@@ -1,1172 +1,132 @@
 import os
+import re
 import time
 from collections import defaultdict, deque
 
-from flask import Flask, jsonify, request, render_template_string
 from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template_string, request
 from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
 
-# =========================================================
-# CONFIGURATION
-# =========================================================
-
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 
 if not API_KEY:
     raise RuntimeError(
-        "OPENAI_API_KEY est manquante. "
-        "Ajoute-la dans ton fichier .env ou dans les variables d'environnement."
+        "OPENAI_API_KEY est introuvable. Vérifie ton fichier .env."
     )
 
 client = OpenAI(api_key=API_KEY)
 
 MAX_MESSAGE_LENGTH = 2000
-MAX_HISTORY = 8
+MAX_HISTORY_ITEMS = 8
+MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 12
 RATE_WINDOW = 60
 
 request_log = defaultdict(deque)
 
 
-# =========================================================
-# PROMPT TERANGA AI
-# =========================================================
-
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
 
-Ta mission est d'aider les habitants du Sénégal, les voyageurs, la diaspora,
-les commerçants et les visiteurs à obtenir des informations utiles, claires
-et fiables sur le Sénégal.
+MISSION
+Aide les habitants du Sénégal, les voyageurs, la diaspora, les visiteurs et les commerçants avec des informations utiles, claires et fiables sur le Sénégal.
 
 LANGUES
-- Réponds naturellement dans la langue utilisée par l'utilisateur.
-- Français -> français.
-- English -> English.
-- Wolof -> Wolof lorsque tu peux répondre correctement.
-- Si l'utilisateur mélange français, anglais et Wolof, comprends le mélange
-  et réponds naturellement.
-- Comprends autant que possible les fautes de frappe et le langage SMS.
+- Réponds dans la langue utilisée par l'utilisateur.
+- Français -> français naturel.
+- English -> natural English.
+- Wolof -> wolof lorsque tu peux le faire correctement.
+- Si l'utilisateur mélange français, anglais et wolof, comprends le mélange et réponds naturellement.
+- Comprends les fautes de frappe, le langage SMS et les formulations courtes.
 
 STYLE
-- Sois chaleureux, professionnel, simple et naturel.
-- Réponds de façon concise par défaut.
-- Utilise des listes lorsque cela facilite la lecture.
-- Ne donne pas une réponse artificiellement longue.
-- Ne répète pas inutilement la question de l'utilisateur.
+- Sois chaleureux, professionnel et simple.
+- Réponds directement à la question.
+- Sois concis par défaut.
+- Donne les détails utiles quand ils sont nécessaires.
+- Utilise des listes courtes quand cela améliore la lisibilité.
+- Ne répète pas inutilement la question.
+- N'invente jamais une information.
 
 SÉNÉGAL
-Tu peux aider notamment sur :
-- Dakar et les autres régions du Sénégal
-- tourisme
-- plages et destinations
-- hôtels et hébergements
-- restaurants et cuisine sénégalaise
-- marchés et commerces
-- transport
-- culture et histoire
-- événements
-- démarches pratiques
-- entreprises et services
-- vie quotidienne
-- conseils pratiques pour les visiteurs
+Tu peux aider notamment sur Dakar et les autres régions, tourisme, plages, destinations, hôtels, restaurants, cuisine sénégalaise, marchés, commerce, transport, culture, histoire, événements, démarches pratiques, entreprises, services et vie quotidienne.
 
-FIABILITÉ
-- N'invente jamais une information.
-- Ne présente pas comme actuelle une information ancienne.
-- Les prix, horaires, disponibilités, événements, transports,
-  coordonnées et informations commerciales peuvent changer.
-- Pour les informations susceptibles d'avoir changé, utilise la recherche
-  Web lorsqu'elle est disponible.
-- Si tu n'es pas certain, dis-le clairement.
-- Ne transforme pas une estimation en prix officiel.
-- Ne fabrique jamais de restaurant, hôtel, entreprise, adresse,
-  numéro de téléphone ou événement.
+FIABILITÉ ET ACTUALITÉ
+- Les prix, horaires, disponibilités, événements, transports, coordonnées et informations commerciales peuvent changer.
+- Pour une information susceptible d'avoir changé récemment, utilise la recherche web lorsque c'est pertinent.
+- Ne présente jamais une estimation comme un tarif officiel.
+- Si une information n'est pas vérifiable ou reste incertaine, dis-le clairement.
+- Pour les informations importantes, privilégie les sources officielles ou les sources récentes et fiables.
+- Ne fabrique jamais le nom, l'adresse, le téléphone, le prix ou le site d'un hôtel, restaurant, entreprise ou service.
 
 PRIX
-Ne donne pas de prix fixe présenté comme actuel sans vérification.
-Si un prix actuel est nécessaire, cherche une source récente.
-Indique lorsque le prix peut varier.
+- Si l'utilisateur demande un prix actuel, cherche une source récente lorsque c'est nécessaire.
+- Indique clairement lorsqu'un prix est indicatif, négociable ou susceptible de varier.
+- Évite les certitudes injustifiées sur les tarifs.
+
+POLITIQUE ET INFORMATIONS PUBLIQUES
+- Pour les sujets politiques, électoraux ou institutionnels actuels, reste strictement factuel et neutre.
+- Distingue les faits vérifiés, les déclarations des acteurs et les analyses attribuées à leurs sources.
+- Ne conseille pas à l'utilisateur pour qui voter et ne classe pas les candidats ou partis.
 
 SÉCURITÉ
-Pour les sujets sensibles ou dangereux, donne des conseils prudents
-et recommande les sources officielles ou les professionnels compétents
-lorsque nécessaire.
+Pour les sujets sensibles ou dangereux, donne des conseils prudents et recommande les sources officielles ou les professionnels appropriés lorsque nécessaire.
 
 OBJECTIF
-L'utilisateur doit avoir l'impression de parler à un assistant
-sérieux, moderne et réellement utile pour le Sénégal.
+L'utilisateur doit avoir l'impression de parler à un assistant sérieux, moderne, utile et réellement adapté au Sénégal.
 """
 
 
-# =========================================================
-# PAGE WEB
-# =========================================================
+def clean_answer(text):
+    text = (text or "").strip()
+    text = re.sub(r"\n{4,}", "\n\n", text)
+    return text
 
-HTML = r"""
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<meta name="theme-color" content="#087443">
+def build_conversation(history, message):
+    lines = []
 
-<title>Teranga AI SN — Votre assistant intelligent au Sénégal</title>
+    if isinstance(history, list):
+        recent = history[-MAX_HISTORY_ITEMS:]
 
-<style>
-:root {
-    --green: #087443;
-    --green-dark: #04552f;
-    --green-light: #e9f7ef;
-    --orange: #f59b23;
-    --orange-light: #fff3df;
-    --dark: #12231b;
-    --text: #26352e;
-    --muted: #718078;
-    --white: #ffffff;
-    --bg: #f5f8f6;
-    --border: #e4ebe7;
-    --shadow: 0 18px 50px rgba(18, 35, 27, .10);
-}
+        for item in recent:
+            if not isinstance(item, dict):
+                continue
 
-* {
-    box-sizing: border-box;
-}
+            role = str(item.get("role", "")).lower()
+            content = str(item.get("content", "")).strip()
 
-html {
-    scroll-behavior: smooth;
-}
+            if role not in {"user", "assistant"} or not content:
+                continue
 
-body {
-    margin: 0;
-    font-family:
-        Inter,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Arial,
-        sans-serif;
-    color: var(--text);
-    background: var(--bg);
-}
+            label = "Utilisateur" if role == "user" else "Teranga AI"
+            lines.append(f"{label}: {content[:2500]}")
 
-button,
-textarea {
-    font: inherit;
-}
+    lines.append(f"Utilisateur: {message}")
 
-button {
-    cursor: pointer;
-}
+    return "\n".join(lines)[-MAX_HISTORY_CHARS:]
 
-.container {
-    width: min(1180px, calc(100% - 32px));
-    margin: auto;
-}
 
-/* ================= HEADER ================= */
+def allowed_request(ip):
+    now = time.time()
+    log = request_log[ip]
 
-header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: rgba(255,255,255,.94);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(228,235,231,.8);
-}
+    while log and now - log[0] > RATE_WINDOW:
+        log.popleft()
 
-.nav {
-    height: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-}
+    if len(log) >= RATE_LIMIT:
+        return False
 
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    text-decoration: none;
-    color: var(--dark);
-    font-weight: 900;
-    font-size: 20px;
-}
+    log.append(now)
+    return True
 
-.logo-mark {
-    width: 40px;
-    height: 40px;
-    border-radius: 13px;
-    display: grid;
-    place-items: center;
-    color: white;
-    font-weight: 900;
-    background:
-        linear-gradient(145deg, var(--green), #0a8d51);
-    box-shadow: 0 8px 20px rgba(8,116,67,.22);
-}
 
-.logo small {
-    display: block;
-    color: var(--green);
-    font-size: 10px;
-    letter-spacing: 1.2px;
-    margin-top: 1px;
-}
-
-.nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-}
-
-.lang-btn {
-    border: 1px solid var(--border);
-    background: white;
-    color: var(--dark);
-    border-radius: 999px;
-    padding: 9px 14px;
-    font-weight: 700;
-}
-
-/* ================= HERO ================= */
-
-.hero {
-    padding: 70px 0 45px;
-    background:
-        radial-gradient(circle at 85% 10%, rgba(245,155,35,.18), transparent 28%),
-        radial-gradient(circle at 5% 20%, rgba(8,116,67,.12), transparent 30%),
-        linear-gradient(180deg, #ffffff, #f5f8f6);
-}
-
-.hero-grid {
-    display: grid;
-    grid-template-columns: 1.05fr .95fr;
-    gap: 45px;
-    align-items: center;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--green-light);
-    color: var(--green);
-    border: 1px solid #cce8d8;
-    border-radius: 999px;
-    padding: 8px 13px;
-    font-size: 13px;
-    font-weight: 800;
-}
-
-.badge-dot {
-    width: 8px;
-    height: 8px;
-    background: #19a862;
-    border-radius: 50%;
-}
-
-h1 {
-    margin: 20px 0 16px;
-    font-size: clamp(40px, 6vw, 68px);
-    line-height: 1.02;
-    letter-spacing: -2.5px;
-    color: var(--dark);
-}
-
-.hero h1 span {
-    color: var(--green);
-}
-
-.hero-text {
-    max-width: 650px;
-    font-size: 18px;
-    line-height: 1.65;
-    color: var(--muted);
-}
-
-.hero-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 28px;
-}
-
-.primary {
-    border: 0;
-    background: var(--green);
-    color: white;
-    padding: 14px 21px;
-    border-radius: 13px;
-    font-weight: 800;
-    box-shadow: 0 10px 25px rgba(8,116,67,.22);
-}
-
-.primary:hover {
-    background: var(--green-dark);
-}
-
-.secondary {
-    border: 1px solid var(--border);
-    background: white;
-    color: var(--dark);
-    padding: 14px 21px;
-    border-radius: 13px;
-    font-weight: 800;
-}
-
-/* ================= HERO CARD ================= */
-
-.hero-card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 25px;
-    padding: 22px;
-    box-shadow: var(--shadow);
-}
-
-.hero-card-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding-bottom: 17px;
-    border-bottom: 1px solid var(--border);
-}
-
-.avatar {
-    width: 46px;
-    height: 46px;
-    border-radius: 15px;
-    display: grid;
-    place-items: center;
-    color: white;
-    font-weight: 900;
-    background: var(--green);
-}
-
-.status {
-    color: #16804a;
-    font-size: 12px;
-    font-weight: 800;
-}
-
-.demo-message {
-    padding: 18px 0 5px;
-}
-
-.bubble {
-    width: fit-content;
-    max-width: 90%;
-    padding: 13px 15px;
-    border-radius: 16px;
-    line-height: 1.5;
-    margin-bottom: 11px;
-}
-
-.bubble.user {
-    margin-left: auto;
-    color: white;
-    background: var(--green);
-    border-bottom-right-radius: 5px;
-}
-
-.bubble.ai {
-    background: #f0f5f2;
-    border-bottom-left-radius: 5px;
-}
-
-/* ================= SECTIONS ================= */
-
-section {
-    padding: 65px 0;
-}
-
-.section-title {
-    text-align: center;
-    margin-bottom: 32px;
-}
-
-.section-title h2 {
-    margin: 0 0 9px;
-    font-size: 34px;
-    color: var(--dark);
-}
-
-.section-title p {
-    margin: 0;
-    color: var(--muted);
-}
-
-.cards {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-}
-
-.card {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 19px;
-    padding: 22px;
-    transition: transform .2s, box-shadow .2s;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
-}
-
-.card-icon {
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
-    display: grid;
-    place-items: center;
-    background: var(--green-light);
-    font-size: 22px;
-    margin-bottom: 16px;
-}
-
-.card h3 {
-    margin: 0 0 7px;
-    color: var(--dark);
-}
-
-.card p {
-    margin: 0;
-    line-height: 1.55;
-    color: var(--muted);
-    font-size: 14px;
-}
-
-/* ================= CHAT ================= */
-
-.chat-section {
-    background: #eef5f1;
-}
-
-.chat-box {
-    max-width: 900px;
-    margin: auto;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-}
-
-.chat-head {
-    padding: 18px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    border-bottom: 1px solid var(--border);
-}
-
-.chat-head strong {
-    color: var(--dark);
-}
-
-.chat-head span {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-}
-
-.messages {
-    height: 430px;
-    overflow-y: auto;
-    padding: 20px;
-    background: #fbfdfc;
-}
-
-.message {
-    display: flex;
-    margin-bottom: 14px;
-}
-
-.message.user {
-    justify-content: flex-end;
-}
-
-.message-bubble {
-    max-width: min(75%, 650px);
-    padding: 13px 15px;
-    border-radius: 17px;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-.message.ai .message-bubble {
-    background: #edf4f0;
-    border-bottom-left-radius: 5px;
-}
-
-.message.user .message-bubble {
-    color: white;
-    background: var(--green);
-    border-bottom-right-radius: 5px;
-}
-
-.quick {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 12px 15px 4px;
-}
-
-.quick button {
-    white-space: nowrap;
-    border: 1px solid var(--border);
-    background: white;
-    border-radius: 999px;
-    padding: 8px 12px;
-    color: var(--green);
-    font-weight: 700;
-    font-size: 13px;
-}
-
-.composer {
-    display: flex;
-    gap: 10px;
-    padding: 15px;
-    border-top: 1px solid var(--border);
-}
-
-#message {
-    flex: 1;
-    resize: none;
-    min-height: 48px;
-    max-height: 130px;
-    border: 1px solid var(--border);
-    border-radius: 15px;
-    padding: 13px 14px;
-    outline: none;
-}
-
-#message:focus {
-    border-color: var(--green);
-}
-
-.send {
-    width: 50px;
-    min-width: 50px;
-    border: 0;
-    border-radius: 15px;
-    color: white;
-    background: var(--green);
-    font-size: 19px;
-}
-
-.send:disabled {
-    opacity: .5;
-}
-
-/* ================= DESTINATIONS ================= */
-
-.destination {
-    background: white;
-}
-
-.destination-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 17px;
-}
-
-.destination-card {
-    min-height: 185px;
-    padding: 23px;
-    border-radius: 20px;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    overflow: hidden;
-    background:
-        linear-gradient(145deg, #087443, #07542f);
-    position: relative;
-}
-
-.destination-card:nth-child(2) {
-    background:
-        linear-gradient(145deg, #bd7210, #f59b23);
-}
-
-.destination-card:nth-child(3) {
-    background:
-        linear-gradient(145deg, #116c7c, #18a1b5);
-}
-
-.destination-card h3 {
-    margin: 0 0 5px;
-    font-size: 22px;
-}
-
-.destination-card p {
-    margin: 0;
-    opacity: .9;
-}
-
-/* ================= FOOTER ================= */
-
-footer {
-    padding: 35px 0;
-    color: #d8e8df;
-    background: #10271d;
-}
-
-.footer-inner {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-}
-
-footer strong {
-    color: white;
-}
-
-footer p {
-    margin: 5px 0 0;
-    font-size: 13px;
-}
-
-/* ================= MOBILE ================= */
-
-@media (max-width: 850px) {
-    .hero-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .hero-card {
-        max-width: 600px;
-        margin: auto;
-    }
-
-    .cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .destination-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 560px) {
-    .container {
-        width: min(100% - 22px, 1180px);
-    }
-
-    .nav {
-        height: 64px;
-    }
-
-    .logo {
-        font-size: 17px;
-    }
-
-    .logo-mark {
-        width: 36px;
-        height: 36px;
-    }
-
-    h1 {
-        font-size: 43px;
-        letter-spacing: -1.7px;
-    }
-
-    .hero {
-        padding-top: 43px;
-    }
-
-    .hero-text {
-        font-size: 16px;
-    }
-
-    .cards {
-        grid-template-columns: 1fr;
-    }
-
-    .messages {
-        height: 390px;
-    }
-
-    .message-bubble {
-        max-width: 86%;
-    }
-
-    .footer-inner {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-    <div class="container nav">
-        <a href="#" class="logo">
-            <div class="logo-mark">T</div>
-            <div>
-                Teranga AI
-                <small>SÉNÉGAL</small>
-            </div>
-        </a>
-
-        <div class="nav-actions">
-            <button class="lang-btn" id="langBtn">FR / EN</button>
-        </div>
-    </div>
-</header>
-
-
-<main>
-
-<!-- HERO -->
-
-<section class="hero">
-    <div class="container hero-grid">
-
-        <div>
-            <div class="badge">
-                <span class="badge-dot"></span>
-                Assistant intelligent pour le Sénégal
-            </div>
-
-            <h1>
-                Votre guide<br>
-                <span>Teranga AI</span>
-            </h1>
-
-            <p class="hero-text">
-                Découvrez le Sénégal, trouvez des informations utiles,
-                préparez vos déplacements et posez vos questions à un
-                assistant pensé pour le quotidien sénégalais.
-            </p>
-
-            <div class="hero-buttons">
-                <button class="primary" id="startChat">
-                    💬 Parler à Teranga AI
-                </button>
-
-                <button class="secondary" id="discoverBtn">
-                    Découvrir le Sénégal
-                </button>
-            </div>
-        </div>
-
-
-        <div class="hero-card">
-
-            <div class="hero-card-top">
-                <div class="avatar">T</div>
-                <div>
-                    <strong>Teranga AI</strong>
-                    <div class="status">● Disponible</div>
-                </div>
-            </div>
-
-            <div class="demo-message">
-                <div class="bubble user">
-                    Que visiter à Dakar ?
-                </div>
-
-                <div class="bubble ai">
-                    Dakar offre beaucoup de possibilités :
-                    Gorée, les marchés, les musées, la corniche,
-                    la cuisine sénégalaise et bien plus encore.
-                    Je peux t'aider à préparer ton programme.
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-</section>
-
-
-<!-- SERVICES -->
-
-<section>
-    <div class="container">
-
-        <div class="section-title">
-            <h2>Tout le Sénégal, dans votre assistant</h2>
-            <p>Des réponses simples pour les besoins du quotidien.</p>
-        </div>
-
-        <div class="cards">
-
-            <div class="card">
-                <div class="card-icon">🌍</div>
-                <h3>Découvrir</h3>
-                <p>
-                    Destinations, culture, histoire et activités
-                    à travers le Sénégal.
-                </p>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">🍲</div>
-                <h3>Goûter</h3>
-                <p>
-                    Cuisine sénégalaise, spécialités et idées
-                    pour découvrir les saveurs locales.
-                </p>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">🚕</div>
-                <h3>Se déplacer</h3>
-                <p>
-                    Informations pratiques sur les déplacements
-                    et transports.
-                </p>
-            </div>
-
-            <div class="card">
-                <div class="card-icon">🏨</div>
-                <h3>Séjourner</h3>
-                <p>
-                    Conseils pour organiser un séjour et rechercher
-                    des hébergements.
-                </p>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-
-<!-- CHAT -->
-
-<section class="chat-section" id="chatSection">
-
-    <div class="container">
-
-        <div class="section-title">
-            <h2>Parlez avec Teranga AI</h2>
-            <p>Posez votre question naturellement.</p>
-        </div>
-
-        <div class="chat-box">
-
-            <div class="chat-head">
-                <div class="avatar">T</div>
-                <div>
-                    <strong>Teranga AI</strong>
-                    <span>Assistant Sénégal • FR / EN / Wolof</span>
-                </div>
-            </div>
-
-            <div class="messages" id="messages">
-
-                <div class="message ai">
-                    <div class="message-bubble">
-                        Bonjour 👋
-                        Je suis Teranga AI.
-                        Que souhaitez-vous découvrir ou savoir sur le Sénégal ?
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="quick">
-                <button data-question="Que visiter à Dakar ?">
-                    📍 Dakar
-                </button>
-
-                <button data-question="Quels plats sénégalais dois-je goûter ?">
-                    🍲 Cuisine
-                </button>
-
-                <button data-question="Comment se déplacer à Dakar ?">
-                    🚕 Transport
-                </button>
-
-                <button data-question="Que visiter au Sénégal pour un premier voyage ?">
-                    🌍 Voyage
-                </button>
-            </div>
-
-            <div class="composer">
-
-                <textarea
-                    id="message"
-                    maxlength="2000"
-                    placeholder="Écrivez votre question..."
-                    rows="1"
-                ></textarea>
-
-                <button class="send" id="sendBtn" title="Envoyer">
-                    ➤
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-</section>
-
-
-<!-- DESTINATIONS -->
-
-<section class="destination" id="destinations">
-
-    <div class="container">
-
-        <div class="section-title">
-            <h2>Quelques incontournables</h2>
-            <p>Le Sénégal possède une grande diversité de paysages et de cultures.</p>
-        </div>
-
-        <div class="destination-grid">
-
-            <div class="destination-card">
-                <h3>Dakar</h3>
-                <p>La capitale, la culture, la gastronomie et l'océan.</p>
-            </div>
-
-            <div class="destination-card">
-                <h3>Saint-Louis</h3>
-                <p>Une ville historique au patrimoine remarquable.</p>
-            </div>
-
-            <div class="destination-card">
-                <h3>Casamance</h3>
-                <p>Nature, paysages et richesse culturelle.</p>
-            </div>
-
-        </div>
-
-    </div>
-</section>
-
-</main>
-
-
-<footer>
-    <div class="container footer-inner">
-        <div>
-            <strong>Teranga AI 🇸🇳</strong>
-            <p>Votre assistant intelligent au Sénégal.</p>
-        </div>
-
-        <p>© 2026 Teranga AI</p>
-    </div>
-</footer>
-
-
-<script>
-const messages = document.getElementById("messages");
-const messageInput = document.getElementById("message");
-const sendBtn = document.getElementById("sendBtn");
-const startChat = document.getElementById("startChat");
-const discoverBtn = document.getElementById("discoverBtn");
-const langBtn = document.getElementById("langBtn");
-
-let history = [];
-
-function addMessage(text, role) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "message " + role;
-
-    const bubble = document.createElement("div");
-    bubble.className = "message-bubble";
-
-    // Important : textContent évite d'injecter du HTML.
-    bubble.textContent = text;
-
-    wrapper.appendChild(bubble);
-    messages.appendChild(wrapper);
-
-    messages.scrollTop = messages.scrollHeight;
-}
-
-function setLoading(loading) {
-    sendBtn.disabled = loading;
-    messageInput.disabled = loading;
-
-    if (loading) {
-        sendBtn.textContent = "…";
-    } else {
-        sendBtn.textContent = "➤";
-        messageInput.disabled = false;
-    }
-}
-
-async function sendMessage(text = null) {
-
-    const question = (text || messageInput.value).trim();
-
-    if (!question) {
-        return;
-    }
-
-    if (question.length > 2000) {
-        addMessage(
-            "Votre message est trop long. Limitez-le à 2000 caractères.",
-            "ai"
-        );
-        return;
-    }
-
-    addMessage(question, "user");
-
-    messageInput.value = "";
-
-    setLoading(true);
-
-    try {
-
-        const response = await fetch("/chat", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: question,
-                history: history
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                data.error || "Une erreur est survenue."
-            );
-        }
-
-        addMessage(data.reply, "ai");
-
-        history.push({
-            role: "user",
-            content: question
-        });
-
-        history.push({
-            role: "assistant",
-            content: data.reply
-        });
-
-        // On garde uniquement les derniers échanges.
-        if (history.length > 8) {
-            history = history.slice(-8);
-        }
-
-    } catch (error) {
-
-        addMessage(
-            "Désolé, une erreur est survenue. Veuillez réessayer dans quelques instants.",
-            "ai"
-        );
-
-        console.error(error);
-
-    } finally {
-        setLoading(false);
-        messageInput.focus();
-    }
-}
-
-
-sendBtn.addEventListener("click", function () {
-    sendMessage();
-});
-
-
-messageInput.addEventListener("keydown", function (event) {
-
-    if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-    }
-
-});
-
-
-document.querySelectorAll("[data-question]").forEach(function (button) {
-
-    button.addEventListener("click", function () {
-
-        const question = button.getAttribute("data-question");
-
-        sendMessage(question);
-    });
-
-});
-
-
-startChat.addEventListener("click", function () {
-
-    document.getElementById("chatSection").scrollIntoView({
-        behavior: "smooth"
-    });
-
-    setTimeout(function () {
-        messageInput.focus();
-    }, 500);
-
-});
-
-
-discoverBtn.addEventListener("click", function () {
-
-    document.getElementById("destinations").scrollIntoView({
-        behavior: "smooth"
-    });
-
-});
-
-
-langBtn.addEventListener("click", function () {
-
-    addMessage(
-        "Le changement complet de langue sera ajouté dans une prochaine version. Pour le moment, écrivez simplement en français, anglais ou Wolof et je m'adapterai.",
-        "ai"
-    );
-
-});
-
-
-messageInput.addEventListener("input", function () {
-
-    messageInput.style.height = "auto";
-    messageInput.style.height =
-        Math.min(messageInput.scrollHeight, 130) + "px";
-
-});
-</script>
-
-</body>
-</html>
-"""
-
-
-# =========================================================
-# ROUTES
-# =========================================================
-
-@app.route("/")
-def home():
-    return render_template_string(HTML)
-
-
-@app.route("/health")
+@app.get("/health")
 def health():
     return jsonify({
         "status": "ok",
@@ -1175,135 +135,920 @@ def health():
     })
 
 
-def allowed_request(ip):
-    now = time.time()
-    requests = request_log[ip]
-
-    while requests and now - requests[0] > RATE_WINDOW:
-        requests.popleft()
-
-    if len(requests) >= RATE_LIMIT:
-        return False
-
-    requests.append(now)
-    return True
-
-
-@app.route("/chat", methods=["POST"])
+@app.post("/chat")
 def chat():
 
     ip = request.headers.get(
         "X-Forwarded-For",
         request.remote_addr or "unknown"
-    ).split(",")[0].strip()
+    )
+
+    ip = ip.split(",")[0].strip()
 
     if not allowed_request(ip):
         return jsonify({
-            "error": "Trop de demandes. Veuillez patienter une minute."
+            "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429
 
-    data = request.get_json(silent=True)
+    data = request.get_json(silent=True) or {}
 
-    if not isinstance(data, dict):
-        return jsonify({
-            "error": "Requête invalide."
-        }), 400
-
-    message = data.get("message", "")
-
-    if not isinstance(message, str):
-        return jsonify({
-            "error": "Message invalide."
-        }), 400
-
-    message = message.strip()
+    message = str(data.get("message", "")).strip()
+    history = data.get("history", [])
+    language = str(data.get("language", "fr")).lower()
 
     if not message:
         return jsonify({
-            "error": "Veuillez écrire une question."
+            "error": "Écris un message avant d'envoyer."
         }), 400
 
     if len(message) > MAX_MESSAGE_LENGTH:
         return jsonify({
-            "error": "Votre message est trop long."
+            "error": (
+                f"Ton message est trop long. "
+                f"Maximum {MAX_MESSAGE_LENGTH} caractères."
+            )
         }), 400
 
-    history = data.get("history", [])
+    language_instruction = {
+        "fr": (
+            "L'utilisateur a choisi le français. "
+            "Réponds en français naturel."
+        ),
+        "en": (
+            "The user selected English. "
+            "Reply in natural English."
+        ),
+        "wo": (
+            "L'utilisateur a choisi le wolof. "
+            "Réponds en wolof lorsque tu peux le faire correctement."
+        ),
+    }.get(
+        language,
+        "Réponds dans la langue de l'utilisateur."
+    )
 
-    if not isinstance(history, list):
-        history = []
+    final_instructions = (
+        SYSTEM_PROMPT
+        + "\n\n"
+        + language_instruction
+    )
 
-    # Sécurité : limiter la taille de l'historique envoyé.
-    history = history[-MAX_HISTORY:]
-
-    conversation = []
-
-    for item in history:
-
-        if not isinstance(item, dict):
-            continue
-
-        role = item.get("role")
-        content = item.get("content")
-
-        if role not in ["user", "assistant"]:
-            continue
-
-        if not isinstance(content, str):
-            continue
-
-        content = content.strip()
-
-        if not content:
-            continue
-
-        conversation.append({
-            "role": role,
-            "content": content[:4000]
-        })
-
-    conversation.append({
-        "role": "user",
-        "content": message
-    })
+    input_text = build_conversation(history, message)
 
     try:
 
         response = client.responses.create(
             model=MODEL,
-            instructions=SYSTEM_PROMPT,
-            input=conversation,
+            instructions=final_instructions,
+            input=input_text,
             tools=[
                 {
                     "type": "web_search"
                 }
-            ]
+            ],
+            max_output_tokens=500
         )
 
-        reply = (response.output_text or "").strip()
+        reply = clean_answer(
+            response.output_text or ""
+        )
 
         if not reply:
             reply = (
-                "Je n'ai pas réussi à générer une réponse. "
-                "Veuillez réessayer."
+                "Désolé, je n'ai pas réussi à obtenir une réponse. "
+                "Réessaie dans quelques secondes."
             )
 
         return jsonify({
             "reply": reply
         })
 
-    except Exception as error:
-
-        print("Erreur OpenAI :", repr(error))
+    except Exception:
+        app.logger.exception("Erreur dans /chat")
 
         return jsonify({
-            "error": "Le service est temporairement indisponible."
+            "error": (
+                "Désolé, le service est temporairement indisponible. "
+                "Réessaie dans quelques secondes."
+            )
         }), 500
 
 
-# =========================================================
-# DÉMARRAGE
-# =========================================================
+HTML = r"""
+<!doctype html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1">
+
+<meta name="theme-color"
+      content="#0b7a4b">
+
+<title>Teranga AI SN</title>
+
+<style>
+
+:root {
+    --green: #0b7a4b;
+    --green-dark: #075c39;
+    --orange: #f28c28;
+    --cream: #fffaf2;
+    --ink: #17251f;
+    --muted: #68756f;
+    --card: #ffffff;
+    --border: #e6ece8;
+    --shadow: 0 16px 45px rgba(16, 48, 35, .10);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, Arial, sans-serif;
+    color: var(--ink);
+    background:
+        linear-gradient(
+            180deg,
+            #f4fbf7 0%,
+            var(--cream) 100%
+        );
+}
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav {
+    max-width: 1120px;
+    margin: auto;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+}
+
+.logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    color: white;
+    background:
+        linear-gradient(
+            135deg,
+            var(--green),
+            var(--orange)
+        );
+    font-size: 21px;
+}
+
+.lang {
+    display: flex;
+    gap: 6px;
+}
+
+.lang button {
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 999px;
+    padding: 7px 11px;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.lang button.active {
+    background: var(--green);
+    color: white;
+    border-color: var(--green);
+}
+
+main {
+    max-width: 1120px;
+    margin: auto;
+    padding: 34px 18px 60px;
+}
+
+.hero {
+    background:
+        linear-gradient(
+            135deg,
+            #08784a,
+            #0e9560 55%,
+            #f28c28
+        );
+    color: white;
+    border-radius: 28px;
+    padding: 42px 30px;
+    box-shadow: var(--shadow);
+}
+
+.hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(34px, 6vw, 58px);
+    line-height: 1;
+}
+
+.hero p {
+    max-width: 720px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.55;
+    opacity: .96;
+}
+
+.section {
+    margin-top: 28px;
+}
+
+.section h2 {
+    font-size: 24px;
+    margin: 0 0 14px;
+}
+
+.quick {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.quick button,
+.destination {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 18px;
+    padding: 16px;
+    text-align: left;
+    box-shadow:
+        0 7px 22px rgba(20,50,35,.05);
+}
+
+.quick button {
+    cursor: pointer;
+    font: inherit;
+}
+
+.quick button:hover {
+    transform: translateY(-1px);
+}
+
+.chat {
+    margin-top: 28px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.chat-head {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 800;
+}
+
+#messages {
+    min-height: 260px;
+    max-height: 560px;
+    overflow: auto;
+    padding: 18px;
+}
+
+.msg {
+    display: flex;
+    margin: 10px 0;
+}
+
+.msg.user {
+    justify-content: flex-end;
+}
+
+.bubble {
+    max-width: 85%;
+    padding: 12px 15px;
+    border-radius: 18px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.assistant .bubble {
+    background: #eef8f2;
+}
+
+.user .bubble {
+    background: var(--green);
+    color: white;
+}
+
+.composer {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+}
+
+textarea {
+    flex: 1;
+    resize: none;
+    min-height: 50px;
+    max-height: 150px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 13px;
+    font: inherit;
+    outline: none;
+}
+
+textarea:focus {
+    border-color: var(--green);
+}
+
+#send {
+    border: 0;
+    border-radius: 16px;
+    padding: 0 20px;
+    background: var(--green);
+    color: white;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+#send:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+
+.destinations {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.destination strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.destination span {
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+footer {
+    text-align: center;
+    padding: 30px 18px 45px;
+    color: var(--muted);
+}
+
+@media (max-width: 800px) {
+
+    .quick {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .destinations {
+        grid-template-columns: 1fr;
+    }
+
+    .hero {
+        padding: 32px 22px;
+    }
+}
+
+@media (max-width: 520px) {
+
+    .quick {
+        grid-template-columns: 1fr;
+    }
+
+    .composer {
+        flex-direction: column;
+    }
+
+    #send {
+        min-height: 48px;
+    }
+
+    .bubble {
+        max-width: 94%;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="nav">
+
+<div class="brand">
+
+<div class="logo">
+🌴
+</div>
+
+<div>
+Teranga AI SN
+</div>
+
+</div>
+
+<div class="lang">
+
+<button
+data-lang="fr"
+class="active">
+FR
+</button>
+
+<button
+data-lang="en">
+EN
+</button>
+
+<button
+data-lang="wo">
+WO
+</button>
+
+</div>
+
+</div>
+
+</header>
+
+
+<main>
+
+<section class="hero">
+
+<h1>
+Teranga AI 🇸🇳
+</h1>
+
+<p id="heroText">
+Ton assistant intelligent pour le Sénégal :
+tourisme, transport, prix, culture,
+démarches et vie quotidienne.
+</p>
+
+</section>
+
+
+<section class="section">
+
+<h2 id="quickTitle">
+Questions rapides
+</h2>
+
+<div class="quick">
+
+<button
+data-question="Quel temps fait-il à Dakar aujourd'hui ?">
+🌤️ Météo à Dakar
+</button>
+
+<button
+data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
+🚕 AIBD → Dakar
+</button>
+
+<button
+data-question="Quels sont les endroits à visiter au Sénégal ?">
+📍 Destinations
+</button>
+
+<button
+data-question="Quels plats sénégalais dois-je goûter ?">
+🍲 Cuisine
+</button>
+
+</div>
+
+</section>
+
+
+<section class="chat">
+
+<div class="chat-head"
+     id="chatTitle">
+Pose ta question à Teranga AI
+</div>
+
+<div id="messages">
+</div>
+
+<div class="composer">
+
+<textarea
+id="input"
+maxlength="2000"
+placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?">
+</textarea>
+
+<button id="send">
+Envoyer
+</button>
+
+</div>
+
+</section>
+
+
+<section class="section">
+
+<h2>
+Quelques idées 🇸🇳
+</h2>
+
+<div class="destinations">
+
+<div class="destination">
+<strong>Dakar</strong>
+<span>
+Culture, marchés, restaurants
+et vie urbaine.
+</span>
+</div>
+
+<div class="destination">
+<strong>Île de Gorée</strong>
+<span>
+Histoire, patrimoine
+et découverte culturelle.
+</span>
+</div>
+
+<div class="destination">
+<strong>Saly & Petite Côte</strong>
+<span>
+Plages, détente et activités
+touristiques.
+</span>
+</div>
+
+</div>
+
+</section>
+
+</main>
+
+
+<footer>
+Teranga AI SN — Un assistant numérique dédié au Sénégal 🇸🇳
+</footer>
+
+
+<script>
+
+const input =
+    document.getElementById('input');
+
+const send =
+    document.getElementById('send');
+
+const messages =
+    document.getElementById('messages');
+
+let history = [];
+
+let currentLanguage = 'fr';
+
+
+const translations = {
+
+    fr: {
+        hero:
+            'Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.',
+
+        quick:
+            'Questions rapides',
+
+        chat:
+            'Pose ta question à Teranga AI',
+
+        placeholder:
+            "Ex. Quel est le prix d'un taxi AIBD → Dakar ?",
+
+        send:
+            'Envoyer',
+
+        welcome:
+            'Bonjour 👋 Je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?'
+    },
+
+    en: {
+        hero:
+            'Your intelligent assistant for Senegal: tourism, transport, prices, culture, practical procedures and daily life.',
+
+        quick:
+            'Quick questions',
+
+        chat:
+            'Ask Teranga AI',
+
+        placeholder:
+            'Example: How much is a taxi from AIBD to Dakar?',
+
+        send:
+            'Send',
+
+        welcome:
+            'Hello 👋 I am Teranga AI. What would you like to know about Senegal?'
+    },
+
+    wo: {
+        hero:
+            'Sa xam-xam bu bees ci Senegaal: tukki, transport, njëg, aada ak dund gu bees.',
+
+        quick:
+            'Laaj yu gaaw',
+
+        chat:
+            'Laajal Teranga AI',
+
+        placeholder:
+            'Misaal: Ñaata la taxi AIBD ba Dakar?',
+
+        send:
+            'Yónnee',
+
+        welcome:
+            'Salaam 👋 Maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?'
+    }
+
+};
+
+
+function addMessage(role, text) {
+
+    const row =
+        document.createElement('div');
+
+    row.className =
+        'msg ' + role;
+
+    const bubble =
+        document.createElement('div');
+
+    bubble.className =
+        'bubble';
+
+    bubble.textContent =
+        text;
+
+    row.appendChild(bubble);
+
+    messages.appendChild(row);
+
+    messages.scrollTop =
+        messages.scrollHeight;
+}
+
+
+function setLanguage(lang) {
+
+    currentLanguage = lang;
+
+    document
+        .querySelectorAll('.lang button')
+        .forEach(btn => {
+
+            btn.classList.toggle(
+                'active',
+                btn.dataset.lang === lang
+            );
+
+        });
+
+    const t =
+        translations[lang];
+
+    document
+        .getElementById('heroText')
+        .textContent = t.hero;
+
+    document
+        .getElementById('quickTitle')
+        .textContent = t.quick;
+
+    document
+        .getElementById('chatTitle')
+        .textContent = t.chat;
+
+    document
+        .getElementById('input')
+        .placeholder = t.placeholder;
+
+    document
+        .getElementById('send')
+        .textContent = t.send;
+}
+
+
+async function sendMessage(textFromButton = null) {
+
+    const text =
+        (textFromButton || input.value).trim();
+
+    if (!text || send.disabled) {
+        return;
+    }
+
+    addMessage(
+        'user',
+        text
+    );
+
+    history.push({
+        role: 'user',
+        content: text
+    });
+
+    input.value = '';
+
+    send.disabled = true;
+
+    send.textContent =
+        currentLanguage === 'en'
+            ? 'Thinking…'
+            : 'Réflexion…';
+
+    try {
+
+        const response =
+            await fetch('/chat', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body: JSON.stringify({
+
+                    message: text,
+
+                    history:
+                        history.slice(-8),
+
+                    language:
+                        currentLanguage
+
+                })
+
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || 'Erreur'
+            );
+        }
+
+
+        const reply =
+            data.reply ||
+            'Aucune réponse.';
+
+
+        addMessage(
+            'assistant',
+            reply
+        );
+
+
+        history.push({
+            role: 'assistant',
+            content: reply
+        });
+
+
+        history =
+            history.slice(-8);
+
+
+    } catch (error) {
+
+        addMessage(
+            'assistant',
+            error.message ||
+            'Service temporairement indisponible.'
+        );
+
+    } finally {
+
+        send.disabled = false;
+
+        send.textContent =
+            translations[
+                currentLanguage
+            ].send;
+
+        input.focus();
+    }
+}
+
+
+document
+    .querySelectorAll('.lang button')
+    .forEach(btn => {
+
+        btn.addEventListener(
+            'click',
+            () => setLanguage(
+                btn.dataset.lang
+            )
+        );
+
+    });
+
+
+document
+    .querySelectorAll('.quick button')
+    .forEach(btn => {
+
+        btn.addEventListener(
+            'click',
+            () => sendMessage(
+                btn.dataset.question
+            )
+        );
+
+    });
+
+
+send.addEventListener(
+    'click',
+    () => sendMessage()
+);
+
+
+input.addEventListener(
+    'keydown',
+    event => {
+
+        if (
+            event.key === 'Enter' &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+        }
+
+    }
+);
+
+
+setLanguage('fr');
+
+addMessage(
+    'assistant',
+    translations.fr.welcome
+);
+
+</script>
+
+</body>
+
+</html>
+"""
+
+
+@app.get("/")
+def home():
+    return render_template_string(HTML)
+
 
 if __name__ == "__main__":
     app.run(
