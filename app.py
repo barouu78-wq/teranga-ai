@@ -34,51 +34,60 @@ SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
 
 MISSION
-Aide les habitants du Sénégal, les voyageurs, la diaspora, les visiteurs et les commerçants avec des informations utiles, claires et fiables sur le Sénégal.
+Aide les habitants du Sénégal, les voyageurs, la diaspora, les visiteurs et
+les commerçants avec des informations utiles, claires et fiables sur le Sénégal.
 
 LANGUES
 - Réponds dans la langue utilisée par l'utilisateur.
 - Français -> français naturel.
 - English -> natural English.
 - Wolof -> wolof lorsque tu peux le faire correctement.
-- Si l'utilisateur mélange français, anglais et wolof, comprends le mélange et réponds naturellement.
+- Comprends les mélanges français, anglais et wolof.
 - Comprends les fautes de frappe, le langage SMS et les formulations courtes.
 
 STYLE
 - Sois chaleureux, professionnel et simple.
-- Réponds directement à la question.
+- Réponds directement.
 - Sois concis par défaut.
 - Donne les détails utiles quand ils sont nécessaires.
 - Utilise des listes courtes quand cela améliore la lisibilité.
-- Ne répète pas inutilement la question.
 - N'invente jamais une information.
 
 SÉNÉGAL
-Tu peux aider notamment sur Dakar et les autres régions, tourisme, plages, destinations, hôtels, restaurants, cuisine sénégalaise, marchés, commerce, transport, culture, histoire, événements, démarches pratiques, entreprises, services et vie quotidienne.
+Tu peux aider notamment sur Dakar et les autres régions, tourisme, plages,
+destinations, hôtels, restaurants, cuisine sénégalaise, marchés, commerce,
+transport, culture, histoire, événements, démarches pratiques, entreprises,
+services et vie quotidienne.
 
 FIABILITÉ ET ACTUALITÉ
-- Les prix, horaires, disponibilités, événements, transports, coordonnées et informations commerciales peuvent changer.
-- Pour une information susceptible d'avoir changé récemment, utilise la recherche web lorsque c'est pertinent.
+- Les prix, horaires, disponibilités, événements, transports, coordonnées et
+  informations commerciales peuvent changer.
+- Pour une information susceptible d'avoir changé récemment, utilise la
+  recherche web lorsque c'est pertinent.
 - Ne présente jamais une estimation comme un tarif officiel.
 - Si une information n'est pas vérifiable ou reste incertaine, dis-le clairement.
-- Pour les informations importantes, privilégie les sources officielles ou les sources récentes et fiables.
-- Ne fabrique jamais le nom, l'adresse, le téléphone, le prix ou le site d'un hôtel, restaurant, entreprise ou service.
+- Privilégie les sources officielles ou récentes et fiables.
+- Ne fabrique jamais le nom, l'adresse, le téléphone, le prix ou le site
+  d'un hôtel, restaurant, entreprise ou service.
 
 PRIX
-- Si l'utilisateur demande un prix actuel, cherche une source récente lorsque c'est nécessaire.
-- Indique clairement lorsqu'un prix est indicatif, négociable ou susceptible de varier.
-- Évite les certitudes injustifiées sur les tarifs.
+- Pour un prix actuel, cherche une source récente lorsque nécessaire.
+- Indique clairement lorsqu'un prix est indicatif, négociable ou variable.
 
 POLITIQUE ET INFORMATIONS PUBLIQUES
-- Pour les sujets politiques, électoraux ou institutionnels actuels, reste strictement factuel et neutre.
-- Distingue les faits vérifiés, les déclarations des acteurs et les analyses attribuées à leurs sources.
-- Ne conseille pas à l'utilisateur pour qui voter et ne classe pas les candidats ou partis.
+- Pour les sujets politiques, électoraux ou institutionnels actuels, reste
+  strictement factuel et neutre.
+- Distingue les faits vérifiés, les déclarations et les analyses attribuées.
+- Ne conseille pas à l'utilisateur pour qui voter et ne classe pas les candidats
+  ou partis.
 
 SÉCURITÉ
-Pour les sujets sensibles ou dangereux, donne des conseils prudents et recommande les sources officielles ou les professionnels appropriés lorsque nécessaire.
+Pour les sujets sensibles ou dangereux, donne des conseils prudents et
+recommande les sources officielles ou les professionnels appropriés.
 
 OBJECTIF
-L'utilisateur doit avoir l'impression de parler à un assistant sérieux, moderne, utile et réellement adapté au Sénégal.
+L'utilisateur doit avoir l'impression de parler à un assistant sérieux,
+moderne, utile et réellement adapté au Sénégal.
 """
 
 
@@ -137,7 +146,6 @@ def health():
 
 @app.post("/chat")
 def chat():
-
     ip = request.headers.get(
         "X-Forwarded-For",
         request.remote_addr or "unknown"
@@ -196,7 +204,6 @@ def chat():
     input_text = build_conversation(history, message)
 
     try:
-
         response = client.responses.create(
             model=MODEL,
             instructions=final_instructions,
@@ -209,9 +216,7 @@ def chat():
             max_output_tokens=500
         )
 
-        reply = clean_answer(
-            response.output_text or ""
-        )
+        reply = clean_answer(response.output_text or "")
 
         if not reply:
             reply = (
@@ -437,6 +442,7 @@ main {
 .msg {
     display: flex;
     margin: 10px 0;
+    gap: 8px;
 }
 
 .msg.user {
@@ -458,6 +464,41 @@ main {
 .user .bubble {
     background: var(--green);
     color: white;
+}
+
+.voice-button {
+    border: 0;
+    border-radius: 14px;
+    padding: 0 16px;
+    min-width: 58px;
+    background: var(--orange);
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.voice-button.listening {
+    background: #c93636;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.speak-button {
+    display: block;
+    margin-top: 7px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 2px 0;
 }
 
 .composer {
@@ -504,6 +545,10 @@ textarea:focus {
     gap: 14px;
 }
 
+.destination {
+    text-align: left;
+}
+
 .destination strong {
     display: block;
     margin-bottom: 5px;
@@ -545,8 +590,10 @@ footer {
         flex-direction: column;
     }
 
+    .voice-button,
     #send {
         min-height: 48px;
+        width: 100%;
     }
 
     .bubble {
@@ -578,21 +625,9 @@ Teranga AI SN
 
 <div class="lang">
 
-<button
-data-lang="fr"
-class="active">
-FR
-</button>
-
-<button
-data-lang="en">
-EN
-</button>
-
-<button
-data-lang="wo">
-WO
-</button>
+<button data-lang="fr" class="active">FR</button>
+<button data-lang="en">EN</button>
+<button data-lang="wo">WO</button>
 
 </div>
 
@@ -626,23 +661,19 @@ Questions rapides
 
 <div class="quick">
 
-<button
-data-question="Quel temps fait-il à Dakar aujourd'hui ?">
+<button data-question="Quel temps fait-il à Dakar aujourd'hui ?">
 🌤️ Météo à Dakar
 </button>
 
-<button
-data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
+<button data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
 🚕 AIBD → Dakar
 </button>
 
-<button
-data-question="Quels sont les endroits à visiter au Sénégal ?">
+<button data-question="Quels sont les endroits à visiter au Sénégal ?">
 📍 Destinations
 </button>
 
-<button
-data-question="Quels plats sénégalais dois-je goûter ?">
+<button data-question="Quels plats sénégalais dois-je goûter ?">
 🍲 Cuisine
 </button>
 
@@ -668,6 +699,14 @@ id="input"
 maxlength="2000"
 placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?">
 </textarea>
+
+<button
+id="mic"
+class="voice-button"
+type="button"
+title="Parler">
+🎤
+</button>
 
 <button id="send">
 Envoyer
@@ -730,6 +769,9 @@ const input =
 const send =
     document.getElementById('send');
 
+const mic =
+    document.getElementById('mic');
+
 const messages =
     document.getElementById('messages');
 
@@ -737,69 +779,77 @@ let history = [];
 
 let currentLanguage = 'fr';
 
+let recognition = null;
+
+let isListening = false;
+
 
 const translations = {
 
     fr: {
         hero:
             'Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.',
-
         quick:
             'Questions rapides',
-
         chat:
             'Pose ta question à Teranga AI',
-
         placeholder:
             "Ex. Quel est le prix d'un taxi AIBD → Dakar ?",
-
         send:
             'Envoyer',
-
         welcome:
-            'Bonjour 👋 Je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?'
+            'Bonjour 👋 Je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
+        listen:
+            '🎤',
+        listening:
+            '🔴'
     },
 
     en: {
         hero:
             'Your intelligent assistant for Senegal: tourism, transport, prices, culture, practical procedures and daily life.',
-
         quick:
             'Quick questions',
-
         chat:
             'Ask Teranga AI',
-
         placeholder:
             'Example: How much is a taxi from AIBD to Dakar?',
-
         send:
             'Send',
-
         welcome:
-            'Hello 👋 I am Teranga AI. What would you like to know about Senegal?'
+            'Hello 👋 I am Teranga AI. What would you like to know about Senegal?',
+        listen:
+            '🎤',
+        listening:
+            '🔴'
     },
 
     wo: {
         hero:
             'Sa xam-xam bu bees ci Senegaal: tukki, transport, njëg, aada ak dund gu bees.',
-
         quick:
             'Laaj yu gaaw',
-
         chat:
             'Laajal Teranga AI',
-
         placeholder:
             'Misaal: Ñaata la taxi AIBD ba Dakar?',
-
         send:
             'Yónnee',
-
         welcome:
-            'Salaam 👋 Maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?'
+            'Salaam 👋 Maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
+        listen:
+            '🎤',
+        listening:
+            '🔴'
     }
 
+};
+
+
+const voiceLanguages = {
+    fr: 'fr-FR',
+    en: 'en-US',
+    wo: 'wo-SN'
 };
 
 
@@ -822,10 +872,172 @@ function addMessage(role, text) {
 
     row.appendChild(bubble);
 
+    if (role === 'assistant') {
+
+        const speakButton =
+            document.createElement('button');
+
+        speakButton.type = 'button';
+
+        speakButton.className =
+            'speak-button';
+
+        speakButton.textContent =
+            '🔊 Écouter';
+
+        speakButton.addEventListener(
+            'click',
+            function () {
+                speakText(text);
+            }
+        );
+
+        row.appendChild(speakButton);
+    }
+
     messages.appendChild(row);
 
     messages.scrollTop =
         messages.scrollHeight;
+}
+
+
+function speakText(text) {
+
+    if (!('speechSynthesis' in window)) {
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const utterance =
+        new SpeechSynthesisUtterance(text);
+
+    utterance.lang =
+        voiceLanguages[currentLanguage] || 'fr-FR';
+
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+
+    window.speechSynthesis.speak(
+        utterance
+    );
+}
+
+
+function setupVoice() {
+
+    const SpeechRecognition =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+
+        mic.disabled = true;
+        mic.title =
+            'La reconnaissance vocale n’est pas disponible sur ce navigateur.';
+
+        return;
+    }
+
+    recognition =
+        new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.lang =
+        voiceLanguages[currentLanguage];
+
+    recognition.onstart =
+        function () {
+
+            isListening = true;
+
+            mic.classList.add('listening');
+
+            mic.textContent =
+                translations[currentLanguage].listening;
+        };
+
+
+    recognition.onresult =
+        function (event) {
+
+            const transcript =
+                event.results[0][0].transcript;
+
+            input.value =
+                transcript;
+
+            input.dispatchEvent(
+                new Event(
+                    'input',
+                    { bubbles: true }
+                )
+            );
+
+            mic.classList.remove(
+                'listening'
+            );
+
+            mic.textContent =
+                translations[currentLanguage].listen;
+
+            isListening = false;
+
+            sendMessage();
+        };
+
+
+    recognition.onerror =
+        function () {
+
+            isListening = false;
+
+            mic.classList.remove(
+                'listening'
+            );
+
+            mic.textContent =
+                translations[currentLanguage].listen;
+        };
+
+
+    recognition.onend =
+        function () {
+
+            isListening = false;
+
+            mic.classList.remove(
+                'listening'
+            );
+
+            mic.textContent =
+                translations[currentLanguage].listen;
+        };
+}
+
+
+function startVoice() {
+
+    if (!recognition) {
+        return;
+    }
+
+    if (isListening) {
+        recognition.stop();
+        return;
+    }
+
+    recognition.lang =
+        voiceLanguages[currentLanguage] || 'fr-FR';
+
+    try {
+        recognition.start();
+    } catch (error) {
+        isListening = false;
+    }
 }
 
 
@@ -866,6 +1078,15 @@ function setLanguage(lang) {
     document
         .getElementById('send')
         .textContent = t.send;
+
+    if (mic && !isListening) {
+        mic.textContent = t.listen;
+    }
+
+    if (recognition) {
+        recognition.lang =
+            voiceLanguages[lang] || 'fr-FR';
+    }
 }
 
 
@@ -1012,6 +1233,12 @@ send.addEventListener(
 );
 
 
+mic.addEventListener(
+    'click',
+    () => startVoice()
+);
+
+
 input.addEventListener(
     'keydown',
     event => {
@@ -1031,6 +1258,8 @@ input.addEventListener(
 
 
 setLanguage('fr');
+
+setupVoice();
 
 addMessage(
     'assistant',
