@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import io
 import json
 import os
 import re
@@ -31,6 +32,8 @@ ALLOWED_ORIGINS = {
     for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
     if origin.strip()
 }
+SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+_OG_PNG = None
 
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
@@ -463,18 +466,30 @@ HTML = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f6efe3" id="themeColor">
-<meta name="description" content="Teranga AI — assistant chaleureux pour le Sénégal. Météo, trajets, cuisine, visites — en français, anglais et wolof.">
-<meta property="og:title" content="Teranga AI">
-<meta property="og:description" content="L’assistant du Sénégal : réponses claires en français, anglais et wolof.">
+<meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
+<meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="__SITE_URL__/">
+<meta property="og:site_name" content="Teranga AI">
+<meta property="og:title" content="Teranga AI — l’assistant du Sénégal">
+<meta property="og:description" content="Pose une question sur le Sénégal. Réponses claires en français, anglais et wolof.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://teranga-ai-1.onrender.com/">
-<meta property="og:image" content="https://teranga-ai-1.onrender.com/og.svg">
-<meta name="twitter:card" content="summary">
+<meta property="og:locale" content="fr_SN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="__SITE_URL__/">
+<meta property="og:image" content="__SITE_URL__/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Teranga AI — l’assistant du Sénégal">
+<meta name="twitter:description" content="Météo, trajets, visa, cuisine — en français, anglais et wolof.">
+<meta name="twitter:image" content="__SITE_URL__/og.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Teranga">
 <link rel="manifest" href="/manifest.webmanifest">
-<title>Teranga AI</title>
+<title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
+<script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo"],"description":"Assistant numérique pour le Sénégal : météo, transport, visa, cuisine, SIM.","offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}}</script>
 <style>
 :root{
   --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
@@ -643,6 +658,18 @@ textarea{
 #send:disabled{opacity:.5}
 .meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--mute);font-size:11px;padding:0 6px}
 .meta button{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer}
+.spread{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.spread a,.spread button{
+  border:1px solid var(--line);background:var(--sand);color:var(--ink);
+  border-radius:999px;padding:8px 12px;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none
+}
+.spread .wa{background:#128C7E;border-color:#128C7E;color:#fff}
+.seo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.foot{
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:6px 6px 0;color:var(--mute);font-size:11px
+}
+.foot button,.foot a{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer;text-decoration:none}
 #count{font-variant-numeric:tabular-nums}
 @media(max-width:680px){
   header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:8px}
@@ -683,6 +710,9 @@ textarea{
     <button class="icon" id="themeBtn" type="button" title="Thème" aria-label="Thème">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
+    <button class="icon" id="shareAppBtn" type="button" title="Partager" aria-label="Partager">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 8a3 3 0 1 0-2.8-4H12a3 3 0 0 0 .2 4L8.5 12M15 16l-4.7-4M8.5 12A3 3 0 1 0 6 17.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <button class="icon" id="resetBtn" type="button" title="Nouveau" aria-label="Nouveau chat">
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
@@ -693,7 +723,15 @@ textarea{
     <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="cards" id="cards"></div>
+    <div class="spread">
+      <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
+      <button type="button" id="copyLink">Copier le lien</button>
+    </div>
   </div>
+  <section class="seo">
+    <h2>Assistant Sénégal</h2>
+    <p>Teranga AI aide habitants, diaspora et voyageurs : météo à Dakar, taxi depuis l’aéroport AIBD, ferry vers l’île de Gorée, visa d’entrée, plats sénégalais, carte SIM et Orange Money. L’interface parle français, anglais et wolof.</p>
+  </section>
   <div id="messages"></div>
 </div>
 <div class="dock">
@@ -723,7 +761,8 @@ fr:{
   timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
   vOn:'Voix auto on',vOff:'Voix auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
-  sources:'Sources',
+  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
+  shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   heroTitle:'L’hospitalité, en quelques questions.',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -743,7 +782,8 @@ en:{
   timeout:'Timed out. Try again.',err:'Service unavailable.',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
-  sources:'Sources',
+  sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
+  shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   heroTitle:'Hospitality, in a few questions.',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
@@ -763,7 +803,8 @@ wo:{
   timeout:'Dafa yàgg. Jéemaatal.',err:'Service bañ na.',
   vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
-  sources:'Téere',
+  sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
+  shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
   heroTitle:'Teranga, ci laaj yu néew.',
   heroText:'Taw, taksi, ñam, teex ak marché — Teranga dina la wonal te du sos lu mëna soppi.',
   hint:'Tontu ci kaw · Enter ngir yónnee',
@@ -800,6 +841,24 @@ function showHero(){setChatMode(false);}
 function applyThemeColor(){
   const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
   $('themeColor').content=dark?'#100e0c':'#f6efe3';
+}
+function sharePayload(){
+  const url=location.origin+'/';
+  return {title:'Teranga AI',text:T[lang].shareText+' '+url,url};
+}
+function bindShare(){
+  const p=sharePayload();
+  const wa=$('waShare');
+  if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
+  const copy=$('copyLink');
+  if(copy)copy.textContent=T[lang].copyLink;
+}
+async function shareApp(){
+  const p=sharePayload();
+  try{
+    if(navigator.share){await navigator.share(p);return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  window.open('https://wa.me/?text='+encodeURIComponent(p.text),'_blank','noopener');
 }
 function nearBottom(){
   return stage.scrollHeight - stage.scrollTop - stage.clientHeight < 80;
@@ -898,6 +957,7 @@ function setLang(next){
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
+  bindShare();
   if(rec)rec.lang=voiceMap[lang];
 }
 function themeInit(){
@@ -1070,6 +1130,14 @@ send.onclick=()=>{
 };
 mic.onclick=()=>{if(!rec)return;listening?rec.stop():rec.start();};
 $('resetBtn').onclick=reset;
+$('shareAppBtn').onclick=shareApp;
+$('copyLink').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(location.origin+'/');
+    $('copyLink').textContent=T[lang].linkCopied;
+    setTimeout(()=>$('copyLink').textContent=T[lang].copyLink,1200);
+  }catch(e){shareApp();}
+};
 $('themeBtn').onclick=()=>{
   const next=document.body.dataset.theme==='dark'?'light':'dark';
   document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
@@ -1129,6 +1197,55 @@ def og_svg():
     return Response(OG_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
+def build_og_png():
+    from PIL import Image, ImageDraw, ImageFont
+    img = Image.new("RGB", (1200, 630), "#f6efe3")
+    draw = ImageDraw.Draw(img)
+    draw.ellipse((920, -140, 1340, 280), fill="#e2b34a")
+    draw.rounded_rectangle((80, 150, 196, 266), 28, fill="#1a3d2a")
+    draw.ellipse((148, 172, 180, 204), fill="#e2b34a")
+    try:
+        title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+        sub_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
+    except Exception:
+        title_font = ImageFont.load_default()
+        sub_font = title_font
+    draw.text((80, 300), "Teranga AI", fill="#1a120c", font=title_font)
+    draw.text((80, 400), "L'assistant du Senegal  ·  FR  EN  WO", fill="#7a6d5f", font=sub_font)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
+@app.get("/og.png")
+def og_png():
+    global _OG_PNG
+    if _OG_PNG is None:
+        try:
+            _OG_PNG = build_og_png()
+        except Exception:
+            app.logger.exception("og.png")
+            return og_svg()
+    return Response(_OG_PNG, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/robots.txt")
+def robots():
+    body = f"User-agent: *\nAllow: /\nDisallow: /chat\nDisallow: /tts\nSitemap: {SITE_URL}/sitemap.xml\n"
+    return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sitemap.xml")
+def sitemap():
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>"
+        "</urlset>"
+    )
+    return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @app.get("/manifest.webmanifest")
 def manifest():
     return Response(
@@ -1150,7 +1267,10 @@ def manifest():
 def home():
     nonce = secrets.token_urlsafe(16)
     request._csp_nonce = nonce
-    response = Response(HTML.replace("__CSP_NONCE__", nonce), mimetype="text/html")
+    response = Response(
+        HTML.replace("__CSP_NONCE__", nonce).replace("__SITE_URL__", SITE_URL),
+        mimetype="text/html",
+    )
     response.set_cookie(
         CSRF_COOKIE,
         issue_csrf(),
