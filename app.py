@@ -109,6 +109,10 @@ def clean_answer(text):
     text = (text or "").strip()
     text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+    text = re.sub(r"(?<!\*)\*(.*?)\*(?!\*)", r"\1", text)
+    text = re.sub(r"__([^_]+)__", r"\1", text)
+    text = re.sub(r"(?<!_)_([^_]+)_(?!_)", r"\1", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -326,511 +330,280 @@ HTML = r"""
 
 <title>Teranga AI V2 🇸🇳</title>
 
+
 <style>
-
-:root {
-    --green: #0b7a4b;
-    --green-dark: #075c39;
-    --orange: #f28c28;
-    --cream: #fffaf2;
-    --ink: #17251f;
-    --muted: #68756f;
-    --card: #ffffff;
-    --border: #e6ece8;
-    --shadow: 0 16px 45px rgba(16, 48, 35, .10);
+:root{
+  --green:#087a4b;
+  --green-2:#0c9b61;
+  --green-dark:#075b39;
+  --orange:#f79324;
+  --cream:#f7fbf8;
+  --ink:#14231c;
+  --muted:#6b7b73;
+  --line:#e4ece7;
+  --card:#ffffff;
+  --soft:#eef8f3;
+  --shadow:0 18px 50px rgba(9,58,38,.10);
+  --shadow-sm:0 8px 24px rgba(9,58,38,.07);
 }
-
-* {
-    box-sizing: border-box;
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 90% 0%,rgba(247,147,36,.10),transparent 28%),
+    radial-gradient(circle at 0% 20%,rgba(8,122,75,.09),transparent 30%),
+    var(--cream);
 }
-
-body {
-    margin: 0;
-    font-family: Inter, Arial, sans-serif;
-    color: var(--ink);
-    background:
-        linear-gradient(
-            180deg,
-            #f4fbf7 0%,
-            var(--cream) 100%
-        );
+button,textarea{font:inherit}
+header{
+  position:sticky;top:0;z-index:20;
+  background:rgba(255,255,255,.90);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(228,236,231,.9);
 }
-
-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: rgba(255,255,255,.94);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
+.nav{
+  max-width:1120px;margin:auto;padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
 }
-
-.nav {
-    max-width: 1120px;
-    margin: auto;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{
+  width:44px;height:44px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--green),var(--green-2) 60%,var(--orange));
+  box-shadow:0 8px 20px rgba(8,122,75,.22);
+  font-size:22px;flex:none;
 }
-
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 800;
+.brand-copy{min-width:0}
+.brand-title{font-weight:850;font-size:17px;letter-spacing:-.02em}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.status-dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  background:#20a463;margin-right:5px;vertical-align:1px;
 }
-
-.logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 13px;
-    display: grid;
-    place-items: center;
-    color: white;
-    background:
-        linear-gradient(
-            135deg,
-            var(--green),
-            var(--orange)
-        );
-    font-size: 21px;
+.lang{display:flex;gap:5px}
+.lang button{
+  border:1px solid var(--line);background:#fff;color:var(--green);
+  border-radius:999px;padding:8px 11px;font-weight:800;cursor:pointer;
 }
-
-.lang {
-    display: flex;
-    gap: 6px;
+.lang button.active{background:var(--green);border-color:var(--green);color:#fff}
+main{max-width:1120px;margin:auto;padding:22px 18px 70px}
+.hero{
+  position:relative;overflow:hidden;
+  color:#fff;border-radius:30px;padding:34px 30px;
+  background:linear-gradient(135deg,#075e3a 0%,#0a8c58 62%,#f79324 150%);
+  box-shadow:var(--shadow);
 }
-
-.lang button {
-    border: 1px solid var(--border);
-    background: white;
-    border-radius: 999px;
-    padding: 7px 11px;
-    cursor: pointer;
-    font-weight: 700;
+.hero:after{
+  content:"";position:absolute;width:190px;height:190px;border-radius:50%;
+  right:-55px;top:-70px;background:rgba(255,255,255,.10);
 }
-
-.lang button.active {
-    background: var(--green);
-    color: white;
-    border-color: var(--green);
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;z-index:1}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  padding:7px 11px;border-radius:999px;font-size:12px;font-weight:800;
 }
-
-main {
-    max-width: 1120px;
-    margin: auto;
-    padding: 34px 18px 60px;
+.hero h1{margin:16px 0 9px;font-size:clamp(31px,6vw,55px);line-height:.98;letter-spacing:-.045em}
+.hero p{max-width:700px;margin:0;font-size:17px;line-height:1.55;opacity:.95}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.hero-pills span{
+  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.18);font-size:12px;
 }
-
-.hero {
-    background:
-        linear-gradient(
-            135deg,
-            #08784a,
-            #0e9560 55%,
-            #f28c28
-        );
-    color: white;
-    border-radius: 28px;
-    padding: 42px 30px;
-    box-shadow: var(--shadow);
+.section{margin-top:25px}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.section h2{font-size:21px;margin:0;letter-spacing:-.025em}
+.section-note{font-size:12px;color:var(--muted)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quick button{
+  border:1px solid var(--line);background:rgba(255,255,255,.9);
+  border-radius:18px;padding:15px;text-align:left;cursor:pointer;
+  box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s;
 }
-
-.hero h1 {
-    margin: 0 0 10px;
-    font-size: clamp(34px, 6vw, 58px);
-    line-height: 1;
+.quick button:hover{transform:translateY(-2px);border-color:#cfe1d8;box-shadow:0 12px 28px rgba(9,58,38,.10)}
+.quick .q-icon{font-size:20px;display:block;margin-bottom:8px}
+.quick strong{display:block;font-size:14px}
+.quick small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+.chat{
+  margin-top:25px;background:rgba(255,255,255,.96);
+  border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;
 }
-
-.hero p {
-    max-width: 720px;
-    margin: 0;
-    font-size: 18px;
-    line-height: 1.55;
-    opacity: .96;
+.chat-head{
+  padding:17px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
 }
-
-.section {
-    margin-top: 28px;
+.chat-title{font-weight:850}
+.chat-status{font-size:12px;color:var(--green);font-weight:700}
+#messages{min-height:270px;max-height:570px;overflow:auto;padding:20px}
+.empty-state{text-align:center;padding:30px 15px;color:var(--muted)}
+.empty-icon{
+  width:58px;height:58px;margin:0 auto 12px;border-radius:20px;
+  display:grid;place-items:center;background:var(--soft);font-size:25px;
 }
-
-.section h2 {
-    font-size: 24px;
-    margin: 0 0 14px;
+.msg{display:flex;margin:12px 0;gap:9px;align-items:flex-end}
+.msg.user{justify-content:flex-end}
+.avatar{
+  width:30px;height:30px;border-radius:11px;display:grid;place-items:center;
+  background:var(--soft);color:var(--green);font-size:15px;flex:none;
 }
-
-.quick {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+.msg.user .avatar{display:none}
+.bubble{
+  max-width:min(84%,680px);padding:13px 15px;border-radius:19px;
+  line-height:1.52;white-space:pre-wrap;box-shadow:0 4px 14px rgba(20,50,35,.04);
 }
-
-.quick button,
-.destination {
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 18px;
-    padding: 16px;
-    text-align: left;
-    box-shadow:
-        0 7px 22px rgba(20,50,35,.05);
+.assistant .bubble{background:var(--soft);border-bottom-left-radius:7px}
+.user .bubble{background:var(--green);color:#fff;border-bottom-right-radius:7px}
+.speak-button{
+  display:block;margin:6px 0 0 39px;border:0;background:transparent;
+  color:var(--green);cursor:pointer;font-size:13px;font-weight:800;padding:3px 0;
 }
-
-.quick button {
-    cursor: pointer;
-    font: inherit;
+.speak-button:disabled{opacity:.6}
+.composer{
+  padding:12px;border-top:1px solid var(--line);
+  background:#fbfdfc;display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end;
 }
-
-.quick button:hover {
-    transform: translateY(-1px);
+.input-wrap{position:relative}
+textarea{
+  width:100%;resize:none;min-height:52px;max-height:150px;
+  border:1px solid var(--line);border-radius:18px;padding:14px 15px;
+  background:#fff;color:var(--ink);outline:none;
 }
-
-.chat {
-    margin-top: 28px;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
+textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(8,122,75,.08)}
+.voice-button,#send{
+  height:52px;border:0;border-radius:17px;cursor:pointer;font-weight:850;
 }
-
-.chat-head {
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border);
-    font-weight: 800;
+.voice-button{width:52px;background:#fff1df;color:#b96300;border:1px solid #f5d3aa;font-size:21px}
+.voice-button.listening{background:#c93636;color:#fff;border-color:#c93636;animation:pulse 1s infinite}
+#send{padding:0 19px;background:var(--green);color:#fff;box-shadow:0 8px 18px rgba(8,122,75,.20)}
+#send:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.composer-hint{grid-column:1/-1;font-size:11px;color:var(--muted);padding:0 4px}
+@keyframes pulse{50%{transform:scale(1.04)}}
+.destinations{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.destination{
+  border:1px solid var(--line);background:#fff;border-radius:20px;padding:18px;
+  box-shadow:var(--shadow-sm);
 }
-
-#messages {
-    min-height: 260px;
-    max-height: 560px;
-    overflow: auto;
-    padding: 18px;
+.destination strong{display:block;margin-bottom:6px}
+.destination span{color:var(--muted);line-height:1.45;font-size:14px}
+footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12px}
+@media(max-width:800px){
+  .quick{grid-template-columns:repeat(2,1fr)}
+  .destinations{grid-template-columns:1fr}
 }
-
-.msg {
-    display: flex;
-    margin: 10px 0;
-    gap: 8px;
+@media(max-width:560px){
+  .nav{padding:10px 12px}.logo{width:40px;height:40px}
+  .brand-sub{display:none}.lang button{padding:7px 9px}
+  main{padding:14px 10px 55px}
+  .hero{border-radius:24px;padding:25px 20px}
+  .hero h1{font-size:34px}.hero p{font-size:15px}
+  .hero-pills span:nth-child(n+3){display:none}
+  .quick{grid-template-columns:1fr 1fr;gap:8px}
+  .quick button{padding:13px}.quick small{display:none}
+  .chat{border-radius:23px}
+  #messages{padding:14px;min-height:300px}
+  .bubble{max-width:89%}
+  .composer{grid-template-columns:1fr auto}
+  #send{grid-column:1/2}.voice-button{grid-column:2/3}
+  .composer-hint{grid-column:1/-1;grid-row:3}
 }
-
-.msg.user {
-    justify-content: flex-end;
-}
-
-.bubble {
-    max-width: 85%;
-    padding: 12px 15px;
-    border-radius: 18px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-}
-
-.assistant .bubble {
-    background: #eef8f2;
-}
-
-.user .bubble {
-    background: var(--green);
-    color: white;
-}
-
-.voice-button {
-    border: 0;
-    border-radius: 14px;
-    padding: 0 16px;
-    min-width: 58px;
-    background: var(--orange);
-    color: white;
-    font-size: 22px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.voice-button.listening {
-    background: #c93636;
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-.speak-button {
-    display: block;
-    margin-top: 7px;
-    border: 0;
-    background: transparent;
-    color: var(--green);
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 2px 0;
-}
-
-.composer {
-    display: flex;
-    gap: 10px;
-    padding: 14px;
-    border-top: 1px solid var(--border);
-}
-
-textarea {
-    flex: 1;
-    resize: none;
-    min-height: 50px;
-    max-height: 150px;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 13px;
-    font: inherit;
-    outline: none;
-}
-
-textarea:focus {
-    border-color: var(--green);
-}
-
-#send {
-    border: 0;
-    border-radius: 16px;
-    padding: 0 20px;
-    background: var(--green);
-    color: white;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-#send:disabled {
-    opacity: .55;
-    cursor: not-allowed;
-}
-
-.destinations {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-}
-
-.destination {
-    text-align: left;
-}
-
-.destination strong {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.destination span {
-    color: var(--muted);
-    line-height: 1.45;
-}
-
-footer {
-    text-align: center;
-    padding: 30px 18px 45px;
-    color: var(--muted);
-}
-
-@media (max-width: 800px) {
-
-    .quick {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .destinations {
-        grid-template-columns: 1fr;
-    }
-
-    .hero {
-        padding: 32px 22px;
-    }
-}
-
-@media (max-width: 520px) {
-
-    .quick {
-        grid-template-columns: 1fr;
-    }
-
-    .composer {
-        flex-direction: column;
-    }
-
-    .voice-button,
-    #send {
-        min-height: 48px;
-        width: 100%;
-    }
-
-    .bubble {
-        max-width: 94%;
-    }
-}
-
 </style>
 
 </head>
 
+
 <body>
-
 <header>
-
-<div class="nav">
-
-<div class="brand">
-
-<div class="logo">
-🌴
-</div>
-
-<div>
-Teranga AI V2
-</div>
-
-</div>
-
-<div class="lang">
-
-<button data-lang="fr" class="active">FR</button>
-<button data-lang="en">EN</button>
-<button data-lang="wo">WO</button>
-
-</div>
-
-</div>
-
+  <div class="nav">
+    <div class="brand">
+      <div class="logo">🌴</div>
+      <div class="brand-copy">
+        <div class="brand-title">Teranga AI V2</div>
+        <div class="brand-sub"><span class="status-dot"></span>Assistant Sénégal</div>
+      </div>
+    </div>
+    <div class="lang">
+      <button data-lang="fr" class="active">FR</button>
+      <button data-lang="en">EN</button>
+      <button data-lang="wo">WO</button>
+    </div>
+  </div>
 </header>
 
-
 <main>
+  <section class="hero">
+    <div class="hero-top">
+      <div>
+        <span class="hero-badge">🇸🇳 Pensé pour le Sénégal</span>
+        <h1>Ton assistant,<br>version Teranga.</h1>
+        <p id="heroText">Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.</p>
+        <div class="hero-pills">
+          <span>⚡ Rapide</span><span>🎤 Vocal</span><span>🌍 FR · EN · WO</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="hero">
+  <section class="section">
+    <div class="section-head">
+      <h2 id="quickTitle">Questions rapides</h2>
+      <span class="section-note">Appuie pour demander</span>
+    </div>
+    <div class="quick">
+      <button data-question="Quel temps fait-il à Dakar aujourd'hui ?">
+        <span class="q-icon">🌤️</span><strong>Météo</strong><small>Dakar aujourd'hui</small>
+      </button>
+      <button data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
+        <span class="q-icon">🚕</span><strong>Taxi AIBD</strong><small>AIBD → Dakar</small>
+      </button>
+      <button data-question="Quels sont les endroits à visiter au Sénégal ?">
+        <span class="q-icon">📍</span><strong>À visiter</strong><small>Destinations</small>
+      </button>
+      <button data-question="Quels plats sénégalais dois-je goûter ?">
+        <span class="q-icon">🍲</span><strong>Cuisine</strong><small>Saveurs locales</small>
+      </button>
+    </div>
+  </section>
 
-<h1>
-Teranga AI V2 🇸🇳
-</h1>
+  <section class="chat">
+    <div class="chat-head">
+      <span class="chat-title" id="chatTitle">Pose ta question à Teranga AI</span>
+      <span class="chat-status">● En ligne</span>
+    </div>
+    <div id="messages">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🌴</div>
+        <strong>Bienvenue sur Teranga AI</strong>
+        <div>Écris ta question ou utilise le micro.</div>
+      </div>
+    </div>
+    <div class="composer">
+      <div class="input-wrap">
+        <textarea id="input" maxlength="2000" placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?"></textarea>
+      </div>
+      <button id="mic" class="voice-button" type="button" title="Parler">🎤</button>
+      <button id="send">Envoyer</button>
+      <div class="composer-hint">La réponse peut être lue automatiquement à voix haute.</div>
+    </div>
+  </section>
 
-<p id="heroText">
-Ton assistant intelligent pour le Sénégal :
-tourisme, transport, prix, culture,
-démarches et vie quotidienne.
-</p>
-
-</section>
-
-
-<section class="section">
-
-<h2 id="quickTitle">
-Questions rapides
-</h2>
-
-<div class="quick">
-
-<button data-question="Quel temps fait-il à Dakar aujourd'hui ?">
-🌤️ Météo à Dakar
-</button>
-
-<button data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
-🚕 AIBD → Dakar
-</button>
-
-<button data-question="Quels sont les endroits à visiter au Sénégal ?">
-📍 Destinations
-</button>
-
-<button data-question="Quels plats sénégalais dois-je goûter ?">
-🍲 Cuisine
-</button>
-
-</div>
-
-</section>
-
-
-<section class="chat">
-
-<div class="chat-head"
-     id="chatTitle">
-Pose ta question à Teranga AI
-</div>
-
-<div id="messages">
-</div>
-
-<div class="composer">
-
-<textarea
-id="input"
-maxlength="2000"
-placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?">
-</textarea>
-
-<button
-id="mic"
-class="voice-button"
-type="button"
-title="Parler">
-🎤
-</button>
-
-<button id="send">
-Envoyer
-</button>
-
-</div>
-
-</section>
-
-
-<section class="section">
-
-<h2>
-Quelques idées 🇸🇳
-</h2>
-
-<div class="destinations">
-
-<div class="destination">
-<strong>Dakar</strong>
-<span>
-Culture, marchés, restaurants
-et vie urbaine.
-</span>
-</div>
-
-<div class="destination">
-<strong>Île de Gorée</strong>
-<span>
-Histoire, patrimoine
-et découverte culturelle.
-</span>
-</div>
-
-<div class="destination">
-<strong>Saly & Petite Côte</strong>
-<span>
-Plages, détente et activités
-touristiques.
-</span>
-</div>
-
-</div>
-
-</section>
-
+  <section class="section">
+    <div class="section-head"><h2>Quelques idées 🇸🇳</h2><span class="section-note">Découvrir le Sénégal</span></div>
+    <div class="destinations">
+      <div class="destination"><strong>🏙️ Dakar</strong><span>Culture, marchés, restaurants et vie urbaine.</span></div>
+      <div class="destination"><strong>🏝️ Île de Gorée</strong><span>Histoire, patrimoine et découverte culturelle.</span></div>
+      <div class="destination"><strong>🌊 Saly & Petite Côte</strong><span>Plages, détente et activités touristiques.</span></div>
+    </div>
+  </section>
 </main>
 
-
 <footer>
-Teranga AI V2 — Un assistant numérique dédié au Sénégal 🇸🇳<br><small>La voix entendue est générée par une IA.</small>
+  Teranga AI V2 — Un assistant numérique dédié au Sénégal 🇸🇳<br>
+  <small>La voix entendue est générée par une IA.</small>
 </footer>
 
-
+<script>
 <script>
 
 const input =
