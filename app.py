@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-5.5")
 
 if not API_KEY:
     raise RuntimeError(
@@ -388,6 +388,9 @@ header{
   border-radius:999px;padding:8px 11px;font-weight:800;cursor:pointer;
 }
 .lang button.active{background:var(--green);border-color:var(--green);color:#fff}
+.reset-btn{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;width:34px;height:34px;cursor:pointer;font-size:16px;flex:none;margin-left:6px}
+.reset-btn:hover{color:var(--green);border-color:#cfe1d8}
+.wake-hint{display:none;font-size:12px;color:var(--muted);padding:0 0 6px 39px}
 main{max-width:1120px;margin:auto;padding:22px 18px 70px}
 .hero{
   position:relative;overflow:hidden;
@@ -528,6 +531,7 @@ footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12p
       <button data-lang="en">EN</button>
       <button data-lang="wo">WO</button>
     </div>
+    <button id="resetBtn" class="reset-btn" type="button" title="Nouvelle conversation">↺</button>
   </div>
 </header>
 
@@ -604,7 +608,6 @@ footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12p
 </footer>
 
 <script>
-<script>
 
 const input =
     document.getElementById('input');
@@ -617,6 +620,12 @@ const mic =
 
 const messages =
     document.getElementById('messages');
+
+const resetBtn =
+    document.getElementById('resetBtn');
+
+const emptyState =
+    document.getElementById('emptyState');
 
 let history = [];
 
@@ -645,7 +654,15 @@ const translations = {
         listen:
             '🎤',
         listening:
-            '🔴'
+            '🔴',
+        reset:
+            'Nouvelle conversation',
+        wake:
+            'Le serveur se réveille, ça peut prendre jusqu\u2019à 30 secondes...',
+        thinking:
+            'Réflexion…',
+        timeout:
+            'Ça prend trop de temps. Réessaie dans un instant.'
     },
 
     en: {
@@ -664,7 +681,15 @@ const translations = {
         listen:
             '🎤',
         listening:
-            '🔴'
+            '🔴',
+        reset:
+            'New conversation',
+        wake:
+            'The server is waking up, this can take up to 30 seconds...',
+        thinking:
+            'Thinking…',
+        timeout:
+            'This is taking too long. Please try again in a moment.'
     },
 
     wo: {
@@ -683,7 +708,15 @@ const translations = {
         listen:
             '🎤',
         listening:
-            '🔴'
+            '🔴',
+        reset:
+            'Waxtaan bu bees',
+        wake:
+            'Server bi mu ngi yeew, mën na yàgg ba 30 second...',
+        thinking:
+            'Xalaat…',
+        timeout:
+            'Dafa yàgg lool. Jéemaatal.'
     }
 
 };
@@ -697,6 +730,10 @@ const voiceLanguages = {
 
 
 function addMessage(role, text) {
+
+    if (emptyState) {
+        emptyState.remove();
+    }
 
     const row =
         document.createElement('div');
@@ -900,6 +937,25 @@ function startVoice() {
 }
 
 
+function resetChat() {
+
+    if (send.disabled) {
+        return;
+    }
+
+    history = [];
+
+    messages.innerHTML = '';
+
+    addMessage(
+        'assistant',
+        translations[currentLanguage].welcome
+    );
+
+    input.focus();
+}
+
+
 function setLanguage(lang) {
 
     currentLanguage = lang;
@@ -942,6 +998,8 @@ function setLanguage(lang) {
         mic.textContent = t.listen;
     }
 
+    resetBtn.title = t.reset;
+
     if (recognition) {
         recognition.lang =
             voiceLanguages[lang] || 'fr-FR';
@@ -973,9 +1031,29 @@ async function sendMessage(textFromButton = null, fromVoice = false) {
     send.disabled = true;
 
     send.textContent =
-        currentLanguage === 'en'
-            ? 'Thinking…'
-            : 'Réflexion…';
+        translations[currentLanguage].thinking;
+
+    const wakeHint =
+        document.createElement('div');
+
+    wakeHint.className = 'wake-hint';
+    wakeHint.textContent = translations[currentLanguage].wake;
+    messages.appendChild(wakeHint);
+    messages.scrollTop = messages.scrollHeight;
+
+    const controller = new AbortController();
+
+    const abortTimer = setTimeout(
+        () => controller.abort(),
+        60000
+    );
+
+    // Sur l'offre gratuite de Render, le premier appel peut être lent
+    // (le serveur se réveille) : on affiche un message après quelques secondes.
+    const wakeTimer = setTimeout(
+        () => { wakeHint.style.display = 'block'; messages.scrollTop = messages.scrollHeight; },
+        8000
+    );
 
     try {
 
@@ -999,13 +1077,15 @@ async function sendMessage(textFromButton = null, fromVoice = false) {
                     language:
                         currentLanguage
 
-                })
+                }),
+
+                signal: controller.signal
 
             });
 
 
         const data =
-            await response.json();
+            await response.json().catch(() => ({}));
 
 
         if (!response.ok) {
@@ -1039,13 +1119,21 @@ async function sendMessage(textFromButton = null, fromVoice = false) {
 
     } catch (error) {
 
+        const message =
+            error.name === 'AbortError'
+                ? translations[currentLanguage].timeout
+                : (error.message || 'Service temporairement indisponible.');
+
         addMessage(
             'assistant',
-            error.message ||
-            'Service temporairement indisponible.'
+            message
         );
 
     } finally {
+
+        clearTimeout(abortTimer);
+        clearTimeout(wakeTimer);
+        wakeHint.remove();
 
         send.disabled = false;
 
@@ -1099,6 +1187,12 @@ mic.addEventListener(
 );
 
 
+resetBtn.addEventListener(
+    'click',
+    () => resetChat()
+);
+
+
 input.addEventListener(
     'keydown',
     event => {
@@ -1144,4 +1238,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=5002,
         debug=False
-    ) 
+    )
