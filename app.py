@@ -4,12 +4,13 @@ import time
 from collections import defaultdict, deque
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, Response, jsonify, render_template_string, request
 from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
@@ -19,15 +20,28 @@ if not API_KEY:
         "OPENAI_API_KEY est introuvable. Vérifie ton fichier .env."
     )
 
-client = OpenAI(api_key=API_KEY)
+client = OpenAI(api_key=API_KEY, timeout=25.0, max_retries=1)
 
 MAX_MESSAGE_LENGTH = 2000
+MAX_TTS_LENGTH = 3500
 MAX_HISTORY_ITEMS = 8
 MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 12
 RATE_WINDOW = 60
 
 request_log = defaultdict(deque)
+tts_request_log = defaultdict(deque)
+
+WEB_HINTS = (
+    "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
+    "actuels", "actuelles", "récent", "récente", "récentes",
+    "prix", "tarif", "coût", "combien", "horaire", "horaires",
+    "ouvert", "ouverte", "disponible", "disponibilité", "réservation",
+    "événement", "evenement", "météo", "meteo", "actualité", "actualités",
+    "news", "today", "now", "current", "latest", "recent", "price",
+    "cost", "schedule", "hours", "open", "available", "availability",
+    "booking", "weather", "event", "how much", "taxi", "transport"
+)
 
 
 SYSTEM_PROMPT = """
@@ -93,31 +107,33 @@ moderne, utile et réellement adapté au Sénégal.
 
 def clean_answer(text):
     text = (text or "").strip()
-    text = re.sub(r"\n{4,}", "\n\n", text)
-    return text
+    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
+    text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def should_use_web(message):
+    lowered = message.lower()
+    return any(term in lowered for term in WEB_HINTS)
 
 
 def build_conversation(history, message):
     lines = []
-
     if isinstance(history, list):
         recent = history[-MAX_HISTORY_ITEMS:]
-
-        for item in recent:
+        for index, item in enumerate(recent):
             if not isinstance(item, dict):
                 continue
-
             role = str(item.get("role", "")).lower()
             content = str(item.get("content", "")).strip()
-
             if role not in {"user", "assistant"} or not content:
                 continue
-
+            if index == len(recent) - 1 and role == "user" and content == message:
+                continue
             label = "Utilisateur" if role == "user" else "Teranga AI"
             lines.append(f"{label}: {content[:2500]}")
-
     lines.append(f"Utilisateur: {message}")
-
     return "\n".join(lines)[-MAX_HISTORY_CHARS:]
 
 
@@ -133,6 +149,33 @@ def allowed_request(ip):
 
     log.append(now)
     return True
+
+
+def allowed_tts_request(ip):
+    now = time.time()
+    log = tts_request_log[ip]
+    while log and now - log[0] > 60:
+        log.popleft()
+    if len(log) >= 6:
+        return False
+    log.append(now)
+    return True
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), geolocation=(), microphone=(self)"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        "connect-src 'self'; media-src 'self' blob:; "
+        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+    )
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.get("/health")
@@ -204,17 +247,15 @@ def chat():
     input_text = build_conversation(history, message)
 
     try:
-        response = client.responses.create(
-            model=MODEL,
-            instructions=final_instructions,
-            input=input_text,
-            tools=[
-                {
-                    "type": "web_search"
-                }
-            ],
-            max_output_tokens=500
-        )
+        response_kwargs = {
+            "model": MODEL,
+            "instructions": final_instructions,
+            "input": input_text,
+            "max_output_tokens": 500,
+        }
+        if should_use_web(message):
+            response_kwargs["tools"] = [{"type": "web_search"}]
+        response = client.responses.create(**response_kwargs)
 
         reply = clean_answer(response.output_text or "")
 
@@ -239,6 +280,35 @@ def chat():
         }), 500
 
 
+@app.post("/tts")
+def tts():
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
+    ip = ip.split(",")[0].strip()
+    if not allowed_tts_request(ip):
+        return jsonify({"error": "Trop de demandes vocales. Attends quelques secondes puis réessaie."}), 429
+    data = request.get_json(silent=True) or {}
+    text = str(data.get("text", "")).strip()
+    language = str(data.get("language", "fr")).lower()
+    if not text:
+        return jsonify({"error": "Texte manquant."}), 400
+    if len(text) > MAX_TTS_LENGTH:
+        return jsonify({"error": f"Texte vocal trop long. Maximum {MAX_TTS_LENGTH} caractères."}), 400
+    language_name = {"fr": "French", "en": "English", "wo": "Wolof"}.get(language, "the language of the text")
+    try:
+        speech = client.audio.speech.create(
+            model="gpt-4o-mini-tts",
+            voice="marin",
+            input=text,
+            instructions=(f"Speak naturally, clearly and warmly in {language_name}. "
+                          "Keep a comfortable pace and pronounce names carefully."),
+            response_format="wav",
+        )
+        return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store"})
+    except Exception:
+        app.logger.exception("Erreur dans /tts")
+        return jsonify({"error": "La génération vocale a échoué. Réessaie."}), 500
+
+
 HTML = r"""
 <!doctype html>
 
@@ -254,7 +324,7 @@ HTML = r"""
 <meta name="theme-color"
       content="#0b7a4b">
 
-<title>Teranga AI SN</title>
+<title>Teranga AI V2 🇸🇳</title>
 
 <style>
 
@@ -618,7 +688,7 @@ footer {
 </div>
 
 <div>
-Teranga AI SN
+Teranga AI V2
 </div>
 
 </div>
@@ -641,7 +711,7 @@ Teranga AI SN
 <section class="hero">
 
 <h1>
-Teranga AI 🇸🇳
+Teranga AI V2 🇸🇳
 </h1>
 
 <p id="heroText">
@@ -757,7 +827,7 @@ touristiques.
 
 
 <footer>
-Teranga AI SN — Un assistant numérique dédié au Sénégal 🇸🇳
+Teranga AI V2 — Un assistant numérique dédié au Sénégal 🇸🇳<br><small>La voix entendue est générée par une IA.</small>
 </footer>
 
 
@@ -888,7 +958,7 @@ function addMessage(role, text) {
         speakButton.addEventListener(
             'click',
             function () {
-                speakText(text);
+                playTTS(text, speakButton);
             }
         );
 
@@ -902,26 +972,43 @@ function addMessage(role, text) {
 }
 
 
-function speakText(text) {
+let currentAudio = null;
 
-    if (!('speechSynthesis' in window)) {
-        return;
+
+async function playTTS(text, button = null) {
+    if (!text) return;
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
     }
-
-    window.speechSynthesis.cancel();
-
-    const utterance =
-        new SpeechSynthesisUtterance(text);
-
-    utterance.lang =
-        voiceLanguages[currentLanguage] || 'fr-FR';
-
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
-
-    window.speechSynthesis.speak(
-        utterance
-    );
+    if (button) {
+        button.disabled = true;
+        button.textContent = '⏳ Lecture…';
+    }
+    try {
+        const response = await fetch('/tts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text, language: currentLanguage})
+        });
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Erreur audio');
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        currentAudio = audio;
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            if (currentAudio === audio) currentAudio = null;
+            if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
+        };
+        await audio.play();
+    } catch (error) {
+        if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
+        console.debug('Lecture vocale indisponible:', error);
+    }
 }
 
 
@@ -985,8 +1072,7 @@ function setupVoice() {
                 translations[currentLanguage].listen;
 
             isListening = false;
-
-            sendMessage();
+            sendMessage(null, true);
         };
 
 
@@ -1090,7 +1176,7 @@ function setLanguage(lang) {
 }
 
 
-async function sendMessage(textFromButton = null) {
+async function sendMessage(textFromButton = null, fromVoice = false) {
 
     const text =
         (textFromButton || input.value).trim();
@@ -1166,6 +1252,7 @@ async function sendMessage(textFromButton = null) {
             reply
         );
 
+        setTimeout(() => playTTS(reply), 0);
 
         history.push({
             role: 'assistant',
