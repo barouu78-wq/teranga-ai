@@ -380,10 +380,19 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1a120c">
-<meta name="description" content="Teranga AI — assistant chaleureux pour le Sénégal.">
+<meta name="theme-color" content="#f6efe3" id="themeColor">
+<meta name="description" content="Teranga AI — assistant chaleureux pour le Sénégal. Météo, trajets, cuisine, visites — en français, anglais et wolof.">
+<meta property="og:title" content="Teranga AI">
+<meta property="og:description" content="L’assistant du Sénégal : réponses claires en français, anglais et wolof.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://teranga-ai-1.onrender.com/">
+<meta property="og:image" content="https://teranga-ai-1.onrender.com/og.svg">
+<meta name="twitter:card" content="summary">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Teranga">
+<link rel="manifest" href="/manifest.webmanifest">
 <title>Teranga AI</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect rx='14' width='64' height='64' fill='%231a3d2a'/%3E%3Ccircle cx='44' cy='18' r='8' fill='%23e2b34a'/%3E%3Cpath d='M32 54V28M18 36c8-2 10-10 14-10s6 8 14 10' stroke='%23f3e6c8' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="icon" href="/icon.svg">
 <style>
 :root{
   --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
@@ -401,6 +410,7 @@ HTML = r"""<!doctype html>
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
+html{color-scheme:light dark}
 body{
   color:var(--ink);
   font:15px/1.5 "Segoe UI",ui-sans-serif,system-ui,-apple-system,sans-serif;
@@ -409,6 +419,7 @@ body{
     radial-gradient(700px 380px at -10% 110%,rgba(15,106,67,.16),transparent 50%),
     var(--sand);
   overflow:hidden;
+  text-rendering:optimizeSpeed;
 }
 body[data-theme="dark"]{
   --sand:#100e0c;--ink:#f3ece2;--mute:#b3a394;--line:rgba(255,236,210,.10);
@@ -423,12 +434,12 @@ body[data-theme="light"]{
   --glow:rgba(217,164,65,.28);
 }
 .sky{
-  pointer-events:none;position:fixed;inset:0;overflow:hidden;z-index:0;
+  pointer-events:none;position:fixed;inset:0;overflow:hidden;z-index:0;contain:strict;
 }
 .sun{
   position:absolute;right:-40px;top:-50px;width:220px;height:220px;border-radius:50%;
   background:radial-gradient(circle at 40% 40%,#ffe7a3,#e2b34a 45%,transparent 70%);
-  opacity:.55;filter:blur(2px);
+  opacity:.45;
 }
 .baobab{
   position:absolute;left:-20px;bottom:-30px;width:280px;height:280px;opacity:.07;
@@ -436,14 +447,14 @@ body[data-theme="light"]{
     radial-gradient(circle at 50% 28%,var(--ink) 18px,transparent 19px),
     linear-gradient(var(--ink),var(--ink)) 50% 40%/8px 58% no-repeat;
 }
-.app{position:relative;z-index:1;min-height:100%;height:100%;display:flex;flex-direction:column;max-width:820px;margin:auto}
+.app{position:relative;z-index:1;min-height:100%;height:var(--vvh,100%);display:flex;flex-direction:column;max-width:820px;margin:auto;contain:layout}
 header{
   position:sticky;top:0;z-index:20;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 18px calc(12px + env(safe-area-inset-top));
-  background:color-mix(in srgb,var(--sand) 72%,transparent);
-  backdrop-filter:blur(18px) saturate(1.2);
+  background:color-mix(in srgb,var(--sand) 88%,transparent);
   border-bottom:1px solid var(--line);
+  contain:layout style;
 }
 .brand{display:flex;gap:12px;align-items:center;min-width:0}
 .mark{
@@ -467,14 +478,15 @@ header{
 .seg button.on{background:var(--brand-2);color:#fff}
 .icon{width:36px;height:36px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center}
 .icon svg{width:16px;height:16px}
-#stage{flex:1;overflow:auto;padding:8px 16px 12px}
+#stage{flex:1;min-height:0;overflow:auto;padding:8px 16px 12px;contain:layout paint;overflow-anchor:none;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+#messages{margin-top:auto;padding-top:8px}
 .hero{
   margin:18px 0 8px;padding:22px 20px 18px;border-radius:28px;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.08),transparent),
-    var(--card);
+  background:var(--card);
   border:1px solid var(--line);box-shadow:var(--shadow);
+  contain:content;
 }
+.hero.is-hidden{display:none}
 .hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1}
 .hero p{margin:0 0 16px;color:var(--mute);max-width:42ch}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -484,8 +496,9 @@ header{
 }
 .card b{display:block;font-size:13px;margin-bottom:4px}
 .card span{display:block;color:var(--mute);font-size:12px;line-height:1.35}
-.card:hover{border-color:color-mix(in srgb,var(--gold) 55%,var(--line));transform:translateY(-1px)}
-.msg{margin:0 0 14px;display:flex;gap:8px;align-items:flex-end;animation:in .2s ease}
+.card:hover{border-color:var(--gold)}
+.msg{margin:0 0 14px;display:flex;gap:8px;align-items:flex-end;contain:content;content-visibility:auto;contain-intrinsic-size:auto 72px}
+.msg.is-new{animation:in .18s ease}
 .msg.user{justify-content:flex-end}
 .avatar{
   flex:none;width:28px;height:28px;border-radius:10px;display:grid;place-items:center;
@@ -494,8 +507,9 @@ header{
 .user .avatar{display:none}
 .col{max-width:min(86%,580px)}
 .bubble{
-  padding:12px 14px;border-radius:20px;white-space:pre-wrap;word-break:break-word
+  padding:12px 14px;border-radius:20px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere
 }
+.bubble.live{contain:content}
 .assistant .bubble{background:var(--soft);border-bottom-left-radius:7px}
 .user .bubble{background:linear-gradient(180deg,#214833,#14281e);color:#f7fff9;border-bottom-right-radius:7px}
 .acts{display:flex;gap:4px;margin-top:6px;opacity:.0;transition:.15s}
@@ -513,13 +527,14 @@ header{
 @keyframes in{from{opacity:0;transform:translateY(8px)}}
 .dock{
   padding:10px 14px calc(14px + env(safe-area-inset-bottom));
-  background:color-mix(in srgb,var(--sand) 78%,transparent);
-  backdrop-filter:blur(16px);
+  background:color-mix(in srgb,var(--sand) 92%,transparent);
+  contain:layout style;
 }
 .composer{
   border:1px solid var(--line);background:var(--card);border-radius:24px;
   padding:8px 8px 8px 14px;box-shadow:var(--shadow)
 }
+body.has-chat .chips,body.has-chat #hero{display:none}
 .chips{display:flex;gap:8px;overflow:auto;padding:0 2px 10px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 .chips button{
@@ -540,12 +555,18 @@ textarea{
 .meta button{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer}
 #count{font-variant-numeric:tabular-nums}
 @media(max-width:680px){
+  header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:8px}
+  .brand span#sub,.brand .dot{display:none}
+  .brand span{display:none}
+  .hero{margin:10px 0;padding:16px 14px}
+  .hero h1{font-size:22px}
   .cards{grid-template-columns:1fr}
-  .hero h1{font-size:24px}
-  .row{grid-template-columns:1fr auto}
-  #send{grid-column:1;width:100%}
-  #mic{grid-column:2}
+  .row{grid-template-columns:1fr auto auto}
+  #send,#mic{grid-column:auto;width:auto}
+  #send{min-width:92px}
   .acts{opacity:1}
+  .dock{padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+  .meta{flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -603,16 +624,19 @@ textarea{
 </div>
 <script nonce="__CSP_NONCE__">
 const $ = id => document.getElementById(id);
-const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic');
+const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic'), stage=$('stage'), hero=$('hero');
+const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 const T={
 fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
   vOn:'Voix auto on',vOff:'Voix auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   heroTitle:'L’hospitalité, en quelques questions.',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
-  hint:'Réponse en direct · Enter pour envoyer',
+  hint:'Réponse en direct · Entrée pour envoyer',
+  hintTouch:'Réponse en direct',
   cards:[
     {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
     {q:"Combien coûte un taxi de l'aéroport AIBD à Dakar ?",t:'Taxi AIBD',d:'Ordre de prix et options'},
@@ -625,9 +649,11 @@ en:{
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
   timeout:'Timed out. Try again.',err:'Service unavailable.',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
   heroTitle:'Hospitality, in a few questions.',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
+  hintTouch:'Live answers',
   cards:[
     {q:'What is the weather like in Dakar today?',t:'Dakar weather',d:'Sky, heat and wind today'},
     {q:'How much is a taxi from AIBD airport to Dakar?',t:'AIBD taxi',d:'Price range and options'},
@@ -640,9 +666,11 @@ wo:{
   welcome:'Salaam, maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
   timeout:'Dafa yàgg. Jéemaatal.',err:'Service bañ na.',
   vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
+  share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
   heroTitle:'Teranga, ci laaj yu néew.',
   heroText:'Taw, taksi, ñam, teex ak marché — Teranga dina la wonal te du sos lu mëna soppi.',
   hint:'Tontu ci kaw · Enter ngir yónnee',
+  hintTouch:'Tontu ci kaw',
   cards:[
     {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk Dakaar',d:'Asamaan, tàngaay ak ngelaw'},
     {q:"Ñaata la taksi AIBD ba Dakaar?",t:'Taksi AIBD',d:'Njëg ak tànneef'},
@@ -655,6 +683,7 @@ const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN'};
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')==='1', inflight=null;
+let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cookie(name){
   const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));
   return m?decodeURIComponent(m[1]):'';
@@ -662,19 +691,40 @@ function cookie(name){
 function headers(extra){
   return Object.assign({'Content-Type':'application/json','X-CSRF-Token':cookie('teranga_csrf')}, extra||{});
 }
-function hideHero(){const h=$('hero');if(h)h.style.display='none';}
-function showHero(){const h=$('hero');if(h)h.style.display='';}
-function addMsg(role,text){
+function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
+function setChatMode(on){
+  document.body.classList.toggle('has-chat',on);
+  hero.classList.toggle('is-hidden',on);
+}
+function hideHero(){setChatMode(true);}
+function showHero(){setChatMode(false);}
+function applyThemeColor(){
+  const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
+  $('themeColor').content=dark?'#100e0c':'#f6efe3';
+}
+function nearBottom(){
+  return stage.scrollHeight - stage.scrollTop - stage.clientHeight < 80;
+}
+function scrollStage(force){
+  if(!force && !stickToBottom)return;
+  if(scrollRaf)return;
+  scrollRaf=requestAnimationFrame(()=>{
+    scrollRaf=0;
+    stage.scrollTop=stage.scrollHeight;
+  });
+}
+function addMsg(role,text,opts){
   const row=document.createElement('div');
-  row.className='msg '+role;
+  row.className='msg '+role+((opts&&opts.animate&&!reduceMotion)?' is-new':'');
   if(role==='assistant'){
     const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
   }
   const col=document.createElement('div');col.className='col';
-  const b=document.createElement('div');b.className='bubble';b.textContent=text;
+  const b=document.createElement('div');b.className='bubble';
+  b.appendChild(document.createTextNode(text||''));
   col.appendChild(b);row.appendChild(col);
   messages.appendChild(row);
-  $('stage').scrollTop=$('stage').scrollHeight;
+  scrollStage(true);
   return {row,b,col};
 }
 function addActs(col,text){
@@ -685,7 +735,14 @@ function addActs(col,text){
   copy.onclick=async()=>{
     try{await navigator.clipboard.writeText(text);copy.textContent=T[lang].copied;setTimeout(()=>copy.textContent=T[lang].copy,1200);}catch(e){}
   };
-  acts.append(listen,copy);col.appendChild(acts);
+  const share=document.createElement('button');share.type='button';share.textContent=T[lang].share;
+  share.onclick=async()=>{
+    try{
+      if(navigator.share)await navigator.share({title:'Teranga AI',text});
+      else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
+    }catch(e){}
+  };
+  acts.append(listen,copy,share);col.appendChild(acts);
 }
 async function speak(text,btn){
   if(!text)return;
@@ -701,9 +758,23 @@ async function speak(text,btn){
   }catch(e){if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}}
 }
 function renderCards(){
+  if(lastLang===lang)return;
+  lastLang=lang;
   const t=T[lang];
-  $('cards').innerHTML=t.cards.map(c=>`<button class="card" type="button" data-q="${c.q.replace(/"/g,'&quot;')}"><b>${c.t}</b><span>${c.d}</span></button>`).join('');
-  $('chips').innerHTML=t.cards.map(c=>`<button type="button" data-q="${c.q.replace(/"/g,'&quot;')}">${c.t}</button>`).join('');
+  const cardFrag=document.createDocumentFragment();
+  const chipFrag=document.createDocumentFragment();
+  t.cards.forEach(c=>{
+    const card=document.createElement('button');
+    card.className='card';card.type='button';card.dataset.q=c.q;
+    const b=document.createElement('b');b.textContent=c.t;
+    const s=document.createElement('span');s.textContent=c.d;
+    card.append(b,s);cardFrag.appendChild(card);
+    const chip=document.createElement('button');
+    chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;
+    chipFrag.appendChild(chip);
+  });
+  $('cards').replaceChildren(cardFrag);
+  $('chips').replaceChildren(chipFrag);
 }
 function setLang(next){
   lang=next;localStorage.setItem('teranga-lang',next);
@@ -711,18 +782,21 @@ function setLang(next){
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
-  $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;$('hint').textContent=t.hint;
+  $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  $('hint').textContent=isTouch()?t.hintTouch:t.hint;
+  document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   if(rec)rec.lang=voiceMap[lang];
 }
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   if(saved)document.body.dataset.theme=saved;
+  applyThemeColor();
 }
 function reset(){
-  if(send.disabled)return;
+  if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
-  history=[];messages.innerHTML='';showHero();
+  history=[];messages.replaceChildren();showHero();
   sessionStorage.removeItem('teranga-history');
 }
 function setupMic(){
@@ -733,7 +807,12 @@ function setupMic(){
   rec.onresult=e=>{input.value=e.results[0][0].transcript;ask();};
   rec.onend=rec.onerror=()=>{listening=false;mic.classList.remove('listen');};
 }
-function persist(){sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}
+function persist(){
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(()=>{
+    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
+  },250);
+}
 function restore(){
   try{
     const raw=sessionStorage.getItem('teranga-history');
@@ -743,12 +822,24 @@ function restore(){
     if(Array.isArray(data.history)&&data.history.length){
       history=data.history.slice(-6);
       hideHero();
+      const frag=document.createDocumentFragment();
       history.forEach(item=>{
-        if(item.role==='user'||item.role==='assistant'){
-          const m=addMsg(item.role,item.content||'');
-          if(item.role==='assistant')addActs(m.col,item.content||'');
+        if(item.role!=='user'&&item.role!=='assistant')return;
+        const row=document.createElement('div');
+        row.className='msg '+item.role;
+        if(item.role==='assistant'){
+          const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
         }
+        const col=document.createElement('div');col.className='col';
+        const b=document.createElement('div');b.className='bubble';
+        b.textContent=item.content||'';
+        col.appendChild(b);
+        if(item.role==='assistant')addActs(col,item.content||'');
+        row.appendChild(col);
+        frag.appendChild(row);
       });
+      messages.appendChild(frag);
+      stage.scrollTop=stage.scrollHeight;
     }
   }catch(e){}
 }
@@ -756,13 +847,17 @@ async function ask(preset){
   const text=(preset||input.value).trim();
   if(!text||send.disabled)return;
   hideHero();
-  addMsg('user',text);
+  addMsg('user',text,{animate:true});
   history.push({role:'user',content:text});
   persist();
-  input.value='';input.style.height='46px';$('count').textContent='0 / 2000';
-  send.disabled=true;send.textContent='…';
-  const wait=addMsg('assistant','');
-  const dots=document.createElement('div');dots.className='typing';dots.innerHTML='<i></i><i></i><i></i>';
+  input.value='';input.style.height='';$('count').textContent='0 / 2000';
+  send.disabled=false;send.textContent=T[lang].stop;
+  send.dataset.mode='stop';
+  const wait=addMsg('assistant','',{animate:true});
+  const node=wait.b.firstChild;
+  const cursor=document.createElement('span');cursor.className='cursor';
+  const dots=document.createElement('div');dots.className='typing';
+  dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),55000);
@@ -774,83 +869,162 @@ async function ask(preset){
       const data=await res.json().catch(()=>({}));
       throw new Error(data.error||T[lang].err);
     }
-    let live='';
-    const reader=res.body.getReader();const dec=new TextDecoder();
-    let buf='';
-    let shown=false;
-    const show=()=>{
-      if(!shown){dots.replaceWith(wait.b);shown=true;}
-      wait.b.textContent=live;
-      wait.b.appendChild(Object.assign(document.createElement('span'),{className:'cursor'}));
-      $('stage').scrollTop=$('stage').scrollHeight;
+    let live='', pending='', shown=false, paint=0;
+    const flush=()=>{
+      paint=0;
+      if(!pending)return;
+      live+=pending;pending='';
+      if(!shown){
+        dots.replaceWith(wait.b);
+        wait.b.classList.add('live');
+        if(!reduceMotion)wait.b.appendChild(cursor);
+        shown=true;
+      }
+      node.nodeValue=live;
+      scrollStage();
     };
+    const queue=chunk=>{
+      pending+=chunk;
+      if(!paint)paint=requestAnimationFrame(flush);
+    };
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
     while(true){
       const {value,done}=await reader.read();
       if(done)break;
       buf+=dec.decode(value,{stream:true});
       const parts=buf.split('\n');buf=parts.pop();
-      for(const line of parts){
-        if(!line.trim())continue;
+      for(let i=0;i<parts.length;i++){
+        const line=parts[i];
+        if(!line)continue;
         let ev;try{ev=JSON.parse(line);}catch{continue;}
         if(ev.error)throw new Error(ev.error);
-        if(ev.d){live+=ev.d;show();}
+        if(ev.d)queue(ev.d);
       }
     }
     if(buf.trim()){
       try{
         const ev=JSON.parse(buf);
         if(ev.error)throw new Error(ev.error);
-        if(ev.d){live+=ev.d;show();}
+        if(ev.d)queue(ev.d);
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
+    if(paint){cancelAnimationFrame(paint);flush();}
     reply=live.trim();
     if(!reply){
       const res2=await fetch('/chat',{method:'POST',headers:headers({'X-Teranga-Mode':'json'}),body,signal:ctrl.signal});
       const data=await res2.json().catch(()=>({}));
       if(!res2.ok)throw new Error(data.error||T[lang].err);
       reply=(data.reply||'').trim();
-      live=reply;show();
+      pending=reply;flush();
     }
-    if(!shown){dots.replaceWith(wait.b);wait.b.textContent=reply||T[lang].err;}
-    else {wait.b.textContent=reply;}
+    if(!shown){dots.replaceWith(wait.b);node.nodeValue=reply||T[lang].err;}
+    else {node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
+    wait.b.classList.remove('live');
     addActs(wait.col,reply);
     history.push({role:'assistant',content:reply});
     history=history.slice(-6);
     persist();
     if(autoVoice&&reply)speak(reply);
   }catch(err){
-    const msg=err.name==='AbortError'?T[lang].timeout:(err.message||T[lang].err);
+    const aborted=err.name==='AbortError';
+    const msg=aborted?T[lang].timeout:(err.message||T[lang].err);
     if(dots.parentNode)dots.replaceWith(wait.b);
-    wait.b.textContent=msg;
+    node.nodeValue=msg;
+    if(!aborted){
+      const retry=document.createElement('button');
+      retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
+      retry.onclick=()=>ask(text);
+      wait.col.appendChild(retry);
+    }
   }finally{
-    clearTimeout(kill);inflight=null;send.disabled=false;send.textContent=T[lang].send;input.focus();
+    clearTimeout(kill);inflight=null;send.dataset.mode='';send.disabled=false;send.textContent=T[lang].send;input.focus();
   }
 }
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
 $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
-send.onclick=()=>ask();
+send.onclick=()=>{
+  if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
+  ask();
+};
 mic.onclick=()=>{if(!rec)return;listening?rec.stop():rec.start();};
 $('resetBtn').onclick=reset;
 $('themeBtn').onclick=()=>{
   const next=document.body.dataset.theme==='dark'?'light':'dark';
   document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
+  applyThemeColor();
 };
 $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;localStorage.setItem('teranga-voice',autoVoice?'1':'0');
   $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
 };
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
+let countRaf=0;
 input.addEventListener('input',()=>{
-  input.style.height='46px';input.style.height=Math.min(input.scrollHeight,130)+'px';
-  $('count').textContent=input.value.length+' / 2000';
+  input.style.height='auto';
+  const h=Math.min(input.scrollHeight,130);
+  input.style.height=h+'px';
+  if(!countRaf)countRaf=requestAnimationFrame(()=>{
+    countRaf=0;$('count').textContent=input.value.length+' / 2000';
+  });
 });
+stage.addEventListener('scroll',()=>{stickToBottom=nearBottom();},{passive:true});
+if(window.visualViewport){
+  const place=()=>{
+    document.body.style.setProperty('--vvh',visualViewport.height+'px');
+    if(document.body.classList.contains('has-chat'))scrollStage(true);
+  };
+  visualViewport.addEventListener('resize',place);place();
+}
 themeInit();restore();setLang(lang);setupMic();
-if(!history.length){/* hero visible */}
 </script>
 </body>
 </html>
 """
+
+
+ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect rx="14" width="64" height="64" fill="#1a3d2a"/>
+<circle cx="44" cy="18" r="8" fill="#e2b34a"/>
+<path d="M32 54V28M18 36c8-2 10-10 14-10s6 8 14 10" stroke="#f3e6c8" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>"""
+
+OG_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#f6efe3"/>
+<circle cx="1080" cy="80" r="220" fill="#e2b34a" opacity=".45"/>
+<rect x="80" y="160" rx="28" width="96" height="96" fill="#1a3d2a"/>
+<text x="80" y="340" font-size="72" font-family="Georgia,serif" fill="#1a120c">Teranga AI</text>
+<text x="80" y="410" font-size="32" font-family="Georgia,serif" fill="#7a6d5f">L’assistant du Sénégal · FR · EN · WO</text>
+</svg>"""
+
+
+@app.get("/icon.svg")
+def icon_svg():
+    return Response(ICON_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/og.svg")
+def og_svg():
+    return Response(OG_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/manifest.webmanifest")
+def manifest():
+    return Response(
+        json.dumps({
+            "name": "Teranga AI",
+            "short_name": "Teranga",
+            "start_url": "/",
+            "display": "standalone",
+            "background_color": "#f6efe3",
+            "theme_color": "#0a3d28",
+            "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"}],
+        }),
+        mimetype="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
 
 
 @app.get("/")
