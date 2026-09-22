@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
@@ -34,6 +35,8 @@ ALLOWED_ORIGINS = {
 }
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 _OG_PNG = None
+if TRUST_PROXY:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
