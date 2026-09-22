@@ -1,19 +1,34 @@
+import hashlib
+import hmac
 import os
 import re
+import secrets
 import time
 from collections import defaultdict, deque
+from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, render_template_string, request
+from flask import Flask, Response, jsonify, make_response, render_template_string, request
 from openai import OpenAI
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+app.config["JSON_SORT_KEYS"] = False
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.5")
+TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
+ALLOWED_ORIGINS = {
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+}
 
 if not API_KEY:
     raise RuntimeError(
@@ -28,9 +43,15 @@ MAX_HISTORY_ITEMS = 8
 MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 12
 RATE_WINDOW = 60
+TTS_RATE_LIMIT = 6
+CSRF_COOKIE = "teranga_csrf"
+CSRF_HEADER = "X-CSRF-Token"
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
+
+CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+SAFE_LANG = frozenset({"fr", "en", "wo"})
 
 WEB_HINTS = (
     "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
@@ -105,8 +126,15 @@ moderne, utile et réellement adapté au Sénégal.
 """
 
 
+def sanitize_text(text, max_len):
+    text = CONTROL_CHARS.sub("", str(text or ""))
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    return text.strip()[:max_len]
+
+
 def clean_answer(text):
-    text = (text or "").strip()
+    text = sanitize_text(text, 8000)
     text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
@@ -130,55 +158,123 @@ def build_conversation(history, message):
             if not isinstance(item, dict):
                 continue
             role = str(item.get("role", "")).lower()
-            content = str(item.get("content", "")).strip()
+            content = sanitize_text(item.get("content", ""), 2500)
             if role not in {"user", "assistant"} or not content:
                 continue
             if index == len(recent) - 1 and role == "user" and content == message:
                 continue
             label = "Utilisateur" if role == "user" else "Teranga AI"
-            lines.append(f"{label}: {content[:2500]}")
+            lines.append(f"{label}: {content}")
     lines.append(f"Utilisateur: {message}")
     return "\n".join(lines)[-MAX_HISTORY_CHARS:]
 
 
-def allowed_request(ip):
+def client_ip():
+    if TRUST_PROXY:
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()[:64]
+    return (request.remote_addr or "unknown")[:64]
+
+
+def allowed_request(ip, log, limit, window):
     now = time.time()
-    log = request_log[ip]
-
-    while log and now - log[0] > RATE_WINDOW:
+    while log and now - log[0] > window:
         log.popleft()
-
-    if len(log) >= RATE_LIMIT:
-        return False
-
-    log.append(now)
-    return True
-
-
-def allowed_tts_request(ip):
-    now = time.time()
-    log = tts_request_log[ip]
-    while log and now - log[0] > 60:
-        log.popleft()
-    if len(log) >= 6:
+    if len(log) >= limit:
         return False
     log.append(now)
     return True
+
+
+def sign_token(value):
+    digest = hmac.new(
+        app.config["SECRET_KEY"].encode("utf-8"),
+        value.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{value}.{digest}"
+
+
+def valid_token(token):
+    if not token or "." not in token:
+        return False
+    value, _, provided = token.partition(".")
+    expected = hmac.new(
+        app.config["SECRET_KEY"].encode("utf-8"),
+        value.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(provided, expected)
+
+
+def issue_csrf():
+    raw = secrets.token_urlsafe(24)
+    return sign_token(raw)
+
+
+def origin_allowed():
+    if not ALLOWED_ORIGINS:
+        return True
+    origin = request.headers.get("Origin") or ""
+    referer = request.headers.get("Referer") or ""
+    if origin:
+        return origin in ALLOWED_ORIGINS
+    return any(referer.startswith(allowed) for allowed in ALLOWED_ORIGINS)
+
+
+def require_json_post(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method != "POST":
+            return jsonify({"error": "Méthode non autorisée."}), 405
+        if request.mimetype != "application/json":
+            return jsonify({"error": "Type de contenu invalide."}), 415
+        if not origin_allowed():
+            return jsonify({"error": "Origine non autorisée."}), 403
+        cookie_token = request.cookies.get(CSRF_COOKIE, "")
+        header_token = request.headers.get(CSRF_HEADER, "")
+        if not cookie_token or not header_token:
+            return jsonify({"error": "Jeton de sécurité manquant."}), 403
+        if not hmac.compare_digest(cookie_token, header_token) or not valid_token(cookie_token):
+            return jsonify({"error": "Jeton de sécurité invalide."}), 403
+        return fn(*args, **kwargs)
+    return wrapper
 
 
 @app.after_request
 def add_security_headers(response):
+    nonce = getattr(request, "_csp_nonce", "")
+    script_src = "'self'"
+    if nonce:
+        script_src += f" 'nonce-{nonce}'"
+    else:
+        script_src += " 'unsafe-inline'"
+
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "0"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "camera=(), geolocation=(), microphone=(self)"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), geolocation=(), microphone=(self), payment=(), usb=()"
+    )
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        f"default-src 'self'; script-src {script_src}; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
         "connect-src 'self'; media-src 'self' blob:; "
-        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        "font-src 'self' data:; object-src 'none'; "
+        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; "
+        "upgrade-insecure-requests"
     )
-    response.headers["Cache-Control"] = "no-store"
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    if request.is_secure or request.headers.get("X-Forwarded-Proto") == "https":
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+    response.headers.pop("Server", None)
     return response
 
 
@@ -192,62 +288,39 @@ def health():
 
 
 @app.post("/chat")
+@require_json_post
 def chat():
-    ip = request.headers.get(
-        "X-Forwarded-For",
-        request.remote_addr or "unknown"
-    )
-
-    ip = ip.split(",")[0].strip()
-
-    if not allowed_request(ip):
+    ip = client_ip()
+    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW):
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429
 
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Requête invalide."}), 400
 
-    message = str(data.get("message", "")).strip()
+    message = sanitize_text(data.get("message", ""), MAX_MESSAGE_LENGTH)
     history = data.get("history", [])
-    language = str(data.get("language", "fr")).lower()
+    language = str(data.get("language", "fr")).lower()[:8]
+    if language not in SAFE_LANG:
+        language = "fr"
+
+    if not isinstance(history, list):
+        history = []
+    if len(history) > MAX_HISTORY_ITEMS * 2:
+        history = history[-MAX_HISTORY_ITEMS:]
 
     if not message:
-        return jsonify({
-            "error": "Écris un message avant d'envoyer."
-        }), 400
-
-    if len(message) > MAX_MESSAGE_LENGTH:
-        return jsonify({
-            "error": (
-                f"Ton message est trop long. "
-                f"Maximum {MAX_MESSAGE_LENGTH} caractères."
-            )
-        }), 400
+        return jsonify({"error": "Écris un message avant d'envoyer."}), 400
 
     language_instruction = {
-        "fr": (
-            "L'utilisateur a choisi le français. "
-            "Réponds en français naturel."
-        ),
-        "en": (
-            "The user selected English. "
-            "Reply in natural English."
-        ),
-        "wo": (
-            "L'utilisateur a choisi le wolof. "
-            "Réponds en wolof lorsque tu peux le faire correctement."
-        ),
-    }.get(
-        language,
-        "Réponds dans la langue de l'utilisateur."
-    )
+        "fr": "L'utilisateur a choisi le français. Réponds en français naturel.",
+        "en": "The user selected English. Reply in natural English.",
+        "wo": "L'utilisateur a choisi le wolof. Réponds en wolof lorsque tu peux le faire correctement.",
+    }[language]
 
-    final_instructions = (
-        SYSTEM_PROMPT
-        + "\n\n"
-        + language_instruction
-    )
-
+    final_instructions = SYSTEM_PROMPT + "\n\n" + language_instruction
     input_text = build_conversation(history, message)
 
     try:
@@ -260,22 +333,15 @@ def chat():
         if should_use_web(message):
             response_kwargs["tools"] = [{"type": "web_search"}]
         response = client.responses.create(**response_kwargs)
-
         reply = clean_answer(response.output_text or "")
-
         if not reply:
             reply = (
                 "Désolé, je n'ai pas réussi à obtenir une réponse. "
                 "Réessaie dans quelques secondes."
             )
-
-        return jsonify({
-            "reply": reply
-        })
-
+        return jsonify({"reply": reply})
     except Exception:
         app.logger.exception("Erreur dans /chat")
-
         return jsonify({
             "error": (
                 "Désolé, le service est temporairement indisponible. "
@@ -285,29 +351,42 @@ def chat():
 
 
 @app.post("/tts")
+@require_json_post
 def tts():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown")
-    ip = ip.split(",")[0].strip()
-    if not allowed_tts_request(ip):
-        return jsonify({"error": "Trop de demandes vocales. Attends quelques secondes puis réessaie."}), 429
-    data = request.get_json(silent=True) or {}
-    text = str(data.get("text", "")).strip()
-    language = str(data.get("language", "fr")).lower()
+    ip = client_ip()
+    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60):
+        return jsonify({
+            "error": "Trop de demandes vocales. Attends quelques secondes puis réessaie."
+        }), 429
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Requête invalide."}), 400
+
+    text = sanitize_text(data.get("text", ""), MAX_TTS_LENGTH)
+    language = str(data.get("language", "fr")).lower()[:8]
+    if language not in SAFE_LANG:
+        language = "fr"
     if not text:
         return jsonify({"error": "Texte manquant."}), 400
-    if len(text) > MAX_TTS_LENGTH:
-        return jsonify({"error": f"Texte vocal trop long. Maximum {MAX_TTS_LENGTH} caractères."}), 400
-    language_name = {"fr": "French", "en": "English", "wo": "Wolof"}.get(language, "the language of the text")
+
+    language_name = {"fr": "French", "en": "English", "wo": "Wolof"}[language]
     try:
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice="marin",
             input=text,
-            instructions=(f"Speak naturally, clearly and warmly in {language_name}. "
-                          "Keep a comfortable pace and pronounce names carefully."),
+            instructions=(
+                f"Speak naturally, clearly and warmly in {language_name}. "
+                "Keep a comfortable pace and pronounce names carefully."
+            ),
             response_format="wav",
         )
-        return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store"})
+        return Response(
+            speech.content,
+            mimetype="audio/wav",
+            headers={"Cache-Control": "no-store"},
+        )
     except Exception:
         app.logger.exception("Erreur dans /tts")
         return jsonify({"error": "La génération vocale a échoué. Réessaie."}), 500
@@ -315,261 +394,243 @@ def tts():
 
 HTML = r"""
 <!doctype html>
-
 <html lang="fr">
-
 <head>
-
 <meta charset="utf-8">
-
-<meta name="viewport"
-      content="width=device-width, initial-scale=1">
-
-<meta name="theme-color"
-      content="#0b7a4b">
-
-<title>Teranga AI V2 🇸🇳</title>
-
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#064c30">
+<meta name="description" content="Teranga AI — assistant intelligent dédié au Sénégal.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Teranga AI · Sénégal</title>
 <style>
 :root{
-  --green:#087a4b;
-  --green-2:#0c9b61;
-  --green-dark:#075b39;
-  --orange:#f79324;
-  --cream:#f7fbf8;
-  --ink:#14231c;
-  --muted:#6b7b73;
-  --line:#e4ece7;
-  --card:#ffffff;
-  --soft:#eef8f3;
-  --shadow:0 18px 50px rgba(9,58,38,.10);
-  --shadow-sm:0 8px 24px rgba(9,58,38,.07);
+  --green:#0a7a4c;
+  --green-deep:#053823;
+  --green-mid:#0b8f59;
+  --gold:#f4b942;
+  --gold-2:#e8941a;
+  --red:#ce1126;
+  --cream:#f4f7f4;
+  --ink:#102018;
+  --muted:#5d7166;
+  --line:rgba(16,48,32,.10);
+  --card:rgba(255,255,255,.82);
+  --soft:#e8f4ed;
+  --shadow:0 24px 60px rgba(5,40,24,.14);
+  --radius:28px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
   margin:0;
   color:var(--ink);
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  font-family:ui-sans-serif,Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   background:
-    radial-gradient(circle at 90% 0%,rgba(247,147,36,.10),transparent 28%),
-    radial-gradient(circle at 0% 20%,rgba(8,122,75,.09),transparent 30%),
-    var(--cream);
+    radial-gradient(900px 420px at 100% -10%, rgba(244,185,66,.18), transparent 50%),
+    radial-gradient(700px 380px at -10% 15%, rgba(10,122,76,.14), transparent 46%),
+    linear-gradient(180deg,#f7faf7 0%, var(--cream) 100%);
+  min-height:100vh;
+}
+body:before{
+  content:"";
+  position:fixed;inset:0 auto auto 0;width:100%;height:4px;z-index:40;
+  background:linear-gradient(90deg,#0a7a4c 0 33%,#f4b942 33% 66%,#ce1126 66% 100%);
 }
 button,textarea{font:inherit}
 header{
   position:sticky;top:0;z-index:20;
-  background:rgba(255,255,255,.90);
-  backdrop-filter:blur(18px);
-  border-bottom:1px solid rgba(228,236,231,.9);
+  background:rgba(247,250,247,.78);
+  backdrop-filter:blur(18px) saturate(1.2);
+  border-bottom:1px solid var(--line);
 }
 .nav{
-  max-width:1120px;margin:auto;padding:12px 18px;
+  max-width:1080px;margin:auto;padding:14px 20px;
   display:flex;align-items:center;justify-content:space-between;gap:14px;
 }
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
 .logo{
-  width:44px;height:44px;border-radius:15px;display:grid;place-items:center;
-  background:linear-gradient(145deg,var(--green),var(--green-2) 60%,var(--orange));
-  box-shadow:0 8px 20px rgba(8,122,75,.22);
-  font-size:22px;flex:none;
+  width:46px;height:46px;border-radius:16px;display:grid;place-items:center;
+  background:
+    linear-gradient(160deg,var(--green-mid),var(--green-deep) 70%),
+    linear-gradient(45deg,transparent 60%, var(--gold));
+  color:#fff;font-size:22px;flex:none;
+  box-shadow:0 10px 24px rgba(10,122,76,.28);
 }
-.brand-copy{min-width:0}
-.brand-title{font-weight:850;font-size:17px;letter-spacing:-.02em}
-.brand-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.brand-title{font-weight:800;font-size:17px;letter-spacing:-.03em}
+.brand-sub{font-size:12px;color:var(--muted);margin-top:2px}
 .status-dot{
   display:inline-block;width:7px;height:7px;border-radius:50%;
-  background:#20a463;margin-right:5px;vertical-align:1px;
+  background:#1db954;margin-right:6px;box-shadow:0 0 0 3px rgba(29,185,84,.18);
 }
-.lang{display:flex;gap:5px}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.lang{display:flex;gap:4px;background:rgba(255,255,255,.7);padding:4px;border-radius:999px;border:1px solid var(--line)}
 .lang button{
-  border:1px solid var(--line);background:#fff;color:var(--green);
-  border-radius:999px;padding:8px 11px;font-weight:800;cursor:pointer;
+  border:0;background:transparent;color:var(--green);
+  border-radius:999px;padding:7px 11px;font-weight:750;cursor:pointer;
 }
-.lang button.active{background:var(--green);border-color:var(--green);color:#fff}
-.reset-btn{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;width:34px;height:34px;cursor:pointer;font-size:16px;flex:none;margin-left:6px}
-.reset-btn:hover{color:var(--green);border-color:#cfe1d8}
-.wake-hint{display:none;font-size:12px;color:var(--muted);padding:0 0 6px 39px}
-main{max-width:1120px;margin:auto;padding:22px 18px 70px}
+.lang button.active{background:var(--green-deep);color:#fff}
+.reset-btn{
+  border:1px solid var(--line);background:#fff;color:var(--muted);
+  border-radius:999px;width:38px;height:38px;cursor:pointer;
+}
+.reset-btn:hover{color:var(--green-deep);border-color:#c9ddd2}
+main{max-width:1080px;margin:auto;padding:24px 20px 72px}
 .hero{
-  position:relative;overflow:hidden;
-  color:#fff;border-radius:30px;padding:34px 30px;
-  background:linear-gradient(135deg,#075e3a 0%,#0a8c58 62%,#f79324 150%);
+  position:relative;overflow:hidden;color:#fff;
+  border-radius:32px;padding:40px 34px 34px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 40%),
+    linear-gradient(145deg,#064c30 0%, #0a7a4c 58%, #d99216 140%);
   box-shadow:var(--shadow);
 }
-.hero:after{
-  content:"";position:absolute;width:190px;height:190px;border-radius:50%;
-  right:-55px;top:-70px;background:rgba(255,255,255,.10);
+.hero h1{
+  margin:14px 0 10px;font-size:clamp(34px,6vw,58px);
+  line-height:.96;letter-spacing:-.05em;max-width:14ch;
 }
-.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;position:relative;z-index:1}
+.hero p{max-width:640px;margin:0;font-size:17px;line-height:1.55;opacity:.94}
 .hero-badge{
-  display:inline-flex;align-items:center;gap:7px;
-  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
-  padding:7px 11px;border-radius:999px;font-size:12px;font-weight:800;
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  padding:7px 12px;border-radius:999px;font-size:12px;font-weight:750;
 }
-.hero h1{margin:16px 0 9px;font-size:clamp(31px,6vw,55px);line-height:.98;letter-spacing:-.045em}
-.hero p{max-width:700px;margin:0;font-size:17px;line-height:1.55;opacity:.95}
-.hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.hero-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
 .hero-pills span{
-  padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.13);
-  border:1px solid rgba(255,255,255,.18);font-size:12px;
+  padding:7px 11px;border-radius:999px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.16);font-size:12px;
 }
-.section{margin-top:25px}
+.section{margin-top:28px}
 .section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
-.section h2{font-size:21px;margin:0;letter-spacing:-.025em}
+.section h2{font-size:22px;margin:0;letter-spacing:-.03em}
 .section-note{font-size:12px;color:var(--muted)}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .quick button{
-  border:1px solid var(--line);background:rgba(255,255,255,.9);
-  border-radius:18px;padding:15px;text-align:left;cursor:pointer;
-  box-shadow:var(--shadow-sm);transition:transform .16s,box-shadow .16s,border-color .16s;
+  border:1px solid var(--line);background:var(--card);
+  border-radius:20px;padding:16px;text-align:left;cursor:pointer;
+  backdrop-filter:blur(10px);
+  transition:transform .18s ease, box-shadow .18s ease;
 }
-.quick button:hover{transform:translateY(-2px);border-color:#cfe1d8;box-shadow:0 12px 28px rgba(9,58,38,.10)}
-.quick .q-icon{font-size:20px;display:block;margin-bottom:8px}
+.quick button:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(8,40,24,.08)}
+.quick .q-icon{font-size:22px;display:block;margin-bottom:8px}
 .quick strong{display:block;font-size:14px}
-.quick small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+.quick small{display:block;color:var(--muted);margin-top:4px}
 .chat{
-  margin-top:25px;background:rgba(255,255,255,.96);
-  border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;
+  margin-top:28px;background:rgba(255,255,255,.88);
+  border:1px solid var(--line);border-radius:30px;box-shadow:var(--shadow);overflow:hidden;
 }
 .chat-head{
-  padding:17px 20px;border-bottom:1px solid var(--line);
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:16px 20px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
 }
-.chat-title{font-weight:850}
+.chat-title{font-weight:800}
 .chat-status{font-size:12px;color:var(--green);font-weight:700}
-#messages{min-height:270px;max-height:570px;overflow:auto;padding:20px}
-.empty-state{text-align:center;padding:30px 15px;color:var(--muted)}
+#messages{min-height:280px;max-height:560px;overflow:auto;padding:20px}
+.empty-state{text-align:center;padding:36px 16px;color:var(--muted)}
 .empty-icon{
-  width:58px;height:58px;margin:0 auto 12px;border-radius:20px;
-  display:grid;place-items:center;background:var(--soft);font-size:25px;
+  width:62px;height:62px;margin:0 auto 12px;border-radius:22px;
+  display:grid;place-items:center;background:var(--soft);font-size:26px;
 }
 .msg{display:flex;margin:12px 0;gap:9px;align-items:flex-end}
 .msg.user{justify-content:flex-end}
-.avatar{
-  width:30px;height:30px;border-radius:11px;display:grid;place-items:center;
-  background:var(--soft);color:var(--green);font-size:15px;flex:none;
-}
-.msg.user .avatar{display:none}
 .bubble{
-  max-width:min(84%,680px);padding:13px 15px;border-radius:19px;
-  line-height:1.52;white-space:pre-wrap;box-shadow:0 4px 14px rgba(20,50,35,.04);
+  max-width:min(84%,680px);padding:13px 16px;border-radius:20px;
+  line-height:1.55;white-space:pre-wrap;
 }
-.assistant .bubble{background:var(--soft);border-bottom-left-radius:7px}
-.user .bubble{background:var(--green);color:#fff;border-bottom-right-radius:7px}
+.assistant .bubble{background:var(--soft);border-bottom-left-radius:8px}
+.user .bubble{background:var(--green-deep);color:#fff;border-bottom-right-radius:8px}
 .speak-button{
-  display:block;margin:6px 0 0 39px;border:0;background:transparent;
-  color:var(--green);cursor:pointer;font-size:13px;font-weight:800;padding:3px 0;
+  display:block;margin:6px 0 0 4px;border:0;background:transparent;
+  color:var(--green);cursor:pointer;font-size:13px;font-weight:750;
 }
-.speak-button:disabled{opacity:.6}
 .composer{
-  padding:12px;border-top:1px solid var(--line);
-  background:#fbfdfc;display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end;
+  padding:12px;border-top:1px solid var(--line);background:#f8fbf9;
+  display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end;
 }
-.input-wrap{position:relative}
 textarea{
-  width:100%;resize:none;min-height:52px;max-height:150px;
+  width:100%;resize:none;min-height:54px;max-height:150px;
   border:1px solid var(--line);border-radius:18px;padding:14px 15px;
   background:#fff;color:var(--ink);outline:none;
 }
-textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(8,122,75,.08)}
-.voice-button,#send{
-  height:52px;border:0;border-radius:17px;cursor:pointer;font-weight:850;
-}
-.voice-button{width:52px;background:#fff1df;color:#b96300;border:1px solid #f5d3aa;font-size:21px}
-.voice-button.listening{background:#c93636;color:#fff;border-color:#c93636;animation:pulse 1s infinite}
-#send{padding:0 19px;background:var(--green);color:#fff;box-shadow:0 8px 18px rgba(8,122,75,.20)}
-#send:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
-.composer-hint{grid-column:1/-1;font-size:11px;color:var(--muted);padding:0 4px}
-@keyframes pulse{50%{transform:scale(1.04)}}
+textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(10,122,76,.10)}
+.voice-button,#send{height:54px;border:0;border-radius:17px;cursor:pointer;font-weight:800}
+.voice-button{width:54px;background:#fff6e8;color:#b56a00;border:1px solid #f3d7a8;font-size:20px}
+.voice-button.listening{background:#c93636;color:#fff;border-color:#c93636}
+#send{padding:0 20px;background:var(--green-deep);color:#fff}
+#send:disabled{opacity:.55;cursor:not-allowed}
+.composer-hint{grid-column:1/-1;font-size:11px;color:var(--muted)}
+.wake-hint{display:none;font-size:12px;color:var(--muted);padding:4px 8px}
 .destinations{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .destination{
-  border:1px solid var(--line);background:#fff;border-radius:20px;padding:18px;
-  box-shadow:var(--shadow-sm);
+  border:1px solid var(--line);background:var(--card);border-radius:22px;padding:18px;
 }
 .destination strong{display:block;margin-bottom:6px}
-.destination span{color:var(--muted);line-height:1.45;font-size:14px}
+.destination span{color:var(--muted);font-size:14px;line-height:1.45}
 footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12px}
 @media(max-width:800px){
   .quick{grid-template-columns:repeat(2,1fr)}
   .destinations{grid-template-columns:1fr}
 }
 @media(max-width:560px){
-  .nav{padding:10px 12px}.logo{width:40px;height:40px}
-  .brand-sub{display:none}.lang button{padding:7px 9px}
-  main{padding:14px 10px 55px}
-  .hero{border-radius:24px;padding:25px 20px}
-  .hero h1{font-size:34px}.hero p{font-size:15px}
-  .hero-pills span:nth-child(n+3){display:none}
-  .quick{grid-template-columns:1fr 1fr;gap:8px}
-  .quick button{padding:13px}.quick small{display:none}
-  .chat{border-radius:23px}
-  #messages{padding:14px;min-height:300px}
-  .bubble{max-width:89%}
+  .nav{padding:10px 12px}
+  main{padding:16px 12px 60px}
+  .hero{padding:26px 20px;border-radius:24px}
   .composer{grid-template-columns:1fr auto}
-  #send{grid-column:1/2}.voice-button{grid-column:2/3}
-  .composer-hint{grid-column:1/-1;grid-row:3}
+  #send{grid-column:1/2}
+  .voice-button{grid-column:2/3}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
 }
 </style>
-
 </head>
-
-
 <body>
 <header>
   <div class="nav">
     <div class="brand">
-      <div class="logo">🌴</div>
-      <div class="brand-copy">
-        <div class="brand-title">Teranga AI V2</div>
+      <div class="logo" aria-hidden="true">🌴</div>
+      <div>
+        <div class="brand-title">Teranga AI</div>
         <div class="brand-sub"><span class="status-dot"></span>Assistant Sénégal</div>
       </div>
     </div>
-    <div class="lang">
-      <button data-lang="fr" class="active">FR</button>
-      <button data-lang="en">EN</button>
-      <button data-lang="wo">WO</button>
+    <div class="nav-actions">
+      <div class="lang" role="tablist" aria-label="Langue">
+        <button type="button" data-lang="fr" class="active">FR</button>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="wo">WO</button>
+      </div>
+      <button id="resetBtn" class="reset-btn" type="button" title="Nouvelle conversation">↺</button>
     </div>
-    <button id="resetBtn" class="reset-btn" type="button" title="Nouvelle conversation">↺</button>
   </div>
 </header>
-
 <main>
   <section class="hero">
-    <div class="hero-top">
-      <div>
-        <span class="hero-badge">🇸🇳 Pensé pour le Sénégal</span>
-        <h1>Ton assistant,<br>version Teranga.</h1>
-        <p id="heroText">Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.</p>
-        <div class="hero-pills">
-          <span>⚡ Rapide</span><span>🎤 Vocal</span><span>🌍 FR · EN · WO</span>
-        </div>
-      </div>
+    <span class="hero-badge"> pensé pour le Sénégal</span>
+    <h1>Ton assistant,<br>version Teranga.</h1>
+    <p id="heroText">Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.</p>
+    <div class="hero-pills">
+      <span>Rapide</span><span>Vocal</span><span>FR · EN · WO</span>
     </div>
   </section>
-
   <section class="section">
     <div class="section-head">
       <h2 id="quickTitle">Questions rapides</h2>
       <span class="section-note">Appuie pour demander</span>
     </div>
     <div class="quick">
-      <button data-question="Quel temps fait-il à Dakar aujourd'hui ?">
+      <button type="button" data-question="Quel temps fait-il à Dakar aujourd'hui ?">
         <span class="q-icon">🌤️</span><strong>Météo</strong><small>Dakar aujourd'hui</small>
       </button>
-      <button data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
+      <button type="button" data-question="Combien coûte un taxi de l'aéroport AIBD à Dakar ?">
         <span class="q-icon">🚕</span><strong>Taxi AIBD</strong><small>AIBD → Dakar</small>
       </button>
-      <button data-question="Quels sont les endroits à visiter au Sénégal ?">
+      <button type="button" data-question="Quels sont les endroits à visiter au Sénégal ?">
         <span class="q-icon">📍</span><strong>À visiter</strong><small>Destinations</small>
       </button>
-      <button data-question="Quels plats sénégalais dois-je goûter ?">
+      <button type="button" data-question="Quels plats sénégalais dois-je goûter ?">
         <span class="q-icon">🍲</span><strong>Cuisine</strong><small>Saveurs locales</small>
       </button>
     </div>
   </section>
-
   <section class="chat">
     <div class="chat-head">
       <span class="chat-title" id="chatTitle">Pose ta question à Teranga AI</span>
@@ -583,17 +644,17 @@ footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12p
       </div>
     </div>
     <div class="composer">
-      <div class="input-wrap">
-        <textarea id="input" maxlength="2000" placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?"></textarea>
-      </div>
+      <textarea id="input" maxlength="2000" placeholder="Ex. Quel est le prix d'un taxi AIBD → Dakar ?" aria-label="Message"></textarea>
       <button id="mic" class="voice-button" type="button" title="Parler">🎤</button>
-      <button id="send">Envoyer</button>
+      <button id="send" type="button">Envoyer</button>
       <div class="composer-hint">La réponse peut être lue automatiquement à voix haute.</div>
     </div>
   </section>
-
   <section class="section">
-    <div class="section-head"><h2>Quelques idées 🇸🇳</h2><span class="section-note">Découvrir le Sénégal</span></div>
+    <div class="section-head">
+      <h2>Quelques idées</h2>
+      <span class="section-note">Découvrir le Sénégal</span>
+    </div>
     <div class="destinations">
       <div class="destination"><strong>🏙️ Dakar</strong><span>Culture, marchés, restaurants et vie urbaine.</span></div>
       <div class="destination"><strong>🏝️ Île de Gorée</strong><span>Histoire, patrimoine et découverte culturelle.</span></div>
@@ -601,641 +662,286 @@ footer{text-align:center;padding:28px 18px 42px;color:var(--muted);font-size:12p
     </div>
   </section>
 </main>
-
 <footer>
-  Teranga AI V2 — Un assistant numérique dédié au Sénégal 🇸🇳<br>
+  Teranga AI — Un assistant numérique dédié au Sénégal<br>
   <small>La voix entendue est générée par une IA.</small>
 </footer>
-
-<script>
-
-const input =
-    document.getElementById('input');
-
-const send =
-    document.getElementById('send');
-
-const mic =
-    document.getElementById('mic');
-
-const messages =
-    document.getElementById('messages');
-
-const resetBtn =
-    document.getElementById('resetBtn');
-
-const emptyState =
-    document.getElementById('emptyState');
+<script nonce="__CSP_NONCE__">
+const input = document.getElementById('input');
+const send = document.getElementById('send');
+const mic = document.getElementById('mic');
+const messages = document.getElementById('messages');
+const resetBtn = document.getElementById('resetBtn');
+const emptyState = document.getElementById('emptyState');
+const csrfToken = document.cookie.split('; ').find(row => row.startsWith('teranga_csrf='))?.split('=')[1] || '';
 
 let history = [];
-
 let currentLanguage = 'fr';
-
 let recognition = null;
-
 let isListening = false;
-
-
-const translations = {
-
-    fr: {
-        hero:
-            'Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.',
-        quick:
-            'Questions rapides',
-        chat:
-            'Pose ta question à Teranga AI',
-        placeholder:
-            "Ex. Quel est le prix d'un taxi AIBD → Dakar ?",
-        send:
-            'Envoyer',
-        welcome:
-            'Bonjour 👋 Je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
-        listen:
-            '🎤',
-        listening:
-            '🔴',
-        reset:
-            'Nouvelle conversation',
-        wake:
-            'Le serveur se réveille, ça peut prendre jusqu\u2019à 30 secondes...',
-        thinking:
-            'Réflexion…',
-        timeout:
-            'Ça prend trop de temps. Réessaie dans un instant.'
-    },
-
-    en: {
-        hero:
-            'Your intelligent assistant for Senegal: tourism, transport, prices, culture, practical procedures and daily life.',
-        quick:
-            'Quick questions',
-        chat:
-            'Ask Teranga AI',
-        placeholder:
-            'Example: How much is a taxi from AIBD to Dakar?',
-        send:
-            'Send',
-        welcome:
-            'Hello 👋 I am Teranga AI. What would you like to know about Senegal?',
-        listen:
-            '🎤',
-        listening:
-            '🔴',
-        reset:
-            'New conversation',
-        wake:
-            'The server is waking up, this can take up to 30 seconds...',
-        thinking:
-            'Thinking…',
-        timeout:
-            'This is taking too long. Please try again in a moment.'
-    },
-
-    wo: {
-        hero:
-            'Sa xam-xam bu bees ci Senegaal: tukki, transport, njëg, aada ak dund gu bees.',
-        quick:
-            'Laaj yu gaaw',
-        chat:
-            'Laajal Teranga AI',
-        placeholder:
-            'Misaal: Ñaata la taxi AIBD ba Dakar?',
-        send:
-            'Yónnee',
-        welcome:
-            'Salaam 👋 Maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
-        listen:
-            '🎤',
-        listening:
-            '🔴',
-        reset:
-            'Waxtaan bu bees',
-        wake:
-            'Server bi mu ngi yeew, mën na yàgg ba 30 second...',
-        thinking:
-            'Xalaat…',
-        timeout:
-            'Dafa yàgg lool. Jéemaatal.'
-    }
-
-};
-
-
-const voiceLanguages = {
-    fr: 'fr-FR',
-    en: 'en-US',
-    wo: 'wo-SN'
-};
-
-
-function addMessage(role, text) {
-
-    if (emptyState) {
-        emptyState.remove();
-    }
-
-    const row =
-        document.createElement('div');
-
-    row.className =
-        'msg ' + role;
-
-    const bubble =
-        document.createElement('div');
-
-    bubble.className =
-        'bubble';
-
-    bubble.textContent =
-        text;
-
-    row.appendChild(bubble);
-
-    if (role === 'assistant') {
-
-        const speakButton =
-            document.createElement('button');
-
-        speakButton.type = 'button';
-
-        speakButton.className =
-            'speak-button';
-
-        speakButton.textContent =
-            '🔊 Écouter';
-
-        speakButton.addEventListener(
-            'click',
-            function () {
-                playTTS(text, speakButton);
-            }
-        );
-
-        row.appendChild(speakButton);
-    }
-
-    messages.appendChild(row);
-
-    messages.scrollTop =
-        messages.scrollHeight;
-}
-
-
 let currentAudio = null;
 
+const translations = {
+  fr: {
+    hero: 'Ton assistant intelligent pour le Sénégal : tourisme, transport, prix, culture, démarches et vie quotidienne.',
+    quick: 'Questions rapides',
+    chat: 'Pose ta question à Teranga AI',
+    placeholder: "Ex. Quel est le prix d'un taxi AIBD → Dakar ?",
+    send: 'Envoyer',
+    welcome: 'Bonjour 👋 Je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
+    listen: '🎤',
+    listening: '🔴',
+    reset: 'Nouvelle conversation',
+    wake: 'Le serveur se réveille, ça peut prendre jusqu’à 30 secondes...',
+    thinking: 'Réflexion…',
+    timeout: 'Ça prend trop de temps. Réessaie dans un instant.'
+  },
+  en: {
+    hero: 'Your intelligent assistant for Senegal: tourism, transport, prices, culture, practical procedures and daily life.',
+    quick: 'Quick questions',
+    chat: 'Ask Teranga AI',
+    placeholder: 'Example: How much is a taxi from AIBD to Dakar?',
+    send: 'Send',
+    welcome: 'Hello 👋 I am Teranga AI. What would you like to know about Senegal?',
+    listen: '🎤',
+    listening: '🔴',
+    reset: 'New conversation',
+    wake: 'The server is waking up, this can take up to 30 seconds...',
+    thinking: 'Thinking…',
+    timeout: 'This is taking too long. Please try again in a moment.'
+  },
+  wo: {
+    hero: 'Sa xam-xam bu bees ci Senegaal: tukki, transport, njëg, aada ak dund gu bees.',
+    quick: 'Laaj yu gaaw',
+    chat: 'Laajal Teranga AI',
+    placeholder: 'Misaal: Ñaata la taxi AIBD ba Dakar?',
+    send: 'Yónnee',
+    welcome: 'Salaam 👋 Maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
+    listen: '🎤',
+    listening: '🔴',
+    reset: 'Waxtaan bu bees',
+    wake: 'Server bi mu ngi yeew, mën na yàgg ba 30 second...',
+    thinking: 'Xalaat…',
+    timeout: 'Dafa yàgg lool. Jéemaatal.'
+  }
+};
+
+const voiceLanguages = { fr: 'fr-FR', en: 'en-US', wo: 'wo-SN' };
+
+function addMessage(role, text) {
+  if (emptyState) emptyState.remove();
+  const row = document.createElement('div');
+  row.className = 'msg ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  row.appendChild(bubble);
+  if (role === 'assistant') {
+    const speakButton = document.createElement('button');
+    speakButton.type = 'button';
+    speakButton.className = 'speak-button';
+    speakButton.textContent = '🔊 Écouter';
+    speakButton.addEventListener('click', () => playTTS(text, speakButton));
+    row.appendChild(speakButton);
+  }
+  messages.appendChild(row);
+  messages.scrollTop = messages.scrollHeight;
+}
 
 async function playTTS(text, button = null) {
-    if (!text) return;
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
+  if (!text) return;
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (button) {
+    button.disabled = true;
+    button.textContent = '⏳ Lecture…';
+  }
+  try {
+    const response = await fetch('/tts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': decodeURIComponent(csrfToken)
+      },
+      body: JSON.stringify({ text, language: currentLanguage })
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || 'Erreur audio');
     }
-    if (button) {
-        button.disabled = true;
-        button.textContent = '⏳ Lecture…';
-    }
-    try {
-        const response = await fetch('/tts', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({text: text, language: currentLanguage})
-        });
-        if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
-            throw new Error(data.error || 'Erreur audio');
-        }
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        currentAudio = audio;
-        audio.onended = () => {
-            URL.revokeObjectURL(url);
-            if (currentAudio === audio) currentAudio = null;
-            if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
-        };
-        await audio.play();
-    } catch (error) {
-        if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
-        console.debug('Lecture vocale indisponible:', error);
-    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      if (currentAudio === audio) currentAudio = null;
+      if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
+    };
+    await audio.play();
+  } catch (error) {
+    if (button) { button.disabled = false; button.textContent = '🔊 Écouter'; }
+  }
 }
-
 
 function setupVoice() {
-
-    const SpeechRecognition =
-        window.SpeechRecognition ||
-        window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-
-        mic.disabled = true;
-        mic.title =
-            'La reconnaissance vocale n’est pas disponible sur ce navigateur.';
-
-        return;
-    }
-
-    recognition =
-        new SpeechRecognition();
-
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.lang =
-        voiceLanguages[currentLanguage];
-
-    recognition.onstart =
-        function () {
-
-            isListening = true;
-
-            mic.classList.add('listening');
-
-            mic.textContent =
-                translations[currentLanguage].listening;
-        };
-
-
-    recognition.onresult =
-        function (event) {
-
-            const transcript =
-                event.results[0][0].transcript;
-
-            input.value =
-                transcript;
-
-            input.dispatchEvent(
-                new Event(
-                    'input',
-                    { bubbles: true }
-                )
-            );
-
-            mic.classList.remove(
-                'listening'
-            );
-
-            mic.textContent =
-                translations[currentLanguage].listen;
-
-            isListening = false;
-            sendMessage(null, true);
-        };
-
-
-    recognition.onerror =
-        function () {
-
-            isListening = false;
-
-            mic.classList.remove(
-                'listening'
-            );
-
-            mic.textContent =
-                translations[currentLanguage].listen;
-        };
-
-
-    recognition.onend =
-        function () {
-
-            isListening = false;
-
-            mic.classList.remove(
-                'listening'
-            );
-
-            mic.textContent =
-                translations[currentLanguage].listen;
-        };
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    mic.disabled = true;
+    mic.title = 'La reconnaissance vocale n’est pas disponible sur ce navigateur.';
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = voiceLanguages[currentLanguage];
+  recognition.onstart = () => {
+    isListening = true;
+    mic.classList.add('listening');
+    mic.textContent = translations[currentLanguage].listening;
+  };
+  recognition.onresult = (event) => {
+    input.value = event.results[0][0].transcript;
+    mic.classList.remove('listening');
+    mic.textContent = translations[currentLanguage].listen;
+    isListening = false;
+    sendMessage(null, true);
+  };
+  recognition.onerror = recognition.onend = () => {
+    isListening = false;
+    mic.classList.remove('listening');
+    mic.textContent = translations[currentLanguage].listen;
+  };
 }
-
 
 function startVoice() {
-
-    if (!recognition) {
-        return;
-    }
-
-    if (isListening) {
-        recognition.stop();
-        return;
-    }
-
-    recognition.lang =
-        voiceLanguages[currentLanguage] || 'fr-FR';
-
-    try {
-        recognition.start();
-    } catch (error) {
-        isListening = false;
-    }
+  if (!recognition) return;
+  if (isListening) {
+    recognition.stop();
+    return;
+  }
+  recognition.lang = voiceLanguages[currentLanguage] || 'fr-FR';
+  try { recognition.start(); } catch (error) { isListening = false; }
 }
-
 
 function resetChat() {
-
-    if (send.disabled) {
-        return;
-    }
-
-    history = [];
-
-    messages.innerHTML = '';
-
-    addMessage(
-        'assistant',
-        translations[currentLanguage].welcome
-    );
-
-    input.focus();
+  if (send.disabled) return;
+  history = [];
+  messages.innerHTML = '';
+  addMessage('assistant', translations[currentLanguage].welcome);
+  input.focus();
 }
-
 
 function setLanguage(lang) {
-
-    currentLanguage = lang;
-
-    document
-        .querySelectorAll('.lang button')
-        .forEach(btn => {
-
-            btn.classList.toggle(
-                'active',
-                btn.dataset.lang === lang
-            );
-
-        });
-
-    const t =
-        translations[lang];
-
-    document
-        .getElementById('heroText')
-        .textContent = t.hero;
-
-    document
-        .getElementById('quickTitle')
-        .textContent = t.quick;
-
-    document
-        .getElementById('chatTitle')
-        .textContent = t.chat;
-
-    document
-        .getElementById('input')
-        .placeholder = t.placeholder;
-
-    document
-        .getElementById('send')
-        .textContent = t.send;
-
-    if (mic && !isListening) {
-        mic.textContent = t.listen;
-    }
-
-    resetBtn.title = t.reset;
-
-    if (recognition) {
-        recognition.lang =
-            voiceLanguages[lang] || 'fr-FR';
-    }
+  currentLanguage = lang;
+  document.querySelectorAll('.lang button').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  const t = translations[lang];
+  document.getElementById('heroText').textContent = t.hero;
+  document.getElementById('quickTitle').textContent = t.quick;
+  document.getElementById('chatTitle').textContent = t.chat;
+  document.getElementById('input').placeholder = t.placeholder;
+  document.getElementById('send').textContent = t.send;
+  if (mic && !isListening) mic.textContent = t.listen;
+  resetBtn.title = t.reset;
+  if (recognition) recognition.lang = voiceLanguages[lang] || 'fr-FR';
 }
 
-
-async function sendMessage(textFromButton = null, fromVoice = false) {
-
-    const text =
-        (textFromButton || input.value).trim();
-
-    if (!text || send.disabled) {
-        return;
-    }
-
-    addMessage(
-        'user',
-        text
-    );
-
-    history.push({
-        role: 'user',
-        content: text
+async function sendMessage(textFromButton = null) {
+  const text = (textFromButton || input.value).trim();
+  if (!text || send.disabled) return;
+  addMessage('user', text);
+  history.push({ role: 'user', content: text });
+  input.value = '';
+  send.disabled = true;
+  send.textContent = translations[currentLanguage].thinking;
+  const wakeHint = document.createElement('div');
+  wakeHint.className = 'wake-hint';
+  wakeHint.textContent = translations[currentLanguage].wake;
+  messages.appendChild(wakeHint);
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 60000);
+  const wakeTimer = setTimeout(() => { wakeHint.style.display = 'block'; }, 8000);
+  try {
+    const response = await fetch('/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': decodeURIComponent(csrfToken)
+      },
+      body: JSON.stringify({
+        message: text,
+        history: history.slice(-8),
+        language: currentLanguage
+      }),
+      signal: controller.signal
     });
-
-    input.value = '';
-
-    send.disabled = true;
-
-    send.textContent =
-        translations[currentLanguage].thinking;
-
-    const wakeHint =
-        document.createElement('div');
-
-    wakeHint.className = 'wake-hint';
-    wakeHint.textContent = translations[currentLanguage].wake;
-    messages.appendChild(wakeHint);
-    messages.scrollTop = messages.scrollHeight;
-
-    const controller = new AbortController();
-
-    const abortTimer = setTimeout(
-        () => controller.abort(),
-        60000
-    );
-
-    // Sur l'offre gratuite de Render, le premier appel peut être lent
-    // (le serveur se réveille) : on affiche un message après quelques secondes.
-    const wakeTimer = setTimeout(
-        () => { wakeHint.style.display = 'block'; messages.scrollTop = messages.scrollHeight; },
-        8000
-    );
-
-    try {
-
-        const response =
-            await fetch('/chat', {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type':
-                        'application/json'
-                },
-
-                body: JSON.stringify({
-
-                    message: text,
-
-                    history:
-                        history.slice(-8),
-
-                    language:
-                        currentLanguage
-
-                }),
-
-                signal: controller.signal
-
-            });
-
-
-        const data =
-            await response.json().catch(() => ({}));
-
-
-        if (!response.ok) {
-            throw new Error(
-                data.error || 'Erreur'
-            );
-        }
-
-
-        const reply =
-            data.reply ||
-            'Aucune réponse.';
-
-
-        addMessage(
-            'assistant',
-            reply
-        );
-
-        setTimeout(() => playTTS(reply), 0);
-
-        history.push({
-            role: 'assistant',
-            content: reply
-        });
-
-
-        history =
-            history.slice(-8);
-
-
-    } catch (error) {
-
-        const message =
-            error.name === 'AbortError'
-                ? translations[currentLanguage].timeout
-                : (error.message || 'Service temporairement indisponible.');
-
-        addMessage(
-            'assistant',
-            message
-        );
-
-    } finally {
-
-        clearTimeout(abortTimer);
-        clearTimeout(wakeTimer);
-        wakeHint.remove();
-
-        send.disabled = false;
-
-        send.textContent =
-            translations[
-                currentLanguage
-            ].send;
-
-        input.focus();
-    }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Erreur');
+    const reply = data.reply || 'Aucune réponse.';
+    addMessage('assistant', reply);
+    setTimeout(() => playTTS(reply), 0);
+    history.push({ role: 'assistant', content: reply });
+    history = history.slice(-8);
+  } catch (error) {
+    const message = error.name === 'AbortError'
+      ? translations[currentLanguage].timeout
+      : (error.message || 'Service temporairement indisponible.');
+    addMessage('assistant', message);
+  } finally {
+    clearTimeout(abortTimer);
+    clearTimeout(wakeTimer);
+    wakeHint.remove();
+    send.disabled = false;
+    send.textContent = translations[currentLanguage].send;
+    input.focus();
+  }
 }
 
-
-document
-    .querySelectorAll('.lang button')
-    .forEach(btn => {
-
-        btn.addEventListener(
-            'click',
-            () => setLanguage(
-                btn.dataset.lang
-            )
-        );
-
-    });
-
-
-document
-    .querySelectorAll('.quick button')
-    .forEach(btn => {
-
-        btn.addEventListener(
-            'click',
-            () => sendMessage(
-                btn.dataset.question
-            )
-        );
-
-    });
-
-
-send.addEventListener(
-    'click',
-    () => sendMessage()
-);
-
-
-mic.addEventListener(
-    'click',
-    () => startVoice()
-);
-
-
-resetBtn.addEventListener(
-    'click',
-    () => resetChat()
-);
-
-
-input.addEventListener(
-    'keydown',
-    event => {
-
-        if (
-            event.key === 'Enter' &&
-            !event.shiftKey
-        ) {
-
-            event.preventDefault();
-
-            sendMessage();
-        }
-
-    }
-);
-
-
+document.querySelectorAll('.lang button').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+document.querySelectorAll('.quick button').forEach(btn => {
+  btn.addEventListener('click', () => sendMessage(btn.dataset.question));
+});
+send.addEventListener('click', () => sendMessage());
+mic.addEventListener('click', () => startVoice());
+resetBtn.addEventListener('click', () => resetChat());
+input.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+});
 setLanguage('fr');
-
 setupVoice();
-
-addMessage(
-    'assistant',
-    translations.fr.welcome
-);
-
+addMessage('assistant', translations.fr.welcome);
 </script>
-
 </body>
-
 </html>
 """
 
 
 @app.get("/")
 def home():
-    return render_template_string(HTML)
+    nonce = secrets.token_urlsafe(16)
+    request._csp_nonce = nonce
+    html = HTML.replace("__CSP_NONCE__", nonce)
+    response = make_response(render_template_string(html))
+    token = issue_csrf()
+    response.set_cookie(
+        CSRF_COOKIE,
+        token,
+        httponly=False,
+        secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
+        samesite="Lax",
+        max_age=60 * 60 * 12,
+    )
+    return response
 
 
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=5002,
-        debug=False
-    )
+    app.run(host="0.0.0.0", port=5002, debug=False)
