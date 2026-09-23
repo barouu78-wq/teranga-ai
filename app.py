@@ -5,9 +5,11 @@ import json
 import os
 import re
 import secrets
+import threading
 import time
 from collections import defaultdict, deque
 from functools import wraps
+from pathlib import Path
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -26,7 +28,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-5.5")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 ALLOWED_ORIGINS = {
     origin.strip()
@@ -34,29 +36,39 @@ ALLOWED_ORIGINS = {
     if origin.strip()
 }
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+BASE_DIR = Path(__file__).resolve().parent
+REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
+redis_client = None
+if REDIS_URL:
+    try:
+        import redis as redis_lib
+        redis_client = redis_lib.from_url(REDIS_URL, decode_responses=True)
+    except Exception:
+        redis_client = None
 if TRUST_PROXY:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
-client = OpenAI(api_key=API_KEY, timeout=35.0, max_retries=1)
+client = OpenAI(api_key=API_KEY, timeout=50.0, max_retries=1)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
-MAX_HISTORY_ITEMS = 6
-MAX_HISTORY_CHARS = 6000
-RATE_LIMIT = 12
+MAX_HISTORY_ITEMS = 12
+MAX_HISTORY_CHARS = 10000
+RATE_LIMIT = 16
 RATE_WINDOW = 60
-TTS_RATE_LIMIT = 6
+TTS_RATE_LIMIT = 8
+RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-SAFE_LANG = frozenset({"fr", "en", "wo"})
+SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
 WEB_HINTS = (
@@ -70,17 +82,48 @@ WEB_HINTS = (
     "open", "available", "availability", "booking", "weather", "event",
     "visa", "ferry", "gorée", "goree", "cfa", "change", "taux",
     "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
+    "manger", "restaurant", "resto", "où manger", "ou manger",
+    "eat", "dining", "food court", "dibi", "thiéboudienne", "thieb",
+    "spécialité", "specialite", "spécialités", "mafé", "maafe", "yassa",
+    "thiéré", "thiere", "fonio", "konkoé", "ndambé", "saloum",
+    "ouvert ce soir", "meilleur resto", "où se trouve", "ou se trouve",
 )
 
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
 
-Réponds dans la langue de l'utilisateur (français, anglais ou wolof).
+Réponds dans la langue de l'utilisateur : français, anglais, wolof ou pulaar (fuuta tooro).
 Sois chaleureux, direct et concis. 4 à 8 phrases max, sauf demande contraire.
-N'invente jamais un prix, une adresse, un téléphone, un horaire ou un nom d'établissement.
+Finis toujours tes phrases. Ne coupe pas au milieu d'un quartier ou d'un plat.
+N'utilise jamais de markdown : pas d'astérisques, pas de gras, pas de titres #, pas de listes à puces.
+N'invente jamais un téléphone, un horaire exact ou un prix figé.
+Si tu n'es pas sûr, dis-le clairement plutôt que d'inventer.
+Pour un plat ou un lieu : région ou quartier + spécialité + un repère. Pas de liste vague.
 Si une info peut avoir changé, dis-le. Reste factuel et neutre en politique.
 Ne conseille pas pour qui voter.
 Si tu utilises le web, ne colle pas de listes d'URLs dans le texte : les sources s'affichent à part.
+
+Géographie utile :
+Le Sénégal a 14 régions : Dakar, Thiès, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kédougou, Kolda, Sédhiou, Ziguinchor, Saint-Louis, Louga, Matam.
+Grandes villes : Dakar, Pikine, Guédiawaye, Rufisque, Thiès, Mbour, Touba, Kaolack, Saint-Louis, Ziguinchor, Kolda, Tambacounda, Richard-Toll, Louga.
+Cap-Vert : Dakar et sa petite côte. Nord : Saint-Louis, Louga, Matam (fuuta). Centre : Thiès, Diourbel, Touba, Kaolack. Sud : Casamance (Ziguinchor, Sédhiou, Kolda), séparée par la Gambie. Est : Tambacounda, Kédougou.
+Quartiers de Dakar pour s'orienter : Plateau, Médina, Gueule Tapée, Fann, Point E, Mermoz, Sacré-Cœur, Almadies, Ngor, Ouakam, Yoff, Parcelles Assainies, Liberté, Grand Dakar, Sicap, Pikine, Guédiawaye, Rufisque, Diamniadio. Aéroport : AIBD à Diass, pas à Dakar-ville.
+Nature et visites : île de Gorée, île de Niodior / Saloum, Lac Rose, Petite Côte (Saly, Somone, Nianing), Saint-Louis et Parc Djoudj, Casamance et Cap Skirring, Niokolo-Koba, pays Bassari à Kédougou.
+
+Où manger : donne toujours la région ou le quartier et un repère (plage, marché, artère), pas seulement le plat.
+Si on te demande un resto précis, situe-le par quartier. Si tu n'es pas sûr du nom, décris la zone et dis de vérifier sur place.
+
+Spécialités régionales (plats + où les chercher) :
+Dakar et Cap-Vert : ceebu jën / thiéboudienne (plat national, poisson et riz au rouge), yassa poulet ou poisson, mafé à l'arachide, soupe kandja / supukanja, pastels et fataya. Médina, Kermel et Plateau pour la cuisine de maison ; Soumbédioune, Ouakam, Ngor et Yoff pour le poisson grillé et les dibiteries ; Almadies pour les restos de plage.
+Petite Côte (Thiès, Mbour, Saly, Somone, Joal) : poisson braisé, thiof, crevettes, calmars, yassa de mer. Autour des plages et des campements.
+Sine-Saloum (Fatick, Foundiougne, Ndangane, islands) : huîtres du Saloum, arches, yett (cymbium), poisson séché-salé, riz au poisson. Aux campements et villages de lagune.
+Kaolack et bassin arachidier : mafé, riz à l'huile, couscous de mil, arachide partout. Marchés de Kaolack.
+Diourbel et Touba : café Touba, ndambé (haricots), plats simples de mil et d'arachide autour des gares routières et du marché.
+Saint-Louis, Louga et Fuuta (Matam, Podor, Richard-Toll) : thiéré / couscous de mil, lakh et laax (mil et lait caillé), fowru, poisson du fleuve, viande braisée. Sur l'île de Saint-Louis et dans les concessions du Fuuta.
+Casamance (Ziguinchor, Sédhiou, Kolda, Cap Skirring) : konkoé, sauces à l'huile de palme, fruits de mer, brochets et thiof grillés à la côte, mangues et anacarde, riz local. Cap Skirring et villages autour de Ziguinchor.
+Est (Tambacounda, Kédougou, pays Bassari) : fonio, mil, sauces aux feuilles, viande de brousse ou mouton selon la saison, miel. Cuisine de campement et de village, plus rare en resto touristique.
+Boissons : bissap, ginger, ditakh, bouye (pain de singe), café Touba. Desserts / goûter : thiakry, ngalakh à la saison de l'arachide.
+Quand on te demande les spécialités d'une région, cite 3 ou 4 plats typiques et dis où on les mange (maison, marché, plage, campement), sans inventer une enseigne.
 """
 
 
@@ -95,10 +138,14 @@ def clean_answer(text):
     text = sanitize_text(text, 8000)
     text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
+    text = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("```", ""), text)
+    text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(.*?)\*(?!\*)", r"\1", text)
-    text = re.sub(r"__([^_]+)__", r"\1", text)
-    text = re.sub(r"(?<!_)_([^_]+)_(?!_)", r"\1", text)
+    text = re.sub(r"__(.*?)__", r"\1", text)
+    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
+    text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
+    text = text.replace("**", "").replace("__", "")
+    text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -135,14 +182,35 @@ def client_ip():
     return (request.remote_addr or "unknown")[:64]
 
 
-def allowed_request(ip, log, limit, window):
+def allowed_request(ip, log, limit, window, bucket="chat"):
+    if redis_client is not None:
+        try:
+            key = f"teranga:rl:{bucket}:{ip}"
+            count = redis_client.incr(key)
+            if count == 1:
+                redis_client.expire(key, int(window))
+            return count <= limit
+        except Exception:
+            app.logger.exception("Redis rate-limit, fallback mémoire")
     now = time.time()
-    while log and now - log[0] > window:
-        log.popleft()
-    if len(log) >= limit:
-        return False
-    log.append(now)
-    return True
+    with RATE_LOCK:
+        while log and now - log[0] > window:
+            log.popleft()
+        if len(log) >= limit:
+            return False
+        log.append(now)
+        return True
+
+
+def public_error(exc):
+    text = f"{type(exc).__name__} {exc}".lower()
+    if "timeout" in text or "timed out" in text:
+        return "La réponse a pris trop de temps. Réessaie."
+    if "429" in text or "rate" in text:
+        return "Le service est très demandé. Réessaie dans un moment."
+    if "401" in text or "403" in text or "api key" in text:
+        return "Le service est temporairement mal configuré. Réessaie plus tard."
+    return "Désolé, le service est temporairement indisponible. Réessaie."
 
 
 def sign_token(value):
@@ -245,6 +313,7 @@ def parse_chat_payload():
         "fr": "Réponds en français naturel.",
         "en": "Reply in natural English.",
         "wo": "Réponds en wolof lorsque tu peux le faire correctement.",
+        "ff": "Réponds en pulaar (fuuta tooro) lorsque tu peux le faire correctement. Si un mot manque, complète clairement en français.",
     }[language]
     return {
         "instructions": SYSTEM_PROMPT + "\n" + language_instruction,
@@ -259,7 +328,7 @@ def model_kwargs(payload, stream):
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 420 if payload["use_web"] else 320,
+        "max_output_tokens": 700 if payload["use_web"] else 520,
         "stream": stream,
     }
     if payload["use_web"]:
@@ -349,10 +418,10 @@ def complete_reply(payload):
 @require_json_post
 def chat():
     ip = client_ip()
-    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW):
+    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
-        }), 429
+        }), 429, {"Retry-After": "8"}
 
     payload, error = parse_chat_payload()
     if error:
@@ -366,11 +435,9 @@ def chat():
             if not reply:
                 reply = "Je n'ai pas réussi à répondre. Réessaie."
             return jsonify({"reply": reply, "sources": sources})
-        except Exception:
+        except Exception as exc:
             app.logger.exception("Erreur JSON /chat")
-            return jsonify({
-                "error": "Désolé, le service est temporairement indisponible."
-            }), 500
+            return jsonify({"error": public_error(exc)}), 500
 
     def generate():
         yielded = False
@@ -410,23 +477,20 @@ def chat():
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
             yield json.dumps({"done": True}) + "\n"
-        except Exception:
+        except Exception as exc:
             app.logger.exception("Erreur stream /chat")
-            # Si des tokens ont déjà été envoyés, ne pas générer une seconde réponse complète.
-            if not yielded:
-                try:
-                    reply, sources = complete_reply(payload)
-                    if reply:
-                        yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
-                        if sources:
-                            yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-                        yield json.dumps({"done": True}) + "\n"
-                        return
-                except Exception:
-                    app.logger.exception("Erreur fallback /chat")
-            yield json.dumps({
-                "error": "Désolé, le service est temporairement indisponible. Réessaie."
-            }, ensure_ascii=False) + "\n"
+            try:
+                reply, sources = complete_reply(payload)
+                if reply:
+                    yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                    if sources:
+                        yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
+                    yield json.dumps({"done": True}) + "\n"
+                    return
+            except Exception as exc2:
+                app.logger.exception("Erreur fallback /chat")
+                exc = exc2
+            yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
 
     return Response(
         stream_with_context(generate()),
@@ -439,7 +503,7 @@ def chat():
 @require_json_post
 def tts():
     ip = client_ip()
-    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60):
+    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts"):
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
@@ -450,7 +514,12 @@ def tts():
         language = "fr"
     if not text:
         return jsonify({"error": "Texte manquant."}), 400
-    language_name = {"fr": "French", "en": "English", "wo": "Wolof"}[language]
+    language_name = {
+        "fr": "French",
+        "en": "English",
+        "wo": "Wolof",
+        "ff": "Pulaar, a Fulah language of northern Senegal",
+    }[language]
     try:
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
@@ -492,6 +561,7 @@ HTML = r"""<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Teranga">
 <link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
 <script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo"],"description":"Assistant numérique pour le Sénégal : météo, transport, visa, cuisine, SIM.","offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}}</script>
@@ -575,7 +645,7 @@ header{
 .seg{display:flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
 .seg button,.icon{
   border:0;background:transparent;color:var(--mute);border-radius:999px;
-  padding:6px 10px;font-weight:750;cursor:pointer
+  padding:6px 8px;font-weight:750;cursor:pointer
 }
 .seg button.on{background:var(--brand-2);color:#fff}
 .icon{width:36px;height:36px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center}
@@ -669,6 +739,8 @@ textarea{
   border-radius:999px;padding:8px 12px;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none
 }
 .spread .wa{background:#128C7E;border-color:#128C7E;color:#fff}
+.spread .install{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.spread .install[hidden]{display:none}
 .seo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 .foot{
   display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -691,7 +763,9 @@ textarea{
   .meta{flex-wrap:wrap}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
 </style>
+
 </head>
 <body>
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
@@ -711,6 +785,7 @@ textarea{
       <button type="button" data-lang="fr" class="on">FR</button>
       <button type="button" data-lang="en">EN</button>
       <button type="button" data-lang="wo">WO</button>
+      <button type="button" data-lang="ff">PU</button>
     </div>
     <button class="icon" id="themeBtn" type="button" title="Thème" aria-label="Thème">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -730,12 +805,13 @@ textarea{
     <div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
+      <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
       <button type="button" id="copyLink">Copier le lien</button>
     </div>
   </div>
   <section class="seo">
     <h2>Assistant Sénégal</h2>
-    <p>Teranga AI aide habitants, diaspora et voyageurs : météo à Dakar, taxi depuis l’aéroport AIBD, ferry vers l’île de Gorée, visa d’entrée, plats sénégalais, carte SIM et Orange Money. L’interface parle français, anglais et wolof.</p>
+    <p>Teranga AI aide habitants, diaspora et voyageurs : géographie des 14 régions, où manger à Dakar par quartier, météo, taxi AIBD, ferry Gorée, visa. L’interface parle français, anglais, wolof et pulaar.</p>
   </section>
   <div id="messages"></div>
 </div>
@@ -768,6 +844,7 @@ fr:{
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
+  install:'Installer l’app',
   heroTitle:'L’hospitalité, en quelques questions.',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -776,9 +853,9 @@ fr:{
     {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
     {q:"Combien coûte un taxi de l'aéroport AIBD à Dakar ?",t:'Taxi AIBD',d:'Ordre de prix et options'},
     {q:"Quels sont les horaires du ferry pour l'île de Gorée aujourd'hui ?",t:'Ferry Gorée',d:'Départs et prix indicatifs'},
-    {q:"Faut-il un visa pour entrer au Sénégal ?",t:'Visa',d:'Règles d’entrée actuelles'},
-    {q:'Quels plats sénégalais dois-je goûter ?',t:'Cuisine',d:'Thiéboudienne, yassa, bissap'},
-    {q:"Comment acheter une carte SIM et utiliser Orange Money à Dakar ?",t:'SIM & OM',d:'Réseau, recharge, paiements'}
+    {q:"Quelles sont les spécialités culinaires de chaque région du Sénégal ?",t:'Spécialités',d:'Plats du Nord, Centre, Casamance'},
+    {q:"Où manger à Dakar selon le quartier : Plateau, Médina, Almadies, Ngor, Ouakam ?",t:'Où manger',d:'Quartier, plage ou marché'},
+    {q:"Présente la géographie du Sénégal : régions, grandes villes et Casamance.",t:'Régions',d:'14 régions et grandes villes'}
   ]
 },
 en:{
@@ -789,6 +866,7 @@ en:{
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
+  install:'Install app',
   heroTitle:'Hospitality, in a few questions.',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
@@ -797,9 +875,9 @@ en:{
     {q:'What is the weather like in Dakar today?',t:'Dakar weather',d:'Sky, heat and wind today'},
     {q:'How much is a taxi from AIBD airport to Dakar?',t:'AIBD taxi',d:'Price range and options'},
     {q:'What are the ferry times to Gorée Island today?',t:'Gorée ferry',d:'Departures and typical fares'},
-    {q:'Do I need a visa to enter Senegal?',t:'Visa',d:'Current entry rules'},
-    {q:'Which Senegalese dishes should I try?',t:'Cuisine',d:'Thieboudienne, yassa, bissap'},
-    {q:'How do I get a SIM card and use Orange Money in Dakar?',t:'SIM & OM',d:'Network, top-up, payments'}
+    {q:'What are the regional food specialties across Senegal?',t:'Specialties',d:'Dishes from North, Center, Casamance'},
+    {q:'Where should I eat in Dakar by area: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Where to eat',d:'Neighborhood, beach or market'},
+    {q:'Explain the geography of Senegal: regions, main cities and Casamance.',t:'Regions',d:'14 regions and main cities'}
   ]
 },
 wo:{
@@ -810,6 +888,7 @@ wo:{
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
   sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
   shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
+  install:'Yebal app bi',
   heroTitle:'Teranga, ci laaj yu néew.',
   heroText:'Taw, taksi, ñam, teex ak marché — Teranga dina la wonal te du sos lu mëna soppi.',
   hint:'Tontu ci kaw · Enter ngir yónnee',
@@ -818,17 +897,53 @@ wo:{
     {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk',d:'Asamaan, tàngaay ak ngelaw'},
     {q:"Ñaata la taksi AIBD ba Dakaar?",t:'Taksi AIBD',d:'Njëg ak tànneef'},
     {q:"Ban waxtu la ferry Gorée am tey?",t:'Ferry Gorée',d:'Départ ak njëg'},
-    {q:"Ndax visa la wara am ngir dugg Senegaal?",t:'Visa',d:'Yoonu dugg bu taxaw'},
-    {q:'Ban ñam Senegaal laa wara mos?',t:'Ñam',d:'Ceebeen, yassa, bissap'},
-    {q:"Naka lañuy jënd SIM te jëfandikoo Orange Money?",t:'SIM & OM',d:'Réseau, recharge, pay'}
+    {q:'Ban ñam aju ci réegion yu Senegaal?',t:'Ñam réegion',d:'Nord, centre, Kasamans'},
+    {q:'Fan laa wara lekk ci Dakaar: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Lekk',d:'Quartier, teex walla marché'},
+    {q:'Wan nga ma géographie Senegaal: régions, dëkk yu mag ak Kasamans.',t:'Réegion',d:'14 régions ak dëkk yu mag'}
+  ]
+},
+ff:{
+  sub:'Ballal Senegaal',ph:'Naamndu…',send:'Neldu',
+  welcome:'Jam tan, miin woni Teranga AI. Hol ko njiɗɗaa anndude e Senegaal?',
+  timeout:'Sahaa booyii. Fuɗɗit.',err:'Sarwiis jaɓaani.',
+  vOn:'Sawtu auto on',vOff:'Sawtu auto off',listen:'Heɗo',copy:'Natal',copied:'Natalaa',
+  share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
+  sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
+  shareText:'Teranga AI — ballal Senegaal (farayse, english, wolof, pulaar).',
+  install:'Aaf app',
+  heroTitle:'Teranga, e naamne seeɗa.',
+  heroText:'Kaanawol, taksi, ñaamdu, geec, luumooji — Teranga holata, wonaa fefindoo.',
+  hint:'Jaabawol e sahaa. Sawtu nde ɓadiima pulaar.',
+  hintTouch:'Jaabawol e sahaa. Sawtu ɓadiima.',
+  cards:[
+    {q:'Hol kaanawol Dakaar hannde?',t:'Kaanawol',d:'Dakaar hannde'},
+    {q:'Fotde taksi AIBD haa Dakaar?',t:'Taksi AIBD',d:'Njoɓdi e tati'},
+    {q:'Hol ñaamdu Dakaar e diiwe: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Ñaamdu',d:'Diiwal, geec walla luumo'},
+    {q:'Hol geografi Senegaal: diiwe, gure mawɗe e Kasamans?',t:'Diiwe',d:'Diiwe 14 e gure'},
+    {q:'Hol ferry Gorée waktuuji hannde?',t:'Ferry Gorée',d:'Yahdu e njoɓdi'},
+    {q:'Hol ñaamdu diiwe Senegaal kala?',t:'Ñaamdu diiwe',d:'Fuuta, hakkunde, Kasamans'}
   ]
 }
 };
-const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN'};
+const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')==='1', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+function cleanReply(text){
+  return String(text||'')
+    .replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''))
+    .replace(/`([^`]+)`/g,'$1')
+    .replace(/\*\*([^*]+)\*\*/g,'$1')
+    .replace(/__([^_]+)__/g,'$1')
+    .replace(/(^|\s)\*([^*\n]+)\*(?=\s|$|[.,;!?])/g,'$1$2')
+    .replace(/\*\*/g,'')
+    .replace(/__/g,'')
+    .replace(/^#{1,6}\s+/gm,'')
+    .replace(/^\s*[-*•]\s+/gm,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
 function cookie(name){
   const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));
   return m?decodeURIComponent(m[1]):'';
@@ -857,6 +972,8 @@ function bindShare(){
   if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
   const copy=$('copyLink');
   if(copy)copy.textContent=T[lang].copyLink;
+  const inst=$('installBtn');
+  if(inst)inst.textContent=T[lang].install;
 }
 async function shareApp(){
   const p=sharePayload();
@@ -997,7 +1114,7 @@ function restore(){
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
-      history=data.history.slice(-6);
+      history=data.history.slice(-12);
       hideHero();
       const frag=document.createDocumentFragment();
       history.forEach(item=>{
@@ -1009,7 +1126,7 @@ function restore(){
         }
         const col=document.createElement('div');col.className='col';
         const b=document.createElement('div');b.className='bubble';
-        b.textContent=item.content||'';
+        b.textContent=cleanReply(item.content||'');
         col.appendChild(b);
         if(item.role==='assistant'){
           addActs(col,item.content||'');
@@ -1040,8 +1157,8 @@ async function ask(preset){
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
-  const kill=setTimeout(()=>ctrl.abort(),55000);
-  const body=JSON.stringify({message:text,history:history.slice(-6),language:lang});
+  const kill=setTimeout(()=>ctrl.abort(),75000);
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang});
   let reply='', sources=[];
   try{
     const res=await fetch('/chat',{method:'POST',headers:headers(),body,signal:ctrl.signal});
@@ -1060,7 +1177,7 @@ async function ask(preset){
         if(!reduceMotion)wait.b.appendChild(cursor);
         shown=true;
       }
-      node.nodeValue=live;
+      node.nodeValue=cleanReply(live);
       scrollStage();
     };
     const queue=chunk=>{
@@ -1102,13 +1219,14 @@ async function ask(preset){
       if(data.sources)sources=data.sources;
       pending=reply;flush();
     }
+    reply=cleanReply(reply);
     if(!shown){dots.replaceWith(wait.b);node.nodeValue=reply||T[lang].err;}
     else {node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
     addActs(wait.col,reply);
     addSources(wait.col,sources);
     history.push({role:'assistant',content:reply,sources});
-    history=history.slice(-6);
+    history=history.slice(-12);
     persist();
     if(autoVoice&&reply)speak(reply);
   }catch(err){
@@ -1170,7 +1288,22 @@ if(window.visualViewport){
   };
   visualViewport.addEventListener('resize',place);place();
 }
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstall=e;
+  const btn=$('installBtn');if(btn)btn.hidden=false;
+});
+$('installBtn').onclick=async()=>{
+  if(!deferredInstall)return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice.catch(()=>{});
+  deferredInstall=null;$('installBtn').hidden=true;
+};
 themeInit();restore();setLang(lang);setupMic();
+
 </script>
 </body>
 </html>
@@ -1251,17 +1384,75 @@ def sitemap():
     return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
+def build_icon_png(size):
+    from PIL import Image, ImageDraw
+    img = Image.new("RGB", (size, size), "#1a3d2a")
+    draw = ImageDraw.Draw(img)
+    pad = size // 8
+    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=size // 5, fill="#1a3d2a")
+    sun = size // 5
+    draw.ellipse((size - pad - sun, pad, size - pad, pad + sun), fill="#e2b34a")
+    trunk_w = max(4, size // 14)
+    draw.rectangle((size // 2 - trunk_w // 2, size // 2, size // 2 + trunk_w // 2, size - pad), fill="#f3e6c8")
+    draw.arc((pad, size // 3, size - pad, size - pad // 2), start=200, end=340, fill="#f3e6c8", width=max(3, size // 18))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
+@app.get("/icon-192.png")
+def icon_192():
+    return Response(build_icon_png(192), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/icon-512.png")
+def icon_512():
+    return Response(build_icon_png(512), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
+@app.get("/sw.js")
+def service_worker():
+    body = """
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim());
+});
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.pathname === '/chat' || url.pathname === '/tts') return;
+  if (url.pathname === '/' ) return;
+});
+"""
+    resp = Response(body.strip() + "\n", mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
+
+
 @app.get("/manifest.webmanifest")
 def manifest():
     return Response(
         json.dumps({
+            "id": "/",
             "name": "Teranga AI",
             "short_name": "Teranga",
+            "description": "Assistant du Sénégal en français, anglais et wolof.",
             "start_url": "/",
+            "scope": "/",
             "display": "standalone",
+            "orientation": "portrait",
+            "lang": "fr",
             "background_color": "#f6efe3",
             "theme_color": "#0a3d28",
-            "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"}],
+            "categories": ["travel", "lifestyle", "utilities"],
+            "icons": [
+                {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+                {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+            ],
         }),
         mimetype="application/manifest+json",
         headers={"Cache-Control": "public, max-age=86400"},
