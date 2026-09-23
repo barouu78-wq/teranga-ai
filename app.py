@@ -5,14 +5,10 @@ import json
 import os
 import re
 import secrets
-import threading
 import time
 from collections import defaultdict, deque
 from functools import wraps
-from pathlib import Path
 from urllib.parse import urlparse
-
-from prompts import SYSTEM_PROMPT, WEB_HINTS
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
@@ -30,7 +26,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.5")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 ALLOWED_ORIGINS = {
     origin.strip()
@@ -38,39 +34,55 @@ ALLOWED_ORIGINS = {
     if origin.strip()
 }
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
-BASE_DIR = Path(__file__).resolve().parent
-REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
-redis_client = None
-if REDIS_URL:
-    try:
-        import redis as redis_lib
-        redis_client = redis_lib.from_url(REDIS_URL, decode_responses=True)
-    except Exception:
-        redis_client = None
 if TRUST_PROXY:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
-client = OpenAI(api_key=API_KEY, timeout=50.0, max_retries=1)
+client = OpenAI(api_key=API_KEY, timeout=35.0, max_retries=1)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
-MAX_HISTORY_ITEMS = 12
-MAX_HISTORY_CHARS = 10000
-RATE_LIMIT = 16
+MAX_HISTORY_ITEMS = 6
+MAX_HISTORY_CHARS = 6000
+RATE_LIMIT = 12
 RATE_WINDOW = 60
-TTS_RATE_LIMIT = 8
-RATE_LOCK = threading.Lock()
+TTS_RATE_LIMIT = 6
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
+SAFE_LANG = frozenset({"fr", "en", "wo"})
+
+# Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
+WEB_HINTS = (
+    "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
+    "actuels", "actuelles", "récent", "récente", "récentes",
+    "horaire", "horaires", "ouvert", "ouverte",
+    "disponible", "disponibilité", "réservation",
+    "événement", "evenement", "météo", "meteo",
+    "actualité", "actualités", "news", "today", "now",
+    "current", "latest", "recent", "schedule", "hours",
+    "open", "available", "availability", "booking", "weather", "event",
+    "visa", "ferry", "gorée", "goree", "cfa", "change", "taux",
+    "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
+)
+
+SYSTEM_PROMPT = """
+Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
+
+Réponds dans la langue de l'utilisateur (français, anglais ou wolof).
+Sois chaleureux, direct et concis. 4 à 8 phrases max, sauf demande contraire.
+N'invente jamais un prix, une adresse, un téléphone, un horaire ou un nom d'établissement.
+Si une info peut avoir changé, dis-le. Reste factuel et neutre en politique.
+Ne conseille pas pour qui voter.
+Si tu utilises le web, ne colle pas de listes d'URLs dans le texte : les sources s'affichent à part.
+"""
+
 
 def sanitize_text(text, max_len):
     text = CONTROL_CHARS.sub("", str(text or ""))
@@ -83,14 +95,10 @@ def clean_answer(text):
     text = sanitize_text(text, 8000)
     text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
-    text = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("```", ""), text)
-    text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"__(.*?)__", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
-    text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
-    text = text.replace("**", "").replace("__", "")
-    text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
+    text = re.sub(r"(?<!\*)\*(.*?)\*(?!\*)", r"\1", text)
+    text = re.sub(r"__([^_]+)__", r"\1", text)
+    text = re.sub(r"(?<!_)_([^_]+)_(?!_)", r"\1", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
@@ -127,35 +135,14 @@ def client_ip():
     return (request.remote_addr or "unknown")[:64]
 
 
-def allowed_request(ip, log, limit, window, bucket="chat"):
-    if redis_client is not None:
-        try:
-            key = f"teranga:rl:{bucket}:{ip}"
-            count = redis_client.incr(key)
-            if count == 1:
-                redis_client.expire(key, int(window))
-            return count <= limit
-        except Exception:
-            app.logger.exception("Redis rate-limit, fallback mémoire")
+def allowed_request(ip, log, limit, window):
     now = time.time()
-    with RATE_LOCK:
-        while log and now - log[0] > window:
-            log.popleft()
-        if len(log) >= limit:
-            return False
-        log.append(now)
-        return True
-
-
-def public_error(exc):
-    text = f"{type(exc).__name__} {exc}".lower()
-    if "timeout" in text or "timed out" in text:
-        return "La réponse a pris trop de temps. Réessaie."
-    if "429" in text or "rate" in text:
-        return "Le service est très demandé. Réessaie dans un moment."
-    if "401" in text or "403" in text or "api key" in text:
-        return "Le service est temporairement mal configuré. Réessaie plus tard."
-    return "Désolé, le service est temporairement indisponible. Réessaie."
+    while log and now - log[0] > window:
+        log.popleft()
+    if len(log) >= limit:
+        return False
+    log.append(now)
+    return True
 
 
 def sign_token(value):
@@ -258,7 +245,6 @@ def parse_chat_payload():
         "fr": "Réponds en français naturel.",
         "en": "Reply in natural English.",
         "wo": "Réponds en wolof lorsque tu peux le faire correctement.",
-        "ff": "Réponds en pulaar (fuuta tooro) lorsque tu peux le faire correctement. Si un mot manque, complète clairement en français.",
     }[language]
     return {
         "instructions": SYSTEM_PROMPT + "\n" + language_instruction,
@@ -273,7 +259,7 @@ def model_kwargs(payload, stream):
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 700 if payload["use_web"] else 520,
+        "max_output_tokens": 420 if payload["use_web"] else 320,
         "stream": stream,
     }
     if payload["use_web"]:
@@ -363,10 +349,10 @@ def complete_reply(payload):
 @require_json_post
 def chat():
     ip = client_ip()
-    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
+    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW):
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
-        }), 429, {"Retry-After": "8"}
+        }), 429
 
     payload, error = parse_chat_payload()
     if error:
@@ -380,9 +366,11 @@ def chat():
             if not reply:
                 reply = "Je n'ai pas réussi à répondre. Réessaie."
             return jsonify({"reply": reply, "sources": sources})
-        except Exception as exc:
+        except Exception:
             app.logger.exception("Erreur JSON /chat")
-            return jsonify({"error": public_error(exc)}), 500
+            return jsonify({
+                "error": "Désolé, le service est temporairement indisponible."
+            }), 500
 
     def generate():
         yielded = False
@@ -422,20 +410,23 @@ def chat():
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
             yield json.dumps({"done": True}) + "\n"
-        except Exception as exc:
+        except Exception:
             app.logger.exception("Erreur stream /chat")
-            try:
-                reply, sources = complete_reply(payload)
-                if reply:
-                    yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
-                    if sources:
-                        yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-                    yield json.dumps({"done": True}) + "\n"
-                    return
-            except Exception as exc2:
-                app.logger.exception("Erreur fallback /chat")
-                exc = exc2
-            yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
+            # Si des tokens ont déjà été envoyés, ne pas générer une seconde réponse complète.
+            if not yielded:
+                try:
+                    reply, sources = complete_reply(payload)
+                    if reply:
+                        yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                        if sources:
+                            yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
+                        yield json.dumps({"done": True}) + "\n"
+                        return
+                except Exception:
+                    app.logger.exception("Erreur fallback /chat")
+            yield json.dumps({
+                "error": "Désolé, le service est temporairement indisponible. Réessaie."
+            }, ensure_ascii=False) + "\n"
 
     return Response(
         stream_with_context(generate()),
@@ -448,7 +439,7 @@ def chat():
 @require_json_post
 def tts():
     ip = client_ip()
-    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts"):
+    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60):
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
@@ -459,12 +450,7 @@ def tts():
         language = "fr"
     if not text:
         return jsonify({"error": "Texte manquant."}), 400
-    language_name = {
-        "fr": "French",
-        "en": "English",
-        "wo": "Wolof",
-        "ff": "Pulaar, a Fulah language of northern Senegal",
-    }[language]
+    language_name = {"fr": "French", "en": "English", "wo": "Wolof"}[language]
     try:
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
@@ -477,6 +463,718 @@ def tts():
     except Exception:
         app.logger.exception("Erreur /tts")
         return jsonify({"error": "La génération vocale a échoué."}), 500
+
+
+HTML = r"""<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6efe3" id="themeColor">
+<meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
+<meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="__SITE_URL__/">
+<meta property="og:site_name" content="Teranga AI">
+<meta property="og:title" content="Teranga AI — l’assistant du Sénégal">
+<meta property="og:description" content="Pose une question sur le Sénégal. Réponses claires en français, anglais et wolof.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_SN">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:url" content="__SITE_URL__/">
+<meta property="og:image" content="__SITE_URL__/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Teranga AI — l’assistant du Sénégal">
+<meta name="twitter:description" content="Météo, trajets, visa, cuisine — en français, anglais et wolof.">
+<meta name="twitter:image" content="__SITE_URL__/og.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Teranga">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
+<link rel="icon" href="/icon.svg">
+<script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo"],"description":"Assistant numérique pour le Sénégal : météo, transport, visa, cuisine, SIM.","offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}}</script>
+<style>
+:root{
+  --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
+  --card:rgba(255,251,244,.82);--soft:#efe4d2;--brand:#0f6a43;--brand-2:#0a3d28;
+  --gold:#d9a441;--terracotta:#c45c2a;--user:#1c3328;--shadow:0 24px 60px rgba(26,18,12,.12);
+  --glow:rgba(217,164,65,.28);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --sand:#100e0c;--ink:#f3ece2;--mute:#b3a394;--line:rgba(255,236,210,.10);
+    --card:rgba(24,20,16,.78);--soft:#241e18;--brand:#4ecf8a;--brand-2:#163628;
+    --gold:#e2b34a;--terracotta:#e07a4a;--user:#214033;--shadow:0 24px 60px rgba(0,0,0,.4);
+    --glow:rgba(226,179,74,.16);
+  }
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{color-scheme:light dark}
+body{
+  color:var(--ink);
+  font:15px/1.5 "Segoe UI",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(900px 420px at 110% -10%,var(--glow),transparent 55%),
+    radial-gradient(700px 380px at -10% 110%,rgba(15,106,67,.16),transparent 50%),
+    var(--sand);
+  overflow:hidden;
+  text-rendering:optimizeSpeed;
+}
+body[data-theme="dark"]{
+  --sand:#100e0c;--ink:#f3ece2;--mute:#b3a394;--line:rgba(255,236,210,.10);
+  --card:rgba(24,20,16,.78);--soft:#241e18;--brand:#4ecf8a;--brand-2:#163628;
+  --gold:#e2b34a;--terracotta:#e07a4a;--user:#214033;--shadow:0 24px 60px rgba(0,0,0,.4);
+  --glow:rgba(226,179,74,.16);
+}
+body[data-theme="light"]{
+  --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
+  --card:rgba(255,251,244,.82);--soft:#efe4d2;--brand:#0f6a43;--brand-2:#0a3d28;
+  --gold:#d9a441;--terracotta:#c45c2a;--user:#1c3328;--shadow:0 24px 60px rgba(26,18,12,.12);
+  --glow:rgba(217,164,65,.28);
+}
+.sky{
+  pointer-events:none;position:fixed;inset:0;overflow:hidden;z-index:0;contain:strict;
+}
+.sun{
+  position:absolute;right:-40px;top:-50px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#ffe7a3,#e2b34a 45%,transparent 70%);
+  opacity:.45;
+}
+.baobab{
+  position:absolute;left:-20px;bottom:-30px;width:280px;height:280px;opacity:.07;
+  background:
+    radial-gradient(circle at 50% 28%,var(--ink) 18px,transparent 19px),
+    linear-gradient(var(--ink),var(--ink)) 50% 40%/8px 58% no-repeat;
+}
+.app{position:relative;z-index:1;min-height:100%;height:var(--vvh,100%);display:flex;flex-direction:column;max-width:820px;margin:auto;contain:layout}
+header{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 18px calc(12px + env(safe-area-inset-top));
+  background:color-mix(in srgb,var(--sand) 88%,transparent);
+  border-bottom:1px solid var(--line);
+  contain:layout style;
+}
+.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.mark{
+  width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 70% 28%,#f6d889 0 7px,transparent 8px),
+    linear-gradient(165deg,#1a5c3b,#072318);
+  box-shadow:0 8px 20px rgba(10,61,40,.28);
+}
+.mark svg{width:24px;height:24px}
+.brand strong{display:block;font-size:15px;letter-spacing:-.04em}
+.brand em{font-style:normal;color:var(--gold)}
+.brand span{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:11px}
+.dot{width:7px;height:7px;border-radius:50%;background:#3dbe7e;box-shadow:0 0 0 4px rgba(61,190,126,.15)}
+.tools{display:flex;gap:6px;align-items:center}
+.seg{display:flex;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+.seg button,.icon{
+  border:0;background:transparent;color:var(--mute);border-radius:999px;
+  padding:6px 10px;font-weight:750;cursor:pointer
+}
+.seg button.on{background:var(--brand-2);color:#fff}
+.icon{width:36px;height:36px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center}
+.icon svg{width:16px;height:16px}
+#stage{flex:1;min-height:0;overflow:auto;padding:8px 16px 12px;contain:layout paint;overflow-anchor:none;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
+#messages{margin-top:auto;padding-top:8px}
+.hero{
+  margin:18px 0 8px;padding:22px 20px 18px;border-radius:28px;
+  background:var(--card);
+  border:1px solid var(--line);box-shadow:var(--shadow);
+  contain:content;
+}
+.hero.is-hidden{display:none}
+.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1}
+.hero p{margin:0 0 16px;color:var(--mute);max-width:42ch}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{
+  text-align:left;border:1px solid var(--line);background:color-mix(in srgb,var(--sand) 70%,transparent);
+  border-radius:18px;padding:13px 14px;cursor:pointer;color:inherit
+}
+.card b{display:block;font-size:13px;margin-bottom:4px}
+.card span{display:block;color:var(--mute);font-size:12px;line-height:1.35}
+.card:hover{border-color:var(--gold)}
+.msg{margin:0 0 14px;display:flex;gap:8px;align-items:flex-end;contain:content;content-visibility:auto;contain-intrinsic-size:auto 72px}
+.msg.is-new{animation:in .18s ease}
+.msg.user{justify-content:flex-end}
+.avatar{
+  flex:none;width:28px;height:28px;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(160deg,#1a5c3b,#072318);color:#f6e7c2;font-size:13px
+}
+.user .avatar{display:none}
+.col{max-width:min(86%,580px)}
+.bubble{
+  padding:12px 14px;border-radius:20px;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere
+}
+.bubble.live{contain:content}
+.assistant .bubble{background:var(--soft);border-bottom-left-radius:7px}
+.user .bubble{background:linear-gradient(180deg,#214833,#14281e);color:#f7fff9;border-bottom-right-radius:7px}
+.acts{display:flex;gap:4px;margin-top:6px;opacity:.0;transition:.15s}
+.assistant:hover .acts,.assistant:focus-within .acts{opacity:1}
+.acts button{
+  border:0;background:transparent;color:var(--mute);font-weight:700;font-size:11px;
+  padding:4px 7px;border-radius:999px;cursor:pointer
+}
+.acts button:hover{background:var(--card);color:var(--brand)}
+.sources{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.sources b{font-size:10px;color:var(--mute);font-weight:750;letter-spacing:.04em;text-transform:uppercase}
+.sources a{
+  max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:11px;color:var(--brand-2);text-decoration:none;
+  border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 9px
+}
+.sources a:hover{border-color:var(--gold)}
+.typing{display:flex;gap:5px;padding:14px 16px;width:fit-content;background:var(--soft);border-radius:18px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.cursor{display:inline-block;width:7px;height:1em;background:var(--gold);margin-left:2px;vertical-align:-2px;animation:b .8s infinite}
+@keyframes b{50%{opacity:.25;transform:translateY(-2px)}}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.dock{
+  padding:10px 14px calc(14px + env(safe-area-inset-bottom));
+  background:color-mix(in srgb,var(--sand) 92%,transparent);
+  contain:layout style;
+}
+.composer{
+  border:1px solid var(--line);background:var(--card);border-radius:24px;
+  padding:8px 8px 8px 14px;box-shadow:var(--shadow)
+}
+body.has-chat .chips,body.has-chat #hero{display:none}
+.chips{display:flex;gap:8px;overflow:auto;padding:0 2px 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{
+  flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer
+}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:7px;align-items:end}
+textarea{
+  width:100%;min-height:46px;max-height:130px;resize:none;border:0;
+  padding:10px 4px 8px 0;background:transparent;color:var(--ink);outline:0;font:inherit
+}
+#mic,#send{height:44px;border:0;border-radius:16px;cursor:pointer;font-weight:800}
+#mic{width:44px;background:color-mix(in srgb,var(--gold) 28%,var(--card));color:#7a4a00}
+#mic.listen{background:#c93636;color:#fff}
+#send{padding:0 16px;background:var(--brand-2);color:#fff}
+#send:disabled{opacity:.5}
+.meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--mute);font-size:11px;padding:0 6px}
+.meta button{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer}
+.spread{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.spread a,.spread button{
+  border:1px solid var(--line);background:var(--sand);color:var(--ink);
+  border-radius:999px;padding:8px 12px;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none
+}
+.spread .wa{background:#128C7E;border-color:#128C7E;color:#fff}
+.seo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.foot{
+  display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:6px 6px 0;color:var(--mute);font-size:11px
+}
+.foot button,.foot a{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer;text-decoration:none}
+#count{font-variant-numeric:tabular-nums}
+@media(max-width:680px){
+  header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:8px}
+  .brand span#sub,.brand .dot{display:none}
+  .brand span{display:none}
+  .hero{margin:10px 0;padding:16px 14px}
+  .hero h1{font-size:22px}
+  .cards{grid-template-columns:1fr 1fr}
+  .row{grid-template-columns:1fr auto auto}
+  #send,#mic{grid-column:auto;width:auto}
+  #send{min-width:92px}
+  .acts{opacity:1}
+  .dock{padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+  .meta{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
+<div class="app">
+<header>
+  <div class="brand">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="#f6e7c2" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="#e2b34a"/></svg>
+    </div>
+    <div>
+      <strong>Teranga <em>AI</em></strong>
+      <span><i class="dot"></i> <span id="sub">Assistant Sénégal</span></span>
+    </div>
+  </div>
+  <div class="tools">
+    <div class="seg" id="langs">
+      <button type="button" data-lang="fr" class="on">FR</button>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="wo">WO</button>
+    </div>
+    <button class="icon" id="themeBtn" type="button" title="Thème" aria-label="Thème">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <button class="icon" id="shareAppBtn" type="button" title="Partager" aria-label="Partager">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 8a3 3 0 1 0-2.8-4H12a3 3 0 0 0 .2 4L8.5 12M15 16l-4.7-4M8.5 12A3 3 0 1 0 6 17.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="icon" id="resetBtn" type="button" title="Nouveau" aria-label="Nouveau chat">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.3-5.7M4 4v5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</header>
+<div id="stage">
+  <div id="hero" class="hero">
+    <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
+    <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
+    <div class="cards" id="cards"></div>
+    <div class="spread">
+      <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
+      <button type="button" id="copyLink">Copier le lien</button>
+    </div>
+  </div>
+  <section class="seo">
+    <h2>Assistant Sénégal</h2>
+    <p>Teranga AI aide habitants, diaspora et voyageurs : météo à Dakar, taxi depuis l’aéroport AIBD, ferry vers l’île de Gorée, visa d’entrée, plats sénégalais, carte SIM et Orange Money. L’interface parle français, anglais et wolof.</p>
+  </section>
+  <div id="messages"></div>
+</div>
+<div class="dock">
+  <div class="chips" id="chips"></div>
+  <div class="composer">
+    <div class="row">
+      <textarea id="input" maxlength="2000" placeholder="Pose ta question…" rows="1"></textarea>
+      <button id="mic" type="button" title="Parler" aria-label="Parler">🎤</button>
+      <button id="send" type="button">Envoyer</button>
+    </div>
+  </div>
+  <div class="meta">
+    <span id="hint">Réponse en direct</span>
+    <span id="count">0 / 2000</span>
+    <button id="voiceToggle" type="button">Voix auto off</button>
+  </div>
+</div>
+</div>
+<script nonce="__CSP_NONCE__">
+const $ = id => document.getElementById(id);
+const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic'), stage=$('stage'), hero=$('hero');
+const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const T={
+fr:{
+  sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
+  welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
+  timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
+  vOn:'Voix auto on',vOff:'Voix auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
+  shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
+  heroTitle:'L’hospitalité, en quelques questions.',
+  heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
+  hint:'Réponse en direct · Entrée pour envoyer',
+  hintTouch:'Réponse en direct',
+  cards:[
+    {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
+    {q:"Combien coûte un taxi de l'aéroport AIBD à Dakar ?",t:'Taxi AIBD',d:'Ordre de prix et options'},
+    {q:"Quels sont les horaires du ferry pour l'île de Gorée aujourd'hui ?",t:'Ferry Gorée',d:'Départs et prix indicatifs'},
+    {q:"Faut-il un visa pour entrer au Sénégal ?",t:'Visa',d:'Règles d’entrée actuelles'},
+    {q:'Quels plats sénégalais dois-je goûter ?',t:'Cuisine',d:'Thiéboudienne, yassa, bissap'},
+    {q:"Comment acheter une carte SIM et utiliser Orange Money à Dakar ?",t:'SIM & OM',d:'Réseau, recharge, paiements'}
+  ]
+},
+en:{
+  sub:'Senegal assistant',ph:'Ask a question…',send:'Send',
+  welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
+  timeout:'Timed out. Try again.',err:'Service unavailable.',
+  vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
+  sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
+  shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
+  heroTitle:'Hospitality, in a few questions.',
+  heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
+  hint:'Live answers · Enter to send',
+  hintTouch:'Live answers',
+  cards:[
+    {q:'What is the weather like in Dakar today?',t:'Dakar weather',d:'Sky, heat and wind today'},
+    {q:'How much is a taxi from AIBD airport to Dakar?',t:'AIBD taxi',d:'Price range and options'},
+    {q:'What are the ferry times to Gorée Island today?',t:'Gorée ferry',d:'Departures and typical fares'},
+    {q:'Do I need a visa to enter Senegal?',t:'Visa',d:'Current entry rules'},
+    {q:'Which Senegalese dishes should I try?',t:'Cuisine',d:'Thieboudienne, yassa, bissap'},
+    {q:'How do I get a SIM card and use Orange Money in Dakar?',t:'SIM & OM',d:'Network, top-up, payments'}
+  ]
+},
+wo:{
+  sub:'Assistant Senegaal',ph:'Laajal…',send:'Yónnee',
+  welcome:'Salaam, maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
+  timeout:'Dafa yàgg. Jéemaatal.',err:'Service bañ na.',
+  vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
+  share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
+  sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
+  shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
+  heroTitle:'Teranga, ci laaj yu néew.',
+  heroText:'Taw, taksi, ñam, teex ak marché — Teranga dina la wonal te du sos lu mëna soppi.',
+  hint:'Tontu ci kaw · Enter ngir yónnee',
+  hintTouch:'Tontu ci kaw',
+  cards:[
+    {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk',d:'Asamaan, tàngaay ak ngelaw'},
+    {q:"Ñaata la taksi AIBD ba Dakaar?",t:'Taksi AIBD',d:'Njëg ak tànneef'},
+    {q:"Ban waxtu la ferry Gorée am tey?",t:'Ferry Gorée',d:'Départ ak njëg'},
+    {q:"Ndax visa la wara am ngir dugg Senegaal?",t:'Visa',d:'Yoonu dugg bu taxaw'},
+    {q:'Ban ñam Senegaal laa wara mos?',t:'Ñam',d:'Ceebeen, yassa, bissap'},
+    {q:"Naka lañuy jënd SIM te jëfandikoo Orange Money?",t:'SIM & OM',d:'Réseau, recharge, pay'}
+  ]
+}
+};
+const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN'};
+let lang=localStorage.getItem('teranga-lang')||'fr';
+if(!T[lang])lang='fr';
+let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')==='1', inflight=null;
+let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+function cookie(name){
+  const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));
+  return m?decodeURIComponent(m[1]):'';
+}
+function headers(extra){
+  return Object.assign({'Content-Type':'application/json','X-CSRF-Token':cookie('teranga_csrf')}, extra||{});
+}
+function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
+function setChatMode(on){
+  document.body.classList.toggle('has-chat',on);
+  hero.classList.toggle('is-hidden',on);
+}
+function hideHero(){setChatMode(true);}
+function showHero(){setChatMode(false);}
+function applyThemeColor(){
+  const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
+  $('themeColor').content=dark?'#100e0c':'#f6efe3';
+}
+function sharePayload(){
+  const url=location.origin+'/';
+  return {title:'Teranga AI',text:T[lang].shareText+' '+url,url};
+}
+function bindShare(){
+  const p=sharePayload();
+  const wa=$('waShare');
+  if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
+  const copy=$('copyLink');
+  if(copy)copy.textContent=T[lang].copyLink;
+}
+async function shareApp(){
+  const p=sharePayload();
+  try{
+    if(navigator.share){await navigator.share(p);return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  window.open('https://wa.me/?text='+encodeURIComponent(p.text),'_blank','noopener');
+}
+function nearBottom(){
+  return stage.scrollHeight - stage.scrollTop - stage.clientHeight < 80;
+}
+function scrollStage(force){
+  if(!force && !stickToBottom)return;
+  if(scrollRaf)return;
+  scrollRaf=requestAnimationFrame(()=>{
+    scrollRaf=0;
+    stage.scrollTop=stage.scrollHeight;
+  });
+}
+function addMsg(role,text,opts){
+  const row=document.createElement('div');
+  row.className='msg '+role+((opts&&opts.animate&&!reduceMotion)?' is-new':'');
+  if(role==='assistant'){
+    const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
+  }
+  const col=document.createElement('div');col.className='col';
+  const b=document.createElement('div');b.className='bubble';
+  b.appendChild(document.createTextNode(text||''));
+  col.appendChild(b);row.appendChild(col);
+  messages.appendChild(row);
+  scrollStage(true);
+  return {row,b,col};
+}
+function addActs(col,text){
+  const acts=document.createElement('div');acts.className='acts';
+  const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
+  listen.onclick=()=>speak(text,listen);
+  const copy=document.createElement('button');copy.type='button';copy.textContent=T[lang].copy;
+  copy.onclick=async()=>{
+    try{await navigator.clipboard.writeText(text);copy.textContent=T[lang].copied;setTimeout(()=>copy.textContent=T[lang].copy,1200);}catch(e){}
+  };
+  const share=document.createElement('button');share.type='button';share.textContent=T[lang].share;
+  share.onclick=async()=>{
+    try{
+      if(navigator.share)await navigator.share({title:'Teranga AI',text});
+      else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
+    }catch(e){}
+  };
+  acts.append(listen,copy,share);col.appendChild(acts);
+}
+function addSources(col,sources){
+  if(!sources||!sources.length)return;
+  const box=document.createElement('div');box.className='sources';
+  const label=document.createElement('b');label.textContent=T[lang].sources;box.appendChild(label);
+  sources.slice(0,5).forEach(src=>{
+    if(!src||!src.url)return;
+    const a=document.createElement('a');
+    a.href=src.url;a.target='_blank';a.rel='noopener noreferrer';
+    a.textContent=src.title||src.url.replace(/^https?:\/\/(www\.)?/,'');
+    box.appendChild(a);
+  });
+  if(box.childElementCount>1)col.appendChild(box);
+}
+async function speak(text,btn){
+  if(!text)return;
+  if(audio){audio.pause();audio=null;}
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  try{
+    const res=await fetch('/tts',{method:'POST',headers:headers(),body:JSON.stringify({text,language:lang})});
+    if(!res.ok)throw 0;
+    const url=URL.createObjectURL(await res.blob());
+    audio=new Audio(url);
+    audio.onended=()=>{URL.revokeObjectURL(url);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
+    await audio.play();
+  }catch(e){if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}}
+}
+function renderCards(){
+  if(lastLang===lang)return;
+  lastLang=lang;
+  const t=T[lang];
+  const cardFrag=document.createDocumentFragment();
+  const chipFrag=document.createDocumentFragment();
+  t.cards.forEach(c=>{
+    const card=document.createElement('button');
+    card.className='card';card.type='button';card.dataset.q=c.q;
+    const b=document.createElement('b');b.textContent=c.t;
+    const s=document.createElement('span');s.textContent=c.d;
+    card.append(b,s);cardFrag.appendChild(card);
+    const chip=document.createElement('button');
+    chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;
+    chipFrag.appendChild(chip);
+  });
+  $('cards').replaceChildren(cardFrag);
+  $('chips').replaceChildren(chipFrag);
+}
+function setLang(next){
+  lang=next;localStorage.setItem('teranga-lang',next);
+  document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.lang===next));
+  const t=T[lang];
+  $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
+  $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
+  $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  $('hint').textContent=isTouch()?t.hintTouch:t.hint;
+  document.documentElement.lang=next==='wo'?'wo':next;
+  renderCards();
+  bindShare();
+  if(rec)rec.lang=voiceMap[lang];
+}
+function themeInit(){
+  const saved=localStorage.getItem('teranga-theme');
+  if(saved)document.body.dataset.theme=saved;
+  applyThemeColor();
+}
+function reset(){
+  if(history.length&&!confirm(T[lang].resetAsk))return;
+  if(inflight)inflight.abort();
+  history=[];messages.replaceChildren();showHero();
+  sessionStorage.removeItem('teranga-history');
+}
+function setupMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){mic.disabled=true;mic.title='Micro non disponible';return;}
+  rec=new SR();rec.continuous=false;rec.interimResults=false;rec.lang=voiceMap[lang];
+  rec.onstart=()=>{listening=true;mic.classList.add('listen');};
+  rec.onresult=e=>{input.value=e.results[0][0].transcript;ask();};
+  rec.onend=rec.onerror=()=>{listening=false;mic.classList.remove('listen');};
+}
+function persist(){
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(()=>{
+    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
+  },250);
+}
+function restore(){
+  try{
+    const raw=sessionStorage.getItem('teranga-history');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    if(data.lang&&T[data.lang])lang=data.lang;
+    if(Array.isArray(data.history)&&data.history.length){
+      history=data.history.slice(-6);
+      hideHero();
+      const frag=document.createDocumentFragment();
+      history.forEach(item=>{
+        if(item.role!=='user'&&item.role!=='assistant')return;
+        const row=document.createElement('div');
+        row.className='msg '+item.role;
+        if(item.role==='assistant'){
+          const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
+        }
+        const col=document.createElement('div');col.className='col';
+        const b=document.createElement('div');b.className='bubble';
+        b.textContent=item.content||'';
+        col.appendChild(b);
+        if(item.role==='assistant'){
+          addActs(col,item.content||'');
+          addSources(col,item.sources);
+        }
+        row.appendChild(col);
+        frag.appendChild(row);
+      });
+      messages.appendChild(frag);
+      stage.scrollTop=stage.scrollHeight;
+    }
+  }catch(e){}
+}
+async function ask(preset){
+  const text=(preset||input.value).trim();
+  if(!text||send.disabled)return;
+  hideHero();
+  addMsg('user',text,{animate:true});
+  history.push({role:'user',content:text});
+  persist();
+  input.value='';input.style.height='';$('count').textContent='0 / 2000';
+  send.disabled=false;send.textContent=T[lang].stop;
+  send.dataset.mode='stop';
+  const wait=addMsg('assistant','',{animate:true});
+  const node=wait.b.firstChild;
+  const cursor=document.createElement('span');cursor.className='cursor';
+  const dots=document.createElement('div');dots.className='typing';
+  dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
+  wait.b.replaceWith(dots);
+  const ctrl=new AbortController();inflight=ctrl;
+  const kill=setTimeout(()=>ctrl.abort(),55000);
+  const body=JSON.stringify({message:text,history:history.slice(-6),language:lang});
+  let reply='', sources=[];
+  try{
+    const res=await fetch('/chat',{method:'POST',headers:headers(),body,signal:ctrl.signal});
+    if(!res.ok){
+      const data=await res.json().catch(()=>({}));
+      throw new Error(data.error||T[lang].err);
+    }
+    let live='', pending='', shown=false, paint=0;
+    const flush=()=>{
+      paint=0;
+      if(!pending)return;
+      live+=pending;pending='';
+      if(!shown){
+        dots.replaceWith(wait.b);
+        wait.b.classList.add('live');
+        if(!reduceMotion)wait.b.appendChild(cursor);
+        shown=true;
+      }
+      node.nodeValue=live;
+      scrollStage();
+    };
+    const queue=chunk=>{
+      pending+=chunk;
+      if(!paint)paint=requestAnimationFrame(flush);
+    };
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const {value,done}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const parts=buf.split('\n');buf=parts.pop();
+      for(let i=0;i<parts.length;i++){
+        const line=parts[i];
+        if(!line)continue;
+        let ev;try{ev=JSON.parse(line);}catch{continue;}
+        if(ev.error)throw new Error(ev.error);
+        if(ev.d)queue(ev.d);
+        if(ev.s)sources=ev.s;
+      }
+    }
+    if(buf.trim()){
+      try{
+        const ev=JSON.parse(buf);
+        if(ev.error)throw new Error(ev.error);
+        if(ev.d)queue(ev.d);
+        if(ev.s)sources=ev.s;
+      }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
+    }
+    if(paint){cancelAnimationFrame(paint);flush();}
+    reply=live.trim();
+    if(!reply){
+      const res2=await fetch('/chat',{method:'POST',headers:headers({'X-Teranga-Mode':'json'}),body,signal:ctrl.signal});
+      const data=await res2.json().catch(()=>({}));
+      if(!res2.ok)throw new Error(data.error||T[lang].err);
+      reply=(data.reply||'').trim();
+      if(data.sources)sources=data.sources;
+      pending=reply;flush();
+    }
+    if(!shown){dots.replaceWith(wait.b);node.nodeValue=reply||T[lang].err;}
+    else {node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
+    wait.b.classList.remove('live');
+    addActs(wait.col,reply);
+    addSources(wait.col,sources);
+    history.push({role:'assistant',content:reply,sources});
+    history=history.slice(-6);
+    persist();
+    if(autoVoice&&reply)speak(reply);
+  }catch(err){
+    const aborted=err.name==='AbortError';
+    const msg=aborted?T[lang].timeout:(err.message||T[lang].err);
+    if(dots.parentNode)dots.replaceWith(wait.b);
+    node.nodeValue=msg;
+    if(!aborted){
+      const retry=document.createElement('button');
+      retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
+      retry.onclick=()=>ask(text);
+      wait.col.appendChild(retry);
+    }
+  }finally{
+    clearTimeout(kill);inflight=null;send.dataset.mode='';send.disabled=false;send.textContent=T[lang].send;input.focus();
+  }
+}
+$('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
+$('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+$('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+send.onclick=()=>{
+  if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
+  ask();
+};
+mic.onclick=()=>{if(!rec)return;listening?rec.stop():rec.start();};
+$('resetBtn').onclick=reset;
+$('shareAppBtn').onclick=shareApp;
+$('copyLink').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(location.origin+'/');
+    $('copyLink').textContent=T[lang].linkCopied;
+    setTimeout(()=>$('copyLink').textContent=T[lang].copyLink,1200);
+  }catch(e){shareApp();}
+};
+$('themeBtn').onclick=()=>{
+  const next=document.body.dataset.theme==='dark'?'light':'dark';
+  document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
+  applyThemeColor();
+};
+$('voiceToggle').onclick=()=>{
+  autoVoice=!autoVoice;localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
+};
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
+let countRaf=0;
+input.addEventListener('input',()=>{
+  input.style.height='auto';
+  const h=Math.min(input.scrollHeight,130);
+  input.style.height=h+'px';
+  if(!countRaf)countRaf=requestAnimationFrame(()=>{
+    countRaf=0;$('count').textContent=input.value.length+' / 2000';
+  });
+});
+stage.addEventListener('scroll',()=>{stickToBottom=nearBottom();},{passive:true});
+if(window.visualViewport){
+  const place=()=>{
+    document.body.style.setProperty('--vvh',visualViewport.height+'px');
+    if(document.body.classList.contains('has-chat'))scrollStage(true);
+  };
+  visualViewport.addEventListener('resize',place);place();
+}
+themeInit();restore();setLang(lang);setupMic();
+</script>
+</body>
+</html>
+"""
 
 
 ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
@@ -553,75 +1251,17 @@ def sitemap():
     return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-def build_icon_png(size):
-    from PIL import Image, ImageDraw
-    img = Image.new("RGB", (size, size), "#1a3d2a")
-    draw = ImageDraw.Draw(img)
-    pad = size // 8
-    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=size // 5, fill="#1a3d2a")
-    sun = size // 5
-    draw.ellipse((size - pad - sun, pad, size - pad, pad + sun), fill="#e2b34a")
-    trunk_w = max(4, size // 14)
-    draw.rectangle((size // 2 - trunk_w // 2, size // 2, size // 2 + trunk_w // 2, size - pad), fill="#f3e6c8")
-    draw.arc((pad, size // 3, size - pad, size - pad // 2), start=200, end=340, fill="#f3e6c8", width=max(3, size // 18))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
-    return buf.getvalue()
-
-
-@app.get("/icon-192.png")
-def icon_192():
-    return Response(build_icon_png(192), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
-
-
-@app.get("/icon-512.png")
-def icon_512():
-    return Response(build_icon_png(512), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
-
-
-@app.get("/sw.js")
-def service_worker():
-    body = """
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
-});
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.pathname === '/chat' || url.pathname === '/tts') return;
-  if (url.pathname === '/' ) return;
-});
-"""
-    resp = Response(body.strip() + "\n", mimetype="application/javascript")
-    resp.headers["Cache-Control"] = "no-store"
-    resp.headers["Service-Worker-Allowed"] = "/"
-    return resp
-
-
 @app.get("/manifest.webmanifest")
 def manifest():
     return Response(
         json.dumps({
-            "id": "/",
             "name": "Teranga AI",
             "short_name": "Teranga",
-            "description": "Assistant du Sénégal en français, anglais et wolof.",
             "start_url": "/",
-            "scope": "/",
             "display": "standalone",
-            "orientation": "portrait",
-            "lang": "fr",
             "background_color": "#f6efe3",
             "theme_color": "#0a3d28",
-            "categories": ["travel", "lifestyle", "utilities"],
-            "icons": [
-                {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-                {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
-            ],
+            "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml"}],
         }),
         mimetype="application/manifest+json",
         headers={"Cache-Control": "public, max-age=86400"},
@@ -632,9 +1272,8 @@ def manifest():
 def home():
     nonce = secrets.token_urlsafe(16)
     request._csp_nonce = nonce
-    page = (BASE_DIR / "templates" / "index.html").read_text(encoding="utf-8")
     response = Response(
-        page.replace("__CSP_NONCE__", nonce).replace("__SITE_URL__", SITE_URL),
+        HTML.replace("__CSP_NONCE__", nonce).replace("__SITE_URL__", SITE_URL),
         mimetype="text/html",
     )
     response.set_cookie(
