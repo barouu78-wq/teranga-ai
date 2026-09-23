@@ -28,3 +28,20 @@ def test_map_for_senegal_city():
     result = lookup_map("Je vais à Ziguinchor")
     assert result is not None
     assert "Ziguinchor" in result["label"]
+
+def test_health_reports_api_key_configured():
+    client = app.test_client()
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.get_json()["api_key_configured"] is True
+
+
+def test_referer_origin_is_exact():
+    import app as app_module
+    with app_module.app.test_request_context(
+        "/chat",
+        headers={"Referer": "https://teranga-ai-1.onrender.com.evil.example/path"},
+    ):
+        app_module.ALLOWED_ORIGINS.clear()
+        app_module.ALLOWED_ORIGINS.add("https://teranga-ai-1.onrender.com")
+        assert app_module.origin_allowed() is False
