@@ -29,7 +29,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.5")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 ALLOWED_ORIGINS = {
     origin.strip()
@@ -268,10 +268,8 @@ def build_conversation(history, message):
 
 
 def client_ip():
-    if TRUST_PROXY:
-        forwarded = request.headers.get("X-Forwarded-For", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()[:64]
+    # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
+    # Ne pas relire X-Forwarded-For directement : il peut être falsifié par un client.
     return (request.remote_addr or "unknown")[:64]
 
 
@@ -577,19 +575,21 @@ def chat():
             yield json.dumps({"done": True}) + "\n"
         except Exception as exc:
             app.logger.exception("Erreur stream /chat")
-            try:
-                reply, sources, image = complete_reply(payload)
-                if reply:
-                    yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
-                    if sources:
-                        yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-                    if image:
-                        yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
-                    yield json.dumps({"done": True}) + "\n"
-                    return
-            except Exception as exc2:
-                app.logger.exception("Erreur fallback /chat")
-                exc = exc2
+            # Après le début du stream, ne jamais générer une seconde réponse complète.
+            if not yielded:
+                try:
+                    reply, sources, image = complete_reply(payload)
+                    if reply:
+                        yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                        if sources:
+                            yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
+                        if image:
+                            yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+                        yield json.dumps({"done": True}) + "\n"
+                        return
+                except Exception as exc2:
+                    app.logger.exception("Erreur fallback /chat")
+                    exc = exc2
             yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
 
     return Response(
