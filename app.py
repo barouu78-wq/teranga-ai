@@ -94,8 +94,8 @@ SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
 
 Réponds dans la langue de l'utilisateur : français, anglais, wolof ou pulaar (fuuta tooro).
-Sois chaleureux, direct et très court. 2 à 4 phrases maximum, sauf si on te demande plus.
-Une idée par phrase. Pas de long paragraphe.
+Sois chaleureux, direct et très court. 2 ou 3 phrases courtes, sauf si on te demande plus.
+Jamais plus de 70 mots. Une idée par phrase. Pas de liste de quartiers.
 Finis toujours tes phrases. Ne coupe pas au milieu d'un quartier ou d'un plat.
 N'utilise jamais de markdown : pas d'astérisques, pas de gras, pas de titres #, pas de listes à puces.
 N'invente jamais un téléphone, un horaire exact ou un prix figé.
@@ -204,25 +204,43 @@ def city_wikipedia_title(message):
     return None
 
 
+def wiki_summary(lang, title):
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
+    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+    with urlopen(req, timeout=4) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def usable_wiki_image(src):
+    src = str(src or "").split("?", 1)[0]
+    if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
+        return ""
+    lowered = src.lower()
+    if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
+        return ""
+    return src
+
+
 def fetch_city_image(title):
     if not title:
         return None
-    url = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
-    try:
-        req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
-        with urlopen(req, timeout=4) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-    except Exception:
-        return None
-    thumb = data.get("thumbnail") or {}
-    src = thumb.get("source") or ""
-    if not src.startswith("https://upload.wikimedia.org/"):
-        return None
-    return {
-        "url": src,
-        "alt": sanitize_text(data.get("title") or title, 80),
-        "credit": "Wikimédia",
-    }
+    english = title.replace(" (Sénégal)", "").replace(" (Senegal)", "")
+    for lang, page in (("fr", title), ("en", english), ("en", title)):
+        try:
+            data = wiki_summary(lang, page)
+        except Exception:
+            continue
+        src = usable_wiki_image((data.get("originalimage") or {}).get("source") or "")
+        if not src:
+            src = usable_wiki_image((data.get("thumbnail") or {}).get("source") or "")
+        if not src:
+            continue
+        return {
+            "url": src,
+            "alt": sanitize_text(data.get("title") or title, 80),
+            "credit": "Wikimédia",
+        }
+    return None
 
 
 def should_use_web(message):
@@ -354,7 +372,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src}; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://commons.wikimedia.org; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
@@ -403,7 +421,7 @@ def model_kwargs(payload, stream):
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 700 if payload["use_web"] else 520,
+        "max_output_tokens": 280 if payload["use_web"] else 220,
         "stream": stream,
     }
     if payload["use_web"]:
@@ -710,7 +728,7 @@ header{
   border-bottom:1px solid var(--line);
   contain:layout style;
 }
-.brand{display:flex;gap:12px;align-items:center;min-width:0}
+.brand{display:flex;gap:10px;align-items:center;min-width:0;flex:0 1 auto}
 .mark{
   width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
   background:
@@ -719,7 +737,7 @@ header{
   box-shadow:0 8px 20px rgba(10,61,40,.28);
 }
 .mark svg{width:24px;height:24px}
-.brand strong{display:block;font-size:15px;letter-spacing:-.04em}
+.brand strong{display:block;font-size:15px;letter-spacing:-.04em;white-space:nowrap}
 .brand em{font-style:normal;color:var(--gold)}
 .brand span{display:flex;align-items:center;gap:6px;color:var(--mute);font-size:11px}
 .dot{width:7px;height:7px;border-radius:50%;background:#3dbe7e;box-shadow:0 0 0 4px rgba(61,190,126,.15)}
@@ -834,9 +852,12 @@ textarea{
 .foot button,.foot a{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer;text-decoration:none}
 #count{font-variant-numeric:tabular-nums}
 @media(max-width:680px){
-  header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:8px}
+  header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:6px}
   .brand span#sub,.brand .dot{display:none}
   .brand span{display:none}
+  .mark{width:34px;height:34px;border-radius:12px}
+  .seg button{padding:5px 6px;font-size:11px}
+  .icon{width:32px;height:32px}
   .hero{margin:10px 0;padding:16px 14px}
   .hero h1{font-size:22px}
   .cards{grid-template-columns:1fr 1fr}
@@ -1005,7 +1026,7 @@ ff:{
     {q:'Fotde taksi AIBD haa Dakaar?',t:'Taksi AIBD',d:'Njoɓdi e tati'},
     {q:'Hol ñaamdu Dakaar e diiwe: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Ñaamdu',d:'Diiwal, geec walla luumo'},
     {q:'Hol geografi Senegaal: diiwe, gure mawɗe e Kasamans?',t:'Diiwe',d:'Diiwe 14 e gure'},
-    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'},
+    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'}
     {q:'Hol ñaamdu diiwe Senegaal kala?',t:'Ñaamdu diiwe',d:'Fuuta, hakkunde, Kasamans'}
   ]
 }
