@@ -457,7 +457,14 @@ def origin_allowed():
     referer = request.headers.get("Referer") or ""
     if origin:
         return origin in ALLOWED_ORIGINS
-    return any(referer.startswith(allowed) for allowed in ALLOWED_ORIGINS)
+    if not referer:
+        return False
+    try:
+        parsed = urlparse(referer)
+        referer_origin = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+    except Exception:
+        return False
+    return referer_origin in {item.rstrip("/") for item in ALLOWED_ORIGINS}
 
 
 def require_json_post(fn):
@@ -518,6 +525,7 @@ def health():
         "service": "teranga-ai",
         "model": MODEL,
         "model_configured": bool(MODEL),
+        "api_key_configured": bool(API_KEY),
         "web_search": True,
         "redis_rate_limit": redis_client is not None,
         "site_url": SITE_URL,
