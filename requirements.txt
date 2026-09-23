@@ -1,4 +1,6 @@
-flask
-openai
-python-dotenv
-gunicorn
+flask>=3.0.0
+openai>=1.50.0
+python-dotenv>=1.0.0
+gunicorn>=23.0.0
+pillow>=10.0.0
+werkzeug>=3.0.0
