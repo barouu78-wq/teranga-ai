@@ -59,3 +59,21 @@ def test_referer_origin_is_exact():
     finally:
         app_module.ALLOWED_ORIGINS.clear()
         app_module.ALLOWED_ORIGINS.update(original_origins)
+
+
+def test_seo_pages_and_sitemap():
+    client = app.test_client()
+    for path in (
+        "/senegal",
+        "/meteo-dakar",
+        "/visiter-goree",
+        "/restaurants-dakar",
+        "/specialites-senegal",
+        "/regions-senegal",
+    ):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert "Teranga AI" in response.get_data(as_text=True)
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "/meteo-dakar" in sitemap
+    assert "/regions-senegal" in sitemap
