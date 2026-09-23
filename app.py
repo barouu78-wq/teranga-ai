@@ -782,7 +782,7 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f6efe3" id="themeColor">
+<meta name="theme-color" content="#0b0907" id="themeColor">
 <meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
 <meta name="robots" content="index,follow">
@@ -810,22 +810,14 @@ HTML = r"""<!doctype html>
 <script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo"],"description":"Assistant numérique pour le Sénégal : météo, transport, visa, cuisine, SIM.","offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}}</script>
 <style>
 :root{
-  --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
-  --card:rgba(255,251,244,.82);--soft:#efe4d2;--brand:#0f6a43;--brand-2:#0a3d28;
-  --gold:#d9a441;--terracotta:#c45c2a;--user:#1c3328;--shadow:0 24px 60px rgba(26,18,12,.12);
-  --glow:rgba(217,164,65,.28);
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --sand:#100e0c;--ink:#f3ece2;--mute:#b3a394;--line:rgba(255,236,210,.10);
-    --card:rgba(24,20,16,.78);--soft:#241e18;--brand:#4ecf8a;--brand-2:#163628;
-    --gold:#e2b34a;--terracotta:#e07a4a;--user:#214033;--shadow:0 24px 60px rgba(0,0,0,.4);
-    --glow:rgba(226,179,74,.16);
-  }
+  --sand:#0b0907;--ink:#f6efe3;--mute:#b8a48c;--line:rgba(226,179,74,.16);
+  --card:rgba(22,18,14,.92);--soft:#171310;--brand:#e2b34a;--brand-2:#c9962e;
+  --gold:#e8c36a;--terracotta:#e07a4a;--user:#2a2114;--shadow:0 24px 60px rgba(0,0,0,.45);
+  --glow:rgba(232,195,106,.18);
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-html{color-scheme:light dark}
+html{color-scheme:dark}
 body{
   color:var(--ink);
   font:15px/1.5 "Segoe UI",ui-sans-serif,system-ui,-apple-system,sans-serif;
@@ -837,10 +829,10 @@ body{
   text-rendering:optimizeSpeed;
 }
 body[data-theme="dark"]{
-  --sand:#100e0c;--ink:#f3ece2;--mute:#b3a394;--line:rgba(255,236,210,.10);
-  --card:rgba(24,20,16,.78);--soft:#241e18;--brand:#4ecf8a;--brand-2:#163628;
-  --gold:#e2b34a;--terracotta:#e07a4a;--user:#214033;--shadow:0 24px 60px rgba(0,0,0,.4);
-  --glow:rgba(226,179,74,.16);
+  --sand:#0b0907;--ink:#f6efe3;--mute:#b8a48c;--line:rgba(226,179,74,.16);
+  --card:rgba(22,18,14,.92);--soft:#171310;--brand:#e2b34a;--brand-2:#c9962e;
+  --gold:#e8c36a;--terracotta:#e07a4a;--user:#2a2114;--shadow:0 24px 60px rgba(0,0,0,.45);
+  --glow:rgba(232,195,106,.18);
 }
 body[data-theme="light"]{
   --sand:#f6efe3;--ink:#1a120c;--mute:#7a6d5f;--line:rgba(26,18,12,.10);
@@ -890,7 +882,7 @@ header{
   border:0;background:transparent;color:var(--mute);border-radius:999px;
   padding:6px 8px;font-weight:750;cursor:pointer
 }
-.seg button.on{background:var(--brand-2);color:#fff}
+.seg button.on{background:var(--gold);color:#1a1208}
 .icon{width:36px;height:36px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center}
 .icon svg{width:16px;height:16px}
 #stage{flex:1;min-height:0;overflow:auto;padding:8px 16px 12px;contain:layout paint;overflow-anchor:none;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
@@ -902,7 +894,7 @@ header{
   contain:content;
 }
 .hero.is-hidden{display:none}
-.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1}
+.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1;color:var(--gold)}
 .hero p{margin:0 0 16px;color:var(--mute);max-width:42ch}
 .cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .card{
@@ -926,7 +918,7 @@ header{
 }
 .bubble.live{contain:content}
 .assistant .bubble{background:var(--soft);border-bottom-left-radius:7px}
-.user .bubble{background:linear-gradient(180deg,#214833,#14281e);color:#f7fff9;border-bottom-right-radius:7px}
+.user .bubble{background:linear-gradient(180deg,#3a2c14,#22180c);color:#f8edd4;border:1px solid rgba(232,195,106,.25);border-bottom-right-radius:7px}
 .acts{display:flex;gap:4px;margin-top:6px;opacity:.0;transition:.15s}
 .assistant:hover .acts,.assistant:focus-within .acts{opacity:1}
 .acts button{
@@ -978,7 +970,7 @@ textarea{
 #mic,#send{height:44px;border:0;border-radius:16px;cursor:pointer;font-weight:800}
 #mic{width:44px;background:color-mix(in srgb,var(--gold) 28%,var(--card));color:#7a4a00}
 #mic.listen{background:#c93636;color:#fff}
-#send{padding:0 16px;background:var(--brand-2);color:#fff}
+#send{padding:0 16px;background:linear-gradient(180deg,#e8c36a,#c9962e);color:#1a1208}
 #send:disabled{opacity:.5}
 .meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--mute);font-size:11px;padding:0 6px}
 .meta button{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer}
@@ -988,7 +980,7 @@ textarea{
   border-radius:999px;padding:8px 12px;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none
 }
 .spread .wa{background:#128C7E;border-color:#128C7E;color:#fff}
-.spread .install{background:var(--brand-2);border-color:var(--brand-2);color:#fff}
+.spread .install{background:linear-gradient(180deg,#e8c36a,#c9962e);border-color:#c9962e;color:#1a1208}
 .spread .install[hidden]{display:none}
 .seo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 .foot{
@@ -1019,7 +1011,7 @@ textarea{
 </style>
 
 </head>
-<body>
+<body data-theme="dark">
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
 <header>
@@ -1212,7 +1204,7 @@ function hideHero(){setChatMode(true);}
 function showHero(){setChatMode(false);}
 function applyThemeColor(){
   const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
-  $('themeColor').content=dark?'#100e0c':'#f6efe3';
+  $('themeColor').content=dark?'#0b0907':'#f6efe3';
 }
 function sharePayload(){
   const url=location.origin+'/';
@@ -1362,7 +1354,7 @@ function setLang(next){
 }
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
-  if(saved)document.body.dataset.theme=saved;
+  document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
 function reset(){
@@ -1741,7 +1733,7 @@ def manifest():
             "orientation": "portrait",
             "lang": "fr",
             "background_color": "#f6efe3",
-            "theme_color": "#0a3d28",
+            "theme_color": "#0b0907",
             "categories": ["travel", "lifestyle", "utilities"],
             "icons": [
                 {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
