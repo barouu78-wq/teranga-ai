@@ -289,6 +289,45 @@ def fetch_topic_images(message):
     return photos or None
 
 
+MAP_PLACES = (
+    ("aibd", "Aéroport Blaise Diagne Diass Sénégal", "Aéroport AIBD"),
+    ("aéroport", "Aéroport Blaise Diagne Diass Sénégal", "Aéroport AIBD"),
+    ("maison des esclaves", "Maison des Esclaves Gorée Sénégal", "Maison des Esclaves"),
+    ("île de gorée", "Île de Gorée Sénégal", "Île de Gorée"),
+    ("ile de goree", "Île de Gorée Sénégal", "Île de Gorée"),
+    ("gorée", "Île de Gorée Sénégal", "Île de Gorée"),
+    ("goree", "Île de Gorée Sénégal", "Île de Gorée"),
+    ("lac rose", "Lac Retba Sénégal", "Lac Rose"),
+    ("lac retba", "Lac Retba Sénégal", "Lac Rose"),
+    ("cap skirring", "Cap Skirring Sénégal", "Cap Skirring"),
+    ("saint-louis", "Saint-Louis Sénégal", "Saint-Louis"),
+    ("saint louis", "Saint-Louis Sénégal", "Saint-Louis"),
+    ("monument de la renaissance", "Monument de la Renaissance africaine Dakar", "Monument de la Renaissance"),
+    ("joal", "Joal-Fadiouth Sénégal", "Joal-Fadiouth"),
+    ("fadiouth", "Joal-Fadiouth Sénégal", "Joal-Fadiouth"),
+    ("touba", "Grande Mosquée de Touba Sénégal", "Touba"),
+    ("ziguinchor", "Ziguinchor Sénégal", "Ziguinchor"),
+    ("saly", "Saly Portudal Sénégal", "Saly"),
+    ("thiès", "Thiès Sénégal", "Thiès"),
+    ("thies", "Thiès Sénégal", "Thiès"),
+    ("kaolack", "Kaolack Sénégal", "Kaolack"),
+    ("dakar", "Dakar Sénégal", "Dakar"),
+)
+
+
+def lookup_map(message):
+    lowered = message.lower()
+    for key, query, label in MAP_PLACES:
+        if key in lowered:
+            q = quote(query)
+            return {
+                "label": label,
+                "url": "https://www.google.com/maps/search/?api=1&query=" + q,
+                "embed": "https://maps.google.com/maps?q=" + q + "&hl=fr&z=14&output=embed",
+            }
+    return None
+
+
 def should_use_web(message):
     lowered = message.lower()
     return any(term in lowered for term in WEB_HINTS)
@@ -420,6 +459,8 @@ def add_security_headers(response):
         f"default-src 'self'; script-src {script_src}; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
+        "frame-src https://www.google.com https://maps.google.com; "
+        "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
     cached = {
@@ -558,7 +599,7 @@ def complete_reply(payload):
     response = client.responses.create(**model_kwargs(payload, stream=False))
     text = clean_answer(getattr(response, "output_text", "") or "")
     image = fetch_topic_images(payload.get("message", ""))
-    return text, extract_sources(response), image
+    return text, extract_sources(response), image, lookup_map(payload.get("message", ""))
 
 
 @app.post("/chat")
@@ -578,10 +619,10 @@ def chat():
 
     if want_json:
         try:
-            reply, sources, image = complete_reply(payload)
+            reply, sources, image, maps = complete_reply(payload)
             if not reply:
                 reply = "Je n'ai pas réussi à répondre. Réessaie."
-            return jsonify({"reply": reply, "sources": sources, "image": image})
+            return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps})
         except Exception as exc:
             app.logger.exception("Erreur JSON /chat")
             return jsonify({"error": public_error(exc)}), 500
@@ -618,26 +659,31 @@ def chat():
                         yielded = True
                         yield json.dumps({"d": clean_answer(text)}, ensure_ascii=False) + "\n"
             if not yielded:
-                reply, sources, image = complete_reply(payload)
+                reply, sources, image, maps = complete_reply(payload)
                 if reply:
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
             else:
                 image = fetch_topic_images(payload.get("message", ""))
+                maps = lookup_map(payload.get("message", ""))
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
             if image:
                 yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+            if maps:
+                yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
             yield json.dumps({"done": True}) + "\n"
         except Exception as exc:
             app.logger.exception("Erreur stream /chat")
             try:
-                reply, sources, image = complete_reply(payload)
+                reply, sources, image, maps = complete_reply(payload)
                 if reply:
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                     if sources:
                         yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
                     if image:
                         yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+                    if maps:
+                        yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
                     yield json.dumps({"done": True}) + "\n"
                     return
             except Exception as exc2:
@@ -855,6 +901,9 @@ header{
 .city-pic{margin:8px 0 2px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--card);max-width:280px}
 .city-pic img{display:block;width:100%;height:158px;object-fit:cover}
 .city-pic small{display:block;padding:6px 10px;color:var(--mute);font-size:11px}
+.city-map{margin:8px 0 2px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--card);max-width:280px}
+.city-map iframe{display:block;width:100%;height:170px;border:0}
+.city-map a{display:block;padding:8px 10px;color:var(--brand-2);font-size:12px;font-weight:750;text-decoration:none}
 .typing{display:flex;gap:5px;padding:14px 16px;width:fit-content;background:var(--soft);border-radius:18px}
 .typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
@@ -1195,6 +1244,20 @@ function addCityImage(col,image){
     box.append(img,cap);col.appendChild(box);
   });
 }
+function addMap(col,map){
+  if(!map||!map.url)return;
+  const box=document.createElement('div');box.className='city-map';
+  if(map.embed){
+    const frame=document.createElement('iframe');
+    frame.src=map.embed;frame.loading='lazy';frame.referrerPolicy='no-referrer-when-downgrade';
+    frame.title=map.label||'Carte';frame.allowFullscreen=true;
+    box.appendChild(frame);
+  }
+  const a=document.createElement('a');
+  a.href=map.url;a.target='_blank';a.rel='noopener noreferrer';
+  a.textContent='Ouvrir dans Google Maps'+(map.label?' · '+map.label:'');
+  box.appendChild(a);col.appendChild(box);
+}
 function addSources(col,sources){
   if(!sources||!sources.length)return;
   const box=document.createElement('div');box.className='sources';
@@ -1302,6 +1365,7 @@ function restore(){
         if(item.role==='assistant'){
           addActs(col,item.content||'');
           addCityImage(col,item.image);
+          addMap(col,item.map);
           addSources(col,item.sources);
         }
         row.appendChild(col);
@@ -1331,7 +1395,7 @@ async function ask(preset){
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),75000);
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang});
-  let reply='', sources=[], image=null;
+  let reply='', sources=[], image=null, map=null;
   try{
     const res=await fetch('/chat',{method:'POST',headers:headers(),body,signal:ctrl.signal});
     if(!res.ok){
@@ -1372,6 +1436,7 @@ async function ask(preset){
         if(ev.d)queue(ev.d);
         if(ev.s)sources=ev.s;
         if(ev.img)image=ev.img;
+        if(ev.map)map=ev.map;
       }
     }
     if(buf.trim()){
@@ -1381,6 +1446,7 @@ async function ask(preset){
         if(ev.d)queue(ev.d);
         if(ev.s)sources=ev.s;
         if(ev.img)image=ev.img;
+        if(ev.map)map=ev.map;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
     if(paint){cancelAnimationFrame(paint);flush();}
@@ -1392,6 +1458,7 @@ async function ask(preset){
       reply=(data.reply||'').trim();
       if(data.sources)sources=data.sources;
       if(data.image)image=data.image;
+      if(data.map)map=data.map;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
@@ -1400,8 +1467,9 @@ async function ask(preset){
     wait.b.classList.remove('live');
     addActs(wait.col,reply);
     addCityImage(wait.col,image);
+    addMap(wait.col,map);
     addSources(wait.col,sources);
-    history.push({role:'assistant',content:reply,sources,image});
+    history.push({role:'assistant',content:reply,sources,image,map});
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply)speak(reply);
