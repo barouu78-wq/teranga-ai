@@ -896,14 +896,28 @@ header{
 .hero.is-hidden{display:none}
 .hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1;color:var(--gold)}
 .hero p{margin:0 0 16px;color:var(--mute);max-width:42ch}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .card{
-  text-align:left;border:1px solid var(--line);background:color-mix(in srgb,var(--sand) 70%,transparent);
-  border-radius:18px;padding:13px 14px;cursor:pointer;color:inherit
+  text-align:center;border:1px solid var(--line);background:color-mix(in srgb,var(--sand) 70%,transparent);
+  border-radius:18px;padding:12px 8px 10px;cursor:pointer;color:inherit
 }
-.card b{display:block;font-size:13px;margin-bottom:4px}
-.card span{display:block;color:var(--mute);font-size:12px;line-height:1.35}
+.card .ico{width:26px;height:26px;margin:0 auto 8px;color:var(--gold);display:grid;place-items:center}
+.card .ico svg{width:24px;height:24px}
+.card b{display:block;font-size:12px;font-weight:750}
+.card span{display:none}
 .card:hover{border-color:var(--gold)}
+.tabbar{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  padding:6px 6px calc(8px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);
+  background:color-mix(in srgb,var(--sand) 94%,transparent);
+}
+.tabbar button{
+  border:0;background:transparent;color:var(--mute);font-size:10px;font-weight:750;
+  padding:6px 2px;cursor:pointer
+}
+.tabbar button.on{color:var(--gold)}
+.tabbar svg{display:block;margin:0 auto 3px;width:18px;height:18px}
 .msg{margin:0 0 14px;display:flex;gap:8px;align-items:flex-end;contain:content;content-visibility:auto;contain-intrinsic-size:auto 72px}
 .msg.is-new{animation:in .18s ease}
 .msg.user{justify-content:flex-end}
@@ -998,7 +1012,7 @@ textarea{
   .icon{width:32px;height:32px}
   .hero{margin:10px 0;padding:16px 14px}
   .hero h1{font-size:22px}
-  .cards{grid-template-columns:1fr 1fr}
+  .cards{grid-template-columns:repeat(3,1fr)}
   .row{grid-template-columns:1fr auto auto}
   #send,#mic{grid-column:auto;width:auto}
   #send{min-width:92px}
@@ -1074,6 +1088,12 @@ textarea{
     <button id="voiceToggle" type="button">Voix auto off</button>
   </div>
 </div>
+<nav class="tabbar" id="tabbar" aria-label="Navigation">
+  <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
+  <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Découvrir</button>
+  <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
+  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
+</nav>
 </div>
 <script nonce="__CSP_NONCE__">
 const $ = id => document.getElementById(id);
@@ -1088,7 +1108,7 @@ fr:{
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
-  install:'Installer l’app',
+  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
   heroTitle:'L’hospitalité, en quelques questions.',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -1110,7 +1130,7 @@ en:{
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
-  install:'Install app',
+  install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
   heroTitle:'Hospitality, in a few questions.',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
@@ -1132,7 +1152,7 @@ wo:{
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
   sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
   shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
-  install:'Yebal app bi',
+  install:'Yebal app bi',navHome:'Accueil',navDiscover:'Xam',navChat:'Waxtaan',navProfile:'Profil',
   heroTitle:'Teranga, ci laaj yu néew.',
   heroText:'Taw, taksi, ñam, teex ak marché — Teranga dina la wonal te du sos lu mëna soppi.',
   hint:'Tontu ci kaw · Enter ngir yónnee',
@@ -1154,7 +1174,7 @@ ff:{
   share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
   sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
   shareText:'Teranga AI — ballal Senegaal (farayse, english, wolof, pulaar).',
-  install:'Aaf app',
+  install:'Aaf app',navHome:'Jaɓɓorgo',navDiscover:'Yiytu',navChat:'Yeewtere',navProfile:'Profil',
   heroTitle:'Teranga, e naamne seeɗa.',
   heroText:'Kaanawol, taksi, ñaamdu, geec, luumooji — Teranga holata, wonaa fefindoo.',
   hint:'Jaabawol e sahaa. Sawtu nde ɓadiima pulaar.',
@@ -1198,6 +1218,7 @@ function headers(extra){
 function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
 function setChatMode(on){
   document.body.classList.toggle('has-chat',on);
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
   hero.classList.toggle('is-hidden',on);
 }
 function hideHero(){setChatMode(true);}
@@ -1320,18 +1341,26 @@ async function speak(text,btn){
     await audio.play();
   }catch(e){if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}}
 }
+const CARD_ICONS=[
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M6 15a6 6 0 1 1 10.4-4.2A4.5 4.5 0 1 1 17 19H7.5A3.5 3.5 0 0 1 6 15Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 11.5 10 9l2 2 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M6 18V9l6-4 6 4v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 18v-5h4v5" stroke="currentColor" stroke-width="1.7"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M5 19V8l7-4 7 4v11" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 19v-6h6v6" stroke="currentColor" stroke-width="1.7"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M4 10h16l-1.2 8.2A2 2 0 0 1 16.8 20H7.2a2 2 0 0 1-2-1.8L4 10Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11" r="2.2" stroke="currentColor" stroke-width="1.7"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5 10 4l4 3 6-2v13l-6 2-4-3-6 2V6.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 4v13M14 7v13" stroke="currentColor" stroke-width="1.7"/></svg>'
+];
 function renderCards(){
   if(lastLang===lang)return;
   lastLang=lang;
   const t=T[lang];
   const cardFrag=document.createDocumentFragment();
   const chipFrag=document.createDocumentFragment();
-  t.cards.forEach(c=>{
+  t.cards.forEach((c,i)=>{
     const card=document.createElement('button');
     card.className='card';card.type='button';card.dataset.q=c.q;
+    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=CARD_ICONS[i%CARD_ICONS.length];
     const b=document.createElement('b');b.textContent=c.t;
-    const s=document.createElement('span');s.textContent=c.d;
-    card.append(b,s);cardFrag.appendChild(card);
+    card.append(ico,b);cardFrag.appendChild(card);
     const chip=document.createElement('button');
     chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;
     chipFrag.appendChild(chip);
@@ -1347,6 +1376,11 @@ function setLang(next){
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
+  const tabs=document.querySelectorAll('#tabbar button');
+  if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
+  if(tabs[1])tabs[1].lastChild.nodeValue=t.navDiscover;
+  if(tabs[2])tabs[2].lastChild.nodeValue=t.navChat;
+  if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   bindShare();
@@ -1357,6 +1391,16 @@ function themeInit(){
   document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
+$('tabbar').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-tab]');
+  if(!btn)return;
+  const tab=btn.dataset.tab;
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
+  if(tab==='home'){showHero();stage.scrollTop=0;}
+  if(tab==='discover'){showHero();$('chips').scrollIntoView({block:'nearest'});}
+  if(tab==='chat'){input.focus();}
+  if(tab==='profile'){$('themeBtn').click();}
+});
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
