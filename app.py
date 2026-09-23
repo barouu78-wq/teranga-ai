@@ -65,6 +65,7 @@ TTS_RATE_LIMIT = 8
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
+CSRF_TOKEN_TTL = 60 * 60 * 12
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
@@ -306,11 +307,24 @@ def valid_token(token):
         value.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return hmac.compare_digest(provided, expected)
+    if not hmac.compare_digest(provided, expected):
+        return False
+    try:
+        issued_at_text, _ = value.split(":", 1)
+        issued_at = int(issued_at_text)
+    except (TypeError, ValueError):
+        return False
+    # Reject expired or implausibly future timestamps. A small clock skew is
+    # tolerated for deployments behind multiple servers.
+    now = time.time()
+    return now - CSRF_TOKEN_TTL <= issued_at <= now + 60
 
 
 def issue_csrf():
-    return sign_token(secrets.token_urlsafe(24))
+    # Include the issue time in the signed value so a copied token cannot remain
+    # valid indefinitely if a browser keeps an expired cookie around.
+    value = f"{int(time.time())}:{secrets.token_urlsafe(24)}"
+    return sign_token(value)
 
 
 def origin_allowed():
@@ -1572,7 +1586,7 @@ def home():
         httponly=False,
         secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
         samesite="Lax",
-        max_age=60 * 60 * 12,
+        max_age=CSRF_TOKEN_TTL,
     )
     return response
 
