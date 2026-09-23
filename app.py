@@ -1004,6 +1004,12 @@ textarea{
 .spread .install{background:linear-gradient(180deg,#e8c36a,#c9962e);border-color:#c9962e;color:#1a1208}
 .spread .install[hidden]{display:none}
 .seo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.guide-section{margin:18px 0 8px;padding:18px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.02)}
+.guide-section h2{margin:0 0 6px;color:var(--gold);font-size:20px}
+.guide-section p{margin:0;color:var(--mute);font-size:14px}
+.guide-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.guide-links a{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;background:var(--card)}
+.guide-links a:hover{border-color:var(--gold);color:var(--gold)}
 .foot{
   display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
   padding:6px 6px 0;color:var(--mute);font-size:11px
@@ -1077,6 +1083,18 @@ textarea{
   <section class="seo">
     <h2>Assistant Sénégal</h2>
     <p>Teranga AI aide habitants, diaspora et voyageurs : géographie des 14 régions, où manger à Dakar par quartier, météo, taxi AIBD, ferry Gorée, visa. L’interface parle français, anglais, wolof et pulaar.</p>
+  </section>
+  <section class="guide-section" aria-labelledby="guidesTitle">
+    <h2 id="guidesTitle">Guides du Sénégal</h2>
+    <p>Des repères pratiques avant de poser votre question à Teranga AI.</p>
+    <div class="guide-links">
+      <a href="/senegal">Découvrir le Sénégal</a>
+      <a href="/meteo-dakar">Météo à Dakar</a>
+      <a href="/visiter-goree">Visiter Gorée</a>
+      <a href="/restaurants-dakar">Restaurants à Dakar</a>
+      <a href="/specialites-senegal">Spécialités sénégalaises</a>
+      <a href="/regions-senegal">Les 14 régions du Sénégal</a>
+    </div>
   </section>
   <div id="messages"></div>
 </div>
