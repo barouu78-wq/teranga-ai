@@ -791,6 +791,7 @@ HTML = r"""<!doctype html>
 <meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
 <meta name="robots" content="index,follow">
+<meta name="google-site-verification" content="Dm3_ewHr8lNTGRogg1Gf9cswzJIEx1_STSW5PGk0XDU">
 <link rel="canonical" href="__SITE_URL__/">
 <meta property="og:site_name" content="Teranga AI">
 <meta property="og:title" content="Teranga AI — l’assistant du Sénégal">
