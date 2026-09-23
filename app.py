@@ -863,6 +863,17 @@ body[data-theme="light"]{
     linear-gradient(var(--ink),var(--ink)) 50% 40%/8px 58% no-repeat;
 }
 .app{position:relative;z-index:1;min-height:100%;height:var(--vvh,100%);display:flex;flex-direction:column;max-width:820px;margin:auto;contain:layout}
+.sidebar{display:none}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:18px 16px 22px;border-bottom:1px solid var(--line)}
+.sidebar-brand .mark{width:40px;height:40px}
+.sidebar-brand strong{font-family:Georgia,serif;font-size:20px;color:var(--gold);letter-spacing:-.03em}
+.sidebar-brand small{display:block;color:var(--mute);font-size:10px;margin-top:1px}
+.side-nav{padding:14px 10px;display:grid;gap:4px}
+.side-nav button{display:flex;align-items:center;gap:12px;width:100%;border:1px solid transparent;background:transparent;color:var(--mute);border-radius:14px;padding:11px 12px;font:600 13px inherit;text-align:left;cursor:pointer}
+.side-nav button:hover,.side-nav button.on{background:linear-gradient(90deg,rgba(226,179,74,.14),transparent);border-color:var(--line);color:var(--gold)}
+.side-nav svg{width:19px;height:19px;flex:none}
+.sidebar-foot{margin-top:auto;padding:18px 16px 20px;color:var(--mute);font-size:11px;border-top:1px solid var(--line)}
+.sidebar-foot b{display:block;color:var(--gold);font-size:12px;margin-bottom:3px}
 header{
   position:sticky;top:0;z-index:20;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -896,24 +907,49 @@ header{
 #stage{flex:1;min-height:0;overflow:auto;padding:8px 16px 12px;contain:layout paint;overflow-anchor:none;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column}
 #messages{margin-top:auto;padding-top:8px}
 .hero{
-  margin:18px 0 8px;padding:22px 20px 18px;border-radius:28px;
-  background:var(--card);
-  border:1px solid var(--line);box-shadow:var(--shadow);
-  contain:content;
+  position:relative;overflow:hidden;
+  margin:18px 0 8px;padding:30px 28px 22px;border-radius:30px;
+  background:
+    linear-gradient(90deg,rgba(10,8,6,.98) 0%,rgba(10,8,6,.92) 48%,rgba(10,8,6,.48) 100%),
+    url("https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/African_Renaissance_Monument_Dakar_2025.jpg/960px-African_Renaissance_Monument_Dakar_2025.jpg") 78% 34%/cover no-repeat,
+    var(--card);
+  border:1px solid rgba(226,179,74,.30);box-shadow:var(--shadow);
+  min-height:520px;contain:content;
 }
+.hero::before{content:"";position:absolute;inset:auto 0 0;height:46%;background:linear-gradient(transparent,rgba(5,4,3,.9));pointer-events:none}
 .hero.is-hidden{display:none}
-.hero h1{margin:0 0 8px;font-size:28px;letter-spacing:-.05em;line-height:1.1;color:var(--gold)}
-.hero p{margin:0 0 16px;color:var(--mute);max-width:42ch}
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hero h1{position:relative;margin:0 0 7px;font:600 clamp(34px,5vw,64px)/1.02 Georgia,serif;letter-spacing:-.045em;color:#f0c968}
+.hero p{position:relative;margin:0 0 20px;color:#eadfce;max-width:55ch;font-size:15px}
+.hero .hero-kicker{position:relative;display:inline-flex;align-items:center;gap:7px;margin-bottom:13px;border:1px solid rgba(226,179,74,.28);background:rgba(10,8,6,.58);border-radius:999px;padding:6px 10px;color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hero .hero-copy{position:relative;z-index:2;max-width:680px}
+.hero .hero-note{display:inline-flex;gap:7px;align-items:center;color:#d7c6aa;font-size:12px;margin:0 0 16px}
+.cards{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .card{
-  text-align:center;border:1px solid var(--line);background:color-mix(in srgb,var(--sand) 70%,transparent);
-  border-radius:18px;padding:12px 8px 10px;cursor:pointer;color:inherit
+  text-align:center;border:1px solid rgba(226,179,74,.16);background:rgba(14,12,10,.72);
+  backdrop-filter:blur(8px);border-radius:17px;padding:14px 8px 12px;cursor:pointer;color:inherit;transition:.18s transform,.18s border-color,.18s background
 }
+.card:hover{transform:translateY(-2px);border-color:rgba(232,195,106,.55);background:rgba(24,19,14,.86)}
 .card .ico{width:26px;height:26px;margin:0 auto 8px;color:var(--gold);display:grid;place-items:center}
 .card .ico svg{width:24px;height:24px}
 .card b{display:block;font-size:12px;font-weight:750}
-.card span{display:none}
-.card:hover{border-color:var(--gold)}
+.card span{display:none;color:var(--mute);font-size:10px;margin-top:2px}
+.discover-panel{position:relative;z-index:2;margin-top:18px;padding-top:17px;border-top:1px solid rgba(226,179,74,.18)}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.section-head h2{margin:0;font:600 22px/1.1 Georgia,serif;color:#f0c968}
+.section-head span{color:var(--mute);font-size:11px}
+.place-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.place-card{position:relative;min-height:128px;overflow:hidden;border:1px solid rgba(226,179,74,.18);border-radius:15px;padding:0;text-align:left;color:#fff;background:var(--soft);cursor:pointer}
+.place-card::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 22%,rgba(0,0,0,.82) 100%)}
+.place-card .place-art{position:absolute;inset:0;background:
+  radial-gradient(circle at 70% 24%,rgba(255,220,132,.45),transparent 22%),
+  linear-gradient(145deg,#183d2d,#0b1711 48%,#5c3817);filter:saturate(.9)}
+.place-card:nth-child(2) .place-art{background:radial-gradient(circle at 35% 28%,rgba(245,205,127,.7),transparent 20%),linear-gradient(145deg,#6c4c2b,#1b1510 55%,#173e35)}
+.place-card:nth-child(3) .place-art{background:radial-gradient(circle at 70% 25%,#eac56a,transparent 20%),linear-gradient(145deg,#0f5b48,#0b2a35 52%,#8c5b25)}
+.place-card:nth-child(4) .place-art{background:radial-gradient(circle at 30% 22%,#f0c975,transparent 18%),linear-gradient(145deg,#19445a,#0d2630 54%,#7e4b25)}
+.place-card:nth-child(5) .place-art{background:radial-gradient(circle at 60% 20%,#f1c96e,transparent 18%),linear-gradient(145deg,#0e5940,#102c25 55%,#254c2b)}
+.place-card .place-copy{position:absolute;left:11px;right:8px;bottom:9px}
+.place-card b{display:block;font-size:13px}.place-card small{display:block;color:#d9cdbb;font-size:10px;margin-top:2px}
+.place-card:hover{border-color:rgba(232,195,106,.6);transform:translateY(-2px)}
 .tabbar{
   display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
   padding:6px 6px calc(8px + env(safe-area-inset-bottom));
@@ -1011,6 +1047,23 @@ textarea{
 }
 .foot button,.foot a{border:0;background:0;color:var(--brand);font-weight:750;cursor:pointer;text-decoration:none}
 #count{font-variant-numeric:tabular-nums}
+@media(min-width:900px){
+  .app{max-width:1400px;width:100%;height:100vh;display:grid;grid-template-columns:228px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"side head" "side stage" "side dock";margin:auto}
+  .sidebar{grid-area:side;display:flex;flex-direction:column;background:rgba(9,8,7,.94);border-right:1px solid var(--line);min-height:100vh}
+  header{grid-area:head;position:relative;padding:14px 28px 12px;background:rgba(10,8,6,.82)}
+  #stage{grid-area:stage;padding:10px 28px 18px}
+  .dock{grid-area:dock;padding:8px 28px 14px;background:rgba(10,8,6,.92)}
+  .tabbar{display:none}
+  .hero{max-width:1180px;margin:12px auto 8px;padding:36px 34px 26px}
+  .cards{grid-template-columns:repeat(6,1fr)}
+  .card span{display:block}
+  .discover-panel{max-width:1180px;margin-left:auto;margin-right:auto}
+  .place-grid{grid-template-columns:repeat(5,1fr)}
+  .composer{max-width:1180px;margin:auto}
+  .chips{max-width:1180px;margin:auto}
+  .meta{max-width:1180px;margin:7px auto 0}
+  .brand strong{font-size:17px}
+}
 @media(max-width:680px){
   header{padding:10px 12px calc(8px + env(safe-area-inset-top));gap:6px}
   .brand span#sub,.brand .dot{display:none}
@@ -1018,16 +1071,22 @@ textarea{
   .mark{width:34px;height:34px;border-radius:12px}
   .seg button{padding:5px 6px;font-size:11px}
   .icon{width:32px;height:32px}
-  .hero{margin:10px 0;padding:16px 14px}
-  .hero h1{font-size:22px}
+  .hero{margin:10px 0;padding:22px 14px 16px;min-height:0;background:linear-gradient(180deg,rgba(10,8,6,.88),rgba(10,8,6,.98)),url("https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/African_Renaissance_Monument_Dakar_2025.jpg/960px-African_Renaissance_Monument_Dakar_2025.jpg") 68% 18%/cover no-repeat,var(--card)}
+  .hero h1{font-size:31px}
+  .hero p{font-size:13px}
   .cards{grid-template-columns:repeat(3,1fr)}
+  .place-grid{grid-template-columns:repeat(2,1fr)}
+  .place-card{min-height:108px}
   .row{grid-template-columns:1fr auto auto}
   #send,#mic{grid-column:auto;width:auto}
   #send{min-width:92px}
   .acts{opacity:1}
   .dock{padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
   .meta{flex-wrap:wrap}
+  .section-head h2{font-size:19px}
 }
+
+@media(max-width:899px){.sidebar{display:none}.place-grid{grid-template-columns:repeat(2,1fr)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 </style>
@@ -1036,6 +1095,21 @@ textarea{
 <body data-theme="dark">
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
+<aside class="sidebar" aria-label="Navigation principale">
+  <div class="sidebar-brand">
+    <div class="mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="#f6e7c2" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="#e2b34a"/></svg>
+    </div>
+    <div><strong>Teranga AI</strong><small>Votre assistant au Sénégal</small></div>
+  </div>
+  <nav class="side-nav">
+    <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
+    <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7"/></svg>Découvrir le Sénégal</button>
+    <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Mes conversations</button>
+    <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
+  </nav>
+  <div class="sidebar-foot"><b>❤️ Teranga AI V2</b>Par Sénégal, pour le monde 🇸🇳</div>
+</aside>
 <header>
   <div class="brand">
     <div class="mark" aria-hidden="true">
@@ -1066,13 +1140,27 @@ textarea{
 </header>
 <div id="stage">
   <div id="hero" class="hero">
-    <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
-    <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
-    <div class="cards" id="cards"></div>
-    <div class="spread">
-      <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
-      <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
-      <button type="button" id="copyLink">Copier le lien</button>
+    <div class="hero-copy">
+      <div class="hero-kicker">🇸🇳 Sénégal · Teranga AI V2</div>
+      <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
+      <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
+      <div class="hero-note">✦ Des réponses claires · des informations actuelles quand il faut · quatre langues</div>
+      <div class="cards" id="cards"></div>
+      <div class="spread">
+        <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
+        <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
+        <button type="button" id="copyLink">Copier le lien</button>
+      </div>
+      <div class="discover-panel">
+        <div class="section-head"><h2>Découvrez le Sénégal</h2><span>Choisis une destination</span></div>
+        <div class="place-grid">
+          <button class="place-card" type="button" data-q="Parle-moi de Dakar et des lieux à visiter."><span class="place-art"></span><span class="place-copy"><b>Dakar</b><small>Capitale · culture · plages</small></span></button>
+          <button class="place-card" type="button" data-q="Parle-moi de l’île de Gorée et de la Maison des Esclaves."><span class="place-art"></span><span class="place-copy"><b>Île de Gorée</b><small>Mémoire · histoire</small></span></button>
+          <button class="place-card" type="button" data-q="Que faire à Saly et sur la Petite Côte ?"><span class="place-art"></span><span class="place-copy"><b>Saly</b><small>Plages · détente</small></span></button>
+          <button class="place-card" type="button" data-q="Que visiter à Saint-Louis du Sénégal ?"><span class="place-art"></span><span class="place-copy"><b>Saint-Louis</b><small>Patrimoine · fleuve</small></span></button>
+          <button class="place-card" type="button" data-q="Que découvrir en Casamance, notamment à Ziguinchor et Cap Skirring ?"><span class="place-art"></span><span class="place-copy"><b>Casamance</b><small>Nature · culture</small></span></button>
+        </div>
+      </div>
     </div>
   </div>
   <section class="seo">
@@ -1368,7 +1456,8 @@ function renderCards(){
     card.className='card';card.type='button';card.dataset.q=c.q;
     const ico=document.createElement('div');ico.className='ico';ico.innerHTML=CARD_ICONS[i%CARD_ICONS.length];
     const b=document.createElement('b');b.textContent=c.t;
-    card.append(ico,b);cardFrag.appendChild(card);
+    const d=document.createElement('span');d.textContent=c.d||'';
+    card.append(ico,b,d);cardFrag.appendChild(card);
     const chip=document.createElement('button');
     chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;
     chipFrag.appendChild(chip);
@@ -1399,15 +1488,21 @@ function themeInit(){
   document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
+function activateTab(tab){
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  if(tab==='home'){showHero();stage.scrollTop=0;}
+  if(tab==='discover'){showHero();$('hero').scrollIntoView({block:'start'});}
+  if(tab==='chat'){hideHero();input.focus();}
+  if(tab==='profile'){$('themeBtn').click();}
+}
 $('tabbar').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-tab]');
   if(!btn)return;
-  const tab=btn.dataset.tab;
-  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
-  if(tab==='home'){showHero();stage.scrollTop=0;}
-  if(tab==='discover'){showHero();$('chips').scrollIntoView({block:'nearest'});}
-  if(tab==='chat'){input.focus();}
-  if(tab==='profile'){$('themeBtn').click();}
+  activateTab(btn.dataset.tab);
+});
+document.querySelector('.side-nav').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-tab]');
+  if(btn)activateTab(btn.dataset.tab);
 });
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
@@ -1579,6 +1674,7 @@ async function ask(preset){
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
 $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+document.querySelector('.place-grid').onclick=e=>{const b=e.target.closest('button[data-q]');if(b)ask(b.dataset.q);};
 send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();
