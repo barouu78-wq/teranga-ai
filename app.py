@@ -1005,7 +1005,7 @@ ff:{
     {q:'Fotde taksi AIBD haa Dakaar?',t:'Taksi AIBD',d:'Njoɓdi e tati'},
     {q:'Hol ñaamdu Dakaar e diiwe: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Ñaamdu',d:'Diiwal, geec walla luumo'},
     {q:'Hol geografi Senegaal: diiwe, gure mawɗe e Kasamans?',t:'Diiwe',d:'Diiwe 14 e gure'},
-    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'}
+    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'},
     {q:'Hol ñaamdu diiwe Senegaal kala?',t:'Ñaamdu diiwe',d:'Fuuta, hakkunde, Kasamans'}
   ]
 }
