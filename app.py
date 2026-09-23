@@ -10,7 +10,8 @@ import time
 from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
+from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
@@ -93,7 +94,8 @@ SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
 
 Réponds dans la langue de l'utilisateur : français, anglais, wolof ou pulaar (fuuta tooro).
-Sois chaleureux, direct et concis. 4 à 8 phrases max, sauf demande contraire.
+Sois chaleureux, direct et très court. 2 à 4 phrases maximum, sauf si on te demande plus.
+Une idée par phrase. Pas de long paragraphe.
 Finis toujours tes phrases. Ne coupe pas au milieu d'un quartier ou d'un plat.
 N'utilise jamais de markdown : pas d'astérisques, pas de gras, pas de titres #, pas de listes à puces.
 N'invente jamais un téléphone, un horaire exact ou un prix figé.
@@ -148,6 +150,79 @@ def clean_answer(text):
     text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
+
+
+CITY_PAGES = (
+    ("cap skirring", "Cap Skirring"),
+    ("saint-louis", "Saint-Louis (Sénégal)"),
+    ("saint louis", "Saint-Louis (Sénégal)"),
+    ("île de gorée", "Île de Gorée"),
+    ("ile de goree", "Île de Gorée"),
+    ("joal", "Joal-Fadiouth"),
+    ("fadiouth", "Joal-Fadiouth"),
+    ("richard-toll", "Richard-Toll"),
+    ("richard toll", "Richard-Toll"),
+    ("lac rose", "Lac Retba"),
+    ("lac retba", "Lac Retba"),
+    ("diamniadio", "Diamniadio"),
+    ("guédiawaye", "Guédiawaye"),
+    ("guediawaye", "Guédiawaye"),
+    ("tambacounda", "Tambacounda"),
+    ("ziguinchor", "Ziguinchor"),
+    ("kedougou", "Kédougou"),
+    ("kédougou", "Kédougou"),
+    ("kaffrine", "Kaffrine"),
+    ("sédhiou", "Sédhiou"),
+    ("sedhiou", "Sédhiou"),
+    ("rufisque", "Rufisque"),
+    ("kaolack", "Kaolack"),
+    ("diourbel", "Diourbel"),
+    ("gorée", "Île de Gorée"),
+    ("goree", "Île de Gorée"),
+    ("mbour", "M'Bour"),
+    ("m'bour", "M'Bour"),
+    ("touba", "Touba (Sénégal)"),
+    ("thiès", "Thiès"),
+    ("thies", "Thiès"),
+    ("kolda", "Kolda"),
+    ("matam", "Matam"),
+    ("louga", "Louga"),
+    ("fatick", "Fatick"),
+    ("podor", "Podor"),
+    ("saly", "Saly Portudal"),
+    ("pikine", "Pikine"),
+    ("dakar", "Dakar"),
+    ("ndar", "Saint-Louis (Sénégal)"),
+)
+
+
+def city_wikipedia_title(message):
+    lowered = message.lower()
+    for key, title in CITY_PAGES:
+        if key in lowered:
+            return title
+    return None
+
+
+def fetch_city_image(title):
+    if not title:
+        return None
+    url = "https://fr.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
+    try:
+        req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+        with urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return None
+    thumb = data.get("thumbnail") or {}
+    src = thumb.get("source") or ""
+    if not src.startswith("https://upload.wikimedia.org/"):
+        return None
+    return {
+        "url": src,
+        "alt": sanitize_text(data.get("title") or title, 80),
+        "credit": "Wikimédia",
+    }
 
 
 def should_use_web(message):
@@ -279,7 +354,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src}; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://commons.wikimedia.org; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
@@ -411,7 +486,8 @@ def event_delta(event):
 def complete_reply(payload):
     response = client.responses.create(**model_kwargs(payload, stream=False))
     text = clean_answer(getattr(response, "output_text", "") or "")
-    return text, extract_sources(response)
+    image = fetch_city_image(city_wikipedia_title(payload.get("message", "")))
+    return text, extract_sources(response), image
 
 
 @app.post("/chat")
@@ -431,10 +507,10 @@ def chat():
 
     if want_json:
         try:
-            reply, sources = complete_reply(payload)
+            reply, sources, image = complete_reply(payload)
             if not reply:
                 reply = "Je n'ai pas réussi à répondre. Réessaie."
-            return jsonify({"reply": reply, "sources": sources})
+            return jsonify({"reply": reply, "sources": sources, "image": image})
         except Exception as exc:
             app.logger.exception("Erreur JSON /chat")
             return jsonify({"error": public_error(exc)}), 500
@@ -471,20 +547,26 @@ def chat():
                         yielded = True
                         yield json.dumps({"d": clean_answer(text)}, ensure_ascii=False) + "\n"
             if not yielded:
-                reply, sources = complete_reply(payload)
+                reply, sources, image = complete_reply(payload)
                 if reply:
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+            else:
+                image = fetch_city_image(city_wikipedia_title(payload.get("message", "")))
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
+            if image:
+                yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
             yield json.dumps({"done": True}) + "\n"
         except Exception as exc:
             app.logger.exception("Erreur stream /chat")
             try:
-                reply, sources = complete_reply(payload)
+                reply, sources, image = complete_reply(payload)
                 if reply:
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                     if sources:
                         yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
+                    if image:
+                        yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
                     yield json.dumps({"done": True}) + "\n"
                     return
             except Exception as exc2:
@@ -699,6 +781,9 @@ header{
   border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 9px
 }
 .sources a:hover{border-color:var(--gold)}
+.city-pic{margin:8px 0 2px;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--card);max-width:280px}
+.city-pic img{display:block;width:100%;height:158px;object-fit:cover}
+.city-pic small{display:block;padding:6px 10px;color:var(--mute);font-size:11px}
 .typing{display:flex;gap:5px;padding:14px 16px;width:fit-content;background:var(--soft);border-radius:18px}
 .typing i{width:6px;height:6px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
@@ -852,7 +937,7 @@ fr:{
   cards:[
     {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
     {q:"Combien coûte un taxi de l'aéroport AIBD à Dakar ?",t:'Taxi AIBD',d:'Ordre de prix et options'},
-    {q:"Quels sont les horaires du ferry pour l'île de Gorée aujourd'hui ?",t:'Ferry Gorée',d:'Départs et prix indicatifs'},
+    {q:"Raconte brièvement l'histoire de Dakar et montre la ville.",t:'Histoire Dakar',d:'Ville, origine, photo'},
     {q:"Quelles sont les spécialités culinaires de chaque région du Sénégal ?",t:'Spécialités',d:'Plats du Nord, Centre, Casamance'},
     {q:"Où manger à Dakar selon le quartier : Plateau, Médina, Almadies, Ngor, Ouakam ?",t:'Où manger',d:'Quartier, plage ou marché'},
     {q:"Présente la géographie du Sénégal : régions, grandes villes et Casamance.",t:'Régions',d:'14 régions et grandes villes'}
@@ -874,7 +959,7 @@ en:{
   cards:[
     {q:'What is the weather like in Dakar today?',t:'Dakar weather',d:'Sky, heat and wind today'},
     {q:'How much is a taxi from AIBD airport to Dakar?',t:'AIBD taxi',d:'Price range and options'},
-    {q:'What are the ferry times to Gorée Island today?',t:'Gorée ferry',d:'Departures and typical fares'},
+    {q:'Briefly tell the history of Dakar and show the city.',t:'Dakar history',d:'City, origin, photo'},
     {q:'What are the regional food specialties across Senegal?',t:'Specialties',d:'Dishes from North, Center, Casamance'},
     {q:'Where should I eat in Dakar by area: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Where to eat',d:'Neighborhood, beach or market'},
     {q:'Explain the geography of Senegal: regions, main cities and Casamance.',t:'Regions',d:'14 regions and main cities'}
@@ -896,7 +981,7 @@ wo:{
   cards:[
     {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk',d:'Asamaan, tàngaay ak ngelaw'},
     {q:"Ñaata la taksi AIBD ba Dakaar?",t:'Taksi AIBD',d:'Njëg ak tànneef'},
-    {q:"Ban waxtu la ferry Gorée am tey?",t:'Ferry Gorée',d:'Départ ak njëg'},
+    {q:"Nettali sama ndakaru Dakaar, wone dëkk bi.",t:'Tàriix Dakaar',d:'Dëkk, tàriix, nataal'},
     {q:'Ban ñam aju ci réegion yu Senegaal?',t:'Ñam réegion',d:'Nord, centre, Kasamans'},
     {q:'Fan laa wara lekk ci Dakaar: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Lekk',d:'Quartier, teex walla marché'},
     {q:'Wan nga ma géographie Senegaal: régions, dëkk yu mag ak Kasamans.',t:'Réegion',d:'14 régions ak dëkk yu mag'}
@@ -920,7 +1005,7 @@ ff:{
     {q:'Fotde taksi AIBD haa Dakaar?',t:'Taksi AIBD',d:'Njoɓdi e tati'},
     {q:'Hol ñaamdu Dakaar e diiwe: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Ñaamdu',d:'Diiwal, geec walla luumo'},
     {q:'Hol geografi Senegaal: diiwe, gure mawɗe e Kasamans?',t:'Diiwe',d:'Diiwe 14 e gure'},
-    {q:'Hol ferry Gorée waktuuji hannde?',t:'Ferry Gorée',d:'Yahdu e njoɓdi'},
+    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'}
     {q:'Hol ñaamdu diiwe Senegaal kala?',t:'Ñaamdu diiwe',d:'Fuuta, hakkunde, Kasamans'}
   ]
 }
@@ -1023,6 +1108,15 @@ function addActs(col,text){
     }catch(e){}
   };
   acts.append(listen,copy,share);col.appendChild(acts);
+}
+function addCityImage(col,image){
+  if(!image||!image.url)return;
+  const box=document.createElement('figure');box.className='city-pic';
+  const img=document.createElement('img');
+  img.src=image.url;img.alt=image.alt||'';img.loading='lazy';
+  const cap=document.createElement('small');
+  cap.textContent=image.alt+(image.credit?' · '+image.credit:'');
+  box.append(img,cap);col.appendChild(box);
 }
 function addSources(col,sources){
   if(!sources||!sources.length)return;
@@ -1130,6 +1224,7 @@ function restore(){
         col.appendChild(b);
         if(item.role==='assistant'){
           addActs(col,item.content||'');
+          addCityImage(col,item.image);
           addSources(col,item.sources);
         }
         row.appendChild(col);
@@ -1159,7 +1254,7 @@ async function ask(preset){
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),75000);
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang});
-  let reply='', sources=[];
+  let reply='', sources=[], image=null;
   try{
     const res=await fetch('/chat',{method:'POST',headers:headers(),body,signal:ctrl.signal});
     if(!res.ok){
@@ -1199,6 +1294,7 @@ async function ask(preset){
         if(ev.error)throw new Error(ev.error);
         if(ev.d)queue(ev.d);
         if(ev.s)sources=ev.s;
+        if(ev.img)image=ev.img;
       }
     }
     if(buf.trim()){
@@ -1207,6 +1303,7 @@ async function ask(preset){
         if(ev.error)throw new Error(ev.error);
         if(ev.d)queue(ev.d);
         if(ev.s)sources=ev.s;
+        if(ev.img)image=ev.img;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
     if(paint){cancelAnimationFrame(paint);flush();}
@@ -1217,6 +1314,7 @@ async function ask(preset){
       if(!res2.ok)throw new Error(data.error||T[lang].err);
       reply=(data.reply||'').trim();
       if(data.sources)sources=data.sources;
+      if(data.image)image=data.image;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
@@ -1224,8 +1322,9 @@ async function ask(preset){
     else {node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
     addActs(wait.col,reply);
+    addCityImage(wait.col,image);
     addSources(wait.col,sources);
-    history.push({role:'assistant',content:reply,sources});
+    history.push({role:'assistant',content:reply,sources,image});
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply)speak(reply);
