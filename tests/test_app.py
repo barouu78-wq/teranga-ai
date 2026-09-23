@@ -1,7 +1,14 @@
 import os
+import sys
+from pathlib import Path
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 os.environ.setdefault("OPENAI_MODEL", "gpt-5.6-luna")
+
+# Garantit que l'application à la racine du dépôt est importable quel que soit le mode pytest.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from app import app, lookup_map, should_use_web
 
@@ -29,6 +36,7 @@ def test_map_for_senegal_city():
     assert result is not None
     assert "Ziguinchor" in result["label"]
 
+
 def test_health_reports_api_key_configured():
     client = app.test_client()
     response = client.get("/health")
@@ -38,10 +46,16 @@ def test_health_reports_api_key_configured():
 
 def test_referer_origin_is_exact():
     import app as app_module
-    with app_module.app.test_request_context(
-        "/chat",
-        headers={"Referer": "https://teranga-ai-1.onrender.com.evil.example/path"},
-    ):
+
+    original_origins = set(app_module.ALLOWED_ORIGINS)
+    try:
         app_module.ALLOWED_ORIGINS.clear()
         app_module.ALLOWED_ORIGINS.add("https://teranga-ai-1.onrender.com")
-        assert app_module.origin_allowed() is False
+        with app_module.app.test_request_context(
+            "/chat",
+            headers={"Referer": "https://teranga-ai-1.onrender.com.evil.example/path"},
+        ):
+            assert app_module.origin_allowed() is False
+    finally:
+        app_module.ALLOWED_ORIGINS.clear()
+        app_module.ALLOWED_ORIGINS.update(original_origins)
