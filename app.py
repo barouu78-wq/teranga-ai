@@ -90,6 +90,16 @@ WEB_HINTS = (
     "ouvert ce soir", "meilleur resto", "où se trouve", "ou se trouve",
     "prix", "tarif", "tarifs", "coût", "cout", "combien coûte", "combien coute",
     "price", "prices", "fare", "fares", "cost", "how much",
+    "itinéraire", "itineraire", "trajet", "transport", "bus", "brt", "ter",
+    "taxi", "péage", "peage", "car rapide", "dem dikk", "tata",
+    "billet", "billets", "ticket", "tickets", "vol", "flight", "airline",
+    "aéroport", "airport", "formalités", "formalites", "document", "documents",
+    "ambassade", "consulat", "immigration", "vaccin", "vaccination",
+    "banque", "bank", "guichet", "atm", "distributeur", "mobile money",
+    "wave", "free money", "expresso money", "yas", "free", "orange",
+    "concert", "festival", "match", "football", "salon", "foire",
+    "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
+    "urgent", "alerte", "grève", "greve", "perturbation", "incident",
 )
 
 SYSTEM_PROMPT = """
@@ -313,6 +323,22 @@ MAP_PLACES = (
     ("thiès", "Thiès Sénégal", "Thiès"),
     ("thies", "Thiès Sénégal", "Thiès"),
     ("kaolack", "Kaolack Sénégal", "Kaolack"),
+    ("mbour", "M'Bour Sénégal", "M'Bour"),
+    ("somone", "Somone Sénégal", "Somone"),
+    ("popenguine", "Popenguine Sénégal", "Popenguine"),
+    ("toubab dialaw", "Toubab Dialaw Sénégal", "Toubab Dialaw"),
+    ("fatick", "Fatick Sénégal", "Fatick"),
+    ("louga", "Louga Sénégal", "Louga"),
+    ("matam", "Matam Sénégal", "Matam"),
+    ("tambacounda", "Tambacounda Sénégal", "Tambacounda"),
+    ("kédougou", "Kédougou Sénégal", "Kédougou"),
+    ("kedougou", "Kédougou Sénégal", "Kédougou"),
+    ("kolda", "Kolda Sénégal", "Kolda"),
+    ("sédhiou", "Sédhiou Sénégal", "Sédhiou"),
+    ("sedhiou", "Sédhiou Sénégal", "Sédhiou"),
+    ("diamniadio", "Diamniadio Sénégal", "Diamniadio"),
+    ("pointe sarène", "Pointe Sarène Sénégal", "Pointe Sarène"),
+    ("pointe sarene", "Pointe Sarène Sénégal", "Pointe Sarène"),
     ("dakar", "Dakar Sénégal", "Dakar"),
 )
 
@@ -332,7 +358,15 @@ def lookup_map(message):
 
 def should_use_web(message):
     lowered = message.lower()
-    return any(term in lowered for term in WEB_HINTS)
+    if any(term in lowered for term in WEB_HINTS):
+        return True
+    # Questions that explicitly ask for a current/verified fact should use web search.
+    current_markers = (
+        "vérifie", "verifie", "confirme", "à jour", "a jour",
+        "exactement", "en ce moment", "pour aujourd'hui", "pour demain",
+        "latest", "current", "right now", "as of", "verify", "check",
+    )
+    return any(term in lowered for term in current_markers)
 
 
 def build_conversation(history, message):
@@ -479,7 +513,15 @@ def add_security_headers(response):
 
 @app.get("/health")
 def health():
-    return jsonify({"status": "ok", "service": "teranga-ai", "model": MODEL})
+    return jsonify({
+        "status": "ok",
+        "service": "teranga-ai",
+        "model": MODEL,
+        "model_configured": bool(MODEL),
+        "web_search": True,
+        "redis_rate_limit": redis_client is not None,
+        "site_url": SITE_URL,
+    })
 
 
 def parse_chat_payload():
