@@ -605,7 +605,7 @@ def fetch_commons_images(title, limit=4):
         def meta_text(key):
             value = meta.get(key, {})
             return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
-        out.append({"url":src,"alt":meta_text("ImageDescription") or page.get("title",title),"credit":"Wikimedia Commons","artist":meta_text("Artist"),"license":meta_text("LicenseShortName"),"page_url":"https://commons.wikimedia.org/wiki/"+quote(page.get("title",""),safe=":")})
+        out.append({"url":src,"alt":meta_text("ImageDescription") or page.get("title",title),"credit":"Wikimédia Commons","artist":meta_text("Artist"),"license":meta_text("LicenseShortName"),"page_url":"https://commons.wikimedia.org/wiki/"+quote(page.get("title",""),safe=":")})
         seen.add(src)
         if len(out) >= limit:
             break
@@ -903,7 +903,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src}; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https://encrypted-tbn0.gstatic.com https://encrypted-tbn1.gstatic.com https://encrypted-tbn2.gstatic.com https://encrypted-tbn3.gstatic.com; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
         "frame-src https://www.google.com https://maps.google.com; "
         "child-src https://www.google.com https://maps.google.com; "
