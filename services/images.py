@@ -44,7 +44,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
             continue
         if thumb_mime and not thumb_mime.startswith("image/"):
             continue
-        src = validate(info.get("thumburl") or info.get("url"))
+        src = validate(info.get("url") or info.get("thumburl"))
         if not src or src in seen:
             continue
         meta = info.get("extmetadata") or {}
