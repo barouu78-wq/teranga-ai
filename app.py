@@ -119,6 +119,12 @@ def format_senegal_knowledge(data):
         places = ", ".join(region.get("places", [])[:10])
         highlights = ", ".join(region.get("highlights", [])[:8])
         lines.append(f"- {region.get('name')}: localités = {places}; points d'intérêt = {highlights}.")
+    places = data.get("places", [])
+    if places:
+        lines.append("Lieux détaillés :")
+        for place in places[:40]:
+            what = "; ".join(str(place.get("what_to_see", "")).split(";")[:4])
+            lines.append(f"- {place.get('name')}: {place.get('summary', '')} À voir : {what}.")
     unesco = ", ".join(data.get("unesco_world_heritage", []))
     if unesco:
         lines.append(f"- Patrimoine mondial UNESCO : {unesco}.")
