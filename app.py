@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
+from services.seo import render_seo_page
 
 load_dotenv()
 
