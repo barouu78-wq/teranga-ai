@@ -1,5 +1,5 @@
 {
-  "version": "2.0",
+  "version": "3.0",
   "country": "Sénégal",
   "regions": [
     {
@@ -619,5 +619,173 @@
       "image_queries"
     ],
     "heritage_note": "Les 7 biens inscrits au patrimoine mondial sont distingués des 8 biens de la liste indicative UNESCO."
-  }
+  },
+  "places": [
+    {
+      "id": "goree",
+      "name": "Île de Gorée",
+      "type": "heritage",
+      "region": "Dakar",
+      "locality": "Dakar",
+      "summary": "Île historique inscrite au patrimoine mondial en 1978.",
+      "history": "Histoire liée à la traite atlantique, à la mémoire et au patrimoine architectural de l'île.",
+      "what_to_see": "Maison des Esclaves; Castel; rues et maisons historiques",
+      "latitude": 14.6667,
+      "longitude": -17.3997,
+      "image_queries": [
+        "Île de Gorée Sénégal",
+        "Maison des Esclaves Gorée Sénégal",
+        "Castel Gorée Sénégal"
+      ]
+    },
+    {
+      "id": "saint-louis",
+      "name": "Île de Saint-Louis",
+      "type": "heritage",
+      "region": "Saint-Louis",
+      "locality": "Saint-Louis",
+      "summary": "Ville historique insulaire inscrite au patrimoine mondial en 2000.",
+      "history": "Architecture historique, patrimoine fluvial et héritage urbain de Saint-Louis.",
+      "what_to_see": "Île; Pont Faidherbe; quartiers historiques; Langue de Barbarie",
+      "latitude": 16.0326,
+      "longitude": -16.4818,
+      "image_queries": [
+        "Île Saint-Louis Sénégal",
+        "Pont Faidherbe Sénégal",
+        "Saint-Louis Sénégal architecture"
+      ]
+    },
+    {
+      "id": "djoudj",
+      "name": "Parc national des oiseaux du Djoudj",
+      "type": "natural_site",
+      "region": "Saint-Louis",
+      "locality": "Ross-Béthio",
+      "summary": "Zone humide majeure et bien naturel inscrit au patrimoine mondial en 1981.",
+      "history": "Espace de zones humides et d'accueil d'oiseaux migrateurs dans le delta du fleuve Sénégal.",
+      "what_to_see": "Plans d'eau; oiseaux; paysages du delta",
+      "latitude": 16.405,
+      "longitude": -16.237,
+      "image_queries": [
+        "Djoudj Sénégal",
+        "Parc national des oiseaux du Djoudj"
+      ]
+    },
+    {
+      "id": "niokolo-koba",
+      "name": "Parc national du Niokolo-Koba",
+      "type": "natural_site",
+      "region": "Tambacounda",
+      "locality": "Tambacounda",
+      "summary": "Grand parc naturel du Sénégal oriental, inscrit au patrimoine mondial en 1981.",
+      "history": "Biodiversité de savane et habitats naturels du Sénégal oriental.",
+      "what_to_see": "Faune; savane; rivière Gambie; paysages du parc",
+      "latitude": 13.0667,
+      "longitude": -12.7167,
+      "image_queries": [
+        "Niokolo-Koba Sénégal",
+        "Parc national Niokolo Koba Sénégal",
+        "rivière Niokolo Koba Sénégal"
+      ]
+    },
+    {
+      "id": "saloum",
+      "name": "Delta du Saloum",
+      "type": "heritage",
+      "region": "Fatick",
+      "locality": "Foundiougne",
+      "summary": "Paysage culturel et naturel du delta, inscrit au patrimoine mondial en 2011.",
+      "history": "Mangroves, bolongs, îles et relations anciennes entre communautés et environnement.",
+      "what_to_see": "Mangroves; bolongs; îles; pêche; paysages",
+      "latitude": 13.75,
+      "longitude": -16.65,
+      "image_queries": [
+        "Delta du Saloum Sénégal",
+        "mangrove Saloum Sénégal",
+        "Toubacouta Sénégal"
+      ]
+    },
+    {
+      "id": "bassari",
+      "name": "Pays Bassari",
+      "type": "heritage",
+      "region": "Kédougou",
+      "locality": "Salémata",
+      "summary": "Paysage culturel inscrit au patrimoine mondial en 2012.",
+      "history": "Ensemble culturel comprenant les zones Bassari-Salémata, Bédik-Bandafassi et Peul-Dindéfello.",
+      "what_to_see": "Villages; terrasses; falaises; pratiques culturelles",
+      "latitude": 12.55,
+      "longitude": -12.85,
+      "image_queries": [
+        "Pays Bassari Sénégal",
+        "Salémata Sénégal",
+        "Bandafassi Sénégal",
+        "Dindéfello Sénégal"
+      ]
+    },
+    {
+      "id": "touba",
+      "name": "Touba",
+      "type": "religious_site",
+      "region": "Diourbel",
+      "locality": "Mbacké",
+      "summary": "Grande ville religieuse du mouridisme et destination majeure du Sénégal.",
+      "history": "Centre religieux lié à Cheikh Ahmadou Bamba et au développement de la confrérie mouride.",
+      "what_to_see": "Grande Mosquée; quartiers religieux; patrimoine mouride",
+      "latitude": 14.8667,
+      "longitude": -15.8833,
+      "image_queries": [
+        "Touba Sénégal Grande Mosquée",
+        "Touba Sénégal"
+      ]
+    },
+    {
+      "id": "dindefello",
+      "name": "Cascades de Dindéfello",
+      "type": "natural_site",
+      "region": "Kédougou",
+      "locality": "Salémata",
+      "summary": "Site naturel de la région de Kédougou associé aux paysages du Pays Bassari.",
+      "history": "Falaises, végétation et cascade dans le sud-est du Sénégal.",
+      "what_to_see": "Cascade; falaises; sentiers; paysages",
+      "latitude": 12.37,
+      "longitude": -12.33,
+      "image_queries": [
+        "Cascades Dindéfello Sénégal",
+        "Dindéfello Sénégal"
+      ]
+    },
+    {
+      "id": "joal-fadiouth",
+      "name": "Joal-Fadiouth",
+      "type": "cultural_site",
+      "region": "Thiès",
+      "locality": "Mbour",
+      "summary": "Destination littorale connue pour Joal et l'île de Fadiouth.",
+      "history": "Patrimoine côtier, culture locale et paysage insulaire.",
+      "what_to_see": "Fadiouth; île aux coquillages; port; littoral",
+      "latitude": 14.1667,
+      "longitude": -16.85,
+      "image_queries": [
+        "Joal-Fadiouth Sénégal",
+        "Fadiouth Sénégal"
+      ]
+    },
+    {
+      "id": "cap-skirring",
+      "name": "Cap Skirring",
+      "type": "beach",
+      "region": "Ziguinchor",
+      "locality": "Oussouye",
+      "summary": "Destination balnéaire de Basse-Casamance.",
+      "history": "Plages, végétation côtière et proximité de villages et sites culturels de Casamance.",
+      "what_to_see": "Plages; littoral; villages; bolongs",
+      "latitude": 12.3928,
+      "longitude": -16.7467,
+      "image_queries": [
+        "Cap Skirring Sénégal",
+        "plage Cap Skirring Sénégal"
+      ]
+    }
+  ]
 }
