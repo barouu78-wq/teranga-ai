@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#f6efe3" id="themeColor">
 <meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
@@ -692,14 +692,16 @@ async function postJSON(url,body,extra){
   return res;
 }
 function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
-function setChatMode(on){
-  document.body.classList.toggle('has-chat',on);
-  sessionStorage.setItem('teranga-screen-v2',on?'chat':'home');
-  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
-  hero.classList.toggle('is-hidden',on);
+function setView(view){
+  const chat=view==='chat';
+  document.body.classList.toggle('has-chat',chat);
+  sessionStorage.setItem('teranga-screen-v2',view);
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===view));
+  hero.classList.toggle('is-hidden',chat);
 }
-function hideHero(){setChatMode(true);}
-function showHero(){setChatMode(false);}
+function setChatMode(on){setView(on?'chat':'home');}
+function hideHero(){setView('chat');}
+function showHero(){setView('home');}
 function applyThemeColor(){
   const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
   $('themeColor').content=dark?'#0b0907':'#f6efe3';
@@ -884,7 +886,7 @@ $('tabbar').addEventListener('click',e=>{
     stage.scrollTop=0;
   }
   if(tab==='discover'){
-    showHero();
+    setView('discover');
     requestAnimationFrame(()=>document.querySelector('.guide-section')?.scrollIntoView({behavior:'smooth',block:'start'}));
   }
   if(tab==='chat'){
@@ -893,6 +895,7 @@ $('tabbar').addEventListener('click',e=>{
   }
   if(tab==='profile'){
     $('themeBtn').click();
+    setView('profile');
   }
 });
 function reset(){
@@ -924,7 +927,9 @@ function restore(){
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
       history=data.history.slice(-12);
-      if(sessionStorage.getItem('teranga-screen-v2')==='chat') hideHero();
+      const savedView=sessionStorage.getItem('teranga-screen-v2');
+      if(savedView==='chat') hideHero();
+      else if(savedView==='discover') setView('discover');
       const frag=document.createDocumentFragment();
       history.forEach(item=>{
         if(item.role!=='user'&&item.role!=='assistant')return;
@@ -1110,7 +1115,7 @@ stage.addEventListener('scroll',()=>{stickToBottom=nearBottom();},{passive:true}
 if(window.visualViewport){
   const place=()=>{
     document.body.style.setProperty('--vvh',visualViewport.height+'px');
-    if(document.body.classList.contains('has-chat'))scrollStage(true);
+    if(document.body.classList.contains('has-chat') && document.activeElement===input)scrollStage(true);
   };
   visualViewport.addEventListener('resize',place);place();
 }
