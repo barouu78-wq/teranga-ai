@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import app, fetch_commons_image, fetch_topic_images, lookup_map, public_error, should_use_web
+from app import app, fetch_commons_image, fetch_topic_images, lookup_map, model_kwargs, public_error, should_use_web
 
 
 def test_health():
@@ -179,3 +179,14 @@ def test_photo_request_routes_to_wikimedia_image(monkeypatch):
     assert images
     assert images[0]["url"].startswith("https://upload.wikimedia.org/")
     assert "Dakar" in calls[0]
+
+
+def test_model_uses_zero_reasoning_for_fast_chat():
+    payload = {
+        "instructions": "test",
+        "input_text": "Bonjour",
+        "use_web": False,
+        "message": "Bonjour",
+    }
+    kwargs = model_kwargs(payload, stream=True)
+    assert kwargs["reasoning"] == {"effort": "none"}
