@@ -1183,6 +1183,8 @@ def tts():
         app.logger.exception("Erreur /tts")
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
+
+ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect rx="14" width="64" height="64" fill="#1a3d2a"/>
 <circle cx="44" cy="18" r="8" fill="#e2b34a"/>
 <path d="M32 54V28M18 36c8-2 10-10 14-10s6 8 14 10" stroke="#f3e6c8" stroke-width="3" fill="none" stroke-linecap="round"/>
