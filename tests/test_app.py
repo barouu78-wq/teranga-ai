@@ -221,3 +221,36 @@ def test_image_proxy_allows_wikimedia_and_blocks_other_hosts(monkeypatch):
 
 def test_image_proxy_url_is_same_origin():
     assert image_proxy_url("https://upload.wikimedia.org/wikipedia/commons/d/d1/Dakar.jpg").startswith("/image-proxy?url=")
+
+
+def test_photo_request_continues_after_wikimedia_lookup_error(monkeypatch):
+    import app as app_module
+
+    calls = []
+
+    def fake_fetch(title):
+        calls.append(title)
+        if title == "Dakar":
+            raise RuntimeError("Commons indisponible")
+        return {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Dakar.jpg",
+            "alt": "Vue de Dakar",
+            "credit": "Wikimédia Commons",
+        }
+
+    monkeypatch.setattr(app_module, "knowledge_image_titles", lambda message, limit=4: ["Dakar", "Gorée"])
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+    monkeypatch.setattr(app_module, "fetch_city_image", fake_fetch)
+
+    images = app_module.fetch_topic_images("Montre-moi des photos de Dakar")
+    assert images
+    assert calls == ["Dakar", "Gorée"]
+    assert images[0]["credit"] == "Wikimédia Commons"
+
+
+def test_image_proxy_rejects_google_thumbnail_hosts():
+    client = app.test_client()
+    response = client.get(
+        "/image-proxy?url=https%3A%2F%2Fencrypted-tbn0.gstatic.com%2Fimages%3Fq%3Dtest"
+    )
+    assert response.status_code == 400
