@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import app, fetch_commons_image, lookup_map, public_error, should_use_web
+from app import app, fetch_commons_image, fetch_topic_images, lookup_map, public_error, should_use_web
 
 
 def test_health():
@@ -157,3 +157,25 @@ def test_commons_image_lookup_returns_real_wikimedia_url(monkeypatch):
     assert result["url"].startswith("https://upload.wikimedia.org/")
     assert result["credit"] == "Wikimédia Commons"
     assert result["alt"] == "Vue de Dakar"
+
+
+def test_photo_request_routes_to_wikimedia_image(monkeypatch):
+    import app as app_module
+
+    calls = []
+
+    def fake_fetch(title):
+        calls.append(title)
+        return {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Dakar.jpg",
+            "alt": "Vue de Dakar",
+            "credit": "Wikimédia Commons",
+        }
+
+    monkeypatch.setattr(app_module, "fetch_city_image", fake_fetch)
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+
+    images = fetch_topic_images("Montre-moi des photos de Dakar")
+    assert images
+    assert images[0]["url"].startswith("https://upload.wikimedia.org/")
+    assert "Dakar" in calls[0]
