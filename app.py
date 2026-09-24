@@ -686,19 +686,22 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 
 def public_error(exc):
     text = f"{type(exc).__name__} {exc}".lower()
+    text = re.sub(r"(sk-[a-z0-9_-]{8,})", "[redacted-key]", text)
     if "timeout" in text or "timed out" in text:
         return "La réponse a pris trop de temps. Réessaie."
     if "429" in text or "rate limit" in text or "quota" in text:
         return "Le service est très demandé. Réessaie dans un moment."
     if "401" in text or "403" in text or "api key" in text or "authentication" in text:
-        return "Le service IA est mal authentifié. Vérifie la clé API."
-    if "model" in text and ("not found" in text or "does not exist" in text or "not available" in text):
-        return "Le modèle IA configuré n'est pas disponible. Vérifie OPENAI_MODEL."
+        return "Le service IA est mal authentifié. Vérifie OPENAI_API_KEY sur Render."
+    if "model" in text and ("not found" in text or "does not exist" in text or "not available" in text or "unsupported" in text or "not permitted" in text):
+        return "Le modèle IA configuré n'est pas disponible. Le modèle de secours va être essayé."
     if "web_search" in text or "web search" in text:
         return "La recherche web IA a échoué. Réessaie sans la recherche actuelle."
-    return "Désolé, le service est temporairement indisponible. Réessaie."
-
-
+    if "badrequest" in text or "invalid" in text or "parameter" in text:
+        return "La requête IA est refusée par le service. Vérifie le modèle ou les paramètres."
+    if "connection" in text or "network" in text or "502" in text or "503" in text:
+        return "Le service IA est momentanément inaccessible. Réessaie dans quelques secondes."
+    return "Le service IA a rencontré une erreur inattendue. Vérifie les logs Render puis réessaie."
 def sign_token(value):
     digest = hmac.new(
         app.config["SECRET_KEY"].encode("utf-8"),
@@ -843,8 +846,6 @@ def create_response(payload, stream):
     try:
         return client.responses.create(**kwargs)
     except Exception as exc:
-        # Keep the deployment usable if an older Render variable points to a
-        # retired/unsupported alias. GPT-6 Luna is the current low-cost API model.
         text = f"{type(exc).__name__} {exc}".lower()
         model_error = (
             "model" in text
@@ -853,15 +854,16 @@ def create_response(payload, stream):
                 or "does not exist" in text
                 or "not available" in text
                 or "unsupported" in text
+                or "not permitted" in text
             )
         )
-        if model_error and MODEL != "gpt-6-luna":
+        if model_error:
+            fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
             fallback = dict(kwargs)
-            fallback["model"] = "gpt-6-luna"
+            fallback["model"] = fallback_model
+            app.logger.warning("Modèle %s indisponible; tentative avec %s", MODEL, fallback_model)
             return client.responses.create(**fallback)
         raise
-
-
 def model_kwargs(payload, stream):
     kwargs = {
         "model": MODEL,
