@@ -7,6 +7,7 @@ import re
 import secrets
 import threading
 import time
+import unicodedata
 from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
@@ -399,6 +400,11 @@ Si on te demande un lieu ou un plat connu, ajoute un détail concret (quartier, 
 """
 
 
+def normalize(value):
+    value = unicodedata.normalize("NFKD", str(value or ""))
+    return "".join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
+
+
 def sanitize_text(text, max_len):
     text = CONTROL_CHARS.sub("", str(text or ""))
     text = text.replace("\r\n", "\n").replace("\r", "\n")
@@ -535,7 +541,12 @@ def image_proxy():
     try:
         req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
         with urlopen(req, timeout=5) as upstream:
-            content_type = upstream.headers.get_content_type()
+            headers = getattr(upstream, "headers", {})
+            get_content_type = getattr(headers, "get_content_type", None)
+            if callable(get_content_type):
+                content_type = get_content_type()
+            else:
+                content_type = str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
             if not content_type.startswith("image/"):
                 return Response("Type image invalide", status=415, mimetype="text/plain")
             data = upstream.read(8 * 1024 * 1024 + 1)
