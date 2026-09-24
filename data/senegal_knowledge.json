@@ -1,5 +1,5 @@
 {
-  "version": "3.0",
+  "version": "3.1",
   "country": "Sénégal",
   "regions": [
     {
@@ -785,6 +785,467 @@
       "image_queries": [
         "Cap Skirring Sénégal",
         "plage Cap Skirring Sénégal"
+      ]
+    },
+    {
+      "id": "dakar-corniche",
+      "name": "Corniche de Dakar",
+      "type": "coastal_site",
+      "region": "Dakar",
+      "locality": "Dakar",
+      "summary": "Littoral urbain emblématique de Dakar.",
+      "history": "Front de mer reliant plusieurs quartiers de la presqu'île et offrant des vues sur l'océan.",
+      "what_to_see": "promenade; vues maritimes; plages; restaurants",
+      "latitude": 14.706,
+      "longitude": -17.475,
+      "image_queries": [
+        "Corniche Dakar Sénégal",
+        "Corniche Ouest Dakar Sénégal"
+      ]
+    },
+    {
+      "id": "dakar-renaissance",
+      "name": "Monument de la Renaissance africaine",
+      "type": "monument",
+      "region": "Dakar",
+      "locality": "Ouakam",
+      "summary": "Monument monumental de Dakar inauguré en 2010.",
+      "history": "Repère urbain majeur de Ouakam et symbole de la ville contemporaine.",
+      "what_to_see": "monument; Ouakam; panorama",
+      "latitude": 14.722,
+      "longitude": -17.491,
+      "image_queries": [
+        "Monument Renaissance africaine Dakar",
+        "Ouakam Dakar Sénégal"
+      ]
+    },
+    {
+      "id": "musee-civilisations",
+      "name": "Musée des Civilisations Noires",
+      "type": "museum",
+      "region": "Dakar",
+      "locality": "Dakar",
+      "summary": "Musée consacré aux civilisations et aux patrimoines africains.",
+      "history": "Institution culturelle majeure de Dakar.",
+      "what_to_see": "collections; expositions; patrimoine",
+      "latitude": 14.678,
+      "longitude": -17.445,
+      "image_queries": [
+        "Musée Civilisations Noires Dakar"
+      ]
+    },
+    {
+      "id": "rufisque",
+      "name": "Vieux Rufisque",
+      "type": "heritage",
+      "region": "Dakar",
+      "locality": "Rufisque",
+      "summary": "Ancien tissu urbain de Rufisque sur la côte.",
+      "history": "Patrimoine urbain et maritime de l'ancienne ville commerciale.",
+      "what_to_see": "architecture; port; patrimoine urbain",
+      "latitude": 14.715,
+      "longitude": -17.274,
+      "image_queries": [
+        "Vieux Rufisque Sénégal",
+        "Rufisque Sénégal"
+      ]
+    },
+    {
+      "id": "lac-rose",
+      "name": "Lac Rose / Lac Retba",
+      "type": "natural_site",
+      "region": "Dakar",
+      "locality": "Niaga",
+      "summary": "Lac côtier connu pour ses paysages et son histoire touristique.",
+      "history": "Site sur la liste indicative du patrimoine mondial de l'UNESCO, et non inscrit sur la Liste du patrimoine mondial.",
+      "what_to_see": "lac; dunes; paysages",
+      "latitude": 14.838,
+      "longitude": -17.234,
+      "image_queries": [
+        "Lac Rose Sénégal",
+        "Lac Retba Sénégal"
+      ]
+    },
+    {
+      "id": "tivaouane",
+      "name": "Tivaouane",
+      "type": "religious_site",
+      "region": "Thiès",
+      "locality": "Tivaouane",
+      "summary": "Grande ville religieuse de la Tijaniyya au Sénégal.",
+      "history": "Centre religieux associé à El Hadji Malick Sy et à une importante tradition d'enseignement islamique.",
+      "what_to_see": "mosquées; patrimoine religieux; pèlerinage",
+      "latitude": 15.102,
+      "longitude": -16.814,
+      "image_queries": [
+        "Tivaouane Sénégal",
+        "Grande Mosquée Tivaouane Sénégal"
+      ]
+    },
+    {
+      "id": "popenguine",
+      "name": "Popenguine",
+      "type": "religious_site",
+      "region": "Thiès",
+      "locality": "Popenguine",
+      "summary": "Lieu côtier connu pour son sanctuaire marial et ses paysages.",
+      "history": "Destination religieuse et littorale de la Petite-Côte.",
+      "what_to_see": "sanctuaire; falaise; littoral",
+      "latitude": 14.564,
+      "longitude": -17.116,
+      "image_queries": [
+        "Popenguine Sénégal",
+        "sanctuaire Popenguine Sénégal"
+      ]
+    },
+    {
+      "id": "somone",
+      "name": "Somone",
+      "type": "natural_site",
+      "region": "Thiès",
+      "locality": "Somone",
+      "summary": "Localité côtière connue pour sa lagune.",
+      "history": "Paysage de lagune, mangrove et littoral de la Petite-Côte.",
+      "what_to_see": "lagune; mangrove; plage; pirogue",
+      "latitude": 14.489,
+      "longitude": -17.075,
+      "image_queries": [
+        "Somone Sénégal",
+        "lagune Somone Sénégal"
+      ]
+    },
+    {
+      "id": "mbour",
+      "name": "Mbour",
+      "type": "coastal_site",
+      "region": "Thiès",
+      "locality": "Mbour",
+      "summary": "Ville côtière et important centre de pêche.",
+      "history": "La pêche et le littoral structurent fortement l'identité locale.",
+      "what_to_see": "port; pêche; marché; littoral",
+      "latitude": 14.421,
+      "longitude": -16.969,
+      "image_queries": [
+        "Mbour Sénégal",
+        "port de Mbour Sénégal"
+      ]
+    },
+    {
+      "id": "toubacouta",
+      "name": "Toubacouta",
+      "type": "natural_site",
+      "region": "Fatick",
+      "locality": "Toubacouta",
+      "summary": "Localité du Delta du Saloum entourée de mangroves et de bolongs.",
+      "history": "Point de départ fréquent pour découvrir les paysages du delta.",
+      "what_to_see": "mangrove; bolongs; îles; faune",
+      "latitude": 13.77,
+      "longitude": -16.467,
+      "image_queries": [
+        "Toubacouta Sénégal",
+        "mangrove Toubacouta Sénégal"
+      ]
+    },
+    {
+      "id": "palmarin",
+      "name": "Palmarin",
+      "type": "natural_site",
+      "region": "Fatick",
+      "locality": "Palmarin",
+      "summary": "Territoire littoral et lagunaire du Sine-Saloum.",
+      "history": "Paysages de mangrove, bolongs, lagunes et littoral.",
+      "what_to_see": "lagunes; mangrove; plage; oiseaux",
+      "latitude": 14.02,
+      "longitude": -16.75,
+      "image_queries": [
+        "Palmarin Sénégal",
+        "lagune Palmarin Sénégal"
+      ]
+    },
+    {
+      "id": "medina-baye",
+      "name": "Médina Baye",
+      "type": "religious_site",
+      "region": "Kaolack",
+      "locality": "Kaolack",
+      "summary": "Quartier religieux majeur de Kaolack associé à la Fayda Tijaniyya.",
+      "history": "Centre religieux lié à Cheikh Ibrahim Niass et à une tradition d'enseignement islamique.",
+      "what_to_see": "Grande Mosquée; patrimoine religieux; quartier",
+      "latitude": 14.146,
+      "longitude": -16.075,
+      "image_queries": [
+        "Médina Baye Kaolack Sénégal",
+        "Grande Mosquée Médina Baye"
+      ]
+    },
+    {
+      "id": "linguere",
+      "name": "Linguère",
+      "type": "locality",
+      "region": "Louga",
+      "locality": "Linguère",
+      "summary": "Ville du Ferlo au cœur d'une zone pastorale du nord.",
+      "history": "Repère important pour comprendre les paysages sahéliens et le pastoralisme.",
+      "what_to_see": "Ferlo; élevage; paysages sahéliens",
+      "latitude": 15.395,
+      "longitude": -15.12,
+      "image_queries": [
+        "Linguère Sénégal",
+        "Ferlo Sénégal"
+      ]
+    },
+    {
+      "id": "podor",
+      "name": "Podor",
+      "type": "heritage",
+      "region": "Saint-Louis",
+      "locality": "Podor",
+      "summary": "Ancienne escale du fleuve Sénégal.",
+      "history": "Ville historique de la vallée du fleuve et ancien point d'échanges.",
+      "what_to_see": "fleuve; escale; patrimoine architectural",
+      "latitude": 16.652,
+      "longitude": -14.958,
+      "image_queries": [
+        "Podor Sénégal",
+        "fleuve Sénégal Podor"
+      ]
+    },
+    {
+      "id": "richard-toll",
+      "name": "Richard-Toll",
+      "type": "locality",
+      "region": "Saint-Louis",
+      "locality": "Richard-Toll",
+      "summary": "Ville de la vallée du fleuve Sénégal connue pour l'agriculture irriguée.",
+      "history": "Territoire marqué par le fleuve et les aménagements agricoles.",
+      "what_to_see": "fleuve; agriculture; vallée",
+      "latitude": 16.46,
+      "longitude": -15.7,
+      "image_queries": [
+        "Richard-Toll Sénégal",
+        "fleuve Sénégal Richard Toll"
+      ]
+    },
+    {
+      "id": "matam-fleuve",
+      "name": "Fleuve Sénégal à Matam",
+      "type": "natural_site",
+      "region": "Matam",
+      "locality": "Matam",
+      "summary": "Paysage fluvial majeur du Fouta-Toro.",
+      "history": "Le fleuve structure les activités agricoles, les mobilités et les paysages de la vallée.",
+      "what_to_see": "fleuve; agriculture; paysages",
+      "latitude": 15.655,
+      "longitude": -13.255,
+      "image_queries": [
+        "Fleuve Sénégal Matam",
+        "Matam Sénégal"
+      ]
+    },
+    {
+      "id": "bakel",
+      "name": "Bakel",
+      "type": "heritage",
+      "region": "Tambacounda",
+      "locality": "Bakel",
+      "summary": "Ville historique du Sénégal oriental sur le fleuve Sénégal.",
+      "history": "Position stratégique ancienne sur les routes fluviales et commerciales.",
+      "what_to_see": "fort; fleuve; patrimoine",
+      "latitude": 14.904,
+      "longitude": -12.461,
+      "image_queries": [
+        "Bakel Sénégal",
+        "fort Bakel Sénégal"
+      ]
+    },
+    {
+      "id": "kidira",
+      "name": "Kidira",
+      "type": "locality",
+      "region": "Tambacounda",
+      "locality": "Kidira",
+      "summary": "Localité frontalière de l'est du Sénégal sur le fleuve Sénégal.",
+      "history": "Zone de passage et d'échanges entre Sénégal et Mali.",
+      "what_to_see": "fleuve; frontière; échanges",
+      "latitude": 14.45,
+      "longitude": -12.21,
+      "image_queries": [
+        "Kidira Sénégal"
+      ]
+    },
+    {
+      "id": "bandafassi",
+      "name": "Bandafassi",
+      "type": "cultural_site",
+      "region": "Kédougou",
+      "locality": "Bandafassi",
+      "summary": "Territoire culturel du Pays Bassari.",
+      "history": "Village et paysage associés aux communautés bédik et aux reliefs du Sénégal oriental.",
+      "what_to_see": "culture bédik; collines; villages",
+      "latitude": 12.53,
+      "longitude": -12.32,
+      "image_queries": [
+        "Bandafassi Sénégal",
+        "Pays Bassari Bandafassi"
+      ]
+    },
+    {
+      "id": "salemata",
+      "name": "Salémata",
+      "type": "cultural_site",
+      "region": "Kédougou",
+      "locality": "Salémata",
+      "summary": "Territoire culturel du Pays Bassari.",
+      "history": "Zone de villages, reliefs et pratiques culturelles du sud-est sénégalais.",
+      "what_to_see": "culture bassari; paysages; villages",
+      "latitude": 12.71,
+      "longitude": -12.82,
+      "image_queries": [
+        "Salémata Sénégal",
+        "Pays Bassari Salémata"
+      ]
+    },
+    {
+      "id": "oussouye",
+      "name": "Oussouye",
+      "type": "cultural_site",
+      "region": "Ziguinchor",
+      "locality": "Oussouye",
+      "summary": "Localité de Basse-Casamance connue pour sa culture diola.",
+      "history": "Territoire où les traditions culturelles et les paysages de Casamance occupent une place importante.",
+      "what_to_see": "culture diola; forêt; architecture traditionnelle",
+      "latitude": 12.485,
+      "longitude": -16.546,
+      "image_queries": [
+        "Oussouye Sénégal",
+        "culture diola Oussouye"
+      ]
+    },
+    {
+      "id": "carabane",
+      "name": "Carabane",
+      "type": "island",
+      "region": "Ziguinchor",
+      "locality": "Carabane",
+      "summary": "Île historique de Basse-Casamance.",
+      "history": "Site de la liste indicative UNESCO, à distinguer des biens inscrits au patrimoine mondial.",
+      "what_to_see": "île; patrimoine; plage; Casamance",
+      "latitude": 12.79,
+      "longitude": -16.72,
+      "image_queries": [
+        "Carabane Sénégal",
+        "île de Carabane Sénégal"
+      ]
+    },
+    {
+      "id": "diembering",
+      "name": "Diembering",
+      "type": "cultural_site",
+      "region": "Ziguinchor",
+      "locality": "Diembering",
+      "summary": "Village côtier de Casamance connu pour son architecture et son environnement.",
+      "history": "Paysage culturel et littoral de Basse-Casamance.",
+      "what_to_see": "cases; plage; culture diola",
+      "latitude": 12.404,
+      "longitude": -16.772,
+      "image_queries": [
+        "Diembering Sénégal",
+        "cases traditionnelles Casamance"
+      ]
+    },
+    {
+      "id": "ziguinchor",
+      "name": "Ziguinchor",
+      "type": "locality",
+      "region": "Ziguinchor",
+      "locality": "Ziguinchor",
+      "summary": "Principale ville de Casamance et centre urbain du sud.",
+      "history": "Ville traversée par le fleuve Casamance et carrefour culturel régional.",
+      "what_to_see": "fleuve; marchés; culture; architecture",
+      "latitude": 12.583,
+      "longitude": -16.271,
+      "image_queries": [
+        "Ziguinchor Sénégal",
+        "fleuve Casamance Ziguinchor"
+      ]
+    },
+    {
+      "id": "sine-ngayene",
+      "name": "Sine Ngayène",
+      "type": "heritage",
+      "region": "Fatick",
+      "locality": "Sine Ngayène",
+      "summary": "Ensemble de cercles mégalithiques de Sénégambie.",
+      "history": "Site sénégalais du bien transfrontalier des Cercles mégalithiques de Sénégambie.",
+      "what_to_see": "mégalithes; archéologie; paysage",
+      "latitude": 14.51,
+      "longitude": -15.45,
+      "image_queries": [
+        "Sine Ngayène Sénégal",
+        "cercles mégalithiques Sénégal"
+      ]
+    },
+    {
+      "id": "wanar",
+      "name": "Wanar",
+      "type": "heritage",
+      "region": "Kaolack",
+      "locality": "Wanar",
+      "summary": "Site sénégalais associé aux Cercles mégalithiques de Sénégambie.",
+      "history": "Ensemble archéologique de monuments mégalithiques.",
+      "what_to_see": "mégalithes; archéologie",
+      "latitude": 13.67,
+      "longitude": -15.75,
+      "image_queries": [
+        "Wanar Sénégal",
+        "cercles mégalithiques Wanar"
+      ]
+    },
+    {
+      "id": "fadiouth",
+      "name": "Île de Fadiouth",
+      "type": "island",
+      "region": "Thiès",
+      "locality": "Joal-Fadiouth",
+      "summary": "Île côtière célèbre pour ses accumulations de coquillages et son paysage insulaire.",
+      "history": "Patrimoine culturel et paysage maritime de Joal-Fadiouth.",
+      "what_to_see": "coquillages; île; cimetière; mangrove",
+      "latitude": 14.166,
+      "longitude": -16.836,
+      "image_queries": [
+        "Île de Fadiouth Sénégal",
+        "Fadiouth Sénégal"
+      ]
+    },
+    {
+      "id": "saly",
+      "name": "Saly",
+      "type": "beach",
+      "region": "Thiès",
+      "locality": "Saly",
+      "summary": "Station balnéaire de la Petite-Côte.",
+      "history": "Destination littorale connue pour ses plages et son activité touristique.",
+      "what_to_see": "plage; littoral; activités nautiques",
+      "latitude": 14.441,
+      "longitude": -17.01,
+      "image_queries": [
+        "Saly Sénégal",
+        "plage Saly Sénégal"
+      ]
+    },
+    {
+      "id": "niokolo-gambie",
+      "name": "Rivière Gambie au Niokolo-Koba",
+      "type": "natural_site",
+      "region": "Kédougou",
+      "locality": "Niokolo-Koba",
+      "summary": "Paysage fluvial au cœur du parc national.",
+      "history": "La rivière et ses affluents structurent une partie des habitats du parc.",
+      "what_to_see": "rivière; savane; biodiversité",
+      "latitude": 13.15,
+      "longitude": -12.45,
+      "image_queries": [
+        "rivière Gambie Niokolo Koba Sénégal"
       ]
     }
   ]
