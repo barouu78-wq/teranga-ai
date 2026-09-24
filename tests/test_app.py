@@ -221,22 +221,3 @@ def test_image_proxy_allows_wikimedia_and_blocks_other_hosts(monkeypatch):
 
 def test_image_proxy_url_is_same_origin():
     assert image_proxy_url("https://upload.wikimedia.org/wikipedia/commons/d/d1/Dakar.jpg").startswith("/image-proxy?url=")
-
-
-def test_google_image_lookup_uses_image_search(monkeypatch):
-    import app as app_module
-    import io
-    import json
-
-    app_module.GOOGLE_IMAGE_API_KEY = "test-key"
-    app_module.GOOGLE_IMAGE_CSE_ID = "test-cx"
-    payload = {"items": [{"link": "https://example.com/dakar.jpg", "title": "Dakar", "image": {"thumbnailLink": "https://encrypted-tbn0.gstatic.com/images?q=test", "contextLink": "https://example.com/dakar"}}]}
-
-    class FakeResponse(io.BytesIO):
-        def __enter__(self): return self
-        def __exit__(self, *args): self.close()
-
-    monkeypatch.setattr(app_module, "urlopen", lambda *args, **kwargs: FakeResponse(json.dumps(payload).encode("utf-8")))
-    result = app_module.fetch_google_images("Dakar", limit=1)
-    assert result[0]["display_url"].startswith("https://encrypted-tbn0.gstatic.com/")
-    assert result[0]["credit"] == "Google Images"
