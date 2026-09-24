@@ -181,6 +181,70 @@ def test_photo_request_routes_to_wikimedia_image(monkeypatch):
     assert "Dakar" in calls[0]
 
 
+def test_photo_request_prioritizes_exact_place_commons_search(monkeypatch):
+    import app as app_module
+
+    calls = []
+
+    def fake_commons(title, limit=4):
+        calls.append((title, limit))
+        if "Gorée" in title:
+            return [{
+                "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Goree.jpg",
+                "alt": "Île de Gorée",
+                "credit": "Wikimédia Commons",
+            }]
+        return []
+
+    monkeypatch.setattr(app_module, "fetch_commons_images", fake_commons)
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+    monkeypatch.setattr(app_module, "knowledge_image_titles", lambda message, limit=4: ["Dakar"])
+
+    images = fetch_topic_images("Montre-moi des photos de Gorée")
+    assert images
+    assert "Gorée" in calls[0][0]
+    assert calls[0][1] == 2
+    assert images[0]["display_url"].startswith("/image-proxy?url=")
+
+
+def test_commons_images_include_same_origin_proxy(monkeypatch):
+    import app as app_module
+    import io
+    import json
+
+    payload = {
+        "query": {
+            "pages": {
+                "1": {
+                    "title": "File:Gorée.jpg",
+                    "imageinfo": [{
+                        "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Goree.jpg/960px-Goree.jpg",
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Goree.jpg",
+                        "mime": "image/jpeg",
+                        "thumbmime": "image/jpeg",
+                        "extmetadata": {},
+                    }],
+                }
+            }
+        }
+    }
+
+    class FakeResponse(io.BytesIO):
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            self.close()
+
+    monkeypatch.setattr(
+        app_module,
+        "urlopen",
+        lambda *args, **kwargs: FakeResponse(json.dumps(payload).encode("utf-8")),
+    )
+    images = app_module.fetch_commons_images("Île de Gorée Sénégal", limit=1)
+    assert images
+    assert images[0]["display_url"].startswith("/image-proxy?url=")
+
+
 def test_model_uses_zero_reasoning_for_fast_chat():
     payload = {
         "instructions": "test",
