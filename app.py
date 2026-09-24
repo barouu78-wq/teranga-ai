@@ -950,7 +950,11 @@ def event_delta(event):
 def complete_reply(payload):
     response = create_response(payload, stream=False)
     text = clean_answer(getattr(response, "output_text", "") or "")
-    image = fetch_topic_images(payload.get("message", ""))
+    try:
+        image = fetch_topic_images(payload.get("message", ""))
+    except Exception:
+        app.logger.exception("Erreur récupération images; réponse texte conservée")
+        image = None
     return text, extract_sources(response), image, lookup_map(payload.get("message", ""))
 
 
@@ -987,7 +991,10 @@ def chat():
             for event in stream:
                 etype = getattr(event, "type", "") or ""
                 if etype == "response.failed":
-                    break
+                    failed = getattr(event, "response", None)
+                    failure = _field(failed, "error", None)
+                    message = _field(failure, "message", None) or _field(failure, "code", None) or "La réponse IA a échoué."
+                    raise RuntimeError(f"OpenAI response.failed: {message}")
                 if (
                     "annotation" in etype
                     or "web_search" in etype
@@ -1015,7 +1022,11 @@ def chat():
                 if reply:
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
             else:
-                image = fetch_topic_images(payload.get("message", ""))
+                try:
+                    image = fetch_topic_images(payload.get("message", ""))
+                except Exception:
+                    app.logger.exception("Erreur récupération images stream; réponse texte conservée")
+                    image = None
                 maps = lookup_map(payload.get("message", ""))
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
