@@ -32,7 +32,8 @@ Le projet reste volontairement simple :
     ├── app.py                         # application Flask + orchestration
     ├── services/
     │   ├── seo.py                     # pages et contenu SEO
-    │   └── images.py                  # recherche et cache des images Wikimedia
+    │   ├── images.py                  # recherche et cache des images Wikimedia
+    │   └── explorer.py                # rendu de la page Explorer
     ├── templates/
     │   └── home.html                  # interface web principale
     ├── data/
