@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0907" id="themeColor">
+<meta name="theme-color" content="#f6efe3" id="themeColor">
 <meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
 <meta name="robots" content="index,follow">
@@ -414,6 +414,21 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
 }
 
 body:not(.has-chat) #messages{display:none}
+/* Final mobile shell — prevent viewport overlap */
+@media(max-width:760px){
+  body{overscroll-behavior-y:none}
+  .app{height:var(--vvh,100dvh);min-height:var(--vvh,100dvh)}
+  header{flex:0 0 auto}
+  #stage{min-height:0;overscroll-behavior:contain}
+  .dock{flex:0 0 auto}
+  .tabbar{position:relative;bottom:auto;flex:0 0 auto}
+  body.has-chat .dock{padding-top:4px}
+  body.has-chat .meta{min-height:15px}
+}
+@media(max-width:380px){
+  .seg button:nth-child(n+3){display:none}
+  .seg:after{content:"••";display:flex;align-items:center;padding:0 5px;color:var(--mute);font-size:10px}
+}
 /* Mobile chat polish — compact, readable, safe-area aware */
 @media(max-width:760px){
   header{min-height:62px;padding:9px 12px calc(8px + env(safe-area-inset-top));}
