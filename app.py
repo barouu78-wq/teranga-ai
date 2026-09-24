@@ -30,7 +30,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-6-luna")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 ALLOWED_ORIGINS = {
     origin.strip()
@@ -65,7 +65,7 @@ if TRUST_PROXY:
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
-client = OpenAI(api_key=API_KEY, timeout=50.0, max_retries=1)
+client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
@@ -1084,23 +1084,8 @@ def chat():
             yield json.dumps({"done": True}) + "\n"
         except Exception as exc:
             app.logger.exception("Erreur stream /chat")
-            # Après le début du stream, ne jamais générer une seconde réponse complète.
-            if not yielded:
-                try:
-                    reply, sources, image, maps = complete_reply(payload)
-                    if reply:
-                        yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
-                        if sources:
-                            yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-                        if image:
-                            yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
-                        if maps:
-                            yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
-                        yield json.dumps({"done": True}) + "\n"
-                        return
-                except Exception as exc2:
-                    app.logger.exception("Erreur fallback /chat")
-                    exc = exc2
+            # Ne relance jamais une seconde requête complète après un timeout/échec du stream.
+            # Cela évite de doubler l'attente côté navigateur.
             yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
 
     return Response(
@@ -1878,7 +1863,7 @@ async function ask(preset){
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
-  const kill=setTimeout(()=>ctrl.abort(),75000);
+  const kill=setTimeout(()=>ctrl.abort(),40000);
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang});
   let reply='', sources=[], image=null, map=null;
   try{
