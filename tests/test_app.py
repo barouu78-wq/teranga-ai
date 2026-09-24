@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import app, lookup_map, public_error, should_use_web
+from app import app, fetch_commons_image, lookup_map, public_error, should_use_web
 
 
 def test_health():
@@ -120,3 +120,40 @@ def test_public_error_classifies_auth_and_bad_request():
 
 def test_public_error_classifies_model_error():
     assert "modèle IA" in public_error(Exception("model gpt-x not available"))
+
+
+def test_commons_image_lookup_returns_real_wikimedia_url(monkeypatch):
+    import app as app_module
+    import io
+    import json
+
+    payload = {
+        "query": {
+            "pages": {
+                "1": {
+                    "title": "File:Dakar.jpg",
+                    "imageinfo": [{
+                        "thumburl": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Dakar.jpg/900px-Dakar.jpg",
+                        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Dakar.jpg",
+                        "extmetadata": {"ImageDescription": {"value": "Vue de Dakar"}},
+                    }],
+                }
+            }
+        }
+    }
+
+    class FakeResponse(io.BytesIO):
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            self.close()
+
+    monkeypatch.setattr(
+        app_module,
+        "urlopen",
+        lambda *args, **kwargs: FakeResponse(json.dumps(payload).encode("utf-8")),
+    )
+    result = fetch_commons_image("Dakar")
+    assert result["url"].startswith("https://upload.wikimedia.org/")
+    assert result["credit"] == "Wikimédia Commons"
+    assert result["alt"] == "Vue de Dakar"
