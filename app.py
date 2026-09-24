@@ -576,7 +576,11 @@ def fetch_google_images(title, limit=4):
     for item in data.get("items", []):
         src = str(item.get("link") or "")
         thumb = str((item.get("image") or {}).get("thumbnailLink") or "")
-        if not src or src in seen:
+        thumb_host = urlparse(thumb).hostname or ""
+        if not src or src in seen or thumb_host not in {
+            "encrypted-tbn0.gstatic.com", "encrypted-tbn1.gstatic.com",
+            "encrypted-tbn2.gstatic.com", "encrypted-tbn3.gstatic.com",
+        }:
             continue
         out.append({
             "url": src,
