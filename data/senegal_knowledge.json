@@ -1,0 +1,246 @@
+{
+  "version": "1.0",
+  "country": "Sénégal",
+  "regions": [
+    {
+      "id": "dakar",
+      "name": "Dakar",
+      "places": [
+        "Dakar",
+        "Gorée",
+        "Rufisque",
+        "Pikine",
+        "Guédiawaye",
+        "Ngor",
+        "Yoff",
+        "Ouakam"
+      ],
+      "highlights": [
+        "Île de Gorée",
+        "Maison des Esclaves",
+        "Musée des Civilisations Noires",
+        "Monument de la Renaissance africaine",
+        "Corniche",
+        "îles de la Madeleine"
+      ]
+    },
+    {
+      "id": "thies",
+      "name": "Thiès",
+      "places": [
+        "Thiès",
+        "Tivaouane",
+        "Mbour",
+        "Saly",
+        "Joal-Fadiouth",
+        "Popenguine",
+        "Somone"
+      ],
+      "highlights": [
+        "Tivaouane",
+        "Joal-Fadiouth",
+        "Popenguine",
+        "Petite-Côte"
+      ]
+    },
+    {
+      "id": "diourbel",
+      "name": "Diourbel",
+      "places": [
+        "Diourbel",
+        "Touba",
+        "Mbacké"
+      ],
+      "highlights": [
+        "Grande Mosquée de Touba",
+        "patrimoine mouride",
+        "Magal de Touba"
+      ]
+    },
+    {
+      "id": "fatick",
+      "name": "Fatick",
+      "places": [
+        "Fatick",
+        "Foundiougne",
+        "Sokone",
+        "Passy"
+      ],
+      "highlights": [
+        "Delta du Saloum",
+        "mangroves",
+        "bolongs",
+        "îles du Saloum"
+      ]
+    },
+    {
+      "id": "kaolack",
+      "name": "Kaolack",
+      "places": [
+        "Kaolack",
+        "Nioro du Rip",
+        "Guinguinéo"
+      ],
+      "highlights": [
+        "Médina Baye",
+        "commerce",
+        "saliculture",
+        "bassin arachidier"
+      ]
+    },
+    {
+      "id": "kaffrine",
+      "name": "Kaffrine",
+      "places": [
+        "Kaffrine",
+        "Koungheul",
+        "Malem-Hodar",
+        "Birkelane"
+      ],
+      "highlights": [
+        "bassin arachidier",
+        "paysages du centre"
+      ]
+    },
+    {
+      "id": "louga",
+      "name": "Louga",
+      "places": [
+        "Louga",
+        "Kébémer",
+        "Linguère",
+        "Dahra"
+      ],
+      "highlights": [
+        "Ferlo",
+        "pastoralisme",
+        "élevage"
+      ]
+    },
+    {
+      "id": "saint-louis",
+      "name": "Saint-Louis",
+      "places": [
+        "Saint-Louis",
+        "Richard-Toll",
+        "Dagana",
+        "Podor"
+      ],
+      "highlights": [
+        "Île de Saint-Louis",
+        "Pont Faidherbe",
+        "Parc national des oiseaux du Djoudj",
+        "fleuve Sénégal"
+      ]
+    },
+    {
+      "id": "matam",
+      "name": "Matam",
+      "places": [
+        "Matam",
+        "Ourossogui",
+        "Kanel",
+        "Thilogne"
+      ],
+      "highlights": [
+        "Fouta-Toro",
+        "vallée du fleuve Sénégal",
+        "agriculture irriguée"
+      ]
+    },
+    {
+      "id": "tambacounda",
+      "name": "Tambacounda",
+      "places": [
+        "Tambacounda",
+        "Bakel",
+        "Goudiry",
+        "Koumpentoum"
+      ],
+      "highlights": [
+        "Sénégal oriental",
+        "savane",
+        "vallée de la Falémé"
+      ]
+    },
+    {
+      "id": "kedougou",
+      "name": "Kédougou",
+      "places": [
+        "Kédougou",
+        "Dindéfello",
+        "Bandafassi",
+        "Salémata"
+      ],
+      "highlights": [
+        "Pays Bassari",
+        "cascades de Dindéfello",
+        "Niokolo-Koba",
+        "collines"
+      ]
+    },
+    {
+      "id": "kolda",
+      "name": "Kolda",
+      "places": [
+        "Kolda",
+        "Vélingara",
+        "Médina Yoro Foulah"
+      ],
+      "highlights": [
+        "Haute-Casamance",
+        "agriculture",
+        "cultures peules et mandingues"
+      ]
+    },
+    {
+      "id": "sedhiou",
+      "name": "Sédhiou",
+      "places": [
+        "Sédhiou",
+        "Bounkiling",
+        "Goudomp",
+        "Marsassoum"
+      ],
+      "highlights": [
+        "Moyenne-Casamance",
+        "fleuve Casamance",
+        "mangroves",
+        "bolongs"
+      ]
+    },
+    {
+      "id": "ziguinchor",
+      "name": "Ziguinchor",
+      "places": [
+        "Ziguinchor",
+        "Oussouye",
+        "Cap Skirring",
+        "Bignona",
+        "Carabane"
+      ],
+      "highlights": [
+        "Basse-Casamance",
+        "culture diola",
+        "bolongs",
+        "mangroves",
+        "plages",
+        "cases à impluvium"
+      ]
+    }
+  ],
+  "unesco_world_heritage": [
+    "Île de Gorée",
+    "Île de Saint-Louis",
+    "Parc national des oiseaux du Djoudj",
+    "Parc national du Niokolo-Koba",
+    "Delta du Saloum",
+    "Cercles mégalithiques de Sénégambie",
+    "Pays Bassari"
+  ],
+  "visual_policy": {
+    "require_source": true,
+    "require_caption": true,
+    "rule": "Associer chaque image à un lieu précis et ne jamais inventer une URL ou une attribution."
+  }
+}
