@@ -550,7 +550,7 @@ body:not(.has-chat) #messages{display:none}
   <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
   <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Découvrir</button>
   <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
-  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
+  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg>Réglages</button>
 </nav>
 </div>
 <script nonce="__CSP_NONCE__">
@@ -566,7 +566,7 @@ fr:{
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
-  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
+  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navSettings:'Réglages',
   heroTitle:'Ton Sénégal commence ici.',
   heroText:'Découvre les lieux, les saveurs et les histoires du Sénégal. Pose ta question à Teranga et laisse l’assistant te guider.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -865,7 +865,7 @@ function setLang(next){
   if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
   if(tabs[1])tabs[1].lastChild.nodeValue=t.navDiscover;
   if(tabs[2])tabs[2].lastChild.nodeValue=t.navChat;
-  if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
+  if(tabs[3])tabs[3].lastChild.nodeValue=t.navSettings;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   bindShare();
