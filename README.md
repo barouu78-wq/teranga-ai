@@ -31,7 +31,10 @@ Le projet reste volontairement simple :
     teranga-ai/
     ├── app.py                         # application Flask + orchestration
     ├── services/
-    │   └── seo.py                     # pages et contenu SEO
+    │   ├── seo.py                     # pages et contenu SEO
+    │   └── images.py                  # recherche et cache des images Wikimedia
+    ├── templates/
+    │   └── home.html                  # interface web principale
     ├── data/
     │   └── senegal_knowledge.json     # données structurées du Sénégal
     ├── tests/
