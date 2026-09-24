@@ -519,41 +519,30 @@ def usable_wiki_image(src):
 _IMAGE_CACHE = {}
 
 
-def fetch_commons_image(title):
-    """Find a real Wikimedia Commons image when the Wikipedia summary has none."""
-    if not title:
-        return None
-    query = f"{title} Sénégal"
-    params = urlencode({
-        "action": "query",
-        "generator": "search",
-        "gsrsearch": query,
-        "gsrnamespace": "6",
-        "gsrlimit": "5",
-        "prop": "imageinfo",
-        "iiprop": "url|extmetadata",
-        "iiurlwidth": "900",
-        "format": "json",
-        "origin": "*",
-    })
-    url = "https://commons.wikimedia.org/w/api.php?" + params
-    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+def fetch_commons_images(title, limit=4):
+    params = {"action":"query","format":"json","generator":"search","gsrsearch":f"{title} Sénégal","gsrnamespace":"6","gsrlimit":str(min(max(limit*2,4),10)),"prop":"imageinfo","iiprop":"url|extmetadata","iiurlwidth":"900","origin":"*"}
+    req = Request("https://commons.wikimedia.org/w/api.php?" + urlencode(params), headers={"User-Agent":"TerangaAI/1.0"})
     with urlopen(req, timeout=4) as resp:
         data = json.loads(resp.read().decode("utf-8"))
-    pages = (data.get("query") or {}).get("pages") or {}
-    for page in pages.values():
+    out, seen = [], set()
+    for page in ((data.get("query") or {}).get("pages") or {}).values():
         info = (page.get("imageinfo") or [{}])[0]
-        src = usable_wiki_image(info.get("thumburl") or info.get("url") or "")
-        if not src:
+        src = info.get("thumburl") or info.get("url")
+        if not usable_wiki_image(src) or src in seen:
             continue
         meta = info.get("extmetadata") or {}
-        description = meta.get("ImageDescription", {}).get("value", "")
-        return {
-            "url": src,
-            "alt": sanitize_text(description or page.get("title") or title, 120),
-            "credit": "Wikimédia Commons",
-        }
-    return None
+        def meta_text(key):
+            value = meta.get(key, {})
+            return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
+        out.append({"url":src,"alt":meta_text("ImageDescription") or page.get("title",title),"credit":"Wikimedia Commons","artist":meta_text("Artist"),"license":meta_text("LicenseShortName"),"page_url":"https://commons.wikimedia.org/wiki/"+quote(page.get("title",""),safe=":")})
+        seen.add(src)
+        if len(out) >= limit:
+            break
+    return out
+
+def fetch_commons_image(title):
+    images = fetch_commons_images(title, limit=1)
+    return images[0] if images else None
 
 
 def fetch_city_image(title):
@@ -2292,7 +2281,7 @@ def explorer_page():
             cards = [x for x, p in zip(cards, places) if p.get("region", "").lower() == target.get("name", "").lower()]
     html = """<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Explorer les lieux du Sénégal avec Teranga AI."><title>Explorer le Sénégal | Teranga AI</title>
 <style>
-body{margin:0;background:#0b0907;color:#f6efe3;font:15px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:24px 16px 50px}a{color:#e2b34a;text-decoration:none}.hero{padding:24px;border:1px solid #3b2d18;border-radius:24px;background:#171310;margin-bottom:16px}.muted{color:#b8a48c}.regions{line-height:2}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}article{padding:16px;border:1px solid #3b2d18;border-radius:20px;background:#171310}article .photo{height:150px;margin:-16px -16px 14px;background:#0f0d0b;border-radius:20px 20px 0 0;overflow:hidden}article .photo img{width:100%;height:100%;object-fit:cover;display:block}article small{color:#e2b34a;text-transform:uppercase}article h2{font-family:Georgia,serif;margin:8px 0}article p{color:#b8a48c;min-height:64px}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.grid{grid-template-columns:1fr}}
+body{margin:0;background:#0b0907;color:#f6efe3;font:15px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:24px 16px 50px}a{color:#e2b34a;text-decoration:none}.hero{padding:24px;border:1px solid #3b2d18;border-radius:24px;background:#171310;margin-bottom:16px}.muted{color:#b8a48c}.regions{line-height:2}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}article{padding:16px;border:1px solid #3b2d18;border-radius:20px;background:#171310}article .gallery{height:170px;margin:-16px -16px 14px;background:#0f0d0b;border-radius:20px 20px 0 0;overflow:hidden}.gallery-track{height:145px;display:flex;overflow-x:auto;scroll-snap-type:x mandatory}.gallery-track img{width:100%;min-width:100%;height:145px;object-fit:cover;scroll-snap-align:start}.gallery-credit{height:25px;padding:4px 9px;color:#b8a48c;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}article small{color:#e2b34a;text-transform:uppercase}article h2{font-family:Georgia,serif;margin:8px 0}article p{color:#b8a48c;min-height:64px}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.grid{grid-template-columns:1fr}}
 </style></head><body><main><p><a href="/">← Teranga AI</a></p><section class="hero"><small>EXPLORER · SÉNÉGAL</small><h1>Le Sénégal, lieu par lieu.</h1><p class="muted">Explore les fiches lieux de Teranga AI : histoire, culture, coordonnées et recherches photo.</p><div class="regions">{regions}</div></section><div class="grid">{cards}</div></main></body></html>"""
     return Response(html.replace("{regions}", region_links).replace("{cards}", "".join(cards)), mimetype="text/html")
 
@@ -2304,7 +2293,7 @@ def explorer_image():
         return jsonify({"image": None})
     try:
         image = fetch_commons_image(query)
-        return jsonify({"image": image})
+        return jsonify({"images": fetch_commons_images(query, limit=4)})
     except Exception:
         app.logger.exception("explorer-image")
         return jsonify({"image": None})
