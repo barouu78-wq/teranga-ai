@@ -1,4 +1,6 @@
-from flask import Response\n\nSEO_PAGES = {
+from flask import Response
+
+SEO_PAGES = {
     "senegal": {
         "title": "Sénégal : guide pratique et assistant IA | Teranga AI",
         "description": "Découvrez le Sénégal avec Teranga AI : Dakar, régions, cuisine, déplacements et informations pratiques.",
