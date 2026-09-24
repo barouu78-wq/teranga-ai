@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import app, lookup_map, should_use_web
+from app import app, lookup_map, public_error, should_use_web
 
 
 def test_health():
@@ -111,3 +111,12 @@ def test_health_does_not_expose_secret():
     body = client.get("/health").get_data(as_text=True)
     assert os.environ["OPENAI_API_KEY"] not in body
     assert "SECRET_KEY" not in body
+
+
+def test_public_error_classifies_auth_and_bad_request():
+    assert "OPENAI_API_KEY" in public_error(Exception("401 invalid api key"))
+    assert "requête IA" in public_error(Exception("BadRequestError invalid parameter"))
+
+
+def test_public_error_classifies_model_error():
+    assert "modèle IA" in public_error(Exception("model gpt-x not available"))
