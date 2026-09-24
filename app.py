@@ -541,12 +541,33 @@ def fetch_city_image(title):
     return found
 
 
+def knowledge_image_titles(message, limit=4):
+    text_value = normalize(message)
+    titles = []
+    for region in SENEGAL_KNOWLEDGE.get("regions", []):
+        candidates = [region.get("name", ""), *region.get("places", []), *region.get("highlights", [])]
+        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
+            for candidate in candidates:
+                if candidate and candidate not in titles:
+                    titles.append(str(candidate))
+                    if len(titles) >= limit:
+                        return titles
+    return titles
+
+
 def fetch_topic_images(message):
     photos = []
-    for title in topic_wikipedia_titles(message, 2):
+    titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
+    seen = set()
+    for title in titles:
+        if not title or title in seen:
+            continue
+        seen.add(title)
         photo = fetch_city_image(title)
         if photo:
             photos.append(photo)
+        if len(photos) >= 4:
+            break
     return photos or None
 
 
