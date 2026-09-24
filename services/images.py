@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
 
 
-def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None):
+def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None, urlopen_fn=None):
     query = str(title or "").strip()
     if not query:
         return []
@@ -31,7 +31,8 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         "https://commons.wikimedia.org/w/api.php?" + urlencode(params),
         headers={"User-Agent": "TerangaAI/1.0 (image lookup)"},
     )
-    with urlopen(req, timeout=5) as resp:
+    opener = urlopen_fn or urlopen
+    with opener(req, timeout=5) as resp:
         data = json.loads(resp.read().decode("utf-8"))
 
     validate = image_validator or (lambda src: str(src or ""))
@@ -69,8 +70,8 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
     return out
 
 
-def fetch_commons_image(title, image_validator=None, display_url_builder=None):
-    images = fetch_commons_images(title, limit=1, image_validator=image_validator, display_url_builder=display_url_builder)
+def fetch_commons_image(title, image_validator=None, display_url_builder=None, urlopen_fn=None):
+    images = fetch_commons_images(title, limit=1, image_validator=image_validator, display_url_builder=display_url_builder, urlopen_fn=urlopen_fn)
     return images[0] if images else None
 
 
