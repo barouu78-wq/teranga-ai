@@ -413,6 +413,7 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
   .hero-media img{object-position:center top}
 }
 
+body:not(.has-chat) #messages{display:none}
 /* Mobile chat polish — compact, readable, safe-area aware */
 @media(max-width:760px){
   header{min-height:62px;padding:9px 12px calc(8px + env(safe-area-inset-top));}
@@ -678,6 +679,7 @@ async function postJSON(url,body,extra){
 function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
 function setChatMode(on){
   document.body.classList.toggle('has-chat',on);
+  sessionStorage.setItem('teranga-screen-v2',on?'chat':'home');
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
   hero.classList.toggle('is-hidden',on);
 }
@@ -862,16 +864,28 @@ $('tabbar').addEventListener('click',e=>{
   if(!btn)return;
   const tab=btn.dataset.tab;
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
-  if(tab==='home'){showHero();stage.scrollTop=0;}
-  if(tab==='discover'){showHero();$('chips').scrollIntoView({block:'nearest'});}
-  if(tab==='chat'){input.focus();}
-  if(tab==='profile'){$('themeBtn').click();}
+  if(tab==='home'){
+    showHero();
+    stage.scrollTop=0;
+  }
+  if(tab==='discover'){
+    showHero();
+    requestAnimationFrame(()=>document.querySelector('.guide-section')?.scrollIntoView({behavior:'smooth',block:'start'}));
+  }
+  if(tab==='chat'){
+    hideHero();
+    requestAnimationFrame(()=>{stage.scrollTop=stage.scrollHeight;input.focus();});
+  }
+  if(tab==='profile'){
+    $('themeBtn').click();
+  }
 });
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
   sessionStorage.removeItem('teranga-history-v2');
+  sessionStorage.setItem('teranga-screen-v2','home');
 }
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -895,7 +909,7 @@ function restore(){
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
       history=data.history.slice(-12);
-      hideHero();
+      if(sessionStorage.getItem('teranga-screen-v2')==='chat') hideHero();
       const frag=document.createDocumentFragment();
       history.forEach(item=>{
         if(item.role!=='user'&&item.role!=='assistant')return;
