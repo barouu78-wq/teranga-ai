@@ -413,6 +413,43 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
   .hero-media img{object-position:center top}
 }
 
+/* Mobile chat polish — compact, readable, safe-area aware */
+@media(max-width:760px){
+  header{min-height:62px;padding:9px 12px calc(8px + env(safe-area-inset-top));}
+  .brand strong{font-size:16px}
+  .brand .mark{width:38px;height:38px;border-radius:13px}
+  #shareAppBtn{display:none}
+  .tools{gap:5px}
+  .seg{max-width:194px}
+  .seg button{padding:5px 7px;font-size:10px}
+  #stage{padding:6px 12px 8px}
+  body.has-chat #stage{padding-top:2px}
+  #messages{padding-top:0}
+  .msg{margin-bottom:11px}
+  .col{max-width:94%}
+  .bubble{font-size:14px;line-height:1.45;padding:11px 13px}
+  .city-pic,.city-map{width:100%;max-width:100%;margin-top:7px;border-radius:17px}
+  .city-pic img{height:170px}
+  .city-map iframe{height:142px}
+  .city-map a{padding:9px 11px;font-size:11px}
+  .dock{width:calc(100% - 20px);margin:0 auto 4px;padding:6px 0 calc(5px + env(safe-area-inset-bottom));}
+  .composer{border-radius:21px;padding:6px 7px 6px 14px}
+  textarea{min-height:42px;padding-top:9px;font-size:14px}
+  #mic,#send{height:42px;border-radius:15px}
+  #mic{width:42px}
+  #send{min-width:84px;padding:0 13px}
+  .meta{margin-top:6px;padding:0 5px;font-size:10px}
+  .tabbar{width:calc(100% - 20px);margin:0 auto 3px;border-radius:20px;padding:5px 7px calc(7px + env(safe-area-inset-bottom))}
+  .tabbar button{font-size:10px;padding:5px 2px}
+  .tabbar svg{width:17px;height:17px;margin-bottom:2px}
+}
+@media(max-width:420px){
+  .seg button{padding:5px 6px}
+  .brand strong{font-size:15px}
+  .brand .mark{width:36px;height:36px}
+  .city-map iframe{height:132px}
+}
+
 </style>
 
 </head>
@@ -881,7 +918,11 @@ function restore(){
         frag.appendChild(row);
       });
       messages.appendChild(frag);
-      stage.scrollTop=stage.scrollHeight;
+      const lastAssistant=messages.querySelector('.msg.assistant:last-child');
+      requestAnimationFrame(()=>{
+        if(lastAssistant) lastAssistant.scrollIntoView({block:'start',behavior:'auto'});
+        else stage.scrollTop=stage.scrollHeight;
+      });
     }
   }catch(e){}
 }
