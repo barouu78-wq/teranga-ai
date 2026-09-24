@@ -816,7 +816,7 @@ function setLang(next){
   if(rec)rec.lang=voiceMap[lang];
 }
 function themeInit(){
-  const saved=localStorage.getItem('teranga-theme');
+  const saved=localStorage.getItem('teranga-theme-v2');
   document.body.dataset.theme=saved||'light';
   applyThemeColor();
 }
@@ -834,7 +834,7 @@ function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
-  sessionStorage.removeItem('teranga-history');
+  sessionStorage.removeItem('teranga-history-v2');
 }
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -847,12 +847,12 @@ function setupMic(){
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
-    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
+    try{sessionStorage.setItem('teranga-history-v2',JSON.stringify({lang,history}));}catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=sessionStorage.getItem('teranga-history');
+    const raw=sessionStorage.getItem('teranga-history-v2');
     if(!raw)return;
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
@@ -1019,7 +1019,7 @@ $('copyLink').onclick=async()=>{
 };
 $('themeBtn').onclick=()=>{
   const next=document.body.dataset.theme==='dark'?'light':'dark';
-  document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
+  document.body.dataset.theme=next;localStorage.setItem('teranga-theme-v2',next);
   applyThemeColor();
 };
 $('voiceToggle').onclick=()=>{
