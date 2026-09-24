@@ -19,6 +19,11 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from services.seo import render_seo_page
+from services.images import (
+    fetch_city_image as _fetch_city_image,
+    fetch_commons_image as _fetch_commons_image,
+    fetch_commons_images as _fetch_commons_images,
+)
 
 load_dotenv()
 
@@ -566,97 +571,16 @@ def image_proxy():
 _IMAGE_CACHE = {}
 
 def fetch_commons_images(title, limit=4):
-    query = str(title or "").strip()
-    if not query:
-        return []
-    params = {
-        "action": "query",
-        "format": "json",
-        "generator": "search",
-        "gsrsearch": query,
-        "gsrnamespace": "6",
-        "gsrlimit": str(min(max(limit * 3, 6), 20)),
-        "prop": "imageinfo",
-        "iiprop": "url|mime|thumbmime|extmetadata",
-        "iiurlwidth": "960",
-        "origin": "*",
-    }
-    req = Request(
-        "https://commons.wikimedia.org/w/api.php?" + urlencode(params),
-        headers={"User-Agent": "TerangaAI/1.0 (image lookup)"},
-    )
-    with urlopen(req, timeout=5) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url)
 
-    out, seen = [], set()
-    for page in ((data.get("query") or {}).get("pages") or {}).values():
-        info = (page.get("imageinfo") or [{}])[0]
-        mime = str(info.get("mime") or "").lower()
-        thumb_mime = str(info.get("thumbmime") or "").lower()
-        if mime and not mime.startswith("image/"):
-            continue
-        if thumb_mime and not thumb_mime.startswith("image/"):
-            continue
-        src = info.get("thumburl") or info.get("url")
-        src = usable_wiki_image(src)
-        if not src or src in seen:
-            continue
-        meta = info.get("extmetadata") or {}
-
-        def meta_text(key):
-            value = meta.get(key, {})
-            return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
-
-        item = {
-            "url": src,
-            "display_url": image_proxy_url(src),
-            "alt": meta_text("ImageDescription") or page.get("title", query),
-            "credit": "Wikimédia Commons",
-            "artist": meta_text("Artist"),
-            "license": meta_text("LicenseShortName"),
-            "page_url": "https://commons.wikimedia.org/wiki/" + quote(page.get("title", ""), safe=":"),
-        }
-        out.append(item)
-        seen.add(src)
-        if len(out) >= limit:
-            break
-    return out
 
 def fetch_commons_image(title):
-    images = fetch_commons_images(title, limit=1)
-    return images[0] if images else None
+    return _fetch_commons_image(title, usable_wiki_image, image_proxy_url)
 
 
 def fetch_city_image(title):
-    if not title:
-        return None
-    if title in _IMAGE_CACHE:
-        return _IMAGE_CACHE[title]
-    english = title.replace(" (Sénégal)", "").replace(" (Senegal)", "")
-    found = None
-    for lang, page in (("fr", title), ("en", english)):
-        try:
-            data = wiki_summary(lang, page)
-        except Exception:
-            continue
-        src = usable_wiki_image((data.get("thumbnail") or {}).get("source") or "")
-        if not src:
-            src = usable_wiki_image((data.get("originalimage") or {}).get("source") or "")
-        if not src:
-            continue
-        found = {
-            "url": src,
-            "alt": sanitize_text(data.get("title") or title, 80),
-            "credit": "Wikimédia",
-        }
-        break
-    if not found:
-        try:
-            found = fetch_commons_image(title)
-        except Exception:
-            app.logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
-    _IMAGE_CACHE[title] = found
-    return found
+    return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
+
 
 def knowledge_image_titles(message, limit=4):
     text_value = normalize(message)
