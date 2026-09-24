@@ -172,6 +172,7 @@ def test_photo_request_routes_to_wikimedia_image(monkeypatch):
             "credit": "Wikimédia Commons",
         }
 
+    monkeypatch.setattr(app_module, "fetch_commons_images", lambda title, limit=2: [])
     monkeypatch.setattr(app_module, "fetch_city_image", fake_fetch)
     monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
 
@@ -302,6 +303,7 @@ def test_photo_request_continues_after_wikimedia_lookup_error(monkeypatch):
             "credit": "Wikimédia Commons",
         }
 
+    monkeypatch.setattr(app_module, "fetch_commons_images", lambda title, limit=2: [])
     monkeypatch.setattr(app_module, "knowledge_image_titles", lambda message, limit=4: ["Dakar", "Gorée"])
     monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
     monkeypatch.setattr(app_module, "fetch_city_image", fake_fetch)
