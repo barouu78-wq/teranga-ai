@@ -100,7 +100,7 @@ def render_seo_page(slug, site_url):
 <meta property="og:title" content="{page["title"]}">
 <meta property="og:description" content="{page["description"]}">
 <meta property="og:type" content="article">
-<meta property="og:url" content="{SITE_URL}/{slug}">
+<meta property="og:url" content="{site_url}/{slug}">
 <title>{page["title"]}</title>
 <style>
 :root{{color-scheme:dark;--bg:#0b0907;--card:#171310;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}}
