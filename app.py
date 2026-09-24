@@ -535,7 +535,14 @@ def origin_allowed():
     referer = request.headers.get("Referer") or ""
     if origin:
         return origin in ALLOWED_ORIGINS
-    return any(referer.startswith(allowed) for allowed in ALLOWED_ORIGINS)
+    if not referer:
+        return False
+    try:
+        parsed = urlparse(referer)
+        referer_origin = f"{parsed.scheme}://{parsed.netloc}"
+    except Exception:
+        return False
+    return referer_origin in ALLOWED_ORIGINS
 
 
 def require_json_post(fn):
