@@ -392,12 +392,12 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
 /* Travel OS mobile correction: real destination image, stable hierarchy */
 .travel-hero{isolation:isolate;min-height:610px;background:#0d6243!important}
 .travel-hero:before{
-  content:"";position:absolute;inset:0;z-index:0;transform:none!important;
+  content:"";position:absolute;inset:0;z-index:1;transform:none!important;
   background:linear-gradient(90deg,rgba(5,38,27,.94) 0%,rgba(5,38,27,.78) 44%,rgba(5,38,27,.28) 78%,rgba(5,38,27,.10) 100%)!important;
 }
-.travel-hero:after{z-index:1;height:180px;background:linear-gradient(transparent,rgba(4,29,21,.68))!important}
-.hero-media{position:absolute!important;inset:0;z-index:-1!important;overflow:hidden}
-.hero-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.82;filter:saturate(1.08) contrast(1.02)}
+.travel-hero:after{z-index:2;height:180px;background:linear-gradient(transparent,rgba(4,29,21,.68))!important}
+.hero-media{position:absolute!important;inset:0;z-index:0!important;overflow:hidden}
+.hero-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.88;filter:saturate(1.08) contrast(1.02)}
 .hero-kicker{position:relative;z-index:3;padding:56px 54px 0;color:#f3c75f;font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
 .travel-hero h1{position:relative;z-index:3;padding:14px 54px 0!important;margin:0!important;max-width:760px;color:#fff!important}
 .travel-hero p{position:relative;z-index:3;margin:18px 0 26px!important}
