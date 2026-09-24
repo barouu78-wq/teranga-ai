@@ -200,6 +200,8 @@ def test_image_proxy_allows_wikimedia_and_blocks_other_hosts(monkeypatch):
         def __init__(self):
             super().__init__(b"fake-image")
             self.headers = {"Content-Type": "image/jpeg"}
+        def get_content_type(self):
+            return self.headers["Content-Type"]
         def __enter__(self):
             return self
         def __exit__(self, *args):
