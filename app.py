@@ -10,7 +10,7 @@ import time
 from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 from dotenv import load_dotenv
@@ -140,6 +140,7 @@ Pour un plat ou un lieu : région ou quartier + spécialité + un repère. Pas d
 Si une info peut avoir changé, dis-le. Reste factuel et neutre en politique.
 Ne conseille pas pour qui voter.
 Si tu utilises le web, ne colle pas de listes d'URLs dans le texte : les sources s'affichent à part.
+Si l'utilisateur demande des photos, réponds comme si les visuels vont être joints par l'application : ne dis jamais que tu ne peux pas afficher de photos et ne demande pas à l'utilisateur de chercher lui-même les images. Présente simplement le lieu et les visuels disponibles.
 
 Géographie utile :
 Le Sénégal a 14 régions : Dakar, Thiès, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kédougou, Kolda, Sédhiou, Ziguinchor, Saint-Louis, Louga, Matam.
@@ -514,6 +515,43 @@ def usable_wiki_image(src):
 _IMAGE_CACHE = {}
 
 
+def fetch_commons_image(title):
+    """Find a real Wikimedia Commons image when the Wikipedia summary has none."""
+    if not title:
+        return None
+    query = f"{title} Sénégal"
+    params = urlencode({
+        "action": "query",
+        "generator": "search",
+        "gsrsearch": query,
+        "gsrnamespace": "6",
+        "gsrlimit": "5",
+        "prop": "imageinfo",
+        "iiprop": "url|extmetadata",
+        "iiurlwidth": "900",
+        "format": "json",
+        "origin": "*",
+    })
+    url = "https://commons.wikimedia.org/w/api.php?" + params
+    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+    with urlopen(req, timeout=4) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    pages = (data.get("query") or {}).get("pages") or {}
+    for page in pages.values():
+        info = (page.get("imageinfo") or [{}])[0]
+        src = usable_wiki_image(info.get("thumburl") or info.get("url") or "")
+        if not src:
+            continue
+        meta = info.get("extmetadata") or {}
+        description = meta.get("ImageDescription", {}).get("value", "")
+        return {
+            "url": src,
+            "alt": sanitize_text(description or page.get("title") or title, 120),
+            "credit": "Wikimédia Commons",
+        }
+    return None
+
+
 def fetch_city_image(title):
     if not title:
         return None
@@ -537,9 +575,13 @@ def fetch_city_image(title):
             "credit": "Wikimédia",
         }
         break
+    if not found:
+        try:
+            found = fetch_commons_image(title)
+        except Exception:
+            app.logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
     _IMAGE_CACHE[title] = found
     return found
-
 
 def knowledge_image_titles(message, limit=4):
     text_value = normalize(message)
@@ -558,6 +600,8 @@ def knowledge_image_titles(message, limit=4):
 def fetch_topic_images(message):
     photos = []
     titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
+    if not titles and any(term in normalize(message) for term in ("photo", "photos", "image", "images", "visuel", "visuels")):
+        titles = ["Dakar Sénégal"]
     seen = set()
     for title in titles:
         if not title or title in seen:
