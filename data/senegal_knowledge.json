@@ -1,5 +1,5 @@
 {
-  "version": "1.0",
+  "version": "2.0",
   "country": "Sénégal",
   "regions": [
     {
@@ -11,9 +11,14 @@
         "Rufisque",
         "Pikine",
         "Guédiawaye",
+        "Keur Massar",
         "Ngor",
         "Yoff",
-        "Ouakam"
+        "Ouakam",
+        "Almadies",
+        "Fann",
+        "Plateau",
+        "Médina"
       ],
       "highlights": [
         "Île de Gorée",
@@ -22,6 +27,34 @@
         "Monument de la Renaissance africaine",
         "Corniche",
         "îles de la Madeleine"
+      ],
+      "departments": [
+        "Dakar",
+        "Guédiawaye",
+        "Keur Massar",
+        "Pikine",
+        "Rufisque"
+      ],
+      "themes": [
+        "mémoire",
+        "culture urbaine",
+        "musées",
+        "littoral",
+        "religions",
+        "création contemporaine"
+      ],
+      "foods": [
+        "ceebu jën",
+        "yassa",
+        "mafé",
+        "poisson grillé",
+        "pastels"
+      ],
+      "image_queries": [
+        "Dakar Sénégal",
+        "Île de Gorée Sénégal",
+        "Monument Renaissance africaine Dakar",
+        "Corniche Dakar Sénégal"
       ]
     },
     {
@@ -34,13 +67,39 @@
         "Saly",
         "Joal-Fadiouth",
         "Popenguine",
-        "Somone"
+        "Somone",
+        "Nianing",
+        "Kayar"
       ],
       "highlights": [
         "Tivaouane",
         "Joal-Fadiouth",
         "Popenguine",
         "Petite-Côte"
+      ],
+      "departments": [
+        "Mbour",
+        "Thiès",
+        "Tivaouane"
+      ],
+      "themes": [
+        "Petite-Côte",
+        "pêche",
+        "artisanat",
+        "religion",
+        "littoral"
+      ],
+      "foods": [
+        "poisson braisé",
+        "yassa poisson",
+        "fruits de mer",
+        "thiéboudienne"
+      ],
+      "image_queries": [
+        "Thiès Sénégal",
+        "Tivaouane Sénégal",
+        "Joal-Fadiouth Sénégal",
+        "Somone Sénégal"
       ]
     },
     {
@@ -49,12 +108,35 @@
       "places": [
         "Diourbel",
         "Touba",
-        "Mbacké"
+        "Mbacké",
+        "Ndoulo"
       ],
       "highlights": [
         "Grande Mosquée de Touba",
         "patrimoine mouride",
         "Magal de Touba"
+      ],
+      "departments": [
+        "Bambey",
+        "Diourbel",
+        "Mbacké"
+      ],
+      "themes": [
+        "mouridisme",
+        "patrimoine religieux",
+        "arachide",
+        "histoire"
+      ],
+      "foods": [
+        "café Touba",
+        "ndambé",
+        "plats de mil",
+        "thiakry"
+      ],
+      "image_queries": [
+        "Touba Sénégal Grande Mosquée",
+        "Diourbel Sénégal",
+        "Mbacké Sénégal"
       ]
     },
     {
@@ -64,13 +146,41 @@
         "Fatick",
         "Foundiougne",
         "Sokone",
-        "Passy"
+        "Passy",
+        "Toubacouta",
+        "Palmarin",
+        "Fadiouth",
+        "Ndangane"
       ],
       "highlights": [
         "Delta du Saloum",
         "mangroves",
         "bolongs",
         "îles du Saloum"
+      ],
+      "departments": [
+        "Fatick",
+        "Foundiougne",
+        "Gossas"
+      ],
+      "themes": [
+        "Delta du Saloum",
+        "mangroves",
+        "îles",
+        "culture sérère",
+        "pêche"
+      ],
+      "foods": [
+        "huîtres du Saloum",
+        "poisson",
+        "riz au poisson",
+        "yett"
+      ],
+      "image_queries": [
+        "Delta du Saloum Sénégal",
+        "Toubacouta Sénégal",
+        "mangrove Saloum Sénégal",
+        "Fatick Sénégal"
       ]
     },
     {
@@ -79,13 +189,37 @@
       "places": [
         "Kaolack",
         "Nioro du Rip",
-        "Guinguinéo"
+        "Guinguinéo",
+        "Médina Baye",
+        "Kahone"
       ],
       "highlights": [
         "Médina Baye",
         "commerce",
         "saliculture",
         "bassin arachidier"
+      ],
+      "departments": [
+        "Guinguinéo",
+        "Kaolack",
+        "Nioro du Rip"
+      ],
+      "themes": [
+        "bassin arachidier",
+        "commerce",
+        "saliculture",
+        "religion"
+      ],
+      "foods": [
+        "arachide",
+        "mafé",
+        "couscous de mil",
+        "café Touba"
+      ],
+      "image_queries": [
+        "Kaolack Sénégal",
+        "Médina Baye Sénégal",
+        "marché Kaolack Sénégal"
       ]
     },
     {
@@ -100,6 +234,29 @@
       "highlights": [
         "bassin arachidier",
         "paysages du centre"
+      ],
+      "departments": [
+        "Birkelane",
+        "Kaffrine",
+        "Koungheul",
+        "Malem-Hodar"
+      ],
+      "themes": [
+        "bassin arachidier",
+        "agriculture",
+        "terroirs ruraux",
+        "paysages du centre"
+      ],
+      "foods": [
+        "arachide",
+        "mil",
+        "couscous de mil",
+        "mafé"
+      ],
+      "image_queries": [
+        "Kaffrine Sénégal",
+        "Koungheul Sénégal",
+        "paysage bassin arachidier Sénégal"
       ]
     },
     {
@@ -109,12 +266,36 @@
         "Louga",
         "Kébémer",
         "Linguère",
-        "Dahra"
+        "Dahra",
+        "Ferlo"
       ],
       "highlights": [
         "Ferlo",
         "pastoralisme",
         "élevage"
+      ],
+      "departments": [
+        "Kébémer",
+        "Linguère",
+        "Louga"
+      ],
+      "themes": [
+        "Ferlo",
+        "pastoralisme",
+        "élevage",
+        "Sahel"
+      ],
+      "foods": [
+        "lait caillé",
+        "lakh",
+        "laax",
+        "mil"
+      ],
+      "image_queries": [
+        "Louga Sénégal",
+        "Ferlo Sénégal",
+        "Linguère Sénégal",
+        "Dahra Sénégal"
       ]
     },
     {
@@ -124,13 +305,40 @@
         "Saint-Louis",
         "Richard-Toll",
         "Dagana",
-        "Podor"
+        "Podor",
+        "Ross-Béthio",
+        "Langue de Barbarie",
+        "Guet Ndar"
       ],
       "highlights": [
         "Île de Saint-Louis",
         "Pont Faidherbe",
         "Parc national des oiseaux du Djoudj",
         "fleuve Sénégal"
+      ],
+      "departments": [
+        "Dagana",
+        "Podor",
+        "Saint-Louis"
+      ],
+      "themes": [
+        "fleuve Sénégal",
+        "patrimoine colonial",
+        "pêche",
+        "oiseaux migrateurs",
+        "vallée"
+      ],
+      "foods": [
+        "thiéré",
+        "poisson du fleuve",
+        "lakh",
+        "thiéboudienne"
+      ],
+      "image_queries": [
+        "Saint-Louis Sénégal île",
+        "Pont Faidherbe Sénégal",
+        "Djoudj Sénégal",
+        "Guet Ndar Saint-Louis"
       ]
     },
     {
@@ -140,12 +348,36 @@
         "Matam",
         "Ourossogui",
         "Kanel",
-        "Thilogne"
+        "Thilogne",
+        "Ranérou",
+        "Ogo"
       ],
       "highlights": [
         "Fouta-Toro",
         "vallée du fleuve Sénégal",
         "agriculture irriguée"
+      ],
+      "departments": [
+        "Kanel",
+        "Matam",
+        "Ranérou-Ferlo"
+      ],
+      "themes": [
+        "Fouta-Toro",
+        "vallée du fleuve",
+        "culture haalpulaar",
+        "agriculture irriguée"
+      ],
+      "foods": [
+        "thiéré",
+        "lakh",
+        "poisson du fleuve",
+        "plats de mil"
+      ],
+      "image_queries": [
+        "Matam Sénégal",
+        "Fouta Toro Sénégal",
+        "fleuve Sénégal Matam"
       ]
     },
     {
@@ -155,12 +387,39 @@
         "Tambacounda",
         "Bakel",
         "Goudiry",
-        "Koumpentoum"
+        "Koumpentoum",
+        "Kidira",
+        "Falémé"
       ],
       "highlights": [
         "Sénégal oriental",
         "savane",
         "vallée de la Falémé"
+      ],
+      "departments": [
+        "Bakel",
+        "Goudiry",
+        "Koumpentoum",
+        "Tambacounda"
+      ],
+      "themes": [
+        "Sénégal oriental",
+        "savane",
+        "fleuves",
+        "biodiversité",
+        "histoire des royaumes"
+      ],
+      "foods": [
+        "fonio",
+        "mil",
+        "miel",
+        "sauces aux feuilles"
+      ],
+      "image_queries": [
+        "Tambacounda Sénégal",
+        "Bakel Sénégal",
+        "Falémé Sénégal",
+        "savane Sénégal oriental"
       ]
     },
     {
@@ -170,13 +429,39 @@
         "Kédougou",
         "Dindéfello",
         "Bandafassi",
-        "Salémata"
+        "Salémata",
+        "Saraya",
+        "Ibel"
       ],
       "highlights": [
         "Pays Bassari",
         "cascades de Dindéfello",
         "Niokolo-Koba",
         "collines"
+      ],
+      "departments": [
+        "Kédougou",
+        "Salémata",
+        "Saraya"
+      ],
+      "themes": [
+        "Pays Bassari",
+        "falaises",
+        "cascades",
+        "cultures Bassari Bédik Peul",
+        "biodiversité"
+      ],
+      "foods": [
+        "fonio",
+        "miel",
+        "mil",
+        "plats aux feuilles"
+      ],
+      "image_queries": [
+        "Kédougou Sénégal",
+        "Dindéfello Sénégal",
+        "Pays Bassari Sénégal",
+        "Bandafassi Sénégal"
       ]
     },
     {
@@ -185,12 +470,35 @@
       "places": [
         "Kolda",
         "Vélingara",
-        "Médina Yoro Foulah"
+        "Médina Yoro Foulah",
+        "Dabo"
       ],
       "highlights": [
         "Haute-Casamance",
         "agriculture",
         "cultures peules et mandingues"
+      ],
+      "departments": [
+        "Kolda",
+        "Médina Yoro Foulah",
+        "Vélingara"
+      ],
+      "themes": [
+        "Haute-Casamance",
+        "agriculture",
+        "cultures peules et mandingues",
+        "forêts"
+      ],
+      "foods": [
+        "riz local",
+        "fonio",
+        "sauces aux feuilles",
+        "huile de palme"
+      ],
+      "image_queries": [
+        "Kolda Sénégal",
+        "Haute Casamance Sénégal",
+        "Vélingara Sénégal"
       ]
     },
     {
@@ -200,13 +508,38 @@
         "Sédhiou",
         "Bounkiling",
         "Goudomp",
-        "Marsassoum"
+        "Marsassoum",
+        "Djibabouya"
       ],
       "highlights": [
         "Moyenne-Casamance",
         "fleuve Casamance",
         "mangroves",
         "bolongs"
+      ],
+      "departments": [
+        "Bounkiling",
+        "Goudomp",
+        "Sédhiou"
+      ],
+      "themes": [
+        "Moyenne-Casamance",
+        "fleuve Casamance",
+        "mangroves",
+        "bolongs",
+        "cultures mandingues"
+      ],
+      "foods": [
+        "riz de Casamance",
+        "poisson",
+        "huile de palme",
+        "fruits de saison"
+      ],
+      "image_queries": [
+        "Sédhiou Sénégal",
+        "fleuve Casamance Sédhiou",
+        "Goudomp Sénégal",
+        "mangrove Casamance Sénégal"
       ]
     },
     {
@@ -217,7 +550,9 @@
         "Oussouye",
         "Cap Skirring",
         "Bignona",
-        "Carabane"
+        "Carabane",
+        "Eloubaline",
+        "Diembering"
       ],
       "highlights": [
         "Basse-Casamance",
@@ -226,6 +561,32 @@
         "mangroves",
         "plages",
         "cases à impluvium"
+      ],
+      "departments": [
+        "Bignona",
+        "Oussouye",
+        "Ziguinchor"
+      ],
+      "themes": [
+        "Basse-Casamance",
+        "culture diola",
+        "bolongs",
+        "mangroves",
+        "plages",
+        "architecture traditionnelle"
+      ],
+      "foods": [
+        "konkoé",
+        "riz de Casamance",
+        "huîtres",
+        "fruits de mer",
+        "sauces à l'huile de palme"
+      ],
+      "image_queries": [
+        "Ziguinchor Sénégal",
+        "Cap Skirring Sénégal",
+        "Oussouye Sénégal",
+        "Carabane Sénégal"
       ]
     }
   ],
@@ -242,5 +603,21 @@
     "require_source": true,
     "require_caption": true,
     "rule": "Associer chaque image à un lieu précis et ne jamais inventer une URL ou une attribution."
+  },
+  "catalog_meta": {
+    "scope": "Sénégal national",
+    "regions_count": 14,
+    "departments_count": 46,
+    "visual_source": "Wikimedia Commons via API, avec provenance affichée",
+    "visual_strategy": "Plusieurs requêtes visuelles par région et lieu majeur; ne jamais inventer une image ni son attribution.",
+    "enrichment_fields": [
+      "departments",
+      "places",
+      "highlights",
+      "themes",
+      "foods",
+      "image_queries"
+    ],
+    "heritage_note": "Les 7 biens inscrits au patrimoine mondial sont distingués des 8 biens de la liste indicative UNESCO."
   }
 }
