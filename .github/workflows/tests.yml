@@ -1,4 +1,5 @@
 name: tests
+# CI verification
 
 on:
   push:
