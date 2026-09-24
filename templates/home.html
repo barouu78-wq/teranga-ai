@@ -388,6 +388,31 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
   .guide-links a{min-height:70px}
 }
 
+
+/* Travel OS mobile correction: real destination image, stable hierarchy */
+.travel-hero{isolation:isolate;min-height:610px;background:#0d6243!important}
+.travel-hero:before{
+  content:"";position:absolute;inset:0;z-index:0;transform:none!important;
+  background:linear-gradient(90deg,rgba(5,38,27,.94) 0%,rgba(5,38,27,.78) 44%,rgba(5,38,27,.28) 78%,rgba(5,38,27,.10) 100%)!important;
+}
+.travel-hero:after{z-index:1;height:180px;background:linear-gradient(transparent,rgba(4,29,21,.68))!important}
+.hero-media{position:absolute!important;inset:0;z-index:-1!important;overflow:hidden}
+.hero-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.82;filter:saturate(1.08) contrast(1.02)}
+.hero-kicker{position:relative;z-index:3;padding:56px 54px 0;color:#f3c75f;font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+.travel-hero h1{position:relative;z-index:3;padding:14px 54px 0!important;margin:0!important;max-width:760px;color:#fff!important}
+.travel-hero p{position:relative;z-index:3;margin:18px 0 26px!important}
+.travel-hero .cards{position:relative;z-index:3}
+.travel-hero .spread{z-index:4}
+@media(max-width:760px){
+  .travel-hero{min-height:610px}
+  .travel-hero:before{background:linear-gradient(180deg,rgba(5,38,27,.25) 0%,rgba(5,38,27,.68) 48%,rgba(5,38,27,.96) 100%)!important}
+  .hero-kicker{padding:34px 24px 0;font-size:10px}
+  .travel-hero h1{padding:10px 24px 0!important;font-size:42px!important;line-height:.98!important}
+  .travel-hero p{padding:0 24px!important;margin:16px 0 20px!important}
+  .travel-hero .cards{margin:0 24px 80px!important}
+  .hero-media img{object-position:center top}
+}
+
 </style>
 
 </head>
@@ -424,6 +449,8 @@ body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{back
 </header>
 <div id="stage">
   <div id="hero" class="hero travel-hero">
+    <div class="hero-media" aria-hidden="true"><img id="heroImage" alt="" loading="eager"></div>
+    <div class="hero-kicker">TERANGA TRAVEL OS · SÉNÉGAL</div>
     <h1 id="heroTitle">Ton Sénégal commence ici.</h1>
     <p id="heroText">Découvre les lieux, les saveurs et les histoires du Sénégal. Pose une question à Teranga et laisse l’assistant te guider.</p>
     <div class="cards" id="cards"></div>
@@ -487,8 +514,8 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
-  heroTitle:'L’hospitalité, en quelques questions.',
-  heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
+  heroTitle:'Ton Sénégal commence ici.',
+  heroText:'Découvre les lieux, les saveurs et les histoires du Sénégal. Pose ta question à Teranga et laisse l’assistant te guider.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
   cards:[
@@ -509,8 +536,8 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
-  heroTitle:'Hospitality, in a few questions.',
-  heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
+  heroTitle:'Your Senegal starts here.',
+  heroText:'Discover places, flavors and stories from Senegal. Ask Teranga and let the assistant guide you.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
   cards:[
@@ -1031,7 +1058,19 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
+async function loadHeroPhoto(){
+  const image=$('heroImage');
+  if(!image)return;
+  try{
+    const res=await fetch('/explorer-image?query='+encodeURIComponent('Île de Gorée'),{headers:{Accept:'application/json'}});
+    if(!res.ok)return;
+    const data=await res.json();
+    const src=data.display_url||data.url;
+    if(src){image.src=src;image.alt='Île de Gorée, Sénégal';}
+  }catch(e){}
+}
 themeInit();restore();setLang(lang);setupMic();
+loadHeroPhoto();
 
 </script>
 </body>
