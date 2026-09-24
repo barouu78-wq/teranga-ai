@@ -554,21 +554,57 @@ def image_proxy():
 _IMAGE_CACHE = {}
 
 def fetch_commons_images(title, limit=4):
-    params = {"action":"query","format":"json","generator":"search","gsrsearch":f"{title} Sénégal","gsrnamespace":"6","gsrlimit":str(min(max(limit*2,4),10)),"prop":"imageinfo","iiprop":"url|extmetadata","iiurlwidth":"900","origin":"*"}
-    req = Request("https://commons.wikimedia.org/w/api.php?" + urlencode(params), headers={"User-Agent":"TerangaAI/1.0"})
-    with urlopen(req, timeout=4) as resp:
+    query = str(title or "").strip()
+    if not query:
+        return []
+    params = {
+        "action": "query",
+        "format": "json",
+        "generator": "search",
+        "gsrsearch": query,
+        "gsrnamespace": "6",
+        "gsrlimit": str(min(max(limit * 3, 6), 20)),
+        "prop": "imageinfo",
+        "iiprop": "url|mime|thumbmime|extmetadata",
+        "iiurlwidth": "960",
+        "origin": "*",
+    }
+    req = Request(
+        "https://commons.wikimedia.org/w/api.php?" + urlencode(params),
+        headers={"User-Agent": "TerangaAI/1.0 (image lookup)"},
+    )
+    with urlopen(req, timeout=5) as resp:
         data = json.loads(resp.read().decode("utf-8"))
+
     out, seen = [], set()
     for page in ((data.get("query") or {}).get("pages") or {}).values():
         info = (page.get("imageinfo") or [{}])[0]
+        mime = str(info.get("mime") or "").lower()
+        thumb_mime = str(info.get("thumbmime") or "").lower()
+        if mime and not mime.startswith("image/"):
+            continue
+        if thumb_mime and not thumb_mime.startswith("image/"):
+            continue
         src = info.get("thumburl") or info.get("url")
-        if not usable_wiki_image(src) or src in seen:
+        src = usable_wiki_image(src)
+        if not src or src in seen:
             continue
         meta = info.get("extmetadata") or {}
+
         def meta_text(key):
             value = meta.get(key, {})
             return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
-        out.append({"url":src,"alt":meta_text("ImageDescription") or page.get("title",title),"credit":"Wikimédia Commons","artist":meta_text("Artist"),"license":meta_text("LicenseShortName"),"page_url":"https://commons.wikimedia.org/wiki/"+quote(page.get("title",""),safe=":")})
+
+        item = {
+            "url": src,
+            "display_url": image_proxy_url(src),
+            "alt": meta_text("ImageDescription") or page.get("title", query),
+            "credit": "Wikimédia Commons",
+            "artist": meta_text("Artist"),
+            "license": meta_text("LicenseShortName"),
+            "page_url": "https://commons.wikimedia.org/wiki/" + quote(page.get("title", ""), safe=":"),
+        }
+        out.append(item)
         seen.add(src)
         if len(out) >= limit:
             break
@@ -633,23 +669,67 @@ def knowledge_image_titles(message, limit=4):
 
 
 def fetch_topic_images(message):
-    photos = []
-    titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
-    if not titles and any(term in normalize(message) for term in ("photo", "photos", "image", "images", "visuel", "visuels")):
+    text_value = normalize(message)
+    photo_request = any(
+        term in text_value
+        for term in ("photo", "photos", "image", "images", "visuel", "visuels")
+    )
+    if not photo_request:
+        return None
+
+    # Pour un lieu explicite, on privilégie ses requêtes photo dédiées
+    # avant les requêtes génériques de la région.
+    specific_titles = []
+    for place in SENEGAL_KNOWLEDGE.get("places", []):
+        name = normalize(str(place.get("name", "")))
+        aliases = [name]
+        if name.startswith("ile de "):
+            aliases.append(name[7:])
+        if name.startswith("île de "):
+            aliases.append(name[7:])
+        if any(alias and alias in text_value for alias in aliases):
+            specific_titles.extend(str(q) for q in (place.get("image_queries") or []) if q)
+
+    titles = specific_titles + knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
+    if not titles:
         titles = ["Dakar Sénégal"]
-    seen = set()
+
+    photos = []
+    seen_titles = set()
+    seen_urls = set()
+
     for title in titles:
-        if not title or title in seen:
+        title = str(title or "").strip()
+        if not title or title in seen_titles:
             continue
-        seen.add(title)
+        seen_titles.add(title)
+
         try:
-            photo = fetch_city_image(title)
+            candidates = fetch_commons_images(title, limit=2)
         except Exception:
-            photo = None
-        if photo:
+            app.logger.exception("Erreur recherche photos Commons pour %s", title)
+            candidates = []
+
+        if not candidates:
+            try:
+                fallback = fetch_city_image(title)
+                candidates = [fallback] if fallback else []
+            except Exception:
+                app.logger.exception("Erreur fallback photo pour %s", title)
+                candidates = []
+
+        for photo in candidates:
+            if not photo:
+                continue
+            photo["display_url"] = image_proxy_url(photo.get("url", ""))
+            src = photo.get("url", "")
+            if not src or src in seen_urls:
+                continue
+            seen_urls.add(src)
             photos.append(photo)
-        if len(photos) >= 4:
-            break
+            if len(photos) >= 4:
+                return photos
+
     return photos or None
 
 
@@ -1723,7 +1803,13 @@ function addCityImage(col,image){
     if(!item||!item.url)return;
     const box=document.createElement('figure');box.className='city-pic';
     const img=document.createElement('img');
-    img.src=item.display_url||('/image-proxy?url='+encodeURIComponent(item.url));img.alt=item.alt||'';img.loading='lazy';
+    const proxy=item.display_url||('/image-proxy?url='+encodeURIComponent(item.url));
+    img.src=proxy;img.alt=item.alt||'';img.loading='lazy';
+    img.onerror=()=>{
+      if(img.dataset.directFallback)return;
+      img.dataset.directFallback='1';
+      img.src=item.url;
+    };
     const cap=document.createElement('small');
     cap.textContent=item.alt+(item.credit?' · '+item.credit:'');
     box.append(img,cap);col.appendChild(box);
