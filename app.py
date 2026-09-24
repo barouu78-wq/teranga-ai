@@ -1,3 +1,4 @@
+import unicodedata
 import hashlib
 import hmac
 import io
