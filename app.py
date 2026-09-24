@@ -914,6 +914,7 @@ def model_kwargs(payload, stream):
         "instructions": payload["instructions"],
         "input": payload["input_text"],
         "max_output_tokens": 280 if payload["use_web"] else 220,
+        "reasoning": {"effort": "none"},
         "stream": stream,
     }
     if payload["use_web"]:
