@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<meta name="theme-color" content="#f6efe3" id="themeColor">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0907" id="themeColor">
 <meta name="description" content="Teranga AI, l’assistant du Sénégal. Météo Dakar, taxi AIBD, ferry Gorée, visa, cuisine, SIM et Orange Money — en français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, météo Dakar, taxi AIBD, Gorée, visa Sénégal, wolof, Orange Money">
 <meta name="robots" content="index,follow">
@@ -250,233 +250,6 @@ textarea{
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-
-/* Teranga Travel OS — visual redesign */
-:root{
-  --sand:#f7f1e7;--ink:#173b2c;--mute:#6f766d;--line:rgba(23,59,44,.10);
-  --card:rgba(255,253,248,.96);--soft:#edf2ea;--brand:#0d6243;--brand-2:#0a5138;
-  --gold:#c98a1b;--terracotta:#c96843;--user:#dfece5;
-  --shadow:0 20px 55px rgba(35,57,45,.12);--glow:rgba(201,138,27,.18);
-}
-html{color-scheme:light}
-body{
-  background:
-    radial-gradient(700px 380px at 100% -10%,rgba(201,138,27,.16),transparent 58%),
-    radial-gradient(650px 400px at -10% 90%,rgba(13,98,67,.13),transparent 58%),
-    var(--sand);
-  color:var(--ink);
-}
-body[data-theme="dark"]{
-  --sand:#10271e;--ink:#f6f0e6;--mute:#b9c5bc;--line:rgba(246,240,230,.13);
-  --card:rgba(22,45,35,.94);--soft:#17372a;--brand:#8fd2ae;--brand-2:#a9dfc2;
-  --gold:#e3b14f;--terracotta:#df8b69;--user:#214b38;--shadow:0 24px 60px rgba(0,0,0,.32);
-}
-.app{max-width:1180px}
-header{
-  padding:18px 28px 16px;
-  background:rgba(247,241,231,.84);
-  backdrop-filter:blur(18px);
-  border-bottom:1px solid rgba(23,59,44,.08);
-}
-body[data-theme="dark"] header{background:rgba(16,39,30,.84);border-color:var(--line)}
-.mark{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#0d6243,#073b29);box-shadow:0 10px 24px rgba(13,98,67,.20)}
-.brand strong{font-size:18px}.brand span{font-size:11px}
-#stage{padding:18px 28px 16px;max-width:1160px;margin:auto;width:100%}
-.hero{
-  position:relative;overflow:hidden;margin:0 0 18px;padding:0;min-height:520px;
-  border:0;border-radius:34px;background:#174f38;
-  box-shadow:0 26px 70px rgba(23,59,44,.16);
-}
-.hero:before{
-  content:"";position:absolute;inset:0;
-  background:
-    linear-gradient(90deg,rgba(8,39,27,.90) 0%,rgba(8,39,27,.70) 42%,rgba(8,39,27,.08) 78%),
-    linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.35)),
-    url('/og.png') center/cover no-repeat;
-  transform:scale(1.02);
-}
-.hero:after{
-  content:"";position:absolute;inset:auto 0 0;height:130px;
-  background:linear-gradient(transparent,rgba(7,31,22,.42));pointer-events:none;
-}
-.hero > *{position:relative;z-index:1}
-.hero h1{
-  padding:112px 54px 0;margin:0;max-width:700px;
-  color:#fff;font-family:Georgia,"Times New Roman",serif;
-  font-size:clamp(42px,6vw,72px);line-height:.98;letter-spacing:-.055em;
-}
-.hero p{
-  padding:0 54px;margin:18px 0 24px;max-width:620px;color:rgba(255,255,255,.86);
-  font-size:18px;line-height:1.55;
-}
-.hero .cards{
-  margin:0 54px 28px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;
-}
-.hero .card{
-  text-align:left;min-height:108px;padding:15px;border:1px solid rgba(255,255,255,.18);
-  background:rgba(255,255,255,.11);backdrop-filter:blur(14px);color:#fff;border-radius:20px;
-}
-.hero .card .ico{margin:0 0 14px;color:#f3c75f}
-.hero .card b{font-size:14px}.hero .card span{display:none}
-.hero .card:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.38)}
-.hero .spread{
-  position:absolute;left:54px;right:54px;bottom:24px;margin:0;align-items:center;
-}
-.hero .spread button,.hero .spread a{
-  border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;
-  backdrop-filter:blur(10px);
-}
-.hero .spread .install{background:#d49a2d;border-color:#d49a2d;color:#173b2c}
-body.has-chat .hero{display:none}
-.guide-section{
-  position:relative;overflow:hidden;margin:0 0 16px;padding:26px;
-  border-radius:28px;background:rgba(255,253,248,.76);border:1px solid rgba(23,59,44,.08);
-  box-shadow:0 16px 40px rgba(23,59,44,.06);
-}
-body[data-theme="dark"] .guide-section{background:rgba(22,45,35,.76)}
-.guide-section h2{font-family:Georgia,"Times New Roman",serif;font-size:30px;color:var(--ink);margin-bottom:8px}
-.guide-section p{font-size:14px;max-width:600px}
-.guide-links{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.guide-links a{
-  min-height:88px;display:flex;align-items:flex-end;
-  background:linear-gradient(145deg,rgba(13,98,67,.08),rgba(201,138,27,.08));
-  border-radius:18px;font-size:14px;font-weight:800;
-}
-.guide-links a:hover{transform:translateY(-2px);transition:.18s;border-color:rgba(13,98,67,.25)}
-.dock{
-  max-width:920px;width:calc(100% - 56px);margin:0 auto 14px;padding:12px 0;
-  background:transparent;
-}
-.composer{
-  border:1px solid rgba(23,59,44,.13);background:rgba(255,253,248,.96);
-  border-radius:26px;box-shadow:0 18px 50px rgba(23,59,44,.12);padding:8px 9px 8px 18px;
-}
-body[data-theme="dark"] .composer{background:rgba(22,45,35,.96);border-color:var(--line)}
-#send{background:#0d6243;color:#fff;border-radius:18px}
-#mic{background:#e7efe9;color:#0d6243;border-radius:18px}
-.tabbar{
-  position:sticky;bottom:0;z-index:20;max-width:620px;margin:0 auto 14px;
-  width:calc(100% - 32px);border:1px solid rgba(23,59,44,.10);border-radius:24px;
-  background:rgba(255,253,248,.90);box-shadow:0 16px 40px rgba(23,59,44,.12);
-  backdrop-filter:blur(18px);padding:7px 10px calc(9px + env(safe-area-inset-bottom));
-}
-body[data-theme="dark"] .tabbar{background:rgba(22,45,35,.90);border-color:var(--line)}
-.tabbar button{font-size:11px}.tabbar button.on{color:var(--brand)}
-.msg .bubble{border-radius:20px}.assistant .bubble{background:#eef3ee}.user .bubble{background:#dcebe2;color:#173b2c;border-color:rgba(13,98,67,.10)}
-body[data-theme="dark"] .assistant .bubble{background:#17372a}.user .bubble{background:#214b38;color:#f6f0e6}
-.city-pic,.city-map{max-width:360px;border-radius:20px}
-.city-pic img{height:200px}
-@media(max-width:760px){
-  header{padding:12px 14px calc(10px + env(safe-area-inset-top))}
-  #stage{padding:10px 12px 10px}
-  .hero{min-height:590px;border-radius:26px}
-  .hero h1{padding:72px 24px 0;font-size:42px}
-  .hero p{padding:0 24px;font-size:15px}
-  .hero .cards{margin:0 24px 80px;grid-template-columns:1fr 1fr}
-  .hero .card{min-height:92px}.hero .card:nth-child(3){grid-column:1/-1}
-  .hero .spread{left:24px;right:24px;bottom:18px}
-  .guide-section{padding:20px;border-radius:24px}
-  .guide-links{grid-template-columns:1fr 1fr}
-  .dock{width:calc(100% - 24px)}
-  .tabbar{width:calc(100% - 24px);margin-bottom:7px}
-}
-@media(max-width:460px){
-  .hero{min-height:560px}
-  .hero h1{padding-top:62px;font-size:38px}
-  .hero .cards{grid-template-columns:1fr 1fr}
-  .guide-links{grid-template-columns:1fr}
-  .guide-links a{min-height:70px}
-}
-
-
-/* Travel OS mobile correction: real destination image, stable hierarchy */
-.travel-hero{isolation:isolate;min-height:610px;background:#0d6243!important}
-.travel-hero:before{
-  content:"";position:absolute;inset:0;z-index:1;transform:none!important;
-  background:linear-gradient(90deg,rgba(5,38,27,.94) 0%,rgba(5,38,27,.78) 44%,rgba(5,38,27,.28) 78%,rgba(5,38,27,.10) 100%)!important;
-}
-.travel-hero:after{z-index:2;height:180px;background:linear-gradient(transparent,rgba(4,29,21,.68))!important}
-.hero-media{position:absolute!important;inset:0;z-index:0!important;overflow:hidden}
-.hero-media img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.88;filter:saturate(1.08) contrast(1.02)}
-.hero-kicker{position:relative;z-index:3;padding:56px 54px 0;color:#f3c75f;font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
-.travel-hero h1{position:relative;z-index:3;padding:14px 54px 0!important;margin:0!important;max-width:760px;color:#fff!important}
-.travel-hero p{position:relative;z-index:3;margin:18px 0 26px!important}
-.travel-hero .cards{position:relative;z-index:3}
-.travel-hero .spread{z-index:4}
-@media(max-width:760px){
-  .travel-hero{min-height:610px}
-  .travel-hero:before{background:linear-gradient(180deg,rgba(5,38,27,.25) 0%,rgba(5,38,27,.68) 48%,rgba(5,38,27,.96) 100%)!important}
-  .hero-kicker{padding:34px 24px 0;font-size:10px}
-  .travel-hero h1{padding:10px 24px 0!important;font-size:42px!important;line-height:.98!important}
-  .travel-hero p{padding:0 24px!important;margin:16px 0 20px!important}
-  .travel-hero .cards{margin:0 24px 80px!important}
-  .hero-media img{object-position:center top}
-}
-
-body:not(.has-chat) #messages{display:none}
-/* Final mobile shell — prevent viewport overlap */
-@media(max-width:760px){
-  body{overscroll-behavior-y:none}
-  .app{height:var(--vvh,100dvh);min-height:var(--vvh,100dvh)}
-  header{flex:0 0 auto}
-  #stage{min-height:0;overscroll-behavior:contain}
-  .dock{flex:0 0 auto}
-  .tabbar{position:relative;bottom:auto;flex:0 0 auto}
-  body.has-chat .dock{padding-top:4px}
-  body.has-chat .meta{min-height:15px}
-}
-@media(max-width:760px){
-  .guide-section{scroll-margin-top:10px}
-  body:not(.has-chat) #messages{min-height:0}
-  body:not(.has-chat) #stage{scroll-behavior:smooth}
-  #input{scroll-margin-bottom:24px}
-}
-@media(max-width:760px){
-  body.has-chat #stage{scroll-padding-bottom:18px}
-  body.has-chat .msg:last-child{scroll-margin-bottom:18px}
-  body.has-chat .dock{background:color-mix(in srgb,var(--sand) 97%,transparent)}
-}
-@media(max-width:380px){
-  .seg button:nth-child(n+3){display:none}
-  .seg:after{content:"••";display:flex;align-items:center;padding:0 5px;color:var(--mute);font-size:10px}
-}
-/* Mobile chat polish — compact, readable, safe-area aware */
-@media(max-width:760px){
-  header{min-height:62px;padding:9px 12px calc(8px + env(safe-area-inset-top));}
-  .brand strong{font-size:16px}
-  .brand .mark{width:38px;height:38px;border-radius:13px}
-  #shareAppBtn{display:none}
-  .tools{gap:5px}
-  .seg{max-width:194px}
-  .seg button{padding:5px 7px;font-size:10px}
-  #stage{padding:6px 12px 8px}
-  body.has-chat #stage{padding-top:2px}
-  #messages{padding-top:0}
-  .msg{margin-bottom:11px}
-  .col{max-width:94%}
-  .bubble{font-size:14px;line-height:1.45;padding:11px 13px}
-  .city-pic,.city-map{width:100%;max-width:100%;margin-top:7px;border-radius:17px}
-  .city-pic img{height:170px}
-  .city-map iframe{height:142px}
-  .city-map a{padding:9px 11px;font-size:11px}
-  .dock{width:calc(100% - 20px);margin:0 auto 4px;padding:6px 0 calc(5px + env(safe-area-inset-bottom));}
-  .composer{border-radius:21px;padding:6px 7px 6px 14px}
-  textarea{min-height:42px;padding-top:9px;font-size:14px}
-  #mic,#send{height:42px;border-radius:15px}
-  #mic{width:42px}
-  #send{min-width:84px;padding:0 13px}
-  .meta{margin-top:6px;padding:0 5px;font-size:10px}
-  .tabbar{width:calc(100% - 20px);margin:0 auto 3px;border-radius:20px;padding:5px 7px calc(7px + env(safe-area-inset-bottom))}
-  .tabbar button{font-size:10px;padding:5px 2px}
-  .tabbar svg{width:17px;height:17px;margin-bottom:2px}
-}
-@media(max-width:420px){
-  .seg button{padding:5px 6px}
-  .brand strong{font-size:15px}
-  .brand .mark{width:36px;height:36px}
-  .city-map iframe{height:132px}
-}
-
 </style>
 
 </head>
@@ -512,16 +285,14 @@ body:not(.has-chat) #messages{display:none}
   </div>
 </header>
 <div id="stage">
-  <div id="hero" class="hero travel-hero">
-    <div class="hero-media" aria-hidden="true"><img id="heroImage" alt="" loading="eager"></div>
-    <div class="hero-kicker">TERANGA TRAVEL OS · SÉNÉGAL</div>
-    <h1 id="heroTitle">Ton Sénégal commence ici.</h1>
-    <p id="heroText">Découvre les lieux, les saveurs et les histoires du Sénégal. Pose une question à Teranga et laisse l’assistant te guider.</p>
+  <div id="hero" class="hero">
+    <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
+    <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="cards" id="cards"></div>
     <div class="spread">
-      <button type="button" id="copyLink">Partager Teranga</button>
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
+      <button type="button" id="copyLink">Copier le lien</button>
     </div>
   </div>
   <section class="seo">
@@ -561,7 +332,7 @@ body:not(.has-chat) #messages{display:none}
   <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
   <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Découvrir</button>
   <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
-  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.7"/></svg>Réglages</button>
+  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
 </nav>
 </div>
 <script nonce="__CSP_NONCE__">
@@ -577,9 +348,9 @@ fr:{
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
-  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navSettings:'Réglages',
-  heroTitle:'Ton Sénégal commence ici.',
-  heroText:'Découvre les lieux, les saveurs et les histoires du Sénégal. Pose ta question à Teranga et laisse l’assistant te guider.',
+  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
+  heroTitle:'L’hospitalité, en quelques questions.',
+  heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
   cards:[
@@ -600,8 +371,8 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
-  heroTitle:'Your Senegal starts here.',
-  heroText:'Discover places, flavors and stories from Senegal. Ask Teranga and let the assistant guide you.',
+  heroTitle:'Hospitality, in a few questions.',
+  heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
   cards:[
@@ -703,19 +474,13 @@ async function postJSON(url,body,extra){
   return res;
 }
 function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
-function setView(view){
-  const chat=view==='chat';
-  document.body.classList.toggle('has-chat',chat);
-  sessionStorage.setItem('teranga-screen-v2',view);
-  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===view));
-  hero.classList.toggle('is-hidden',chat);
-  if(view==='profile'){
-    $('themeBtn').setAttribute('aria-pressed',document.body.dataset.theme==='dark'?'true':'false');
-  }
+function setChatMode(on){
+  document.body.classList.toggle('has-chat',on);
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
+  hero.classList.toggle('is-hidden',on);
 }
-function setChatMode(on){setView(on?'chat':'home');}
-function hideHero(){setView('chat');}
-function showHero(){setView('home');}
+function hideHero(){setChatMode(true);}
+function showHero(){setChatMode(false);}
 function applyThemeColor(){
   const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
   $('themeColor').content=dark?'#0b0907':'#f6efe3';
@@ -879,15 +644,15 @@ function setLang(next){
   if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
   if(tabs[1])tabs[1].lastChild.nodeValue=t.navDiscover;
   if(tabs[2])tabs[2].lastChild.nodeValue=t.navChat;
-  if(tabs[3])tabs[3].lastChild.nodeValue=t.navSettings;
+  if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   bindShare();
   if(rec)rec.lang=voiceMap[lang];
 }
 function themeInit(){
-  const saved=localStorage.getItem('teranga-theme-v2');
-  document.body.dataset.theme=saved||'light';
+  const saved=localStorage.getItem('teranga-theme');
+  document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
 $('tabbar').addEventListener('click',e=>{
@@ -895,29 +660,16 @@ $('tabbar').addEventListener('click',e=>{
   if(!btn)return;
   const tab=btn.dataset.tab;
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
-  if(tab==='home'){
-    showHero();
-    stage.scrollTop=0;
-  }
-  if(tab==='discover'){
-    setView('discover');
-    requestAnimationFrame(()=>document.querySelector('.guide-section')?.scrollIntoView({behavior:'smooth',block:'start'}));
-  }
-  if(tab==='chat'){
-    hideHero();
-    requestAnimationFrame(()=>{stage.scrollTop=stage.scrollHeight;input.focus();});
-  }
-  if(tab==='profile'){
-    setView('profile');
-    $('themeBtn').click();
-  }
+  if(tab==='home'){showHero();stage.scrollTop=0;}
+  if(tab==='discover'){showHero();$('chips').scrollIntoView({block:'nearest'});}
+  if(tab==='chat'){input.focus();}
+  if(tab==='profile'){$('themeBtn').click();}
 });
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
-  sessionStorage.removeItem('teranga-history-v2');
-  sessionStorage.setItem('teranga-screen-v2','home');
+  sessionStorage.removeItem('teranga-history');
 }
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -930,20 +682,18 @@ function setupMic(){
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
-    try{sessionStorage.setItem('teranga-history-v2',JSON.stringify({lang,history}));}catch(e){}
+    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=sessionStorage.getItem('teranga-history-v2');
+    const raw=sessionStorage.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
       history=data.history.slice(-12);
-      const savedView=sessionStorage.getItem('teranga-screen-v2');
-      if(savedView==='chat') hideHero();
-      else if(savedView==='discover') setView('discover');
+      hideHero();
       const frag=document.createDocumentFragment();
       history.forEach(item=>{
         if(item.role!=='user'&&item.role!=='assistant')return;
@@ -966,11 +716,7 @@ function restore(){
         frag.appendChild(row);
       });
       messages.appendChild(frag);
-      const lastAssistant=messages.querySelector('.msg.assistant:last-child');
-      requestAnimationFrame(()=>{
-        if(lastAssistant) lastAssistant.scrollIntoView({block:'start',behavior:'auto'});
-        else stage.scrollTop=stage.scrollHeight;
-      });
+      stage.scrollTop=stage.scrollHeight;
     }
   }catch(e){}
 }
@@ -1108,7 +854,7 @@ $('copyLink').onclick=async()=>{
 };
 $('themeBtn').onclick=()=>{
   const next=document.body.dataset.theme==='dark'?'light':'dark';
-  document.body.dataset.theme=next;localStorage.setItem('teranga-theme-v2',next);
+  document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
   applyThemeColor();
 };
 $('voiceToggle').onclick=()=>{
@@ -1129,7 +875,7 @@ stage.addEventListener('scroll',()=>{stickToBottom=nearBottom();},{passive:true}
 if(window.visualViewport){
   const place=()=>{
     document.body.style.setProperty('--vvh',visualViewport.height+'px');
-    if(document.body.classList.contains('has-chat') && document.activeElement===input)scrollStage(true);
+    if(document.body.classList.contains('has-chat'))scrollStage(true);
   };
   visualViewport.addEventListener('resize',place);place();
 }
@@ -1147,19 +893,7 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
-async function loadHeroPhoto(){
-  const image=$('heroImage');
-  if(!image)return;
-  try{
-    const res=await fetch('/explorer-image?query='+encodeURIComponent('Île de Gorée'),{headers:{Accept:'application/json'}});
-    if(!res.ok)return;
-    const data=await res.json();
-    const src=data.display_url||data.url;
-    if(src){image.src=src;image.alt='Île de Gorée, Sénégal';}
-  }catch(e){}
-}
 themeInit();restore();setLang(lang);setupMic();
-loadHeroPhoto();
 
 </script>
 </body>
