@@ -39,6 +39,17 @@ ALLOWED_ORIGINS = {
 }
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 BASE_DIR = Path(__file__).resolve().parent
+KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
+
+def load_senegal_knowledge():
+    try:
+        with KNOWLEDGE_PATH.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+SENEGAL_KNOWLEDGE = load_senegal_knowledge()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
 redis_client = None
@@ -102,6 +113,18 @@ WEB_HINTS = (
     "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
     "urgent", "alerte", "grève", "greve", "perturbation", "incident",
 )
+
+def format_senegal_knowledge(data):
+    regions = data.get("regions", [])
+    lines = ["DONNÉES STRUCTURÉES DU SÉNÉGAL (référence interne) :"]
+    for region in regions:
+        places = ", ".join(region.get("places", [])[:10])
+        highlights = ", ".join(region.get("highlights", [])[:8])
+        lines.append(f"- {region.get('name')}: localités = {places}; points d'intérêt = {highlights}.")
+    unesco = ", ".join(data.get("unesco_world_heritage", []))
+    if unesco:
+        lines.append(f"- Patrimoine mondial UNESCO : {unesco}.")
+    return "\n".join(lines)
 
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
@@ -783,7 +806,7 @@ def parse_chat_payload():
         "ff": "Réponds en pulaar (fuuta tooro) lorsque tu peux le faire correctement. Si un mot manque, complète clairement en français.",
     }[language]
     return {
-        "instructions": SYSTEM_PROMPT + "\n" + language_instruction,
+        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction,
         "input_text": build_conversation(history, message),
         "use_web": should_use_web(message),
         "message": message,
