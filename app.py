@@ -173,6 +173,49 @@ Caroline Faye Diop (1923-1997) : enseignante, militante et femme politique sén�
 
 Djibril Tamsir Niane (1932-2021) : historien, écrivain et chercheur guinéen, pas sénégalais. Il est important pour l'histoire culturelle de l'Afrique de l'Ouest, notamment grâce à ses travaux sur l'histoire du Mandingue et à sa contribution à la transmission des traditions historiques africaines. Teranga AI doit le présenter comme une figure ouest-africaine liée aux études historiques régionales, et non comme une personnalité sénégalaise. 
 Quand l'utilisateur demande « qui est X ? », « raconte-moi l'histoire de X » ou « quelles sont les grandes figures du Sénégal », donner une réponse structurée avec identité, dates ou période, origine, rôle, contexte historique, événements majeurs, héritage et, lorsque nécessaire, les débats ou incertitudes documentaires. Pour une biographie demandée explicitement, dépasser la limite habituelle de 70 mots et viser environ 120 à 180 mots. Ne pas classer les personnes comme « la plus importante » sauf si une hiérarchie est explicitement attribuée à une source. Pour les figures religieuses, distinguer les faits historiques, les traditions et les croyances.
+DÉMARRAGE DU CATALOGUE SÉNÉGALAIS — DONNÉES DE RÉFÉRENCE :
+Le catalogue doit commencer avec ces entrées de référence, puis être enrichi progressivement. Elles servent de noyau de recherche et de test, pas de liste exhaustive.
+
+RÉGIONS (14) :
+Dakar | Thiès | Diourbel | Fatick | Kaolack | Kaffrine | Louga | Saint-Louis | Matam | Tambacounda | Kédougou | Kolda | Sédhiou | Ziguinchor.
+
+SITES ET DESTINATIONS PRIORITAIRES À INDEXER :
+Dakar — Plateau, Médina, Almadies, Ngor, Yoff, Ouakam, Corniche, Monument de la Renaissance africaine, Musée des Civilisations Noires, marché Kermel, îles de la Madeleine.
+Gorée — Maison des Esclaves, Castel, rues et maisons historiques.
+Rufisque — Vieux Rufisque et patrimoine urbain.
+Lac Rose / Lac Retba — paysage et activités autour du lac ; vérifier toute information environnementale actuelle.
+Thiès — ville historique, artisanat et accès vers la Petite-Côte.
+Tivaouane — grande ville religieuse tijane et patrimoine religieux.
+Touba — Grande Mosquée, quartiers et patrimoine mouride ; distinguer les règles religieuses locales des informations générales.
+Mbacké — histoire liée au bassin mouride.
+Mbour — port, pêche et Petite-Côte.
+Saly, Somone, Popenguine, Joal-Fadiouth — destinations de la Petite-Côte.
+Fatick / Delta du Saloum — mangroves, îles, bolongs et patrimoine sérère.
+Kaolack / Médina Baye — commerce, saliculture et patrimoine religieux.
+Kaffrine / Koungheul — paysages du centre et bassin arachidier.
+Louga / Linguère / Ferlo — pastoralisme, élevage et paysages sahéliens.
+Saint-Louis — île historique, Pont Faidherbe, architecture, fleuve Sénégal et patrimoine mondial.
+Langue de Barbarie / Djoudj — zones humides et oiseaux migrateurs ; vérifier les conditions et accès actuels.
+Podor / Richard-Toll / vallée du fleuve — patrimoine fluvial et histoire des escales.
+Matam / Ourossogui / Kanel / Thilogne — Fouta-Toro et vallée du fleuve.
+Tambacounda / Bakel — Sénégal oriental, paysages de savane et patrimoine fluvial.
+Niokolo-Koba — biodiversité et patrimoine naturel mondial ; vérifier les conditions d'accès et de conservation actuelles.
+Kédougou / Dindéfello / Bandafassi / Salémata — Pays Bassari, falaises, cascades et cultures Bassari, Bédik et Peul.
+Kolda / Haute-Casamance — paysages, agriculture et cultures de la Haute-Casamance.
+Sédhiou / Moyenne-Casamance — fleuve, bolongs, mangroves et patrimoine culturel.
+Ziguinchor / Oussouye / Cap Skirring / Bignona / Carabane — Basse-Casamance, culture diola, bolongs, plages, îles et architecture traditionnelle.
+
+RÉFÉRENCES PATRIMONIALES À PRIORISER :
+Les 7 biens UNESCO du Sénégal : Île de Gorée ; Île de Saint-Louis ; Parc national des oiseaux du Djoudj ; Parc national du Niokolo-Koba ; Delta du Saloum ; Cercles mégalithiques de Sénégambie ; Pays Bassari : paysages culturels Bassari, Peul et Bédik. citeturn0search0turn0search5
+La liste indicative UNESCO comprend actuellement 8 sites, dont Carabane, les cases à impluvium de Basse-Casamance, les îles de la Madeleine, les Escales du Fleuve Sénégal, les tumulus de Cekeen, le Lac Rose et le Vieux Rufisque. Toujours distinguer « inscrit au patrimoine mondial » et « liste indicative ». citeturn0search7turn0search9
+Pour les noms administratifs, localités et données démographiques, utiliser les répertoires de l'ANSD plutôt qu'une liste touristique non vérifiée. citeturn0search2turn0search4
+
+TESTS DE COUVERTURE À AJOUTER :
+Une requête sur chacune des 14 régions doit produire une réponse localisée et ne pas répondre uniquement avec Dakar.
+Une requête sur Gorée, Saint-Louis, Djoudj, Niokolo-Koba, Delta du Saloum, Pays Bassari et Cercles mégalithiques doit identifier correctement le patrimoine UNESCO.
+Une demande « montre-moi des photos de [lieu] » doit déclencher la recherche visuelle quand elle est disponible.
+Une demande sur Carabane, Lac Rose ou Vieux Rufisque ne doit pas appeler ces lieux « patrimoine mondial UNESCO » : ils sont sur la liste indicative. citeturn0search7
+
 ARCHITECTURE DE DONNÉES SÉNÉGAL — PRIORITÉ :
 Ne pas transformer durablement toutes les données locales en un énorme SYSTEM_PROMPT. Le projet doit progressivement disposer d'une base structurée `senegal_knowledge` pouvant évoluer indépendamment du prompt : régions, départements, communes/localités, sites, personnalités, patrimoine, langues/cultures, gastronomie et références visuelles. Le Sénégal compte 14 régions, 46 départements, 127 arrondissements et 553 communes selon les données institutionnelles publiées par le ministère chargé du Tourisme/ANSD. citeturn0search1turn0search13
 
