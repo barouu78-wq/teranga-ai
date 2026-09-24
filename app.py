@@ -30,7 +30,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 ALLOWED_ORIGINS = {
     origin.strip()
@@ -688,10 +688,14 @@ def public_error(exc):
     text = f"{type(exc).__name__} {exc}".lower()
     if "timeout" in text or "timed out" in text:
         return "La réponse a pris trop de temps. Réessaie."
-    if "429" in text or "rate" in text:
+    if "429" in text or "rate limit" in text or "quota" in text:
         return "Le service est très demandé. Réessaie dans un moment."
-    if "401" in text or "403" in text or "api key" in text:
-        return "Le service est temporairement mal configuré. Réessaie plus tard."
+    if "401" in text or "403" in text or "api key" in text or "authentication" in text:
+        return "Le service IA est mal authentifié. Vérifie la clé API."
+    if "model" in text and ("not found" in text or "does not exist" in text or "not available" in text):
+        return "Le modèle IA configuré n'est pas disponible. Vérifie OPENAI_MODEL."
+    if "web_search" in text or "web search" in text:
+        return "La recherche web IA a échoué. Réessaie sans la recherche actuelle."
     return "Désolé, le service est temporairement indisponible. Réessaie."
 
 
@@ -834,6 +838,30 @@ def parse_chat_payload():
     }, None
 
 
+def create_response(payload, stream):
+    kwargs = model_kwargs(payload, stream)
+    try:
+        return client.responses.create(**kwargs)
+    except Exception as exc:
+        # Keep the deployment usable if an older Render variable points to a
+        # retired/unsupported alias. GPT-6 Luna is the current low-cost API model.
+        text = f"{type(exc).__name__} {exc}".lower()
+        model_error = (
+            "model" in text
+            and (
+                "not found" in text
+                or "does not exist" in text
+                or "not available" in text
+                or "unsupported" in text
+            )
+        )
+        if model_error and MODEL != "gpt-6-luna":
+            fallback = dict(kwargs)
+            fallback["model"] = "gpt-6-luna"
+            return client.responses.create(**fallback)
+        raise
+
+
 def model_kwargs(payload, stream):
     kwargs = {
         "model": MODEL,
@@ -920,7 +948,7 @@ def event_delta(event):
 
 
 def complete_reply(payload):
-    response = client.responses.create(**model_kwargs(payload, stream=False))
+    response = create_response(payload, stream=False)
     text = clean_answer(getattr(response, "output_text", "") or "")
     image = fetch_topic_images(payload.get("message", ""))
     return text, extract_sources(response), image, lookup_map(payload.get("message", ""))
@@ -955,7 +983,7 @@ def chat():
         yielded = False
         sources = []
         try:
-            stream = client.responses.create(**model_kwargs(payload, stream=True))
+            stream = create_response(payload, stream=True)
             for event in stream:
                 etype = getattr(event, "type", "") or ""
                 if etype == "response.failed":
