@@ -425,6 +425,11 @@ body:not(.has-chat) #messages{display:none}
   body.has-chat .dock{padding-top:4px}
   body.has-chat .meta{min-height:15px}
 }
+@media(max-width:760px){
+  body.has-chat #stage{scroll-padding-bottom:18px}
+  body.has-chat .msg:last-child{scroll-margin-bottom:18px}
+  body.has-chat .dock{background:color-mix(in srgb,var(--sand) 97%,transparent)}
+}
 @media(max-width:380px){
   .seg button:nth-child(n+3){display:none}
   .seg:after{content:"••";display:flex;align-items:center;padding:0 5px;color:var(--mute);font-size:10px}
@@ -698,6 +703,9 @@ function setView(view){
   sessionStorage.setItem('teranga-screen-v2',view);
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===view));
   hero.classList.toggle('is-hidden',chat);
+  if(view==='profile'){
+    $('themeBtn').setAttribute('aria-pressed',document.body.dataset.theme==='dark'?'true':'false');
+  }
 }
 function setChatMode(on){setView(on?'chat':'home');}
 function hideHero(){setView('chat');}
@@ -894,8 +902,8 @@ $('tabbar').addEventListener('click',e=>{
     requestAnimationFrame(()=>{stage.scrollTop=stage.scrollHeight;input.focus();});
   }
   if(tab==='profile'){
-    $('themeBtn').click();
     setView('profile');
+    $('themeBtn').click();
   }
 });
 function reset(){
