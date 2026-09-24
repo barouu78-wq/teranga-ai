@@ -516,9 +516,7 @@ def usable_wiki_image(src):
     return src
 
 
-ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org", "encrypted-tbn0.gstatic.com", "encrypted-tbn1.gstatic.com", "encrypted-tbn2.gstatic.com", "encrypted-tbn3.gstatic.com"}
-GOOGLE_IMAGE_API_KEY = os.getenv("GOOGLE_IMAGE_API_KEY", "").strip()
-GOOGLE_IMAGE_CSE_ID = os.getenv("GOOGLE_IMAGE_CSE_ID", "").strip()
+ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
 
 def image_proxy_url(src):
@@ -554,45 +552,6 @@ def image_proxy():
 
 
 _IMAGE_CACHE = {}
-
-
-def fetch_google_images(title, limit=4):
-    if not (GOOGLE_IMAGE_API_KEY and GOOGLE_IMAGE_CSE_ID):
-        return []
-    params = {
-        "key": GOOGLE_IMAGE_API_KEY,
-        "cx": GOOGLE_IMAGE_CSE_ID,
-        "q": f"{title} Sénégal",
-        "searchType": "image",
-        "num": str(min(max(limit, 1), 10)),
-        "safe": "active",
-        "imgType": "photo",
-        "hl": "fr",
-    }
-    req = Request("https://www.googleapis.com/customsearch/v1?" + urlencode(params), headers={"User-Agent": "TerangaAI/1.0"})
-    with urlopen(req, timeout=4) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
-    out, seen = [], set()
-    for item in data.get("items", []):
-        src = str(item.get("link") or "")
-        thumb = str((item.get("image") or {}).get("thumbnailLink") or "")
-        thumb_host = urlparse(thumb).hostname or ""
-        if not src or src in seen or thumb_host not in {
-            "encrypted-tbn0.gstatic.com", "encrypted-tbn1.gstatic.com",
-            "encrypted-tbn2.gstatic.com", "encrypted-tbn3.gstatic.com",
-        }:
-            continue
-        out.append({
-            "url": src,
-            "display_url": thumb or src,
-            "alt": item.get("title") or title,
-            "credit": "Google Images",
-            "page_url": (item.get("image") or {}).get("contextLink") or src,
-        })
-        seen.add(src)
-        if len(out) >= limit:
-            break
-    return out
 
 def fetch_commons_images(title, limit=4):
     params = {"action":"query","format":"json","generator":"search","gsrsearch":f"{title} Sénégal","gsrnamespace":"6","gsrlimit":str(min(max(limit*2,4),10)),"prop":"imageinfo","iiprop":"url|extmetadata","iiurlwidth":"900","origin":"*"}
@@ -676,14 +635,6 @@ def knowledge_image_titles(message, limit=4):
 def fetch_topic_images(message):
     photos = []
     titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
-    if titles:
-        for title in titles:
-            try:
-                google_photos = fetch_google_images(title, limit=4)
-            except Exception:
-                google_photos = []
-            if google_photos:
-                return google_photos[:4]
     if not titles and any(term in normalize(message) for term in ("photo", "photos", "image", "images", "visuel", "visuels")):
         titles = ["Dakar Sénégal"]
     seen = set()
@@ -691,7 +642,10 @@ def fetch_topic_images(message):
         if not title or title in seen:
             continue
         seen.add(title)
-        photo = fetch_city_image(title)
+        try:
+            photo = fetch_city_image(title)
+        except Exception:
+            photo = None
         if photo:
             photos.append(photo)
         if len(photos) >= 4:
@@ -907,7 +861,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src}; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https://encrypted-tbn0.gstatic.com https://encrypted-tbn1.gstatic.com https://encrypted-tbn2.gstatic.com https://encrypted-tbn3.gstatic.com; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
         "frame-src https://www.google.com https://maps.google.com; "
         "child-src https://www.google.com https://maps.google.com; "
