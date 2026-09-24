@@ -426,6 +426,12 @@ body:not(.has-chat) #messages{display:none}
   body.has-chat .meta{min-height:15px}
 }
 @media(max-width:760px){
+  .guide-section{scroll-margin-top:10px}
+  body:not(.has-chat) #messages{min-height:0}
+  body:not(.has-chat) #stage{scroll-behavior:smooth}
+  #input{scroll-margin-bottom:24px}
+}
+@media(max-width:760px){
   body.has-chat #stage{scroll-padding-bottom:18px}
   body.has-chat .msg:last-child{scroll-margin-bottom:18px}
   body.has-chat .dock{background:color-mix(in srgb,var(--sand) 97%,transparent)}
