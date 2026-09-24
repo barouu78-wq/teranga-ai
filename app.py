@@ -598,6 +598,14 @@ def knowledge_image_titles(message, limit=4):
                     titles.append(str(candidate))
                     if len(titles) >= limit:
                         return titles
+    for place in SENEGAL_KNOWLEDGE.get("places", []):
+        candidates = [place.get("name", ""), *place.get("image_queries", [])]
+        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
+            for candidate in candidates:
+                if candidate and candidate not in titles:
+                    titles.append(str(candidate))
+                    if len(titles) >= limit:
+                        return titles
     return titles
 
 
