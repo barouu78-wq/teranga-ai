@@ -585,7 +585,7 @@ def knowledge_image_titles(message, limit=4):
     text_value = normalize(message)
     titles = []
     for region in SENEGAL_KNOWLEDGE.get("regions", []):
-        candidates = [region.get("name", ""), *region.get("places", []), *region.get("highlights", [])]
+        candidates = [region.get("name", ""), *region.get("places", []), *region.get("highlights", []), *region.get("image_queries", [])]
         if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
             for candidate in candidates:
                 if candidate and candidate not in titles:
