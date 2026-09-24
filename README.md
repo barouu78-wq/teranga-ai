@@ -33,7 +33,8 @@ Le projet reste volontairement simple :
     ├── services/
     │   ├── seo.py                     # pages et contenu SEO
     │   ├── images.py                  # recherche et cache des images Wikimedia
-    │   └── explorer.py                # rendu de la page Explorer
+    │   ├── explorer.py                # rendu de la page Explorer
+    │   └── maps.py                    # recherche et liens cartographiques
     ├── templates/
     │   └── home.html                  # interface web principale
     ├── data/
