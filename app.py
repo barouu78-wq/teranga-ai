@@ -19,6 +19,7 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from services.seo import render_seo_page
+from services.seo import SEO_PAGES, render_seo_page
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -571,11 +572,11 @@ def image_proxy():
 _IMAGE_CACHE = {}
 
 def fetch_commons_images(title, limit=4):
-    return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url)
+    return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
 
 
 def fetch_commons_image(title):
-    return _fetch_commons_image(title, usable_wiki_image, image_proxy_url)
+    return _fetch_commons_image(title, usable_wiki_image, image_proxy_url, urlopen)
 
 
 def fetch_city_image(title):
