@@ -77,3 +77,37 @@ def test_seo_pages_and_sitemap():
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/meteo-dakar" in sitemap
     assert "/regions-senegal" in sitemap
+
+
+def test_security_headers():
+    client = app.test_client()
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+    assert response.headers["X-Frame-Options"] == "DENY"
+    assert response.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
+    assert "default-src 'self'" in response.headers["Content-Security-Policy"]
+    assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
+
+
+def test_chat_requires_csrf_and_json():
+    client = app.test_client()
+    response = client.post("/chat", data="{}", content_type="text/plain")
+    assert response.status_code == 415
+
+    csrf = client.get("/csrf")
+    assert csrf.status_code == 200
+    token = csrf.get_json()["token"]
+    response = client.post(
+        "/chat",
+        json={"message": "Bonjour", "history": [], "language": "fr"},
+        headers={"X-CSRF-Token": "invalid"},
+    )
+    assert response.status_code == 403
+
+
+def test_health_does_not_expose_secret():
+    client = app.test_client()
+    body = client.get("/health").get_data(as_text=True)
+    assert os.environ["OPENAI_API_KEY"] not in body
+    assert "SECRET_KEY" not in body
