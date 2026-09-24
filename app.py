@@ -516,6 +516,41 @@ def usable_wiki_image(src):
     return src
 
 
+ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
+
+
+def image_proxy_url(src):
+    src = usable_wiki_image(src)
+    return f"/image-proxy?url={quote(src, safe='')}" if src else ""
+
+
+@app.get("/image-proxy")
+def image_proxy():
+    src = usable_wiki_image(request.args.get("url", ""))
+    if not src:
+        return Response("Image invalide", status=400, mimetype="text/plain")
+    host = urlparse(src).hostname or ""
+    if host not in ALLOWED_IMAGE_HOSTS:
+        return Response("Source image non autorisée", status=403, mimetype="text/plain")
+    try:
+        req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
+        with urlopen(req, timeout=5) as upstream:
+            content_type = upstream.headers.get_content_type()
+            if not content_type.startswith("image/"):
+                return Response("Type image invalide", status=415, mimetype="text/plain")
+            data = upstream.read(8 * 1024 * 1024 + 1)
+        if len(data) > 8 * 1024 * 1024:
+            return Response("Image trop volumineuse", status=413, mimetype="text/plain")
+        return Response(
+            data,
+            mimetype=content_type,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+    except Exception:
+        app.logger.exception("Erreur proxy image Wikimedia")
+        return Response("Image indisponible", status=502, mimetype="text/plain")
+
+
 _IMAGE_CACHE = {}
 
 
@@ -1686,7 +1721,7 @@ function addCityImage(col,image){
     if(!item||!item.url)return;
     const box=document.createElement('figure');box.className='city-pic';
     const img=document.createElement('img');
-    img.src=item.url;img.alt=item.alt||'';img.loading='lazy';
+    img.src=item.display_url||('/image-proxy?url='+encodeURIComponent(item.url));img.alt=item.alt||'';img.loading='lazy';
     const cap=document.createElement('small');
     cap.textContent=item.alt+(item.credit?' · '+item.credit:'');
     box.append(img,cap);col.appendChild(box);
@@ -2283,7 +2318,7 @@ def explorer_page():
 <style>
 body{margin:0;background:#0b0907;color:#f6efe3;font:15px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:24px 16px 50px}a{color:#e2b34a;text-decoration:none}.hero{padding:24px;border:1px solid #3b2d18;border-radius:24px;background:#171310;margin-bottom:16px}.muted{color:#b8a48c}.regions{line-height:2}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}article{padding:16px;border:1px solid #3b2d18;border-radius:20px;background:#171310}article .gallery{height:170px;margin:-16px -16px 14px;background:#0f0d0b;border-radius:20px 20px 0 0;overflow:hidden}.gallery-track{height:145px;display:flex;overflow-x:auto;scroll-snap-type:x mandatory}.gallery-track img{width:100%;min-width:100%;height:145px;object-fit:cover;scroll-snap-align:start}.gallery-credit{height:25px;padding:4px 9px;color:#b8a48c;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}article small{color:#e2b34a;text-transform:uppercase}article h2{font-family:Georgia,serif;margin:8px 0}article p{color:#b8a48c;min-height:64px}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.grid{grid-template-columns:1fr}}
 </style><script>
-async function loadGalleries(){for(const box of document.querySelectorAll('.gallery[data-query]')){try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)).then(r=>r.json());if(!d.images||!d.images.length){box.style.display='none';continue}box.querySelector('.gallery-track').innerHTML=d.images.map(x=>'<img loading="lazy" src="'+x.url+'" alt="'+(x.alt||'').replace(/"/g,'&quot;')+'">').join('');const x=d.images[0];box.querySelector('.gallery-credit').textContent='Wikimedia Commons'+(x.artist?' · '+x.artist:'')+(x.license?' · '+x.license:'')}catch(_){box.style.display='none'}}}
+async function loadGalleries(){for(const box of document.querySelectorAll('.gallery[data-query]')){try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)).then(r=>r.json());if(!d.images||!d.images.length){box.style.display='none';continue}box.querySelector('.gallery-track').innerHTML=d.images.map(x=>'<img loading="lazy" src="'+(x.display_url||('/image-proxy?url='+encodeURIComponent(x.url)))+'" alt="'+(x.alt||'').replace(/"/g,'&quot;')+'">').join('');const x=d.images[0];box.querySelector('.gallery-credit').textContent='Wikimedia Commons'+(x.artist?' · '+x.artist:'')+(x.license?' · '+x.license:'')}catch(_){box.style.display='none'}}}
 document.addEventListener('DOMContentLoaded',loadGalleries);
 </script></head><body><main><p><a href="/">← Teranga AI</a></p><section class="hero"><small>EXPLORER · SÉNÉGAL</small><h1>Le Sénégal, lieu par lieu.</h1><p class="muted">Explore les fiches lieux de Teranga AI : histoire, culture, coordonnées et recherches photo.</p><div class="regions">{regions}</div></section><div class="grid">{cards}</div></main></body></html>"""
     return Response(html.replace("{regions}", region_links).replace("{cards}", "".join(cards)), mimetype="text/html")
@@ -2295,8 +2330,10 @@ def explorer_image():
     if not query:
         return jsonify({"images": []})
     try:
-        image = fetch_commons_image(query)
-        return jsonify({"images": fetch_commons_images(query, limit=4)})
+        images = fetch_commons_images(query, limit=4)
+        for item in images:
+            item["display_url"] = image_proxy_url(item.get("url", ""))
+        return jsonify({"images": images})
     except Exception:
         app.logger.exception("explorer-image")
         return jsonify({"image": None})
