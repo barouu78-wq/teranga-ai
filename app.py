@@ -123,20 +123,40 @@ WEB_HINTS = (
 
 def format_senegal_knowledge(data):
     regions = data.get("regions", [])
-    lines = ["DONNÉES STRUCTURÉES DU SÉNÉGAL (référence interne) :"]
+    lines = [
+        "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
+        "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
+    ]
     for region in regions:
-        places = ", ".join(region.get("places", [])[:10])
-        highlights = ", ".join(region.get("highlights", [])[:8])
-        lines.append(f"- {region.get('name')}: localités = {places}; points d'intérêt = {highlights}.")
+        places = ", ".join(region.get("places", [])[:12])
+        highlights = ", ".join(region.get("highlights", [])[:10])
+        departments = ", ".join(region.get("departments", [])[:8])
+        lines.append(
+            f"- {region.get('name')}: départements = {departments}; localités = {places}; "
+            f"points d'intérêt = {highlights}."
+        )
     places = data.get("places", [])
     if places:
         lines.append("Lieux détaillés :")
-        for place in places[:40]:
-            what = "; ".join(str(place.get("what_to_see", "")).split(";")[:4])
+        for place in places[:60]:
+            what = "; ".join(str(place.get("what_to_see", "")).split(";")[:5])
             lines.append(f"- {place.get('name')}: {place.get('summary', '')} À voir : {what}.")
+    domains = data.get("knowledge_scope", {}).get("domains", {})
+    if domains:
+        lines.append("DOMAINES À COUVRIR :")
+        for key, description in domains.items():
+            lines.append(f"- {key}: {description}")
+    sources = data.get("source_registry", [])
+    if sources:
+        lines.append("SOURCES DE RÉFÉRENCE :")
+        for source in sources:
+            lines.append(f"- {source.get('name')}: {source.get('role')}.")
+    dynamic_topics = data.get("dynamic_topics", [])
+    if dynamic_topics:
+        lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
     unesco = ", ".join(data.get("unesco_world_heritage", []))
     if unesco:
-        lines.append(f"- Patrimoine mondial UNESCO : {unesco}.")
+        lines.append(f"Patrimoine mondial UNESCO (une partie du patrimoine, pas toute la connaissance nationale) : {unesco}.")
     return "\n".join(lines)
 
 SYSTEM_PROMPT = """
@@ -150,7 +170,7 @@ N'utilise jamais de markdown : pas d'astérisques, pas de gras, pas de titres #,
 N'invente jamais un téléphone, un horaire exact ou un prix figé.
 Si tu n'es pas sûr, dis-le clairement plutôt que d'inventer.
 Pour un plat ou un lieu : région ou quartier + spécialité + un repère. Pas de liste vague.
-Si une info peut avoir changé, dis-le. Reste factuel et neutre en politique. Pour la météo et les alertes actuelles, privilégie l’ANACIM (anacim.sn). Pour les statistiques et la démographie, privilégie l’ANSD (ansd.sn). Pour le patrimoine mondial, vérifie l’UNESCO. Ne présente jamais une donnée susceptible d’avoir changé comme actuelle sans vérification web.
+Si une info peut avoir changé, dis-le. Reste factuel et neutre en politique. La connaissance du Sénégal ne se limite jamais à l’UNESCO : couvre aussi géographie, régions et communes, histoire, langues, cultures, religions, vie quotidienne, gastronomie, économie, agriculture, environnement, santé, mobilité, formalités et tourisme. Pour la météo et les alertes actuelles, privilégie l’ANACIM (anacim.sn). Pour les statistiques et la démographie, privilégie l’ANSD (ansd.sn). Pour les démarches administratives, privilégie les services publics sénégalais. Pour la santé et les urgences, privilégie les autorités sanitaires sénégalaises. Pour le patrimoine, distingue clairement patrimoine mondial UNESCO, liste indicative, patrimoine national et autres sites culturels. Ne présente jamais une donnée susceptible d’avoir changé comme actuelle sans vérification web.
 Ne conseille pas pour qui voter.
 Si tu utilises le web, ne colle pas de listes d'URLs dans le texte : les sources s'affichent à part.
 Si l'utilisateur demande des photos, réponds comme si les visuels vont être joints par l'application : ne dis jamais que tu ne peux pas afficher de photos et ne demande pas à l'utilisateur de chercher lui-même les images. Présente simplement le lieu et les visuels disponibles.
