@@ -1313,7 +1313,7 @@
     }
   ],
   "knowledge_scope": {
-    "version": "2026-09",
+    "version": "2026-09-25",
     "principle": "Base nationale multisources : ne pas réduire la connaissance du Sénégal au patrimoine UNESCO. Couvrir aussi géographie, administration, démographie, météo/climat, mobilité, santé, sécurité, formalités, économie, agriculture, environnement, histoire, religions, langues, cultures, gastronomie, tourisme, sports, éducation, vie quotidienne et services.",
     "source_priority": [
       "Sources officielles sénégalaises pour les données administratives, sanitaires, météorologiques, démographiques et réglementaires.",
@@ -1409,5 +1409,95 @@
     "actualité nationale",
     "taux de change",
     "disponibilité des services"
-  ]
+  ],
+  "country_profile": {
+    "official_name": "République du Sénégal",
+    "capital": "Dakar",
+    "area_km2": 196722,
+    "administrative_regions": 14,
+    "departments": 46,
+    "arrondissements": 127,
+    "communes": 553,
+    "official_language": "français",
+    "common_languages": [
+      "wolof",
+      "pulaar/fulfulde",
+      "sérère",
+      "diola",
+      "soninké",
+      "mandingue"
+    ],
+    "currency": {
+      "name": "franc CFA BCEAO",
+      "code": "XOF"
+    },
+    "time_zone": "UTC+0",
+    "independence_date": "4 avril 1960",
+    "geography": {
+      "coastline": "océan Atlantique",
+      "neighboring_countries": [
+        "Mauritanie",
+        "Mali",
+        "Guinée",
+        "Guinée-Bissau",
+        "Gambie"
+      ],
+      "major_rivers": [
+        "fleuve Sénégal",
+        "fleuve Gambie",
+        "fleuve Casamance"
+      ],
+      "major_geographic_areas": [
+        "Dakar et Cap-Vert",
+        "Grande-Côte et Nord",
+        "vallée du fleuve Sénégal",
+        "Sine-Saloum",
+        "bassin arachidier",
+        "Ferlo",
+        "Sénégal oriental",
+        "Casamance"
+      ]
+    },
+    "climate": {
+      "description": "Climat tropical à dominante sahélienne, avec une saison sèche et une saison des pluies dont la durée et l'intensité varient selon les régions.",
+      "rule": "Pour une prévision, une alerte ou une pluie attendue, utiliser l'ANACIM et la date/heure de validité plutôt qu'une règle climatique générale."
+    },
+    "daily_life": {
+      "payments": [
+        "espèces en FCFA",
+        "cartes bancaires selon les établissements",
+        "services de paiement mobile selon disponibilité"
+      ],
+      "rule": "Les tarifs, commissions, horaires et disponibilités sont dynamiques et doivent être vérifiés."
+    },
+    "emergency_numbers": [
+      {
+        "service": "SAMU",
+        "number": "1515",
+        "scope": "urgences médicales, chirurgicales et obstétricales",
+        "source": "Ministère de la Santé et de l’Hygiène publique"
+      },
+      {
+        "service": "Police",
+        "number": "17",
+        "scope": "urgence police",
+        "source": "Ministère de la Santé et de l’Hygiène publique"
+      },
+      {
+        "service": "Sapeurs-pompiers",
+        "number": "18",
+        "scope": "urgence incendie et secours",
+        "source": "Ministère de la Santé et de l’Hygiène publique"
+      }
+    ],
+    "knowledge_rules": [
+      "Distinguer les faits stables des informations qui changent.",
+      "Pour météo et alertes, privilégier ANACIM.",
+      "Pour statistiques, population et découpage administratif, privilégier ANSD.",
+      "Pour santé et urgences, privilégier les autorités sanitaires sénégalaises.",
+      "Pour formalités, visas, douanes et règles d'entrée, vérifier les services publics et autorités compétentes.",
+      "Pour transport, vols, horaires, tarifs et événements, vérifier en temps réel.",
+      "Ne pas réduire le Sénégal au tourisme ou à l'UNESCO."
+    ]
+  }
 }
