@@ -82,6 +82,38 @@ SEO_PAGES = {
         ],
         "related": [("restaurants-dakar", "Ou manger"), ("regions-senegal", "Regions"), ("senegal", "Guide")],
     },
+    "france-senegal": {
+        "title": "Sénégal et France : voyage, diaspora, démarches | Teranga AI",
+        "description": "Teranga AI accompagne les personnes au Sénégal et en France : voyage, Dakar, AIBD, démarches, culture, langues et vie de la diaspora.",
+        "h1": "Sénégal ↔ France",
+        "intro": "Un assistant pensé pour les personnes qui vivent au Sénégal, voyagent entre le Sénégal et la France, ou gardent un lien avec le pays.",
+        "sections": [
+            ("Pour le Sénégal", "Dakar, AIBD, transport, météo, régions, gastronomie, culture et informations pratiques."),
+            ("Pour la France", "Questions de voyage, préparation du séjour, repères culturels, langues et informations utiles pour la diaspora sénégalaise."),
+            ("Langues", "Français, anglais, wolof et pulaar, selon la demande."),
+        ],
+        "faq": [
+            ("Teranga AI fonctionne-t-il depuis la France ?", "Oui. Le service est accessible sur le web depuis la France comme depuis le Sénégal."),
+            ("Peut-on préparer un voyage au Sénégal ?", "Oui. Demandez les formalités, le transport, les lieux, la météo ou les repères utiles ; les informations changeantes sont à vérifier."),
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("regions-senegal", "14 régions"), ("meteo-dakar", "Météo Dakar")],
+    },
+    "diaspora-senegalaise": {
+        "title": "Diaspora sénégalaise : France, Sénégal et informations pratiques | Teranga AI",
+        "description": "Assistant pour la diaspora sénégalaise en France et ailleurs : démarches, voyage, régions, culture, langues et vie pratique au Sénégal.",
+        "h1": "Diaspora sénégalaise",
+        "intro": "Teranga AI aide à garder un lien pratique avec le Sénégal : préparer un voyage, comprendre une démarche, retrouver une région ou découvrir une spécialité.",
+        "sections": [
+            ("Depuis la France", "Préparez un séjour au Sénégal, recherchez des repères sur Dakar et les régions, ou posez une question sur la culture et les langues."),
+            ("Au Sénégal", "Transport, météo, gastronomie, lieux, cartes et informations pratiques selon le contexte."),
+            ("Une réponse adaptée", "Précisez votre ville, votre région ou votre situation pour obtenir une réponse plus pertinente."),
+        ],
+        "faq": [
+            ("L'assistant est-il réservé aux voyageurs ?", "Non. Il s'adresse aussi aux résidents, à la diaspora et aux commerçants."),
+            ("Peut-on parler wolof ou pulaar ?", "Oui, Teranga AI prend en charge le wolof et le pulaar en plus du français et de l'anglais."),
+        ],
+        "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
+    },
     "regions-senegal": {
         "title": "14 regions du Senegal : villes et carte | Teranga AI",
         "description": "Les 14 regions du Senegal : Dakar, Thies, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
