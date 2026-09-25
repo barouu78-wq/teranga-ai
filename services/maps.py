@@ -46,7 +46,19 @@ MAP_PLACES = (
 )
 
 
-def lookup_map(message):
+MAP_INTENTS = ("ou se trouve", "ou est", "adresse", "localisation", "localiser", "itineraire", "trajet", "route", "distance", "pres de", "sur la carte", "carte", "map", "where is", "how to get", "comment aller")
+
+def _normalize(text):
+    text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode("ascii")
+    return " ".join(text.lower().split())
+
+def should_fetch_map(message):
+    return any(term in _normalize(message) for term in MAP_INTENTS)
+
+
+def lookup_map(message, enabled=None):
+    if enabled is False:
+        return None
     lowered = str(message or "").lower()
     for key, query, label in MAP_PLACES:
         if key in lowered:
