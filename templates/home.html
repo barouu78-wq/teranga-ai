@@ -849,6 +849,18 @@ body.has-chat #messages{padding-top:4px}
   #mic,#mic.listen{animation:none!important;transition:none!important}
   #mic.listen:after{animation:none!important}
 }
+
+/* Teranga Audience v1 — tourist & merchant entry points */
+.audience-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 12px}
+.audience-btn{min-height:66px;padding:10px 13px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);text-align:left;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
+.audience-btn span{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;margin-top:2px;border-radius:10px;background:var(--soft);color:var(--gold);font-size:14px}
+.audience-btn b{font-size:13px;line-height:1.1}
+.audience-btn small{color:var(--mute);font-size:10px;margin-top:3px}
+.audience-btn:hover{transform:translateY(-1px);border-color:rgba(217,164,65,.5)}
+.audience-btn.on{border-color:rgba(217,164,65,.72);background:linear-gradient(135deg,rgba(217,164,65,.13),var(--card));box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.audience-btn.on span{background:var(--brand);color:#fff}
+@media(max-width:680px){.audience-mode{margin:14px 0 10px}.audience-btn{min-height:62px;padding:9px 11px;border-radius:16px}}
+@media(prefers-reduced-motion:reduce){.audience-btn{transition:none}}
 </style>
 
 </head>
@@ -887,7 +899,10 @@ body.has-chat #messages{padding-top:4px}
   <div id="hero" class="hero">
     <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
-    <div class="cards" id="cards"></div>
+    <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
+  <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
+  <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
+</div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -1029,6 +1044,43 @@ ff:{
 }
 };
 const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
+const AUDIENCE={
+fr:{
+ tourist:[['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
+ merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
+},
+en:{
+ tourist:[['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
+ merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
+},
+wo:{
+ tourist:[['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Yoon',"Naka laa dem AIBD ba sama hôtel, te ñaata laa wara def budget?"],['Budget',"Ñaata laa wara def budget bés bu nekk ci Senegaal?"],['Jëfandikoo',"Yan ndigal yu am solo laa wara xam ngir visiter Dakar ak Gorée?"],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
+ merchant:[['Njëg ak marge',"Jàppale ma defar njëg ak marge ci sama produit."],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['WhatsApp',"Naka laa mëna tëral commande yi ci WhatsApp?"],['Fey',"Yan yoon yu fey laa mëna jëfandikoo ngir sama clients?"],['Stock',"Jàppale ma tëral stock bi te moytu rupture."],['Client toubab',"Naka laa mëna dalal te jaay ak client turist bu jóge biti?"]]
+},
+ff:{
+ tourist:[['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Laawol','No mbaydi mi AIBD haa hôtel am, e hol ko mi heftin e budget?'],['Budget','Hol budget mi waɗa ñalawma e Senegaal?'],['Jokkondiral','Hol cuɓe mawɗe mi anndu ngam yahrude Dakar e Gorée?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
+ merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
+}
+};
+let audience=localStorage.getItem('teranga-audience')||'tourist';
+function renderAudience(){
+  const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
+  const labels=lang==='fr'?['Touriste','Voyager facilement','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Jaaytoowo','Jaayde e golle'];
+  $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
+  $('audienceMerchant').textContent=labels[2];$('audienceMerchantHint').textContent=labels[3];
+  document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+  const rows=a[audience];
+  const cards=rows.map(([t,q])=>({t,q,d:''}));
+  const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
+  cards.forEach((c,i)=>{
+    const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
+    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=CARD_ICONS[i%CARD_ICONS.length];
+    const b=document.createElement('b');b.textContent=c.t;card.append(ico,b);frag.appendChild(card);
+    const chip=document.createElement('button');chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;chip.setAttribute('aria-label',c.t);chips.appendChild(chip);
+  });
+  $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
+}
+
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')==='1', inflight=null;
@@ -1325,9 +1377,11 @@ function setLang(next){
   if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
+  renderAudience();
   bindShare();
   if(rec)rec.lang=voiceMap[lang];
 }
+document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{audience=btn.dataset.audience;localStorage.setItem('teranga-audience',audience);renderAudience();}));
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   document.body.dataset.theme=saved||'dark';
