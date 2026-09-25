@@ -1,5 +1,5 @@
 {
-  "version": "3.1",
+  "version": "3.2",
   "country": "Sénégal",
   "regions": [
     {
@@ -1246,6 +1246,69 @@
       "longitude": -12.45,
       "image_queries": [
         "rivière Gambie Niokolo Koba Sénégal"
+      ]
+    }
+  ],
+  "authoritative_sources": [
+    {
+      "name": "ANSD",
+      "domain": "ansd.sn",
+      "topics": [
+        "population",
+        "démographie",
+        "régions",
+        "statistiques",
+        "économie",
+        "données officielles"
+      ]
+    },
+    {
+      "name": "ANACIM",
+      "domain": "anacim.sn",
+      "topics": [
+        "météo",
+        "prévisions",
+        "climat",
+        "aviation",
+        "alertes météorologiques"
+      ]
+    },
+    {
+      "name": "Ministère chargé du Tourisme",
+      "domain": "tourisme.gouv.sn",
+      "topics": [
+        "tourisme",
+        "géographie",
+        "informations générales sur le Sénégal"
+      ]
+    },
+    {
+      "name": "UNESCO",
+      "domain": "unesco.org",
+      "topics": [
+        "patrimoine mondial",
+        "patrimoine culturel",
+        "sites UNESCO",
+        "éducation et culture"
+      ]
+    },
+    {
+      "name": "Présidence de la République du Sénégal",
+      "domain": "presidence.sn",
+      "topics": [
+        "institutions",
+        "fonctions officielles",
+        "actualité institutionnelle"
+      ]
+    },
+    {
+      "name": "Gouvernement du Sénégal",
+      "domain": "gouv.sn",
+      "topics": [
+        "administration",
+        "services publics",
+        "réformes",
+        "informations gouvernementales"
       ]
     }
   ]
