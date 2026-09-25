@@ -893,7 +893,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        f"default-src 'self'; script-src {script_src} https://cse.google.com https://www.google.com https://www.gstatic.com; "
+        f"default-src 'self'; script-src {script_src} 'unsafe-eval' https://cse.google.com https://www.google.com https://www.gstatic.com; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
         "connect-src 'self' https://cse.google.com https://www.google.com; media-src 'self' blob:; object-src 'none'; "
         "frame-src https://www.google.com https://cse.google.com https://maps.google.com; "
