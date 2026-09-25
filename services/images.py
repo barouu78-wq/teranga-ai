@@ -44,7 +44,9 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         except Exception:
             body = ""
         safe_body = body.replace(api_key, "[REDACTED]") if api_key else body
-        logger.error("Google Custom Search HTTP %s pour %r (cx=%s): %s", exc.code, query, cse_id, safe_body[:1200])
+        message = "Google Custom Search HTTP %s pour %r (cx=%s): %s" % (exc.code, query, cse_id, safe_body[:1200])
+        logger.error(message)
+        print(message, flush=True)
         raise
 
     out, seen = [], set()
