@@ -128,6 +128,23 @@ def format_senegal_knowledge(data):
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
         "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
     ]
+    modules = data.get("knowledge_modules", {})
+    if modules:
+        lines.append("MODULES NATIONAUX COMPLÉMENTAIRES :")
+        for name, module in modules.items():
+            description = module.get("description") or ""
+            if description:
+                lines.append(f"- {name}: {description}")
+            for key in ("anchors", "languages", "cultural_areas", "traditions", "important_context", "stable_knowledge", "live_topics", "modes", "key_nodes", "sectors", "regional_examples", "ecosystems", "topics", "food_topics", "daily_topics", "categories", "major_areas"):
+                values = module.get(key)
+                if values:
+                    lines.append(f"  {key}: {', '.join(map(str, values))}")
+            rule = module.get("rule")
+            if rule:
+                lines.append(f"  règle: {rule}")
+            source = module.get("live_source")
+            if source:
+                lines.append(f"  source temps réel: {source}")
     if profile:
         lines.append("REPÈRES NATIONAUX :")
         lines.append(
