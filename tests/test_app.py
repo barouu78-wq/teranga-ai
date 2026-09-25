@@ -10,8 +10,26 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app import app, fetch_commons_image, fetch_topic_images, image_proxy_url, lookup_map, model_kwargs, public_error, should_use_web
+from app import SENEGAL_KNOWLEDGE, app, fetch_commons_image, fetch_topic_images, image_proxy_url, lookup_map, model_kwargs, public_error, should_use_web
 
+
+
+def test_senegal_knowledge_is_multisource():
+    scope = SENEGAL_KNOWLEDGE["knowledge_scope"]
+    domains = scope["domains"]
+    assert "weather_climate" in domains
+    assert "health" in domains
+    assert "mobility" in domains
+    assert "economy" in domains
+    assert "culture_history" in domains
+    assert "daily_life" in domains
+    source_names = {source["name"] for source in SENEGAL_KNOWLEDGE["source_registry"]}
+    assert {"ANSD", "ANACIM", "Ministère de la Santé et de l’Hygiène publique", "UNESCO"} <= source_names
+
+
+def test_senegal_knowledge_covers_all_fourteen_regions():
+    assert len(SENEGAL_KNOWLEDGE["regions"]) == 14
+    assert len({region["name"] for region in SENEGAL_KNOWLEDGE["regions"]}) == 14
 
 def test_health():
     client = app.test_client()
