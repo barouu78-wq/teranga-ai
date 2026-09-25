@@ -1,5 +1,5 @@
 {
-  "version": "3.4",
+  "version": "4.0",
   "country": "Sénégal",
   "regions": [
     {
@@ -55,7 +55,69 @@
         "Île de Gorée Sénégal",
         "Monument Renaissance africaine Dakar",
         "Corniche Dakar Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Dakar",
+        "identity": "Région capitale, cœur administratif, économique, culturel et universitaire du Sénégal; péninsule du Cap-Vert.",
+        "geography": "Presqu'île de Dakar et littoral atlantique; espaces urbains denses et littoraux.",
+        "economy": [
+          "services",
+          "commerce",
+          "finance",
+          "industrie",
+          "technologies",
+          "transport",
+          "tourisme",
+          "pêche"
+        ],
+        "culture": [
+          "culture urbaine",
+          "musique",
+          "arts contemporains",
+          "patrimoine historique",
+          "vie religieuse"
+        ],
+        "key_places": [
+          "Île de Gorée",
+          "Monument de la Renaissance africaine",
+          "Corniche",
+          "Ngor",
+          "Almadies",
+          "Médina",
+          "Plateau"
+        ],
+        "foods": [
+          "ceebu jën",
+          "yassa",
+          "mafé",
+          "poisson grillé",
+          "pastels"
+        ],
+        "practical": "Pour les transports, événements, tarifs, établissements et horaires, vérifier les informations actuelles.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "thies",
@@ -100,7 +162,64 @@
         "Tivaouane Sénégal",
         "Joal-Fadiouth Sénégal",
         "Somone Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Thiès",
+        "identity": "Région de transition entre l'agglomération dakaroise, la Petite-Côte et l'intérieur du pays; importante pour le tourisme, l'agriculture, la pêche et l'artisanat.",
+        "geography": "Littoral de la Petite-Côte, zones agricoles et plateaux; présence de pôles urbains comme Thiès et Mbour.",
+        "economy": [
+          "agriculture",
+          "pêche",
+          "tourisme",
+          "artisanat",
+          "commerce",
+          "industrie"
+        ],
+        "culture": [
+          "Tivaouane et patrimoine religieux",
+          "artisanat",
+          "cultures littorales",
+          "patrimoine sérère"
+        ],
+        "key_places": [
+          "Tivaouane",
+          "Mbour",
+          "Saly",
+          "Joal-Fadiouth",
+          "Popenguine",
+          "Somone",
+          "Kayar"
+        ],
+        "foods": [
+          "poissons et fruits de mer",
+          "thiéboudienne",
+          "yassa poisson"
+        ],
+        "practical": "Les accès aux plages, réservations, tarifs et horaires sont dynamiques et doivent être vérifiés.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "diourbel",
@@ -137,7 +256,62 @@
         "Touba Sénégal Grande Mosquée",
         "Diourbel Sénégal",
         "Mbacké Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Diourbel",
+        "identity": "Région du centre-ouest fortement marquée par le bassin arachidier et par le patrimoine religieux mouride.",
+        "geography": "Espace intérieur du centre du Sénégal, à dominante agricole et urbaine autour de Diourbel, Touba et Mbacké.",
+        "economy": [
+          "agriculture",
+          "commerce",
+          "économie religieuse",
+          "artisanat",
+          "services"
+        ],
+        "culture": [
+          "mouridisme",
+          "patrimoine religieux",
+          "enseignement coranique",
+          "traditions du Baol"
+        ],
+        "key_places": [
+          "Touba",
+          "Grande Mosquée de Touba",
+          "Mbacké",
+          "Diourbel"
+        ],
+        "foods": [
+          "café Touba",
+          "mil",
+          "thiakry",
+          "ndambé",
+          "plats à base d'arachide"
+        ],
+        "practical": "Les informations liées au Magal, aux rassemblements et aux transports doivent être actualisées avant publication.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "fatick",
@@ -181,7 +355,64 @@
         "Toubacouta Sénégal",
         "mangrove Saloum Sénégal",
         "Fatick Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Fatick",
+        "identity": "Région du Sine-Saloum, connue pour ses mangroves, bolongs, îles, activités halieutiques et patrimoine sérère.",
+        "geography": "Delta et estuaire du Saloum, zones de mangrove, îles et espaces agricoles.",
+        "economy": [
+          "pêche",
+          "aquaculture",
+          "agriculture",
+          "saliculture",
+          "élevage",
+          "tourisme",
+          "artisanat"
+        ],
+        "culture": [
+          "culture sérère",
+          "traditions du Sine",
+          "pêche et savoir-faire littoraux"
+        ],
+        "key_places": [
+          "Delta du Saloum",
+          "Toubacouta",
+          "Foundiougne",
+          "Palmarin",
+          "Sokone",
+          "Ndangane"
+        ],
+        "foods": [
+          "huîtres du Saloum",
+          "poissons",
+          "riz au poisson",
+          "produits de mangrove"
+        ],
+        "practical": "Les excursions dans les bolongs, accès aux îles et activités naturelles dépendent des conditions et opérateurs.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "kaolack",
@@ -220,7 +451,62 @@
         "Kaolack Sénégal",
         "Médina Baye Sénégal",
         "marché Kaolack Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Kaolack",
+        "identity": "Grand carrefour commercial du centre, au cœur du bassin arachidier, avec un important patrimoine religieux à Médina Baye.",
+        "geography": "Zone intérieure et estuarienne proche du Saloum; axes routiers et commerciaux majeurs.",
+        "economy": [
+          "commerce",
+          "arachide",
+          "agro-industrie",
+          "transport",
+          "saliculture",
+          "services"
+        ],
+        "culture": [
+          "Médina Baye",
+          "traditions du Saloum",
+          "commerce et marchés"
+        ],
+        "key_places": [
+          "Médina Baye",
+          "Kaolack",
+          "Kahone",
+          "Nioro du Rip",
+          "Saloum"
+        ],
+        "foods": [
+          "arachide",
+          "mil",
+          "mafé",
+          "café Touba"
+        ],
+        "practical": "Prix des marchés, transport et activité commerciale sont des informations à vérifier en temps réel.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "kaffrine",
@@ -257,7 +543,60 @@
         "Kaffrine Sénégal",
         "Koungheul Sénégal",
         "paysage bassin arachidier Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Kaffrine",
+        "identity": "Région du centre-est associée au bassin arachidier, à l'agriculture et aux terroirs ruraux.",
+        "geography": "Plaines et espaces agricoles du centre; transition vers les zones plus sèches de l'intérieur.",
+        "economy": [
+          "arachide",
+          "mil",
+          "élevage",
+          "commerce",
+          "agriculture pluviale"
+        ],
+        "culture": [
+          "cultures rurales du centre",
+          "artisanat",
+          "traditions agricoles"
+        ],
+        "key_places": [
+          "Kaffrine",
+          "Koungheul",
+          "Birkelane",
+          "Malem-Hodar"
+        ],
+        "foods": [
+          "mil",
+          "arachide",
+          "couscous de mil",
+          "mafé"
+        ],
+        "practical": "Les données agricoles et pastorales doivent être datées selon la campagne concernée.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "louga",
@@ -296,7 +635,61 @@
         "Ferlo Sénégal",
         "Linguère Sénégal",
         "Dahra Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Louga",
+        "identity": "Région du nord-ouest marquée par le Ferlo, le pastoralisme, l'élevage et les activités agricoles adaptées à un environnement plus sahélien.",
+        "geography": "Grande région intérieure allant vers le Ferlo; zones pastorales et agricoles.",
+        "economy": [
+          "élevage",
+          "pastoralisme",
+          "agriculture",
+          "commerce",
+          "artisanat"
+        ],
+        "culture": [
+          "traditions pastorales",
+          "cultures du Sahel",
+          "artisanat"
+        ],
+        "key_places": [
+          "Louga",
+          "Linguère",
+          "Kébémer",
+          "Dahra",
+          "Ferlo"
+        ],
+        "foods": [
+          "lait caillé",
+          "lakh",
+          "laax",
+          "mil"
+        ],
+        "practical": "Les conditions pastorales, l'eau et les feux de brousse sont des sujets sensibles à suivre avec les sources officielles.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "saint-louis",
@@ -378,7 +771,62 @@
         "Matam Sénégal",
         "Fouta Toro Sénégal",
         "fleuve Sénégal Matam"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Matam",
+        "identity": "Région de la vallée du fleuve Sénégal et du Fouta-Toro, avec une forte présence de cultures haalpulaar et une agriculture irriguée importante.",
+        "geography": "Vallée du fleuve au nord et espaces sahéliens vers l'intérieur; présence du Ferlo à l'est.",
+        "economy": [
+          "agriculture irriguée",
+          "élevage",
+          "commerce",
+          "pêche fluviale",
+          "artisanat"
+        ],
+        "culture": [
+          "culture haalpulaar",
+          "patrimoine du Fouta-Toro",
+          "traditions fluviales"
+        ],
+        "key_places": [
+          "Matam",
+          "Ourossogui",
+          "Kanel",
+          "Thilogne",
+          "Ogo",
+          "Ranérou"
+        ],
+        "foods": [
+          "thiéré",
+          "lakh",
+          "poissons du fleuve",
+          "plats à base de mil"
+        ],
+        "practical": "Les niveaux du fleuve, campagnes agricoles et conditions pastorales doivent être datés.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "tambacounda",
@@ -420,7 +868,62 @@
         "Bakel Sénégal",
         "Falémé Sénégal",
         "savane Sénégal oriental"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Tambacounda",
+        "identity": "Grande région du Sénégal oriental, caractérisée par la savane, l'élevage, l'agriculture et de vastes espaces naturels.",
+        "geography": "Territoire vaste entre Sénégal oriental, vallée de la Gambie et frontière malienne.",
+        "economy": [
+          "agriculture",
+          "élevage",
+          "commerce",
+          "foresterie",
+          "tourisme de nature"
+        ],
+        "culture": [
+          "diversité mandingue et peule",
+          "patrimoine des anciens royaumes",
+          "artisanat"
+        ],
+        "key_places": [
+          "Tambacounda",
+          "Parc national du Niokolo-Koba",
+          "Bakel",
+          "Kidira",
+          "Goudiry",
+          "Falémé"
+        ],
+        "foods": [
+          "fonio",
+          "mil",
+          "miel",
+          "sauces aux feuilles"
+        ],
+        "practical": "Les conditions d'accès aux parcs, routes et zones naturelles sont à vérifier avant déplacement.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "kedougou",
@@ -462,7 +965,64 @@
         "Dindéfello Sénégal",
         "Pays Bassari Sénégal",
         "Bandafassi Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Kédougou",
+        "identity": "Région montagneuse du sud-est, remarquable pour le Pays Bassari, les paysages de collines, les cascades et une grande diversité culturelle.",
+        "geography": "Reliefs et plateaux du sud-est; proximité de la Gambie, de la Guinée et du Mali.",
+        "economy": [
+          "agriculture",
+          "orpaillage et exploitation minière",
+          "élevage",
+          "artisanat",
+          "écotourisme"
+        ],
+        "culture": [
+          "Bassari",
+          "Bédik",
+          "Peul",
+          "Mandingue",
+          "artisanat et traditions locales"
+        ],
+        "key_places": [
+          "Pays Bassari",
+          "Dindéfello",
+          "Bandafassi",
+          "Salémata",
+          "Ibel",
+          "Niokolo-Koba"
+        ],
+        "foods": [
+          "fonio",
+          "miel",
+          "mil",
+          "plats aux feuilles"
+        ],
+        "practical": "Les activités minières, les accès aux cascades et sites culturels doivent être présentés avec contexte et informations à jour.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "kolda",
@@ -499,7 +1059,61 @@
         "Kolda Sénégal",
         "Haute Casamance Sénégal",
         "Vélingara Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Kolda",
+        "identity": "Région de Haute-Casamance à dominante agricole, avec une forte diversité culturelle et forestière.",
+        "geography": "Sud du Sénégal, paysages de Casamance intérieure, vallées et zones boisées.",
+        "economy": [
+          "agriculture",
+          "élevage",
+          "agroalimentaire",
+          "commerce",
+          "foresterie"
+        ],
+        "culture": [
+          "cultures peules",
+          "mandingues",
+          "traditions de Casamance",
+          "musique et artisanat"
+        ],
+        "key_places": [
+          "Kolda",
+          "Vélingara",
+          "Médina Yoro Foulah",
+          "Dabo"
+        ],
+        "foods": [
+          "riz local",
+          "fonio",
+          "huile de palme",
+          "sauces aux feuilles"
+        ],
+        "practical": "Pluviométrie, agriculture et état des routes peuvent varier fortement selon la saison.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "sedhiou",
@@ -540,7 +1154,62 @@
         "fleuve Casamance Sédhiou",
         "Goudomp Sénégal",
         "mangrove Casamance Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Sédhiou",
+        "identity": "Région de Moyenne-Casamance, structurée par le fleuve Casamance, les bolongs, les mangroves et les activités agricoles.",
+        "geography": "Vallées et zones de mangrove de la Moyenne-Casamance.",
+        "economy": [
+          "agriculture",
+          "riziculture",
+          "pêche",
+          "mangrove",
+          "commerce",
+          "artisanat"
+        ],
+        "culture": [
+          "cultures mandingues",
+          "traditions casamançaises",
+          "savoir-faire liés au fleuve"
+        ],
+        "key_places": [
+          "Sédhiou",
+          "Goudomp",
+          "Bounkiling",
+          "Marsassoum",
+          "fleuve Casamance"
+        ],
+        "foods": [
+          "riz de Casamance",
+          "poisson",
+          "huile de palme",
+          "fruits de saison"
+        ],
+        "practical": "Les déplacements fluviaux, routes et activités dans les bolongs nécessitent des informations actualisées.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "ziguinchor",
@@ -587,7 +1256,66 @@
         "Cap Skirring Sénégal",
         "Oussouye Sénégal",
         "Carabane Sénégal"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Ziguinchor",
+        "identity": "Région de Basse-Casamance, connue pour ses paysages de bolongs et mangroves, ses plages, sa diversité culturelle et ses terroirs agricoles.",
+        "geography": "Basse vallée de la Casamance, littoral atlantique, bolongs, mangroves et zones forestières.",
+        "economy": [
+          "agriculture",
+          "riziculture",
+          "pêche",
+          "tourisme",
+          "commerce",
+          "artisanat"
+        ],
+        "culture": [
+          "culture diola",
+          "diversité casamançaise",
+          "architecture traditionnelle",
+          "musique et fêtes locales"
+        ],
+        "key_places": [
+          "Ziguinchor",
+          "Oussouye",
+          "Cap Skirring",
+          "Carabane",
+          "Diembering",
+          "Eloubaline",
+          "Bignona"
+        ],
+        "foods": [
+          "riz de Casamance",
+          "poissons",
+          "huîtres",
+          "fruits de mer",
+          "préparations à l'huile de palme"
+        ],
+        "practical": "Pour les plages, ferries, routes, hébergements et activités, vérifier les conditions actuelles.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     }
   ],
   "unesco_world_heritage": [
@@ -1909,5 +2637,27 @@
       ]
     }
   },
-  "current_reference_date": "2026-09-25"
+  "current_reference_date": "2026-09-25",
+  "enrichment": {
+    "release": "2026-09-25",
+    "goal": "Construire une connaissance nationale du Sénégal, région par région, puis département et localité par localité.",
+    "regional_coverage": "Les 14 régions disposent désormais d'un dossier régional structuré avec identité, géographie, économie, culture, lieux clés, gastronomie et règles d'actualisation.",
+    "data_method": "Associer connaissances stables et données datées; privilégier les sources officielles sénégalaises pour les statistiques, le territoire, les services et les informations dynamiques.",
+    "official_reference_hubs": [
+      "https://www.ansd.sn/ses-regionales",
+      "https://www.ansd.sn/rapports/rgph-5-2023",
+      "https://www.ansd.sn/regions",
+      "https://geosenegal.gouv.sn/"
+    ],
+    "next_layers": [
+      "46 départements",
+      "principales communes et villes",
+      "villages et sites locaux lorsque les données sont fiables",
+      "histoire régionale détaillée",
+      "économie et filières par territoire",
+      "établissements et services avec données actualisées",
+      "patrimoine matériel et immatériel",
+      "cartographie et coordonnées vérifiées"
+    ]
+  }
 }
