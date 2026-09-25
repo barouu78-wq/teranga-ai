@@ -1,5 +1,5 @@
 {
-  "version": "3.2",
+  "version": "3.3",
   "country": "Sénégal",
   "regions": [
     {
@@ -1314,29 +1314,38 @@
   ],
   "knowledge_scope": {
     "version": "2026-09-25",
-    "principle": "Base nationale multisources : ne pas réduire la connaissance du Sénégal au patrimoine UNESCO. Couvrir aussi géographie, administration, démographie, météo/climat, mobilité, santé, sécurité, formalités, économie, agriculture, environnement, histoire, religions, langues, cultures, gastronomie, tourisme, sports, éducation, vie quotidienne et services.",
+    "principle": "Base nationale multisources : ne pas réduire la connaissance du Sénégal à l’UNESCO. Couvrir territoire, administration, démographie, météo et climat, santé, sécurité, mobilité, formalités, économie, agriculture, élevage, pêche, environnement, histoire, religions, langues, cultures, gastronomie, tourisme, sports, éducation, vie quotidienne et services. Les données dynamiques doivent être vérifiées au moment de la réponse.",
     "source_priority": [
-      "Sources officielles sénégalaises pour les données administratives, sanitaires, météorologiques, démographiques et réglementaires.",
-      "Organisations internationales ou sources institutionnelles reconnues pour compléter les données historiques, patrimoniales et économiques.",
-      "Web en temps réel pour les informations susceptibles de changer : météo, alertes, horaires, transports, prix, événements, formalités et disponibilité.",
-      "Ne jamais présenter une donnée dynamique comme permanente sans vérification."
+      "Sources officielles sénégalaises en priorité pour les données administratives, sanitaires, météorologiques, réglementaires, agricoles, géographiques et statistiques.",
+      "Opérateurs et autorités compétentes pour les transports, aéroports, mobilité et services.",
+      "Organisations internationales reconnues pour compléter les données économiques, sanitaires, patrimoniales et historiques.",
+      "Recherche web en temps réel pour météo, alertes, horaires, transports, prix, événements, formalités, taux de change et disponibilités.",
+      "Ne jamais transformer une information dynamique en fait permanent sans date ou vérification."
     ],
     "domains": {
-      "geography_administration": "14 régions, 46 départements, 127 arrondissements et 553 communes ; utiliser l'ANSD pour les nomenclatures et statistiques.",
-      "demography": "Population, urbanisation, âge, ménages et indicateurs sociaux : privilégier l'ANSD et ses recensements/projections.",
-      "weather_climate": "Prévisions, alertes, pluie, vent, température et phénomènes dangereux : privilégier l'ANACIM et vérifier la date/heure de validité.",
-      "health": "Santé publique, prévention, épidémies, établissements et urgences : privilégier le ministère chargé de la Santé, le SAMU et les sources sanitaires institutionnelles.",
-      "travel_formalities": "Passeports, visas, entrée/sortie, douanes et démarches : vérifier les services publics, autorités sénégalaises et représentations diplomatiques avant de répondre.",
-      "mobility": "Aéroports, vols, TER, BRT, bus, taxis, ferries, péages et trafic : vérifier les opérateurs/autorités en temps réel.",
-      "tourism": "Destinations, plages, parcs, musées, patrimoine, hébergements et activités ; ne pas confondre patrimoine mondial, patrimoine national et liste indicative.",
-      "culture_history": "Histoire précoloniale, royaumes, colonisation, indépendance, figures historiques, littérature, cinéma, musique, arts et traditions.",
-      "languages_society": "Français, wolof, pulaar/fulfulde, sérère, diola, soninké, mandingue et autres langues nationales ; distinguer langue officielle, langue courante et variété locale.",
+      "geography_administration": "Territoire, 14 régions, départements, arrondissements, communes et localités : privilégier ANSD et Géo Sénégal.",
+      "demography": "Population, urbanisation, ménages, âge, migration et indicateurs sociaux : ANSD.",
+      "weather_climate": "Prévisions, alertes, pluie, vent, température et phénomènes dangereux : ANACIM, avec date et heure de validité.",
+      "health": "Santé publique, prévention, épidémies, établissements et urgences : autorités sanitaires sénégalaises, SAMU et OMS pour le complément international.",
+      "travel_formalities": "Entrée, sortie, visas, passeports, douanes et démarches : services publics sénégalais et représentations diplomatiques, vérification obligatoire.",
+      "mobility": "Aéroports, vols, TER, BRT, bus, taxis, ferries, routes et trafic : autorités/opérateurs compétents et vérification en temps réel.",
+      "tourism": "Destinations, plages, parcs, musées, patrimoine, hébergements et activités ; distinguer patrimoine mondial, liste indicative, patrimoine national et autres sites.",
+      "culture_history": "Royaumes, colonisation, indépendance, personnalités, littérature, cinéma, musique, arts, traditions et mémoire : archives, institutions culturelles, musées et sources historiques reconnues.",
+      "languages_society": "Français, wolof, pulaar/fulfulde, sérère, diola, soninké, mandingue et autres langues nationales : distinguer langue officielle, langue véhiculaire et variétés locales.",
       "religion": "Islam, christianisme et traditions religieuses/culturelles ; présenter les pratiques comme faits, traditions ou croyances selon le cas, sans généraliser.",
       "economy": "Agriculture, pêche, élevage, industrie, services, tourisme, énergie, pétrole/gaz, commerce et emploi ; dater les chiffres et vérifier les évolutions.",
       "environment": "Littoral, mangroves, fleuves, zones humides, forêts, biodiversité, sécheresse, érosion et conservation.",
       "food": "Cuisine nationale et spécialités régionales, ingrédients, boissons, habitudes alimentaires et contexte culturel ; ne pas inventer d'enseignes.",
       "daily_life": "Monnaie FCFA, paiements numériques, banques, télécommunications, marchés, horaires et services ; vérifier les tarifs et disponibilités actuels.",
-      "sports_events": "Football, lutte, basketball, athlétisme, festivals, foires et événements ; vérifier les calendriers actuels."
+      "sports_events": "Football, lutte, basketball, athlétisme, festivals, foires et événements ; vérifier les calendriers actuels.",
+      "safety": "Urgences, sécurité et alertes : autorités sénégalaises compétentes ; ne pas inventer de consignes locales.",
+      "economy_finance": "PIB, inflation, emploi, commerce, entreprises et finances : ANSD, BCEAO, ministères compétents et Banque mondiale selon le sujet.",
+      "agriculture_livestock_fisheries": "Agriculture, élevage, pêche, sécurité alimentaire, campagnes et situation pastorale : ministère chargé de l'Agriculture/Élevage et sources sectorielles.",
+      "environment_biodiversity": "Aires protégées, eau, sols, littoral, biodiversité et risques environnementaux : Géo Sénégal et autorités environnementales, complétés par les organismes reconnus.",
+      "gastronomy": "Plats, produits, boissons, terroirs et pratiques culinaires régionales ; éviter les généralisations et les enseignes inventées.",
+      "education": "Système éducatif, établissements, examens et statistiques : sources institutionnelles et ANSD.",
+      "sports": "Football, lutte, basket et autres sports : données et calendriers à vérifier auprès des fédérations, organisateurs ou sources récentes.",
+      "services": "Banques, mobile money, opérateurs, commerces, horaires et disponibilités : information dynamique à vérifier."
     }
   },
   "source_registry": [
@@ -1394,6 +1403,26 @@
       "name": "OMS",
       "role": "santé internationale et informations sanitaires",
       "url": "https://www.who.int/countries/sen/"
+    },
+    {
+      "name": "Géo Sénégal",
+      "role": "données géospatiales officielles : cartes, territoire, agriculture, eau, environnement, infrastructures et services sociaux",
+      "url": "https://geosenegal.gouv.sn/"
+    },
+    {
+      "name": "BCEAO",
+      "role": "franc CFA, cours de change, statistiques monétaires et informations de politique monétaire pour l'UEMOA",
+      "url": "https://www.bceao.int/"
+    },
+    {
+      "name": "AIBD SA",
+      "role": "aéroport international Blaise Diagne de Diass et informations institutionnelles sur le réseau aéroportuaire",
+      "url": "https://www.aibd.sn/"
+    },
+    {
+      "name": "Ministère de l’Agriculture, de la Souveraineté alimentaire et de l’Élevage",
+      "role": "agriculture, élevage, campagnes agricoles, situation pastorale et sécurité alimentaire",
+      "url": "https://agriculture.gouv.sn/"
     }
   ],
   "dynamic_topics": [
@@ -1408,7 +1437,12 @@
     "alertes sanitaires",
     "actualité nationale",
     "taux de change",
-    "disponibilité des services"
+    "disponibilité des services",
+    "cours de change BCEAO",
+    "campagnes agricoles et situation pastorale",
+    "situation aéroportuaire et vols",
+    "risques environnementaux et feux de brousse",
+    "qualité et disponibilité des services"
   ],
   "country_profile": {
     "official_name": "République du Sénégal",
