@@ -81,6 +81,9 @@ client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
+MAX_HISTORY_ITEM_LENGTH = 1400
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+OUTBOUND_TIMEOUT = 5
 MAX_HISTORY_ITEMS = 12
 MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 16
@@ -618,6 +621,27 @@ def image_proxy_url(src):
     return f"/image-proxy?url={quote(src, safe='')}" if src else ""
 
 
+def safe_image_fetch(src):
+    parsed = urlparse(str(src or ""))
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if parsed.scheme != "https" or host not in ALLOWED_IMAGE_HOSTS or parsed.username or parsed.password or parsed.port not in (None, 443):
+        raise ValueError("Source image non autorisée")
+    req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
+    with urlopen(req, timeout=OUTBOUND_TIMEOUT) as upstream:
+        headers = getattr(upstream, "headers", {})
+        get_type = getattr(headers, "get_content_type", None)
+        content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
+        if not content_type.startswith("image/"):
+            raise ValueError("Type image invalide")
+        length = str(headers.get("Content-Length") or "").strip()
+        if length.isdigit() and int(length) > MAX_IMAGE_BYTES:
+            raise ValueError("Image trop volumineuse")
+        data = upstream.read(MAX_IMAGE_BYTES + 1)
+        if len(data) > MAX_IMAGE_BYTES:
+            raise ValueError("Image trop volumineuse")
+        return content_type, data
+
+
 @app.get("/image-proxy")
 def image_proxy():
     src = usable_wiki_image(request.args.get("url", ""))
@@ -627,19 +651,7 @@ def image_proxy():
     if host not in ALLOWED_IMAGE_HOSTS:
         return Response("Source image non autorisée", status=403, mimetype="text/plain")
     try:
-        req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
-        with urlopen(req, timeout=5) as upstream:
-            headers = getattr(upstream, "headers", {})
-            get_content_type = getattr(headers, "get_content_type", None)
-            if callable(get_content_type):
-                content_type = get_content_type()
-            else:
-                content_type = str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
-            if not content_type.startswith("image/"):
-                return Response("Type image invalide", status=415, mimetype="text/plain")
-            data = upstream.read(8 * 1024 * 1024 + 1)
-        if len(data) > 8 * 1024 * 1024:
-            return Response("Image trop volumineuse", status=413, mimetype="text/plain")
+        content_type, data = safe_image_fetch(src)
         return Response(
             data,
             mimetype=content_type,
@@ -877,7 +889,7 @@ def build_conversation(history, message):
             if not isinstance(item, dict):
                 continue
             role = str(item.get("role", "")).lower()
-            content = sanitize_text(item.get("content", ""), 1400)
+            content = sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)
             if role not in {"user", "assistant"} or not content:
                 continue
             if index == len(recent) - 1 and role == "user" and content == message:
@@ -1056,6 +1068,11 @@ def parse_chat_payload():
     if not isinstance(history, list):
         history = []
     history = history[-MAX_HISTORY_ITEMS:]
+    history = [
+        {"role": str(item.get("role", "")).lower(), "content": sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)}
+        for item in history
+        if isinstance(item, dict) and str(item.get("role", "")).lower() in {"user", "assistant"}
+    ]
     audience = str(data.get("audience", "tourist")).lower()[:16]
     if audience not in {"tourist", "resident", "diaspora", "merchant"}:
         audience = "tourist"
@@ -1147,6 +1164,7 @@ def model_kwargs(payload, stream):
         "input": payload["input_text"],
         "max_output_tokens": 720 if payload["use_web"] else 500,
         "reasoning": {"effort": os.getenv("OPENAI_REASONING_EFFORT", "low")},
+        "truncation": "auto",
         "stream": stream,
     }
     if payload["use_web"]:
