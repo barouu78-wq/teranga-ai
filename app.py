@@ -948,9 +948,25 @@ def abuse_key(ip):
     return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
 
 
+def _redis_key(prefix, value):
+    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:40]
+    return f"teranga:abuse:{prefix}:{digest}"
+
+
 def record_abuse(identity, kind, weight=1):
     now = time.time()
     key = str(identity)[:64]
+    if redis_client is not None:
+        try:
+            redis_key = _redis_key("score", key)
+            score = redis_client.incrbyfloat(redis_key, min(int(weight), 5))
+            redis_client.expire(redis_key, ABUSE_SCORE_WINDOW)
+            if score >= ABUSE_SCORE_THRESHOLD:
+                redis_client.setex(_redis_key("block", key), ABUSE_BLOCK_SECONDS, "1")
+                return True
+            return False
+        except Exception:
+            app.logger.exception("Redis abuse-score, fallback mémoire")
     with RATE_LOCK:
         events = abuse_events[key]
         while events and now - events[0][0] > ABUSE_SCORE_WINDOW:
@@ -966,6 +982,11 @@ def record_abuse(identity, kind, weight=1):
 def abuse_blocked(identity):
     now = time.time()
     key = str(identity)[:64]
+    if redis_client is not None:
+        try:
+            return bool(redis_client.exists(_redis_key("block", key)))
+        except Exception:
+            app.logger.exception("Redis abuse-block, fallback mémoire")
     with RATE_LOCK:
         until = abuse_blocks.get(key, 0)
         if until > now:
@@ -978,7 +999,7 @@ def abuse_blocked(identity):
 def allowed_request(ip, log, limit, window, bucket="chat"):
     if redis_client is not None:
         try:
-            key = f"teranga:rl:{bucket}:{ip}"
+            key = f"teranga:rl:{bucket}:{hashlib.sha256(str(ip).encode('utf-8')).hexdigest()[:40]}"
             count = redis_client.incr(key)
             if count == 1:
                 redis_client.expire(key, int(window))
