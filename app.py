@@ -1650,6 +1650,16 @@ def seo_regions_senegal():
     return render_seo_page("regions-senegal", SITE_URL)
 
 
+@app.get("/france-senegal")
+def seo_france_senegal():
+    return render_seo_page("france-senegal", SITE_URL)
+
+
+@app.get("/diaspora-senegalaise")
+def seo_diaspora_senegalaise():
+    return render_seo_page("diaspora-senegalaise", SITE_URL)
+
+
 
 def explorer_page():
     html = render_explorer_page(
