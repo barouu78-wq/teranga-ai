@@ -661,7 +661,7 @@ def safe_image_fetch(src):
 def image_proxy():
     ip = client_ip()
     identity = abuse_key(ip)
-    if not allowed_request(identity, image_request_log[identity], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image"):
+    if not allowed_request(ip, image_request_log[ip], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image") or not allowed_request(identity, image_request_log[identity], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image_identity"):
         return Response("Trop de demandes d'images. Réessaie dans un instant.", status=429, mimetype="text/plain", headers={"Retry-After": "10"})
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
@@ -1338,7 +1338,7 @@ def fetch_bceao_rates():
 def exchange_rates():
     ip = client_ip()
     identity = abuse_key(ip)
-    if not allowed_request(identity, fx_request_log[identity], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx"):
+    if not allowed_request(ip, fx_request_log[ip], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx") or not allowed_request(identity, fx_request_log[identity], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx_identity"):
         return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
     data = fetch_bceao_rates()
     return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
@@ -1349,11 +1349,11 @@ def exchange_rates():
 def chat():
     ip = client_ip()
     identity = abuse_key(ip)
-    if not allowed_request(identity, request_log[identity], RATE_LIMIT, RATE_WINDOW, "chat"):
+    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429, {"Retry-After": "8"}
-    if not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_hour"):
+    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour") or not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_identity"):
         return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
     payload, error = parse_chat_payload()
@@ -1448,9 +1448,9 @@ def chat():
 def tts():
     ip = client_ip()
     identity = abuse_key(ip)
-    if not allowed_request(identity, tts_request_log[identity], TTS_RATE_LIMIT, 60, "tts"):
+    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts") or not allowed_request(identity, tts_request_log[identity], TTS_RATE_LIMIT, 60, "tts_identity"):
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
-    if not allowed_request(identity, tts_hourly_log[identity], TTS_HOURLY_LIMIT, 3600, "tts_hour"):
+    if not allowed_request(ip, tts_hourly_log[ip], TTS_HOURLY_LIMIT, 3600, "tts_hour") or not allowed_request(identity, tts_hourly_log[identity], TTS_HOURLY_LIMIT, 3600, "tts_identity_hour"):
         return jsonify({"error": "Trop de demandes vocales sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
