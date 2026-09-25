@@ -1226,11 +1226,17 @@ def tts():
         "ff": "Pulaar, a Fulah language of northern Senegal",
     }[language]
     try:
+        voice_instructions = {
+            "fr": "Voix chaleureuse, naturelle et claire. Prononce correctement les noms sénégalais, les lieux, plats et mots wolof ou pulaar présents dans le texte. Débit régulier, articulation nette, pauses naturelles entre les phrases. Ne lis pas les symboles markdown.",
+            "en": "Warm, natural and clear voice. Pronounce Senegalese names, places, dishes and Wolof or Pulaar words carefully. Use a steady pace, crisp articulation and natural pauses between sentences. Do not read markdown symbols.",
+            "wo": "Wax ak baat bu neex, bu naturel te leer. Jàppale ci wax Wolof bu baax, te jàppale ci tur yu Senegaal, dëkk yi ak lekk yi. Jàppale ci dalal ak waxtu yu naturel ci diggante kàddu yi. Bul jàng ay simbol yu markdown.",
+            "ff": "Voix chaleureuse, naturelle et claire. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Débit légèrement lent, articulation nette et pauses naturelles entre les phrases. Ne lis pas les symboles markdown.",
+        }[language]
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
-            voice="marin",
+            voice=os.getenv("TTS_VOICE", "marin"),
             input=text,
-            instructions=f"Speak naturally and clearly in {language_name}.",
+            instructions=voice_instructions,
             response_format="mp3",
         )
         return Response(speech.content, mimetype="audio/mpeg", headers={"Cache-Control": "no-store"})
