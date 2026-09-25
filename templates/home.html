@@ -779,6 +779,76 @@ body.has-chat #messages{padding-top:4px}
   #send:before{display:none}
   .card,.guide-links a,.chips button,.spread a,.spread button{will-change:auto}
 }
+
+/* Teranga Micro v9 — premium voice control */
+#mic{
+  position:relative;
+  width:48px;height:48px;min-width:48px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  padding:0;
+  background:linear-gradient(145deg,#f3d88d,#d9a441);
+  color:#173d2b;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 7px 18px rgba(15,106,67,.16),inset 0 1px 0 rgba(255,255,255,.34);
+  isolation:isolate;
+  transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+}
+#mic:before{
+  content:"";
+  width:17px;height:21px;
+  border:2px solid currentColor;
+  border-radius:10px;
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  box-sizing:border-box;
+}
+#mic:after{
+  content:"";
+  width:24px;height:19px;
+  border:2px solid currentColor;
+  border-top-color:transparent;
+  border-radius:0 0 14px 14px;
+  position:absolute;top:15px;left:50%;transform:translateX(-50%);
+  box-sizing:border-box;
+}
+#mic span{display:none}
+#mic:hover{
+  transform:translateY(-1px) scale(1.025);
+  box-shadow:0 10px 22px rgba(15,106,67,.22),inset 0 1px 0 rgba(255,255,255,.34);
+}
+#mic:active{transform:scale(.94)}
+#mic.listen{
+  background:linear-gradient(145deg,#d94b42,#b92f2f)!important;
+  color:#fff!important;
+  box-shadow:0 8px 22px rgba(201,54,54,.28),0 0 0 0 rgba(201,54,54,.35);
+  animation:terangaMicBreath 1.15s ease-in-out infinite;
+}
+#mic.listen:before{border-width:2.2px}
+#mic.listen:after{border-bottom-color:currentColor}
+#mic.listen + #send{transform:translateZ(0)}
+@keyframes terangaMicBreath{
+  0%,100%{box-shadow:0 8px 22px rgba(201,54,54,.28),0 0 0 0 rgba(201,54,54,.28)}
+  50%{box-shadow:0 9px 25px rgba(201,54,54,.34),0 0 0 7px rgba(201,54,54,.09)}
+}
+@media(max-width:680px){
+  #mic{
+    width:50px;height:50px;min-width:50px;
+    box-shadow:0 7px 18px rgba(15,106,67,.18),inset 0 1px 0 rgba(255,255,255,.35);
+  }
+  #mic:before{top:10px}
+  #mic:after{top:15px}
+  #mic.listen:after{
+    animation:terangaMicRing 1.25s ease-out infinite;
+  }
+  @keyframes terangaMicRing{
+    0%{box-shadow:0 0 0 0 rgba(201,54,54,.25)}
+    100%{box-shadow:0 0 0 11px rgba(201,54,54,0)}
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #mic,#mic.listen{animation:none!important;transition:none!important}
+  #mic.listen:after{animation:none!important}
+}
 </style>
 
 </head>
