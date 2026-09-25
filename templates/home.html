@@ -199,11 +199,27 @@ async function ask(preset){
       })
     });
 
+    if(!res.ok){
+      let detail='';
+      try{
+        const data=await res.json();
+        detail=data.error||'';
+      }catch(e){}
+      last.textContent=detail||('Erreur HTTP '+res.status);
+      return;
+    }
+
+    if(!res.body){
+      last.textContent='Réponse serveur vide.';
+      return;
+    }
+
     const reader=res.body.getReader();
     const dec=new TextDecoder();
 
     let buf='';
     let reply='';
+    let streamError='';
 
     while(true){
       const {value,done}=await reader.read();
@@ -219,8 +235,14 @@ async function ask(preset){
         try{
           const ev=JSON.parse(line);
           if(ev.d)reply+=ev.d;
+          if(ev.error)streamError=ev.error;
         }catch(e){}
       });
+
+      if(streamError){
+        last.textContent=streamError;
+        return;
+      }
 
       last.textContent=reply||'\u2026';
     }
