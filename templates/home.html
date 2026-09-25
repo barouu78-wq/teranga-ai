@@ -522,6 +522,62 @@ body[data-theme="dark"] .assistant .bubble{background:#171310;border-color:rgba(
   .dock{flex-shrink:0}
   .tabbar{flex-shrink:0}
 }
+
+/* Mobile v3 — remove clipping and rebalance layout */
+@media(max-width:680px){
+  .app{height:100dvh;min-height:100dvh}
+  header{flex:0 0 auto}
+  #stage{display:block;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:6px 12px 18px}
+  .hero{
+    display:block;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    margin:8px 0 12px;
+    padding:22px 17px 18px;
+    border-radius:24px;
+  }
+  .hero h1{
+    display:block!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    white-space:normal!important;
+    font-size:32px!important;
+    line-height:1.08!important;
+    letter-spacing:-.045em!important;
+    margin:0 0 13px!important;
+    color:var(--gold)!important;
+  }
+  .hero h1:after{margin-top:10px}
+  .hero p{display:block!important;margin:0 0 16px!important}
+  .cards{grid-template-columns:1fr 1fr!important}
+  .card{min-height:68px!important}
+  .card span{display:none!important}
+  .guide-section{
+    margin:8px 0 12px!important;
+    padding:16px!important;
+    border-radius:20px!important;
+  }
+  .guide-links{grid-template-columns:1fr 1fr!important}
+  .guide-links a{min-height:58px!important}
+  .dock{
+    position:relative!important;
+    flex:0 0 auto;
+    padding:6px 10px calc(6px + env(safe-area-inset-bottom))!important;
+  }
+  .chips{padding-bottom:6px!important}
+  .chips button{font-size:11px!important}
+  .composer{border-radius:21px!important}
+  .meta{margin-top:5px!important}
+  .tabbar{
+    position:relative!important;
+    flex:0 0 auto;
+    min-height:64px;
+  }
+}
 </style>
 
 </head>
