@@ -20,7 +20,7 @@ from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from services.seo import SEO_PAGES, render_seo_page
 from services.explorer import render_explorer_page
-from services.maps import lookup_map
+from services.maps import lookup_map, should_fetch_map
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -1096,7 +1096,7 @@ def complete_reply(payload):
     except Exception:
         app.logger.exception("Erreur récupération images; réponse texte conservée")
         image = None
-    return text, extract_sources(response), image, lookup_map(payload.get("message", ""))
+    return text, extract_sources(response), image, lookup_map(payload.get("message", ""), should_fetch_map(payload.get("message", "")))
 
 
 @app.post("/chat")
@@ -1168,7 +1168,7 @@ def chat():
                 except Exception:
                     app.logger.exception("Erreur récupération images stream; réponse texte conservée")
                     image = None
-                maps = lookup_map(payload.get("message", ""))
+                maps = lookup_map(payload.get("message", ""), should_fetch_map(payload.get("message", "")))
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
             if image:
