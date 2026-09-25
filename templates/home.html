@@ -1063,6 +1063,21 @@ ff:{
 }
 };
 let audience=localStorage.getItem('teranga-audience')||'tourist';
+const audienceContext={
+ tourist:{
+  fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
+  en:"Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
+  wo:"Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
+  ff:"Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+ },
+ merchant:{
+  fr:"Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
+  en:"Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
+  wo:"Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
+  ff:"Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
+ }
+};
+
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
   const labels=lang==='fr'?['Touriste','Voyager facilement','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Jaaytoowo','Jaayde e golle'];
@@ -1471,7 +1486,7 @@ async function ask(preset){
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),40000);
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang});
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience});
   let reply='', sources=[], image=null, map=null;
   try{
     const res=await postJSON('/chat',body);
