@@ -717,6 +717,36 @@ body.assistant-speaking .mark{animation:terangaBreath 1.8s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){
   .mark,.brand:hover .mark,.msg.thinking .avatar,body.assistant-speaking .mark,#mic.listen{animation:none!important;transition:none!important}
 }
+
+/* Teranga UI v7 — accessibility, focus polish and clean chat surface */
+.sr-only{
+  position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;border:0!important;
+}
+button:focus-visible,a:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--gold);outline-offset:2px;
+}
+textarea::placeholder{color:var(--mute);opacity:.78}
+.composer:focus-within{
+  border-color:color-mix(in srgb,var(--gold) 48%,var(--line));
+  box-shadow:0 0 0 3px rgba(217,164,65,.07),var(--shadow);
+}
+body.has-chat .guide-section{display:none}
+body.has-chat #stage{padding-top:8px}
+body.has-chat #messages{padding-top:4px}
+.msg.thinking .typing{box-shadow:0 8px 24px rgba(0,0,0,.06)}
+@media(max-width:680px){
+  .guide-section{margin-top:12px;padding:14px;border-radius:18px}
+  .guide-links{gap:7px;margin-top:10px}
+  .guide-links a{padding:10px 11px;font-size:12px}
+  .composer{border-radius:21px}
+  textarea{font-size:16px}
+  .meta{padding-inline:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  .composer:focus-within{box-shadow:var(--shadow)}
+}
 </style>
 
 </head>
@@ -778,19 +808,19 @@ body.assistant-speaking .mark{animation:terangaBreath 1.8s ease-in-out infinite}
       <a href="/regions-senegal">Les 14 régions du Sénégal</a>
     </div>
   </section>
-  <div id="messages"></div>
+  <div id="messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
 </div>
 <div class="dock">
   <div class="chips" id="chips"></div>
   <div class="composer">
     <div class="row">
-      <textarea id="input" maxlength="2000" placeholder="Pose ta question…" rows="1"></textarea>
+      <label class="sr-only" for="input">Question</label><textarea id="input" maxlength="2000" placeholder="Pose ta question…" rows="1" autocomplete="off" spellcheck="true"></textarea>
       <button id="mic" type="button" title="Parler" aria-label="Parler">🎤</button>
       <button id="send" type="button">Envoyer</button>
     </div>
   </div>
   <div class="meta">
-    <span id="hint">Réponse en direct</span>
+    <span id="hint" role="status" aria-live="polite">Réponse en direct</span>
     <span id="count">0 / 2000</span>
     <button id="voiceToggle" type="button">Voix auto off</button>
   </div>
@@ -1114,6 +1144,7 @@ function addSources(col,sources){
 function speakFallback(text){
   if(!('speechSynthesis' in window)||!text)return false;
   try{
+    document.body.classList.add('assistant-speaking');
     window.speechSynthesis.cancel();
     const utterance=new SpeechSynthesisUtterance(text);
     utterance.lang=voiceMap[lang]||'fr-FR';
@@ -1122,13 +1153,14 @@ function speakFallback(text){
     const voices=window.speechSynthesis.getVoices();
     const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith((voiceMap[lang]||'fr-FR').toLowerCase().slice(0,2)));
     if(preferred)utterance.voice=preferred;
+    utterance.onend=utterance.onerror=()=>document.body.classList.remove('assistant-speaking');
     window.speechSynthesis.speak(utterance);
     return true;
   }catch(e){return false;}
 }
 async function speak(text,btn){
   if(!text)return;
-  if(audio){audio.pause();audio=null;}
+  if(audio){audio.pause();audio=null;document.body.classList.remove('assistant-speaking');}
   if(btn){btn.disabled=true;btn.textContent='…';}
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
@@ -1178,7 +1210,7 @@ function renderCards(){
 }
 function setLang(next){
   lang=next;localStorage.setItem('teranga-lang',next);
-  document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.lang===next));
+  document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
