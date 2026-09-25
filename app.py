@@ -712,10 +712,10 @@ def fetch_topic_images(message):
         # La recherche Google est maintenant rendue côté navigateur via Programmable Search Element.
         candidates = []
         try:
-                candidates = fetch_commons_images(title, limit=2)
-            except Exception:
-                app.logger.exception("Erreur recherche photos Commons pour %s", title)
-                candidates = []
+            candidates = fetch_commons_images(title, limit=2)
+        except Exception:
+            app.logger.exception("Erreur recherche photos Commons pour %s", title)
+            candidates = []
 
         if not candidates:
             try:
