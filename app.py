@@ -1620,6 +1620,21 @@ def og_png():
 
 
 
+@app.get("/a-propos")
+def seo_a_propos():
+    return render_seo_page("a-propos", SITE_URL)
+
+
+@app.get("/presse")
+def seo_presse():
+    return render_seo_page("presse", SITE_URL)
+
+
+@app.get("/media-kit")
+def seo_media_kit():
+    return render_seo_page("media-kit", SITE_URL)
+
+
 @app.get("/senegal")
 def seo_senegal():
     return render_seo_page("senegal", SITE_URL)
