@@ -1,5 +1,5 @@
 {
-  "version": "3.3",
+  "version": "3.4",
   "country": "Sénégal",
   "regions": [
     {
@@ -1351,12 +1351,12 @@
   "source_registry": [
     {
       "name": "ANSD",
-      "role": "statistiques, recensements, démographie, régions et indicateurs",
+      "role": "population, démographie, statistiques économiques et sociales, régions et indicateurs",
       "url": "https://www.ansd.sn/"
     },
     {
       "name": "ANACIM",
-      "role": "météorologie, prévisions, alertes et aviation civile",
+      "role": "prévisions météo, vigilance, climat et aviation civile",
       "url": "https://www.anacim.sn/"
     },
     {
@@ -1406,7 +1406,7 @@
     },
     {
       "name": "Géo Sénégal",
-      "role": "données géospatiales officielles : cartes, territoire, agriculture, eau, environnement, infrastructures et services sociaux",
+      "role": "données géospatiales officielles : cartographie, territoire, agriculture, eau, environnement, infrastructures et services sociaux",
       "url": "https://geosenegal.gouv.sn/"
     },
     {
@@ -1533,5 +1533,381 @@
       "Pour transport, vols, horaires, tarifs et événements, vérifier en temps réel.",
       "Ne pas réduire le Sénégal au tourisme ou à l'UNESCO."
     ]
-  }
+  },
+  "knowledge_modules": {
+    "geography": {
+      "description": "Connaissance territoriale nationale : géographie physique, découpage administratif et lecture des territoires.",
+      "anchors": [
+        "14 régions",
+        "46 départements",
+        "127 arrondissements",
+        "553 communes",
+        "Dakar et Cap-Vert",
+        "Grande-Côte et Niayes",
+        "vallée du fleuve Sénégal",
+        "Sine-Saloum",
+        "bassin arachidier",
+        "Ferlo",
+        "Sénégal oriental",
+        "Casamance"
+      ],
+      "stable_knowledge": [
+        "Le Sénégal est bordé par l'océan Atlantique.",
+        "Les principaux cours d'eau à connaître comprennent le fleuve Sénégal, le fleuve Gambie et le fleuve Casamance.",
+        "Pour les cartes, limites administratives, occupation du sol et données géospatiales, privilégier Géo Sénégal et l'ANSD."
+      ],
+      "source_priority": [
+        "Géo Sénégal",
+        "ANSD",
+        "Ministère chargé du Tourisme"
+      ]
+    },
+    "weather_climate": {
+      "description": "Météo et climat du Sénégal, avec séparation stricte entre climat général et prévisions actuelles.",
+      "anchors": [
+        "saison sèche",
+        "saison des pluies",
+        "pluviométrie",
+        "température",
+        "vent",
+        "orages",
+        "vigilance",
+        "inondations",
+        "poussière et visibilité"
+      ],
+      "stable_knowledge": [
+        "Le climat varie fortement du nord au sud et entre littoral, intérieur, vallée et Casamance.",
+        "Une description climatique générale ne remplace jamais une prévision."
+      ],
+      "live_topics": [
+        "prévisions du jour",
+        "prévisions horaires",
+        "pluie",
+        "orages",
+        "vent",
+        "vigilance",
+        "températures",
+        "visibilité",
+        "aviation"
+      ],
+      "live_source": "ANACIM (anacim.sn)",
+      "rule": "Pour toute météo actuelle ou alerte, vérifier la date et l'heure de validité auprès de l'ANACIM."
+    },
+    "economy_society": {
+      "description": "Économie, démographie, emploi, prix et conditions de vie avec données datées.",
+      "anchors": [
+        "agriculture",
+        "pêche",
+        "élevage",
+        "industrie",
+        "services",
+        "tourisme",
+        "commerce",
+        "emploi",
+        "inflation",
+        "PIB",
+        "entreprises",
+        "énergie",
+        "hydrocarbures"
+      ],
+      "stable_knowledge": [
+        "Les chiffres économiques doivent toujours être accompagnés de leur période et de leur statut (provisoire, définitif ou estimation)."
+      ],
+      "current_indicators": [
+        "ANSD : PIB réel 2025 provisoire +6,5 % (publication du 18 septembre 2026).",
+        "ANSD : inflation 2025 +1,4 % (donnée annuelle publiée en 2026).",
+        "ANSD : population estimée à 18,6 millions en 2023 selon les données reprises par le ministère chargé du Tourisme."
+      ],
+      "live_topics": [
+        "PIB",
+        "inflation",
+        "emploi",
+        "prix",
+        "commerce extérieur",
+        "production",
+        "entreprises",
+        "agriculture",
+        "pêche",
+        "élevage"
+      ],
+      "source_priority": [
+        "ANSD",
+        "BCEAO",
+        "ministères sectoriels",
+        "Banque mondiale"
+      ]
+    },
+    "health_safety": {
+      "description": "Santé publique, prévention, établissements, urgences et alertes sans remplacer un professionnel de santé.",
+      "anchors": [
+        "prévention",
+        "vaccination",
+        "maladies infectieuses",
+        "santé maternelle",
+        "santé infantile",
+        "urgences",
+        "SAMU",
+        "hôpitaux",
+        "pharmacies"
+      ],
+      "stable_knowledge": [
+        "Les conseils médicaux doivent rester généraux et prudents.",
+        "Pour une urgence, donner les coordonnées officielles disponibles et orienter vers les services compétents.",
+        "Les alertes sanitaires et disponibilités d'établissements sont dynamiques."
+      ],
+      "live_topics": [
+        "alertes sanitaires",
+        "épidémies",
+        "vaccination",
+        "établissements ouverts",
+        "urgences",
+        "disponibilité des services"
+      ],
+      "source_priority": [
+        "Ministère de la Santé et de l'Hygiène publique",
+        "OMS",
+        "SAMU"
+      ]
+    },
+    "mobility_travel": {
+      "description": "Déplacements au Sénégal : avion, routes, TER, BRT, bus, taxis, ferries et accès aux destinations.",
+      "anchors": [
+        "AIBD à Diass",
+        "Dakar",
+        "TER",
+        "BRT",
+        "transport routier",
+        "transport maritime",
+        "ferries",
+        "taxis",
+        "routes",
+        "péages"
+      ],
+      "stable_knowledge": [
+        "AIBD désigne l'aéroport international Blaise Diagne situé à Diass.",
+        "Les modalités, horaires, tarifs, perturbations et disponibilités doivent être vérifiés avant de les présenter comme actuels."
+      ],
+      "live_topics": [
+        "vols",
+        "horaires",
+        "retards",
+        "routes",
+        "trafic",
+        "TER",
+        "BRT",
+        "ferries",
+        "billets",
+        "tarifs",
+        "perturbations"
+      ],
+      "source_priority": [
+        "AIBD SA",
+        "opérateurs de transport",
+        "autorités compétentes",
+        "ANSD"
+      ]
+    },
+    "administration_formalities": {
+      "description": "Démarches administratives et règles d'entrée/sortie avec priorité aux sources officielles.",
+      "anchors": [
+        "passeport",
+        "visa",
+        "entrée au Sénégal",
+        "sortie du territoire",
+        "douanes",
+        "séjour",
+        "documents administratifs",
+        "état civil"
+      ],
+      "stable_knowledge": [
+        "Les formalités peuvent changer : ne jamais présenter une règle d'entrée, un visa ou une pièce obligatoire comme actuelle sans vérification.",
+        "Pour une démarche, identifier l'administration compétente et fournir la source officielle lorsque disponible."
+      ],
+      "live_topics": [
+        "visa",
+        "conditions d'entrée",
+        "documents",
+        "douanes",
+        "frais",
+        "délais",
+        "rendez-vous",
+        "formalités"
+      ],
+      "source_priority": [
+        "Service public du Sénégal",
+        "services consulaires",
+        "autorités sénégalaises compétentes"
+      ]
+    },
+    "culture_languages_history": {
+      "description": "Histoire, sociétés, langues, religions, littérature, arts, musique et mémoire du Sénégal.",
+      "anchors": [
+        "royaumes du Sénégal et de la Sénégambie",
+        "colonisation",
+        "indépendance",
+        "Négritude",
+        "wolof",
+        "pulaar",
+        "sérère",
+        "diola",
+        "soninké",
+        "mandingue",
+        "islam",
+        "christianisme",
+        "traditions culturelles"
+      ],
+      "stable_knowledge": [
+        "Distinguer faits historiques documentés, traditions orales, croyances et interprétations.",
+        "Le français est la langue officielle ; plusieurs langues nationales et variétés locales sont utilisées dans la vie sociale.",
+        "Pour les personnalités contemporaines, vérifier les fonctions et activités actuelles."
+      ],
+      "source_priority": [
+        "Archives et institutions sénégalaises",
+        "Ministère de la Culture",
+        "institutions patrimoniales",
+        "sources académiques reconnues"
+      ]
+    },
+    "food_daily_life": {
+      "description": "Cuisine, produits, marchés, paiements, télécommunications et vie quotidienne.",
+      "anchors": [
+        "ceebu jën",
+        "yassa",
+        "mafé",
+        "thiakry",
+        "café Touba",
+        "bissap",
+        "fonio",
+        "riz de Casamance",
+        "fruits de mer",
+        "arachide",
+        "mil"
+      ],
+      "stable_knowledge": [
+        "La cuisine sénégalaise varie selon les régions, produits et traditions familiales.",
+        "Les prix, horaires, enseignes et disponibilités sont dynamiques et doivent être vérifiés.",
+        "La monnaie est le franc CFA BCEAO (XOF)."
+      ],
+      "live_topics": [
+        "prix",
+        "restaurants",
+        "marchés",
+        "horaires",
+        "mobile money",
+        "banques",
+        "disponibilité des services",
+        "taux de change"
+      ]
+    },
+    "environment_agriculture": {
+      "description": "Environnement, agriculture, élevage, pêche, eau, littoral et biodiversité.",
+      "anchors": [
+        "Niayes",
+        "Ferlo",
+        "mangroves",
+        "fleuves",
+        "littoral",
+        "zones humides",
+        "forêts",
+        "savane",
+        "agriculture pluviale",
+        "agriculture irriguée",
+        "pastoralisme",
+        "pêche",
+        "érosion côtière",
+        "feux de brousse"
+      ],
+      "stable_knowledge": [
+        "Géo Sénégal regroupe des données AGRO, SOCIO, AQUA, TERRA et BIO sur le territoire.",
+        "Les conditions agricoles, pastorales, hydrologiques et les risques environnementaux peuvent évoluer et doivent être datés."
+      ],
+      "live_topics": [
+        "campagne agricole",
+        "situation pastorale",
+        "feux de brousse",
+        "inondations",
+        "érosion",
+        "qualité de l'eau",
+        "risques environnementaux"
+      ],
+      "source_priority": [
+        "Géo Sénégal",
+        "ANSD",
+        "ministères sectoriels",
+        "ANACIM"
+      ]
+    },
+    "tourism_heritage": {
+      "description": "Tourisme, patrimoine culturel et naturel, avec distinction entre patrimoine mondial, liste indicative et autres sites.",
+      "anchors": [
+        "Gorée",
+        "Saint-Louis",
+        "Djoudj",
+        "Niokolo-Koba",
+        "Delta du Saloum",
+        "Pays Bassari",
+        "Cercles mégalithiques de Sénégambie",
+        "Petite-Côte",
+        "Casamance",
+        "Sénégal oriental",
+        "Fouta-Toro"
+      ],
+      "stable_knowledge": [
+        "Le Sénégal compte 7 biens inscrits au patrimoine mondial de l'UNESCO.",
+        "Une inscription sur la liste indicative UNESCO n'est pas une inscription au patrimoine mondial.",
+        "Le patrimoine sénégalais ne se limite pas aux biens UNESCO : il comprend aussi patrimoine national, religieux, architectural, immatériel, naturel et mémoriel."
+      ],
+      "live_topics": [
+        "accès",
+        "horaires",
+        "tarifs",
+        "fermetures",
+        "activités",
+        "événements",
+        "conditions des parcs",
+        "réservations"
+      ],
+      "source_priority": [
+        "Ministère de la Culture",
+        "Ministère chargé du Tourisme",
+        "UNESCO",
+        "gestionnaires des sites"
+      ]
+    },
+    "education_sports_events": {
+      "description": "Éducation, universités, formation, sports et événements culturels.",
+      "anchors": [
+        "écoles",
+        "universités",
+        "formation professionnelle",
+        "football",
+        "lutte",
+        "basketball",
+        "athlétisme",
+        "festivals",
+        "foires",
+        "concerts"
+      ],
+      "stable_knowledge": [
+        "Pour les établissements, calendriers, résultats, compétitions et événements, vérifier les sources institutionnelles ou organisateurs concernés."
+      ],
+      "live_topics": [
+        "calendriers",
+        "résultats",
+        "matchs",
+        "festivals",
+        "concerts",
+        "inscriptions",
+        "examens",
+        "fermetures"
+      ],
+      "source_priority": [
+        "ministères compétents",
+        "fédérations sportives",
+        "organisateurs",
+        "ANSD"
+      ]
+    }
+  },
+  "current_reference_date": "2026-09-25"
 }
