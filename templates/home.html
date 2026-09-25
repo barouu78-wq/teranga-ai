@@ -683,6 +683,40 @@ body[data-theme="dark"] .assistant .bubble{background:#171310;border-color:rgba(
   #mic.listen{animation:micPulseDesktop 1.1s ease-in-out infinite}
   @keyframes micPulseDesktop{50%{box-shadow:0 0 0 8px rgba(201,54,54,.10)}}
 }
+
+/* Teranga UI v6 — premium motion + live assistant state */
+.mark{position:relative;overflow:visible;transition:transform .25s ease,box-shadow .25s ease}
+.mark:after{
+  content:"";position:absolute;inset:-4px;border-radius:17px;
+  border:1px solid rgba(226,179,74,.18);opacity:.7;
+  transform:scale(.94);transition:.25s ease;pointer-events:none;
+}
+.brand:hover .mark{transform:translateY(-1px) rotate(-1deg);box-shadow:0 10px 24px rgba(10,61,40,.34)}
+.brand:hover .mark:after{transform:scale(1.04);opacity:1}
+body.assistant-speaking .dot{background:#e2b34a;box-shadow:0 0 0 4px rgba(226,179,74,.14),0 0 12px rgba(226,179,74,.35)}
+body.assistant-speaking .mark{animation:terangaBreath 1.8s ease-in-out infinite}
+@keyframes terangaBreath{50%{transform:translateY(-1px) scale(1.025)}}
+.msg.thinking .avatar{animation:avatarBreath 1.15s ease-in-out infinite}
+.msg.thinking .typing{position:relative}
+.msg.thinking .typing:before{
+  content:"Teranga réfléchit";
+  position:absolute;left:0;bottom:-18px;
+  font-size:10px;font-weight:650;color:var(--mute);white-space:nowrap;
+  opacity:.82;
+}
+@keyframes avatarBreath{50%{box-shadow:0 0 0 5px rgba(226,179,74,.08)}}
+#voiceToggle{transition:background .2s ease,transform .2s ease}
+#voiceToggle:active{transform:scale(.96)}
+@media(max-width:680px){
+  header{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .brand strong{font-size:15px}
+  .brand .mark{width:40px;height:40px;border-radius:13px}
+  .msg.thinking .typing{margin-bottom:16px}
+  .msg.thinking .typing:before{bottom:-17px}
+}
+@media(prefers-reduced-motion:reduce){
+  .mark,.brand:hover .mark,.msg.thinking .avatar,body.assistant-speaking .mark,#mic.listen{animation:none!important;transition:none!important}
+}
 </style>
 
 </head>
@@ -1105,8 +1139,9 @@ async function speak(text,btn){
     const url=URL.createObjectURL(blob);
     audio=new Audio(url);
     audio.preload='auto';
-    audio.onended=()=>{URL.revokeObjectURL(url);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
-    audio.onerror=()=>{URL.revokeObjectURL(url);audio=null;speakFallback(text);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
+    document.body.classList.add('assistant-speaking');
+    audio.onended=()=>{document.body.classList.remove('assistant-speaking');URL.revokeObjectURL(url);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
+    audio.onerror=()=>{document.body.classList.remove('assistant-speaking');URL.revokeObjectURL(url);audio=null;speakFallback(text);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
     try{await audio.play();}
     catch(e){audio.onerror();throw e;}
   }catch(e){
@@ -1240,6 +1275,7 @@ async function ask(preset){
   send.disabled=false;send.textContent=T[lang].stop;
   send.dataset.mode='stop';
   const wait=addMsg('assistant','',{animate:true});
+  wait.row.classList.add('thinking');
   const node=wait.b.firstChild;
   const cursor=document.createElement('span');cursor.className='cursor';
   const dots=document.createElement('div');dots.className='typing';
@@ -1262,6 +1298,7 @@ async function ask(preset){
       live+=pending;pending='';
       if(!shown){
         dots.replaceWith(wait.b);
+        wait.row.classList.remove('thinking');
         wait.b.classList.add('live');
         if(!reduceMotion)wait.b.appendChild(cursor);
         shown=true;
@@ -1315,8 +1352,8 @@ async function ask(preset){
       pending=reply;flush();
     }
     reply=cleanReply(reply);
-    if(!shown){dots.replaceWith(wait.b);node.nodeValue=reply||T[lang].err;}
-    else {node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
+    if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
+    else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
     addActs(wait.col,reply);
     addCityImage(wait.col,image);
@@ -1333,6 +1370,7 @@ async function ask(preset){
       raw=T[lang].timeout;
     const msg=aborted?T[lang].timeout:raw;
     if(dots.parentNode)dots.replaceWith(wait.b);
+    wait.row.classList.remove('thinking');
     node.nodeValue=msg;
     if(!aborted){
       const retry=document.createElement('button');
