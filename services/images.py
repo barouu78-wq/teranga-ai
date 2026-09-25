@@ -4,6 +4,7 @@ import json
 import logging
 import re
 from urllib.parse import quote, urlencode
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 
@@ -34,8 +35,17 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         headers={"User-Agent": "TerangaAI/1.0 (Google Images)"},
     )
     opener = urlopen_fn or urlopen
-    with opener(req, timeout=8) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    try:
+        with opener(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except HTTPError as exc:
+        try:
+            body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        safe_body = body.replace(api_key, "[REDACTED]") if api_key else body
+        logger.error("Google Custom Search HTTP %s pour %r (cx=%s): %s", exc.code, query, cse_id, safe_body[:1200])
+        raise
 
     out, seen = [], set()
     for item in data.get("items", []) or []:
