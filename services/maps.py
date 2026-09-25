@@ -1,6 +1,7 @@
 """Map lookup helpers for Teranga AI."""
 
 from urllib.parse import quote
+import unicodedata
 
 
 MAP_PLACES = (
