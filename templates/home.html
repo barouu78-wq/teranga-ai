@@ -1,2 +1,128 @@
 <!doctype html>
-<!-- restored locally 45980 bytes: use push_files -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0907">
+<meta name="description" content="Teranga AI, assistant du Senegal en francais, anglais, wolof et pulaar.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="__SITE_URL__/">
+<title>Teranga AI — assistant Senegal</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0907;--ink:#f6efe3;--mute:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18);--card:#171310}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;display:flex;flex-direction:column;max-width:820px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.brand{font-weight:800}.brand em{color:var(--gold);font-style:normal}
+.seg button{border:0;background:transparent;color:var(--mute);padding:6px 8px;border-radius:999px;font-weight:750}
+.seg button.on{background:var(--gold);color:#1a1208}
+#hero{padding:24px 16px}#hero h1{color:var(--gold);font:700 28px/1.15 Georgia,serif;margin:0 0 8px}
+#hero p{color:var(--mute);margin:0 0 16px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.card{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:16px;padding:12px;text-align:left}
+#messages{flex:1;overflow:auto;padding:12px 16px}
+.msg{margin:0 0 12px}.user{text-align:right}
+.bubble{display:inline-block;max-width:86%;padding:10px 12px;border-radius:16px;background:var(--card);white-space:pre-wrap}
+.user .bubble{background:#2a2114}
+.dock{padding:10px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px}
+textarea,button#send{font:inherit;border-radius:14px}
+textarea{width:100%;min-height:44px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px}
+#send{border:0;background:var(--gold);color:#1a1208;font-weight:800;padding:0 16px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Teranga <em>AI</em></div>
+  <div class="seg" id="langs">
+    <button type="button" data-lang="fr" class="on">FR</button>
+    <button type="button" data-lang="en">EN</button>
+    <button type="button" data-lang="wo">WO</button>
+    <button type="button" data-lang="ff">PU</button>
+  </div>
+</header>
+<div id="hero">
+  <h1 id="heroTitle"></h1>
+  <p id="heroText"></p>
+  <div class="cards" id="cards"></div>
+</div>
+<div id="messages"></div>
+<div class="dock">
+  <div class="row">
+    <textarea id="input" maxlength="2000" rows="1"></textarea>
+    <button id="send" type="button">Envoyer</button>
+  </div>
+</div>
+<script nonce="__CSP_NONCE__">
+const T={
+fr:{sub:'Assistant Senegal',ph:'Pose ta question…',send:'Envoyer',err:'Service indisponible.',
+heroTitle:'L hospitalite, en quelques questions.',
+heroText:'Meteo, trajets, plats, plages — Teranga t oriente sans inventer les details.',
+cards:[{q:"Quel temps fait-il a Dakar aujourd'hui ?",t:'Meteo Dakar'},{q:"Parle-moi de Goree.",t:'Goree'},{q:"Ou manger a Dakar ?",t:'Ou manger'}]},
+en:{sub:'Senegal assistant',ph:'Ask a question…',send:'Send',err:'Service unavailable.',
+heroTitle:'Hospitality, in a few questions.',
+heroText:'Weather, rides, food, beaches — Teranga guides you without inventing details.',
+cards:[{q:'What is the weather in Dakar today?',t:'Dakar weather'},{q:'Tell me about Goree.',t:'Goree'},{q:'Where should I eat in Dakar?',t:'Where to eat'}]},
+wo:{sub:'Ndimbalu Senegaal',ph:'Bindal sa laaj…',send:'Yonnee',err:'Menul wuyu leegi.',
+heroTitle:'Teranga, ci laaj yu neew.',
+heroText:'Takk-takk, yoon, nam, teex ak luum — Teranga dina la wonal.',
+cards:[{q:'Lan mooy takk-takku Dakaar tey?',t:'Takk-takk'},{q:'Nettalil ma Goree.',t:'Goree'},{q:'Fan laa wara lekk ci Dakaar?',t:'Lekk'}]},
+ff:{sub:'Ballal Senegaal',ph:'Winndu naamne maa…',send:'Neldu',err:'Sarwiis jaabaaki.',
+heroTitle:'Teranga, e naamne seeda.',
+heroText:'Weeyo, laawol, naamdu e luumooji — Teranga holata, wonaa fefindoo.',
+cards:[{q:'Hol weeyo Dakaar hannde?',t:'Weeyo'},{q:'Haalanam Goree.',t:'Goree'},{q:'Hol naamdu Dakaar?',t:'Naamdu'}]}
+};
+let lang=localStorage.getItem('teranga-lang')||'fr';
+if(!T[lang])lang='fr';
+const $=id=>document.getElementById(id);
+function setLang(next){
+  lang=next;localStorage.setItem('teranga-lang',next);
+  document.querySelectorAll('#langs button').forEach(b=>b.classList.toggle('on',b.dataset.lang===next));
+  const t=T[lang];
+  $('heroTitle').textContent=t.heroTitle;
+  $('heroText').textContent=t.heroText;
+  $('input').placeholder=t.ph;
+  $('send').textContent=t.send;
+  document.documentElement.lang=next==='wo'?'wo':next==='ff'?'ff':next;
+  const box=$('cards');box.innerHTML='';
+  t.cards.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='card';b.type='button';b.textContent=c.t;b.onclick=()=>ask(c.q);
+    box.appendChild(b);
+  });
+}
+function add(role,text){
+  const row=document.createElement('div');row.className='msg '+role;
+  const b=document.createElement('div');b.className='bubble';b.textContent=text;
+  row.appendChild(b);$('messages').appendChild(row);$('messages').scrollTop=99999;
+}
+function cookie(n){const m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}
+async function ask(preset){
+  const text=(preset||$('input').value).trim();
+  if(!text)return;
+  $('hero').style.display='none';
+  add('user',text);$('input').value='';
+  add('assistant','\u2026');
+  const last=$('messages').lastChild.querySelector('.bubble');
+  try{
+    const res=await fetch('/chat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':cookie('teranga_csrf')},body:JSON.stringify({message:text,history:[],language:lang})});
+    const reader=res.body.getReader();const dec=new TextDecoder();
+    let buf='', reply='';
+    while(true){
+      const {value,done}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const parts=buf.split('\n');buf=parts.pop();
+      parts.forEach(line=>{try{const ev=JSON.parse(line);if(ev.d)reply+=ev.d;}catch(e){}});
+      last.textContent=reply||'\u2026';
+    }
+    if(!reply)last.textContent=T[lang].err;
+  }catch(e){last.textContent=T[lang].err;}
+}
+$('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
+$('send').onclick=()=>ask();
+$('input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
+setLang(lang);
+</script>
+</body>
+</html>
