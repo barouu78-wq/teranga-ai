@@ -679,10 +679,7 @@ def knowledge_image_titles(message, limit=4):
 
 def fetch_topic_images(message):
     text_value = normalize(message)
-    photo_request = any(
-        term in text_value
-        for term in ("photo", "photos", "image", "images", "visuel", "visuels")
-    )
+    photo_request = should_fetch_images(message)
     if not photo_request:
         return None
 
@@ -747,16 +744,36 @@ def fetch_topic_images(message):
 
 
 def should_use_web(message):
-    lowered = message.lower()
+    lowered = normalize(message)
+    current_markers = (
+        "verifie", "confirme", "a jour", "exactement", "en ce moment",
+        "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
+        "latest", "current", "right now", "as of", "verify", "check",
+        "actualite", "actualites", "news", "nouveau", "nouvelle",
+    )
+    if any(term in lowered for term in current_markers):
+        return True
     if any(term in lowered for term in WEB_HINTS):
         return True
-    # Questions that explicitly ask for a current/verified fact should use web search.
-    current_markers = (
-        "vérifie", "verifie", "confirme", "à jour", "a jour",
-        "exactement", "en ce moment", "pour aujourd'hui", "pour demain",
-        "latest", "current", "right now", "as of", "verify", "check",
+    live_entities = (
+        "president", "presidente", "ministre", "maire", "depute",
+        "gouvernement", "federation", "selectionneur", "club",
+        "equipe nationale", "joueur", "chanteur", "artiste",
+        "entreprise", "restaurant", "hotel",
     )
-    return any(term in lowered for term in current_markers)
+    return any(term in lowered for term in live_entities)
+
+
+def should_fetch_images(message):
+    lowered = normalize(message)
+    explicit = (
+        "photo", "photos", "image", "images", "visuel", "visuels",
+        "montre moi", "montre-moi", "affiche", "fais voir",
+        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
+        "voir la ville", "montre la ville", "show me", "show",
+        "picture", "pictures",
+    )
+    return any(term in lowered for term in explicit)
 
 
 def build_conversation(history, message):
