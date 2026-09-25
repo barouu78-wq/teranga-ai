@@ -708,15 +708,10 @@ def fetch_topic_images(message):
             continue
         seen_titles.add(title)
 
+        # Le Custom Search JSON API est fermé aux nouveaux clients Google depuis 2026.
+        # La recherche Google est maintenant rendue côté navigateur via Programmable Search Element.
         candidates = []
-        if GOOGLE_API_KEY and GOOGLE_CSE_ID:
-            try:
-                candidates = fetch_google_images(title, limit=4)
-            except Exception:
-                app.logger.exception("Erreur recherche Google Images pour %s", title)
-
-        if not candidates:
-            try:
+        try:
                 candidates = fetch_commons_images(title, limit=2)
             except Exception:
                 app.logger.exception("Erreur recherche photos Commons pour %s", title)
