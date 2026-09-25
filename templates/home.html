@@ -29,6 +29,8 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
+<script nonce="__CSP_NONCE__">window.__gcse={parsetags:'explicit'};</script>
+<script async nonce="__CSP_NONCE__" src="https://cse.google.com/cse.js?cx=22fe8f4b7882d4e0e"></script>
 <script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo"],"description":"Assistant numérique pour le Sénégal : météo, transport, visa, cuisine, SIM.","offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}}</script>
 <style>
 :root{
@@ -549,6 +551,55 @@ function addActs(col,text){
   };
   acts.append(listen,copy,share);col.appendChild(acts);
 }
+let googleImageSearchSeq=0;
+function showGoogleImages(col,query){
+  query=String(query||'').trim();
+  if(!query)return;
+  const section=document.createElement('section');
+  section.className='google-images';
+  section.style.cssText='margin:10px 0;padding:12px;border:1px solid rgba(226,179,74,.18);border-radius:18px;background:rgba(255,255,255,.035);';
+  const title=document.createElement('div');
+  title.textContent='Images Google';
+  title.style.cssText='font-weight:700;margin-bottom:8px;';
+  const host=document.createElement('div');
+  const id='google-images-'+(++googleImageSearchSeq);
+  host.id=id;
+  section.append(title,host);
+  col.appendChild(section);
+  const render=()=>{
+    if(!(window.google&&google.search&&google.search.cse&&google.search.cse.element))return false;
+    try{
+      google.search.cse.element.render({
+        div:id,
+        tag:'searchresults-only',
+        gname:id,
+        attributes:{
+          enableImageSearch:true,
+          defaultToImageSearch:true,
+          disableWebSearch:true,
+          imageSearchLayout:'column',
+          imageSearchResultSetSize:'8',
+          safeSearch:'active',
+          image_type:'photo'
+        }
+      });
+      const run=()=>{
+        const el=google.search.cse.element.getElement(id);
+        if(el&&typeof el.execute==='function'){el.execute(query);return true;}
+        return false;
+      };
+      if(!run()){
+        let tries=0;
+        const timer=setInterval(()=>{if(run()||++tries>30)clearInterval(timer);},200);
+      }
+      return true;
+    }catch(e){return false;}
+  };
+  if(!render()){
+    let tries=0;
+    const timer=setInterval(()=>{if(render()||++tries>50)clearInterval(timer);},200);
+  }
+}
 function addCityImage(col,image){
   const list=Array.isArray(image)?image:(image&&image.url?[image]:[]);
   list.slice(0,2).forEach(item=>{
@@ -566,6 +617,8 @@ function addCityImage(col,image){
     cap.textContent=item.alt+(item.credit?' · '+item.credit:'');
     box.append(img,cap);col.appendChild(box);
   });
+  const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
+  if(googleQuery)showGoogleImages(col,googleQuery);
 }
 function addMap(col,map){
   if(!map||!map.url)return;
