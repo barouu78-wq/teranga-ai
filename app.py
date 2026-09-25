@@ -25,6 +25,7 @@ from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
     fetch_commons_images as _fetch_commons_images,
+    fetch_google_images as _fetch_google_images,
 )
 
 load_dotenv()
@@ -47,6 +48,8 @@ ALLOWED_ORIGINS = {
     if origin.strip()
 }
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
+GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
@@ -633,6 +636,12 @@ def fetch_commons_images(title, limit=4):
     return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
 
 
+def fetch_google_images(title, limit=4):
+    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
+        return []
+    return _fetch_google_images(title, GOOGLE_API_KEY, GOOGLE_CSE_ID, limit, urlopen)
+
+
 def fetch_commons_image(title):
     return _fetch_commons_image(title, usable_wiki_image, image_proxy_url, urlopen)
 
@@ -699,11 +708,19 @@ def fetch_topic_images(message):
             continue
         seen_titles.add(title)
 
-        try:
-            candidates = fetch_commons_images(title, limit=2)
-        except Exception:
-            app.logger.exception("Erreur recherche photos Commons pour %s", title)
-            candidates = []
+        candidates = []
+        if GOOGLE_API_KEY and GOOGLE_CSE_ID:
+            try:
+                candidates = fetch_google_images(title, limit=4)
+            except Exception:
+                app.logger.exception("Erreur recherche Google Images pour %s", title)
+
+        if not candidates:
+            try:
+                candidates = fetch_commons_images(title, limit=2)
+            except Exception:
+                app.logger.exception("Erreur recherche photos Commons pour %s", title)
+                candidates = []
 
         if not candidates:
             try:
@@ -881,7 +898,7 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src}; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
         "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
         "frame-src https://www.google.com https://maps.google.com; "
         "child-src https://www.google.com https://maps.google.com; "
@@ -910,6 +927,7 @@ def health():
         "model_configured": bool(MODEL),
         "web_search": True,
         "api_key_configured": bool(API_KEY),
+        "google_images_configured": bool(GOOGLE_API_KEY and GOOGLE_CSE_ID),
         "redis_rate_limit": redis_client is not None,
         "site_url": SITE_URL,
     })
