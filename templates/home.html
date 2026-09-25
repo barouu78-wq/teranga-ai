@@ -861,6 +861,13 @@ body.has-chat #messages{padding-top:4px}
 .audience-btn.on span{background:var(--brand);color:#fff}
 @media(max-width:680px){.audience-mode{margin:14px 0 10px}.audience-btn{min-height:62px;padding:9px 11px;border-radius:16px}}
 @media(prefers-reduced-motion:reduce){.audience-btn{transition:none}}
+/* Teranga FX v1 */
+.fx-widget{margin:12px 0 16px;padding:16px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(135deg,rgba(217,164,65,.10),var(--card));box-shadow:0 10px 28px rgba(0,0,0,.06)}
+.fx-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.fx-head b{display:block;font-size:14px}.fx-head small{display:block;color:var(--mute);font-size:10px;margin-top:3px}.fx-head>span{font-size:22px}
+.fx-row{display:grid;grid-template-columns:1fr 104px;gap:8px}.fx-field label{display:block;color:var(--mute);font-size:10px;margin:0 0 4px 4px}.fx-field input,.fx-row select{width:100%;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);padding:0 12px;font:inherit;font-weight:750;box-sizing:border-box;outline:none}.fx-field input:focus,.fx-row select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,164,65,.12)}
+.fx-result{margin-top:9px;padding:12px 14px;border-radius:15px;background:var(--soft);display:flex;align-items:baseline;justify-content:space-between;gap:10px}.fx-result span{font-size:21px;font-weight:850;color:var(--gold)}.fx-result small{color:var(--mute);font-size:10px}
+.fx-note{margin-top:8px;color:var(--mute);font-size:9px;line-height:1.45}
+@media(max-width:680px){.fx-widget{padding:14px;border-radius:18px}.fx-result span{font-size:19px}}
 </style>
 
 </head>
@@ -902,7 +909,15 @@ body.has-chat #messages{padding-top:4px}
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
   <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
-</div><div class="cards" id="cards"></div>
+</div><section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
+  <div class="fx-head"><div><b id="fxTitle">Convertisseur</b><small id="fxUpdated">Taux indicatif</small></div><span>🇸🇳</span></div>
+  <div class="fx-row">
+    <div class="fx-field"><label for="fxAmount">Montant</label><input id="fxAmount" inputmode="decimal" value="100" aria-label="Montant à convertir"></div>
+    <select id="fxFrom" aria-label="Devise source"><option value="EUR">EUR €</option><option value="USD">USD $</option><option value="GBP">GBP £</option></select>
+  </div>
+  <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
+  <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
+</section><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -1062,6 +1077,22 @@ tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftin
 merchant:[['Jaɓɓude feyde','Hol laawol feyde mi waawi hokkude clients am e Senegaal?'],['Change e feyde','No mi doxirta feyde e CFA, change e frais e golle am?']]
 }
 };
+const FX_CACHE={EUR:655.957,USD:577.070,GBP:762.860};
+let fxRates={...FX_CACHE};
+function formatCfa(v){return new Intl.NumberFormat(lang==='en'?'en-US':'fr-FR',{maximumFractionDigits:0}).format(Math.round(v))+' FCFA';}
+function updateFx(){
+  const amount=Math.max(0,Number(String($('fxAmount').value).replace(',','.'))||0);
+  const from=$('fxFrom').value;
+  $('fxResult').textContent=formatCfa(amount*(fxRates[from]||FX_CACHE[from]||655.957));
+}
+async function loadFx(){
+  try{
+    const res=await fetch('/exchange-rates',{cache:'no-store'});
+    if(res.ok){const data=await res.json();if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};$('fxUpdated').textContent=(data.date?('Réf. '+data.date+' · '):'')+'BCEAO';}
+  }catch(_){}
+  updateFx();
+}
+$('fxAmount').addEventListener('input',updateFx);$('fxFrom').addEventListener('change',updateFx);
 const AUDIENCE={
 fr:{
  tourist:[['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
@@ -1411,6 +1442,8 @@ function setLang(next){
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   renderAudience();
+  $('fxTitle').textContent=lang==='en'?'Currency converter':lang==='wo'?'Soppi xaalis':lang==='ff'?'Waylugol ceede':'Convertisseur';
+  $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
   if(rec)rec.lang=voiceMap[lang];
 }
@@ -1661,6 +1694,7 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
+loadFx();
 themeInit();restore();setLang(lang);setupMic();
 
 </script>
