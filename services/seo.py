@@ -3,231 +3,222 @@ import json
 
 SEO_PAGES = {
     "senegal": {
-        "title": "Guide S\u00e9n\u00e9gal : Dakar, Gor\u00e9e, 14 r\u00e9gions | Teranga AI",
-        "description": "Guide pratique du S\u00e9n\u00e9gal : Dakar, Gor\u00e9e, m\u00e9t\u00e9o, o\u00f9 manger, AIBD. Assistant gratuit en fran\u00e7ais, wolof et pulaar.",
-        "h1": "Guide du S\u00e9n\u00e9gal",
-        "intro": "Teranga AI aide \u00e0 s\u2019orienter au S\u00e9n\u00e9gal : une question, une r\u00e9ponse courte. Horaires et tarifs se v\u00e9rifient le jour J.",
+        "title": "Guide Senegal : Dakar, Goree, 14 regions | Teranga AI",
+        "description": "Guide pratique du Senegal : Dakar, Goree, meteo, ou manger, AIBD. Assistant gratuit en francais, wolof et pulaar.",
+        "h1": "Guide du Senegal",
+        "intro": "Teranga AI aide a s'orienter au Senegal : une question, une reponse courte. Horaires et tarifs se verifient le jour J.",
         "sections": [
-            ("Que demander", "M\u00e9t\u00e9o Dakar, ferry Gor\u00e9e, trajet AIBD, ceebu j\u00ebn, quartiers pour manger, les 14 r\u00e9gions."),
-            ("Rep\u00e8res", "14 r\u00e9gions. Dakar pour l\u2019arriv\u00e9e. Saint-Louis, Lac Rose, Petite C\u00f4te, Touba, Casamance au sud."),
-            ("Langues", "Fran\u00e7ais, anglais, wolof et pulaar."),
+            ("Que demander", "Meteo Dakar, ferry Goree, trajet AIBD, ceebu jen, quartiers pour manger, les 14 regions."),
+            ("Reperes", "14 regions. Dakar pour l'arrivee. Saint-Louis, Lac Rose, Petite Cote, Touba, Casamance au sud."),
+            ("Langues", "Francais, anglais, wolof et pulaar."),
         ],
         "faq": [
-            ("Teranga AI est-il gratuit ?", "Oui. Aucune inscription n\u2019est obligatoire."),
-            ("\u00c7a marche dans quelle langue ?", "Fran\u00e7ais, anglais, wolof et pulaar."),
+            ("Teranga AI est-il gratuit ?", "Oui. Aucune inscription n'est obligatoire."),
+            ("Ca marche dans quelle langue ?", "Francais, anglais, wolof et pulaar."),
         ],
-        "related": [("meteo-dakar", "M\u00e9t\u00e9o Dakar"), ("visiter-goree", "Gor\u00e9e"), ("regions-senegal", "14 r\u00e9gions")],
+        "related": [("meteo-dakar", "Meteo Dakar"), ("visiter-goree", "Goree"), ("regions-senegal", "14 regions")],
     },
     "meteo-dakar": {
-        "title": "M\u00e9t\u00e9o Dakar aujourd\u2019hui : chaleur, vent, ciel | Teranga AI",
-        "description": "M\u00e9t\u00e9o Dakar du jour. Demandez \u00e0 Teranga AI les conditions avant Gor\u00e9e, Ngor ou l\u2019a\u00e9roport AIBD.",
-        "h1": "M\u00e9t\u00e9o Dakar",
-        "intro": "Le temps \u00e0 Dakar change vite. Demandez \u00ab Quelle m\u00e9t\u00e9o \u00e0 Dakar aujourd\u2019hui ? \u00bb pour une r\u00e9ponse courte.",
+        "title": "Meteo Dakar aujourd'hui : chaleur, vent, ciel | Teranga AI",
+        "description": "Meteo Dakar du jour. Demandez a Teranga AI les conditions avant Goree, Ngor ou l'aeroport AIBD.",
+        "h1": "Meteo Dakar",
+        "intro": "Le temps a Dakar change vite. Demandez la meteo a Dakar aujourd'hui pour une reponse courte.",
         "sections": [
-            ("Questions utiles", "M\u00e9t\u00e9o Dakar aujourd\u2019hui, demain \u00e0 Ngor, v\u00e9rifier avant le ferry Gor\u00e9e."),
-            ("Saisons", "Saison s\u00e8che plut\u00f4t novembre\u2013mai, pluies souvent de juin \u00e0 octobre. Ce sont des rep\u00e8res, pas une pr\u00e9vision."),
-            ("Ensuite", "Ajoutez un lieu : plage, \u00eele, AIBD. Teranga peut encha\u00eener avec une carte."),
+            ("Questions utiles", "Meteo Dakar aujourd'hui, demain a Ngor, verifier avant le ferry Goree."),
+            ("Saisons", "Saison seche plutot novembre-mai, pluies souvent de juin a octobre. Ce sont des reperes, pas une prevision."),
+            ("Ensuite", "Ajoutez un lieu : plage, ile, AIBD. Teranga peut enchainer avec une carte."),
         ],
         "faq": [
-            ("La m\u00e9t\u00e9o est-elle en direct ?", "L\u2019assistant peut chercher les conditions r\u00e9centes. Pr\u00e9cisez aujourd\u2019hui ou demain."),
+            ("La meteo est-elle en direct ?", "L'assistant peut chercher les conditions recentes. Precisez aujourd'hui ou demain."),
             ("Et hors Dakar ?", "Oui : Saint-Louis, Saly, Ziguinchor, Cap Skirring."),
         ],
-        "related": [("visiter-goree", "Gor\u00e9e"), ("restaurants-dakar", "O\u00f9 manger"), ("senegal", "Guide")],
+        "related": [("visiter-goree", "Goree"), ("restaurants-dakar", "Ou manger"), ("senegal", "Guide")],
     },
     "visiter-goree": {
-        "title": "Visiter Gor\u00e9e : Maison des Esclaves, ferry, photos | Teranga AI",
-        "description": "\u00cele de Gor\u00e9e : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
-        "h1": "Visiter l\u2019\u00eele de Gor\u00e9e",
-        "intro": "Gor\u00e9e fait face \u00e0 Dakar. On y vient pour l\u2019histoire et la Maison des Esclaves. Demandez une r\u00e9ponse courte + photos + carte.",
+        "title": "Visiter Goree : Maison des Esclaves, ferry, photos | Teranga AI",
+        "description": "Ile de Goree : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
+        "h1": "Visiter l'ile de Goree",
+        "intro": "Goree fait face a Dakar. On y vient pour l'histoire et la Maison des Esclaves. Demandez une reponse courte, photos et carte.",
         "sections": [
-            ("S\u2019y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : \u00e0 v\u00e9rifier le jour du d\u00e9part."),
-            ("Quoi voir", "Maison des Esclaves, ruelles, mus\u00e9es. Comptez 2 \u00e0 4 heures."),
-            ("Question type", "\u00ab Parle-moi de Gor\u00e9e et montre l\u2019\u00eele \u00bb."),
+            ("S'y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : a verifier le jour du depart."),
+            ("Quoi voir", "Maison des Esclaves, ruelles, musees. Comptez 2 a 4 heures."),
+            ("Question type", "Parle-moi de Goree et montre l'ile."),
         ],
         "faq": [
-            ("Une demi-journ\u00e9e suffit-elle ?", "Oui, beaucoup de visites tiennent en une matin\u00e9e."),
-            ("Faut-il r\u00e9server le ferry ?", "Souvent non. V\u00e9rifiez l\u2019affluence le jour J."),
+            ("Une demi-journee suffit-elle ?", "Oui, beaucoup de visites tiennent en une matinee."),
+            ("Faut-il reserver le ferry ?", "Souvent non. Verifiez l'affluence le jour J."),
         ],
-        "related": [("meteo-dakar", "M\u00e9t\u00e9o"), ("restaurants-dakar", "Manger \u00e0 Dakar"), ("senegal", "Guide")],
+        "related": [("meteo-dakar", "Meteo"), ("restaurants-dakar", "Manger a Dakar"), ("senegal", "Guide")],
     },
     "restaurants-dakar": {
-        "title": "O\u00f9 manger \u00e0 Dakar : Plateau, M\u00e9dina, Almadies, Ngor | Teranga AI",
-        "description": "O\u00f9 manger \u00e0 Dakar par quartier : Plateau, M\u00e9dina, Almadies, Ngor, Ouakam. Ceebu j\u00ebn, yassa, march\u00e9s.",
-        "h1": "O\u00f9 manger \u00e0 Dakar",
-        "intro": "On mange \u00e0 Dakar par quartier, pas par \u00ab meilleur resto unique \u00bb. Demandez un quartier. Teranga oriente sans inventer une enseigne ferm\u00e9e.",
+        "title": "Ou manger a Dakar : Plateau, Medina, Almadies, Ngor | Teranga AI",
+        "description": "Ou manger a Dakar par quartier : Plateau, Medina, Almadies, Ngor, Ouakam. Ceebu jen, yassa, marches.",
+        "h1": "Ou manger a Dakar",
+        "intro": "On mange a Dakar par quartier, pas par meilleur resto unique. Demandez un quartier. Teranga oriente sans inventer une enseigne fermee.",
         "sections": [
-            ("Quartiers", "Plateau : centre. M\u00e9dina : cuisine du quotidien. Almadies et Ngor : mer. Ouakam : mix r\u00e9sidentiel."),
-            ("Plats", "Ceebu j\u00ebn, yassa, maf\u00e9, dibi. Pr\u00e9cisez Casamance ou Saint-Louis pour une sp\u00e9cialit\u00e9 r\u00e9gionale."),
-            ("March\u00e9s", "Demandez \u00ab pr\u00e8s de\u2026 \u00bb plut\u00f4t qu\u2019un classement."),
+            ("Quartiers", "Plateau : centre. Medina : cuisine du quotidien. Almadies et Ngor : mer. Ouakam : mix residentiel."),
+            ("Plats", "Ceebu jen, yassa, mafe, dibi. Precisez Casamance ou Saint-Louis pour une specialite regionale."),
+            ("Marches", "Demandez pres de... plutot qu'un classement."),
         ],
         "faq": [
-            ("Y a-t-il des notes Google ?", "Non. L\u2019assistant situe le quartier et le type de plat."),
+            ("Y a-t-il des notes Google ?", "Non. L'assistant situe le quartier et le type de plat."),
             ("Hors Dakar ?", "Saint-Louis, Saly, Ziguinchor, Cap Skirring."),
         ],
-        "related": [("specialites-senegal", "Sp\u00e9cialit\u00e9s"), ("visiter-goree", "Gor\u00e9e"), ("meteo-dakar", "M\u00e9t\u00e9o")],
+        "related": [("specialites-senegal", "Specialites"), ("visiter-goree", "Goree"), ("meteo-dakar", "Meteo")],
     },
     "specialites-senegal": {
-        "title": "Sp\u00e9cialit\u00e9s du S\u00e9n\u00e9gal : ceebu j\u00ebn, yassa, maf\u00e9 | Teranga AI",
-        "description": "Cuisine s\u00e9n\u00e9galaise : ceebu j\u00ebn, yassa, maf\u00e9, plats du Nord et de Casamance. O\u00f9 les go\u00fbter.",
-        "h1": "Sp\u00e9cialit\u00e9s du S\u00e9n\u00e9gal",
+        "title": "Specialites du Senegal : ceebu jen, yassa, mafe | Teranga AI",
+        "description": "Cuisine senegalaise : ceebu jen, yassa, mafe, plats du Nord et de Casamance. Ou les gouter.",
+        "h1": "Specialites du Senegal",
         "intro": "La cuisine change selon la mer, le fleuve et la Casamance. Teranga cite 3 ou 4 plats, pas une liste infinie.",
         "sections": [
-            ("Plats connus", "Ceebu j\u00ebn, yassa, maf\u00e9, dibi."),
-            ("R\u00e9gions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fum\u00e9."),
-            ("O\u00f9 chercher", "Un quartier \u00e0 Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
+            ("Plats connus", "Ceebu jen, yassa, mafe, dibi."),
+            ("Regions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fume."),
+            ("Ou chercher", "Un quartier a Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
         ],
         "faq": [
-            ("Quel plat est le plus cit\u00e9 ?", "Le ceebu j\u00ebn, souvent le midi."),
+            ("Quel plat est le plus cite ?", "Le ceebu jen, souvent le midi."),
             ("Y a-t-il des photos ?", "Pour certains sujets, oui, via Wikimedia."),
         ],
-        "related": [("restaurants-dakar", "O\u00f9 manger"), ("regions-senegal", "R\u00e9gions"), ("senegal", "Guide")],
+        "related": [("restaurants-dakar", "Ou manger"), ("regions-senegal", "Regions"), ("senegal", "Guide")],
     },
     "regions-senegal": {
-        "title": "14 r\u00e9gions du S\u00e9n\u00e9gal : villes et carte | Teranga AI",
-        "description": "Les 14 r\u00e9gions du S\u00e9n\u00e9gal : Dakar, Thi\u00e8s, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
-        "h1": "Les 14 r\u00e9gions du S\u00e9n\u00e9gal",
-        "intro": "Teranga situe une r\u00e9gion, une ville et un trajet, avec photo ou carte si le lieu est connu.",
+        "title": "14 regions du Senegal : villes et carte | Teranga AI",
+        "description": "Les 14 regions du Senegal : Dakar, Thies, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
+        "h1": "Les 14 regions du Senegal",
+        "intro": "Teranga situe une region, une ville et un trajet, avec photo ou carte si le lieu est connu.",
         "sections": [
-            ("Liste", "Dakar, Thi\u00e8s, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, K\u00e9dougou, Kolda, S\u00e9dhiou, Ziguinchor, Saint-Louis, Louga, Matam."),
-            ("Zones", "Ouest : Dakar\u2013Thi\u00e8s. Nord : Saint-Louis, Louga, Matam. Sud / Casamance : Ziguinchor, S\u00e9dhiou, Kolda."),
-            ("\u00c0 demander", "\u00ab Pr\u00e9sente la Casamance \u00bb, \u00ab O\u00f9 est Saint-Louis ? \u00bb, \u00ab Comment aller \u00e0 Ziguinchor ? \u00bb"),
+            ("Liste", "Dakar, Thies, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kedougou, Kolda, Sedhiou, Ziguinchor, Saint-Louis, Louga, Matam."),
+            ("Zones", "Ouest : Dakar-Thies. Nord : Saint-Louis, Louga, Matam. Sud / Casamance : Ziguinchor, Sedhiou, Kolda."),
+            ("A demander", "Presente la Casamance. Ou est Saint-Louis. Comment aller a Ziguinchor."),
         ],
         "faq": [
-            ("Combien de r\u00e9gions ?", "14 r\u00e9gions administratives."),
-            ("La Casamance est-elle une r\u00e9gion ?", "C\u2019est le Sud, sur Ziguinchor, S\u00e9dhiou et Kolda."),
+            ("Combien de regions ?", "14 regions administratives."),
+            ("La Casamance est-elle une region ?", "C'est le Sud, sur Ziguinchor, Sedhiou et Kolda."),
         ],
-        "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Gor\u00e9e")],
+        "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Goree")],
     },
 }
-
-
-def sitemap_xml(site_url):
-    urls = [(\"/\", \"daily\", \"1.0\"), (\"/explorer\", \"weekly\", \"0.9\")]
-    urls += [(f\"/{slug}\", \"weekly\", \"0.8\") for slug in SEO_PAGES]
-    parts = [
-        '<?xml version=\"1.0\" encoding=\"UTF-8\"?>',
-        '<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">',
-    ]
-    for path, freq, pri in urls:
-        parts.append(
-            f\"<url><loc>{site_url}{path}</loc><changefreq>{freq}</changefreq><priority>{pri}</priority></url>\"
-        )
-    parts.append(\"</urlset>\")
-    return Response(
-        \"\".join(parts),
-        mimetype=\"application/xml\",
-        headers={\"Cache-Control\": \"public, max-age=86400\"},
-    )
 
 
 def render_seo_page(slug, site_url):
     page = SEO_PAGES.get(slug)
     if not page:
         return None
-    sections = \"\".join(
-        f\"<section><h2>{heading}</h2><p>{text}</p></section>\"
-        for heading, text in page[\"sections\"]
+    sections = "".join(
+        "<section><h2>%s</h2><p>%s</p></section>" % (heading, text)
+        for heading, text in page["sections"]
     )
-    faq_html = \"\"
+    faq_html = ""
     faq_ld = []
-    if page.get(\"faq\"):
-        items = \"\".join(f\"<div class='faq'><h3>{q}</h3><p>{a}</p></div>\" for q, a in page[\"faq\"])
-        faq_html = f\"<section><h2>Questions fr\u00e9quentes</h2>{items}</section>\"
+    if page.get("faq"):
+        items = "".join("<div class='faq'><h3>%s</h3><p>%s</p></div>" % (q, a) for q, a in page["faq"])
+        faq_html = "<section><h2>Questions frequentes</h2>%s</section>" % items
         faq_ld = [
-            {\"@type\": \"Question\", \"name\": q, \"acceptedAnswer\": {\"@type\": \"Answer\", \"text\": a}}
-            for q, a in page[\"faq\"]
+            {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in page["faq"]
         ]
-    related = \"\".join(f'<a href=\"/{s}\">{label}</a>' for s, label in page.get(\"related\", []))
-    related_html = (
-        f'<nav class=\"related\">Voir aussi : {related}<a href=\"/explorer\">Explorer</a></nav>'
-        if related
-        else \"\"
-    )
-    if slug in {\"senegal\", \"regions-senegal\"}:
+    related = "".join('<a href="/%s">%s</a>' % (s, label) for s, label in page.get("related", []))
+    related_html = ""
+    if related:
+        related_html = '<nav class="related">Voir aussi : %s<a href="/explorer">Explorer</a></nav>' % related
+    if slug in {"senegal", "regions-senegal"}:
         source_link = (
-            '<p class=\"source\">Source : <a href=\"https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html\" '
-            'target=\"_blank\" rel=\"noopener noreferrer\">Minist\u00e8re du Tourisme du S\u00e9n\u00e9gal</a>.</p>'
+            '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
+            'target="_blank" rel="noopener noreferrer">Ministere du Tourisme du Senegal</a>.</p>'
         )
     else:
         source_link = (
-            '<p class=\"source\">Rep\u00e8res : <a href=\"https://www.au-senegal.com/\" '
-            'target=\"_blank\" rel=\"noopener noreferrer\">Au S\u00e9n\u00e9gal</a>.</p>'
+            '<p class="source">Reperes : <a href="https://www.au-senegal.com/" '
+            'target="_blank" rel="noopener noreferrer">Au Senegal</a>.</p>'
         )
-    url = f\"{site_url}/{slug}\"
+    url = "%s/%s" % (site_url, slug)
     ld = {
-        \"@context\": \"https://schema.org\",
-        \"@graph\": [
+        "@context": "https://schema.org",
+        "@graph": [
             {
-                \"@type\": \"WebPage\",
-                \"name\": page[\"title\"],
-                \"description\": page[\"description\"],
-                \"url\": url,
-                \"isPartOf\": {\"@type\": \"WebSite\", \"name\": \"Teranga AI\", \"url\": site_url + \"/\"},
-                \"inLanguage\": \"fr\",
+                "@type": "WebPage",
+                "name": page["title"],
+                "description": page["description"],
+                "url": url,
+                "isPartOf": {"@type": "WebSite", "name": "Teranga AI", "url": site_url + "/"},
+                "inLanguage": "fr",
             },
             {
-                \"@type\": \"BreadcrumbList\",
-                \"itemListElement\": [
-                    {\"@type\": \"ListItem\", \"position\": 1, \"name\": \"Accueil\", \"item\": site_url + \"/\"},
-                    {\"@type\": \"ListItem\", \"position\": 2, \"name\": page[\"h1\"], \"item\": url},
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Accueil", "item": site_url + "/"},
+                    {"@type": "ListItem", "position": 2, "name": page["h1"], "item": url},
                 ],
             },
         ],
     }
     if faq_ld:
-        ld[\"@graph\"].append({\"@type\": \"FAQPage\", \"mainEntity\": faq_ld})
-    ld_json = json.dumps(ld, ensure_ascii=False).replace(\"<\", \"\\u003c\")
-    html = f\"\"\"<!doctype html>
+        ld["@graph"].append({"@type": "FAQPage", "mainEntity": faq_ld})
+    ld_json = json.dumps(ld, ensure_ascii=True).replace("<", "\\u003c")
+    html = """<!doctype html>
 <html lang=\"fr\">
 <head>
 <meta charset=\"utf-8\">
 <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
 <meta name=\"robots\" content=\"index,follow\">
-<meta name=\"description\" content=\"{page[\"description\"]}\">
-<link rel=\"canonical\" href=\"{url}\">
+<meta name=\"description\" content=\"%(description)s\">
+<link rel=\"canonical\" href=\"%(url)s\">
 <meta property=\"og:site_name\" content=\"Teranga AI\">
-<meta property=\"og:title\" content=\"{page[\"title\"]}\">
-<meta property=\"og:description\" content=\"{page[\"description\"]}\">
+<meta property=\"og:title\" content=\"%(title)s\">
+<meta property=\"og:description\" content=\"%(description)s\">
 <meta property=\"og:type\" content=\"article\">
 <meta property=\"og:locale\" content=\"fr_SN\">
-<meta property=\"og:url\" content=\"{url}\">
-<meta property=\"og:image\" content=\"{site_url}/og.png\">
+<meta property=\"og:url\" content=\"%(url)s\">
+<meta property=\"og:image\" content=\"%(site)s/og.png\">
 <meta name=\"twitter:card\" content=\"summary_large_image\">
-<meta name=\"twitter:title\" content=\"{page[\"title\"]}\">
-<meta name=\"twitter:description\" content=\"{page[\"description\"]}\">
-<meta name=\"twitter:image\" content=\"{site_url}/og.png\">
-<title>{page[\"title\"]}</title>
-<script type=\"application/ld+json\">{ld_json}</script>
+<meta name=\"twitter:title\" content=\"%(title)s\">
+<meta name=\"twitter:description\" content=\"%(description)s\">
+<meta name=\"twitter:image\" content=\"%(site)s/og.png\">
+<title>%(title)s</title>
+<script type=\"application/ld+json\">%(ld)s</script>
 <style>
-:root{{color-scheme:dark;--bg:#0b0907;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}}
-*{{box-sizing:border-box}}body{{margin:0;background:#0b0907;color:var(--text);font:16px/1.65 system-ui,sans-serif}}
-main{{width:min(860px,100% - 32px);margin:auto;padding:28px 0 56px}}
-nav{{display:flex;justify-content:space-between;margin-bottom:20px}}
-.logo{{font-weight:800}}.logo em{{color:var(--gold);font-style:normal}}
-nav a,.cta,.related a{{color:var(--gold);text-decoration:none;font-weight:750}}
-.related{{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;font-size:14px}}
-article{{background:#171310;border:1px solid var(--line);border-radius:28px;padding:28px}}
-.kicker{{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}}
-h1{{font:700 clamp(32px,6vw,48px)/1.08 Georgia,serif;margin:10px 0 16px}}
-.intro{{font-size:18px;color:var(--muted)}}
-section{{padding:18px 0;border-top:1px solid var(--line)}}
-h2{{font-size:20px;margin:0 0 6px}}h3{{font-size:16px;margin:12px 0 4px}}
-.ctaBox{{margin-top:24px;padding:18px;border-radius:18px;background:#20190f;border:1px solid var(--line)}}
-.source,footer{{font-size:12px;color:var(--muted)}}
+:root{color-scheme:dark;--bg:#0b0907;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}
+*{box-sizing:border-box}body{margin:0;background:#0b0907;color:var(--text);font:16px/1.65 system-ui,sans-serif}
+main{width:min(860px,100%% - 32px);margin:auto;padding:28px 0 56px}
+nav{display:flex;justify-content:space-between;margin-bottom:20px}
+.logo{font-weight:800}.logo em{color:var(--gold);font-style:normal}
+nav a,.cta,.related a{color:var(--gold);text-decoration:none;font-weight:750}
+.related{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;font-size:14px}
+article{background:#171310;border:1px solid var(--line);border-radius:28px;padding:28px}
+.kicker{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+h1{font:700 clamp(32px,6vw,48px)/1.08 Georgia,serif;margin:10px 0 16px}
+.intro{font-size:18px;color:var(--muted)}
+section{padding:18px 0;border-top:1px solid var(--line)}
+h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
+.ctaBox{margin-top:24px;padding:18px;border-radius:18px;background:#20190f;border:1px solid var(--line)}
+.source,footer{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body><main>
-<nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question \u2192</a></nav>
-{related_html}
+<nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question</a></nav>
+%(related)s
 <article>
-<div class=\"kicker\">S\u00e9n\u00e9gal \u00b7 Teranga AI</div>
-<h1>{page[\"h1\"]}</h1>
-<p class=\"intro\">{page[\"intro\"]}</p>
-{sections}
-{faq_html}
-<div class=\"ctaBox\"><strong>Une question pr\u00e9cise ?</strong><p>R\u00e9ponse courte, photo et carte quand le lieu est connu.</p><a class=\"cta\" href=\"/\">Ouvrir Teranga AI \u2192</a></div>
-{source_link}
+<div class=\"kicker\">Senegal · Teranga AI</div>
+<h1>%(h1)s</h1>
+<p class=\"intro\">%(intro)s</p>
+%(sections)s
+%(faq)s
+<div class=\"ctaBox\"><strong>Une question precise ?</strong><p>Reponse courte, photo et carte quand le lieu est connu.</p><a class=\"cta\" href=\"/\">Ouvrir Teranga AI</a></div>
+%(source)s
 </article>
-<footer>Teranga AI \u00b7 FR \u00b7 EN \u00b7 WO \u00b7 PU</footer>
-</main></body></html>\"\"\"
-    return Response(html, mimetype=\"text/html\", headers={\"Cache-Control\": \"public, max-age=3600\"})
+<footer>Teranga AI · FR · EN · WO · PU</footer>
+</main></body></html>""" % {
+        "description": page["description"],
+        "url": url,
+        "title": page["title"],
+        "site": site_url,
+        "ld": ld_json,
+        "related": related_html,
+        "h1": page["h1"],
+        "intro": page["intro"],
+        "sections": sections,
+        "faq": faq_html,
+        "source": source_link,
+    }
+    return Response(html, mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
