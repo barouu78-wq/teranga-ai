@@ -157,6 +157,7 @@ header{
 .user .bubble{background:linear-gradient(180deg,#3a2c14,#22180c);color:#f8edd4;border:1px solid rgba(232,195,106,.25);border-bottom-right-radius:7px}
 .acts{display:flex;gap:4px;margin-top:6px;opacity:.0;transition:.15s}
 .assistant:hover .acts,.assistant:focus-within .acts{opacity:1}
+@media (pointer:coarse){.assistant .acts{opacity:1}}
 .acts button{
   border:0;background:transparent;color:var(--mute);font-weight:700;font-size:11px;
   padding:4px 7px;border-radius:999px;cursor:pointer
@@ -592,18 +593,39 @@ function addSources(col,sources){
   });
   if(box.childElementCount>1)col.appendChild(box);
 }
+function speakFallback(text){
+  if(!('speechSynthesis' in window)||!text)return false;
+  try{
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(text);
+    utterance.lang=voiceMap[lang]||'fr-FR';
+    utterance.rate=0.96;
+    utterance.pitch=1;
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }catch(e){return false;}
+}
 async function speak(text,btn){
   if(!text)return;
   if(audio){audio.pause();audio=null;}
   if(btn){btn.disabled=true;btn.textContent='…';}
   try{
-    const res=await fetch('/tts',{method:'POST',headers:headers(),body:JSON.stringify({text,language:lang})});
-    if(!res.ok)throw 0;
-    const url=URL.createObjectURL(await res.blob());
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
+    if(!res.ok)throw new Error('tts');
+    const blob=await res.blob();
+    if(!blob.size)throw new Error('tts-empty');
+    const url=URL.createObjectURL(blob);
     audio=new Audio(url);
+    audio.preload='auto';
     audio.onended=()=>{URL.revokeObjectURL(url);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
-    await audio.play();
-  }catch(e){if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}}
+    audio.onerror=()=>{URL.revokeObjectURL(url);audio=null;speakFallback(text);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
+    try{await audio.play();}
+    catch(e){audio.onerror();throw e;}
+  }catch(e){
+    speakFallback(text);
+    if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+  }
 }
 const CARD_ICONS=[
   '<svg viewBox="0 0 24 24" fill="none"><path d="M6 15a6 6 0 1 1 10.4-4.2A4.5 4.5 0 1 1 17 19H7.5A3.5 3.5 0 0 1 6 15Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 11.5 10 9l2 2 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
