@@ -446,6 +446,82 @@ body[data-theme="dark"] .assistant .bubble{background:#171310;border-color:rgba(
   #send:after{content:"➤";font-size:20px}
 }
 
+
+/* Final mobile polish — Teranga AI */
+@media(max-width:680px){
+  html,body{min-height:100%;overflow:hidden}
+  .app{width:100%;max-width:none}
+  header{position:sticky;top:0;z-index:30;padding:9px 12px calc(8px + env(safe-area-inset-top));min-height:58px}
+  .brand{gap:8px}
+  .mark{width:38px;height:38px;border-radius:13px}
+  .brand strong{font-family:Georgia,"Times New Roman",serif;font-size:18px}
+  .tools{gap:5px}
+  .seg{padding:3px}
+  .seg button{min-width:30px;padding:6px 7px;font-size:10px}
+  .icon{width:34px;height:34px}
+
+  #stage{padding:8px 12px 10px;overflow-x:hidden}
+  .hero{
+    min-height:0!important;
+    margin:8px 0 12px;
+    padding:24px 18px 18px;
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:0 14px 36px rgba(0,0,0,.22);
+  }
+  .hero:before{display:none}
+  .hero h1{
+    max-width:none;
+    font-size:clamp(32px,9.5vw,43px);
+    line-height:1.03;
+    letter-spacing:-.055em;
+    margin:0 0 12px;
+    overflow:visible;
+    position:relative;
+    z-index:2;
+  }
+  .hero h1:after{width:64px;height:4px;margin-top:11px}
+  .hero p{font-size:14px;line-height:1.45;margin:0 0 18px;max-width:none}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .card{min-height:76px;padding:11px;border-radius:16px;gap:9px}
+  .card .ico{width:28px;height:28px}
+  .card .ico svg{width:23px;height:23px}
+  .card b{font-size:12px;line-height:1.25}
+  .card span{font-size:9px;line-height:1.25}
+  .spread{display:none}
+
+  .guide-section{margin:8px 0 10px;padding:16px;border-radius:20px}
+  .guide-section h2{font-size:19px;margin-bottom:4px}
+  .guide-section p{font-size:13px;line-height:1.4}
+  .guide-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+  .guide-links a{min-height:58px;padding:11px 12px;border-radius:15px;font-size:13px;line-height:1.25;display:flex;align-items:center}
+
+  .dock{position:sticky;bottom:0;z-index:25;padding:7px 10px calc(7px + env(safe-area-inset-bottom));}
+  .chips{padding:0 1px 7px;gap:7px}
+  .chips button{padding:7px 11px;font-size:11px}
+  .composer{border-radius:22px;padding:6px 7px 6px 13px}
+  .row{grid-template-columns:minmax(0,1fr) 42px 50px;gap:6px;align-items:center}
+  textarea{min-height:42px;padding:8px 2px 7px 0;font-size:15px}
+  #mic,#send{height:42px}
+  #mic{width:42px;border-radius:50%}
+  #send{width:50px;min-width:50px;padding:0;border-radius:50%}
+  #send{font-size:0;position:relative}
+  #send:after{content:"➤";font-size:20px;line-height:1;position:absolute;left:50%;top:50%;transform:translate(-45%,-52%)}
+  .meta{font-size:10px;margin-top:6px;padding:0 4px}
+  .tabbar{position:sticky;bottom:0;z-index:28;min-height:66px;padding:5px 5px calc(7px + env(safe-area-inset-bottom));}
+  .tabbar button{font-size:10px;padding:7px 2px 4px;border-radius:14px}
+  .tabbar button.on{background:var(--sen-green);color:#fff}
+  .tabbar svg{width:20px;height:20px;margin-bottom:2px}
+  body[data-theme="dark"] .hero{background:linear-gradient(145deg,rgba(21,31,25,.98),rgba(17,14,11,.96));border-color:rgba(217,164,65,.18)}
+  body[data-theme="dark"] .card{background:rgba(28,23,18,.92);border-color:rgba(217,164,65,.16)}
+  body[data-theme="dark"] .guide-section{background:rgba(22,18,14,.92)}
+  body[data-theme="dark"] .guide-links a{background:rgba(28,23,18,.96);border-color:rgba(217,164,65,.14)}
+  body[data-theme="dark"] .dock{background:rgba(11,9,7,.96)}
+}
+@media(min-width:681px){
+  .dock{flex-shrink:0}
+  .tabbar{flex-shrink:0}
+}
 </style>
 
 </head>
