@@ -600,7 +600,7 @@ def wiki_summary(lang, title):
 
 
 def usable_wiki_image(src):
-    src = str(src or "").split("?", 1)[0]
+    src = str(src or "").split("?", 1)[0][:2000]
     if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
         return ""
     lowered = src.lower()
