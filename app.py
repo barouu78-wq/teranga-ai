@@ -979,7 +979,7 @@ def parse_chat_payload():
         history = []
     history = history[-MAX_HISTORY_ITEMS:]
     audience = str(data.get("audience", "tourist")).lower()[:16]
-    if audience not in {"tourist", "merchant"}:
+    if audience not in {"tourist", "resident", "diaspora", "merchant"}:
         audience = "tourist"
     if not message:
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
@@ -995,6 +995,18 @@ def parse_chat_payload():
             "en": "Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
             "wo": "Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
             "ff": "Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+        },
+        "resident": {
+            "fr": "Profil actif : résident. Priorise la vie quotidienne au Sénégal : démarches, logement, budget, paiements, transport, services locaux, santé pratique et organisation du quotidien. Vérifie les règles, tarifs et horaires actuels quand ils changent.",
+            "en": "Active profile: resident. Prioritize everyday life in Senegal: paperwork, housing, budgeting, payments, transport, local services, practical health and daily organization. Verify changing rules, fees and schedules.",
+            "wo": "Profil bi mooy dundkat. Jox ndimbal ci dund bés bu nekk: formalité, kër, budget, fey, yoon, services, aar ak doxalin. Seet lu bees bu ko soxla.",
+            "ff": "Profil ngol dunndotoowo. Hokkude ballal e dund bés e Senegaal: formalité, suudu, budget, feyde, laawol, sarwiis e doxalin. Ƴeewto ko hesɗi so ina waɗi."
+        },
+        "diaspora": {
+            "fr": "Profil actif : diaspora. Priorise la préparation de séjours et retours au Sénégal, la gestion à distance, les transferts d'argent, les dépenses familiales, le logement, les projets et investissements. Sépare clairement les informations indicatives des règles ou tarifs à vérifier.",
+            "en": "Active profile: diaspora. Prioritize planning stays and returns to Senegal, remote management, money transfers, family expenses, housing, projects and investments. Clearly separate indicative information from rules or fees that must be verified.",
+            "wo": "Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellusi, doxal ci sore, yónnee xaalis, dépense famille, kër, projet ak investissement. Seet lu bees te wone ko bu leer.",
+            "ff": "Profil ngol diaspora. Hokkude ballal e waajta yahdugol walla ruttorde, doxal daga woɗnde, yónnude ceede, dépense ɓeyngu, suudu, projet e investissement. Ƴeewto ko hesɗi tee hollu ko misaal tan."
         },
         "merchant": {
             "fr": "Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
