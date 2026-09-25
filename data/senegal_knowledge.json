@@ -1,5 +1,5 @@
 {
-  "version": "4.0",
+  "version": "4.1",
   "country": "Sénégal",
   "regions": [
     {
@@ -117,6 +117,37 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Dakar",
+        "Guédiawaye",
+        "Keur Massar",
+        "Pikine",
+        "Rufisque"
+      ],
+      "locality_index": [
+        "Dakar",
+        "Plateau",
+        "Médina",
+        "Almadies",
+        "Ngor",
+        "Ouakam",
+        "Yoff",
+        "Rufisque",
+        "Pikine",
+        "Guédiawaye",
+        "Keur Massar"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Dakar",
+          "Guédiawaye",
+          "Keur Massar",
+          "Pikine",
+          "Rufisque"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -219,6 +250,30 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Thiès",
+        "Mbour",
+        "Tivaouane"
+      ],
+      "locality_index": [
+        "Thiès",
+        "Mbour",
+        "Tivaouane",
+        "Saly",
+        "Joal-Fadiouth",
+        "Popenguine",
+        "Somone",
+        "Kayar"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Thiès",
+          "Mbour",
+          "Tivaouane"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -311,6 +366,26 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Bambey",
+        "Diourbel",
+        "Mbacké"
+      ],
+      "locality_index": [
+        "Diourbel",
+        "Touba",
+        "Mbacké",
+        "Bambey"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Bambey",
+          "Diourbel",
+          "Mbacké"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -412,6 +487,29 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Fatick",
+        "Foundiougne",
+        "Gossas"
+      ],
+      "locality_index": [
+        "Fatick",
+        "Foundiougne",
+        "Toubacouta",
+        "Palmarin",
+        "Sokone",
+        "Ndangane",
+        "Gossas"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Fatick",
+          "Foundiougne",
+          "Gossas"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -506,6 +604,27 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Guinguinéo",
+        "Kaolack",
+        "Nioro du Rip"
+      ],
+      "locality_index": [
+        "Kaolack",
+        "Médina Baye",
+        "Nioro du Rip",
+        "Guinguinéo",
+        "Kahone"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Guinguinéo",
+          "Kaolack",
+          "Nioro du Rip"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -596,6 +715,28 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Birkelane",
+        "Kaffrine",
+        "Koungheul",
+        "Malem-Hodar"
+      ],
+      "locality_index": [
+        "Kaffrine",
+        "Koungheul",
+        "Birkelane",
+        "Malem-Hodar"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Birkelane",
+          "Kaffrine",
+          "Koungheul",
+          "Malem-Hodar"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -689,6 +830,27 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Kébémer",
+        "Linguère",
+        "Louga"
+      ],
+      "locality_index": [
+        "Louga",
+        "Linguère",
+        "Kébémer",
+        "Dahra",
+        "Ferlo"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Kébémer",
+          "Linguère",
+          "Louga"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -790,6 +952,29 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Dagana",
+        "Podor",
+        "Saint-Louis"
+      ],
+      "locality_index": [
+        "Saint-Louis",
+        "Podor",
+        "Dagana",
+        "Richard-Toll",
+        "Ross-Béthio",
+        "Guet Ndar",
+        "Langue de Barbarie"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Dagana",
+          "Podor",
+          "Saint-Louis"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -884,6 +1069,28 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Kanel",
+        "Matam",
+        "Ranérou-Ferlo"
+      ],
+      "locality_index": [
+        "Matam",
+        "Ourossogui",
+        "Kanel",
+        "Thilogne",
+        "Ranérou",
+        "Ogo"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Kanel",
+          "Matam",
+          "Ranérou-Ferlo"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -981,6 +1188,30 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Bakel",
+        "Goudiry",
+        "Koumpentoum",
+        "Tambacounda"
+      ],
+      "locality_index": [
+        "Tambacounda",
+        "Bakel",
+        "Kidira",
+        "Goudiry",
+        "Koumpentoum",
+        "Falémé"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Bakel",
+          "Goudiry",
+          "Koumpentoum",
+          "Tambacounda"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -1080,6 +1311,28 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Kédougou",
+        "Salémata",
+        "Saraya"
+      ],
+      "locality_index": [
+        "Kédougou",
+        "Dindéfello",
+        "Bandafassi",
+        "Salémata",
+        "Saraya",
+        "Ibel"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Kédougou",
+          "Salémata",
+          "Saraya"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -1171,6 +1424,26 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Kolda",
+        "Médina Yoro Foulah",
+        "Vélingara"
+      ],
+      "locality_index": [
+        "Kolda",
+        "Vélingara",
+        "Médina Yoro Foulah",
+        "Dabo"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Kolda",
+          "Médina Yoro Foulah",
+          "Vélingara"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -1267,6 +1540,27 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Bounkiling",
+        "Goudomp",
+        "Sédhiou"
+      ],
+      "locality_index": [
+        "Sédhiou",
+        "Goudomp",
+        "Bounkiling",
+        "Marsassoum",
+        "Djibabouya"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Bounkiling",
+          "Goudomp",
+          "Sédhiou"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     },
     {
@@ -1373,6 +1667,29 @@
           "sources locales officielles"
         ],
         "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      },
+      "departments_official": [
+        "Bignona",
+        "Oussouye",
+        "Ziguinchor"
+      ],
+      "locality_index": [
+        "Ziguinchor",
+        "Bignona",
+        "Oussouye",
+        "Cap Skirring",
+        "Carabane",
+        "Diembering",
+        "Eloubaline"
+      ],
+      "department_coverage": {
+        "scope": "Principaux départements de la région",
+        "departments": [
+          "Bignona",
+          "Oussouye",
+          "Ziguinchor"
+        ],
+        "rule": "Les données démographiques, économiques et sociales détaillées doivent être rattachées aux publications ANSD/RGPH-5 correspondantes."
       }
     }
   ],
@@ -2716,6 +3033,17 @@
       "établissements et services avec données actualisées",
       "patrimoine matériel et immatériel",
       "cartographie et coordonnées vérifiées"
-    ]
+    ],
+    "department_layer": {
+      "status": "initial",
+      "coverage": "46 départements",
+      "official_source": "ANSD RGPH-5 2023",
+      "note": "Le répertoire des localités RGPH-5 permet d'aller jusqu'au quartier ou village lorsque la donnée est disponible.",
+      "source_urls": [
+        "https://www.ansd.sn/rapports/rgph-5-2023",
+        "https://www.ansd.sn/mademba/repertoire-des-localites-issu-du-rgph-5-2023"
+      ],
+      "next": "Importer progressivement les indicateurs des rapports régionaux et du répertoire des localités, avec année et source pour chaque chiffre."
+    }
   }
 }
