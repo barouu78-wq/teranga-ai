@@ -782,12 +782,12 @@ def contextual_query(history, message):
 def infer_senegal_context(history, message):
     text_value = normalize(contextual_query(history, message))
     cities = (
-        "dakar", "thies", "thiès", "mbour", "saly", "somone", "toubа", "touba",
+        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba", "touba",
         "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
         "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
         "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
         "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
-        "ngor", "yoff", "ouakam", "alhadiès", "almalies", "almaties",
+        "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
         "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
     )
     regions = (
