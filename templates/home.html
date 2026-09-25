@@ -851,7 +851,7 @@ body.has-chat #messages{padding-top:4px}
 }
 
 /* Teranga Audience v1 — tourist & merchant entry points */
-.audience-mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 12px}
+.audience-mode{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0 12px}
 .audience-btn{min-height:66px;padding:10px 13px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);text-align:left;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease}
 .audience-btn span{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;margin-top:2px;border-radius:10px;background:var(--soft);color:var(--gold);font-size:14px}
 .audience-btn b{font-size:13px;line-height:1.1}
@@ -859,7 +859,7 @@ body.has-chat #messages{padding-top:4px}
 .audience-btn:hover{transform:translateY(-1px);border-color:rgba(217,164,65,.5)}
 .audience-btn.on{border-color:rgba(217,164,65,.72);background:linear-gradient(135deg,rgba(217,164,65,.13),var(--card));box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .audience-btn.on span{background:var(--brand);color:#fff}
-@media(max-width:680px){.audience-mode{margin:14px 0 10px}.audience-btn{min-height:62px;padding:9px 11px;border-radius:16px}}
+@media(max-width:680px){.audience-mode{grid-template-columns:1fr 1fr;margin:14px 0 10px}.audience-btn{min-height:62px;padding:9px 11px;border-radius:16px}}
 @media(prefers-reduced-motion:reduce){.audience-btn{transition:none}}
 /* Teranga FX v1 */
 .fx-widget{margin:12px 0 16px;padding:16px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(135deg,rgba(217,164,65,.10),var(--card));box-shadow:0 10px 28px rgba(0,0,0,.06)}
@@ -908,6 +908,8 @@ body.has-chat #messages{padding-top:4px}
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
   <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
+  <button type="button" class="audience-btn" data-audience="resident" aria-pressed="false"><span>⌂</span><b id="audienceResident">Résident</b><small id="audienceResidentHint">Vivre au Sénégal</small></button>
+  <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span>↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
 </div><section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
   <div class="fx-head"><div><b id="fxTitle">Convertisseur</b><small id="fxUpdated">Taux indicatif</small></div><span>🇸🇳</span></div>
@@ -1059,6 +1061,24 @@ ff:{
 }
 };
 const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
+const AUDIENCE_EXTRA={
+fr:{
+ resident:[['Vie quotidienne','Aide-moi à gérer ma vie quotidienne au Sénégal : transport, démarches, paiements et services.'],['Démarches','Quelles démarches administratives dois-je vérifier pour ma situation au Sénégal ?'],['Budget maison','Aide-moi à organiser mon budget mensuel en FCFA.'],['Services locaux','Comment trouver les bons services dans mon quartier ?']],
+ diaspora:[['Préparer mon retour','Je prépare un séjour ou un retour au Sénégal : aide-moi à organiser les priorités.'],['Maison & famille','Quelles choses dois-je prévoir pour gérer une maison ou aider ma famille au Sénégal ?'],['Argent à distance','Comment organiser mes transferts et dépenses au Sénégal en limitant les frais ?'],['Investir','Quelles informations dois-je vérifier avant un projet ou un investissement au Sénégal ?']]
+},
+en:{
+ resident:[['Daily life','Help me manage daily life in Senegal: transport, paperwork, payments and services.'],['Paperwork','Which administrative requirements should I verify for my situation in Senegal?'],['Home budget','Help me organize my monthly budget in CFA francs.'],['Local services','How can I find the right services in my area?']],
+ diaspora:[['Plan my return','I am preparing a stay or return to Senegal. Help me organize the priorities.'],['Home & family','What should I plan for managing a home or helping family in Senegal?'],['Money from abroad','How can I organize transfers and spending in Senegal while limiting fees?'],['Investing','What should I verify before a project or investment in Senegal?']]
+},
+wo:{
+ resident:[['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Services','Naka laa mëna gis services yi ci sama quartier?']],
+ diaspora:[['Waxtu dellusi','Maa ngi waajal tukki walla dellusi Senegaal; jàppale ma defar yi ëpp solo.'],['Kër ak waa kër','Lan laa wara waajal ngir sama kër walla dimbali sama waa kër ci Senegaal?'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Investir','Yan mbir laa wara seet bala ma tàmbali projet walla investissement ci Senegaal?']]
+},
+ff:{
+ resident:[['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Sarwiis','No mi yiyirta sarwiis ɗe moƴƴi e quartier am?']],
+ diaspora:[['Waajta ruttorde','Mi waajtii yahdugol walla ruttorde e Senegaal; wallu-mi feewtude ko ɓuri nafde.'],['Suudu e ɓeyngu','Hol ko mi waajta ngam suudu walla wallude ɓeyngu am e Senegaal?'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Investir','Hol ko mi ƴeewta hade mi fuɗɗa projet walla investissement e Senegaal?']]
+}
+};
 const MONEY_SIM={
 fr:{
 tourist:[['Argent & change',"Convertis mon argent en FCFA et explique-moi les frais à prévoir."],['SIM & Internet',"Quelle SIM ou eSIM choisir au Sénégal pour un séjour touristique ?"]],
@@ -1129,11 +1149,13 @@ const audienceContext={
 
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
-  const labels=lang==='fr'?['Touriste','Voyager facilement','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Jaaytoowo','Jaayde e golle'];
+  const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
   $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
-  $('audienceMerchant').textContent=labels[2];$('audienceMerchantHint').textContent=labels[3];
+  $('audienceResident').textContent=labels[2];$('audienceResidentHint').textContent=labels[3];
+  $('audienceDiaspora').textContent=labels[4];$('audienceDiasporaHint').textContent=labels[5];
+  $('audienceMerchant').textContent=labels[6];$('audienceMerchantHint').textContent=labels[7];
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
-  const rows=[...(a[audience]||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
+  const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
   const cards=rows.map(([t,q])=>({t,q,d:''}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
