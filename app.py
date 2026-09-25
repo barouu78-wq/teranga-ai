@@ -89,12 +89,22 @@ MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 16
 RATE_WINDOW = 60
 TTS_RATE_LIMIT = 8
+CHAT_HOURLY_LIMIT = 120
+TTS_HOURLY_LIMIT = 30
+IMAGE_RATE_LIMIT = 24
+IMAGE_RATE_WINDOW = 60
+FX_RATE_LIMIT = 6
+FX_RATE_WINDOW = 60
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
+chat_hourly_log = defaultdict(deque)
+tts_hourly_log = defaultdict(deque)
+image_request_log = defaultdict(deque)
+fx_request_log = defaultdict(deque)
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
@@ -644,6 +654,9 @@ def safe_image_fetch(src):
 
 @app.get("/image-proxy")
 def image_proxy():
+    ip = client_ip()
+    if not allowed_request(ip, image_request_log[ip], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image"):
+        return Response("Trop de demandes d'images. Réessaie dans un instant.", status=429, mimetype="text/plain", headers={"Retry-After": "10"})
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
         return Response("Image invalide", status=400, mimetype="text/plain")
@@ -930,6 +943,8 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 def public_error(exc):
     text = f"{type(exc).__name__} {exc}".lower()
     text = re.sub(r"(sk-[a-z0-9_-]{8,})", "[redacted-key]", text)
+    text = re.sub(r"(bearer\s+)[a-z0-9._-]{12,}", r"\1[redacted-token]", text)
+    text = re.sub(r"([?&](?:key|api_key|token|access_token)=)[^&\s]+", r"\1[redacted]", text)
     if "timeout" in text or "timed out" in text:
         return "La réponse a pris trop de temps. Réessaie."
     if "429" in text or "rate limit" in text or "quota" in text:
@@ -1289,6 +1304,9 @@ def fetch_bceao_rates():
 
 @app.get("/exchange-rates")
 def exchange_rates():
+    ip = client_ip()
+    if not allowed_request(ip, fx_request_log[ip], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx"):
+        return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
     data = fetch_bceao_rates()
     return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
 
@@ -1301,6 +1319,8 @@ def chat():
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429, {"Retry-After": "8"}
+    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour"):
+        return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
     payload, error = parse_chat_payload()
     if error:
@@ -1390,6 +1410,8 @@ def tts():
     ip = client_ip()
     if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts"):
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
+    if not allowed_request(ip, tts_hourly_log[ip], TTS_HOURLY_LIMIT, 3600, "tts_hour"):
+        return jsonify({"error": "Trop de demandes vocales sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({"error": "Requête invalide."}), 400
