@@ -114,6 +114,55 @@ SEO_PAGES = {
         ],
         "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
     },
+    "a-propos": {
+        "title": "À propos de Teranga AI : assistant numérique du Sénégal",
+        "description": "Découvrez Teranga AI, assistant numérique consacré au Sénégal : informations pratiques, voyage, culture, langues et vie quotidienne.",
+        "h1": "À propos de Teranga AI",
+        "intro": "Teranga AI est un assistant numérique pensé autour du Sénégal et accessible depuis le Sénégal, la France et la diaspora.",
+        "sections": [
+            ("Un assistant pour le Sénégal", "Teranga AI aide à trouver des repères sur Dakar, les régions, les transports, la météo, la culture, la gastronomie et les langues."),
+            ("Pour plusieurs publics", "Voyageurs, résidents, diaspora et commerçants peuvent poser leurs questions en français, anglais, wolof ou pulaar."),
+            ("Informations à vérifier", "Pour les horaires, tarifs, formalités et autres informations susceptibles de changer, Teranga AI peut rechercher des sources récentes et invite à vérifier les informations officielles."),
+        ],
+        "faq": [
+            ("Teranga AI est-il accessible depuis le Sénégal ?", "Oui, le service est accessible sur le web depuis le Sénégal."),
+            ("Quelles langues sont disponibles ?", "Français, anglais, wolof et pulaar."),
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal"), ("diaspora-senegalaise", "Diaspora sénégalaise")],
+    },
+    "presse": {
+        "title": "Presse et médias : Teranga AI au Sénégal",
+        "description": "Informations presse sur Teranga AI : présentation, usages, langues et ressources pour les médias sénégalais.",
+        "h1": "Presse et médias",
+        "intro": "Cette page rassemble les informations essentielles pour présenter Teranga AI dans un article, une émission ou une publication numérique.",
+        "sections": [
+            ("Présentation courte", "Teranga AI est un assistant numérique consacré au Sénégal. Il répond aux questions pratiques sur les villes, régions, voyage, transport, culture, gastronomie, météo et langues."),
+            ("Présentation longue", "Pensé pour les personnes au Sénégal et pour la diaspora, Teranga AI permet de poser une question en français, anglais, wolof ou pulaar. Pour les informations changeantes, l'assistant peut rechercher des sources récentes."),
+            ("Contact presse", "Pour une demande média, utilisez les coordonnées de contact publiées par Teranga AI sur son site. Ne reprenez pas une information sensible sans la vérifier."),
+        ],
+        "faq": [
+            ("Teranga AI est-il un média ?", "Non. Teranga AI est un service d'assistance numérique ; les informations journalistiques doivent être attribuées à leurs sources."),
+            ("Peut-on utiliser Teranga AI pour préparer un reportage ?", "Oui, comme outil de recherche et de préparation, avec vérification des informations auprès des sources originales."),
+        ],
+        "related": [("a-propos", "À propos"), ("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal")],
+    },
+    "media-kit": {
+        "title": "Kit média Teranga AI : logo, présentation et ressources",
+        "description": "Kit média Teranga AI pour journalistes, créateurs et partenaires : présentation, identité et ressources de communication.",
+        "h1": "Kit média Teranga AI",
+        "intro": "Une fiche simple pour présenter Teranga AI de manière cohérente sur un site, un média, une newsletter ou les réseaux sociaux.",
+        "sections": [
+            ("Nom", "Teranga AI"),
+            ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais, wolof et pulaar."),
+            ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
+            ("Lien officiel", "https://teranga-ai-1.onrender.com/"),
+        ],
+        "faq": [
+            ("Peut-on reprendre la description courte ?", "Oui, en conservant le nom Teranga AI et en renvoyant vers le site officiel."),
+            ("Les réponses de Teranga AI remplacent-elles les sources officielles ?", "Non. Les informations administratives, juridiques, tarifaires ou très récentes doivent être vérifiées auprès des sources compétentes."),
+        ],
+        "related": [("a-propos", "À propos"), ("presse", "Presse"), ("senegal", "Guide du Sénégal")],
+    },
     "regions-senegal": {
         "title": "14 regions du Senegal : villes et carte | Teranga AI",
         "description": "Les 14 regions du Senegal : Dakar, Thies, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
