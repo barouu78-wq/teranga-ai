@@ -1132,6 +1132,43 @@ def complete_reply(payload):
     return text, extract_sources(response), image, lookup_map(payload.get("message", ""), should_fetch_map(payload.get("message", "")))
 
 
+FX_CACHE_TTL = 900
+_fx_cache = {"at": 0.0, "date": "", "rates": {"EUR": 655.957, "USD": 577.070, "GBP": 762.860}}
+
+def fetch_bceao_rates():
+    global _fx_cache
+    now = time.time()
+    if now - _fx_cache["at"] < FX_CACHE_TTL:
+        return _fx_cache
+    fallback = _fx_cache
+    try:
+        req = Request(
+            "https://www.bceao.int/fr/cours/cours-de-reference-des-principales-devises-contre-Franc-CFA",
+            headers={"User-Agent": "TerangaAI/1.0"},
+        )
+        raw = urlopen(req, timeout=5).read().decode("utf-8", "ignore")
+        rates = dict(fallback["rates"])
+        patterns = {
+            "EUR": r"Euro\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
+            "USD": r"Dollar us\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
+            "GBP": r"Livre sterling\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
+        }
+        for code, pattern in patterns.items():
+            m = re.search(pattern, raw, re.I)
+            if m:
+                rates[code] = float(m.group(1).replace(" ", "").replace(",", "."))
+        date_match = re.search(r"Cours des devises du\s+([^<]+)", raw, re.I)
+        _fx_cache = {"at": now, "date": date_match.group(1).strip() if date_match else "", "rates": rates}
+    except Exception:
+        app.logger.exception("Impossible de rafraîchir les taux BCEAO")
+    return _fx_cache
+
+@app.get("/exchange-rates")
+def exchange_rates():
+    data = fetch_bceao_rates()
+    return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
+
+
 @app.post("/chat")
 @require_json_post
 def chat():
