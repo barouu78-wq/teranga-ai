@@ -732,7 +732,65 @@
         "Pont Faidherbe Sénégal",
         "Djoudj Sénégal",
         "Guet Ndar Saint-Louis"
-      ]
+      ],
+      "regional_dossier": {
+        "capital_regionale": "Saint-Louis",
+        "identity": "Région du nord organisée autour du fleuve Sénégal, de la ville historique de Saint-Louis, de la pêche, de l'agriculture irriguée et des zones humides.",
+        "geography": "Vallée du fleuve Sénégal, delta, littoral et Langue de Barbarie.",
+        "economy": [
+          "agriculture irriguée",
+          "pêche",
+          "élevage",
+          "tourisme",
+          "commerce",
+          "services"
+        ],
+        "culture": [
+          "patrimoine de Saint-Louis",
+          "pêche à Guet Ndar",
+          "musique et festivals",
+          "cultures de la vallée"
+        ],
+        "key_places": [
+          "Île de Saint-Louis",
+          "Pont Faidherbe",
+          "Djoudj",
+          "Langue de Barbarie",
+          "Guet Ndar",
+          "Richard-Toll",
+          "Podor"
+        ],
+        "foods": [
+          "thiéré",
+          "poissons",
+          "thiéboudienne",
+          "lakh"
+        ],
+        "practical": "Météo, navigation, pêche, accès aux parcs et conditions du fleuve doivent être vérifiés.",
+        "coverage_topics": [
+          "géographie et découpage administratif",
+          "histoire et patrimoine",
+          "population et société",
+          "langues et cultures",
+          "économie et emploi",
+          "agriculture, élevage et pêche",
+          "éducation et santé",
+          "transport et infrastructures",
+          "tourisme et loisirs",
+          "gastronomie",
+          "environnement et biodiversité",
+          "services et vie quotidienne",
+          "actualité régionale"
+        ],
+        "source_priority": [
+          "ANSD",
+          "services publics sénégalais compétents",
+          "Géo Sénégal",
+          "institutions culturelles et touristiques",
+          "sources locales officielles"
+        ],
+        "freshness_rule": "Les chiffres, tarifs, horaires, événements, transports, services ouverts et alertes doivent être vérifiés avant d'être présentés comme actuels."
+      }
     },
     {
       "id": "matam",
