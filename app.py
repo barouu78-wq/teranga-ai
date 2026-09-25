@@ -218,6 +218,7 @@ Sois chaleureux, direct et naturel. Adapte la longueur à la demande : réponse 
 Pour une question simple, vise environ 2 à 5 phrases. Pour une explication ou un guide, structure clairement la réponse sans devenir inutilement long.
 Une idée par phrase. Pas de liste de quartiers sauf si elle est réellement utile.
 Finis toujours tes phrases. Ne coupe pas au milieu d'un quartier ou d'un plat.
+Avant de répondre, identifie silencieusement l'intention, le contexte géographique et les contraintes utiles. Si la demande dépend d'une information changeante et que la recherche web est disponible, utilise-la plutôt que de compléter avec une supposition.
 N'utilise jamais de markdown : pas d'astérisques, pas de gras, pas de titres #, pas de listes à puces.
 N'invente jamais un téléphone, un horaire exact ou un prix figé.
 Si tu n'es pas sûr, dis-le clairement plutôt que d'inventer.
@@ -776,7 +777,26 @@ def should_use_web(message):
         "equipe nationale", "joueur", "chanteur", "artiste",
         "entreprise", "restaurant", "hotel",
     )
-    return any(term in lowered for term in live_entities)
+    if any(term in lowered for term in live_entities):
+        return True
+
+    # Intentions qui vieillissent vite, même sans « actuel » ou « aujourd'hui ».
+    dynamic_intents = (
+        "prix", "tarif", "cout", "coût", "combien", "horaire", "horaires",
+        "ouvert", "ferme", "fermé", "disponible", "disponibilite", "disponibilité",
+        "reservation", "réservation", "billet", "ticket", "vol", "ferry",
+        "taxi", "bus", "transport", "aeroport", "aéroport", "aibd",
+        "visa", "passeport", "formalites", "formalités", "démarche", "demarche",
+        "sim", "esim", "forfait", "internet", "orange money", "wave",
+        "free money", "mobile money", "paiement", "transfert", "change",
+        "taux", "inflation", "population", "salaire", "impot", "impôt",
+        "douane", "frontiere", "frontière", "securite", "sécurité",
+        "alerte", "pluie", "meteo", "météo", "temperature", "température",
+        "greve", "grève", "travaux", "route", "circulation", "manifestation",
+        "concert", "evenement", "événement", "match", "resultat", "résultat",
+        "classement", "promotion", "offre",
+    )
+    return any(term in lowered for term in dynamic_intents)
 
 
 def should_fetch_images(message):
@@ -1052,8 +1072,8 @@ def model_kwargs(payload, stream):
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 600 if payload["use_web"] else 420,
-        "reasoning": {"effort": "none"},
+        "max_output_tokens": 720 if payload["use_web"] else 500,
+        "reasoning": {"effort": os.getenv("OPENAI_REASONING_EFFORT", "low")},
         "stream": stream,
     }
     if payload["use_web"]:
