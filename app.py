@@ -978,6 +978,9 @@ def parse_chat_payload():
     if not isinstance(history, list):
         history = []
     history = history[-MAX_HISTORY_ITEMS:]
+    audience = str(data.get("audience", "tourist")).lower()[:16]
+    if audience not in {"tourist", "merchant"}:
+        audience = "tourist"
     if not message:
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
     language_instruction = {
@@ -986,11 +989,26 @@ def parse_chat_payload():
         "wo": "Réponds en wolof naturel autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le wolof pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof.",
         "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
     }[language]
+    audience_instruction = {
+        "tourist": {
+            "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
+            "en": "Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
+            "wo": "Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
+            "ff": "Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+        },
+        "merchant": {
+            "fr": "Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
+            "en": "Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
+            "wo": "Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
+            "ff": "Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
+        }
+    }[audience][language]
     return {
-        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction,
+        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction,
         "input_text": build_conversation(history, message),
         "use_web": should_use_web(message),
         "message": message,
+        "audience": audience,
     }, None
 
 
