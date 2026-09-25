@@ -98,7 +98,7 @@ WEB_HINTS = (
     "actuels", "actuelles", "récent", "récente", "récentes",
     "horaire", "horaires", "ouvert", "ouverte",
     "disponible", "disponibilité", "réservation",
-    "événement", "evenement", "météo", "meteo",
+    "événement", "evenement", "météo", "meteo", "climat", "température", "temperature", "pluie", "pluies", "orage", "vent", "humidité", "humidite",
     "actualité", "actualités", "news", "today", "now",
     "current", "latest", "recent", "schedule", "hours",
     "open", "available", "availability", "booking", "weather", "event",
