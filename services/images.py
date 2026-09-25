@@ -11,6 +11,58 @@ logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
 
 
+def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
+    """Recherche d'images via Google Custom Search JSON API."""
+    query = str(query or "").strip()
+    api_key = str(api_key or "").strip()
+    cse_id = str(cse_id or "").strip()
+    if not query or not api_key or not cse_id:
+        return []
+
+    params = {
+        "key": api_key,
+        "cx": cse_id,
+        "q": query,
+        "searchType": "image",
+        "num": str(min(max(int(limit), 1), 10)),
+        "safe": "active",
+        "gl": "sn",
+        "imgType": "photo",
+    }
+    req = Request(
+        "https://www.googleapis.com/customsearch/v1?" + urlencode(params),
+        headers={"User-Agent": "TerangaAI/1.0 (Google Images)"},
+    )
+    opener = urlopen_fn or urlopen
+    with opener(req, timeout=8) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+
+    out, seen = [], set()
+    for item in data.get("items", []) or []:
+        image = item.get("image") or {}
+        thumbnail = image.get("thumbnailLink") or ""
+        original = image.get("url") or item.get("link") or ""
+        context = image.get("contextLink") or item.get("link") or ""
+        if not thumbnail or not original or not context:
+            continue
+        if not thumbnail.startswith(("https://", "http://")):
+            continue
+        key = thumbnail.split("?", 1)[0].lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({
+            "url": original,
+            "display_url": thumbnail,
+            "alt": str(item.get("title") or query)[:160],
+            "credit": "Google Images",
+            "page_url": context,
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
 def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None, urlopen_fn=None):
     query = str(title or "").strip()
     if not query:
