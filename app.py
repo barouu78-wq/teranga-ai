@@ -42,12 +42,12 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
+SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 ALLOWED_ORIGINS = {
-    origin.strip()
-    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    origin.strip().rstrip("/")
+    for origin in os.getenv("ALLOWED_ORIGINS", SITE_URL).split(",")
     if origin.strip()
 }
-SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
@@ -93,6 +93,7 @@ CSRF_HEADER = "X-CSRF-Token"
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
@@ -479,8 +480,10 @@ def normalize(value):
     return "".join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
 
 
+CSRF_TTL = 60 * 60 * 12
+
 def sanitize_text(text, max_len):
-    text = CONTROL_CHARS.sub("", str(text or ""))
+    text = ZERO_WIDTH_CHARS.sub("", CONTROL_CHARS.sub("", str(text or "")))
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"[ \t]{2,}", " ", text)
     return text.strip()[:max_len]
@@ -852,17 +855,23 @@ def sign_token(value):
 def valid_token(token):
     if not token or "." not in token:
         return False
-    value, _, provided = token.partition(".")
+    value, _, provided = token.rpartition(".")
     expected = hmac.new(
         app.config["SECRET_KEY"].encode("utf-8"),
         value.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return hmac.compare_digest(provided, expected)
+    if not hmac.compare_digest(provided, expected):
+        return False
+    try:
+        issued_at = int(value.split(".", 1)[0])
+    except (ValueError, IndexError):
+        return False
+    return 0 <= time.time() - issued_at <= CSRF_TTL
 
 
 def issue_csrf():
-    return sign_token(secrets.token_urlsafe(24))
+    return sign_token(f"{int(time.time())}.{secrets.token_urlsafe(24)}")
 
 
 def origin_allowed():
@@ -911,8 +920,11 @@ def add_security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = (
-        "camera=(), geolocation=(), microphone=(self), payment=(), usb=()"
+        "camera=(), geolocation=(), microphone=(self), payment=(), usb=(), "
+        "accelerometer=(), gyroscope=(), magnetometer=()"
     )
+    response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+    response.headers["Origin-Agent-Cluster"] = "?1"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
@@ -939,17 +951,7 @@ def add_security_headers(response):
 
 @app.get("/health")
 def health():
-    return jsonify({
-        "status": "ok",
-        "service": "teranga-ai",
-        "model": MODEL,
-        "model_configured": bool(MODEL),
-        "web_search": True,
-        "api_key_configured": bool(API_KEY),
-        "google_images_configured": bool(GOOGLE_API_KEY and GOOGLE_CSE_ID),
-        "redis_rate_limit": redis_client is not None,
-        "site_url": SITE_URL,
-    })
+    return jsonify({"status": "ok", "service": "teranga-ai"})
 
 
 def parse_chat_payload():
