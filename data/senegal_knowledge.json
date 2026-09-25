@@ -1311,5 +1311,103 @@
         "informations gouvernementales"
       ]
     }
+  ],
+  "knowledge_scope": {
+    "version": "2026-09",
+    "principle": "Base nationale multisources : ne pas réduire la connaissance du Sénégal au patrimoine UNESCO. Couvrir aussi géographie, administration, démographie, météo/climat, mobilité, santé, sécurité, formalités, économie, agriculture, environnement, histoire, religions, langues, cultures, gastronomie, tourisme, sports, éducation, vie quotidienne et services.",
+    "source_priority": [
+      "Sources officielles sénégalaises pour les données administratives, sanitaires, météorologiques, démographiques et réglementaires.",
+      "Organisations internationales ou sources institutionnelles reconnues pour compléter les données historiques, patrimoniales et économiques.",
+      "Web en temps réel pour les informations susceptibles de changer : météo, alertes, horaires, transports, prix, événements, formalités et disponibilité.",
+      "Ne jamais présenter une donnée dynamique comme permanente sans vérification."
+    ],
+    "domains": {
+      "geography_administration": "14 régions, 46 départements, 127 arrondissements et 553 communes ; utiliser l'ANSD pour les nomenclatures et statistiques.",
+      "demography": "Population, urbanisation, âge, ménages et indicateurs sociaux : privilégier l'ANSD et ses recensements/projections.",
+      "weather_climate": "Prévisions, alertes, pluie, vent, température et phénomènes dangereux : privilégier l'ANACIM et vérifier la date/heure de validité.",
+      "health": "Santé publique, prévention, épidémies, établissements et urgences : privilégier le ministère chargé de la Santé, le SAMU et les sources sanitaires institutionnelles.",
+      "travel_formalities": "Passeports, visas, entrée/sortie, douanes et démarches : vérifier les services publics, autorités sénégalaises et représentations diplomatiques avant de répondre.",
+      "mobility": "Aéroports, vols, TER, BRT, bus, taxis, ferries, péages et trafic : vérifier les opérateurs/autorités en temps réel.",
+      "tourism": "Destinations, plages, parcs, musées, patrimoine, hébergements et activités ; ne pas confondre patrimoine mondial, patrimoine national et liste indicative.",
+      "culture_history": "Histoire précoloniale, royaumes, colonisation, indépendance, figures historiques, littérature, cinéma, musique, arts et traditions.",
+      "languages_society": "Français, wolof, pulaar/fulfulde, sérère, diola, soninké, mandingue et autres langues nationales ; distinguer langue officielle, langue courante et variété locale.",
+      "religion": "Islam, christianisme et traditions religieuses/culturelles ; présenter les pratiques comme faits, traditions ou croyances selon le cas, sans généraliser.",
+      "economy": "Agriculture, pêche, élevage, industrie, services, tourisme, énergie, pétrole/gaz, commerce et emploi ; dater les chiffres et vérifier les évolutions.",
+      "environment": "Littoral, mangroves, fleuves, zones humides, forêts, biodiversité, sécheresse, érosion et conservation.",
+      "food": "Cuisine nationale et spécialités régionales, ingrédients, boissons, habitudes alimentaires et contexte culturel ; ne pas inventer d'enseignes.",
+      "daily_life": "Monnaie FCFA, paiements numériques, banques, télécommunications, marchés, horaires et services ; vérifier les tarifs et disponibilités actuels.",
+      "sports_events": "Football, lutte, basketball, athlétisme, festivals, foires et événements ; vérifier les calendriers actuels."
+    }
+  },
+  "source_registry": [
+    {
+      "name": "ANSD",
+      "role": "statistiques, recensements, démographie, régions et indicateurs",
+      "url": "https://www.ansd.sn/"
+    },
+    {
+      "name": "ANACIM",
+      "role": "météorologie, prévisions, alertes et aviation civile",
+      "url": "https://www.anacim.sn/"
+    },
+    {
+      "name": "Ministère chargé du Tourisme",
+      "role": "données générales, destinations et tourisme",
+      "url": "https://www.tourisme.gouv.sn/"
+    },
+    {
+      "name": "Ministère de la Culture",
+      "role": "patrimoine, culture, artisanat et activités culturelles",
+      "url": "https://mcat.gouv.sn/"
+    },
+    {
+      "name": "Ministère de la Santé et de l’Hygiène publique",
+      "role": "santé publique, urgences et alertes sanitaires",
+      "url": "https://sante.gouv.sn/"
+    },
+    {
+      "name": "Service public du Sénégal",
+      "role": "démarches administratives et textes de référence",
+      "url": "https://www.servicepublic.gouv.sn/"
+    },
+    {
+      "name": "UNESCO",
+      "role": "patrimoine mondial et patrimoine culturel immatériel",
+      "url": "https://www.unesco.org/fr/countries/sn"
+    },
+    {
+      "name": "UNESCO World Heritage Centre",
+      "role": "statut des biens inscrits et liste indicative",
+      "url": "https://whc.unesco.org/fr/etatsparties/sn"
+    },
+    {
+      "name": "France Diplomatie",
+      "role": "informations consulaires et présentation générale du pays",
+      "url": "https://www.diplomatie.gouv.fr/fr/information-par-pays/senegal/"
+    },
+    {
+      "name": "Banque mondiale",
+      "role": "indicateurs macroéconomiques et développement",
+      "url": "https://www.banquemondiale.org/fr/country/senegal"
+    },
+    {
+      "name": "OMS",
+      "role": "santé internationale et informations sanitaires",
+      "url": "https://www.who.int/countries/sen/"
+    }
+  ],
+  "dynamic_topics": [
+    "météo et alertes ANACIM",
+    "transport et trafic",
+    "vols et horaires",
+    "ferries et liaisons maritimes",
+    "événements et festivals",
+    "prix et tarifs",
+    "ouverture des lieux",
+    "formalités d'entrée et visas",
+    "alertes sanitaires",
+    "actualité nationale",
+    "taux de change",
+    "disponibilité des services"
   ]
 }
