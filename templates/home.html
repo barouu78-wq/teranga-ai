@@ -1044,6 +1044,24 @@ ff:{
 }
 };
 const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
+const MONEY_SIM={
+fr:{
+tourist:[['Argent & change',"Convertis mon argent en FCFA et explique-moi les frais à prévoir."],['SIM & Internet',"Quelle SIM ou eSIM choisir au Sénégal pour un séjour touristique ?"]],
+merchant:[['Encaisser',"Quels moyens de paiement puis-je proposer à mes clients au Sénégal ?"],['Change & paiements',"Comment gérer les paiements en FCFA, le change et les frais pour mon activité ?"]]
+},
+en:{
+tourist:[['Money & exchange','Convert my money to CFA francs and explain the fees I should expect.'],['SIM & internet','Which SIM or eSIM should I choose for a tourist stay in Senegal?']],
+merchant:[['Accept payments','Which payment methods can I offer customers in Senegal?'],['Exchange & payments','How should I manage CFA payments, exchange and fees for my business?']]
+},
+wo:{
+tourist:[['Xaalis & change',"Naka laa mëna soppi sama xaalis ci CFA, te lan mooy frais yi?"],['SIM & Internet',"Ban SIM walla eSIM laa wara jënd ci Senegaal ngir tukki?"]],
+merchant:[['Jël fey',"Yan yoon yu fey laa mëna jox sama clients ci Senegaal?"],['Change & fey',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
+},
+ff:{
+tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftina?'],['SIM e Internet','Hol SIM walla eSIM mi waawi moƴƴude ngam yahdugol e Senegaal?']],
+merchant:[['Jaɓɓude feyde','Hol laawol feyde mi waawi hokkude clients am e Senegaal?'],['Change e feyde','No mi doxirta feyde e CFA, change e frais e golle am?']]
+}
+};
 const AUDIENCE={
 fr:{
  tourist:[['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
@@ -1084,7 +1102,7 @@ function renderAudience(){
   $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
   $('audienceMerchant').textContent=labels[2];$('audienceMerchantHint').textContent=labels[3];
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
-  const rows=a[audience];
+  const rows=[...(a[audience]||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
   const cards=rows.map(([t,q])=>({t,q,d:''}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
