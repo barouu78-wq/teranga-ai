@@ -122,11 +122,31 @@ WEB_HINTS = (
 )
 
 def format_senegal_knowledge(data):
+    profile = data.get("country_profile", {})
     regions = data.get("regions", [])
     lines = [
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
         "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
     ]
+    if profile:
+        lines.append("REPÈRES NATIONAUX :")
+        lines.append(
+            f"- Capitale : {profile.get('capital')}; superficie : {profile.get('area_km2')} km²; "
+            f"langue officielle : {profile.get('official_language')}; monnaie : {profile.get('currency', {}).get('name')} ({profile.get('currency', {}).get('code')}); "
+            f"fuseau : {profile.get('time_zone')}; indépendance : {profile.get('independence_date')}."
+        )
+        geography = profile.get("geography", {})
+        if geography:
+            lines.append(
+                f"- Géographie : façade {geography.get('coastline')}; pays voisins : {', '.join(geography.get('neighboring_countries', []))}; "
+                f"grands fleuves : {', '.join(geography.get('major_rivers', []))}; zones : {', '.join(geography.get('major_geographic_areas', []))}."
+            )
+        climate = profile.get("climate", {})
+        if climate:
+            lines.append(f"- Climat : {climate.get('description')}")
+        emergencies = profile.get("emergency_numbers", [])
+        if emergencies:
+            lines.append("URGENCES : " + "; ".join(f"{x.get('service')} {x.get('number')}" for x in emergencies) + ".")
     for region in regions:
         places = ", ".join(region.get("places", [])[:12])
         highlights = ", ".join(region.get("highlights", [])[:10])
