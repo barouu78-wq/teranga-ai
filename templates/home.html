@@ -468,8 +468,9 @@ async function postJSON(url,body,extra){
   if(res.status===403){
     const data=await res.clone().json().catch(()=>({}));
     if(String(data.error||'').includes('csrf')||String(data.error||'').includes('Jeton')){
-      await refreshCsrf();
-      res=await fetch(url,{method:'POST',headers:headers(extra),body,credentials:'same-origin'});
+      const token=await refreshCsrf();
+      const retryExtra=Object.assign({},extra||{},token?{'X-CSRF-Token':token}:{});
+      res=await fetch(url,{method:'POST',headers:headers(retryExtra),body,credentials:'same-origin'});
     }
   }
   return res;
