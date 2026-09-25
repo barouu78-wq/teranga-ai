@@ -99,6 +99,10 @@ IDENTITY_COOKIE = "teranga_client"
 IDENTITY_TTL = 60 * 60 * 24 * 30
 WEB_RATE_LIMIT = 10
 WEB_RATE_WINDOW = 60
+ABUSE_SCORE_WINDOW = 600
+ABUSE_BLOCK_SECONDS = 600
+ABUSE_SCORE_THRESHOLD = 8
+ABUSE_LOG_SAMPLE = 40
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
@@ -110,6 +114,8 @@ tts_hourly_log = defaultdict(deque)
 image_request_log = defaultdict(deque)
 fx_request_log = defaultdict(deque)
 web_request_log = defaultdict(deque)
+abuse_events = defaultdict(deque)
+abuse_blocks = {}
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
@@ -661,7 +667,11 @@ def safe_image_fetch(src):
 def image_proxy():
     ip = client_ip()
     identity = abuse_key(ip)
+    if abuse_blocked(ip) or abuse_blocked(identity):
+        return Response("Trop de demandes. Réessaie dans quelques minutes.", status=429, mimetype="text/plain", headers={"Retry-After": "120"})
     if not allowed_request(ip, image_request_log[ip], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image") or not allowed_request(identity, image_request_log[identity], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image_identity"):
+        record_abuse(ip, "image_rate", 1)
+        record_abuse(identity, "image_identity_rate", 1)
         return Response("Trop de demandes d'images. Réessaie dans un instant.", status=429, mimetype="text/plain", headers={"Retry-After": "10"})
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
@@ -936,6 +946,33 @@ def client_identity():
 def abuse_key(ip):
     identity = client_identity()
     return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
+
+
+def record_abuse(identity, kind, weight=1):
+    now = time.time()
+    key = str(identity)[:64]
+    with RATE_LOCK:
+        events = abuse_events[key]
+        while events and now - events[0][0] > ABUSE_SCORE_WINDOW:
+            events.popleft()
+        events.append((now, kind, min(int(weight), 5)))
+        score = sum(item[2] for item in events)
+        if score >= ABUSE_SCORE_THRESHOLD:
+            abuse_blocks[key] = now + ABUSE_BLOCK_SECONDS
+            return True
+    return False
+
+
+def abuse_blocked(identity):
+    now = time.time()
+    key = str(identity)[:64]
+    with RATE_LOCK:
+        until = abuse_blocks.get(key, 0)
+        if until > now:
+            return True
+        if until:
+            abuse_blocks.pop(key, None)
+    return False
 
 
 def allowed_request(ip, log, limit, window, bucket="chat"):
@@ -1339,6 +1376,8 @@ def exchange_rates():
     ip = client_ip()
     identity = abuse_key(ip)
     if not allowed_request(ip, fx_request_log[ip], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx") or not allowed_request(identity, fx_request_log[identity], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx_identity"):
+        record_abuse(ip, "fx_rate", 1)
+        record_abuse(identity, "fx_identity_rate", 1)
         return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
     data = fetch_bceao_rates()
     return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
@@ -1349,11 +1388,16 @@ def exchange_rates():
 def chat():
     ip = client_ip()
     identity = abuse_key(ip)
+    if abuse_blocked(ip):
+        return jsonify({"error": "Trop de demandes rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
     if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
+        record_abuse(ip, "chat_rate", 2)
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429, {"Retry-After": "8"}
-    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour") or not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_identity"):
+    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour") or not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_identity"): 
+        record_abuse(ip, "chat_hourly", 3)
+        record_abuse(identity, "chat_identity_hour", 1)
         return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
     payload, error = parse_chat_payload()
@@ -1362,8 +1406,12 @@ def chat():
     # Une recherche web consomme davantage de ressources : quota séparé.
     if payload["use_web"]:
         web_identity = abuse_key(client_ip())
+        if abuse_blocked(web_identity):
+            return jsonify({"error": "Trop de recherches rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
         if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
             return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
+        if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
+            record_abuse(web_identity, "web_rate", 2)
 
     want_json = request.headers.get("X-Teranga-Mode", "").lower() == "json"
 
@@ -1448,9 +1496,15 @@ def chat():
 def tts():
     ip = client_ip()
     identity = abuse_key(ip)
+    if abuse_blocked(ip) or abuse_blocked(identity):
+        return jsonify({"error": "Trop de demandes vocales rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
     if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts") or not allowed_request(identity, tts_request_log[identity], TTS_RATE_LIMIT, 60, "tts_identity"):
+        record_abuse(ip, "tts_rate", 2)
+        record_abuse(identity, "tts_identity_rate", 1)
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
     if not allowed_request(ip, tts_hourly_log[ip], TTS_HOURLY_LIMIT, 3600, "tts_hour") or not allowed_request(identity, tts_hourly_log[identity], TTS_HOURLY_LIMIT, 3600, "tts_identity_hour"):
+        record_abuse(ip, "tts_hourly", 3)
+        record_abuse(identity, "tts_identity_hour", 1)
         return jsonify({"error": "Trop de demandes vocales sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
