@@ -733,6 +733,7 @@ def fetch_topic_images(message):
         for photo in candidates:
             if not photo:
                 continue
+            photo["search_query"] = title
             photo["display_url"] = image_proxy_url(photo.get("url", ""))
             src = photo.get("url", "")
             if not src or src in seen_urls:
@@ -897,10 +898,10 @@ def add_security_headers(response):
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        f"default-src 'self'; script-src {script_src}; "
+        f"default-src 'self'; script-src {script_src} https://cse.google.com https://www.google.com https://www.gstatic.com; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self'; media-src 'self' blob:; object-src 'none'; "
-        "frame-src https://www.google.com https://maps.google.com; "
+        "connect-src 'self' https://cse.google.com https://www.google.com; media-src 'self' blob:; object-src 'none'; "
+        "frame-src https://www.google.com https://cse.google.com https://maps.google.com; "
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
