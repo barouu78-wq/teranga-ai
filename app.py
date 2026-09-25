@@ -95,6 +95,10 @@ IMAGE_RATE_LIMIT = 24
 IMAGE_RATE_WINDOW = 60
 FX_RATE_LIMIT = 6
 FX_RATE_WINDOW = 60
+IDENTITY_COOKIE = "teranga_client"
+IDENTITY_TTL = 60 * 60 * 24 * 30
+WEB_RATE_LIMIT = 10
+WEB_RATE_WINDOW = 60
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
@@ -105,6 +109,7 @@ chat_hourly_log = defaultdict(deque)
 tts_hourly_log = defaultdict(deque)
 image_request_log = defaultdict(deque)
 fx_request_log = defaultdict(deque)
+web_request_log = defaultdict(deque)
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
@@ -655,7 +660,8 @@ def safe_image_fetch(src):
 @app.get("/image-proxy")
 def image_proxy():
     ip = client_ip()
-    if not allowed_request(ip, image_request_log[ip], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image"):
+    identity = abuse_key(ip)
+    if not allowed_request(identity, image_request_log[identity], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image"):
         return Response("Trop de demandes d'images. Réessaie dans un instant.", status=429, mimetype="text/plain", headers={"Retry-After": "10"})
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
@@ -920,6 +926,18 @@ def client_ip():
     return (request.remote_addr or "unknown")[:64]
 
 
+def client_identity():
+    raw = request.cookies.get(IDENTITY_COOKIE, "")
+    if raw and re.fullmatch(r"[A-Za-z0-9_-]{24,80}", raw):
+        return raw
+    return secrets.token_urlsafe(24)
+
+
+def abuse_key(ip):
+    identity = client_identity()
+    return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
+
+
 def allowed_request(ip, log, limit, window, bucket="chat"):
     if redis_client is not None:
         try:
@@ -1027,6 +1045,20 @@ def require_json_post(fn):
             return jsonify({"error": "csrf"}), 403
         return fn(*args, **kwargs)
     return wrapper
+
+
+@app.after_request
+def add_client_identity(response):
+    if request.path in {"/chat", "/tts", "/image-proxy", "/exchange-rates"} and not request.cookies.get(IDENTITY_COOKIE):
+        response.set_cookie(
+            IDENTITY_COOKIE,
+            client_identity(),
+            max_age=IDENTITY_TTL,
+            secure=True,
+            httponly=True,
+            samesite="Lax",
+        )
+    return response
 
 
 @app.after_request
@@ -1305,7 +1337,8 @@ def fetch_bceao_rates():
 @app.get("/exchange-rates")
 def exchange_rates():
     ip = client_ip()
-    if not allowed_request(ip, fx_request_log[ip], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx"):
+    identity = abuse_key(ip)
+    if not allowed_request(identity, fx_request_log[identity], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx"):
         return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
     data = fetch_bceao_rates()
     return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
@@ -1315,16 +1348,22 @@ def exchange_rates():
 @require_json_post
 def chat():
     ip = client_ip()
-    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
+    identity = abuse_key(ip)
+    if not allowed_request(identity, request_log[identity], RATE_LIMIT, RATE_WINDOW, "chat"):
         return jsonify({
             "error": "Trop de demandes. Attends quelques secondes puis réessaie."
         }), 429, {"Retry-After": "8"}
-    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour"):
+    if not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_hour"):
         return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
     payload, error = parse_chat_payload()
     if error:
         return error
+    # Une recherche web consomme davantage de ressources : quota séparé.
+    if payload["use_web"]:
+        web_identity = abuse_key(client_ip())
+        if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
+            return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
     want_json = request.headers.get("X-Teranga-Mode", "").lower() == "json"
 
@@ -1408,9 +1447,10 @@ def chat():
 @require_json_post
 def tts():
     ip = client_ip()
-    if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts"):
+    identity = abuse_key(ip)
+    if not allowed_request(identity, tts_request_log[identity], TTS_RATE_LIMIT, 60, "tts"):
         return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
-    if not allowed_request(ip, tts_hourly_log[ip], TTS_HOURLY_LIMIT, 3600, "tts_hour"):
+    if not allowed_request(identity, tts_hourly_log[identity], TTS_HOURLY_LIMIT, 3600, "tts_hour"):
         return jsonify({"error": "Trop de demandes vocales sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
