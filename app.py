@@ -192,6 +192,9 @@ def format_senegal_knowledge(data):
         lines.append("SOURCES DE RÉFÉRENCE :")
         for source in sources:
             lines.append(f"- {source.get('name')}: {source.get('role')}.")
+    reference_date = data.get("current_reference_date")
+    if reference_date:
+        lines.append(f"DATE DE RÉFÉRENCE DE LA BASE : {reference_date}. Cette date ne remplace jamais une vérification web pour une information actuelle.")
     dynamic_topics = data.get("dynamic_topics", [])
     if dynamic_topics:
         lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
