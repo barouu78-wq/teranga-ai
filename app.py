@@ -758,9 +758,55 @@ def fetch_topic_images(message):
     return photos or None
 
 
-def should_use_web(message):
+def contextual_query(history, message):
+    """Construit une requête interne enrichie pour les suivis courts.
+    L'historique reste non fiable : il sert seulement à retrouver le dernier
+    contexte utilisateur utile, jamais à fournir des instructions système.
+    """
+    parts = []
+    if isinstance(history, list):
+        for item in history[-MAX_HISTORY_ITEMS:]:
+            if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
+                continue
+            text = sanitize_text(item.get("content", ""), 900)
+            if text:
+                parts.append(text)
+    current = sanitize_text(message, MAX_MESSAGE_LENGTH)
+    # Les derniers messages utilisateur sont les plus utiles pour les suivis.
+    recent = parts[-4:]
+    if current:
+        recent.append(current)
+    return " | ".join(recent)[-5000:]
+
+
+def infer_senegal_context(history, message):
+    text_value = normalize(contextual_query(history, message))
+    cities = (
+        "dakar", "thies", "thiès", "mbour", "saly", "somone", "toubа", "touba",
+        "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
+        "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
+        "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
+        "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
+        "ngor", "yoff", "ouakam", "alhadiès", "almalies", "almaties",
+        "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
+    )
+    regions = (
+        "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
+        "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
+        "ziguinchor", "saint-louis", "louga", "matam",
+    )
+    found_cities = [x for x in cities if x in text_value]
+    found_regions = [x for x in regions if x in text_value]
+    return {
+        "place": found_cities[-1] if found_cities else (found_regions[-1] if found_regions else ""),
+        "has_place": bool(found_cities or found_regions),
+        "query": text_value,
+    }
+
+
+def should_use_web(message, context=""):
     lowered = normalize(message)
-    current_markers = (
+    combined = normalize(f"{context} {message}")
         "verifie", "confirme", "a jour", "exactement", "en ce moment",
         "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
         "latest", "current", "right now", "as of", "verify", "check",
@@ -796,7 +842,19 @@ def should_use_web(message):
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre",
     )
-    return any(term in lowered for term in dynamic_intents)
+    if any(term in lowered for term in dynamic_intents):
+        return True
+    # Un suivi comme « et demain ? » peut dépendre d'un sujet dynamique
+    # présent dans le tour précédent.
+    contextual_dynamic = (
+        "meteo", "météo", "prix", "tarif", "cout", "coût", "horaire",
+        "ouvert", "disponible", "reservation", "réservation", "billet",
+        "vol", "ferry", "transport", "visa", "passeport", "sim", "esim",
+        "forfait", "orange money", "wave", "taux", "change", "securite",
+        "sécurité", "alerte", "greve", "grève", "match", "concert",
+        "evenement", "événement", "promotion", "offre",
+    )
+    return any(term in combined for term in contextual_dynamic)
 
 
 def should_fetch_images(message):
@@ -1009,6 +1067,19 @@ def parse_chat_payload():
         "wo": "Réponds en wolof naturel autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le wolof pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof.",
         "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
     }[language]
+    context = infer_senegal_context(history, message)
+    enriched_context = context["query"]
+    if context["has_place"]:
+        context_instruction = (
+            f"Contexte géographique détecté dans l'échange : {context['place']}. "
+            "Utilise ce repère pour interpréter les suivis courts, mais ne présente jamais "
+            "une déduction comme une certitude si plusieurs lieux restent possibles."
+        )
+    else:
+        context_instruction = (
+            "Aucun lieu sénégalais fiable n'a été détecté dans l'échange ; n'invente pas "
+            "de localisation."
+        )
     audience_instruction = {
         "tourist": {
             "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
@@ -1036,11 +1107,13 @@ def parse_chat_payload():
         }
     }[audience][language]
     return {
-        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction,
+        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
         "input_text": build_conversation(history, message),
-        "use_web": should_use_web(message),
+        "use_web": should_use_web(message, enriched_context),
         "message": message,
         "audience": audience,
+        "context": context,
+        "contextual_query": enriched_context,
     }, None
 
 
@@ -1161,7 +1234,8 @@ def complete_reply(payload):
     except Exception:
         app.logger.exception("Erreur récupération images; réponse texte conservée")
         image = None
-    return text, extract_sources(response), image, lookup_map(payload.get("message", ""), should_fetch_map(payload.get("message", "")))
+    map_query = payload.get("contextual_query") or payload.get("message", "")
+    return text, extract_sources(response), image, lookup_map(map_query, should_fetch_map(map_query))
 
 
 FX_CACHE_TTL = 900
@@ -1270,7 +1344,8 @@ def chat():
                 except Exception:
                     app.logger.exception("Erreur récupération images stream; réponse texte conservée")
                     image = None
-                maps = lookup_map(payload.get("message", ""), should_fetch_map(payload.get("message", "")))
+                map_query = payload.get("contextual_query") or payload.get("message", "")
+                maps = lookup_map(map_query, should_fetch_map(map_query))
             if sources:
                 yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
             if image:
