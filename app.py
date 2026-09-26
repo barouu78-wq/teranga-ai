@@ -1361,8 +1361,17 @@ def complete_reply(payload):
     return text, extract_sources(response), image, lookup_map(map_query, should_fetch_map(map_query))
 
 
-FX_CACHE_TTL = 900
-_fx_cache = {"at": 0.0, "date": "", "rates": {"EUR": 655.957, "USD": 577.070, "GBP": 762.860}}
+FX_CACHE_TTL = 300  # 5 min : la BCEAO publie des cours de référence quotidiens
+FX_SOURCE_URL = "https://www.bceao.int/fr/cours/cours-de-reference-des-principales-devises-contre-Franc-CFA"
+_fx_cache = {
+    "at": 0.0,
+    "date": "",
+    "rates": {"EUR": 655.957, "USD": 577.070, "GBP": 762.860},
+}
+
+def _clean_html_cell(value):
+    value = re.sub(r"<[^>]+>", " ", value or "")
+    return re.sub(r"\s+", " ", value).strip()
 
 def fetch_bceao_rates():
     global _fx_cache
@@ -1372,24 +1381,42 @@ def fetch_bceao_rates():
     fallback = _fx_cache
     try:
         req = Request(
-            "https://www.bceao.int/fr/cours/cours-de-reference-des-principales-devises-contre-Franc-CFA",
+            FX_SOURCE_URL,
             headers={"User-Agent": "TerangaAI/1.0"},
         )
         raw = urlopen(req, timeout=5).read().decode("utf-8", "ignore")
-        rates = dict(fallback["rates"])
-        patterns = {
-            "EUR": r"Euro\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
-            "USD": r"Dollar us\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
-            "GBP": r"Livre sterling\s*</[^>]+>\s*<[^>]+>\s*([0-9.,]+)",
+        cells = re.findall(r"<(?:td|th)[^>]*>(.*?)</(?:td|th)>", raw, re.I | re.S)
+        normalized = [_clean_html_cell(cell) for cell in cells]
+        aliases = {
+            "EUR": {"euro"},
+            "USD": {"dollar us", "dollar américain", "dollar americain"},
+            "GBP": {"livre sterling"},
         }
-        for code, pattern in patterns.items():
-            m = re.search(pattern, raw, re.I)
-            if m:
-                rates[code] = float(m.group(1).replace(" ", "").replace(",", "."))
-        date_match = re.search(r"Cours des devises du\s+([^<]+)", raw, re.I)
-        _fx_cache = {"at": now, "date": date_match.group(1).strip() if date_match else "", "rates": rates}
+        rates = dict(fallback["rates"])
+        for index, cell in enumerate(normalized):
+            key = cell.casefold()
+            for code, names in aliases.items():
+                if key in names and index + 1 < len(normalized):
+                    raw_value = normalized[index + 1].replace(" ", "").replace(",", ".")
+                    try:
+                        value = float(raw_value)
+                    except ValueError:
+                        continue
+                    if value > 0:
+                        rates[code] = value
+        date_match = re.search(
+            r"Cours des devises du\s+([^<\r\n]+)",
+            raw,
+            re.I,
+        )
+        _fx_cache = {
+            "at": now,
+            "date": date_match.group(1).strip() if date_match else "",
+            "rates": rates,
+        }
     except Exception:
-        app.logger.exception("Impossible de rafraîchir les taux BCEAO")
+        # On conserve le dernier cours valide plutôt que d'afficher une valeur vide.
+        app.logger.warning("Rafraîchissement BCEAO indisponible; conservation du dernier cours valide.")
     return _fx_cache
 
 @app.get("/exchange-rates")
