@@ -1690,6 +1690,11 @@ def seo_media_kit():
     return render_seo_page("media-kit", SITE_URL)
 
 
+@app.get("/assistant-senegal")
+def seo_assistant_senegal():
+    return render_seo_page("assistant-senegal", SITE_URL)
+
+
 @app.get("/senegal")
 def seo_senegal():
     return render_seo_page("senegal", SITE_URL)
