@@ -22,6 +22,7 @@ from services.seo import SEO_PAGES, render_seo_page
 from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
+from services.voice_quality import voice_instruction, transcription_prompt, tts_instruction
 from services.trip_planner import register_trip_planner
 from services.images import (
     fetch_city_image as _fetch_city_image,
@@ -1754,6 +1755,7 @@ def realtime_call():
         f"Tu es Teranga AI, assistant conversationnel consacré au Sénégal. "
         f"Réponds naturellement en {language_name}, comme dans une conversation orale réelle. "
         f"Tu t'adresses à un {audience_name}. Sois chaleureux, clair, concis et utile. "
+        + voice_instruction(language) + " "
         "Comprends les phrases familières, les hésitations, les noms de lieux sénégalais et les mots wolof ou pulaar. "
         "Ne lis jamais du markdown, des URL ou des signes techniques à voix haute. "
         "Pour une information qui peut changer (météo, horaires, prix, transport, actualité, réglementation), "
@@ -1777,7 +1779,7 @@ def realtime_call():
                 "transcription": {
                     "model": "gpt-4o-transcribe",
                     "language": language if language in {"fr", "en"} else None,
-                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof, Pulaar."
+                    "prompt": transcription_prompt(language)
                 },
                 "turn_detection": {
                     "type": "semantic_vad",
@@ -1935,12 +1937,7 @@ def tts():
         "ff": "Pulaar, a Fulah language of northern Senegal",
     }[language]
     try:
-        voice_instructions = {
-            "fr": "Voix adulte, claire, chaleureuse et très présente, avec une vraie projection vocale. Parle comme dans une conversation naturelle, jamais comme une lecture automatique. Utilise une énergie moyenne à soutenue, une voix bien articulée et un timbre plutôt clair que grave, sans chuchoter ni parler trop bas. Débit naturel autour de 1.0, micro-pauses entre les idées, intonation vivante et légèrement expressive. Fais ressortir les mots importants sans dramatiser. Prononce soigneusement les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
-            "en": "Warm, spontaneous conversational voice, as if speaking directly to one person. Do not sound like a narrator reading text. Use clear articulation without over-enunciating, a smooth slightly measured pace, natural micro-pauses and lively but calm intonation. Adjust pacing to the sentence. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown, emojis, bullets, URLs or technical symbols aloud.",
-            "wo": "Wax ak baat bu nit, bu neex te naturel, mel ni waxtaan ci kanam ak kanam. Débit bu yomb te ñuul, noppi yu gàtt ci diggante xalaat yi, intonation bu naturel ak doole bu dal. Teg solo ci wax yi am solo te bañ a dramatise. Jàng tur yu Senegaal, dëkk yi, ñam yi ak Wolof ak Pulaar bu baax. Bul jàng markdown, URL walla simbol yu teknikal.",
-            "ff": "Voix humaine, chaleureuse et très naturelle, comme une conversation directe. Débit fluide légèrement posé, petites pauses naturelles entre les idées, intonation vivante et énergie calme. Mets doucement en valeur les mots importants. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais le markdown, les URL ou les signes techniques.",
-        }[language]
+        voice_instructions = tts_instruction(language)
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
             voice=os.getenv("TTS_VOICE", "cedar"),
