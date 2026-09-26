@@ -63,7 +63,7 @@ function createVoiceAudio(url){
   return el;
 }
 
-// Teranga Voice v10 — natural turn-taking, speech cleanup, cache and barge-in.
+// Teranga Voice v15 — natural turn-taking, fast first response, speech cleanup and cache.
 let voiceDraft='';
 let voiceSilenceTimer=0;
 const ttsCache=new Map();
@@ -81,7 +81,7 @@ function clearVoiceTtsQueue(){
 }
 function queueVoiceSpeech(text){
   text=cleanReply(text||'').replace(/\s+/g,' ').trim();
-  if(!text||text.length<18||!autoVoice)return;
+  if(!text||text.length<4||!autoVoice)return;
   voiceTtsQueue.push({text,turn:voiceTtsTurn});
   playVoiceTtsQueue();
 }
@@ -138,7 +138,7 @@ function feedVoiceStreamTts(delta){
     const end=match.index+match[0].length;
     const sentence=voiceStreamTtsBuffer.slice(last,end).trim();
     last=end;
-    if(sentence.length>=16){
+    if(sentence.length>=4){
       queueVoiceSpeech(sentence);
       voiceStreamTtsCount++;
     }
@@ -2901,12 +2901,12 @@ let voiceNoiseSamples=0, voiceMonitorData=null, voiceBargeInStartedAt=0, voiceRe
 let voiceRecorderMime='';
 let voiceTurnId=0;
 
-const VOICE_SILENCE_MS=850;
-const VOICE_MIN_SPEECH_MS=220;
+const VOICE_SILENCE_MS=720;
+const VOICE_MIN_SPEECH_MS=180;
 const VOICE_MAX_MS=30000;
-const VOICE_NOISE_CALIBRATION_MS=800;
+const VOICE_NOISE_CALIBRATION_MS=550;
 const VOICE_BARGE_MS=220;
-const VOICE_RESTART_MS=120;
+const VOICE_RESTART_MS=90;
 
 function voiceStatus(text){
   if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
@@ -3117,7 +3117,7 @@ async function startVoiceCapture(){
         scheduleVoiceCapture(120);
       }
     };
-    recorder.start(120);
+    recorder.start(80);
     const data=voiceMonitorData;
     voiceVADTimer=setInterval(()=>{
       if(!voiceAnalyser||recorder.state==='inactive')return;
