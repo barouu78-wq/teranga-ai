@@ -303,7 +303,7 @@ def test_image_proxy_allows_wikimedia_and_blocks_other_hosts(monkeypatch):
         def __exit__(self, *args):
             self.close()
 
-    monkeypatch.setattr(app_module, "urlopen", lambda *args, **kwargs: FakeResponse())
+    monkeypatch.setattr(app_module._SAFE_IMAGE_OPENER, "open", lambda *args, **kwargs: FakeResponse())
     client = app.test_client()
 
     good = client.get("/image-proxy?url=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fd%2Fd1%2FDakar.jpg")
