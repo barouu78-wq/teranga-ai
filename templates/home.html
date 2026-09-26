@@ -967,6 +967,41 @@ body.has-chat #messages{padding-top:4px}
   body:not(.has-chat) #hero{grid-template-columns:1fr;grid-template-areas:"title" "text" "audience" "fx" "cards" "spread";grid-template-rows:none}
 }
 
+
+/* Teranga UI v12 — deterministic desktop home layout */
+@media (min-width:681px){
+  body:not(.has-chat) #hero{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:14px!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    overflow:visible!important;
+    contain:none!important;
+  }
+  body:not(.has-chat) #heroTitle,
+  body:not(.has-chat) #heroText,
+  body:not(.has-chat) #audienceMode,
+  body:not(.has-chat) #fxWidget,
+  body:not(.has-chat) #cards,
+  body:not(.has-chat) #hero .spread{
+    grid-area:auto!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    position:relative!important;
+    inset:auto!important;
+  }
+  body:not(.has-chat) #heroTitle{display:block!important;order:1!important}
+  body:not(.has-chat) #heroText{display:block!important;order:2!important}
+  body:not(.has-chat) #audienceMode{display:grid!important;order:3!important}
+  body:not(.has-chat) #fxWidget{display:block!important;order:4!important;width:auto!important}
+  body:not(.has-chat) #cards{display:grid!important;order:5!important}
+  body:not(.has-chat) #hero .spread{display:flex!important;order:6!important}
+}
+
 </style>
 
 </head>
