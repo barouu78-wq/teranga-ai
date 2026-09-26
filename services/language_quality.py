@@ -73,6 +73,11 @@ def language_instruction(language):
     )
 
 
+def is_supported_language(language):
+    """Return whether a language is supported by the chat language engine."""
+    return language in LANGUAGE_RULES
+
+
 def language_test_cases():
     """Small stable prompts used by automated language regression tests."""
     return {
