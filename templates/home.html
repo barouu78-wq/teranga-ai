@@ -2781,7 +2781,7 @@ $('installBtn').onclick=async()=>{
 /* Teranga Voice v13 — hands-free conversation, persistent mic, adaptive VAD and barge-in.
    Goal: speak naturally, pause, get an answer, and continue without touching the screen. */
 let voiceStream=null, voiceRecorder=null, voiceAudioContext=null, voiceAnalyser=null, voiceVADTimer=0;
-let voiceChunks=[], voiceCaptureBusy=false, voiceSTTBusy=false, voiceSpeaking=false;
+let voiceChunks=[], voiceCaptureBusy=false, voiceSTTBusy=false;
 let voiceSpeechStarted=false, voiceSpeechStartedAt=0, voiceLastLoudAt=0, voiceNoiseFloor=.008;
 let voiceNoiseSamples=0, voiceMonitorData=null, voiceBargeInStartedAt=0, voiceRestartTimer=0;
 let voiceRecorderMime='';
@@ -3093,7 +3093,7 @@ function setupMic(){
     };
     rec.onend=()=>{
       voiceSetMicState(false);
-      if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight&&!voiceUsingRecorder)scheduleVoiceCapture(180);
+      if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight&&!voiceCaptureBusy)scheduleVoiceCapture(180);
     };
     rec.onerror=e=>{
       voiceSetMicState(false);
