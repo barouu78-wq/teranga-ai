@@ -1777,7 +1777,7 @@ def realtime_call():
                 },
                 "turn_detection": {
                     "type": "semantic_vad",
-                    "eagerness": "medium",
+                    "eagerness": "low",
                     "create_response": True,
                     "interrupt_response": True
                 }
