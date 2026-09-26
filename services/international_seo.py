@@ -201,3 +201,89 @@ def localized_sitemap_urls(site_url):
 
 def localized_routes():
     return {(lang, topic) for lang in LANGS for topic in TOPICS}
+\n\n# --- Rich topic-specific content layer ---\nconst TOPIC_VALUE = {
+    "senegal-travel-guide": {
+        "en": "Build the trip around a few hubs rather than trying to cover the whole country at once. Dakar works well as a base for Gorée and nearby coastal outings, while Saint-Louis, Sine-Saloum, Casamance and Kédougou offer very different landscapes and travel rhythms.",
+        "es": "Conviene organizar el viaje alrededor de varias bases en lugar de intentar recorrer todo el país. Dakar facilita las excursiones a Gorée y la costa, mientras Saint-Louis, Sine-Saloum, Casamance y Kédougou ofrecen experiencias y ritmos muy distintos.",
+        "de": "Plane die Reise besser über einige Etappen statt über das ganze Land auf einmal. Dakar eignet sich als Ausgangspunkt für Gorée und die Küste; Saint-Louis, Sine-Saloum, Casamance und Kédougou bieten jeweils andere Landschaften und Reiserhythmen.",
+        "it": "È utile organizzare il viaggio intorno a poche basi invece di cercare di vedere tutto il paese. Dakar è pratica per Gorée e la costa, mentre Saint-Louis, Sine-Saloum, Casamance e Kédougou hanno paesaggi e ritmi di viaggio molto diversi.",
+        "fr": "Organisez le voyage autour de quelques étapes plutôt que de vouloir couvrir tout le pays. Dakar est pratique pour Gorée et la côte proche, tandis que Saint-Louis, le Sine-Saloum, la Casamance et Kédougou offrent des paysages et des rythmes très différents."
+    },
+    "dakar-travel-guide": {
+        "en": "Dakar is best planned by neighborhood and travel time. Group Plateau, Médina and the waterfront separately from Ngor, Almadies or Mamelles so that you spend less time crossing the city and more time visiting.",
+        "es": "Dakar se planifica mejor por barrios y tiempos de desplazamiento. Agrupa Plateau, Medina y el frente marítimo por un lado, y Ngor, Almadies o Mamelles por otro para reducir los trayectos.",
+        "de": "Dakar lässt sich am besten nach Vierteln und Fahrzeiten planen. Kombiniere Plateau, Medina und die Uferzone getrennt von Ngor, Almadies oder Mamelles, damit weniger Zeit für Wege verloren geht.",
+        "it": "Dakar si organizza meglio per quartieri e tempi di spostamento. Raggruppa Plateau, Medina e zona costiera separatamente da Ngor, Almadies o Mamelles per ridurre gli attraversamenti della città.",
+        "fr": "Dakar se planifie mieux par quartiers et temps de trajet. Regroupez Plateau, la Médina et le front de mer séparément de Ngor, Almadies ou Mamelles pour limiter les déplacements."
+    },
+    "things-to-do-in-dakar": {
+        "en": "Mix cultural visits with open-air time: Gorée, museums and monuments can be combined with markets, coastal viewpoints, beaches and food stops. Leave some flexibility because traffic and opening times can affect a day.",
+        "es": "Combina visitas culturales y actividades al aire libre: Gorée, museos y monumentos pueden alternarse con mercados, miradores, playas y pausas gastronómicas. Mantén margen por el tráfico y los horarios.",
+        "de": "Kombiniere Kultur mit Zeit im Freien: Gorée, Museen und Monumente lassen sich mit Märkten, Küstenblicken, Stränden und Essen verbinden. Plane Puffer für Verkehr und wechselnde Öffnungszeiten ein.",
+        "it": "Alterna cultura e attività all'aperto: Gorée, musei e monumenti possono essere combinati con mercati, panorami sulla costa, spiagge e soste gastronomiche. Lascia margine per traffico e orari.",
+        "fr": "Alternez visites culturelles et plein air : Gorée, musées et monuments peuvent être combinés avec marchés, points de vue, plages et pauses gourmandes. Gardez une marge pour les trajets et les horaires."
+    },
+    "things-to-do-in-senegal": {
+        "en": "Choose regions according to the experience you want: history and urban culture around Dakar and Saint-Louis, waterways and wildlife in Sine-Saloum, beaches and villages along the Petite Côte, and a different southern or southeastern atmosphere in Casamance and Kédougou.",
+        "es": "Elige las regiones según la experiencia buscada: historia y cultura urbana en Dakar y Saint-Louis, agua y naturaleza en Sine-Saloum, playas en Petite Côte y ambientes diferentes en Casamance y Kédougou.",
+        "de": "Wähle Regionen nach dem gewünschten Erlebnis: Geschichte und Stadtkultur in Dakar und Saint-Louis, Wasserlandschaften in Sine-Saloum, Strände an der Petite Côte sowie eine andere Atmosphäre in Casamance und Kédougou.",
+        "it": "Scegli le regioni in base all'esperienza desiderata: storia e cultura urbana a Dakar e Saint-Louis, ambienti d'acqua nel Sine-Saloum, spiagge sulla Petite Côte e atmosfere diverse in Casamance e Kédougou.",
+        "fr": "Choisissez les régions selon l’expérience recherchée : histoire et culture urbaine à Dakar et Saint-Louis, paysages d’eau au Sine-Saloum, plages sur la Petite Côte, et ambiances différentes en Casamance et à Kédougou."
+    },
+    "dakar-airport-to-city": {
+        "en": "Blaise Diagne International Airport is outside central Dakar, so airport-to-city time matters when planning a first or last day. Compare the available transfer options for your arrival time, destination and luggage rather than relying on a fixed journey estimate.",
+        "es": "El aeropuerto Blaise Diagne está fuera del centro de Dakar, por lo que el tiempo de traslado importa el primer y último día. Compara las opciones según hora de llegada, destino y equipaje.",
+        "de": "Der Flughafen Blaise Diagne liegt außerhalb des Zentrums von Dakar. Berücksichtige daher die Transferzeit am ersten und letzten Tag und vergleiche Optionen nach Ankunftszeit, Ziel und Gepäck.",
+        "it": "L'aeroporto Blaise Diagne è fuori dal centro di Dakar, quindi il trasferimento conta soprattutto il primo e l'ultimo giorno. Confronta le opzioni in base a orario di arrivo, destinazione e bagagli.",
+        "fr": "L’aéroport Blaise Diagne se situe en dehors du centre de Dakar : le temps de transfert compte donc pour le premier et le dernier jour. Comparez les options selon l’heure d’arrivée, la destination et les bagages."
+    },
+    "goree-island": {
+        "en": "Treat Gorée as a half-day or full-day outing depending on your pace. Check the current ferry timetable before leaving Dakar, then allow time for the island's historical sites, streets, waterfront and a meal or break.",
+        "es": "Considera Gorée como una excursión de medio día o de día completo según tu ritmo. Comprueba el horario actual del ferry antes de salir de Dakar y reserva tiempo para los lugares históricos y el paseo por la isla.",
+        "de": "Plane Gorée je nach Tempo als Halb- oder Ganztagesausflug. Prüfe den aktuellen Fährplan vor der Abfahrt und plane Zeit für historische Orte, Gassen, Ufer und eine Pause ein.",
+        "it": "Considera Gorée un'escursione di mezza o intera giornata in base al ritmo. Controlla l'orario attuale del traghetto prima di partire e lascia tempo per luoghi storici, strade, costa e una pausa.",
+        "fr": "Prévoyez Gorée comme une demi-journée ou une journée complète selon votre rythme. Vérifiez l’horaire actuel du ferry avant de partir et gardez du temps pour les lieux historiques, les ruelles et le bord de mer."
+    },
+    "where-to-eat-in-dakar": {
+        "en": "Dakar's food scene varies strongly by neighborhood and budget. For a first visit, decide whether you want traditional Senegalese dishes, seafood, casual local food or a more contemporary restaurant, then choose an area that fits your itinerary.",
+        "es": "La oferta gastronómica de Dakar cambia mucho según el barrio y el presupuesto. Decide si buscas cocina senegalesa tradicional, marisco, comida local informal o restaurantes contemporáneos y elige la zona según tu itinerario.",
+        "de": "Dakar bietet je nach Viertel und Budget sehr unterschiedliche Küche. Entscheide zuerst, ob du traditionelle senegalesische Gerichte, Meeresfrüchte, einfache lokale Küche oder moderne Restaurants suchst, und wähle dann die passende Gegend.",
+        "it": "La scena gastronomica di Dakar cambia molto per quartiere e budget. Decidi se cerchi piatti senegalesi tradizionali, pesce, cucina locale informale o ristoranti contemporanei, poi scegli la zona in base all'itinerario.",
+        "fr": "La scène gastronomique de Dakar varie beaucoup selon le quartier et le budget. Déterminez si vous cherchez des plats sénégalais traditionnels, des produits de la mer, une cuisine locale simple ou une adresse contemporaine, puis choisissez le secteur selon votre itinéraire."
+    },
+    "senegal-transport": {
+        "en": "Transport planning depends on distance, road conditions, departure time and comfort level. For intercity trips, compare current schedules and operators; inside Dakar, allow extra time for traffic and choose the mode that fits the neighborhood and time of day.",
+        "es": "El transporte depende de la distancia, el estado de las carreteras, la hora y el nivel de comodidad. Para viajes entre ciudades, compara horarios y operadores actuales; en Dakar, deja margen por el tráfico.",
+        "de": "Die Verkehrswahl hängt von Entfernung, Straßenlage, Abfahrtszeit und Komfort ab. Für Fernstrecken solltest du aktuelle Fahrpläne und Anbieter vergleichen; in Dakar ist zusätzlicher Puffer wegen des Verkehrs sinnvoll.",
+        "it": "La scelta del trasporto dipende da distanza, strade, orario e comfort. Per gli spostamenti tra città confronta orari e operatori attuali; a Dakar considera margine extra per il traffico.",
+        "fr": "Le choix du transport dépend de la distance, de l’état des routes, de l’horaire et du confort recherché. Pour les trajets interurbains, comparez les horaires et opérateurs actuels ; à Dakar, prévoyez une marge pour le trafic."
+    },
+    "senegal-sim-card": {
+        "en": "For mobile connectivity, check whether your phone is unlocked and whether an eSIM is supported before departure. On arrival, compare current tourist or prepaid offers, coverage for your destinations and the identification requirements of the operator.",
+        "es": "Antes de viajar, comprueba que el teléfono esté desbloqueado y sea compatible con eSIM si la necesitas. Al llegar, compara las ofertas actuales, la cobertura y los requisitos de identificación del operador.",
+        "de": "Prüfe vor der Reise, ob dein Telefon entsperrt ist und eSIM unterstützt. Vor Ort solltest du aktuelle Prepaid-Angebote, Netzabdeckung für deine Ziele und die Identifikationsanforderungen vergleichen.",
+        "it": "Prima della partenza verifica che il telefono sia sbloccato e compatibile con eSIM. All'arrivo confronta offerte attuali, copertura nelle destinazioni e requisiti di identificazione dell'operatore.",
+        "fr": "Avant le départ, vérifiez que votre téléphone est désimlocké et compatible eSIM si besoin. À l’arrivée, comparez les offres actuelles, la couverture sur vos destinations et les exigences d’identification de l’opérateur."
+    },
+    "senegal-weather": {
+        "en": "Senegal has distinct seasonal patterns, but conditions vary by region and can change day to day. Use climate information for broad planning and a current forecast for your exact dates, especially when planning outdoor activities or regional travel.",
+        "es": "Senegal tiene patrones estacionales marcados, pero las condiciones varían según la región y el día. Usa el clima para planificar a grandes rasgos y un pronóstico actual para tus fechas exactas.",
+        "de": "Senegal hat ausgeprägte Jahreszeiten, doch Wetter und Bedingungen unterscheiden sich regional und von Tag zu Tag. Nutze Klimadaten für die grobe Planung und eine aktuelle Prognose für deine Reisedaten.",
+        "it": "Il Senegal ha stagioni ben definite, ma le condizioni cambiano in base alla regione e al giorno. Usa i dati climatici per la pianificazione generale e le previsioni attuali per le date precise.",
+        "fr": "Le Sénégal connaît des saisons marquées, mais les conditions varient selon les régions et d’un jour à l’autre. Utilisez les repères climatiques pour préparer le voyage et une prévision actuelle pour vos dates."
+    },
+    "senegal-visa": {
+        "en": "Entry requirements depend on nationality, travel document and current rules. Do not rely on an old blog or a generic visa summary: check the relevant official authority for your nationality and travel date before departure.",
+        "es": "Los requisitos de entrada dependen de la nacionalidad, el documento de viaje y las reglas vigentes. No te bases en una página antigua: consulta la autoridad oficial correspondiente antes de viajar.",
+        "de": "Einreisebestimmungen hängen von Nationalität, Reisedokument und den aktuell geltenden Regeln ab. Verlasse dich nicht auf alte Blogs, sondern prüfe vor der Reise die zuständige offizielle Stelle.",
+        "it": "I requisiti di ingresso dipendono da nazionalità, documento di viaggio e norme vigenti. Non affidarti a vecchi blog: verifica prima della partenza l'autorità ufficiale competente.",
+        "fr": "Les conditions d’entrée dépendent de la nationalité, du document de voyage et des règles en vigueur. Ne vous fiez pas à un ancien article : vérifiez l’autorité officielle compétente avant le départ."
+    },
+    "senegal-trip-planner": {
+        "en": "A useful itinerary starts with constraints: dates, arrival point, budget, pace and must-see interests. Once those are clear, Teranga AI can help compare routes and organize days without pretending that changing schedules or prices are fixed.",
+        "es": "Un buen itinerario empieza por las restricciones: fechas, punto de llegada, presupuesto, ritmo e intereses prioritarios. Con esos datos, Teranga AI puede comparar rutas y organizar días, verificando los datos variables.",
+        "de": "Ein guter Reiseplan beginnt mit den Rahmenbedingungen: Daten, Ankunftsort, Budget, Tempo und Interessen. Danach kann Teranga AI Routen vergleichen und Tage strukturieren, während variable Angaben geprüft werden sollten.",
+        "it": "Un buon itinerario parte dai vincoli: date, arrivo, budget, ritmo e interessi principali. Con questi dati Teranga AI può confrontare percorsi e organizzare le giornate, verificando le informazioni variabili.",
+        "fr": "Un bon itinéraire commence par les contraintes : dates, arrivée, budget, rythme et centres d’intérêt prioritaires. Teranga AI peut ensuite comparer les options et structurer les journées, tout en vérifiant les données variables."
+    }
+};\n\nconst _base_render_international_page = render_international_page;\n\nfunction render_international_page(lang, topic, site_url) {\n    const response = _base_render_international_page(lang, topic, site_url);\n    if (!response) return response;\n    const text = response.get_data(as_text=true);\n    const value = TOPIC_VALUE[topic] && TOPIC_VALUE[topic][lang];\n    if (!value) return response;\n    const heading = {en:"Practical focus",es:"Enfoque práctico",de:"Praktischer Fokus",it:"Focus pratico",fr:"Focus pratique"}[lang];\n    const section = "<section><h2>" + escape(heading) + "</h2><p>" + escape(value) + "</p></section>";\n    const marker = "<section><h2>" + ({en:"Frequently asked questions",es:"Preguntas frecuentes",de:"Häufige Fragen",it:"Domande frequenti",fr:"Questions fréquentes"}[lang]) + "</h2>";\n    return new Response(text.replace(marker, section + marker), mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"});\n}\n
