@@ -1,9 +1,14 @@
 import json
 from html import escape
 from flask import Response, jsonify, request
+from datetime import date
+import hashlib
+from urllib.parse import quote
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
+REGION_COORDS = {"Dakar": (14.7167, -17.4677), "Gorée": (14.6667, -17.4000), "Saint-Louis": (16.0326, -16.4818), "Petite Côte": (14.6000, -17.1000), "Sine-Saloum": (13.9000, -16.7000), "Casamance": (12.5500, -16.2800), "Kédougou": (12.5600, -12.1800)}
+BUDGET_BANDS = {"Économique": (35, 65), "Confort": (70, 130), "Premium": (140, 240), "Luxe": (260, 500), "Budget": (35, 65), "Comfort": (70, 130), "Luxury": (260, 500)}
 
 UI = {
     "fr": {
@@ -67,7 +72,7 @@ label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-
 input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px solid var(--line);color:var(--text);border-radius:13px;padding:13px;font:inherit}}
 .chips{{display:flex;flex-wrap:wrap;gap:10px}}.chip input{{position:absolute;opacity:0}}.chip span{{display:block;padding:11px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted)}}.chip input:checked+span{{border-color:var(--gold);color:var(--text);background:#2a2113}}
 .actions{{display:flex;justify-content:space-between;gap:12px;margin-top:24px}}button{{border:0;border-radius:14px;padding:13px 18px;font:800 15px system-ui;cursor:pointer}}.primary{{background:var(--gold);color:#17100a}}.secondary{{background:#251e18;color:var(--text)}}
-.result{{white-space:pre-wrap;font-family:inherit;line-height:1.7}}.loading{{color:var(--gold)}}.error{{color:#ffb4a9;margin-top:12px}}
+.result{{white-space:pre-wrap;font-family:inherit;line-height:1.7}}.map{{margin-top:16px;border-radius:18px;overflow:hidden;border:1px solid var(--line)}}.loading{{color:var(--gold)}}.error{{color:#ffb4a9;margin-top:12px}}
 .small{{font-size:12px;color:var(--muted);margin-top:14px}}
 </style></head>
 <body><main>
@@ -90,7 +95,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <section class="step" data-step="5"><h2>{regions}</h2><div class="chips">{regions_html}</div><label class="chip" style="display:inline-block;margin-top:12px"><input id="surprise" type="checkbox"><span>{surprise}</span></label>
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
-<div id="status"></div><div id="result" class="result"></div>
+<div id="status"></div><div id="result" class="result"></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">🔗 Partager ce voyage</button></div><div id="map" class="map"></div>
 </div><p class="small">Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.</p>
 </main>
 <script>
@@ -119,6 +124,19 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         regions_html=_option_list(t["region_options"]), surprise=escape(t["surprise"])
     )
     return html
+
+def _budget(data):
+    days = max(1, (data["departure_date"] - data["arrival_date"]).days)
+    low, high = BUDGET_BANDS.get(data["budget"], (70, 130))
+    people = data["adults"] + data["children"]
+    return {"days": days, "low": low * people * days, "high": high * people * days}
+
+def _map_html(regions):
+    points = [REGION_COORDS[r] for r in regions if r in REGION_COORDS]
+    if not points:
+        return ""
+    bbox = "-18.2%2C11.8%2C-11.0%2C17.0"
+    return f'<iframe title="Carte du voyage" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
 
 def _prompt(data):
     return f"""Build a practical Senegal travel itinerary from these preferences.
@@ -169,7 +187,15 @@ def register_trip_planner(app, client, site_url):
         regions = [str(x)[:80] for x in body.get("regions", []) if isinstance(x, str)][:7]
         budget = str(body.get("budget", "Confort"))[:40]
         pace = str(body.get("pace", "Équilibré"))[:40]
+        try:
+            arrival_date = date.fromisoformat(str(body["arrival"])[:10])
+            departure_date = date.fromisoformat(str(body["departure"])[:10])
+        except ValueError:
+            return jsonify({"error": "Format de date invalide."}), 400
+        if departure_date <= arrival_date:
+            return jsonify({"error": "La date de départ doit être après l'arrivée."}), 400
         data = {"arrival": str(body["arrival"])[:20], "departure": str(body["departure"])[:20],
+                "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
                 "budget": budget, "pace": pace, "surprise": bool(body.get("surprise"))}
         try:
@@ -178,7 +204,11 @@ def register_trip_planner(app, client, site_url):
             text = getattr(response, "output_text", "") or ""
             if not text:
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
-            return jsonify({"itinerary": text[:14000], "language": lang})
+            budget_info = _budget(data)
+            regions = data["regions"] or ["Dakar"]
+            share_id = hashlib.sha256(json.dumps({k: str(v) for k, v in data.items()}, sort_keys=True).encode()).hexdigest()[:12]
+            budget_note = f"\\n\\nBudget indicatif : {budget_info['low']:.0f}–{budget_info['high']:.0f} USD pour le groupe, sur {budget_info['days']} jours, hors vols internationaux. À vérifier selon saison et choix réels."
+            return jsonify({"itinerary": text[:14000] + budget_note, "language": lang, "share_id": share_id, "map_html": _map_html(regions)})
         except Exception:
             app.logger.exception("trip-planner")
             return jsonify({"error": "Impossible de générer le voyage pour le moment."}), 502
