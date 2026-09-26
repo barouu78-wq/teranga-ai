@@ -373,3 +373,60 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert sitemap.count("<loc>") >= 1 + len(TOPICS) * len(LANGS)
     assert "/en/senegal-travel-guide" in sitemap
     assert "/fr/senegal-trip-planner" in sitemap
+
+
+def test_language_quality_contract_covers_all_supported_languages():
+    from services.language_quality import LANGUAGE_RULES, language_instruction
+
+    assert set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
+    for language in ("fr", "en", "wo", "ff"):
+        instruction = language_instruction(language)
+        assert "LANGUE DE SORTIE" in instruction
+        assert len(instruction) > 180
+
+
+def test_language_quality_contract_has_specific_safety_for_wolof_and_pulaar():
+    from services.language_quality import language_instruction
+
+    wolof = language_instruction("wo").lower()
+    pulaar = language_instruction("ff").lower()
+    assert "n'invente" in wolof
+    assert "n'invente" in pulaar
+    assert "traduction littérale" in wolof
+    assert "traduction littérale" in pulaar
+
+
+def test_language_quality_preserves_requested_language_contract():
+    from services.language_quality import language_instruction
+
+    contracts = {lang: language_instruction(lang) for lang in ("fr", "en", "wo", "ff")}
+    assert len(set(contracts.values())) == 4
+    assert "LANGUE DE SORTIE : français" in contracts["fr"]
+    assert "LANGUE DE SORTIE : English" in contracts["en"]
+    assert "LANGUE DE SORTIE : wolof" in contracts["wo"]
+    assert "LANGUE DE SORTIE : pulaar" in contracts["ff"]
+
+
+def test_language_quality_code_switching_is_explicit_not_a_fallback():
+    from services.language_quality import language_instruction
+
+    assert "majoritairement en wolof" in language_instruction("wo")
+    assert "majoritairement en pulaar" in language_instruction("ff")
+    assert "N'invente jamais un mot" in language_instruction("wo")
+    assert "N'invente pas de vocabulaire pulaar" in language_instruction("ff")
+
+
+def test_language_test_cases_cover_all_supported_chat_languages():
+    from services.language_quality import LANGUAGE_RULES, language_test_cases
+
+    cases = language_test_cases()
+    assert set(cases) == set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
+    assert all(isinstance(prompt, str) and prompt.strip() for prompt in cases.values())
+
+
+def test_language_support_check_is_explicit():
+    from services.language_quality import is_supported_language
+
+    assert all(is_supported_language(lang) for lang in ("fr", "en", "wo", "ff"))
+    assert not is_supported_language("es")
+    assert not is_supported_language("")

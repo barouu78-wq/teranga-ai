@@ -29,6 +29,7 @@ from services.images import (
     fetch_commons_images as _fetch_commons_images,
     fetch_google_images as _fetch_google_images,
 )
+from services.language_quality import language_instruction
 
 load_dotenv()
 
@@ -1314,12 +1315,7 @@ def parse_chat_payload():
         audience = "tourist"
     if not message:
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
-    language_instruction = {
-        "fr": "Réponds en français naturel, avec un vocabulaire sénégalais naturel quand le contexte s'y prête.",
-        "en": "Reply in natural English. Keep Senegalese names, places, dishes and cultural terms in their established form.",
-        "wo": "Réponds en wolof naturel autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le wolof pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof.",
-        "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
-    }[language]
+    language_instruction_text = language_instruction(language)
     context = infer_senegal_context(history, message)
     enriched_context = context["query"]
     if context["has_place"]:
@@ -1379,7 +1375,7 @@ def parse_chat_payload():
         }
     }[audience][language]
     return {
-        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
+        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction_text + "\n" + audience_instruction + "\n" + context_instruction,
         "input_text": build_conversation(history, message),
         "use_web": should_use_web(message, enriched_context),
         "planner": planner_enabled,
