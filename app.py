@@ -1232,7 +1232,7 @@ def require_json_post(fn):
 
 @app.after_request
 def add_client_identity(response):
-    if request.path in {"/chat", "/tts", "/image-proxy", "/exchange-rates"} and not request.cookies.get(IDENTITY_COOKIE):
+    if request.path in {"/chat", "/tts", "/stt", "/image-proxy", "/exchange-rates"} and not request.cookies.get(IDENTITY_COOKIE):
         response.set_cookie(
             IDENTITY_COOKIE,
             client_identity(),
@@ -1691,8 +1691,19 @@ def chat():
 
 
 @app.post("/stt")
-@require_json_post
 def stt():
+    if not origin_allowed():
+        return jsonify({"error": "Origine non autorisée."}), 403
+    cookie_token = request.cookies.get(CSRF_COOKIE, "")
+    header_token = request.headers.get(CSRF_HEADER, "")
+    if not cookie_token or not header_token:
+        return jsonify({"error": "csrf"}), 403
+    try:
+        same = hmac.compare_digest(cookie_token, header_token)
+    except Exception:
+        same = False
+    if not same or not valid_token(cookie_token):
+        return jsonify({"error": "csrf"}), 403
     """Transcribe a short voice turn for hands-free conversation."""
     ip = client_ip()
     identity = abuse_key(ip)
