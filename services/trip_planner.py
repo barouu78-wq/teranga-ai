@@ -99,7 +99,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 </div><p class="small">Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.</p>
 </main>
 <script>
-const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
+const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
 function show(i){{current=i;steps.forEach((s,n)=>s.classList.toggle('active',n===i));window.scrollTo({{top:0,behavior:'smooth'}})}}
 document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.reportValidity())show(current+1)}});
 document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
@@ -109,7 +109,7 @@ interests:[...document.querySelectorAll('input[name=x]:checked')].map(x=>x.value
 pace:[...document.querySelectorAll('section[data-step="4"] input[name=x]:checked')].map(x=>x.value)[1]||'Équilibré',
 regions:[...document.querySelectorAll('section[data-step="5"] input[name=x]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');result.textContent=data.itinerary;status.textContent='';}}
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+d.day+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));history.replaceState(null,'','/trip-planner?trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
@@ -129,7 +129,16 @@ def _budget(data):
     days = max(1, (data["departure_date"] - data["arrival_date"]).days)
     low, high = BUDGET_BANDS.get(data["budget"], (70, 130))
     people = data["adults"] + data["children"]
-    return {"days": days, "low": low * people * days, "high": high * people * days}
+    total_low, total_high = low * people * days, high * people * days
+    return {
+        "days": days, "people": people,
+        "accommodation": [round(total_low * .38), round(total_high * .38)],
+        "food": [round(total_low * .22), round(total_high * .22)],
+        "transport": [round(total_low * .18), round(total_high * .18)],
+        "activities": [round(total_low * .17), round(total_high * .17)],
+        "buffer": [round(total_low * .05), round(total_high * .05)],
+        "total": [round(total_low), round(total_high)],
+    }
 
 def _map_html(regions):
     points = [REGION_COORDS[r] for r in regions if r in REGION_COORDS]
@@ -149,7 +158,7 @@ Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
 Surprise me: {data['surprise']}
 
-Return ONLY a useful itinerary in the user's language. Use a clear day-by-day structure.
+Return ONLY valid JSON in the user's language. Schema: {"summary": string, "days": [{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}], "practical_notes": [string]}. Create one object per travel day.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
 Do not invent hotels, restaurants, transport operators or reservations. If a recommendation needs current verification, say so.
@@ -207,8 +216,21 @@ def register_trip_planner(app, client, site_url):
             budget_info = _budget(data)
             regions = data["regions"] or ["Dakar"]
             share_id = hashlib.sha256(json.dumps({k: str(v) for k, v in data.items()}, sort_keys=True).encode()).hexdigest()[:12]
-            budget_note = f"\\n\\nBudget indicatif : {budget_info['low']:.0f}–{budget_info['high']:.0f} USD pour le groupe, sur {budget_info['days']} jours, hors vols internationaux. À vérifier selon saison et choix réels."
-            return jsonify({"itinerary": text[:14000] + budget_note, "language": lang, "share_id": share_id, "map_html": _map_html(regions)})
+            try:
+                plan = json.loads(text)
+            except json.JSONDecodeError:
+                plan = {"summary": text[:3000], "days": [], "practical_notes": []}
+            budget_lines = [
+                f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
+                f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
+                f"Repas : {budget_info['food'][0]}–{budget_info['food'][1]} USD",
+                f"Transport local : {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
+                f"Activités : {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
+                f"Marge : {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
+                "Estimation hors vols internationaux, à ajuster selon saison et choix réels."
+            ]
+            share_id = hashlib.sha256(json.dumps({k: str(v) for k, v in data.items()}, sort_keys=True).encode()).hexdigest()[:12]
+            return jsonify({"itinerary": json.dumps(plan, ensure_ascii=False), "plan": plan, "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]}, "language": lang, "share_id": share_id, "map_html": _map_html(regions)})
         except Exception:
             app.logger.exception("trip-planner")
             return jsonify({"error": "Impossible de générer le voyage pour le moment."}), 502
