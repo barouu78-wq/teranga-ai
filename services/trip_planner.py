@@ -99,7 +99,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 </div><p class="small">Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.</p>
 </main>
 <script>
-const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
+const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
 function show(i){{current=i;steps.forEach((s,n)=>s.classList.toggle('active',n===i));window.scrollTo({{top:0,behavior:'smooth'}})}}
 document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.reportValidity())show(current+1)}});
 document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
@@ -109,7 +109,7 @@ interests:[...document.querySelectorAll('input[name=x]:checked')].map(x=>x.value
 pace:[...document.querySelectorAll('section[data-step="4"] input[name=x]:checked')].map(x=>x.value)[1]||'Équilibré',
 regions:[...document.querySelectorAll('section[data-step="5"] input[name=x]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');result.textContent=data.itinerary;status.textContent='';}}
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+d.day+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));history.replaceState(null,'','/trip-planner?trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
