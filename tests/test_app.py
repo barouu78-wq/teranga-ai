@@ -365,7 +365,7 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
             response = client.get(f"/{lang}/{topic}")
             assert response.status_code == 200
             body = response.get_data(as_text=True)
-            assert "<link rel="canonical"" in body
+            assert '<link rel="canonical"' in body
             assert 'hreflang="x-default"' in body
             assert "Practical focus" in body or "Enfoque práctico" in body or "Praktischer Fokus" in body or "Focus pratico" in body or "Focus pratique" in body
 
