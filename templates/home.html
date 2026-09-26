@@ -32,6 +32,37 @@
 <title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
 <script nonce="__CSP_NONCE__">window.__gcse={parsetags:'explicit'};
+// Teranga Voice v14 — clearer, louder browser playback with gentle dynamics control.
+let voiceOutputContext=null;
+function createVoiceAudio(url){
+  const el=new Audio(url);
+  el.preload='auto';
+  el.setAttribute('playsinline','');
+  el.volume=1;
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(AC){
+      if(!voiceOutputContext)voiceOutputContext=new AC();
+      if(voiceOutputContext.state==='suspended')voiceOutputContext.resume().catch(()=>{});
+      const source=voiceOutputContext.createMediaElementSource(el);
+      const gain=voiceOutputContext.createGain();
+      gain.gain.value=1.24;
+      const compressor=voiceOutputContext.createDynamicsCompressor();
+      compressor.threshold.value=-15;
+      compressor.knee.value=18;
+      compressor.ratio.value=3;
+      compressor.attack.value=.003;
+      compressor.release.value=.18;
+      source.connect(gain);
+      gain.connect(compressor);
+      compressor.connect(voiceOutputContext.destination);
+    }
+  }catch(_){
+    el.volume=1;
+  }
+  return el;
+}
+
 // Teranga Voice v10 — natural turn-taking, speech cleanup, cache and barge-in.
 let voiceDraft='';
 let voiceSilenceTimer=0;
@@ -73,10 +104,7 @@ async function playVoiceTtsQueue(){
     }
     if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
     const url=URL.createObjectURL(blob);
-    audio=new Audio(url);
-    audio.preload='auto';
-    audio.setAttribute('playsinline','');
-    audio.volume=1;
+    audio=createVoiceAudio(url);
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
     await new Promise(resolve=>{
@@ -110,7 +138,7 @@ function feedVoiceStreamTts(delta){
     const end=match.index+match[0].length;
     const sentence=voiceStreamTtsBuffer.slice(last,end).trim();
     last=end;
-    if(sentence.length>=24){
+    if(sentence.length>=16){
       queueVoiceSpeech(sentence);
       voiceStreamTtsCount++;
     }
@@ -217,10 +245,7 @@ async function speak(text,btn){
       ttsCache.set(cacheKey,blob);
     }
     const url=URL.createObjectURL(blob);
-    audio=new Audio(url);
-    audio.preload='auto';
-    audio.setAttribute('playsinline','');
-    audio.volume=1;
+    audio=createVoiceAudio(url);
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
     audio.onended=()=>{const a=audio;audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
@@ -2028,7 +2053,7 @@ body.voice-active #mic.listen{box-shadow:0 8px 24px rgba(201,54,54,.28),0 0 0 7p
   <div class="meta">
     <span id="hint" role="status" aria-live="polite">Réponse en direct</span>
     <span id="count">0 / 2000</span>
-    <button id="voiceToggle" type="button">Voix auto off</button>
+    <button id="voiceToggle" type="button" title="La voix de Teranga AI est générée par IA">Voix IA auto off</button>
   </div>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
@@ -2047,7 +2072,7 @@ fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
-  vOn:'Voix auto on',vOff:'Voix auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
+  vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
