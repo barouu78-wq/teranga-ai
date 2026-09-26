@@ -114,47 +114,13 @@ SEO_PAGES = {
         ],
         "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
     },
-    "soutenir-teranga-ai": {
-        "title": "Soutenir Teranga AI : partenaires et financement",
-        "description": "Soutenir Teranga AI, assistant IA consacré au Sénégal : partenariats, sponsoring, financement et développement de services numériques.",
-        "h1": "Soutenir Teranga AI",
-        "intro": "Teranga AI développe un assistant numérique consacré au Sénégal et cherche des partenaires, des entreprises pilotes et des soutiens financiers pour accélérer son développement.",
-        "sections": [
-            ("Pourquoi soutenir le projet", "Teranga AI combine conversation, informations locales, cartes, photos et informations pratiques, avec une interface en français, anglais, wolof et pulaar."),
-            ("Partenariats", "Entreprises, médias, tourisme, télécoms, écoles et incubateurs peuvent soutenir un pilote, une intégration ou une action de visibilité autour de l'IA et du Sénégal."),
-            ("Utilisation du soutien", "Le financement peut contribuer à l'infrastructure IA, aux données locales vérifiées, au développement produit, à la visibilité et à l'accès du service à davantage d'utilisateurs."),
-            ("Modèle économique", "Teranga AI peut développer des offres professionnelles : assistants spécialisés, intégrations, services B2B, visibilité locale et pilotes sur mesure.")
-        ],
-        "faq": [
-            ("Comment soutenir Teranga AI ?", "Par un partenariat, un pilote entreprise, un soutien financier, une mise en relation ou une action de visibilité."),
-            ("À quoi servirait un financement ?", "À développer le produit, renforcer l'infrastructure, enrichir les données locales et construire des offres professionnelles.")
-        ],
-        "related": [("entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("media-kit", "Kit média")]
-    },
-    "entreprises": {"title":"IA pour entreprises au Senegal : Teranga AI","description":"Solutions IA pour entreprises au Senegal : assistant specialise, information locale, tourisme et pilotes B2B.","h1":"Teranga AI pour les entreprises","intro":"Une base IA consacree au Senegal pour construire des services numeriques utiles aux entreprises et organisations.","sections":[("Assistant specialise","Accueil, tourisme, information locale, support client ou FAQ."),("Pilote B2B","Commencer par un perimetre limite, mesurer les usages puis elargir."),("Integration","Interface web, contenus structures, cartes, visuels ou integration selon le projet.")],"faq":[("Peut-on commencer petit ?","Oui. Un pilote limite permet de definir le besoin et le perimetre.")],"related":[("soutenir-teranga-ai","Soutenir le projet"),("media-kit","Kit media")]},
-    "partenaires": {"title":"Partenaires Teranga AI : Senegal, diaspora, medias et entreprises","description":"Partenaires Teranga AI : medias, tourisme, entreprises, ecoles, incubateurs et acteurs de la diaspora.","h1":"Partenaires Teranga AI","intro":"Teranga AI souhaite construire un reseau de partenaires autour de l information locale, du numerique, de l innovation et du Senegal.","sections":[("Medias et createurs","Articles, emissions, newsletters, videos ou dossiers sur l IA et le Senegal."),("Tourisme et hotellerie","Tester des usages d accueil, d orientation et d information pratique."),("Entreprises et ecosystèmes tech","Construire des pilotes autour de l information et des services numeriques."),("Diaspora","Developper des contenus et services utiles entre la France, le Senegal et d autres pays.")],"faq":[("Quel type de partenariat ?","Media, distribution, pilote, sponsoring, technologie, donnees, formation ou mise en relation.")],"related":[("soutenir-teranga-ai","Soutenir Teranga AI"),("entreprises","Entreprises"),("presse","Presse")]},
-    "a-propos": {
-        "title": "À propos de Teranga AI : assistant numérique du Sénégal",
-        "description": "Découvrez Teranga AI, assistant numérique consacré au Sénégal : informations pratiques, voyage, culture, langues et vie quotidienne.",
-        "h1": "À propos de Teranga AI",
-        "intro": "Teranga AI est un assistant numérique pensé autour du Sénégal et accessible depuis le Sénégal, la France et la diaspora.",
-        "sections": [
-            ("Un assistant pour le Sénégal", "Teranga AI aide à trouver des repères sur Dakar, les régions, les transports, la météo, la culture, la gastronomie et les langues."),
-            ("Pour plusieurs publics", "Voyageurs, résidents, diaspora et commerçants peuvent poser leurs questions en français, anglais, wolof ou pulaar."),
-            ("Informations à vérifier", "Pour les horaires, tarifs, formalités et autres informations susceptibles de changer, Teranga AI peut rechercher des sources récentes et invite à vérifier les informations officielles."),
-        ],
-        "faq": [
-            ("Teranga AI est-il accessible depuis le Sénégal ?", "Oui, le service est accessible sur le web depuis le Sénégal."),
-            ("Quelles langues sont disponibles ?", "Français, anglais, wolof et pulaar."),
-        ],
-        "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal"), ("diaspora-senegalaise", "Diaspora sénégalaise")],
-    },
     "presse": {
         "title": "Presse et médias : Teranga AI au Sénégal",
         "description": "Informations presse sur Teranga AI : présentation, usages, langues et ressources pour les médias sénégalais.",
         "h1": "Presse et médias",
         "intro": "Cette page rassemble les informations essentielles pour présenter Teranga AI dans un article, une émission ou une publication numérique.",
         "sections": [
+            ("Pour les partenaires", "Les médias, entreprises et organisations peuvent demander une présentation du projet, proposer un pilote ou contribuer à sa visibilité. Le kit média présente les usages et ressources disponibles."),
             ("Présentation courte", "Teranga AI est un assistant numérique consacré au Sénégal. Il répond aux questions pratiques sur les villes, régions, voyage, transport, culture, gastronomie, météo et langues."),
             ("Présentation longue", "Pensé pour les personnes au Sénégal et pour la diaspora, Teranga AI permet de poser une question en français, anglais, wolof ou pulaar. Pour les informations changeantes, l'assistant peut rechercher des sources récentes."),
             ("Contact presse", "Pour une demande média, utilisez les coordonnées de contact publiées par Teranga AI sur son site. Ne reprenez pas une information sensible sans la vérifier."),
@@ -171,6 +137,7 @@ SEO_PAGES = {
         "h1": "Kit média Teranga AI",
         "intro": "Une fiche simple pour présenter Teranga AI de manière cohérente sur un site, un média, une newsletter ou les réseaux sociaux.",
         "sections": [
+            ("Partenariat", "Le kit peut servir de base à une présentation auprès d’un média, d’un partenaire, d’un incubateur ou d’un financeur intéressé par l’IA et les usages numériques au Sénégal."),
             ("Nom", "Teranga AI"),
             ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais, wolof et pulaar."),
             ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
