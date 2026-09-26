@@ -399,3 +399,10 @@ def test_voice_routes_use_shared_quality_contract():
     assert "voice_instruction(language)" in source
     assert "transcription_prompt(language)" in source
     assert "tts_instruction(language)" in source
+
+
+def test_voice_code_switching_contract_is_explicit():
+    from services.voice_quality import transcription_prompt, voice_instruction
+    assert "melange plusieurs langues" in voice_instruction("fr")
+    assert "code-switching" in transcription_prompt("wo")
+    assert "code-switching" in transcription_prompt("ff")
