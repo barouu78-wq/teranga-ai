@@ -1742,6 +1742,114 @@ body.voice-active #mic{box-shadow:0 8px 24px rgba(15,106,67,.18),0 0 0 5px rgba(
 body.voice-active #mic.listen{box-shadow:0 8px 24px rgba(201,54,54,.28),0 0 0 7px rgba(201,54,54,.10)}
 @media(max-width:680px){body.voice-active .composer{box-shadow:0 0 0 3px rgba(15,106,67,.06),0 14px 32px rgba(61,44,23,.12)}}
 
+
+/* Teranga UI v18 — final desktop polish */
+@media (min-width:681px){
+  /* The landing screen should not reserve an empty message row. */
+  body:not(.has-chat) #stage{
+    grid-template-rows:auto!important;
+    align-content:start!important;
+    padding-bottom:118px!important;
+  }
+  body:not(.has-chat) #messages{display:none!important;}
+
+  /* Give the landing panel a cleaner visual rhythm. */
+  body:not(.has-chat) #hero{
+    width:100%!important;
+    padding:26px!important;
+    border-radius:24px!important;
+    gap:13px 20px!important;
+  }
+  body:not(.has-chat) #heroTitle{
+    max-width:760px!important;
+  }
+  body:not(.has-chat) #heroText{
+    margin-top:-2px!important;
+  }
+
+  /* Quick actions should look intentional rather than washed out. */
+  body:not(.has-chat) #cards{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:8px!important;
+    margin-top:2px!important;
+  }
+  body:not(.has-chat) #cards .card{
+    color:var(--ink)!important;
+    min-height:60px!important;
+    border-color:rgba(15,106,67,.12)!important;
+    background:rgba(255,255,255,.82)!important;
+  }
+  body:not(.has-chat) #cards .card b{
+    color:#254337!important;
+    font-weight:800!important;
+  }
+  body:not(.has-chat) #cards .card .ico{
+    color:var(--sen-green)!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) #cards .card{
+    background:rgba(30,26,22,.90)!important;
+    border-color:rgba(217,164,65,.12)!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) #cards .card b{
+    color:#f1e7d8!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) #cards .card .ico{
+    color:#e8c36a!important;
+  }
+
+  /* The guides panel becomes a proper secondary rail. */
+  body:not(.has-chat) .guide-section{
+    max-height:calc(100vh - 104px)!important;
+    overflow:auto!important;
+    scrollbar-width:thin!important;
+  }
+  body:not(.has-chat) .guide-section p{
+    color:#6f6255!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) .guide-section p{
+    color:#b8a48c!important;
+  }
+  body:not(.has-chat) .guide-links a{
+    color:#2d3d34!important;
+    font-weight:700!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) .guide-links a{
+    color:#efe6d8!important;
+  }
+
+  /* Composer reads as the main action, not a detached mobile footer. */
+  body:not(.has-chat) .dock{
+    bottom:16px!important;
+    width:min(900px,calc(100% - 390px))!important;
+  }
+  body:not(.has-chat) .dock .composer{
+    min-height:64px!important;
+  }
+  body:not(.has-chat) .dock .meta{
+    display:flex!important;
+    align-items:center!important;
+  }
+  body:not(.has-chat) .dock .meta > span:last-child{
+    color:var(--sen-green)!important;
+    font-weight:800!important;
+  }
+  body[data-theme="dark"]:not(.has-chat) .dock .meta > span:last-child{
+    color:#e8c36a!important;
+  }
+}
+
+@media (min-width:681px) and (max-width:1050px){
+  body:not(.has-chat) #stage{
+    grid-template-rows:auto!important;
+  }
+  body:not(.has-chat) #cards{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body:not(.has-chat) .dock{
+    width:min(700px,calc(100% - 300px))!important;
+  }
+}
+
 </style>
 
 </head>
