@@ -92,3 +92,5 @@ Les prochaines évolutions visent notamment à approfondir l’Explorer, la rech
 ## 📣 Partager le projet
 
 Le projet est public et peut être testé directement depuis la démo. Pour contribuer, ouvrir une issue ou une pull request sur GitHub.
+
+<!-- Render redeploy trigger: 2026-09-26 -->
