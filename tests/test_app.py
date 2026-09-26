@@ -394,3 +394,31 @@ def test_language_quality_contract_has_specific_safety_for_wolof_and_pulaar():
     assert "n'invente" in pulaar
     assert "traduction littérale" in wolof
     assert "traduction littérale" in pulaar
+
+
+def test_language_quality_preserves_requested_language_contract():
+    from services.language_quality import language_instruction
+
+    contracts = {lang: language_instruction(lang) for lang in ("fr", "en", "wo", "ff")}
+    assert len(set(contracts.values())) == 4
+    assert "LANGUE DE SORTIE : français" in contracts["fr"]
+    assert "LANGUE DE SORTIE : English" in contracts["en"]
+    assert "LANGUE DE SORTIE : wolof" in contracts["wo"]
+    assert "LANGUE DE SORTIE : pulaar" in contracts["ff"]
+
+
+def test_language_quality_code_switching_is_explicit_not_a_fallback():
+    from services.language_quality import language_instruction
+
+    assert "majoritairement en wolof" in language_instruction("wo")
+    assert "majoritairement en pulaar" in language_instruction("ff")
+    assert "N'invente jamais un mot" in language_instruction("wo")
+    assert "N'invente pas de vocabulaire pulaar" in language_instruction("ff")
+
+
+def test_language_test_cases_cover_all_supported_chat_languages():
+    from services.language_quality import LANGUAGE_RULES, language_test_cases
+
+    cases = language_test_cases()
+    assert set(cases) == set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
+    assert all(isinstance(prompt, str) and prompt.strip() for prompt in cases.values())
