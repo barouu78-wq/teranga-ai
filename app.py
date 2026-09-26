@@ -2116,7 +2116,7 @@ def sitemap():
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>"
+        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>" + f"<url><loc>{SITE_URL}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
         + "".join(
             f"<url><loc>{SITE_URL}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
             for slug in SEO_PAGES
