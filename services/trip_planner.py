@@ -113,7 +113,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
-        error=escape(t["error"]), from=escape(t["from"]), to=escape(t["to"]), adults=escape(t["adults"]),
+        error=escape(t["error"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
         children=escape(t["children"]), interests_html=_option_list(t["interest_options"]),
         budget_html=_option_list(t["budget_options"]), pace_html=_option_list(t["pace_options"]),
         regions_html=_option_list(t["region_options"]), surprise=escape(t["surprise"])
