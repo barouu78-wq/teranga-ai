@@ -422,3 +422,11 @@ def test_language_test_cases_cover_all_supported_chat_languages():
     cases = language_test_cases()
     assert set(cases) == set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
     assert all(isinstance(prompt, str) and prompt.strip() for prompt in cases.values())
+
+
+def test_language_support_check_is_explicit():
+    from services.language_quality import is_supported_language
+
+    assert all(is_supported_language(lang) for lang in ("fr", "en", "wo", "ff"))
+    assert not is_supported_language("es")
+    assert not is_supported_language("")
