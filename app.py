@@ -1688,6 +1688,17 @@ def chat():
 
 @app.post("/tts")
 @require_json_post
+def speech_ready_text(text: str) -> str:
+    """Prepare assistant text for natural speech without changing its meaning."""
+    text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
+    text = re.sub(r'\[([^\]\n]+)\]\((?:https?://|www\.)[^)]+\)', r'\1', text)
+    text = re.sub(r'(^|\n)\s{0,3}#{1,6}\s*', r'\1', text)
+    text = re.sub(r'(^|\n)\s*[-*•]+\s+', r'\1', text)
+    text = re.sub(r'(^|\n)\s*\d+[.)]\s+', r'\1', text)
+    text = re.sub(r'[*_~`]+', '', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text[:MAX_TTS_LENGTH]
+
 def tts():
     ip = client_ip()
     identity = abuse_key(ip)
@@ -1705,6 +1716,7 @@ def tts():
     if not isinstance(data, dict):
         return jsonify({"error": "Requête invalide."}), 400
     text = sanitize_text(data.get("text", ""), MAX_TTS_LENGTH)
+    text = speech_ready_text(text)
     language = str(data.get("language", "fr")).lower()[:8]
     if language not in SAFE_LANG:
         language = "fr"
@@ -1718,10 +1730,10 @@ def tts():
     }[language]
     try:
         voice_instructions = {
-            "fr": "Voix conversationnelle, chaleureuse et naturelle, comme un assistant qui parle directement à une personne. Articulation claire sans sur-articuler, débit fluide légèrement posé, intonation vivante et pauses naturelles. Prononce soigneusement les noms sénégalais, lieux, plats, mots wolof et pulaar. Ne lis jamais les symboles markdown, les puces ou les URL.",
+            "fr": "Voix humaine, chaleureuse et très naturelle, comme une conversation en face à face. Débit fluide, légèrement posé, avec de courtes pauses entre les idées, une intonation vivante et une énergie calme. Mets naturellement en valeur les mots importants sans dramatiser. Prononce avec soin les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL ou les signes techniques.",
             "en": "Warm, natural conversational voice, as an assistant speaking directly to a person. Clear articulation without over-enunciating, smooth slightly measured pace, lively intonation and natural pauses. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown symbols, bullets or URLs aloud.",
-            "wo": "Wax ak baat bu naturel, bu neex te mel ni waxtaan ak nit. Bul wax bu gaaw lool walla bu ndank lool; jàppale ci leer, intonation bu naturel ak noppi yu gëna am solo. Jàng tur yu Senegaal, dëkk yi, lekk yi ak wax Wolof ak Pulaar bu baax. Bul jàng ay simbol yu markdown, puce walla URL.",
-            "ff": "Voix conversationnelle, chaleureuse et naturelle. Articulation claire sans sur-articuler, débit fluide légèrement posé, intonation vivante et pauses naturelles. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais les symboles markdown, les puces ou les URL.",
+            "wo": "Wax ak baat bu nit, bu neex te naturel, mel ni waxtaan ci kanam ak kanam. Débit bu yomb te ñuul, noppi yu gàtt ci diggante xalaat yi, intonation bu naturel ak doole bu dal. Teg solo ci wax yi am solo te bañ a dramatise. Jàng tur yu Senegaal, dëkk yi, ñam yi ak Wolof ak Pulaar bu baax. Bul jàng markdown, URL walla simbol yu teknikal.",
+            "ff": "Voix humaine, chaleureuse et très naturelle, comme une conversation directe. Débit fluide légèrement posé, petites pauses naturelles entre les idées, intonation vivante et énergie calme. Mets doucement en valeur les mots importants. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais le markdown, les URL ou les signes techniques.",
         }[language]
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
