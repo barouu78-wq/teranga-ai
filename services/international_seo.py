@@ -201,7 +201,10 @@ def localized_sitemap_urls(site_url):
 
 def localized_routes():
     return {(lang, topic) for lang in LANGS for topic in TOPICS}
-\n\n# --- Rich topic-specific content layer ---\nconst TOPIC_VALUE = {
+
+
+# --- Rich topic-specific content layer ---
+TOPIC_VALUE = {
     "senegal-travel-guide": {
         "en": "Build the trip around a few hubs rather than trying to cover the whole country at once. Dakar works well as a base for Gorée and nearby coastal outings, while Saint-Louis, Sine-Saloum, Casamance and Kédougou offer very different landscapes and travel rhythms.",
         "es": "Conviene organizar el viaje alrededor de varias bases en lugar de intentar recorrer todo el país. Dakar facilita las excursiones a Gorée y la costa, mientras Saint-Louis, Sine-Saloum, Casamance y Kédougou ofrecen experiencias y ritmos muy distintos.",
@@ -286,4 +289,21 @@ def localized_routes():
         "it": "Un buon itinerario parte dai vincoli: date, arrivo, budget, ritmo e interessi principali. Con questi dati Teranga AI può confrontare percorsi e organizzare le giornate, verificando le informazioni variabili.",
         "fr": "Un bon itinéraire commence par les contraintes : dates, arrivée, budget, rythme et centres d’intérêt prioritaires. Teranga AI peut ensuite comparer les options et structurer les journées, tout en vérifiant les données variables."
     }
-};\n\nconst _base_render_international_page = render_international_page;\n\nfunction render_international_page(lang, topic, site_url) {\n    const response = _base_render_international_page(lang, topic, site_url);\n    if (!response) return response;\n    const text = response.get_data(as_text=True);\n    const value = TOPIC_VALUE[topic] && TOPIC_VALUE[topic][lang];\n    if (!value) return response;\n    const heading = {en:"Practical focus",es:"Enfoque práctico",de:"Praktischer Fokus",it:"Focus pratico",fr:"Focus pratique"}[lang];\n    const section = "<section><h2>" + escape(heading) + "</h2><p>" + escape(value) + "</p></section>";\n    const marker = "<section><h2>" + ({en:"Frequently asked questions",es:"Preguntas frecuentes",de:"Häufige Fragen",it:"Domande frequenti",fr:"Questions fréquentes"}[lang]) + "</h2>";\n    return new Response(text.replace(marker, section + marker), mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"});\n}\n
+}
+
+_base_render_international_page = render_international_page
+
+
+def render_international_page(lang, topic, site_url):
+    response = _base_render_international_page(lang, topic, site_url)
+    if not response:
+        return response
+    value = TOPIC_VALUE.get(topic, {}).get(lang)
+    if not value:
+        return response
+    heading = {"en":"Practical focus","es":"Enfoque práctico","de":"Praktischer Fokus","it":"Focus pratico","fr":"Focus pratique"}[lang]
+    section = f"<section><h2>{escape(heading)}</h2><p>{escape(value)}</p></section>"
+    faq_heading = {"en":"Frequently asked questions","es":"Preguntas frecuentes","de":"Häufige Fragen","it":"Domande frequenti","fr":"Questions fréquentes"}[lang]
+    faq_marker = f"<section><h2>{faq_heading}</h2>"
+    text = response.get_data(as_text=True)
+    return Response(text.replace(faq_marker, section + faq_marker), mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})
