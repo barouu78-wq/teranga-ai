@@ -109,6 +109,7 @@ function speakFallback(text,btn){
     utterance.onend=()=>finishSpeech(btn);
     utterance.onerror=()=>finishSpeech(btn);
     window.speechSynthesis.speak(utterance);
+    if(voiceConversation)startVoiceMonitor();
     return true;
   }catch(_){voiceSpeaking=false;document.body.classList.remove('assistant-speaking');return false;}
 }
@@ -137,7 +138,7 @@ async function speak(text,btn){
     document.body.classList.add('assistant-speaking');
     audio.onended=()=>{const a=audio;audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
     audio.onerror=()=>{audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
-    try{await audio.play();}catch(_){audio.onerror();}
+    try{await audio.play();if(voiceConversation)startVoiceMonitor();}catch(_){audio.onerror();}
   }catch(_){
     if(!speakFallback(text,btn))finishSpeech(btn);
   }
