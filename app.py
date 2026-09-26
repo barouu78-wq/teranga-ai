@@ -19,6 +19,7 @@ from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from services.seo import SEO_PAGES, render_seo_page
+from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
 from services.images import (
@@ -43,6 +44,7 @@ API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+register_localized_routes(app, SITE_URL)
 ALLOWED_ORIGINS = {
     origin.strip().rstrip("/")
     for origin in os.getenv("ALLOWED_ORIGINS", SITE_URL).split(",")
@@ -2118,6 +2120,7 @@ def sitemap():
             f"<url><loc>{SITE_URL}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
             for slug in SEO_PAGES
         )
+        + "".join(f"<url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>" for url in localized_sitemap_urls(SITE_URL))
         + "</urlset>"
     )
     return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})

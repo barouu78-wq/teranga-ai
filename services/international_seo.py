@@ -183,6 +183,16 @@ def render_international_page(lang, topic, site_url):
 </article><footer>Teranga AI · {", ".join(LANG_NAMES.values())}</footer></main></body></html>"""
     return Response(html, mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})
 
+def register_localized_routes(app, site_url):
+    @app.get("/<lang>/<topic>")
+    def localized_travel_page(lang, topic):
+        response = render_international_page(lang, topic, site_url)
+        if response is None:
+            from flask import abort
+            abort(404)
+        return response
+
+
 def localized_sitemap_urls(site_url):
     return [
         f"{site_url.rstrip('/')}/{lang}/{topic}"
