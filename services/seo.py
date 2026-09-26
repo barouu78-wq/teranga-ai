@@ -201,6 +201,42 @@ SEO_PAGES = {
         ],
         "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("senegal", "Guide du Sénégal")]
     },
+    "pour-les-entreprises": {
+        "title": "Teranga AI pour les entreprises au Sénégal et en France",
+        "description": "Teranga AI pour hôtels, restaurants, commerces, agences, tourisme et entreprises : assistant Sénégal, visibilité digitale et parcours clients.",
+        "h1": "Teranga AI pour les entreprises",
+        "intro": "Un assistant numérique consacré au Sénégal, pensé pour créer un point d’entrée simple entre vos clients et les informations utiles.",
+        "sections": [
+            ("Hôtels, restaurants et tourisme", "Aidez vos clients à trouver des repères sur Dakar, les transports, la météo, les quartiers, les spécialités et les lieux à visiter."),
+            ("Commerçants et services", "Utilisez Teranga AI comme point de découverte pour les questions fréquentes : horaires à vérifier, itinéraires, langues, produits, services et informations pratiques."),
+            ("Entreprises et partenaires", "Nous pouvons étudier un pilote, une intégration, une campagne de visibilité ou un partenariat éditorial avec des acteurs au Sénégal et en France."),
+            ("Une présence qui se partage", "Le site, les pages thématiques, les réseaux sociaux, les médias et les annuaires peuvent relayer Teranga AI. L’objectif est de construire une présence cohérente, sans spam ni fausses affiliations.")
+        ],
+        "faq": [
+            ("Peut-on travailler avec Teranga AI ?", "Oui. Les entreprises, médias, acteurs du tourisme et organisations peuvent proposer un pilote ou un partenariat."),
+            ("Le service vise-t-il uniquement Dakar ?", "Non. Le contenu et les pages couvrent le Sénégal, avec un axe particulier sur Dakar et les besoins de la diaspora."),
+            ("Peut-on proposer Teranga AI à des clients ?", "Oui, comme outil d’information et d’orientation, en gardant une vérification des informations sensibles ou changeantes.")
+        ],
+        "related": [("partenaires", "Partenaires"), ("presse", "Presse"), ("media-kit", "Kit média"), ("france-senegal", "France ↔ Sénégal")]
+    },
+    "partenaires": {
+        "title": "Partenaires Teranga AI : Sénégal, France et diaspora",
+        "description": "Partenariats Teranga AI avec médias, tourisme, entreprises, associations, écoles et acteurs tech au Sénégal et en France.",
+        "h1": "Partenaires",
+        "intro": "Teranga AI cherche des partenaires qui veulent améliorer l’accès aux informations pratiques sur le Sénégal et développer des usages numériques utiles.",
+        "sections": [
+            ("Médias et créateurs", "Articles, interviews, newsletters, émissions, vidéos et contenus pédagogiques peuvent présenter le service avec un lien vers le site officiel."),
+            ("Tourisme et hôtellerie", "Hôtels, agences, guides, restaurants et acteurs du tourisme peuvent explorer des parcours d’information pour leurs visiteurs."),
+            ("Entreprises et écosystèmes tech", "Incubateurs, écoles, entreprises numériques et réseaux professionnels peuvent proposer des démonstrations, pilotes ou collaborations."),
+            ("Sénégal ↔ France", "Les acteurs de la diaspora et les réseaux franco-sénégalais peuvent contribuer à faire connaître un assistant accessible depuis les deux pays.")
+        ],
+        "faq": [
+            ("Comment proposer un partenariat ?", "Présentez votre organisation, votre audience, votre idée et le type de collaboration envisagé."),
+            ("Teranga AI accepte-t-il les mises en avant payantes ?", "Les modalités commerciales doivent être définies au cas par cas et présentées clairement aux utilisateurs."),
+            ("Peut-on utiliser le logo et le kit média ?", "Oui pour présenter Teranga AI, en conservant une description exacte et un lien vers le site officiel.")
+        ],
+        "related": [("pour-les-entreprises", "Pour les entreprises"), ("presse", "Presse"), ("media-kit", "Kit média"), ("a-propos", "À propos")]
+    },
     "assistant-senegal": {
         "title": "Assistant Sénégal : informations pratiques, voyage et Dakar | Teranga AI",
         "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais, wolof et pulaar.",
