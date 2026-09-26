@@ -22,6 +22,7 @@ from services.seo import SEO_PAGES, render_seo_page
 from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
+from services.trip_planner import register_trip_planner
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
