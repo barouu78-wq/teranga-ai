@@ -373,3 +373,36 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert sitemap.count("<loc>") >= 1 + len(TOPICS) * len(LANGS)
     assert "/en/senegal-travel-guide" in sitemap
     assert "/fr/senegal-trip-planner" in sitemap
+
+
+def test_voice_quality_contract_covers_all_supported_languages():
+    from services.voice_quality import VOICE_LANGUAGE_RULES, transcription_prompt, tts_instruction, voice_instruction
+    assert set(VOICE_LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
+    for language in VOICE_LANGUAGE_RULES:
+        assert "LANGUE VOCALE" in voice_instruction(language)
+        assert "LANGUE AUDIO" in transcription_prompt(language)
+        assert "Voix conversationnelle" in tts_instruction(language)
+
+
+def test_voice_quality_has_wolof_and_pulaar_anti_invention_rules():
+    from services.voice_quality import transcription_prompt, voice_instruction
+    assert "Bul sos" in voice_instruction("wo")
+    assert "bul sos" in transcription_prompt("wo").lower()
+    assert "N'invente pas" in voice_instruction("ff")
+    assert "n'invente pas" in transcription_prompt("ff").lower()
+
+
+def test_voice_routes_use_shared_quality_contract():
+    import app as app_module
+    source = Path(app_module.__file__).read_text(encoding="utf-8")
+    assert "from services.voice_quality import" in source
+    assert "voice_instruction(language)" in source
+    assert "transcription_prompt(language)" in source
+    assert "tts_instruction(language)" in source
+
+
+def test_voice_code_switching_contract_is_explicit():
+    from services.voice_quality import transcription_prompt, voice_instruction
+    assert "melange plusieurs langues" in voice_instruction("fr")
+    assert "code-switching" in transcription_prompt("wo")
+    assert "code-switching" in transcription_prompt("ff")
