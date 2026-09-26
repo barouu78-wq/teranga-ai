@@ -36,6 +36,93 @@
 let voiceDraft='';
 let voiceSilenceTimer=0;
 const ttsCache=new Map();
+let voiceTtsQueue=[];
+let voiceTtsPlaying=false;
+let voiceTtsTurn=0;
+let voiceStreamTtsBuffer='';
+let voiceStreamTtsCount=0;
+
+function clearVoiceTtsQueue(){
+  voiceTtsTurn++;
+  voiceTtsQueue=[];
+  voiceStreamTtsBuffer='';
+  voiceStreamTtsCount=0;
+}
+function queueVoiceSpeech(text){
+  text=cleanReply(text||'').replace(/\s+/g,' ').trim();
+  if(!text||text.length<18||!autoVoice)return;
+  voiceTtsQueue.push({text,turn:voiceTtsTurn});
+  playVoiceTtsQueue();
+}
+async function playVoiceTtsQueue(){
+  if(voiceTtsPlaying||!voiceTtsQueue.length||!autoVoice)return;
+  const item=voiceTtsQueue.shift();
+  if(!item||item.turn!==voiceTtsTurn)return playVoiceTtsQueue();
+  voiceTtsPlaying=true;
+  const cacheKey=lang+'|'+item.text;
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    let blob=ttsCache.get(cacheKey);
+    if(!blob){
+      const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
+      if(!res.ok)throw new Error('tts');
+      blob=await res.blob();
+      if(!blob.size)throw new Error('tts-empty');
+      if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
+      ttsCache.set(cacheKey,blob);
+    }
+    if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
+    const url=URL.createObjectURL(blob);
+    audio=new Audio(url);
+    audio.preload='auto';
+    audio.setAttribute('playsinline','');
+    audio.volume=1;
+    voiceSpeaking=true;
+    document.body.classList.add('assistant-speaking');
+    await new Promise(resolve=>{
+      const done=()=>{
+        if(audio&&audio.src===url)audio=null;
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      audio.onended=done;
+      audio.onerror=done;
+      audio.play().catch(done);
+      if(voiceConversation)startVoiceMonitor();
+    });
+  }catch(_){
+    if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text);
+  }finally{
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    voiceTtsPlaying=false;
+    if(voiceTtsQueue.length&&autoVoice)playVoiceTtsQueue();
+    else if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+  }
+}
+function feedVoiceStreamTts(delta){
+  if(!autoVoice||!voiceConversation||!delta)return;
+  voiceStreamTtsBuffer+=delta;
+  if(voiceStreamTtsCount>=3)return;
+  const re=/([.!?…]+)(?=\s|$)/g;
+  let match,last=0;
+  while(voiceStreamTtsCount<3&&(match=re.exec(voiceStreamTtsBuffer))){
+    const end=match.index+match[0].length;
+    const sentence=voiceStreamTtsBuffer.slice(last,end).trim();
+    last=end;
+    if(sentence.length>=24){
+      queueVoiceSpeech(sentence);
+      voiceStreamTtsCount++;
+    }
+  }
+  if(last)voiceStreamTtsBuffer=voiceStreamTtsBuffer.slice(last).trimStart();
+}
+function flushVoiceStreamTts(reply){
+  if(!autoVoice||!voiceConversation)return;
+  const rest=voiceStreamTtsBuffer.trim();
+  voiceStreamTtsBuffer='';
+  if(rest)queueVoiceSpeech(rest);
+}
 
 function clearVoiceSilence(){
   clearTimeout(voiceSilenceTimer);
@@ -2618,6 +2705,7 @@ async function ask(preset,fromVoice=false){
     };
     const queue=chunk=>{
       pending+=chunk;
+      feedVoiceStreamTts(chunk);
       if(!paint)paint=requestAnimationFrame(flush);
     };
     const reader=res.body.getReader();
@@ -2674,7 +2762,8 @@ async function ask(preset,fromVoice=false){
     persist();
     if(autoVoice&&reply){
       voiceWaitingForAnswer=true;
-      await speak(reply);
+      flushVoiceStreamTts(reply);
+      if(!voiceStreamTtsCount&&!voiceTtsQueue.length)queueVoiceSpeech(reply);
     }
   }catch(err){
     const aborted=err.name==='AbortError';
@@ -3053,10 +3142,19 @@ function endVoiceMode(){
   voiceStatus(T[lang].hintTouch);
 }
 function stopSpeakingForListening(){
-  stopVoiceMonitor();
-  if(audio){try{audio.pause();}catch(_){}const src=audio.src;audio=null;if(src)URL.revokeObjectURL(src);}
-  if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch(_){}}
-  voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
+  clearVoiceTtsQueue();
+  if(audio){
+    try{audio.pause();}catch(_){}
+    const src=audio.src;
+    audio=null;
+    if(src)URL.revokeObjectURL(src);
+  }
+  if('speechSynthesis' in window){
+    try{window.speechSynthesis.cancel();}catch(_){}
+  }
+  voiceSpeaking=false;
+  voiceTtsPlaying=false;
+  document.body.classList.remove('assistant-speaking');
 }
 function finishSpeech(btn){
   voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
