@@ -1718,10 +1718,10 @@ def tts():
     }[language]
     try:
         voice_instructions = {
-            "fr": "Voix chaleureuse, naturelle et claire. Prononce correctement les noms sénégalais, les lieux, plats et mots wolof ou pulaar présents dans le texte. Débit régulier, articulation nette, pauses naturelles entre les phrases. Ne lis pas les symboles markdown.",
-            "en": "Warm, natural and clear voice. Pronounce Senegalese names, places, dishes and Wolof or Pulaar words carefully. Use a steady pace, crisp articulation and natural pauses between sentences. Do not read markdown symbols.",
-            "wo": "Wax ak baat bu neex, bu naturel te leer. Jàppale ci wax Wolof bu baax, te jàppale ci tur yu Senegaal, dëkk yi ak lekk yi. Jàppale ci dalal ak waxtu yu naturel ci diggante kàddu yi. Bul jàng ay simbol yu markdown.",
-            "ff": "Voix chaleureuse, naturelle et claire. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Débit légèrement lent, articulation nette et pauses naturelles entre les phrases. Ne lis pas les symboles markdown.",
+            "fr": "Voix conversationnelle, chaleureuse et naturelle, comme un assistant qui parle directement à une personne. Articulation claire sans sur-articuler, débit fluide légèrement posé, intonation vivante et pauses naturelles. Prononce soigneusement les noms sénégalais, lieux, plats, mots wolof et pulaar. Ne lis jamais les symboles markdown, les puces ou les URL.",
+            "en": "Warm, natural conversational voice, as an assistant speaking directly to a person. Clear articulation without over-enunciating, smooth slightly measured pace, lively intonation and natural pauses. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown symbols, bullets or URLs aloud.",
+            "wo": "Wax ak baat bu naturel, bu neex te mel ni waxtaan ak nit. Bul wax bu gaaw lool walla bu ndank lool; jàppale ci leer, intonation bu naturel ak noppi yu gëna am solo. Jàng tur yu Senegaal, dëkk yi, lekk yi ak wax Wolof ak Pulaar bu baax. Bul jàng ay simbol yu markdown, puce walla URL.",
+            "ff": "Voix conversationnelle, chaleureuse et naturelle. Articulation claire sans sur-articuler, débit fluide légèrement posé, intonation vivante et pauses naturelles. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais les symboles markdown, les puces ou les URL.",
         }[language]
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
