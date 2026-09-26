@@ -131,6 +131,7 @@ SEO_PAGES = {
         ],
         "related": [("entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("media-kit", "Kit média")]
     },
+    "entreprises": {"title":"IA pour entreprises au Senegal : Teranga AI","description":"Solutions IA pour entreprises au Senegal : assistant specialise, information locale, tourisme et pilotes B2B.","h1":"Teranga AI pour les entreprises","intro":"Une base IA consacree au Senegal pour construire des services numeriques utiles aux entreprises et organisations.","sections":[("Assistant specialise","Accueil, tourisme, information locale, support client ou FAQ."),("Pilote B2B","Commencer par un perimetre limite, mesurer les usages puis elargir."),("Integration","Interface web, contenus structures, cartes, visuels ou integration selon le projet.")],"faq":[("Peut-on commencer petit ?","Oui. Un pilote limite permet de definir le besoin et le perimetre.")],"related":[("soutenir-teranga-ai","Soutenir le projet"),("media-kit","Kit media")]},
     "a-propos": {
         "title": "À propos de Teranga AI : assistant numérique du Sénégal",
         "description": "Découvrez Teranga AI, assistant numérique consacré au Sénégal : informations pratiques, voyage, culture, langues et vie quotidienne.",
