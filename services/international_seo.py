@@ -162,6 +162,7 @@ def render_international_page(lang, topic, site_url):
             {"@type":"FAQPage","mainEntity":faq_ld}
         ]
     }
+    ld_json = json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c")
     html = f"""<!doctype html>
 <html lang="{escape(lang)}"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -172,7 +173,7 @@ def render_international_page(lang, topic, site_url):
 <meta property="og:url" content="{escape(url)}"><meta property="og:image" content="{escape(site_url.rstrip("/")+"/og.png")}">
 <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{escape(title)}">
 <meta name="twitter:description" content="{escape(description)}"><meta name="twitter:image" content="{escape(site_url.rstrip("/")+"/og.png")}">
-<title>{escape(title)}</title><script type="application/ld+json">{json.dumps(ld,ensure_ascii=False).replace("<","\\u003c")}</script>
+<title>{escape(title)}</title><script type="application/ld+json">{ld_json}</script>
 <style>:root{{--bg:#0b0907;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}}*{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,sans-serif}}main{{width:min(860px,calc(100% - 32px));margin:auto;padding:28px 0 56px}}nav{{display:flex;justify-content:space-between;margin-bottom:20px}}a{{color:var(--gold);text-decoration:none;font-weight:750}}article{{background:#171310;border:1px solid var(--line);border-radius:28px;padding:28px}}.kicker{{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}}h1{{font:700 clamp(32px,6vw,48px)/1.08 Georgia,serif;margin:10px 0 16px}}.intro{{font-size:18px;color:var(--muted)}}section{{padding:18px 0;border-top:1px solid var(--line)}}h2{{font-size:20px;margin:0 0 6px}}h3{{font-size:16px;margin:12px 0 4px}}.related{{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px;font-size:14px}}.ctaBox{{margin-top:24px;padding:18px;border-radius:18px;background:#20190f;border:1px solid var(--line)}}footer{{font-size:12px;color:var(--muted);margin-top:18px}}</style>
 </head><body><main><nav><strong>Teranga <span style="color:var(--gold)">AI</span></strong><a href="/">{escape({"en":"Ask Teranga AI","es":"Preguntar a Teranga AI","de":"Teranga AI fragen","it":"Chiedi a Teranga AI","fr":"Poser une question"}[lang])}</a></nav>
 <div class="related">{related}</div><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
