@@ -46,11 +46,11 @@ function createVoiceAudio(url){
       if(voiceOutputContext.state==='suspended')voiceOutputContext.resume().catch(()=>{});
       const source=voiceOutputContext.createMediaElementSource(el);
       const gain=voiceOutputContext.createGain();
-      gain.gain.value=1.24;
+      gain.gain.value=1.08;
       const compressor=voiceOutputContext.createDynamicsCompressor();
-      compressor.threshold.value=-15;
+      compressor.threshold.value=-18;
       compressor.knee.value=18;
-      compressor.ratio.value=3;
+      compressor.ratio.value=2.5;
       compressor.attack.value=.003;
       compressor.release.value=.18;
       source.connect(gain);
@@ -99,7 +99,7 @@ async function playVoiceTtsQueue(){
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
       if(!blob.size)throw new Error('tts-empty');
-      if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
+      if(ttsCache.size>=12)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
     if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
@@ -2901,11 +2901,11 @@ let voiceNoiseSamples=0, voiceMonitorData=null, voiceBargeInStartedAt=0, voiceRe
 let voiceRecorderMime='';
 let voiceTurnId=0;
 
-const VOICE_SILENCE_MS=720;
-const VOICE_MIN_SPEECH_MS=180;
-const VOICE_MAX_MS=24000;
-const VOICE_NOISE_CALIBRATION_MS=650;
-const VOICE_BARGE_MS=180;
+const VOICE_SILENCE_MS=850;
+const VOICE_MIN_SPEECH_MS=220;
+const VOICE_MAX_MS=30000;
+const VOICE_NOISE_CALIBRATION_MS=800;
+const VOICE_BARGE_MS=220;
 const VOICE_RESTART_MS=120;
 
 function voiceStatus(text){
@@ -3044,6 +3044,11 @@ async function postVoiceAudio(blob,turnId){
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||'stt');
     const text=String(data.text||'').replace(/\s+/g,' ').trim();
+    if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
+      endVoiceMode();
+      voiceStatus(lang==='fr'?'Mode vocal arrêté.':lang==='en'?'Voice mode stopped.':T[lang].hintTouch);
+      return;
+    }
     if(!text){
       voiceWaitingForAnswer=false;
       voiceStatus(lang==='fr'?'Je n’ai pas bien entendu. Parle encore.':lang==='en'?'I didn’t catch that. Try again.':T[lang].hintTouch);
@@ -3211,7 +3216,7 @@ function setupMic(){
         voiceSilenceTimer=setTimeout(()=>{
           const spoken=voiceDraft.trim();voiceDraft='';
           if(spoken&&!inflight&&!voiceSTTBusy){try{rec.stop();}catch(_){}ask(spoken,true);}
-        },650);
+        },850);
       }
     };
     rec.onend=()=>{
