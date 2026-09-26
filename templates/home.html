@@ -1107,19 +1107,40 @@ function updateFx(){
   const from=$('fxFrom').value;
   $('fxResult').textContent=formatCfa(amount*(fxRates[from]||FX_CACHE[from]||655.957));
 }
+function formatFxDate(value){
+  if(!value)return '';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '';
+  try{
+    return new Intl.DateTimeFormat(
+      lang==='en'?'en-US':lang==='wo'?'wo':lang==='ff'?'ff':'fr-FR',
+      {weekday:'long',day:'numeric',month:'long',year:'numeric'}
+    ).format(date);
+  }catch(_){
+    return date.toLocaleDateString();
+  }
+}
 async function loadFx(){
   try{
     const res=await fetch('/exchange-rates',{cache:'no-store'});
     if(res.ok){
       const data=await res.json();
       if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};
-      $('fxUpdated').textContent=(data.date?('Réf. '+data.date+' · '):'')+'BCEAO';
+      const ref=data.date?('Taux de référence du '+data.date):'Taux de référence BCEAO';
+      const checked=formatFxDate(data.checked_at);
+      $('fxUpdated').textContent=checked
+        ? (lang==='en' ? ref.replace('Taux de référence du ','Reference rate ')+' · checked '+checked
+          : lang==='wo' ? ref+' · seet '+checked
+          : lang==='ff' ? ref+' · ƴeewtaa '+checked
+          : ref+' · vérifié '+checked)
+        : ref;
     }
   }catch(_){}
   updateFx();
 }
 $('fxAmount').addEventListener('input',updateFx);$('fxFrom').addEventListener('change',updateFx);
 setInterval(loadFx,10*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
 const AUDIENCE={
 fr:{
  tourist:[['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
