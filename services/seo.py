@@ -179,6 +179,23 @@ SEO_PAGES = {
         ],
         "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Goree")],
     },
+
+    "assistant-senegal": {
+        "title": "Assistant Sénégal : informations pratiques, voyage et Dakar | Teranga AI",
+        "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais, wolof et pulaar.",
+        "h1": "Assistant Sénégal",
+        "intro": "Teranga AI est un assistant numérique consacré au Sénégal. Posez une question sur Dakar, un trajet, une région, la météo, la culture ou la vie pratique.",
+        "sections": [
+            ("Voyage et déplacements", "Préparez un séjour au Sénégal, demandez des repères sur AIBD, Dakar, Gorée, les transports, les quartiers et les régions."),
+            ("Vie pratique", "Posez une question sur la météo, les spécialités, les langues, les services ou une situation du quotidien. Pour les informations changeantes, les sources récentes doivent être vérifiées."),
+            ("Pour le Sénégal et la diaspora", "Le service est accessible depuis le Sénégal, la France et ailleurs. Vous pouvez préciser votre ville, votre région ou votre contexte pour obtenir une réponse plus ciblée."),
+        ],
+        "faq": [
+            ("Quelles langues peut-on utiliser ?", "Teranga AI prend en charge le français, l'anglais, le wolof et le pulaar."),
+            ("Peut-on préparer un voyage au Sénégal ?", "Oui. Demandez des informations sur les lieux, transports, météo, culture et repères pratiques, puis vérifiez les informations susceptibles de changer."),
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "Sénégal ↔ France"), ("meteo-dakar", "Météo Dakar"), ("regions-senegal", "14 régions")],
+    },
 }
 
 
