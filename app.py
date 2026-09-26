@@ -80,6 +80,7 @@ if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
 client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
+register_trip_planner(app, client, SITE_URL)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
