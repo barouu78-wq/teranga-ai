@@ -373,3 +373,24 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert sitemap.count("<loc>") >= 1 + len(TOPICS) * len(LANGS)
     assert "/en/senegal-travel-guide" in sitemap
     assert "/fr/senegal-trip-planner" in sitemap
+
+
+def test_language_quality_contract_covers_all_supported_languages():
+    from services.language_quality import LANGUAGE_RULES, language_instruction
+
+    assert set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
+    for language in ("fr", "en", "wo", "ff"):
+        instruction = language_instruction(language)
+        assert "LANGUE DE SORTIE" in instruction
+        assert len(instruction) > 180
+
+
+def test_language_quality_contract_has_specific_safety_for_wolof_and_pulaar():
+    from services.language_quality import language_instruction
+
+    wolof = language_instruction("wo").lower()
+    pulaar = language_instruction("ff").lower()
+    assert "n'invente" in wolof
+    assert "n'invente" in pulaar
+    assert "traduction littérale" in wolof
+    assert "traduction littérale" in pulaar
