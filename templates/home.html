@@ -868,6 +868,85 @@ body.has-chat #messages{padding-top:4px}
 .fx-result{margin-top:9px;padding:12px 14px;border-radius:15px;background:var(--soft);display:flex;align-items:baseline;justify-content:space-between;gap:10px}.fx-result span{font-size:21px;font-weight:850;color:var(--gold)}.fx-result small{color:var(--mute);font-size:10px}
 .fx-note{margin-top:8px;color:var(--mute);font-size:9px;line-height:1.45}
 @media(max-width:680px){.fx-widget{padding:14px;border-radius:18px}.fx-result span{font-size:19px}}
+
+/* Teranga UI v10 — desktop hierarchy and compact workspace */
+@media (min-width:681px){
+  .app{width:min(1180px,100%);max-width:1180px}
+  header{padding:12px 26px 10px}
+  #stage{padding:18px 24px 12px}
+  .hero{
+    display:grid;
+    grid-template-columns:minmax(0,1.18fr) minmax(310px,.82fr);
+    grid-template-rows:auto auto auto auto;
+    column-gap:26px;
+    row-gap:16px;
+    align-items:start;
+    margin:12px 0 14px;
+    padding:30px 32px 24px;
+    min-height:0;
+  }
+  .hero h1{
+    grid-column:1;
+    grid-row:1;
+    align-self:end;
+    margin:0;
+    font-size:clamp(42px,4.8vw,58px);
+    line-height:1.02;
+  }
+  .hero p{
+    grid-column:1;
+    grid-row:2;
+    align-self:start;
+    margin:0;
+    max-width:54ch;
+  }
+  .audience-mode{
+    grid-column:1 / -1;
+    grid-row:3;
+    margin:0;
+  }
+  .fx-widget{
+    grid-column:2;
+    grid-row:1 / span 2;
+    align-self:stretch;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    min-width:0;
+  }
+  .cards{
+    grid-column:1 / -1;
+    grid-row:4;
+  }
+  .spread{grid-column:1 / -1;grid-row:5;margin-top:0}
+  .dock{padding-left:24px;padding-right:24px}
+  .dock>.chips,.dock>.composer,.dock>.meta{width:min(980px,100%);margin-left:auto;margin-right:auto}
+  .dock>.chips{margin-bottom:0}
+  .composer{min-height:62px}
+  .tabbar{padding-left:24px;padding-right:24px}
+  .tabbar button{max-width:220px;justify-self:center;width:100%}
+}
+@media (min-width:681px) and (max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .hero h1,.hero p,.audience-mode,.fx-widget,.cards,.spread{
+    grid-column:1;grid-row:auto
+  }
+  .fx-widget{min-height:0}
+}
+@media (min-width:681px){
+  body[data-theme="dark"] .hero{
+    background:
+      radial-gradient(420px 240px at 100% 0%,rgba(217,164,65,.13),transparent 70%),
+      linear-gradient(145deg,rgba(21,31,25,.98),rgba(17,14,11,.97));
+  }
+  body[data-theme="dark"] .fx-widget{
+    background:linear-gradient(145deg,rgba(217,164,65,.10),rgba(22,18,14,.94));
+  }
+  .hero h1:after{margin-top:12px}
+  .audience-btn{min-height:70px}
+}
+
 </style>
 
 </head>
