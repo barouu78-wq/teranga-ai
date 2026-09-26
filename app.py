@@ -1315,7 +1315,8 @@ def parse_chat_payload():
         audience = "tourist"
     if not message:
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
-    language_instruction_text = language_instruction(language)\n    context = infer_senegal_context(history, message)
+    language_instruction_text = language_instruction(language)
+    context = infer_senegal_context(history, message)
     enriched_context = context["query"]
     if context["has_place"]:
         place_line = (
