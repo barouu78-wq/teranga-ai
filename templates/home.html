@@ -2949,7 +2949,7 @@ function setupMic(){
     rec.onend=()=>{listening=false;mic.classList.remove('listen');if(voiceConversation&&!voiceSTTBusy&&!voiceSpeaking&&!inflight&&!voiceUsingRecorder)resumeVoiceListening(180);};
     rec.onerror=()=>{listening=false;mic.classList.remove('listen');};
   }
-  if(!navigator.mediaDevices?.getUserMedia&&!rec){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';}
+  if((!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)&&!rec){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';}
 }
 mic.onclick=()=>{
   if(voiceSpeaking){stopSpeakingForListening();beginVoiceMode();startVoiceCapture();return;}
