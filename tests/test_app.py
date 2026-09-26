@@ -64,6 +64,17 @@ def test_health_does_not_expose_configuration_details():
     assert "model" not in data
 
 
+def test_image_redirect_target_is_restricted():
+    import app as app_module
+
+    assert app_module._allowed_image_url("https://upload.wikimedia.org/wikipedia/commons/a/a0/test.jpg")
+    assert app_module._allowed_image_url("https://thumb.wikimedia.org/wikipedia/commons/a/a0/test.jpg")
+    assert not app_module._allowed_image_url("http://upload.wikimedia.org/wikipedia/commons/a/a0/test.jpg")
+    assert not app_module._allowed_image_url("https://example.com/test.jpg")
+    assert not app_module._allowed_image_url("https://upload.wikimedia.org@evil.example/test.jpg")
+    assert not app_module._allowed_image_url("https://upload.wikimedia.org:8443/test.jpg")
+
+
 def test_referer_origin_is_exact():
     import app as app_module
 
