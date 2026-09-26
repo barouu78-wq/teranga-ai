@@ -88,11 +88,11 @@ MAX_HISTORY_ITEMS = 12
 MAX_HISTORY_CHARS = 10000
 RATE_LIMIT = 16
 RATE_WINDOW = 60
-TTS_RATE_LIMIT = 8
+TTS_RATE_LIMIT = 15
 CHAT_HOURLY_LIMIT = 120
-TTS_HOURLY_LIMIT = 30
-STT_RATE_LIMIT = 8
-STT_HOURLY_LIMIT = 30
+TTS_HOURLY_LIMIT = 45
+STT_RATE_LIMIT = 15
+STT_HOURLY_LIMIT = 45
 IMAGE_RATE_LIMIT = 24
 IMAGE_RATE_WINDOW = 60
 FX_RATE_LIMIT = 6
@@ -1790,8 +1790,8 @@ def tts():
     }[language]
     try:
         voice_instructions = {
-            "fr": "Voix humaine, chaleureuse et très naturelle, comme une conversation en face à face. Débit fluide, légèrement posé, avec de courtes pauses entre les idées, une intonation vivante et une énergie calme. Mets naturellement en valeur les mots importants sans dramatiser. Prononce avec soin les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL ou les signes techniques.",
-            "en": "Warm, natural conversational voice, as an assistant speaking directly to a person. Clear articulation without over-enunciating, smooth slightly measured pace, lively intonation and natural pauses. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown symbols, bullets or URLs aloud.",
+            "fr": "Voix humaine, chaleureuse et très naturelle, comme une conversation en face à face. Réponds avec une présence calme et spontanée, sans ton de lecture. Débit fluide et légèrement posé, avec des micro-pauses naturelles entre les idées et une intonation vivante. Adapte le rythme à la phrase : plus direct pour une réponse courte, plus posé pour une explication. Mets naturellement en valeur les mots importants sans dramatiser. Prononce avec soin les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
+            "en": "Warm, spontaneous conversational voice, as if speaking directly to one person. Do not sound like a narrator reading text. Use clear articulation without over-enunciating, a smooth slightly measured pace, natural micro-pauses and lively but calm intonation. Adjust pacing to the sentence. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown, emojis, bullets, URLs or technical symbols aloud.",
             "wo": "Wax ak baat bu nit, bu neex te naturel, mel ni waxtaan ci kanam ak kanam. Débit bu yomb te ñuul, noppi yu gàtt ci diggante xalaat yi, intonation bu naturel ak doole bu dal. Teg solo ci wax yi am solo te bañ a dramatise. Jàng tur yu Senegaal, dëkk yi, ñam yi ak Wolof ak Pulaar bu baax. Bul jàng markdown, URL walla simbol yu teknikal.",
             "ff": "Voix humaine, chaleureuse et très naturelle, comme une conversation directe. Débit fluide légèrement posé, petites pauses naturelles entre les idées, intonation vivante et énergie calme. Mets doucement en valeur les mots importants. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais le markdown, les URL ou les signes techniques.",
         }[language]
