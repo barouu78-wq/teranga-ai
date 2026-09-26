@@ -1002,6 +1002,56 @@ body.has-chat #messages{padding-top:4px}
   body:not(.has-chat) #hero .spread{display:flex!important;order:6!important}
 }
 
+
+/* Teranga UI v13 — clean desktop composition */
+@media (min-width:681px){
+  #stage{
+    display:block!important;
+    overflow:auto!important;
+    padding:18px 24px 24px!important;
+    contain:none!important;
+  }
+  #hero{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 320px!important;
+    grid-template-areas:
+      "title fx"
+      "text fx"
+      "audience audience"
+      "cards cards"
+      "spread spread"!important;
+    gap:16px 24px!important;
+    width:100%!important;
+    max-width:none!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    margin:0 0 18px!important;
+    padding:28px!important;
+    box-sizing:border-box!important;
+    overflow:visible!important;
+    contain:none!important;
+    align-items:start!important;
+  }
+  #heroTitle{grid-area:title!important;min-width:0!important;margin:0!important}
+  #heroText{grid-area:text!important;min-width:0!important;margin:0 0 2px!important}
+  #audienceMode{grid-area:audience!important;width:100%!important;margin:2px 0 0!important}
+  #fxWidget{grid-area:fx!important;width:100%!important;margin:0!important;box-sizing:border-box!important}
+  #cards{grid-area:cards!important;width:100%!important;min-width:0!important}
+  #hero .spread{grid-area:spread!important;width:100%!important;margin:0!important}
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .guide-section{width:100%!important;box-sizing:border-box!important;margin:0 0 18px!important}
+  .seo{position:absolute!important}
+}
+@media (min-width:681px) and (max-width:900px){
+  #hero{
+    grid-template-columns:1fr!important;
+    grid-template-areas:"title" "text" "audience" "fx" "cards" "spread"!important;
+  }
+  #fxWidget{max-width:none!important}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
 </style>
 
 </head>
