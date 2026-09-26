@@ -31,7 +31,7 @@ from services.images import (
 load_dotenv()
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
 _stable = os.getenv("SECRET_KEY") or os.getenv("OPENAI_API_KEY") or "teranga-ai"
 app.config["SECRET_KEY"] = hashlib.sha256(_stable.encode("utf-8")).hexdigest()
 app.config["JSON_SORT_KEYS"] = False
@@ -91,6 +91,8 @@ RATE_WINDOW = 60
 TTS_RATE_LIMIT = 8
 CHAT_HOURLY_LIMIT = 120
 TTS_HOURLY_LIMIT = 30
+STT_RATE_LIMIT = 8
+STT_HOURLY_LIMIT = 30
 IMAGE_RATE_LIMIT = 24
 IMAGE_RATE_WINDOW = 60
 FX_RATE_LIMIT = 6
@@ -111,6 +113,8 @@ request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
 chat_hourly_log = defaultdict(deque)
 tts_hourly_log = defaultdict(deque)
+stt_request_log = defaultdict(deque)
+stt_hourly_log = defaultdict(deque)
 image_request_log = defaultdict(deque)
 fx_request_log = defaultdict(deque)
 web_request_log = defaultdict(deque)
@@ -1684,6 +1688,51 @@ def chat():
         mimetype="application/x-ndjson",
         headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"},
     )
+
+
+@app.post("/stt")
+@require_json_post
+def stt():
+    """Transcribe a short voice turn for hands-free conversation."""
+    ip = client_ip()
+    identity = abuse_key(ip)
+    if abuse_blocked(ip) or abuse_blocked(identity):
+        return jsonify({"error": "Trop de demandes vocales rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
+    if not allowed_request(ip, stt_request_log[ip], STT_RATE_LIMIT, 60, "stt") or not allowed_request(identity, stt_request_log[identity], STT_RATE_LIMIT, 60, "stt_identity"):
+        record_abuse(ip, "stt_rate", 2)
+        record_abuse(identity, "stt_identity_rate", 1)
+        return jsonify({"error": "Trop de transcriptions vocales. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
+    if not allowed_request(ip, stt_hourly_log[ip], STT_HOURLY_LIMIT, 3600, "stt_hour") or not allowed_request(identity, stt_hourly_log[identity], STT_HOURLY_LIMIT, 3600, "stt_identity_hour"):
+        record_abuse(ip, "stt_hourly", 3)
+        record_abuse(identity, "stt_identity_hour", 1)
+        return jsonify({"error": "Trop de transcriptions vocales sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
+    upload = request.files.get("audio")
+    if upload is None:
+        return jsonify({"error": "Audio manquant."}), 400
+    raw = upload.read(3 * 1024 * 1024 + 1)
+    if not raw:
+        return jsonify({"error": "Audio vide."}), 400
+    if len(raw) > 3 * 1024 * 1024:
+        return jsonify({"error": "Enregistrement trop long."}), 413
+    language = str(request.form.get("language", "fr")).lower()[:8]
+    if language not in SAFE_LANG:
+        language = "fr"
+    try:
+        audio_file = io.BytesIO(raw)
+        audio_file.name = upload.filename or "voice.webm"
+        kwargs = {
+            "model": os.getenv("STT_MODEL", "gpt-4o-mini-transcribe"),
+            "file": audio_file,
+        }
+        if language in {"fr", "en"}:
+            kwargs["language"] = language
+        result = client.audio.transcriptions.create(**kwargs)
+        text = _field(result, "text", "") or ""
+        text = sanitize_text(text, MAX_MESSAGE_LENGTH).strip()
+        return jsonify({"text": text})
+    except Exception as exc:
+        app.logger.exception("Erreur /stt")
+        return jsonify({"error": public_error(exc)}), 500
 
 
 @app.post("/tts")
