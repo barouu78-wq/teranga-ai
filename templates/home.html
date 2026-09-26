@@ -2774,7 +2774,6 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
-<script nonce="__CSP_NONCE__">
 /* Teranga Voice v11 — hands-free audio turns with VAD + server transcription.
    Browser SpeechRecognition remains the lightweight fallback. */
 let voiceStream=null, voiceRecorder=null, voiceAudioContext=null, voiceAnalyser=null;
