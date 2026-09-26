@@ -1287,11 +1287,24 @@ def parse_chat_payload():
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
-    planner_line = "Mode planification recommandé : oui." if should_use_planner(context) else "Mode planification recommandé : non."
+    planner_enabled = should_use_planner(context)
+    planner_line = "Mode planification recommandé : oui." if planner_enabled else "Mode planification recommandé : non."
+    if planner_enabled:
+        planner_instruction = (
+            "MODE PLANIFICATION ACTIF : transforme la demande en plan concret et directement exploitable. "
+            "Utilise d'abord les contraintes détectées (lieu, durée, budget, famille/enfants, moment) et les éléments explicitement demandés. "
+            "Si une information essentielle manque, fais une hypothèse raisonnable et indique-la brièvement au lieu de bloquer la réponse. "
+            "Organise le plan dans un ordre logique et chronologique. Pour un séjour ou une journée, propose des étapes par jour ou par période, avec déplacement, activité et repas lorsque pertinent. "
+            "Si un budget est fourni, répartis-le en postes utiles et donne un total indicatif ; ne présente jamais une estimation comme un prix vérifié. "
+            "Pour les horaires, prix, disponibilités, transports, météo ou événements susceptibles de changer, utilise la recherche web si disponible et distingue clairement ce qui est vérifié de ce qui reste indicatif. "
+            "Évite les détours et les listes interminables : privilégie un plan réaliste, avec une alternative simple si une étape peut être indisponible."
+        )
+    else:
+        planner_instruction = ""
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line + " " + planner_line +
-        " Si la demande est un suivi court, conserve le dernier référent pertinent. "
-        "Si plusieurs référents sont réellement possibles, pose une seule question courte. "
+        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " + planner_instruction +
+        " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
+        "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
     )
     audience_instruction = {
