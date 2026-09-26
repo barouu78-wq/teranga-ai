@@ -2576,8 +2576,22 @@ function setLang(next){
   $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
   if(rec)rec.lang=voiceMap[lang];
+  if(realtimeActive){
+    const wasActive=voiceConversation&&autoVoice;
+    closeRealtimeVoice();
+    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
+  }
 }
-document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{audience=btn.dataset.audience;localStorage.setItem('teranga-audience',audience);renderAudience();}));
+document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  audience=btn.dataset.audience;
+  localStorage.setItem('teranga-audience',audience);
+  renderAudience();
+  if(realtimeActive){
+    const wasActive=voiceConversation&&autoVoice;
+    closeRealtimeVoice();
+    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
+  }
+}));
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   document.body.dataset.theme=saved||'dark';
@@ -3036,6 +3050,16 @@ function handleRealtimeEvent(ev){
     }
     return;
   }
+  if(ev.type==='response.cancelled'){
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+    return;
+  }
+  if(ev.type==='conversation.item.input_audio_transcription.failed'){
+    realtimeVoiceStatus(lang==='fr'?'Je n’ai pas bien compris. Répète-moi ça.':lang==='en'?'I didn’t catch that. Please say it again.':T[lang].hintTouch);
+    return;
+  }
   if(ev.type==='error'){
     realtimeVoiceStatus(lang==='fr'?'La voix rencontre un problème.':lang==='en'?'Voice encountered a problem.':T[lang].err);
     return;
@@ -3082,14 +3106,10 @@ async function startRealtimeVoice(){
     };
     realtimeDc=realtimePc.createDataChannel('oai-events');
     realtimeDc.onopen=()=>{
-      realtimeEvent({
-        type:'conversation.item.create',
-        item:{
-          type:'message',
-          role:'system',
-          content:[{type:'input_text',text:'Contexte de conversation récent (à utiliser comme contexte uniquement):\n'+(realtimeContext()||'Aucun contexte récent.')}]
-        }
-      });
+      // The recent context is already injected into the server-side Realtime
+      // instructions. Do not create a synthetic system message in the conversation:
+      // that adds latency and can create a visible/invalid extra turn.
+      realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
     };
     realtimeDc.onmessage=e=>{
       try{handleRealtimeEvent(JSON.parse(e.data));}catch(_){}
