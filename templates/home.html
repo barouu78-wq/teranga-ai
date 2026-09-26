@@ -1150,6 +1150,188 @@ body.has-chat #messages{padding-top:4px}
   .dock>.chips,.dock>.composer,.dock>.meta{width:min(900px,100%)!important}
 }
 
+
+/* Teranga UI v15 — desktop-first workspace, mobile stays separate */
+@media (min-width:681px){
+  body{overflow:hidden!important}
+  .app{
+    width:min(1440px,calc(100% - 48px))!important;
+    max-width:1440px!important;
+    height:100vh!important;
+    min-height:100vh!important;
+    margin:0 auto!important;
+  }
+  header{
+    height:72px!important;
+    box-sizing:border-box!important;
+    padding:12px 8px!important;
+    background:transparent!important;
+    border-bottom:1px solid var(--line)!important;
+  }
+  .brand strong{font-size:18px!important}
+  .brand span{font-size:11px!important}
+  .mark{width:44px!important;height:44px!important}
+  #stage{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 285px!important;
+    grid-template-rows:auto 1fr!important;
+    grid-template-areas:
+      "workspace guides"
+      "messages guides"!important;
+    gap:18px!important;
+    padding:18px 4px 132px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    contain:none!important;
+  }
+  body:not(.has-chat) #hero{
+    grid-area:workspace!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 270px!important;
+    grid-template-areas:
+      "title title fx"
+      "text text fx"
+      "audience audience fx"
+      "cards cards cards"
+      "spread spread spread"!important;
+    gap:14px 16px!important;
+    margin:0!important;
+    padding:26px!important;
+    border-radius:24px!important;
+    min-height:0!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    box-shadow:0 10px 30px rgba(20,35,25,.08)!important;
+  }
+  body:not(.has-chat) #heroTitle{
+    grid-area:title!important;
+    font-size:clamp(36px,4vw,54px)!important;
+    line-height:.98!important;
+    max-width:850px!important;
+    align-self:end!important;
+  }
+  body:not(.has-chat) #heroText{
+    grid-area:text!important;
+    max-width:720px!important;
+    font-size:15px!important;
+    margin:0!important;
+  }
+  body:not(.has-chat) #audienceMode{
+    grid-area:audience!important;
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:9px!important;
+    margin:0!important;
+    align-self:start!important;
+  }
+  body:not(.has-chat) .audience-btn{
+    min-height:64px!important;
+    padding:10px 12px!important;
+    border-radius:15px!important;
+  }
+  body:not(.has-chat) .audience-btn b{font-size:12px!important}
+  body:not(.has-chat) .audience-btn small{font-size:9px!important}
+  body:not(.has-chat) #fxWidget{
+    grid-area:fx!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-self:stretch!important;
+    width:auto!important;
+    min-width:0!important;
+    margin:0!important;
+    padding:18px!important;
+    border-radius:20px!important;
+    box-shadow:none!important;
+  }
+  body:not(.has-chat) #fxWidget .fx-head{margin-bottom:12px!important}
+  body:not(.has-chat) #fxWidget .fx-row{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+  body:not(.has-chat) #fxWidget .fx-field{display:block!important}
+  body:not(.has-chat) #fxWidget .fx-field label{display:block!important;margin-bottom:5px!important}
+  body:not(.has-chat) #fxWidget .fx-result{
+    margin-top:10px!important;
+    padding:14px!important;
+    border-radius:14px!important;
+  }
+  body:not(.has-chat) #fxWidget .fx-result span{font-size:22px!important}
+  body:not(.has-chat) #fxWidget .fx-note{font-size:9px!important;line-height:1.35!important;margin-top:8px!important}
+  body:not(.has-chat) #cards{
+    grid-area:cards!important;
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:9px!important;
+    margin:0!important;
+  }
+  body:not(.has-chat) #cards .card{
+    min-height:72px!important;
+    padding:12px!important;
+    text-align:left!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:10px!important;
+    border-radius:15px!important;
+  }
+  body:not(.has-chat) #cards .card .ico{margin:0!important;flex:none!important}
+  body:not(.has-chat) #cards .card b{font-size:11px!important}
+  body:not(.has-chat) #hero .spread{grid-area:spread!important;margin:0!important}
+  .seo{display:none!important}
+  .guide-section{
+    grid-area:guides!important;
+    align-self:start!important;
+    margin:0!important;
+    padding:18px!important;
+    border-radius:20px!important;
+    position:sticky!important;
+    top:0!important;
+  }
+  .guide-section h2{font-size:18px!important;margin:0 0 5px!important}
+  .guide-section p{font-size:11px!important;line-height:1.45!important}
+  .guide-links{display:flex!important;flex-direction:column!important;gap:6px!important}
+  .guide-links a{
+    padding:10px 11px!important;
+    border-radius:11px!important;
+    font-size:11px!important;
+    text-decoration:none!important;
+  }
+  #messages{
+    grid-area:messages!important;
+    width:min(820px,100%)!important;
+    margin:0 auto!important;
+    padding:8px 8px 24px!important;
+  }
+  .dock{
+    position:fixed!important;
+    left:50%!important;
+    bottom:14px!important;
+    transform:translateX(-50%)!important;
+    width:min(920px,calc(100% - 360px))!important;
+    padding:0!important;
+    z-index:30!important;
+    background:transparent!important;
+  }
+  .dock .chips{padding:0 2px 7px!important}
+  .dock .composer{
+    background:var(--card)!important;
+    border:1px solid var(--line)!important;
+    box-shadow:0 12px 35px rgba(0,0,0,.14)!important;
+  }
+  .dock .meta{padding:5px 8px 0!important}
+  .tabbar{display:none!important}
+}
+@media (min-width:681px) and (max-width:1050px){
+  .app{width:calc(100% - 24px)!important}
+  #stage{grid-template-columns:minmax(0,1fr) 240px!important}
+  body:not(.has-chat) #hero{grid-template-columns:minmax(0,1fr) 240px!important;grid-template-areas:"title fx" "text fx" "audience fx" "cards cards" "spread spread"!important}
+  body:not(.has-chat) #audienceMode{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body:not(.has-chat) #cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .dock{width:min(720px,calc(100% - 280px))!important}
+}
+
 </style>
 
 </head>
