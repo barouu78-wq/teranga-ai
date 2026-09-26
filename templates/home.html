@@ -1951,7 +1951,7 @@ function renderAudience(){
 
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
-let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')==='1', inflight=null;
+let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cleanReply(text){
   return String(text||'')
@@ -2163,26 +2163,46 @@ function addSources(col,sources){
   });
   if(box.childElementCount>1)col.appendChild(box);
 }
-function speakFallback(text){
+function resumeVoiceListening(delay=260){
+  if(!voiceConversation||voiceSpeaking||voiceWaitingForAnswer||inflight)return;
+  if(!rec)return;
+  clearTimeout(resumeVoiceTimer);
+  resumeVoiceTimer=setTimeout(()=>{
+    if(!voiceConversation||voiceSpeaking||voiceWaitingForAnswer||inflight||listening)return;
+    try{rec.start();}catch(_){}
+  },delay);
+}
+function finishSpeech(btn){
+  voiceSpeaking=false;
+  document.body.classList.remove('assistant-speaking');
+  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+  resumeVoiceListening();
+}
+function speakFallback(text,btn){
   if(!('speechSynthesis' in window)||!text)return false;
   try{
     document.body.classList.add('assistant-speaking');
+    voiceSpeaking=true;
     window.speechSynthesis.cancel();
     const utterance=new SpeechSynthesisUtterance(text);
     utterance.lang=voiceMap[lang]||'fr-FR';
-    utterance.rate=lang==='wo'?0.90:lang==='ff'?0.91:0.94;
+    utterance.rate=lang==='wo'?0.88:lang==='ff'?0.90:0.92;
     utterance.pitch=lang==='wo'?1.02:1;
+    utterance.volume=1;
     const voices=window.speechSynthesis.getVoices();
-    const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith((voiceMap[lang]||'fr-FR').toLowerCase().slice(0,2)));
+    const base=(voiceMap[lang]||'fr-FR').toLowerCase();
+    const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase()===base)
+      || voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(base.slice(0,2)));
     if(preferred)utterance.voice=preferred;
-    utterance.onend=utterance.onerror=()=>document.body.classList.remove('assistant-speaking');
+    utterance.onend=()=>finishSpeech(btn);
+    utterance.onerror=()=>finishSpeech(btn);
     window.speechSynthesis.speak(utterance);
     return true;
-  }catch(e){return false;}
+  }catch(e){voiceSpeaking=false;document.body.classList.remove('assistant-speaking');return false;}
 }
 async function speak(text,btn){
   if(!text)return;
-  if(audio){audio.pause();audio=null;document.body.classList.remove('assistant-speaking');}
+  if(audio){audio.pause();audio=null;document.body.classList.remove('assistant-speaking');voiceSpeaking=false;}
   if(btn){btn.disabled=true;btn.textContent='…';}
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
@@ -2193,14 +2213,28 @@ async function speak(text,btn){
     const url=URL.createObjectURL(blob);
     audio=new Audio(url);
     audio.preload='auto';
+    audio.setAttribute('playsinline','');
+    audio.volume=1;
+    voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
-    audio.onended=()=>{document.body.classList.remove('assistant-speaking');URL.revokeObjectURL(url);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
-    audio.onerror=()=>{document.body.classList.remove('assistant-speaking');URL.revokeObjectURL(url);audio=null;speakFallback(text);if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}};
+    audio.onended=()=>{
+      audio=null;
+      URL.revokeObjectURL(url);
+      finishSpeech(btn);
+    };
+    audio.onerror=()=>{
+      audio=null;
+      URL.revokeObjectURL(url);
+      voiceSpeaking=false;
+      document.body.classList.remove('assistant-speaking');
+      if(!speakFallback(text,btn))finishSpeech(btn);
+    };
     try{await audio.play();}
-    catch(e){audio.onerror();throw e;}
+    catch(e){
+      audio.onerror();
+    }
   }catch(e){
-    speakFallback(text);
-    if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+    if(!speakFallback(text,btn))finishSpeech(btn);
   }
 }
 const CARD_ICONS=[
@@ -2273,13 +2307,58 @@ function reset(){
   history=[];messages.replaceChildren();showHero();
   sessionStorage.removeItem('teranga-history');
 }
+let resumeVoiceTimer=0;
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){mic.disabled=true;mic.title='Micro non disponible';return;}
-  rec=new SR();rec.continuous=false;rec.interimResults=false;rec.lang=voiceMap[lang];
-  rec.onstart=()=>{listening=true;mic.classList.add('listen');mic.setAttribute('aria-label','Arrêter l’écoute');};
-  rec.onresult=e=>{input.value=e.results[0][0].transcript;ask();};
-  rec.onend=rec.onerror=()=>{listening=false;mic.classList.remove('listen');mic.setAttribute('aria-label','Parler');};
+  if(!SR){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';return;}
+  rec=new SR();
+  rec.continuous=true;
+  rec.interimResults=true;
+  rec.maxAlternatives=1;
+  rec.lang=voiceMap[lang];
+  rec.onstart=()=>{
+    listening=true;
+    voiceWaitingForAnswer=false;
+    mic.classList.add('listen');
+    mic.setAttribute('aria-label',T[lang].voiceStop||'Arrêter la conversation vocale');
+    mic.title=T[lang].voiceStop||'Arrêter la conversation vocale';
+  };
+  rec.onresult=e=>{
+    let finalText='', interimText='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const part=e.results[i][0]?.transcript||'';
+      if(e.results[i].isFinal)finalText+=part+' ';
+      else interimText+=part;
+    }
+    if(interimText){
+      input.value=(finalText||interimText).trim();
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    if(finalText.trim()){
+      const spoken=finalText.trim();
+      input.value=spoken;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      voiceWaitingForAnswer=true;
+      try{rec.stop();}catch(_){}
+      ask(spoken,true);
+    }
+  };
+  rec.onend=()=>{
+    listening=false;
+    mic.classList.remove('listen');
+    if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight)resumeVoiceListening(180);
+    else mic.setAttribute('aria-label','Parler');
+  };
+  rec.onerror=e=>{
+    listening=false;
+    mic.classList.remove('listen');
+    if(e&&e.error==='not-allowed'){
+      voiceConversation=false;
+      autoVoice=false;
+      localStorage.setItem('teranga-voice','0');
+    }
+    if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight)resumeVoiceListening(500);
+  };
 }
 function persist(){
   clearTimeout(persistTimer);
@@ -2326,7 +2405,7 @@ function restore(){
     }
   }catch(e){}
 }
-async function ask(preset){
+async function ask(preset,fromVoice=false){
   const text=(preset||input.value).trim();
   if(!text||send.disabled)return;
   hideHero();
@@ -2424,7 +2503,10 @@ async function ask(preset){
     history.push({role:'assistant',content:reply,sources,image,map});
     history=history.slice(-12);
     persist();
-    if(autoVoice&&reply)speak(reply);
+    if(autoVoice&&reply){
+      voiceWaitingForAnswer=false;
+      speak(reply);
+    }
   }catch(err){
     const aborted=err.name==='AbortError';
     let raw=err.message||T[lang].err;
@@ -2441,7 +2523,12 @@ async function ask(preset){
       wait.col.appendChild(retry);
     }
   }finally{
-    clearTimeout(kill);inflight=null;send.dataset.mode='';send.disabled=false;send.textContent=T[lang].send;input.focus();
+    clearTimeout(kill);
+    inflight=null;
+    send.dataset.mode='';
+    send.disabled=false;
+    send.textContent=T[lang].send;
+    if(!voiceConversation)input.focus();
   }
 }
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
@@ -2467,8 +2554,19 @@ $('themeBtn').onclick=()=>{
   applyThemeColor();
 };
 $('voiceToggle').onclick=()=>{
-  autoVoice=!autoVoice;localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  autoVoice=!autoVoice;
+  localStorage.setItem('teranga-voice',autoVoice?'1':'0');
   $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
+  if(!autoVoice){
+    voiceConversation=false;
+    voiceWaitingForAnswer=false;
+    if(rec&&listening)try{rec.stop();}catch(_){}
+    if(audio){audio.pause();audio=null;}
+    if('speechSynthesis' in window)window.speechSynthesis.cancel();
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    mic.classList.remove('listen');
+  }
 };
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
 let countRaf=0;
