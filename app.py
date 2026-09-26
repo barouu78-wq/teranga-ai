@@ -1740,7 +1740,7 @@ def stt():
             kwargs["language"] = language
         voice_context = sanitize_text(request.form.get("context", ""), 1800).strip()
         base_prompt = {
-            "fr": "Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris exactement ce qui est dit, sans inventer ni reformuler.",
+            "fr": "Contexte conversationnel : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris fidèlement ce qui est dit, avec une ponctuation naturelle. Ne reformule pas, ne résume pas et n’invente rien. Si la personne parle de façon familière, conserve ses mots et son intention.",
             "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Preserve proper names, numbers, places and Senegalese words. Transcribe exactly what is spoken without inventing or paraphrasing.",
             "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Denc tur yi, lim yi, dëkk yi ak wax yu Senegaal. Bind li nit wax, bul yokk dara.",
             "ff": "Kontext Senegal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris exactement ce qui est dit.",
@@ -1810,9 +1810,9 @@ def tts():
             input=text,
             instructions=voice_instructions,
             response_format="wav",
-            speed=1.0,
+            speed=0.98,
         )
-        return Response(speech.content, mimetype="audio/mpeg", headers={"Cache-Control": "no-store"})
+        return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store", "Content-Type": "audio/wav"})
     except Exception:
         app.logger.exception("Erreur /tts")
 
