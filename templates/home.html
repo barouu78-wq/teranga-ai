@@ -1640,11 +1640,15 @@ function restore(){
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
-      history=data.history.slice(-12);
+      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim());
+      if(!restored.length){
+        sessionStorage.removeItem('teranga-history');
+        return;
+      }
+      history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
       history.forEach(item=>{
-        if(item.role!=='user'&&item.role!=='assistant')return;
         const row=document.createElement('div');
         row.className='msg '+item.role;
         if(item.role==='assistant'){
