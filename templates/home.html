@@ -906,20 +906,19 @@ body.has-chat #messages{padding-top:4px}
     margin:0;
   }
   .fx-widget{
-    grid-column:2;
-    grid-row:1 / span 2;
+    grid-column:1 / -1;
+    grid-row:4;
     align-self:stretch;
     margin:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+    display:block;
     min-width:0;
+    padding:16px 18px;
   }
   .cards{
     grid-column:1 / -1;
-    grid-row:4;
+    grid-row:5;
   }
-  .spread{grid-column:1 / -1;grid-row:5;margin-top:0}
+  .spread{grid-column:1 / -1;grid-row:6;margin-top:0}
   .dock{padding-left:24px;padding-right:24px}
   .dock>.chips,.dock>.composer,.dock>.meta{width:min(980px,100%);margin-left:auto;margin-right:auto}
   .dock>.chips{margin-bottom:0}
