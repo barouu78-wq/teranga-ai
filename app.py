@@ -22,6 +22,7 @@ from services.seo import SEO_PAGES, render_seo_page
 from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
+from services.trip_planner import register_trip_planner
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -80,6 +81,7 @@ if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
 client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
+register_trip_planner(app, client, SITE_URL)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
@@ -2115,7 +2117,7 @@ def sitemap():
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>"
+        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>" + f"<url><loc>{SITE_URL}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
         + "".join(
             f"<url><loc>{SITE_URL}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
             for slug in SEO_PAGES
