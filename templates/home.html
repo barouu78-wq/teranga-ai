@@ -31,7 +31,119 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
-<script nonce="__CSP_NONCE__">window.__gcse={parsetags:'explicit'};</script>
+<script nonce="__CSP_NONCE__">window.__gcse={parsetags:'explicit'};
+// Teranga Voice v10 — natural turn-taking, speech cleanup, cache and barge-in.
+let voiceDraft='';
+let voiceSilenceTimer=0;
+const ttsCache=new Map();
+
+function clearVoiceSilence(){
+  clearTimeout(voiceSilenceTimer);
+  voiceSilenceTimer=0;
+}
+function stopSpeakingForListening(){
+  if(audio){
+    try{audio.pause();}catch(_){}
+    const src=audio.src;
+    audio=null;
+    if(src)URL.revokeObjectURL(src);
+  }
+  if('speechSynthesis' in window){
+    try{window.speechSynthesis.cancel();}catch(_){}
+  }
+  voiceSpeaking=false;
+  document.body.classList.remove('assistant-speaking');
+}
+function beginVoiceMode(){
+  voiceConversation=true;
+  autoVoice=true;
+  localStorage.setItem('teranga-voice','1');
+  document.body.classList.add('voice-active');
+  $('voiceToggle').textContent=T[lang].vOn;
+}
+function endVoiceMode(){
+  clearVoiceSilence();
+  voiceConversation=false;
+  voiceWaitingForAnswer=false;
+  voiceDraft='';
+  document.body.classList.remove('voice-active');
+  if(rec&&listening)try{rec.stop();}catch(_){}
+}
+function commitVoiceTurn(){
+  clearVoiceSilence();
+  const spoken=voiceDraft.trim();
+  voiceDraft='';
+  if(!spoken||voiceSpeaking||voiceWaitingForAnswer||inflight)return;
+  voiceWaitingForAnswer=true;
+  try{rec.stop();}catch(_){}
+  ask(spoken,true);
+}
+function scheduleVoiceTurn(){
+  clearVoiceSilence();
+  // A short pause is treated as the end of a sentence, while allowing
+  // recognition to append another segment if the speaker continues.
+  voiceSilenceTimer=setTimeout(commitVoiceTurn,850);
+}
+function finishSpeech(btn){
+  voiceSpeaking=false;
+  document.body.classList.remove('assistant-speaking');
+  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+  if(voiceConversation&&!inflight&&!voiceWaitingForAnswer)resumeVoiceListening(180);
+}
+function speakFallback(text,btn){
+  if(!('speechSynthesis' in window)||!text)return false;
+  try{
+    document.body.classList.add('assistant-speaking');
+    voiceSpeaking=true;
+    window.speechSynthesis.cancel();
+    const utterance=new SpeechSynthesisUtterance(text);
+    utterance.lang=voiceMap[lang]||'fr-FR';
+    utterance.rate=lang==='wo'?0.90:lang==='ff'?0.91:0.94;
+    utterance.pitch=1;
+    utterance.volume=1;
+    const voices=window.speechSynthesis.getVoices();
+    const base=(voiceMap[lang]||'fr-FR').toLowerCase();
+    const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase()===base)
+      ||voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(base.slice(0,2)));
+    if(preferred)utterance.voice=preferred;
+    utterance.onend=()=>finishSpeech(btn);
+    utterance.onerror=()=>finishSpeech(btn);
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }catch(_){voiceSpeaking=false;document.body.classList.remove('assistant-speaking');return false;}
+}
+async function speak(text,btn){
+  if(!text)return;
+  stopSpeakingForListening();
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  const cacheKey=lang+'|'+text;
+  try{
+    let blob=ttsCache.get(cacheKey);
+    if(!blob){
+      if(!cookie('teranga_csrf'))await refreshCsrf();
+      const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
+      if(!res.ok)throw new Error('tts');
+      blob=await res.blob();
+      if(!blob.size)throw new Error('tts-empty');
+      if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
+      ttsCache.set(cacheKey,blob);
+    }
+    const url=URL.createObjectURL(blob);
+    audio=new Audio(url);
+    audio.preload='auto';
+    audio.setAttribute('playsinline','');
+    audio.volume=1;
+    voiceSpeaking=true;
+    document.body.classList.add('assistant-speaking');
+    audio.onended=()=>{const a=audio;audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
+    audio.onerror=()=>{audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
+    try{await audio.play();}catch(_){audio.onerror();}
+  }catch(_){
+    if(!speakFallback(text,btn))finishSpeech(btn);
+  }
+}
+
+</script>
 <script async nonce="__CSP_NONCE__" src="https://cse.google.com/cse.js?cx=22fe8f4b7882d4e0e"></script>
 <script type="application/ld+json" nonce="__CSP_NONCE__">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"Teranga AI","url":"__SITE_URL__/","applicationCategory":"TravelApplication","operatingSystem":"Web","inLanguage":["fr","en","wo","ff"],"description":"Assistant numérique spécialisé dans le Sénégal, accessible depuis le Sénégal et la France pour le voyage, la vie pratique, la culture et la diaspora.","areaServed":[{"@type":"Country","name":"Sénégal"},{"@type":"Country","name":"France"}],"offers":{"@type":"Offer","price":"0","priceCurrency":"XOF"}},{"@type":"WebSite","name":"Teranga AI","url":"__SITE_URL__/","inLanguage":["fr","en","wo","ff"]}]}</script>
 <style>
@@ -1621,6 +1733,15 @@ body.has-chat #messages{padding-top:4px}
   body.has-chat .dock{width:min(760px,calc(100% - 40px))!important}
 }
 
+
+/* Teranga Voice v10 — hands-free turn taking */
+.voice-state{display:inline-flex;align-items:center;gap:6px}
+body.voice-active .composer{border-color:rgba(15,106,67,.32);box-shadow:0 0 0 4px rgba(15,106,67,.06),0 18px 42px rgba(61,44,23,.14)}
+body.voice-active #voiceToggle{background:rgba(15,106,67,.10);color:var(--sen-green);}
+body.voice-active #mic{box-shadow:0 8px 24px rgba(15,106,67,.18),0 0 0 5px rgba(15,106,67,.07)}
+body.voice-active #mic.listen{box-shadow:0 8px 24px rgba(201,54,54,.28),0 0 0 7px rgba(201,54,54,.10)}
+@media(max-width:680px){body.voice-active .composer{box-shadow:0 0 0 3px rgba(15,106,67,.06),0 14px 32px rgba(61,44,23,.12)}}
+
 </style>
 
 </head>
@@ -2163,7 +2284,7 @@ function addSources(col,sources){
   });
   if(box.childElementCount>1)col.appendChild(box);
 }
-function resumeVoiceListening(delay=260){
+function resumeVoiceListening(delay=220){
   if(!voiceConversation||voiceSpeaking||voiceWaitingForAnswer||inflight)return;
   if(!rec)return;
   clearTimeout(resumeVoiceTimer);
@@ -2172,71 +2293,7 @@ function resumeVoiceListening(delay=260){
     try{rec.start();}catch(_){}
   },delay);
 }
-function finishSpeech(btn){
-  voiceSpeaking=false;
-  document.body.classList.remove('assistant-speaking');
-  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
-  resumeVoiceListening();
-}
-function speakFallback(text,btn){
-  if(!('speechSynthesis' in window)||!text)return false;
-  try{
-    document.body.classList.add('assistant-speaking');
-    voiceSpeaking=true;
-    window.speechSynthesis.cancel();
-    const utterance=new SpeechSynthesisUtterance(text);
-    utterance.lang=voiceMap[lang]||'fr-FR';
-    utterance.rate=lang==='wo'?0.88:lang==='ff'?0.90:0.92;
-    utterance.pitch=lang==='wo'?1.02:1;
-    utterance.volume=1;
-    const voices=window.speechSynthesis.getVoices();
-    const base=(voiceMap[lang]||'fr-FR').toLowerCase();
-    const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase()===base)
-      || voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(base.slice(0,2)));
-    if(preferred)utterance.voice=preferred;
-    utterance.onend=()=>finishSpeech(btn);
-    utterance.onerror=()=>finishSpeech(btn);
-    window.speechSynthesis.speak(utterance);
-    return true;
-  }catch(e){voiceSpeaking=false;document.body.classList.remove('assistant-speaking');return false;}
-}
-async function speak(text,btn){
-  if(!text)return;
-  if(audio){audio.pause();audio=null;document.body.classList.remove('assistant-speaking');voiceSpeaking=false;}
-  if(btn){btn.disabled=true;btn.textContent='…';}
-  try{
-    if(!cookie('teranga_csrf'))await refreshCsrf();
-    const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
-    if(!res.ok)throw new Error('tts');
-    const blob=await res.blob();
-    if(!blob.size)throw new Error('tts-empty');
-    const url=URL.createObjectURL(blob);
-    audio=new Audio(url);
-    audio.preload='auto';
-    audio.setAttribute('playsinline','');
-    audio.volume=1;
-    voiceSpeaking=true;
-    document.body.classList.add('assistant-speaking');
-    audio.onended=()=>{
-      audio=null;
-      URL.revokeObjectURL(url);
-      finishSpeech(btn);
-    };
-    audio.onerror=()=>{
-      audio=null;
-      URL.revokeObjectURL(url);
-      voiceSpeaking=false;
-      document.body.classList.remove('assistant-speaking');
-      if(!speakFallback(text,btn))finishSpeech(btn);
-    };
-    try{await audio.play();}
-    catch(e){
-      audio.onerror();
-    }
-  }catch(e){
-    if(!speakFallback(text,btn))finishSpeech(btn);
-  }
-}
+
 const CARD_ICONS=[
   '<svg viewBox="0 0 24 24" fill="none"><path d="M6 15a6 6 0 1 1 10.4-4.2A4.5 4.5 0 1 1 17 19H7.5A3.5 3.5 0 0 1 6 15Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 11.5 10 9l2 2 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   '<svg viewBox="0 0 24 24" fill="none"><path d="M4 18h16M6 18V9l6-4 6 4v9" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 18v-5h4v5" stroke="currentColor" stroke-width="1.7"/></svg>',
@@ -2318,49 +2375,50 @@ function setupMic(){
   rec.lang=voiceMap[lang];
   rec.onstart=()=>{
     listening=true;
-    voiceConversation=true;
-    autoVoice=true;
-    localStorage.setItem('teranga-voice','1');
+    beginVoiceMode();
     voiceWaitingForAnswer=false;
     mic.classList.add('listen');
     mic.setAttribute('aria-label',T[lang].voiceStop||'Arrêter la conversation vocale');
     mic.title=T[lang].voiceStop||'Arrêter la conversation vocale';
   };
   rec.onresult=e=>{
-    let finalText='', interimText='';
+    let finalText='',interimText='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       const part=e.results[i][0]?.transcript||'';
       if(e.results[i].isFinal)finalText+=part+' ';
       else interimText+=part;
     }
-    if(interimText){
-      input.value=(finalText||interimText).trim();
+    const preview=(voiceDraft+' '+finalText+' '+interimText).replace(/\s+/g,' ').trim();
+    if(preview){
+      input.value=preview;
       input.dispatchEvent(new Event('input',{bubbles:true}));
     }
     if(finalText.trim()){
-      const spoken=finalText.trim();
-      input.value=spoken;
-      input.dispatchEvent(new Event('input',{bubbles:true}));
-      voiceWaitingForAnswer=true;
-      try{rec.stop();}catch(_){}
-      ask(spoken,true);
+      voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
+      scheduleVoiceTurn();
     }
   };
   rec.onend=()=>{
     listening=false;
     mic.classList.remove('listen');
-    if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight)resumeVoiceListening(180);
-    else mic.setAttribute('aria-label','Parler');
+    if(voiceDraft.trim()&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
+      scheduleVoiceTurn();
+    }else if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
+      resumeVoiceListening(220);
+    }else{
+      mic.setAttribute('aria-label',T[lang].listen||'Parler');
+    }
   };
   rec.onerror=e=>{
     listening=false;
     mic.classList.remove('listen');
     if(e&&e.error==='not-allowed'){
-      voiceConversation=false;
+      endVoiceMode();
       autoVoice=false;
       localStorage.setItem('teranga-voice','0');
+    }else if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
+      resumeVoiceListening(500);
     }
-    if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight)resumeVoiceListening(500);
   };
 }
 function persist(){
@@ -2541,7 +2599,13 @@ send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();
 };
-mic.onclick=()=>{if(!rec)return;listening?rec.stop():rec.start();};
+mic.onclick=()=>{
+  if(!rec)return;
+  if(voiceSpeaking)stopSpeakingForListening();
+  if(listening){endVoiceMode();return;}
+  beginVoiceMode();
+  try{rec.start();}catch(_){}
+};
 $('resetBtn').onclick=reset;
 $('shareAppBtn').onclick=shareApp;
 $('copyLink').onclick=async()=>{
@@ -2560,14 +2624,13 @@ $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;
   localStorage.setItem('teranga-voice',autoVoice?'1':'0');
   $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
-  if(!autoVoice){
-    voiceConversation=false;
-    voiceWaitingForAnswer=false;
-    if(rec&&listening)try{rec.stop();}catch(_){}
-    if(audio){audio.pause();audio=null;}
-    if('speechSynthesis' in window)window.speechSynthesis.cancel();
-    voiceSpeaking=false;
-    document.body.classList.remove('assistant-speaking');
+  if(autoVoice){
+    beginVoiceMode();
+    stopSpeakingForListening();
+    if(rec&&!listening)try{rec.start();}catch(_){}
+  }else{
+    endVoiceMode();
+    stopSpeakingForListening();
     mic.classList.remove('listen');
   }
 };
