@@ -1799,17 +1799,18 @@ def tts():
     }[language]
     try:
         voice_instructions = {
-            "fr": "Voix humaine, chaleureuse et très naturelle, comme une conversation en face à face. Réponds avec une présence calme et spontanée, sans ton de lecture. Débit fluide et légèrement posé, avec des micro-pauses naturelles entre les idées et une intonation vivante. Adapte le rythme à la phrase : plus direct pour une réponse courte, plus posé pour une explication. Mets naturellement en valeur les mots importants sans dramatiser. Prononce avec soin les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
+            "fr": "Voix adulte, claire, chaleureuse et très présente, avec une vraie projection vocale. Parle comme dans une conversation naturelle, jamais comme une lecture automatique. Utilise une énergie moyenne à soutenue, une voix bien articulée et un timbre plutôt clair que grave, sans chuchoter ni parler trop bas. Débit naturel autour de 1.0, micro-pauses entre les idées, intonation vivante et légèrement expressive. Fais ressortir les mots importants sans dramatiser. Prononce soigneusement les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
             "en": "Warm, spontaneous conversational voice, as if speaking directly to one person. Do not sound like a narrator reading text. Use clear articulation without over-enunciating, a smooth slightly measured pace, natural micro-pauses and lively but calm intonation. Adjust pacing to the sentence. Pronounce Senegalese names, places, dishes, Wolof and Pulaar words carefully. Never read markdown, emojis, bullets, URLs or technical symbols aloud.",
             "wo": "Wax ak baat bu nit, bu neex te naturel, mel ni waxtaan ci kanam ak kanam. Débit bu yomb te ñuul, noppi yu gàtt ci diggante xalaat yi, intonation bu naturel ak doole bu dal. Teg solo ci wax yi am solo te bañ a dramatise. Jàng tur yu Senegaal, dëkk yi, ñam yi ak Wolof ak Pulaar bu baax. Bul jàng markdown, URL walla simbol yu teknikal.",
             "ff": "Voix humaine, chaleureuse et très naturelle, comme une conversation directe. Débit fluide légèrement posé, petites pauses naturelles entre les idées, intonation vivante et énergie calme. Mets doucement en valeur les mots importants. Respecte au mieux la prononciation pulaar et les noms propres sénégalais. Ne lis jamais le markdown, les URL ou les signes techniques.",
         }[language]
         speech = client.audio.speech.create(
             model="gpt-4o-mini-tts",
-            voice=os.getenv("TTS_VOICE", "marin"),
+            voice=os.getenv("TTS_VOICE", "cedar"),
             input=text,
             instructions=voice_instructions,
-            response_format="mp3",
+            response_format="wav",
+            speed=1.0,
         )
         return Response(speech.content, mimetype="audio/mpeg", headers={"Cache-Control": "no-store"})
     except Exception:
