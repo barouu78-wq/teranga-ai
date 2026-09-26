@@ -2673,8 +2673,8 @@ async function ask(preset,fromVoice=false){
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply){
-      voiceWaitingForAnswer=false;
-      speak(reply);
+      voiceWaitingForAnswer=true;
+      await speak(reply);
     }
   }catch(err){
     const aborted=err.name==='AbortError';
@@ -2697,7 +2697,11 @@ async function ask(preset,fromVoice=false){
     send.dataset.mode='';
     send.disabled=false;
     send.textContent=T[lang].send;
-    if(!voiceConversation)input.focus();
+    if(voiceConversation&&autoVoice&&!voiceSpeaking&&!voiceSTTBusy){
+      voiceWaitingForAnswer=false;
+      voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
+      setTimeout(startVoiceCapture,140);
+    }else if(!voiceConversation)input.focus();
   }
 }
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
@@ -2781,8 +2785,10 @@ let voiceVADTimer=0, voiceLastLoudAt=0, voiceSpeechStarted=false, voiceSpeechSta
 let voiceCaptureBusy=false, voiceSTTBusy=false, voiceUsingRecorder=false;
 let voiceNoiseFloor=0.008, voiceNoiseSamples=0;
 let voiceMonitorStream=null, voiceMonitorContext=null, voiceMonitorAnalyser=null, voiceMonitorTimer=0, voiceBargeInStartedAt=0;
-const VOICE_SILENCE_MS=650, VOICE_MAX_MS=15000, VOICE_MIN_SPEECH_MS=260;
-const VOICE_NOISE_CALIBRATION_MS=850;
+const VOICE_SILENCE_MS=820, VOICE_MAX_MS=20000, VOICE_MIN_SPEECH_MS=220;
+const VOICE_NOISE_CALIBRATION_MS=700;
+const VOICE_PRE_ROLL_MS=180;
+let voiceLastSpeechAt=0;
 
 function voiceStatus(text){
   if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
@@ -2837,7 +2843,7 @@ function stopVoiceCapture(){
   if(voiceAudioContext){try{voiceAudioContext.close();}catch(_){}voiceAudioContext=null;}
   voiceAnalyser=null;
   if(voiceStream){voiceStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});voiceStream=null;}
-  voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
+  voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;voiceLastSpeechAt=0;
   voiceNoiseFloor=.008;voiceNoiseSamples=0;voiceCaptureBusy=false;voiceUsingRecorder=false;
   listening=false;mic.classList.remove('listen');
 }
@@ -2850,6 +2856,8 @@ async function postVoiceAudio(blob){
     const form=new FormData();
     form.append('audio',blob,'teranga-voice.webm');
     form.append('language',lang);
+    const recentVoiceContext=history.slice(-6).map(item=>String(item.content||'')).filter(Boolean).join(' ').slice(-1800);
+    if(recentVoiceContext)form.append('context',recentVoiceContext);
     let res=await fetch('/stt',{method:'POST',headers:{'X-CSRF-Token':cookie('teranga_csrf')},body:form,credentials:'same-origin'});
     if(res.status===403){
       await refreshCsrf();
@@ -2882,6 +2890,7 @@ function finishVoiceRecording(){
 }
 function startVoiceCapture(){
   if(!voiceConversation||voiceSpeaking||inflight||voiceSTTBusy||voiceCaptureBusy)return;
+  clearVoiceSilence();
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
     if(rec){try{rec.start();}catch(_){}}
     return;
@@ -2891,6 +2900,7 @@ function startVoiceCapture(){
     audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
   }).then(stream=>{
     if(!voiceConversation||voiceSpeaking){stream.getTracks().forEach(t=>t.stop());voiceCaptureBusy=false;return;}
+    if(voiceAudioContext?.state==='suspended')voiceAudioContext.resume().catch(()=>{});
     voiceStream=stream;listening=true;mic.classList.add('listen');
     const AC=window.AudioContext||window.webkitAudioContext;
     if(AC){
@@ -2915,8 +2925,8 @@ function startVoiceCapture(){
       if(hadSpeech&&speechMs>=VOICE_MIN_SPEECH_MS&&blob.size>1200)postVoiceAudio(blob);
       else if(voiceConversation&&!voiceSpeaking&&!inflight&&!voiceSTTBusy)setTimeout(startVoiceCapture,140);
     };
-    voiceRecorder.start(250);
-    voiceStatus(lang==='fr'?'Parle naturellement…':lang==='en'?'Speak naturally…':lang==='wo'?'Wax ak yomb…':'Haala e ɗoŋngal…');
+    voiceRecorder.start(VOICE_PRE_ROLL_MS);
+    voiceStatus(lang==='fr'?'Voix IA · Parle naturellement…':lang==='en'?'AI voice · Speak naturally…':lang==='wo'?'Baat IA · Wax ak yomb…':'Baat IA · Haala e ɗoŋngal…');
     const data=new Uint8Array(voiceAnalyser?voiceAnalyser.fftSize:1024);
     voiceVADTimer=setInterval(()=>{
       if(!voiceAnalyser||!voiceRecorder||voiceRecorder.state==='inactive')return;
@@ -2930,10 +2940,11 @@ function startVoiceCapture(){
         voiceNoiseSamples++;
         voiceNoiseFloor=voiceNoiseSamples===1?rms:(voiceNoiseFloor*.92+rms*.08);
       }
-      const threshold=Math.max(.012,voiceNoiseFloor*2.35+.007);
+      const threshold=Math.max(.010,voiceNoiseFloor*2.15+.006);
       if(rms>threshold){
         if(!voiceSpeechStarted){voiceSpeechStarted=true;voiceSpeechStartedAt=now;}
         voiceLastLoudAt=now;
+        voiceLastSpeechAt=now;
       }
       if(voiceSpeechStarted&&voiceLastLoudAt&&now-voiceLastLoudAt>VOICE_SILENCE_MS)finishVoiceRecording();
       else if(elapsed>VOICE_MAX_MS)finishVoiceRecording();
