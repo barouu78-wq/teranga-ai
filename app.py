@@ -931,6 +931,40 @@ def should_use_planner(context):
     )
 
 
+def build_planner_data(context):
+    """Construit un brief déterministe pour guider les plans et leurs budgets."""
+    budget_raw = context.get("budget", "")
+    budget_match = re.search(r"(\d[\d\\s.,]*)", budget_raw or "")
+    budget_amount = None
+    if budget_match:
+        raw = re.sub(r"[\\s.,]", "", budget_match.group(1))
+        try:
+            budget_amount = int(raw)
+        except ValueError:
+            budget_amount = None
+
+    duration_raw = context.get("duration", "")
+    duration_days = None
+    duration_match = re.search(r"(\d+)", duration_raw or "")
+    if duration_match:
+        try:
+            duration_days = int(duration_match.group(1))
+        except ValueError:
+            duration_days = None
+    if duration_days is None and "semaine" in duration_raw:
+        duration_days = 7
+
+    return {
+        "place": context.get("place", ""),
+        "duration": duration_raw,
+        "duration_days": duration_days,
+        "budget_raw": budget_raw,
+        "budget_fcfa": budget_amount,
+        "intents": context.get("intents", []),
+        "constraints": context.get("constraints", []),
+    }
+
+
 def should_use_web(message, context=""):
     lowered = normalize(message)
     combined = normalize(f"{context} {message}")
