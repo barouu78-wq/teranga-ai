@@ -845,25 +845,71 @@ def contextual_query(history, message):
 def infer_senegal_context(history, message):
     text_value = normalize(contextual_query(history, message))
     cities = (
-        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba", "touba",
+        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
         "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
         "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
         "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
         "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
         "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
-        "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
+        "almadies", "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
     )
     regions = (
         "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
         "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
         "ziguinchor", "saint-louis", "louga", "matam",
     )
-    found_cities = [x for x in cities if x in text_value]
-    found_regions = [x for x in regions if x in text_value]
+    aliases = {
+        "aeroport blaise diagne": "aibd", "aéroport blaise diagne": "aibd",
+        "ile de goree": "goree", "île de gorée": "goree",
+        "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
+        "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
+    }
+    normalized_place_text = text_value
+    for alias, canonical in aliases.items():
+        if normalize(alias) in normalized_place_text:
+            normalized_place_text += " " + canonical
+    found_cities = [x for x in cities if x in normalized_place_text]
+    found_regions = [x for x in regions if x in normalized_place_text]
+
+    intent_groups = {
+        "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
+        "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
+        "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
+        "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
+        "travel": ("voyage", "visiter", "séjour", "sejour", "tourisme", "vacances", "plage", "goree", "gorée"),
+        "admin": ("visa", "passeport", "formalites", "formalités", "demarche", "démarche", "document"),
+        "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
+        "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
+        "news": ("actualite", "actualités", "actualite", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
+    }
+    intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
+
+    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
+    budget = amounts[-1].strip() if amounts else ""
+    duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
+    duration = duration_match.group(0) if duration_match else ""
+    constraints = []
+    if budget:
+        constraints.append("budget=" + budget)
+    if duration:
+        constraints.append("durée=" + duration)
+    if "avec mes enfants" in text_value or "en famille" in text_value:
+        constraints.append("famille")
+    if "avec enfant" in text_value or "avec enfants" in text_value:
+        constraints.append("enfants")
+    if "ce soir" in text_value:
+        constraints.append("ce soir")
+    if "demain" in text_value:
+        constraints.append("demain")
+    place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
     return {
-        "place": found_cities[-1] if found_cities else (found_regions[-1] if found_regions else ""),
+        "place": place,
         "has_place": bool(found_cities or found_regions),
         "query": text_value,
+        "intents": intents[:4],
+        "constraints": constraints[:5],
+        "budget": budget,
+        "duration": duration,
     }
 
 
@@ -1215,16 +1261,20 @@ def parse_chat_payload():
     context = infer_senegal_context(history, message)
     enriched_context = context["query"]
     if context["has_place"]:
-        context_instruction = (
-            f"Contexte géographique détecté dans l'échange : {context['place']}. "
-            "Utilise ce repère pour interpréter les suivis courts, mais ne présente jamais "
-            "une déduction comme une certitude si plusieurs lieux restent possibles."
+        place_line = (
+            f"Contexte géographique détecté : {context['place']}. "
+            "Utilise ce repère pour les suivis courts, sans transformer une déduction en certitude."
         )
     else:
-        context_instruction = (
-            "Aucun lieu sénégalais fiable n'a été détecté dans l'échange ; n'invente pas "
-            "de localisation."
-        )
+        place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
+    intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
+    constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
+    context_instruction = (
+        place_line + " " + intent_line + " " + constraint_line +
+        " Si la demande est un suivi court, conserve le dernier référent pertinent. "
+        "Si plusieurs référents sont réellement possibles, pose une seule question courte. "
+        "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
+    )
     audience_instruction = {
         "tourist": {
             "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
