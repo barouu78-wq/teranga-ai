@@ -913,6 +913,24 @@ def infer_senegal_context(history, message):
     }
 
 
+def should_use_planner(context):
+    """Détecte une demande qui bénéficie d'un plan multi-étapes sans forcer la recherche web."""
+    intents = set(context.get("intents", []))
+    query = context.get("query", "")
+    planning_terms = (
+        "planifie", "programme", "organise", "itineraire", "itinéraire",
+        "journee", "journée", "sejour", "séjour", "vacances", "weekend",
+        "week-end", "pendant", "pour 2 jours", "pour 3 jours", "pour 4 jours",
+        "pour 5 jours", "pour une semaine", "budget",
+    )
+    has_duration = bool(context.get("duration"))
+    has_budget = bool(context.get("budget"))
+    return (
+        bool(intents.intersection({"travel", "transport", "food", "price"}))
+        and (has_duration or has_budget or any(term in query for term in planning_terms))
+    )
+
+
 def should_use_web(message, context=""):
     lowered = normalize(message)
     combined = normalize(f"{context} {message}")
@@ -1269,8 +1287,9 @@ def parse_chat_payload():
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
+    planner_line = "Mode planification recommandé : oui." if should_use_planner(context) else "Mode planification recommandé : non."
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line +
+        place_line + " " + intent_line + " " + constraint_line + " " + planner_line +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. "
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. "
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
@@ -1305,6 +1324,7 @@ def parse_chat_payload():
         "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
         "input_text": build_conversation(history, message),
         "use_web": should_use_web(message, enriched_context),
+        "planner": should_use_planner(context),
         "message": message,
         "audience": audience,
         "context": context,
@@ -1340,7 +1360,7 @@ def model_kwargs(payload, stream):
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 720 if payload["use_web"] else 500,
+        "max_output_tokens": 900 if (payload["use_web"] or payload.get("planner")) else 500,
         "reasoning": {"effort": os.getenv("OPENAI_REASONING_EFFORT", "low")},
         "truncation": "auto",
         "stream": stream,
