@@ -2936,20 +2936,36 @@ function finishSpeech(btn){
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(SR){
-    rec=new SR();rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;rec.lang=voiceMap[lang];
-    rec.onstart=()=>{listening=true;mic.classList.add('listen');beginVoiceMode();};
-    rec.onresult=e=>{
+    rec=new SR();
+    rec.continuous=true;
+    rec.interimResults=true;
+    rec.maxAlternatives=1;
+    rec.lang=voiceMap[lang];
+    rec.onstart=function(){listening=true;mic.classList.add('listen');beginVoiceMode();};
+    rec.onresult=function(e){
       let finalText='';
       for(let i=e.resultIndex;i<e.results.length;i++){
-        const part=e.results[i][0]?.transcript||'';
+        const part=(e.results[i][0]&&e.results[i][0].transcript)||'';
         if(e.results[i].isFinal)finalText+=part+' ';
       }
-      if(finalText.trim()){voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();input.value=voiceDraft;input.dispatchEvent(new Event('input',{bubbles:true));scheduleVoiceTurn();}
+      if(finalText.trim()){
+        voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
+        input.value=voiceDraft;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        scheduleVoiceTurn();
+      }
     };
-    rec.onend=()=>{listening=false;mic.classList.remove('listen');if(voiceConversation&&!voiceSTTBusy&&!voiceSpeaking&&!inflight&&!voiceUsingRecorder)resumeVoiceListening(180);};
-    rec.onerror=()=>{listening=false;mic.classList.remove('listen');};
+    rec.onend=function(){
+      listening=false;
+      mic.classList.remove('listen');
+      if(voiceConversation&&!voiceSTTBusy&&!voiceSpeaking&&!inflight&&!voiceUsingRecorder)resumeVoiceListening(180);
+    };
+    rec.onerror=function(){listening=false;mic.classList.remove('listen');};
   }
-  if((!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)&&!rec){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';}
+  if((!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)&&!rec){
+    mic.disabled=true;
+    mic.title='Micro non disponible sur ce navigateur';
+  }
 }
 mic.onclick=()=>{
   if(voiceSpeaking){stopSpeakingForListening();beginVoiceMode();startVoiceCapture();return;}
