@@ -15,3 +15,8 @@ def test_trip_planner_page():
 def test_trip_planner_rejects_invalid_json():
     response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""})
     assert response.status_code == 400
+
+
+def test_trip_planner_rejects_reversed_dates():
+    response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"})
+    assert response.status_code == 400
