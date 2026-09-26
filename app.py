@@ -12,7 +12,7 @@ from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
 from urllib.parse import quote, urlencode, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
@@ -642,13 +642,35 @@ def image_proxy_url(src):
     return f"/image-proxy?url={quote(src, safe='')}" if src else ""
 
 
-def safe_image_fetch(src):
+def _allowed_image_url(src):
     parsed = urlparse(str(src or ""))
     host = (parsed.hostname or "").lower().rstrip(".")
-    if parsed.scheme != "https" or host not in ALLOWED_IMAGE_HOSTS or parsed.username or parsed.password or parsed.port not in (None, 443):
+    if (
+        parsed.scheme != "https"
+        or host not in ALLOWED_IMAGE_HOSTS
+        or parsed.username
+        or parsed.password
+        or parsed.port not in (None, 443)
+    ):
+        return False
+    return True
+
+
+class _SafeImageRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not _allowed_image_url(newurl):
+            raise ValueError("Redirection image non autorisée")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_SAFE_IMAGE_OPENER = build_opener(_SafeImageRedirectHandler)
+
+
+def safe_image_fetch(src):
+    if not _allowed_image_url(src):
         raise ValueError("Source image non autorisée")
     req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
-    with urlopen(req, timeout=OUTBOUND_TIMEOUT) as upstream:
+    with _SAFE_IMAGE_OPENER.open(req, timeout=OUTBOUND_TIMEOUT) as upstream:
         headers = getattr(upstream, "headers", {})
         get_type = getattr(headers, "get_content_type", None)
         content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
