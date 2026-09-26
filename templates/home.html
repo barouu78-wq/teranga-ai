@@ -2318,6 +2318,9 @@ function setupMic(){
   rec.lang=voiceMap[lang];
   rec.onstart=()=>{
     listening=true;
+    voiceConversation=true;
+    autoVoice=true;
+    localStorage.setItem('teranga-voice','1');
     voiceWaitingForAnswer=false;
     mic.classList.add('listen');
     mic.setAttribute('aria-label',T[lang].voiceStop||'Arrêter la conversation vocale');
