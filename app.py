@@ -1429,7 +1429,12 @@ def exchange_rates():
         record_abuse(identity, "fx_identity_rate", 1)
         return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
     data = fetch_bceao_rates()
-    return jsonify({"source": "BCEAO", "date": data["date"], "rates": data["rates"]})
+    return jsonify({
+        "source": "BCEAO",
+        "date": data["date"],
+        "rates": data["rates"],
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    })
 
 
 @app.post("/chat")
