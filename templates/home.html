@@ -2603,7 +2603,7 @@ $('tabbar').addEventListener('click',e=>{
   const tab=btn.dataset.tab;
   document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
   if(tab==='home'){showHero();stage.scrollTop=0;}
-  if(tab==='discover'){showHero();$('chips').scrollIntoView({block:'nearest'});}
+  if(tab==='discover'){window.location.href='/explorer';}
   if(tab==='chat'){input.focus();}
   if(tab==='profile'){$('themeBtn').click();}
 });
