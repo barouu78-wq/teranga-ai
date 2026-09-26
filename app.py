@@ -848,6 +848,7 @@ def infer_senegal_context(history, message):
 def should_use_web(message, context=""):
     lowered = normalize(message)
     combined = normalize(f"{context} {message}")
+    current_markers = (
         "verifie", "confirme", "a jour", "exactement", "en ce moment",
         "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
         "latest", "current", "right now", "as of", "verify", "check",
