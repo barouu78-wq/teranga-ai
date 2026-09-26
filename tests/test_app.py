@@ -37,8 +37,8 @@ def test_health():
     assert response.status_code == 200
     data = response.get_json()
     assert data["status"] == "ok"
-    assert data["model"] == "gpt-5.6-luna"
-    assert data["web_search"] is True
+    assert "model" not in data
+    assert "api_key_configured" not in data
 
 
 def test_current_price_question_uses_web():
@@ -55,11 +55,13 @@ def test_map_for_senegal_city():
     assert "Ziguinchor" in result["label"]
 
 
-def test_health_reports_api_key_configured():
+def test_health_does_not_expose_configuration_details():
     client = app.test_client()
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.get_json()["api_key_configured"] is True
+    data = response.get_json()
+    assert "api_key_configured" not in data
+    assert "model" not in data
 
 
 def test_referer_origin_is_exact():
@@ -264,7 +266,7 @@ def test_commons_images_include_same_origin_proxy(monkeypatch):
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 
-def test_model_uses_zero_reasoning_for_fast_chat():
+def test_model_uses_configured_low_reasoning_for_fast_chat():
     payload = {
         "instructions": "test",
         "input_text": "Bonjour",
@@ -272,7 +274,7 @@ def test_model_uses_zero_reasoning_for_fast_chat():
         "message": "Bonjour",
     }
     kwargs = model_kwargs(payload, stream=True)
-    assert kwargs["reasoning"] == {"effort": "none"}
+    assert kwargs["reasoning"] == {"effort": "low"}
 
 
 def test_image_proxy_allows_wikimedia_and_blocks_other_hosts(monkeypatch):
