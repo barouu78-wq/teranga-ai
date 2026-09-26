@@ -114,6 +114,23 @@ SEO_PAGES = {
         ],
         "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
     },
+    "soutenir-teranga-ai": {
+        "title": "Soutenir Teranga AI : partenaires et financement",
+        "description": "Soutenir Teranga AI, assistant IA consacré au Sénégal : partenariats, sponsoring, financement et développement de services numériques.",
+        "h1": "Soutenir Teranga AI",
+        "intro": "Teranga AI développe un assistant numérique consacré au Sénégal et cherche des partenaires, des entreprises pilotes et des soutiens financiers pour accélérer son développement.",
+        "sections": [
+            ("Pourquoi soutenir le projet", "Teranga AI combine conversation, informations locales, cartes, photos et informations pratiques, avec une interface en français, anglais, wolof et pulaar."),
+            ("Partenariats", "Entreprises, médias, tourisme, télécoms, écoles et incubateurs peuvent soutenir un pilote, une intégration ou une action de visibilité autour de l'IA et du Sénégal."),
+            ("Utilisation du soutien", "Le financement peut contribuer à l'infrastructure IA, aux données locales vérifiées, au développement produit, à la visibilité et à l'accès du service à davantage d'utilisateurs."),
+            ("Modèle économique", "Teranga AI peut développer des offres professionnelles : assistants spécialisés, intégrations, services B2B, visibilité locale et pilotes sur mesure.")
+        ],
+        "faq": [
+            ("Comment soutenir Teranga AI ?", "Par un partenariat, un pilote entreprise, un soutien financier, une mise en relation ou une action de visibilité."),
+            ("À quoi servirait un financement ?", "À développer le produit, renforcer l'infrastructure, enrichir les données locales et construire des offres professionnelles.")
+        ],
+        "related": [("entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("media-kit", "Kit média")]
+    },
     "a-propos": {
         "title": "À propos de Teranga AI : assistant numérique du Sénégal",
         "description": "Découvrez Teranga AI, assistant numérique consacré au Sénégal : informations pratiques, voyage, culture, langues et vie quotidienne.",
