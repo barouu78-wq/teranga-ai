@@ -2773,32 +2773,76 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
-/* Teranga Voice v11 — hands-free audio turns with VAD + server transcription.
-   Browser SpeechRecognition remains the lightweight fallback. */
+/* Teranga Voice v12 — natural hands-free conversation.
+   Adaptive VAD, faster turns, barge-in and automatic recovery. */
 let voiceStream=null, voiceRecorder=null, voiceAudioContext=null, voiceAnalyser=null;
-let voiceVADTimer=0, voiceLastLoudAt=0, voiceSpeechStarted=false, voiceChunks=[];
+let voiceVADTimer=0, voiceLastLoudAt=0, voiceSpeechStarted=false, voiceSpeechStartedAt=0, voiceChunks=[];
 let voiceCaptureBusy=false, voiceSTTBusy=false, voiceUsingRecorder=false;
-const VOICE_SILENCE_MS=850, VOICE_MAX_MS=18000, VOICE_THRESHOLD=0.018;
+let voiceNoiseFloor=0.008, voiceNoiseSamples=0;
+let voiceMonitorStream=null, voiceMonitorContext=null, voiceMonitorAnalyser=null, voiceMonitorTimer=0, voiceBargeInStartedAt=0;
+const VOICE_SILENCE_MS=650, VOICE_MAX_MS=15000, VOICE_MIN_SPEECH_MS=260;
+const VOICE_NOISE_CALIBRATION_MS=850;
 
 function voiceStatus(text){
   if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
 }
+function stopVoiceMonitor(){
+  clearInterval(voiceMonitorTimer);voiceMonitorTimer=0;
+  if(voiceMonitorContext){try{voiceMonitorContext.close();}catch(_){}voiceMonitorContext=null;}
+  voiceMonitorAnalyser=null;
+  if(voiceMonitorStream){voiceMonitorStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});voiceMonitorStream=null;}
+  voiceBargeInStartedAt=0;
+}
+async function startVoiceMonitor(){
+  if(!voiceConversation||voiceMonitorStream||!navigator.mediaDevices?.getUserMedia)return;
+  try{
+    voiceMonitorStream=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
+    });
+    if(!voiceConversation||!voiceSpeaking){stopVoiceMonitor();return;}
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    voiceMonitorContext=new AC();
+    const source=voiceMonitorContext.createMediaStreamSource(voiceMonitorStream);
+    voiceMonitorAnalyser=voiceMonitorContext.createAnalyser();
+    voiceMonitorAnalyser.fftSize=1024;
+    voiceMonitorAnalyser.smoothingTimeConstant=.78;
+    source.connect(voiceMonitorAnalyser);
+    const data=new Uint8Array(voiceMonitorAnalyser.fftSize);
+    voiceMonitorTimer=setInterval(()=>{
+      if(!voiceMonitorAnalyser||!voiceSpeaking)return;
+      voiceMonitorAnalyser.getByteTimeDomainData(data);
+      let sum=0;
+      for(let i=0;i<data.length;i++){const x=(data[i]-128)/128;sum+=x*x;}
+      const rms=Math.sqrt(sum/data.length);
+      const threshold=Math.max(.018,voiceNoiseFloor*2.4+.010);
+      const now=Date.now();
+      if(rms>threshold){
+        if(!voiceBargeInStartedAt)voiceBargeInStartedAt=now;
+        if(now-voiceBargeInStartedAt>=220){
+          stopSpeakingForListening();
+          startVoiceCapture();
+        }
+      }else{
+        voiceBargeInStartedAt=0;
+      }
+    },60);
+  }catch(_){stopVoiceMonitor();}
+}
 function stopVoiceCapture(){
-  clearInterval(voiceVADTimer); voiceVADTimer=0;
-  if(voiceRecorder && voiceRecorder.state!=='inactive'){
-    try{voiceRecorder.stop();}catch(_){}
-  }
+  clearInterval(voiceVADTimer);voiceVADTimer=0;
+  if(voiceRecorder&&voiceRecorder.state!=='inactive'){try{voiceRecorder.stop();}catch(_){}}
   voiceRecorder=null;
-  if(voiceAudioContext){try{voiceAudioContext.close();}catch(_){} voiceAudioContext=null;}
+  if(voiceAudioContext){try{voiceAudioContext.close();}catch(_){}voiceAudioContext=null;}
   voiceAnalyser=null;
   if(voiceStream){voiceStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});voiceStream=null;}
-  voiceChunks=[];voiceSpeechStarted=false;voiceCaptureBusy=false;voiceUsingRecorder=false;
-  listening=false;
-  mic.classList.remove('listen');
+  voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
+  voiceNoiseFloor=.008;voiceNoiseSamples=0;voiceCaptureBusy=false;voiceUsingRecorder=false;
+  listening=false;mic.classList.remove('listen');
 }
 async function postVoiceAudio(blob){
   if(!blob||!blob.size||voiceSTTBusy||!voiceConversation)return;
-  voiceSTTBusy=true; voiceWaitingForAnswer=true;
+  voiceSTTBusy=true;voiceWaitingForAnswer=true;
   voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'Listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
@@ -2825,24 +2869,23 @@ async function postVoiceAudio(blob){
     voiceWaitingForAnswer=false;
     if(voiceConversation){
       voiceStatus(lang==='fr'?'Je n’ai pas bien entendu. Réessaie.':lang==='en'?'I didn’t catch that. Try again.':T[lang].hintTouch);
-      setTimeout(()=>startVoiceCapture(),650);
+      setTimeout(()=>startVoiceCapture(),500);
     }
   }finally{voiceSTTBusy=false;}
 }
 function finishVoiceRecording(){
   clearInterval(voiceVADTimer);voiceVADTimer=0;
-  const recorder=voiceRecorder;
-  voiceRecorder=null;
+  const recorder=voiceRecorder;voiceRecorder=null;
   if(!recorder)return;
   try{recorder.stop();}catch(_){}
 }
 function startVoiceCapture(){
   if(!voiceConversation||voiceSpeaking||inflight||voiceSTTBusy||voiceCaptureBusy)return;
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){
     if(rec){try{rec.start();}catch(_){}}
     return;
   }
-  voiceCaptureBusy=true;voiceUsingRecorder=true;voiceChunks=[];voiceSpeechStarted=false;voiceLastLoudAt=0;
+  voiceCaptureBusy=true;voiceUsingRecorder=true;voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
   navigator.mediaDevices.getUserMedia({
     audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
   }).then(stream=>{
@@ -2862,109 +2905,83 @@ function startVoiceCapture(){
     else if(MediaRecorder.isTypeSupported('audio/mp4'))mime='audio/mp4';
     voiceRecorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
     const startedAt=Date.now();
-    voiceRecorder.ondataavailable=e=>{if(e.data&&e.data.size)voiceChunks.push(e.data);};
+    voiceRecorder.ondataavailable=e=>{if(e.data?.size)voiceChunks.push(e.data);};
     voiceRecorder.onstop=()=>{
       const blob=new Blob(voiceChunks,{type:voiceRecorder?.mimeType||mime||'audio/webm'});
       const hadSpeech=voiceSpeechStarted;
+      const speechMs=voiceSpeechStartedAt?Date.now()-voiceSpeechStartedAt:0;
       stopVoiceCapture();
-      if(hadSpeech&&blob.size>1200)postVoiceAudio(blob);
-      else if(voiceConversation&&!voiceSpeaking&&!inflight&&!voiceSTTBusy)setTimeout(startVoiceCapture,180);
+      if(hadSpeech&&speechMs>=VOICE_MIN_SPEECH_MS&&blob.size>1200)postVoiceAudio(blob);
+      else if(voiceConversation&&!voiceSpeaking&&!inflight&&!voiceSTTBusy)setTimeout(startVoiceCapture,140);
     };
     voiceRecorder.start(250);
     voiceStatus(lang==='fr'?'Parle naturellement…':lang==='en'?'Speak naturally…':lang==='wo'?'Wax ak yomb…':'Haala e ɗoŋngal…');
+    const data=new Uint8Array(voiceAnalyser?voiceAnalyser.fftSize:1024);
     voiceVADTimer=setInterval(()=>{
       if(!voiceAnalyser||!voiceRecorder||voiceRecorder.state==='inactive')return;
-      const data=new Uint8Array(voiceAnalyser.fftSize);voiceAnalyser.getByteTimeDomainData(data);
+      voiceAnalyser.getByteTimeDomainData(data);
       let sum=0;
       for(let i=0;i<data.length;i++){const x=(data[i]-128)/128;sum+=x*x;}
       const rms=Math.sqrt(sum/data.length);
       const now=Date.now();
-      if(rms>VOICE_THRESHOLD){
-        voiceSpeechStarted=true;voiceLastLoudAt=now;
+      const elapsed=now-startedAt;
+      if(!voiceSpeechStarted&&elapsed<VOICE_NOISE_CALIBRATION_MS){
+        voiceNoiseSamples++;
+        voiceNoiseFloor=voiceNoiseSamples===1?rms:(voiceNoiseFloor*.92+rms*.08);
       }
-      if(voiceSpeechStarted&&voiceLastLoudAt&&now-voiceLastLoudAt>VOICE_SILENCE_MS){
-        finishVoiceRecording();
-      }else if(now-startedAt>VOICE_MAX_MS){
-        finishVoiceRecording();
+      const threshold=Math.max(.012,voiceNoiseFloor*2.35+.007);
+      if(rms>threshold){
+        if(!voiceSpeechStarted){voiceSpeechStarted=true;voiceSpeechStartedAt=now;}
+        voiceLastLoudAt=now;
       }
+      if(voiceSpeechStarted&&voiceLastLoudAt&&now-voiceLastLoudAt>VOICE_SILENCE_MS)finishVoiceRecording();
+      else if(elapsed>VOICE_MAX_MS)finishVoiceRecording();
     },60);
   }).catch(_=>{
     voiceCaptureBusy=false;voiceUsingRecorder=false;
     if(rec){try{rec.start();}catch(_){}}
-    else{
-      endVoiceMode();
-      voiceStatus(lang==='fr'?'Microphone indisponible.':lang==='en'?'Microphone unavailable.':'Micro indisponible.');
-    }
+    else{endVoiceMode();voiceStatus(lang==='fr'?'Microphone indisponible.':lang==='en'?'Microphone unavailable.':'Micro indisponible.');}
   });
 }
-
-/* Override the old browser-only voice lifecycle with the audio-first one. */
 function beginVoiceMode(){
-  voiceConversation=true;autoVoice=true;
-  localStorage.setItem('teranga-voice','1');
-  document.body.classList.add('voice-active');
-  $('voiceToggle').textContent=T[lang].vOn;
+  voiceConversation=true;autoVoice=true;localStorage.setItem('teranga-voice','1');
+  document.body.classList.add('voice-active');$('voiceToggle').textContent=T[lang].vOn;
 }
 function endVoiceMode(){
   voiceConversation=false;voiceWaitingForAnswer=false;voiceDraft='';
-  stopVoiceCapture();
+  stopVoiceMonitor();stopVoiceCapture();
   if(rec&&listening){try{rec.stop();}catch(_){}}
-  document.body.classList.remove('voice-active');
-  $('voiceToggle').textContent=T[lang].vOff;
+  document.body.classList.remove('voice-active');$('voiceToggle').textContent=T[lang].vOff;
   voiceStatus(T[lang].hintTouch);
 }
 function stopSpeakingForListening(){
-  stopVoiceCapture();
-  if(audio){
-    try{audio.pause();}catch(_){}
-    const src=audio.src;audio=null;
-    if(src)URL.revokeObjectURL(src);
-  }
+  stopVoiceMonitor();stopVoiceCapture();
+  if(audio){try{audio.pause();}catch(_){}const src=audio.src;audio=null;if(src)URL.revokeObjectURL(src);}
   if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch(_){}}
   voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
 }
 function finishSpeech(btn){
-  voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
+  stopVoiceMonitor();voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
   if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
   if(voiceConversation&&!inflight&&!voiceSTTBusy){
-    voiceWaitingForAnswer=false;
-    voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
-    setTimeout(startVoiceCapture,220);
+    voiceWaitingForAnswer=false;voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
+    setTimeout(startVoiceCapture,160);
   }
 }
 function setupMic(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(SR){
-    rec=new SR();
-    rec.continuous=true;
-    rec.interimResults=true;
-    rec.maxAlternatives=1;
-    rec.lang=voiceMap[lang];
-    rec.onstart=function(){listening=true;mic.classList.add('listen');beginVoiceMode();};
-    rec.onresult=function(e){
+    rec=new SR();rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;rec.lang=voiceMap[lang];
+    rec.onstart=()=>{listening=true;mic.classList.add('listen');beginVoiceMode();};
+    rec.onresult=e=>{
       let finalText='';
-      for(let i=e.resultIndex;i<e.results.length;i++){
-        const part=(e.results[i][0]&&e.results[i][0].transcript)||'';
-        if(e.results[i].isFinal)finalText+=part+' ';
-      }
-      if(finalText.trim()){
-        voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
-        input.value=voiceDraft;
-        input.dispatchEvent(new Event('input',{bubbles:true}));
-        scheduleVoiceTurn();
-      }
+      for(let i=e.resultIndex;i<e.results.length;i++){const part=e.results[i][0]?.transcript||'';if(e.results[i].isFinal)finalText+=part+' ';}
+      if(finalText.trim()){voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();input.value=voiceDraft;input.dispatchEvent(new Event('input',{bubbles:true}));scheduleVoiceTurn();}
     };
-    rec.onend=function(){
-      listening=false;
-      mic.classList.remove('listen');
-      if(voiceConversation&&!voiceSTTBusy&&!voiceSpeaking&&!inflight&&!voiceUsingRecorder)resumeVoiceListening(180);
-    };
-    rec.onerror=function(){listening=false;mic.classList.remove('listen');};
+    rec.onend=()=>{listening=false;mic.classList.remove('listen');if(voiceConversation&&!voiceSTTBusy&&!voiceSpeaking&&!inflight&&!voiceUsingRecorder)resumeVoiceListening(160);};
+    rec.onerror=()=>{listening=false;mic.classList.remove('listen');};
   }
-  if((!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)&&!rec){
-    mic.disabled=true;
-    mic.title='Micro non disponible sur ce navigateur';
-  }
+  if(!navigator.mediaDevices?.getUserMedia&&!rec){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';}
 }
 mic.onclick=()=>{
   if(voiceSpeaking){stopSpeakingForListening();beginVoiceMode();startVoiceCapture();return;}
@@ -2973,13 +2990,9 @@ mic.onclick=()=>{
 };
 $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;localStorage.setItem('teranga-voice',autoVoice?'1':'0');
-  if(autoVoice){
-    beginVoiceMode();stopSpeakingForListening();startVoiceCapture();
-  }else{
-    endVoiceMode();stopSpeakingForListening();
-  }
+  if(autoVoice){beginVoiceMode();stopSpeakingForListening();startVoiceCapture();}
+  else{endVoiceMode();stopSpeakingForListening();}
 };
-
 loadFx();
 themeInit();restore();setLang(lang);setupMic();
 
