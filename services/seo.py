@@ -114,6 +114,23 @@ SEO_PAGES = {
         ],
         "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
     },
+    "a-propos": {
+        "title": "À propos de Teranga AI : assistant numérique du Sénégal",
+        "description": "Découvrez Teranga AI, assistant numérique consacré au Sénégal : informations pratiques, voyage, culture, langues et vie quotidienne.",
+        "h1": "À propos de Teranga AI",
+        "intro": "Teranga AI est un assistant numérique pensé autour du Sénégal et accessible depuis le Sénégal, la France et la diaspora.",
+        "sections": [
+            ("Un assistant pour le Sénégal", "Teranga AI aide à trouver des repères sur Dakar, les régions, les transports, la météo, la culture, la gastronomie et les langues."),
+            ("Pour plusieurs publics", "Voyageurs, résidents, diaspora et commerçants peuvent poser leurs questions en français, anglais, wolof ou pulaar."),
+            ("Partenariats et soutien", "Teranga AI peut travailler avec des entreprises, médias, acteurs du tourisme, écoles et écosystèmes tech. Un soutien peut prendre la forme d’un pilote, d’un partenariat, d’une mise en relation ou d’un financement du développement."),
+            ("Informations à vérifier", "Pour les horaires, tarifs, formalités et autres informations susceptibles de changer, Teranga AI peut rechercher des sources récentes et invite à vérifier les informations officielles.")
+        ],
+        "faq": [
+            ("Teranga AI est-il accessible depuis le Sénégal ?", "Oui, le service est accessible sur le web depuis le Sénégal."),
+            ("Quelles langues sont disponibles ?", "Français, anglais, wolof et pulaar.")
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal"), ("diaspora-senegalaise", "Diaspora sénégalaise")]
+    },
     "presse": {
         "title": "Presse et médias : Teranga AI au Sénégal",
         "description": "Informations presse sur Teranga AI : présentation, usages, langues et ressources pour les médias sénégalais.",
