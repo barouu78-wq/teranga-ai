@@ -180,6 +180,24 @@ SEO_PAGES = {
         "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Goree")],
     },
 
+    "dakar": {
+        "title": "Dakar : guide pratique, quartiers, transport et voyage | Teranga AI",
+        "description": "Guide de Dakar : AIBD, quartiers, transport, météo, Gorée, restaurants et repères pratiques pour habitants et voyageurs.",
+        "h1": "Dakar",
+        "intro": "Teranga AI vous aide à préparer ou comprendre Dakar : arrivée à AIBD, déplacements, quartiers, météo, gastronomie et sorties.",
+        "sections": [
+            ("Arriver à Dakar", "Demandez un itinéraire depuis AIBD, un repère sur les transports ou les informations utiles pour votre arrivée. Les horaires et tarifs doivent être vérifiés le jour du trajet."),
+            ("Quartiers et sorties", "Plateau, Médina, Almadies, Ngor, Ouakam et d'autres quartiers peuvent être abordés selon votre besoin : manger, dormir, se déplacer ou découvrir la ville."),
+            ("Dakar et Gorée", "Pour une visite de Gorée, demandez les repères sur le ferry, la météo et les points d'intérêt. Les horaires de traversée sont à vérifier avant le départ."),
+            ("Météo et vie pratique", "Demandez la météo du jour, une tenue adaptée, un trajet ou une information pratique. Pour les données qui changent, Teranga AI recherche des informations récentes lorsque nécessaire.")
+        ],
+        "faq": [
+            ("Comment aller de AIBD à Dakar ?", "Demandez votre destination ou votre quartier et Teranga AI peut rechercher les options de transport récentes."),
+            ("Quels quartiers de Dakar peut-on explorer ?", "Plateau, Médina, Almadies, Ngor, Ouakam et d'autres quartiers peuvent être décrits selon votre activité."),
+            ("Peut-on préparer une journée à Dakar ?", "Oui. Indiquez votre point de départ, le temps disponible et vos centres d'intérêt.")
+        ],
+        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("senegal", "Guide du Sénégal")]
+    },
     "assistant-senegal": {
         "title": "Assistant Sénégal : informations pratiques, voyage et Dakar | Teranga AI",
         "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais, wolof et pulaar.",
