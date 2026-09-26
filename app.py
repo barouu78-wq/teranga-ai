@@ -1738,12 +1738,14 @@ def stt():
         }
         if language in {"fr", "en", "wo", "ff"}:
             kwargs["language"] = language
-        kwargs["prompt"] = {
-            "fr": "Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres et les mots sénégalais.",
-            "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Preserve proper names and Senegalese words.",
-            "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Denc tur yi ak wax yu Senegaal.",
-            "ff": "Kontext Senegal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Conserve les noms propres et les mots sénégalais.",
+        voice_context = sanitize_text(request.form.get("context", ""), 1800).strip()
+        base_prompt = {
+            "fr": "Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris exactement ce qui est dit, sans inventer ni reformuler.",
+            "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Preserve proper names, numbers, places and Senegalese words. Transcribe exactly what is spoken without inventing or paraphrasing.",
+            "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Denc tur yi, lim yi, dëkk yi ak wax yu Senegaal. Bind li nit wax, bul yokk dara.",
+            "ff": "Kontext Senegal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris exactement ce qui est dit.",
         }[language]
+        kwargs["prompt"] = base_prompt + (f" Contexte récent de la conversation : {voice_context}" if voice_context else "")
         result = client.audio.transcriptions.create(**kwargs)
         text = _field(result, "text", "") or ""
         text = sanitize_text(text, MAX_MESSAGE_LENGTH).strip()
