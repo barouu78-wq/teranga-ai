@@ -1857,6 +1857,19 @@ body.voice-active #mic.listen{box-shadow:0 8px 24px rgba(201,54,54,.28),0 0 0 7p
 @media(max-width:680px){body.voice-active .composer{box-shadow:0 0 0 3px rgba(15,106,67,.06),0 14px 32px rgba(61,44,23,.12)}}
 
 
+/* Teranga Voice v16 — hands-free realtime polish */
+body.realtime-voice .composer{border-color:rgba(15,106,67,.34)}
+body.realtime-voice #hint{font-weight:650}
+@media(min-width:681px){
+  body.realtime-voice #mic{
+    background:linear-gradient(145deg,#c93636,#9e2424)!important;
+    color:#fff!important;
+    box-shadow:0 0 0 6px rgba(201,54,54,.10),0 12px 28px rgba(201,54,54,.22)!important;
+  }
+  body.realtime-voice #voiceToggle{background:rgba(15,106,67,.10);color:var(--brand)}
+}
+@media(prefers-reduced-motion:reduce){body.realtime-voice #mic{animation:none!important}}
+
 /* Teranga UI v18 — final desktop polish */
 @media (min-width:681px){
   /* The landing screen should not reserve an empty message row. */
@@ -2294,7 +2307,7 @@ function renderAudience(){
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
-let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
+let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cleanReply(text){
   return String(text||'')
@@ -2914,12 +2927,27 @@ function waitForIceGathering(pc,timeout=2200){
     pc.addEventListener('icegatheringstatechange',check);
   });
 }
+function scheduleRealtimeReconnect(){
+  clearTimeout(realtimeReconnectTimer);
+  if(!voiceConversation||!autoVoice||realtimeStarting||realtimeActive)return;
+  const attempt=Math.min(6,realtimeReconnectAttempts++);
+  const delay=Math.min(5000,350*Math.pow(1.7,attempt));
+  realtimeReconnectTimer=setTimeout(async()=>{
+    realtimeReconnectTimer=0;
+    if(!voiceConversation||!autoVoice||realtimeActive)return;
+    const ok=await startRealtimeVoice();
+    if(ok)realtimeReconnectAttempts=0;
+    else scheduleRealtimeReconnect();
+  },delay);
+}
 function closeRealtimeVoice(){
+  clearTimeout(realtimeReconnectTimer);
+  realtimeReconnectTimer=0;
   realtimeActive=false;
   realtimeStarting=false;
   if(realtimeDc){try{realtimeDc.close();}catch(_){}realtimeDc=null;}
   if(realtimePc){try{realtimePc.close();}catch(_){}realtimePc=null;}
-  if(realtimeMic){realtimeMic.getTracks().forEach(t=>{try{t.stop();}catch(_){}});realtimeMic=null;}
+  if(realtimeMic){realtimeMic.getTracks().forEach(t=>{try{t.stop();}catch(_){} });realtimeMic=null;}
   if(realtimeAudio){try{realtimeAudio.pause();}catch(_){}realtimeAudio.srcObject=null;realtimeAudio.remove();realtimeAudio=null;}
   realtimeAssistantRows.clear();
   realtimeAssistantText.clear();
@@ -3040,12 +3068,16 @@ async function startRealtimeVoice(){
       if(state==='connected'){
         realtimeActive=true;
         realtimeStarting=false;
+        realtimeReconnectAttempts=0;
         document.body.classList.add('realtime-voice');
         realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
         voiceSetMicState(true);
       }else if(['failed','closed','disconnected'].includes(state)&&realtimeActive){
         closeRealtimeVoice();
-        realtimeVoiceStatus(lang==='fr'?'La connexion vocale est interrompue.':lang==='en'?'Voice connection interrupted.':T[lang].err);
+        if(voiceConversation&&autoVoice){
+          realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
+          scheduleRealtimeReconnect();
+        }
       }
     };
     realtimeDc=realtimePc.createDataChannel('oai-events');
@@ -3062,7 +3094,11 @@ async function startRealtimeVoice(){
     realtimeDc.onmessage=e=>{
       try{handleRealtimeEvent(JSON.parse(e.data));}catch(_){}
     };
-    realtimeDc.onerror=()=>{};
+    realtimeDc.onerror=()=>{
+      if(voiceConversation&&autoVoice){
+        realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
+      }
+    };
     realtimePc.addTrack(stream.getAudioTracks()[0],stream);
     const offer=await realtimePc.createOffer({offerToReceiveAudio:true});
     await realtimePc.setLocalDescription(offer);
