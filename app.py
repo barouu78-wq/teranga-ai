@@ -1732,11 +1732,18 @@ def stt():
         audio_file = io.BytesIO(raw)
         audio_file.name = upload.filename or "voice.webm"
         kwargs = {
-            "model": os.getenv("STT_MODEL", "gpt-4o-mini-transcribe"),
+            "model": os.getenv("STT_MODEL", "gpt-4o-transcribe"),
             "file": audio_file,
+            "chunking_strategy": "auto",
         }
-        if language in {"fr", "en"}:
+        if language in {"fr", "en", "wo", "ff"}:
             kwargs["language"] = language
+        kwargs["prompt"] = {
+            "fr": "Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres et les mots sénégalais.",
+            "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Preserve proper names and Senegalese words.",
+            "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Denc tur yi ak wax yu Senegaal.",
+            "ff": "Kontext Senegal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Conserve les noms propres et les mots sénégalais.",
+        }[language]
         result = client.audio.transcriptions.create(**kwargs)
         text = _field(result, "text", "") or ""
         text = sanitize_text(text, MAX_MESSAGE_LENGTH).strip()
