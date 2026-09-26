@@ -1322,6 +1322,7 @@ def parse_chat_payload():
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     planner_enabled = should_use_planner(context)
+    planner_data = build_planner_data(context) if planner_enabled else {}
     planner_line = "Mode planification recommandé : oui." if planner_enabled else "Mode planification recommandé : non."
     if planner_enabled:
         planner_instruction = (
@@ -1371,7 +1372,8 @@ def parse_chat_payload():
         "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
         "input_text": build_conversation(history, message),
         "use_web": should_use_web(message, enriched_context),
-        "planner": should_use_planner(context),
+        "planner": planner_enabled,
+        "planner_data": planner_data,
         "message": message,
         "audience": audience,
         "context": context,
