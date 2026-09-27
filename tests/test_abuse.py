@@ -75,10 +75,23 @@ def test_redis_abuse_score_sets_temporary_block():
     blocks = {}
     lock = Lock()
 
+    assert not record_abuse(
+        "identity",
+        "rate-1",
+        5,
+        redis_client=redis,
+        logger=Logger(),
+        events_by_key=events,
+        blocks_by_key=blocks,
+        lock=lock,
+        score_window=600,
+        block_seconds=600,
+        score_threshold=8,
+    )
     assert record_abuse(
         "identity",
-        "rate",
-        8,
+        "rate-2",
+        3,
         redis_client=redis,
         logger=Logger(),
         events_by_key=events,
