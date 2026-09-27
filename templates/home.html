@@ -1978,6 +1978,23 @@ body.realtime-voice #hint{font-weight:650}
   }
 }
 
+
+/* Teranga UI v19 — chat-first minimal interface: capabilities live inside the chat. */
+.hero,.seo,.guide-section,.tabbar,.chips{display:none!important}
+#stage{display:block!important;overflow-y:auto!important;overflow-x:hidden!important;padding:12px 14px 118px!important;}
+#messages{display:block!important;max-width:860px;margin:0 auto;padding-top:10px!important;}
+#messages:empty{display:none!important}
+.dock{position:fixed!important;left:50%!important;bottom:0!important;transform:translateX(-50%)!important;width:min(900px,calc(100% - 28px))!important;z-index:40!important;padding:8px 0 calc(9px + env(safe-area-inset-bottom))!important;background:transparent!important;backdrop-filter:none!important;}
+.dock .composer{width:100%!important;}
+.dock .meta{display:flex!important;align-items:center!important;padding:5px 8px 0!important;}
+#voiceToggle{display:none!important}
+#shareAppBtn,#themeBtn{display:none!important}
+@media(max-width:680px){
+  header{padding-left:12px!important;padding-right:12px!important;}
+  #stage{padding:8px 10px 112px!important;}
+  .dock{width:calc(100% - 20px)!important;padding-bottom:calc(7px + env(safe-area-inset-bottom))!important;}
+  .dock .meta{padding-top:4px!important;}
+}
 </style>
 
 </head>
@@ -2609,7 +2626,8 @@ $('tabbar').addEventListener('click',e=>{
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
-  history=[];messages.replaceChildren();showHero();
+  history=[];messages.replaceChildren();setChatMode(true);
+  addMsg('assistant',T[lang].welcome);
   sessionStorage.removeItem('teranga-history');
 }
 let resumeVoiceTimer=0;
@@ -3527,7 +3545,14 @@ $('voiceToggle').onclick=()=>{
   }
 };
 loadFx();
-themeInit();restore();setLang(lang);setupMic();
+themeInit();
+restore();
+setLang(lang);
+if(!history.length){
+  setChatMode(true);
+  addMsg('assistant',T[lang].welcome);
+}
+setupMic();
 
 </script>
 </body>
