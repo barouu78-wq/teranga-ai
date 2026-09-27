@@ -28,6 +28,7 @@ from services.intelligence import build_intent_context
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size
 from services.rate_limit import allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, format_senegal_knowledge
+from services.validation import normalize, sanitize_text
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -130,8 +131,6 @@ fx_request_log = defaultdict(deque)
 web_request_log = defaultdict(deque)
 abuse_events = defaultdict(deque)
 abuse_blocks = {}
-CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
@@ -447,19 +446,6 @@ Gorée : ancien comptoir et Maison des Esclaves. Touba : ville mouride et grande
 Si on te demande un lieu ou un plat connu, ajoute un détail concret (quartier, fleuve, marché, saison) et reste court.
 """
 
-
-def normalize(value):
-    value = unicodedata.normalize("NFKD", str(value or ""))
-    return "".join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
-
-
-CSRF_TTL = 60 * 60 * 12
-
-def sanitize_text(text, max_len):
-    text = ZERO_WIDTH_CHARS.sub("", CONTROL_CHARS.sub("", str(text or "")))
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = re.sub(r"[ \t]{2,}", " ", text)
-    return text.strip()[:max_len]
 
 
 def clean_answer(text):
