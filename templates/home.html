@@ -2015,6 +2015,58 @@ body.realtime-voice #hint{font-weight:650}
   }
 }
 
+
+/* Teranga UI v22 — improve desktop readability, lighting and typography. */
+body[data-theme="light"]{
+  background:
+    radial-gradient(760px 360px at 100% 0%,rgba(217,164,65,.18),transparent 58%),
+    radial-gradient(680px 360px at 0% 100%,rgba(15,106,67,.10),transparent 55%),
+    #f3ecdf!important;
+}
+body[data-theme="light"] #hero{
+  background:rgba(255,252,246,.96)!important;
+  border-color:rgba(26,18,12,.10)!important;
+  box-shadow:0 18px 45px rgba(26,18,12,.12)!important;
+}
+body[data-theme="light"] #heroTitle{
+  color:#c45c2a!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:clamp(34px,4.2vw,48px)!important;
+  line-height:1.04!important;
+  letter-spacing:-.045em!important;
+  text-wrap:balance;
+}
+body[data-theme="light"] #heroText{
+  color:#40566d!important;
+  font-size:15px!important;
+  line-height:1.55!important;
+}
+body[data-theme="light"] .card{
+  background:#fffdf8!important;
+  border-color:rgba(26,18,12,.12)!important;
+  color:#182536!important;
+  box-shadow:0 6px 18px rgba(26,18,12,.06)!important;
+}
+body[data-theme="light"] .card b{
+  color:#182536!important;
+  font-size:12px!important;
+}
+body[data-theme="light"] .card .ico{color:#d39a24!important}
+body[data-theme="light"] .composer{
+  background:rgba(255,252,246,.97)!important;
+  border-color:rgba(26,18,12,.12)!important;
+  box-shadow:0 12px 30px rgba(26,18,12,.10)!important;
+}
+body[data-theme="light"] #input{
+  color:#182536!important;
+  font-size:15px!important;
+}
+@media(max-width:680px){
+  body[data-theme="light"] #heroTitle{
+    font-size:34px!important;
+  }
+}
+
 </style>
 
 </head>
