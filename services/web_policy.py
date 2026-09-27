@@ -1,11 +1,8 @@
-"""Web retrieval policy for Teranga AI V3.1.
-
-Keeps web quality and latency decisions outside the Flask route so they can be
-tested without loading the full application.
-"""
+"""Web retrieval policy for Teranga AI V3.3."""
 from __future__ import annotations
 
 SOURCE_FILTERS = {
+    "weather": ("anacim.sn", "gov.sn", "who.int"),
     "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
     "economy": ("ansd.sn", "gov.sn", "worldbank.org"),
     "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gov.sn", "fao.org"),
@@ -14,6 +11,8 @@ SOURCE_FILTERS = {
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
+    "transport": ("transports.gouv.sn", "gov.sn", "ansd.sn"),
+    "diaspora": ("diplomatie.gouv.sn", "gov.sn", "ansd.sn"),
 }
 
 def preferred_domains(domain: str) -> tuple[str, ...]:
