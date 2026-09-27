@@ -412,3 +412,32 @@ def test_visual_system_rule_requires_web_before_requesting_user_photo():
     import app as app_module
     assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
     assert "Ne demande une photo à l'utilisateur qu'après cette recherche" in app_module.SYSTEM_PROMPT
+
+
+def test_supported_languages_focus_on_french_english_wolof():
+    import app as app_module
+
+    assert app_module.SAFE_LANG == frozenset({"fr", "en", "wo"})
+    assert 'data-lang="ff"' not in app_module.HOME_HTML
+    assert ">PU<" not in app_module.HOME_HTML
+
+
+def test_language_engine_keeps_wolof_and_english_conversational():
+    import app as app_module
+
+    client = app_module.app.test_client()
+    with app_module.app.test_request_context(
+        "/api/chat",
+        json={"message": "Hello, I want to visit Dakar.", "language": "en"},
+    ):
+        payload, error = app_module.parse_chat_payload()
+        assert error is None
+        assert "fluent, natural English" in payload["instructions"]
+
+    with app_module.app.test_request_context(
+        "/api/chat",
+        json={"message": "Naka nga def? Maa ngi bëgg dem Dakar.", "language": "wo"},
+    ):
+        payload, error = app_module.parse_chat_payload()
+        assert error is None
+        assert "wolof naturel et idiomatique" in payload["instructions"]

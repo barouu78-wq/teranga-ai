@@ -135,7 +135,7 @@ abuse_events = defaultdict(deque)
 abuse_blocks = {}
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
-SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
+SAFE_LANG = frozenset({"fr", "en", "wo"})
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
 WEB_HINTS = (
@@ -1331,8 +1331,8 @@ def parse_chat_payload():
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
     language_instruction = {
         "fr": "Réponds en français naturel, avec un vocabulaire sénégalais naturel quand le contexte s'y prête.",
-        "en": "Reply in natural English. Keep Senegalese names, places, dishes and cultural terms in their established form.",
-        "wo": "Réponds en wolof naturel autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le wolof pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof.",
+        "en": "Reply in fluent, natural English. Prefer idiomatic conversational phrasing and concise sentences. Keep Senegalese names, places, dishes and cultural terms in their established form; never translate them mechanically.",
+        "wo": "Réponds en wolof naturel et idiomatique autant que possible. Privilégie les formulations réellement utilisées à l'oral au Sénégal, sans traduction mot à mot depuis le français. Garde les noms propres, lieux et plats dans leur forme usuelle. Si un terme technique n'a pas d'équivalent clair, garde naturellement le mot français ou anglais puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof sans corriger son parler.",
         "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
     }[language]
     context = infer_senegal_context(history, message)
@@ -1757,7 +1757,6 @@ def realtime_call():
         "fr": "français",
         "en": "anglais",
         "wo": "wolof",
-        "ff": "pulaar",
     }[language]
     audience_name = {
         "tourist": "voyageur",
@@ -1791,8 +1790,8 @@ def realtime_call():
                 "noise_reduction": {"type": os.getenv("REALTIME_NOISE_REDUCTION", "far_field")},
                 "transcription": {
                     "model": "gpt-4o-transcribe",
-                    "language": language if language in {"fr", "en"} else None,
-                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof, Pulaar."
+                    "language": language if language in {"fr", "en", "wo"} else None,
+                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof."
                 },
                 "turn_detection": {
                     "type": "semantic_vad",
@@ -1888,13 +1887,13 @@ def stt():
             "file": audio_file,
             "chunking_strategy": "auto",
         }
-        if language in {"fr", "en", "wo", "ff"}:
+        if language in {"fr", "en", "wo"}:
             kwargs["language"] = language
         voice_context = sanitize_text(request.form.get("context", ""), 1800).strip()
         base_prompt = {
             "fr": "Contexte conversationnel : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, wolof, pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris fidèlement ce qui est dit, avec une ponctuation naturelle. Ne reformule pas, ne résume pas et n’invente rien. Si la personne parle de façon familière, conserve ses mots et son intention.",
-            "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Preserve proper names, numbers, places and Senegalese words. Transcribe exactly what is spoken without inventing or paraphrasing.",
-            "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Denc tur yi, lim yi, dëkk yi ak wax yu Senegaal. Bind li nit wax, bul yokk dara.",
+            "en": "Context: Senegal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, FCFA, BCEAO. Preserve proper names, numbers, places and Senegalese words. Transcribe natural spoken English faithfully without inventing or paraphrasing.",
+            "wo": "Kontextu Senegaal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, FCFA, BCEAO. Denc tur yi, lim yi, dëkk yi ak wax yu Senegaal. Bind li nit wax ci Wolof bu naturel, bul tekki mot à mot, bul yokk dara, bul reformule.",
             "ff": "Kontext Senegal : Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, Wolof, Pulaar, FCFA, BCEAO. Conserve les noms propres, les chiffres, les villes et les mots sénégalais. Transcris exactement ce qui est dit.",
         }[language]
         kwargs["prompt"] = base_prompt + (f" Contexte récent de la conversation : {voice_context}" if voice_context else "")
