@@ -120,6 +120,26 @@ def test_build_intent_context_uses_recent_turns_for_domain_and_web_policy():
 
 
 
+
+def test_infer_senegal_context_extracts_traveler_counts_for_planner():
+    from services.intelligence import infer_senegal_context, build_planner_data
+
+    context = infer_senegal_context(
+        [{"role": "user", "content": "On part 4 jours à Gorée avec 2 adultes et 2 enfants pour 120000 FCFA"}],
+        "Et plutôt en famille ?",
+    )
+
+    assert context["adults"] == 2
+    assert context["children"] == 2
+    assert "adultes=2" in context["constraints"]
+    assert "enfants=2" in context["constraints"]
+
+    planner = build_planner_data(context)
+    assert planner["adults"] == 2
+    assert planner["children"] == 2
+    assert planner["family"] is True
+
+
 def test_infer_senegal_context_keeps_place_and_budget_from_recent_turn():
     from services.intelligence import infer_senegal_context
 
