@@ -767,25 +767,7 @@ def should_fetch_images(message):
     return any(term in lowered for term in explicit)
 
 
-def build_conversation(history, message):
-    lines = []
-    if isinstance(history, list):
-        recent = history[-MAX_HISTORY_ITEMS:]
-        for index, item in enumerate(recent):
-            if not isinstance(item, dict):
-                continue
-            role = str(item.get("role", "")).lower()
-            content = sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)
-            if role not in {"user", "assistant"} or not content:
-                continue
-            if index == len(recent) - 1 and role == "user" and content == message:
-                continue
-            label = "Utilisateur" if role == "user" else "Teranga AI"
-            lines.append(f"{label}: {content}")
-    conversation = "\n".join(lines)
-    return ("<historique_non_fiable>\n" + conversation + "\n</historique_non_fiable>\n" +
-            "<demande_utilisateur>\n" + message + "\n</demande_utilisateur>")[-MAX_HISTORY_CHARS:]
-
+from services.conversation import build_conversation as _build_conversation
 
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
@@ -1041,7 +1023,7 @@ def parse_chat_payload():
     }[audience][language]
     return {
         "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
-        "input_text": build_conversation(history, message),
+        "input_text": _build_conversation(history, message, max_history_items=MAX_HISTORY_ITEMS, max_history_item_length=MAX_HISTORY_ITEM_LENGTH, max_history_chars=MAX_HISTORY_CHARS),
         "use_web": should_use_web(message, enriched_context),
         "planner": planner_enabled,
         "planner_data": planner_data,
