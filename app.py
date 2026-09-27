@@ -499,100 +499,6 @@ def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
 
 
-def knowledge_image_titles(message, limit=4):
-    text_value = normalize(message)
-    titles = []
-    for region in SENEGAL_KNOWLEDGE.get("regions", []):
-        candidates = [region.get("name", ""), *region.get("places", []), *region.get("highlights", []), *region.get("image_queries", [])]
-        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
-            for candidate in candidates:
-                if candidate and candidate not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
-    for place in SENEGAL_KNOWLEDGE.get("places", []):
-        candidates = [place.get("name", ""), *place.get("image_queries", [])]
-        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
-            for candidate in candidates:
-                if candidate and candidate not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
-    return titles
-
-
-def fetch_topic_images(message):
-    text_value = normalize(message)
-    photo_request = should_fetch_images(message)
-    if not photo_request:
-        return None
-
-    # Pour un lieu explicite, on utilise uniquement ses requêtes photo dédiées.
-    # Cela évite qu'une demande précise (ex. Gorée) retombe sur des images
-    # génériques de la région de Dakar.
-    specific_titles = []
-    for place in SENEGAL_KNOWLEDGE.get("places", []):
-        name = normalize(str(place.get("name", "")))
-        aliases = [name]
-        if name.startswith("ile de "):
-            aliases.append(name[7:])
-            if name == "ile de goree":
-                aliases.append("gore")
-        if name.startswith("île de "):
-            aliases.append(name[7:])
-        if any(alias and alias in text_value for alias in aliases):
-            specific_titles.extend(str(q) for q in (place.get("image_queries") or []) if q)
-
-    if specific_titles:
-        titles = specific_titles
-    else:
-        titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
-    if not titles:
-        titles = ["Dakar Sénégal"]
-
-    photos = []
-    seen_titles = set()
-    seen_urls = set()
-
-    for title in titles:
-        title = str(title or "").strip()
-        if not title or title in seen_titles:
-            continue
-        seen_titles.add(title)
-
-        # Le Custom Search JSON API est fermé aux nouveaux clients Google depuis 2026.
-        # La recherche Google est maintenant rendue côté navigateur via Programmable Search Element.
-        candidates = []
-        try:
-            candidates = fetch_commons_images(title, limit=3)
-        except Exception:
-            app.logger.exception("Erreur recherche photos Commons pour %s", title)
-            candidates = []
-
-        if not candidates:
-            try:
-                fallback = fetch_city_image(title)
-                candidates = [fallback] if fallback else []
-            except Exception:
-                app.logger.exception("Erreur fallback photo pour %s", title)
-                candidates = []
-
-        for photo in candidates:
-            if not photo:
-                continue
-            photo["search_query"] = title
-            photo["display_url"] = image_proxy_url(photo.get("url", ""))
-            src = photo.get("url", "")
-            if not src or src in seen_urls:
-                continue
-            seen_urls.add(src)
-            photos.append(photo)
-            if len(photos) >= 6:
-                return photos
-
-    return photos or None
-
-
 
 
 
@@ -601,9 +507,28 @@ from services.responses import extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
 from services.chat_payload import normalize_chat_input
 from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
+from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
+
+def knowledge_image_titles(message, limit=4):
+    return _knowledge_image_titles(message, SENEGAL_KNOWLEDGE, normalize=normalize, limit=limit)
+
+
+def fetch_topic_images(message):
+    return _fetch_topic_images(
+        message,
+        SENEGAL_KNOWLEDGE,
+        normalize=normalize,
+        should_fetch_images=should_fetch_images,
+        topic_wikipedia_titles=topic_wikipedia_titles,
+        fetch_commons_images=fetch_commons_images,
+        fetch_city_image=fetch_city_image,
+        image_proxy_url=image_proxy_url,
+        logger=app.logger,
+    )
+
 
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
