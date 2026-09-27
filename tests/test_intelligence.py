@@ -40,3 +40,16 @@ def test_context_history_is_flagged_without_changing_query():
     )
     assert result["has_context"] is True
     assert result["query"] == "Et demain ?"
+
+
+
+def test_intent_engine_drives_dynamic_routing():
+    result = build_intent_context("Je veux préparer un voyage de 5 jours à Dakar.")
+    assert result["intent"] == "trip_planning"
+    assert result["location"] == "dakar"
+    assert result["needs_web_search"] is True
+
+
+def test_intent_engine_language_is_metadata_only():
+    result = build_intent_context("Hello, I want to travel to Dakar")
+    assert result["language"] == "en"
