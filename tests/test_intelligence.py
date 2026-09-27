@@ -121,6 +121,18 @@ def test_build_intent_context_uses_recent_turns_for_domain_and_web_policy():
 
 
 
+def test_infer_senegal_context_prefers_currency_amount_over_duration_number():
+    from services.intelligence import infer_senegal_context
+
+    context = infer_senegal_context(
+        [],
+        "Je prévois 100000 FCFA pour 4 jours à Gorée.",
+    )
+
+    assert context["budget"] == "100000 fcfa"
+    assert context["duration"] == "4 jours"
+
+
 def test_infer_senegal_context_extracts_traveler_counts_for_planner():
     from services.intelligence import infer_senegal_context, build_planner_data
 
