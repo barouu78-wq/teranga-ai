@@ -258,11 +258,19 @@ def wiki_summary(lang: str, title: str) -> dict:
 
 ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
-def image_proxy_url(src: object) -> str:
+def usable_wiki_image(src: object) -> str:
     src = str(src or "").split("?", 1)[0][:2000]
     if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
         return ""
-    return f"/image-proxy?url={quote(src, safe='')}"
+    lowered = src.lower()
+    if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
+        return ""
+    return src
+
+
+def image_proxy_url(src: object) -> str:
+    src = usable_wiki_image(src)
+    return f"/image-proxy?url={quote(src, safe='')}" if src else ""
 
 
 def allowed_image_url(src: object) -> bool:
