@@ -154,15 +154,26 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     budget = amounts[-1].strip() if amounts else ""
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""
+    adults_match = re.search(r"\\b(\\d+)\\s*(?:adultes?|personnes?)(?:\\s*\\+\\s*(\\d+)\\s*enfants?)?\\b", text_value)
+    children_match = re.search(r"\\b(\\d+)\\s*enfants?\\b", text_value)
+    adults = int(adults_match.group(1)) if adults_match else None
+    children = int(adults_match.group(2)) if adults_match and adults_match.group(2) else (
+        int(children_match.group(1)) if children_match else None
+    )
+    if "en famille" in text_value and children is None:
+        children = 1
+
     constraints = []
     if budget:
         constraints.append("budget=" + budget)
     if duration:
         constraints.append("durée=" + duration)
+    if adults is not None:
+        constraints.append("adultes=" + str(adults))
+    if children is not None:
+        constraints.append("enfants=" + str(children))
     if "avec mes enfants" in text_value or "en famille" in text_value:
         constraints.append("famille")
-    if "avec enfant" in text_value or "avec enfants" in text_value:
-        constraints.append("enfants")
     if "ce soir" in text_value:
         constraints.append("ce soir")
     if "demain" in text_value:
@@ -173,9 +184,11 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         "has_place": bool(found_cities or found_regions),
         "query": text_value,
         "intents": intents[:4],
-        "constraints": constraints[:5],
+        "constraints": constraints[:8],
         "budget": budget,
         "duration": duration,
+        "adults": adults,
+        "children": children,
         "context_source": "conversation" if history and message and len(text_value) > len(_normalize(message)) else "current_message",
     }
 
@@ -225,6 +238,9 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
         "budget_fcfa": budget_amount,
         "intents": context.get("intents", []),
         "constraints": context.get("constraints", []),
+        "adults": context.get("adults"),
+        "children": context.get("children"),
+        "family": "famille" in context.get("constraints", []),
     }
 
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
