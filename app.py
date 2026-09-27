@@ -36,6 +36,7 @@ from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _rec
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
     image_proxy_url,
+    usable_wiki_image,
     allowed_image_url,
     SafeImageRedirectHandler,
     safe_image_fetch as _safe_image_fetch,
@@ -444,18 +445,6 @@ Si on te demande un lieu ou un plat connu, ajoute un détail concret (quartier, 
 
 
 
-
-def usable_wiki_image(src):
-    src = str(src or "").split("?", 1)[0][:2000]
-    if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
-        return ""
-    lowered = src.lower()
-    if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
-        return ""
-    return src
-
-
-ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
 
 @app.get("/image-proxy")
