@@ -20,6 +20,30 @@ SOURCE_PRIORITY = (
     "worldbank.org",
 )
 
+
+# Official administrative coverage: the 14 regions of Senegal.
+SENEGAL_REGIONS = (
+    "Dakar", "Diourbel", "Fatick", "Kaffrine", "Kaolack", "Kédougou", "Kolda",
+    "Louga", "Matam", "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor",
+)
+
+REGION_ALIASES = {
+    "Dakar": ("dakar",),
+    "Diourbel": ("diourbel",),
+    "Fatick": ("fatick",),
+    "Kaffrine": ("kaffrine",),
+    "Kaolack": ("kaolack",),
+    "Kédougou": ("kedougou", "kédougou"),
+    "Kolda": ("kolda",),
+    "Louga": ("louga",),
+    "Matam": ("matam",),
+    "Saint-Louis": ("saint-louis", "saint louis"),
+    "Sédhiou": ("sedhiou", "sédhiou"),
+    "Tambacounda": ("tambacounda",),
+    "Thiès": ("thies", "thiès"),
+    "Ziguinchor": ("ziguinchor",),
+}
+
 SENEGAL_DOMAINS = {
     "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
