@@ -51,6 +51,7 @@ def fetch_topic_images(
     normalize: Callable[[object], str],
     should_fetch_images: Callable[[object], bool],
     topic_wikipedia_titles: Callable[[object, int], Sequence[str]],
+    knowledge_image_titles: Callable[[object, int], Sequence[str]] | None = None,
     fetch_commons_images: Callable[..., list[dict]],
     fetch_city_image: Callable[[str], dict | None],
     image_proxy_url: Callable[[object], str],
@@ -83,7 +84,7 @@ def fetch_topic_images(
     titles = (
         specific_titles
         if specific_titles
-        else knowledge_image_titles(message, knowledge, normalize=normalize, limit=4)
+        else (knowledge_image_titles(message, 4) if knowledge_image_titles else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4))
         + list(topic_wikipedia_titles(message, 4))
     )
     if not titles:
