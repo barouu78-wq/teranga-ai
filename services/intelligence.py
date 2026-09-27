@@ -110,7 +110,8 @@ def contextual_query(history: list[dict[str, Any]] | None, message: str, max_his
 
 def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) -> dict[str, Any]:
     """Resolve Senegal places, intents and planning constraints from recent turns."""
-    text_value = _normalize(contextual_query(history, message))
+    context_query = contextual_query(history, message)
+    text_value = _normalize(context_query)
     cities = (
         "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
         "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
@@ -167,7 +168,16 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     if "demain" in text_value:
         constraints.append("demain")
     place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
-    return {"place": place, "has_place": bool(found_cities or found_regions), "query": text_value, "intents": intents[:4], "constraints": constraints[:5], "budget": budget, "duration": duration}
+    return {
+        "place": place,
+        "has_place": bool(found_cities or found_regions),
+        "query": text_value,
+        "intents": intents[:4],
+        "constraints": constraints[:5],
+        "budget": budget,
+        "duration": duration,
+        "context_source": "conversation" if history and message and len(text_value) > len(_normalize(message)) else "current_message",
+    }
 
 
 def should_use_planner(context: dict[str, Any]) -> bool:
