@@ -2124,7 +2124,7 @@ def home():
     )
     response.set_cookie(
         CSRF_COOKIE,
-        issue_csrf(),
+        issue_csrf(app.config["SECRET_KEY"], CSRF_TTL),
         httponly=False,
         secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
         samesite="Lax",
