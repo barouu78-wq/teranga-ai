@@ -10,8 +10,27 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from config import env_bool
 from app import SENEGAL_KNOWLEDGE, app, fetch_commons_image, fetch_topic_images, image_proxy_url, lookup_map, model_kwargs, public_error, should_use_web
 
+
+
+def test_env_bool_accepts_common_true_values(monkeypatch):
+    for value in ("1", "true", "TRUE", "yes", "on"):
+        monkeypatch.setenv("TEST_BOOL", value)
+        assert env_bool("TEST_BOOL", False) is True
+
+
+def test_env_bool_accepts_common_false_values(monkeypatch):
+    for value in ("0", "false", "FALSE", "no", "off", ""):
+        monkeypatch.setenv("TEST_BOOL", value)
+        assert env_bool("TEST_BOOL", True) is False
+
+
+def test_env_bool_uses_default_for_unknown_values(monkeypatch):
+    monkeypatch.setenv("TEST_BOOL", "maybe")
+    assert env_bool("TEST_BOOL", True) is True
+    assert env_bool("TEST_BOOL", False) is False
 
 
 def test_senegal_knowledge_is_multisource():
