@@ -10,6 +10,7 @@ import re
 import unicodedata
 from typing import Any
 from .senegal_knowledge import classify_domain, needs_fresh_web, source_domains
+from .validation import sanitize_text
 
 
 SUPPORTED_LANGUAGES = ("fr", "en", "wo", "ff")
@@ -97,8 +98,7 @@ def contextual_query(history: list[dict[str, Any]] | None, message: str, max_his
         for item in history[-max_history_items:]:
             if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
                 continue
-            content = str(item.get("content") or "").strip()
-            content = content[:900]
+            content = sanitize_text(item.get("content", ""), 900)
             if content:
                 parts.append(content)
     current = str(message or "").strip()[:max_message_length]
