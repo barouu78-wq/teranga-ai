@@ -13,9 +13,10 @@ def create_response(
     build_kwargs: Callable[[dict[str, Any], bool], dict[str, Any]],
     model: str,
     logger: Any,
+    stream: bool,
     fallback_models: tuple[str, ...] = (),
 ):
-    kwargs = build_kwargs(payload, False)
+    kwargs = build_kwargs(payload, stream)
     try:
         return client.responses.create(**kwargs)
     except Exception as exc:
