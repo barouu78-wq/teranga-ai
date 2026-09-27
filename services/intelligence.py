@@ -1,7 +1,7 @@
-"""Lightweight intent and context extraction for Teranga AI.
+""""Lightweight intent and context extraction for Teranga AI.
 
-This first version is deliberately deterministic: it normalizes a user message
-into a small routing context without changing the existing chat behavior.
+The engine is deterministic and now resolves short follow-ups from recent
+conversation context without changing the user's original query.
 """
 
 from __future__ import annotations
@@ -31,6 +31,8 @@ _INTENT_PATTERNS = {
     "culture": ("culture", "tradition", "histoire", "history", "musique"),
 }
 
+_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos"}
+
 _LOCATION_ALIASES = {
     "dakar": ("dakar",),
     "goree": ("goree", "gorée", "ile de goree", "île de gorée"),
@@ -39,6 +41,7 @@ _LOCATION_ALIASES = {
     "casamance": ("casamance",),
     "senegal": ("senegal", "sénégal"),
 }
+
 
 def _normalize(text: str) -> str:
     text = unicodedata.normalize("NFD", str(text or "").lower())
@@ -72,20 +75,57 @@ def detect_location(text: str) -> str | None:
     return None
 
 
+def _recent_user_messages(history: list[dict[str, Any]] | None, limit: int = 6) -> list[str]:
+    messages: list[str] = []
+    for item in reversed(history or []):
+        if not isinstance(item, dict) or item.get("role") != "user":
+            continue
+        content = str(item.get("content") or "").strip()
+        if content:
+            messages.append(content)
+        if len(messages) >= limit:
+            break
+    return messages
+
+
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     message = str(text or "").strip()
-    intent = detect_intent(message)
-    location = detect_location(message)
+    current_intent = detect_intent(message)
+    current_location = detect_location(message)
+    recent_users = _recent_user_messages(history)
+
+    resolved_intent = current_intent
+    resolved_location = current_location
+    context_source = "current_message"
+
+    if recent_users:
+        if resolved_intent == "general_information":
+            for previous in recent_users:
+                previous_intent = detect_intent(previous)
+                if previous_intent != "general_information":
+                    resolved_intent = previous_intent
+                    context_source = "conversation"
+                    break
+        if resolved_location is None:
+            for previous in recent_users:
+                previous_location = detect_location(previous)
+                if previous_location is not None:
+                    resolved_location = previous_location
+                    context_source = "conversation"
+                    break
+
     normalized = _normalize(message)
-    needs_web = intent in {"trip_planning", "weather", "transport", "restaurant", "photos"}
-    needs_images = intent == "photos"
+    needs_web = resolved_intent in _DYNAMIC_INTENTS
+    needs_images = resolved_intent == "photos"
     return {
-        "intent": intent,
-        "location": location,
+        "intent": resolved_intent,
+        "location": resolved_location,
         "language": detect_language(message),
         "needs_web_search": needs_web,
         "needs_images": needs_images,
-        "has_context": bool(history),
+        "has_context": bool(recent_users),
+        "context_source": context_source,
         "query": message,
         "normalized_query": normalized,
     }
+
