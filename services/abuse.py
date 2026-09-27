@@ -84,3 +84,5 @@ def abuse_blocked(
         if until:
             blocks_by_key.pop(key, None)
     return False
+
+# Kept as a standalone module so abuse behavior can be tested independently.
