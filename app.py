@@ -595,6 +595,7 @@ from services.conversation import build_conversation as _build_conversation
 from services.responses import extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
 from services.chat_payload import normalize_chat_input
+from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -914,62 +915,11 @@ def complete_reply(payload):
     return text, extract_sources(response), image, lookup_map(map_query, should_fetch_map(map_query))
 
 
-FX_CACHE_TTL = 300  # 5 min : la BCEAO publie des cours de référence quotidiens
-FX_SOURCE_URL = "https://www.bceao.int/fr/cours/cours-de-reference-des-principales-devises-contre-Franc-CFA"
-_fx_cache = {
-    "at": 0.0,
-    "date": "",
-    "rates": {"EUR": 655.957, "USD": 577.070, "GBP": 762.860},
-}
-
-def _clean_html_cell(value):
-    value = re.sub(r"<[^>]+>", " ", value or "")
-    return re.sub(r"\s+", " ", value).strip()
+_fx_cache = {"at": 0.0, "date": "", "rates": dict(DEFAULT_RATES)}
 
 def fetch_bceao_rates():
     global _fx_cache
-    now = time.time()
-    if now - _fx_cache["at"] < FX_CACHE_TTL:
-        return _fx_cache
-    fallback = _fx_cache
-    try:
-        req = Request(
-            FX_SOURCE_URL,
-            headers={"User-Agent": "TerangaAI/1.0"},
-        )
-        raw = urlopen(req, timeout=5).read().decode("utf-8", "ignore")
-        cells = re.findall(r"<(?:td|th)[^>]*>(.*?)</(?:td|th)>", raw, re.I | re.S)
-        normalized = [_clean_html_cell(cell) for cell in cells]
-        aliases = {
-            "EUR": {"euro"},
-            "USD": {"dollar us", "dollar américain", "dollar americain"},
-            "GBP": {"livre sterling"},
-        }
-        rates = dict(fallback["rates"])
-        for index, cell in enumerate(normalized):
-            key = cell.casefold()
-            for code, names in aliases.items():
-                if key in names and index + 1 < len(normalized):
-                    raw_value = normalized[index + 1].replace(" ", "").replace(",", ".")
-                    try:
-                        value = float(raw_value)
-                    except ValueError:
-                        continue
-                    if value > 0:
-                        rates[code] = value
-        date_match = re.search(
-            r"Cours des devises du\s+([^<\r\n]+)",
-            raw,
-            re.I,
-        )
-        _fx_cache = {
-            "at": now,
-            "date": date_match.group(1).strip() if date_match else "",
-            "rates": rates,
-        }
-    except Exception:
-        # On conserve le dernier cours valide plutôt que d'afficher une valeur vide.
-        app.logger.warning("Rafraîchissement BCEAO indisponible; conservation du dernier cours valide.")
+    _fx_cache = _fetch_bceao_rates(_fx_cache, logger=app.logger)
     return _fx_cache
 
 @app.get("/exchange-rates")
