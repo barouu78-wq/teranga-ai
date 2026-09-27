@@ -117,7 +117,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         "gsrlimit": str(min(max(limit * 4, 8), 30)),
         "prop": "imageinfo",
         "iiprop": "url|mime|thumbmime|extmetadata",
-        "iiurlwidth": "960",
+        "iiurlwidth": "1280",
         "origin": "*",
     }
     req = Request(
