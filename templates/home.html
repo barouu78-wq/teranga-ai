@@ -2809,7 +2809,7 @@ async function ask(preset,fromVoice=false){
     addActs(wait.col,reply);
     addCityImage(wait.col,image);
     addMap(wait.col,map);
-    addSources(wait.col,sources);
+    // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map});
     history=history.slice(-12);
     persist();
