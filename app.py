@@ -133,6 +133,7 @@ SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
 WEB_HINTS = (
     "photo", "photos", "image", "images", "visuel", "visuels", "montre moi", "montre-moi",
+    "a quoi ressemble", "à quoi ressemble", "a quoi ça ressemble", "à quoi ça ressemble",
     "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
     "actuels", "actuelles", "récent", "récente", "récentes",
     "horaire", "horaires", "ouvert", "ouverte",
