@@ -119,6 +119,7 @@ ABUSE_LOG_SAMPLE = 40
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
+CSRF_TTL = 60 * 60 * 12
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
