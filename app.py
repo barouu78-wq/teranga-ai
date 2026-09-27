@@ -29,6 +29,7 @@ from services.web_policy import preferred_domains, reasoning_effort, search_cont
 from services.rate_limit import allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
+from services.text import clean_answer
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -447,21 +448,6 @@ Si on te demande un lieu ou un plat connu, ajoute un détail concret (quartier, 
 """
 
 
-
-def clean_answer(text):
-    text = sanitize_text(text, 8000)
-    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
-    text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
-    text = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("```", ""), text)
-    text = re.sub(r"`([^`]+)`", r"\1", text)
-    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"__(.*?)__", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
-    text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
-    text = text.replace("**", "").replace("__", "")
-    text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
 
 
 PHOTO_TOPICS = (
