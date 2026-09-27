@@ -39,7 +39,6 @@ from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
-from services.openai_response import create_response as _create_openai_response
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
