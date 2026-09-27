@@ -35,6 +35,8 @@ from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
+    allowed_image_url,
+    safe_image_fetch as _safe_image_fetch,
     should_fetch_images,
     topic_wikipedia_titles,
     wiki_summary,
@@ -454,54 +456,6 @@ def usable_wiki_image(src):
 ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
 
-def image_proxy_url(src):
-    src = usable_wiki_image(src)
-    return f"/image-proxy?url={quote(src, safe='')}" if src else ""
-
-
-def _allowed_image_url(src):
-    parsed = urlparse(str(src or ""))
-    host = (parsed.hostname or "").lower().rstrip(".")
-    if (
-        parsed.scheme != "https"
-        or host not in ALLOWED_IMAGE_HOSTS
-        or parsed.username
-        or parsed.password
-        or parsed.port not in (None, 443)
-    ):
-        return False
-    return True
-
-
-class _SafeImageRedirectHandler(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        if not _allowed_image_url(newurl):
-            raise ValueError("Redirection image non autorisée")
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
-
-
-_SAFE_IMAGE_OPENER = build_opener(_SafeImageRedirectHandler)
-
-
-def safe_image_fetch(src):
-    if not _allowed_image_url(src):
-        raise ValueError("Source image non autorisée")
-    req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
-    with _SAFE_IMAGE_OPENER.open(req, timeout=OUTBOUND_TIMEOUT) as upstream:
-        headers = getattr(upstream, "headers", {})
-        get_type = getattr(headers, "get_content_type", None)
-        content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
-        if not content_type.startswith("image/"):
-            raise ValueError("Type image invalide")
-        length = str(headers.get("Content-Length") or "").strip()
-        if length.isdigit() and int(length) > MAX_IMAGE_BYTES:
-            raise ValueError("Image trop volumineuse")
-        data = upstream.read(MAX_IMAGE_BYTES + 1)
-        if len(data) > MAX_IMAGE_BYTES:
-            raise ValueError("Image trop volumineuse")
-        return content_type, data
-
-
 @app.get("/image-proxy")
 def image_proxy():
     ip = client_ip()
@@ -515,11 +469,10 @@ def image_proxy():
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
         return Response("Image invalide", status=400, mimetype="text/plain")
-    host = urlparse(src).hostname or ""
-    if host not in ALLOWED_IMAGE_HOSTS:
+    if not allowed_image_url(src):
         return Response("Source image non autorisée", status=403, mimetype="text/plain")
     try:
-        content_type, data = safe_image_fetch(src)
+        content_type, data = _safe_image_fetch(src, MAX_IMAGE_BYTES, OUTBOUND_TIMEOUT)
         return Response(
             data,
             mimetype=content_type,
