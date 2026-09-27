@@ -1,0 +1,30 @@
+name: Submit IndexNow URLs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  submit:
+    if: contains(github.event.head_commit.message, 'submit IndexNow URLs')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit URLs to IndexNow
+        env:
+          INDEXNOW_KEY: 8078ffb659c643b58bddddca48be0627
+          KEY_LOCATION: https://teranga-ai-1.onrender.com/8078ffb659c643b58bddddca48be0627.txt
+        run: |
+          curl --fail-with-body -X POST "https://api.indexnow.org/indexnow"             -H "Content-Type: application/json; charset=utf-8"             -d '{
+              "host": "teranga-ai-1.onrender.com",
+              "key": "'"$INDEXNOW_KEY"'",
+              "keyLocation": "'"$KEY_LOCATION"'",
+              "urlList": [
+                "https://teranga-ai-1.onrender.com/",
+                "https://teranga-ai-1.onrender.com/trip-planner",
+                "https://teranga-ai-1.onrender.com/explorer",
+                "https://teranga-ai-1.onrender.com/fr/visiter-goree",
+                "https://teranga-ai-1.onrender.com/fr/senegal-travel-guide",
+                "https://teranga-ai-1.onrender.com/en/dakar-travel-guide"
+              ]
+            }'
