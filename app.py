@@ -35,6 +35,7 @@ from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
+from services.model_params import build_model_kwargs
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -874,29 +875,15 @@ def create_response(payload, stream):
             return client.responses.create(**fallback)
         raise
 def model_kwargs(payload, stream):
-    use_web = bool(payload["use_web"])
-    planner = bool(payload.get("planner"))
-    domain = str((payload.get("intent_context") or {}).get("domain") or "general")
-    effort = os.getenv("OPENAI_REASONING_EFFORT", reasoning_effort(use_web, planner))
-    kwargs = {
-        "model": MODEL,
-        "instructions": payload["instructions"],
-        "input": payload["input_text"],
-        "max_output_tokens": 700 if (use_web or planner) else 500,
-        "reasoning": {"effort": effort},
-        "truncation": "auto",
-        "stream": stream,
-    }
-    if use_web:
-        tool = {
-            "type": "web_search",
-            "search_context_size": search_context_size(domain, planner),
-        }
-        domains = preferred_domains(domain)
-        if domains:
-            tool["filters"] = {"allowed_domains": list(domains)}
-        kwargs["tools"] = [tool]
-    return kwargs
+    return build_model_kwargs(
+        payload,
+        model=MODEL,
+        reasoning_effort=reasoning_effort,
+        search_context_size=search_context_size,
+        preferred_domains=preferred_domains,
+        stream=stream,
+        reasoning_override=os.getenv("OPENAI_REASONING_EFFORT") or None,
+    )
 
 
 
