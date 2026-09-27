@@ -8,7 +8,7 @@ import unicodedata
 from .photo_search import normalize_place_query, relevant_image_evidence
 from urllib.parse import quote, urlencode
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 
 logger = logging.getLogger(__name__)
@@ -255,6 +255,40 @@ def wiki_summary(lang: str, title: str) -> dict:
     req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
     with urlopen(req, timeout=2) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
+
+def allowed_image_url(src: object) -> bool:
+    from urllib.parse import urlparse
+    parsed = urlparse(str(src or ""))
+    host = (parsed.hostname or "").lower().rstrip(".")
+    return bool(parsed.scheme == "https" and host in ALLOWED_IMAGE_HOSTS and not parsed.username and not parsed.password and parsed.port in (None, 443))
+
+class SafeImageRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not allowed_image_url(newurl):
+            raise ValueError("Redirection image non autorisée")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+def safe_image_fetch(src: object, max_bytes: int, timeout: float = 5.0, opener=None):
+    if not allowed_image_url(src):
+        raise ValueError("Source image non autorisée")
+    req = Request(str(src), headers={"User-Agent": "TerangaAI/1.0"})
+    image_opener = opener or build_opener(SafeImageRedirectHandler)
+    with image_opener.open(req, timeout=timeout) as upstream:
+        headers = getattr(upstream, "headers", {})
+        get_type = getattr(headers, "get_content_type", None)
+        content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
+        if not content_type.startswith("image/"):
+            raise ValueError("Type image invalide")
+        length = str(headers.get("Content-Length") or "").strip()
+        if length.isdigit() and int(length) > max_bytes:
+            raise ValueError("Image trop volumineuse")
+        data = upstream.read(max_bytes + 1)
+        if len(data) > max_bytes:
+            raise ValueError("Image trop volumineuse")
+        return content_type, data
+
 
 def should_fetch_images(message: object) -> bool:
     lowered = _normalize(message)
