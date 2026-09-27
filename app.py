@@ -1786,7 +1786,7 @@ def realtime_call():
                 "transcription": {
                     "model": "gpt-4o-transcribe",
                     "language": language if language in {"fr", "en"} else None,
-                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof, Pulaar."
+                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof."
                 },
                 "turn_detection": {
                     "type": "semantic_vad",
