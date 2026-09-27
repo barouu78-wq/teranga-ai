@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
+from config import env_bool
 from services.seo import SEO_PAGES, render_seo_page
 from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
@@ -45,7 +46,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
-TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
+TRUST_PROXY = env_bool("TRUST_PROXY", True)
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 register_localized_routes(app, SITE_URL)
 
