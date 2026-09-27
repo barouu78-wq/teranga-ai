@@ -35,6 +35,7 @@ from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
+    image_proxy_url as _image_proxy_url,
     allowed_image_url,
     safe_image_fetch as _safe_image_fetch,
     should_fetch_images,
@@ -457,6 +458,10 @@ ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
 
 @app.get("/image-proxy")
+def image_proxy_url(src):
+    return _image_proxy_url(src)
+
+
 def image_proxy():
     ip = client_ip()
     identity = abuse_key(ip)
