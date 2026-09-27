@@ -35,6 +35,7 @@ from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
+    should_fetch_images,
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
     fetch_commons_images as _fetch_commons_images,
@@ -755,16 +756,6 @@ def fetch_topic_images(message):
 
 
 
-def should_fetch_images(message):
-    lowered = normalize(message)
-    explicit = (
-        "photo", "photos", "image", "images", "visuel", "visuels",
-        "montre moi", "montre-moi", "affiche", "fais voir",
-        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
-        "voir la ville", "montre la ville", "show me", "show",
-        "picture", "pictures",
-    )
-    return any(term in lowered for term in explicit)
 
 
 from services.conversation import build_conversation as _build_conversation
