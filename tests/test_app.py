@@ -50,6 +50,21 @@ def test_senegal_knowledge_covers_all_fourteen_regions():
     assert len(SENEGAL_KNOWLEDGE["regions"]) == 14
     assert len({region["name"] for region in SENEGAL_KNOWLEDGE["regions"]}) == 14
 
+def test_responses_include_request_id_header():
+    client = app.test_client()
+    first = client.get("/health")
+    second = client.get("/health")
+    assert first.status_code == 200
+    assert second.status_code == 200
+    first_id = first.headers.get("X-Request-ID")
+    second_id = second.headers.get("X-Request-ID")
+    assert first_id
+    assert second_id
+    assert len(first_id) == 16
+    assert len(second_id) == 16
+    assert first_id != second_id
+
+
 def test_health():
     client = app.test_client()
     response = client.get("/health")
