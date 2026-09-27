@@ -7,7 +7,7 @@ SECRET = "test-secret"
 
 
 def test_signed_token_round_trips():
-    token = sign_token(SECRET, "12345.payload")
+    token = sign_token(SECRET, f"{int(time.time())}.payload")
     assert valid_token(token, SECRET, 3600) is True
 
 
