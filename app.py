@@ -151,7 +151,36 @@ abuse_events = defaultdict(deque)
 abuse_blocks = {}
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
-
+# Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
+WEB_HINTS = (
+    "photo", "photos", "image", "images", "visuel", "visuels", "montre moi", "montre-moi",
+    "a quoi ressemble", "à quoi ressemble", "a quoi ça ressemble", "à quoi ça ressemble",
+    "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
+    "actuels", "actuelles", "récent", "récente", "récentes",
+    "horaire", "horaires", "ouvert", "ouverte",
+    "disponible", "disponibilité", "réservation",
+    "événement", "evenement", "météo", "meteo", "climat", "température", "temperature", "pluie", "pluies", "orage", "vent", "humidité", "humidite",
+    "actualité", "actualités", "news", "today", "now",
+    "current", "latest", "recent", "schedule", "hours",
+    "open", "available", "availability", "booking", "weather", "event",
+    "visa", "ferry", "cfa", "change", "taux",
+    "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
+    "manger", "restaurant", "resto", "où manger", "ou manger",
+    "eat", "dining", "food court",
+    "ouvert ce soir", "meilleur resto", "où se trouve", "ou se trouve",
+    "prix", "tarif", "tarifs", "coût", "cout", "combien coûte", "combien coute",
+    "price", "prices", "fare", "fares", "cost", "how much",
+    "itinéraire", "itineraire", "trajet", "transport", "bus", "brt", "ter",
+    "taxi", "péage", "peage", "car rapide", "dem dikk", "tata",
+    "billet", "billets", "ticket", "tickets", "vol", "flight", "airline",
+    "aéroport", "airport", "formalités", "formalites", "document", "documents",
+    "ambassade", "consulat", "immigration", "vaccin", "vaccination",
+    "banque", "bank", "guichet", "atm", "distributeur", "mobile money",
+    "wave", "free money", "expresso money", "yas", "free", "orange",
+    "concert", "festival", "match", "football", "salon", "foire",
+    "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
+    "urgent", "alerte", "grève", "greve", "perturbation", "incident",
+)
 
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
@@ -869,43 +898,60 @@ def build_planner_data(context):
     }
 
 
-def should_use_web(message, context=""):
-    lowered = normalize(message)
-    combined = normalize(f"{context} {message}")
-    current_markers = (
-        "verifie", "confirme", "a jour", "exactement", "en ce moment",
-        "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
-        "latest", "current", "right now", "as of", "verify", "check",
-        "actualite", "actualites", "news", "nouveau", "nouvelle",
-    )
-    if any(term in lowered for term in current_markers):
-        return True
-    if any(term in lowered for term in WEB_HINTS):
-        return True
-    live_entities = (
-        "president", "presidente", "ministre", "maire", "depute",
-        "gouvernement", "federation", "selectionneur", "club",
-        "election", "elections", "loi", "decret", "parlement", "politique",
-        "equipe nationale", "joueur", "chanteur", "artiste",
-        "entreprise", "restaurant", "hotel",
-    )
-    if any(term in lowered for term in live_entities):
-        return True
 
-    # Intentions qui vieillissent vite, même sans « actuel » ou « aujourd'hui ».
-    dynamic_intents = (
-        "prix", "tarif", "cout", "coût", "combien", "horaire", "horaires",
-        "ouvert", "ferme", "fermé", "disponible", "disponibilite", "disponibilité",
-        "reservation", "réservation", "billet", "ticket", "vol", "ferry",
-        "taxi", "bus", "transport", "aeroport", "aéroport", "aibd",
-        "visa", "passeport", "formalites", "formalités", "démarche", "demarche",
-        "sim", "esim", "forfait", "internet", "orange money", "wave",
-        "free money", "mobile money", "paiement", "transfert", "change",
-        "taux", "inflation", "population", "salaire", "impot", "impôt",
-        "douane", "frontiere", "frontière", "securite", "sécurité",
-        "alerte", "pluie", "meteo", "météo", "temperature", "température",
-        "greve", "grève", "travaux", "route", "circulation", "manifestation",
-        "concert", "evenement", "événement", "match", "resultat", "résultat",     identity,
+def should_fetch_images(message):
+    lowered = normalize(message)
+    explicit = (
+        "photo", "photos", "image", "images", "visuel", "visuels",
+        "montre moi", "montre-moi", "affiche", "fais voir",
+        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
+        "voir la ville", "montre la ville", "show me", "show",
+        "picture", "pictures",
+    )
+    return any(term in lowered for term in explicit)
+
+
+def build_conversation(history, message):
+    lines = []
+    if isinstance(history, list):
+        recent = history[-MAX_HISTORY_ITEMS:]
+        for index, item in enumerate(recent):
+            if not isinstance(item, dict):
+                continue
+            role = str(item.get("role", "")).lower()
+            content = sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)
+            if role not in {"user", "assistant"} or not content:
+                continue
+            if index == len(recent) - 1 and role == "user" and content == message:
+                continue
+            label = "Utilisateur" if role == "user" else "Teranga AI"
+            lines.append(f"{label}: {content}")
+    conversation = "\n".join(lines)
+    return ("<historique_non_fiable>\n" + conversation + "\n</historique_non_fiable>\n" +
+            "<demande_utilisateur>\n" + message + "\n</demande_utilisateur>")[-MAX_HISTORY_CHARS:]
+
+
+def client_ip():
+    # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
+    # Ne pas relire X-Forwarded-For directement : il peut être falsifié par un client.
+    return (request.remote_addr or "unknown")[:64]
+
+
+def client_identity():
+    raw = request.cookies.get(IDENTITY_COOKIE, "")
+    if raw and re.fullmatch(r"[A-Za-z0-9_-]{24,80}", raw):
+        return raw
+    return secrets.token_urlsafe(24)
+
+
+def abuse_key(ip):
+    identity = client_identity()
+    return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
+
+
+def record_abuse(identity, kind, weight=1):
+    return _record_abuse(
+        identity,
         kind,
         weight,
         redis_client=redis_client,
