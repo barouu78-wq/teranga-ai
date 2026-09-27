@@ -39,7 +39,6 @@ from services.images import (
     allowed_image_url,
     SafeImageRedirectHandler,
     safe_image_fetch as _safe_image_fetch,
-    safe_image_fetch as _safe_image_fetch,
     should_fetch_images,
     topic_wikipedia_titles,
     wiki_summary,
