@@ -4,6 +4,19 @@ import re
 import unicodedata
 
 PLACE_ALIASES = {
+    "dakar": ("Dakar", "Sénégal"),
+    "diourbel": ("Diourbel", "Sénégal"),
+    "fatick": ("Fatick", "Sénégal"),
+    "kaffrine": ("Kaffrine", "Sénégal"),
+    "kaolack": ("Kaolack", "Sénégal"),
+    "kedougou": ("Kédougou", "Sénégal"),
+    "kolda": ("Kolda", "Sénégal"),
+    "louga": ("Louga", "Sénégal"),
+    "matam": ("Matam", "Sénégal"),
+    "sedhiou": ("Sédhiou", "Sénégal"),
+    "tambacounda": ("Tambacounda", "Sénégal"),
+    "thies": ("Thiès", "Sénégal"),
+    "ziguinchor": ("Ziguinchor", "Casamance", "Sénégal"),
     "goree": ("Gorée", "Île de Gorée", "Goree Island"),
     "lac rose": ("Lac Rose", "Lac Retba", "Lake Retba", "Sénégal"),
     "saint-louis": ("Saint-Louis", "Saint Louis", "Sénégal"),
