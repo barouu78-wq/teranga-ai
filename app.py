@@ -1940,11 +1940,10 @@ def tts():
         "fr": "French",
         "en": "English",
         "wo": "Wolof",
-        "ff": "Pulaar, a Fulah language of northern Senegal",
     }[language]
     try:
         voice_instructions = {
-            "fr": "Voix adulte, claire, chaleureuse et très présente, avec une vraie projection vocale. Parle comme dans une conversation naturelle, jamais comme une lecture automatique. Utilise une énergie moyenne à soutenue, une voix bien articulée et un timbre plutôt clair que grave, sans chuchoter ni parler trop bas. Débit naturel autour de 1.0, micro-pauses entre les idées, intonation vivante et légèrement expressive. Fais ressortir les mots importants sans dramatiser. Prononce soigneusement les noms sénégalais, villes, plats, Wolof et Pulaar. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
+            "fr": "Voix adulte, claire, chaleureuse et très présente, avec une vraie projection vocale. Parle comme dans une conversation naturelle, jamais comme une lecture automatique. Utilise une énergie moyenne à soutenue, une voix bien articulée et un timbre plutôt clair que grave, sans chuchoter ni parler trop bas. Débit naturel autour de 1.0, micro-pauses entre les idées, intonation vivante et légèrement expressive. Fais ressortir les mots importants sans dramatiser. Prononce soigneusement les noms sénégalais, villes, plats et Wolof. Ne lis jamais le markdown, les URL, les emojis, les listes ou les signes techniques.",
             "en": "Warm, spontaneous conversational English. Sound like a real person speaking directly to one person, not a narrator. Use natural contractions, clear but relaxed articulation, short conversational phrasing, natural micro-pauses and lively calm intonation. Pronounce Senegalese names, places, dishes and Wolof words carefully. Never read markdown, emojis, bullets, URLs or technical symbols aloud.",
             "wo": "Wax ak baat bu nit, bu neex te naturel, mel ni waxtaan ci kanam ak kanam. Jëfandikoo wax yu Wolof yu naturel, yu ñu mën a wax ci dund bu bés, te bul tekki mot à mot ci français. Débit bu yomb, noppi yu gàtt ci diggante xalaat yi, intonation bu naturel ak doole bu dal. Teg solo ci wax yi am solo te bul dramatise. Jàng tur yu Senegaal, dëkk yi ak ñam yi bu baax. Bul jàng markdown, URL walla simbol yu teknikal.",
                     }[language]
@@ -2197,7 +2196,7 @@ def manifest():
             "id": "/",
             "name": "Teranga AI",
             "short_name": "Teranga",
-            "description": "Assistant du Sénégal en français, anglais, wolof et pulaar.",
+            "description": "Assistant du Sénégal en français, anglais et wolof.",
             "start_url": "/",
             "scope": "/",
             "display": "standalone",
