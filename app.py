@@ -1,5 +1,4 @@
 import hashlib
-import hmac
 import io
 import json
 import os
@@ -30,6 +29,7 @@ from services.rate_limit import allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
 from services.text import clean_answer
+from services.security import issue_csrf, sign_token, valid_token
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -1066,37 +1066,6 @@ def public_error(exc):
     if "connection" in text or "network" in text or "502" in text or "503" in text:
         return "Le service IA est momentanément inaccessible. Réessaie dans quelques secondes."
     return "Le service IA a rencontré une erreur inattendue. Vérifie les logs Render puis réessaie."
-def sign_token(value):
-    digest = hmac.new(
-        app.config["SECRET_KEY"].encode("utf-8"),
-        value.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    return f"{value}.{digest}"
-
-
-def valid_token(token):
-    if not token or "." not in token:
-        return False
-    value, _, provided = token.rpartition(".")
-    expected = hmac.new(
-        app.config["SECRET_KEY"].encode("utf-8"),
-        value.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    if not hmac.compare_digest(provided, expected):
-        return False
-    try:
-        issued_at = int(value.split(".", 1)[0])
-    except (ValueError, IndexError):
-        return False
-    return 0 <= time.time() - issued_at <= CSRF_TTL
-
-
-def issue_csrf():
-    return sign_token(f"{int(time.time())}.{secrets.token_urlsafe(24)}")
-
-
 def origin_allowed():
     if not ALLOWED_ORIGINS:
         return True
@@ -1129,7 +1098,7 @@ def require_json_post(fn):
             same = hmac.compare_digest(cookie_token, header_token)
         except Exception:
             same = False
-        if not same or not valid_token(cookie_token):
+        if not same or not valid_token(cookie_token, app.config["SECRET_KEY"], CSRF_TTL):
             return jsonify({"error": "csrf"}), 403
         return fn(*args, **kwargs)
     return wrapper
@@ -2130,7 +2099,7 @@ def manifest():
 
 @app.get("/csrf")
 def csrf_token():
-    token = issue_csrf()
+    token = issue_csrf(app.config["SECRET_KEY"], CSRF_TTL)
     resp = jsonify({"token": token})
     resp.set_cookie(
         CSRF_COOKIE,
