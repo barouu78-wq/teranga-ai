@@ -4,8 +4,9 @@ from services.photo_search import normalize_place_query, relevant_image_evidence
 
 def test_all_fourteen_regions_are_recognized():
     assert len(REGIONS) == 14
+    expected = {"Dakar": "dakar", "Thiès": "thies", "Diourbel": "diourbel", "Fatick": "fatick", "Kaolack": "kaolack", "Kaffrine": "kaffrine", "Louga": "louga", "Saint-Louis": "saint-louis", "Matam": "matam", "Tambacounda": "tambacounda", "Kédougou": "kedougou", "Kolda": "kolda", "Sédhiou": "sedhiou", "Ziguinchor": "ziguinchor"}
     for region in REGIONS:
-        assert detect_location(region) == region.lower().replace("é", "e") if region not in {"Thiès", "Kédougou", "Sédhiou"} else True
+        assert detect_location(region) == expected[region]
         assert region_highlights(region)
 
 def test_weather_is_a_fresh_web_domain():
