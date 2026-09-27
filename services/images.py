@@ -206,3 +206,15 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
             logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
     _IMAGE_CACHE[title] = found
     return found
+
+
+def should_fetch_images(message: object) -> bool:
+    lowered = _normalize(message)
+    explicit = (
+        "photo", "photos", "image", "images", "visuel", "visuels",
+        "montre moi", "montre-moi", "affiche", "fais voir",
+        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
+        "voir la ville", "montre la ville", "show me", "show",
+        "picture", "pictures",
+    )
+    return any(term in lowered for term in explicit)
