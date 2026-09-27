@@ -32,6 +32,7 @@ from services.validation import normalize, sanitize_text
 from services.text import clean_answer
 from services.security import issue_csrf, sign_token, valid_token
 from services.errors import public_error
+from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
     fetch_city_image as _fetch_city_image,
@@ -989,52 +990,30 @@ def abuse_key(ip):
     return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
 
 
-def _redis_key(prefix, value):
-    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:40]
-    return f"teranga:abuse:{prefix}:{digest}"
-
-
 def record_abuse(identity, kind, weight=1):
-    now = time.time()
-    key = str(identity)[:64]
-    if redis_client is not None:
-        try:
-            redis_key = _redis_key("score", key)
-            score = redis_client.incrbyfloat(redis_key, min(int(weight), 5))
-            redis_client.expire(redis_key, ABUSE_SCORE_WINDOW)
-            if score >= ABUSE_SCORE_THRESHOLD:
-                redis_client.setex(_redis_key("block", key), ABUSE_BLOCK_SECONDS, "1")
-                return True
-            return False
-        except Exception:
-            app.logger.exception("Redis abuse-score, fallback mémoire")
-    with RATE_LOCK:
-        events = abuse_events[key]
-        while events and now - events[0][0] > ABUSE_SCORE_WINDOW:
-            events.popleft()
-        events.append((now, kind, min(int(weight), 5)))
-        score = sum(item[2] for item in events)
-        if score >= ABUSE_SCORE_THRESHOLD:
-            abuse_blocks[key] = now + ABUSE_BLOCK_SECONDS
-            return True
-    return False
+    return _record_abuse(
+        identity,
+        kind,
+        weight,
+        redis_client=redis_client,
+        logger=app.logger,
+        events_by_key=abuse_events,
+        blocks_by_key=abuse_blocks,
+        lock=RATE_LOCK,
+        score_window=ABUSE_SCORE_WINDOW,
+        block_seconds=ABUSE_BLOCK_SECONDS,
+        score_threshold=ABUSE_SCORE_THRESHOLD,
+    )
 
 
 def abuse_blocked(identity):
-    now = time.time()
-    key = str(identity)[:64]
-    if redis_client is not None:
-        try:
-            return bool(redis_client.exists(_redis_key("block", key)))
-        except Exception:
-            app.logger.exception("Redis abuse-block, fallback mémoire")
-    with RATE_LOCK:
-        until = abuse_blocks.get(key, 0)
-        if until > now:
-            return True
-        if until:
-            abuse_blocks.pop(key, None)
-    return False
+    return _abuse_blocked(
+        identity,
+        redis_client=redis_client,
+        logger=app.logger,
+        blocks_by_key=abuse_blocks,
+        lock=RATE_LOCK,
+    )
 
 
 def allowed_request(ip, log, limit, window, bucket="chat"):
