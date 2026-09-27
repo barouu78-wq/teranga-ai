@@ -840,7 +840,7 @@ def fetch_topic_images(message):
                 continue
             seen_urls.add(src)
             photos.append(photo)
-            if len(photos) >= 4:
+            if len(photos) >= 6:
                 return photos
 
     return photos or None
