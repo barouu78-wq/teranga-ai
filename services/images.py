@@ -208,6 +208,54 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
     return found
 
 
+
+PHOTO_TOPICS = (
+    ("monument de la renaissance", "Monument de la Renaissance africaine"),
+    ("renaissance africaine", "Monument de la Renaissance africaine"),
+    ("maison des esclaves", "Maison des Esclaves"),
+    ("cap skirring", "Cap Skirring"),
+    ("île de gorée", "Île de Gorée"), ("ile de goree", "Île de Gorée"),
+    ("saint-louis", "Saint-Louis (Sénégal)"), ("saint louis", "Saint-Louis (Sénégal)"),
+    ("niokolo-koba", "Parc national du Niokolo-Koba"), ("niokolo koba", "Parc national du Niokolo-Koba"),
+    ("djoudj", "Parc national des oiseaux du Djoudj"), ("joal-fadiouth", "Joal-Fadiouth"),
+    ("fadiouth", "Joal-Fadiouth"), ("joal", "Joal-Fadiouth"),
+    ("thiéboudienne", "Thiéboudienne"), ("thieboudienne", "Thiéboudienne"),
+    ("ceebu jen", "Thiéboudienne"), ("ceebu jën", "Thiéboudienne"),
+    ("café touba", "Café Touba"), ("cafe touba", "Café Touba"),
+    ("lac rose", "Lac Retba"), ("lac retba", "Lac Retba"),
+    ("richard-toll", "Richard-Toll"), ("richard toll", "Richard-Toll"),
+    ("grande mosquée de touba", "Grande Mosquée de Touba"), ("mosquée de touba", "Grande Mosquée de Touba"),
+    ("casamance", "Casamance"), ("somone", "La Somone"), ("yassa", "Yassa"), ("bissap", "Bissap"),
+    ("mafé", "Mafé"), ("maafe", "Mafé"), ("diamniadio", "Diamniadio"),
+    ("guédiawaye", "Guédiawaye"), ("guediawaye", "Guédiawaye"), ("tambacounda", "Tambacounda"),
+    ("ziguinchor", "Ziguinchor"), ("kedougou", "Kédougou"), ("kédougou", "Kédougou"),
+    ("kaffrine", "Kaffrine"), ("sédhiou", "Sédhiou"), ("sedhiou", "Sédhiou"),
+    ("rufisque", "Rufisque"), ("kaolack", "Kaolack"), ("diourbel", "Diourbel"),
+    ("gorée", "Île de Gorée"), ("goree", "Île de Gorée"), ("mbour", "M'Bour"), ("m'bour", "M'Bour"),
+    ("touba", "Touba (Sénégal)"), ("thiès", "Thiès"), ("thies", "Thiès"), ("kolda", "Kolda"),
+    ("matam", "Matam"), ("louga", "Louga"), ("fatick", "Fatick"), ("podor", "Podor"),
+    ("saly", "Saly Portudal"), ("pikine", "Pikine"), ("dakar", "Dakar"), ("ndar", "Saint-Louis (Sénégal)"),
+)
+
+
+def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
+    lowered = str(message or "").lower()
+    found, seen = [], set()
+    for key, title in PHOTO_TOPICS:
+        if key in lowered and title not in seen:
+            seen.add(title)
+            found.append(title)
+            if len(found) >= limit:
+                break
+    return found
+
+
+def wiki_summary(lang: str, title: str) -> dict:
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
+    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+    with urlopen(req, timeout=2) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
 def should_fetch_images(message: object) -> bool:
     lowered = _normalize(message)
     explicit = (
