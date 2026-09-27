@@ -523,6 +523,7 @@ def fetch_topic_images(message):
         normalize=normalize,
         should_fetch_images=should_fetch_images,
         topic_wikipedia_titles=topic_wikipedia_titles,
+        knowledge_image_titles=knowledge_image_titles,
         fetch_commons_images=fetch_commons_images,
         fetch_city_image=fetch_city_image,
         image_proxy_url=image_proxy_url,
