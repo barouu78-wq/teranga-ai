@@ -154,8 +154,8 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     budget = amounts[-1].strip() if amounts else ""
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""
-    adults_match = re.search(r"\\b(\\d+)\\s*(?:adultes?|personnes?)(?:\\s*\\+\\s*(\\d+)\\s*enfants?)?\\b", text_value)
-    children_match = re.search(r"\\b(\\d+)\\s*enfants?\\b", text_value)
+    adults_match = re.search(r"\b(\d+)\s*(?:adultes?|personnes?)(?:\s*\+\s*(\d+)\s*enfants?)?\b", text_value)
+    children_match = re.search(r"\b(\d+)\s*enfants?\b", text_value)
     adults = int(adults_match.group(1)) if adults_match else None
     children = int(adults_match.group(2)) if adults_match and adults_match.group(2) else (
         int(children_match.group(1)) if children_match else None
