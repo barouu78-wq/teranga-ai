@@ -594,6 +594,7 @@ def fetch_topic_images(message):
 from services.conversation import build_conversation as _build_conversation
 from services.responses import extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
+from services.chat_payload import normalize_chat_input
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -741,26 +742,23 @@ def health():
 
 def parse_chat_payload():
     data = request.get_json(silent=True)
-    if not isinstance(data, dict):
+    normalized, error = normalize_chat_input(
+        data,
+        sanitize=sanitize_text,
+        max_message_length=MAX_MESSAGE_LENGTH,
+        max_history_items=MAX_HISTORY_ITEMS,
+        max_history_item_length=MAX_HISTORY_ITEM_LENGTH,
+        safe_languages=SAFE_LANG,
+    )
+    if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
-    message = sanitize_text(data.get("message", ""), MAX_MESSAGE_LENGTH)
-    history = data.get("history", [])
-    language = str(data.get("language", "fr")).lower()[:8]
-    if language not in SAFE_LANG:
-        language = "fr"
-    if not isinstance(history, list):
-        history = []
-    history = history[-MAX_HISTORY_ITEMS:]
-    history = [
-        {"role": str(item.get("role", "")).lower(), "content": sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)}
-        for item in history
-        if isinstance(item, dict) and str(item.get("role", "")).lower() in {"user", "assistant"}
-    ]
-    audience = str(data.get("audience", "tourist")).lower()[:16]
-    if audience not in {"tourist", "resident", "diaspora", "merchant"}:
-        audience = "tourist"
-    if not message:
+    if error == "empty":
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
+
+    message = normalized["message"]
+    history = normalized["history"]
+    language = normalized["language"]
+    audience = normalized["audience"]
     language_instruction = {
         "fr": "Réponds en français naturel, avec un vocabulaire sénégalais naturel quand le contexte s'y prête.",
         "en": "Reply in natural English. Keep Senegalese names, places, dishes and cultural terms in their established form.",
