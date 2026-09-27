@@ -1060,7 +1060,7 @@ def realtime_call():
         same = hmac.compare_digest(cookie_token, header_token)
     except Exception:
         same = False
-    if not same or not valid_token(cookie_token):
+    if not same or not valid_token(cookie_token, app.config["SECRET_KEY"], CSRF_TTL):
         return jsonify({"error": "csrf"}), 403
 
     ip = client_ip()
@@ -1239,8 +1239,6 @@ def stt():
         return jsonify({"error": public_error(exc)}), 500
 
 
-@app.post("/tts")
-@require_json_post
 def speech_ready_text(text: str) -> str:
     """Prepare assistant text for natural speech without changing its meaning."""
     text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
@@ -1251,7 +1249,8 @@ def speech_ready_text(text: str) -> str:
     text = re.sub(r'[*_~`]+', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text[:MAX_TTS_LENGTH]
-
+@app.post("/tts")
+@require_json_post
 def tts():
     ip = client_ip()
     identity = abuse_key(ip)
