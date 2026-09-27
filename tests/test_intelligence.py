@@ -102,3 +102,18 @@ def test_build_conversation_sanitizes_and_marks_history_untrusted():
     assert "Utilisateur: Bonjour" in result
     assert "Teranga AI: Salut" in result
     assert "<demande_utilisateur>\nEt Dakar ?" in result
+
+
+
+def test_build_intent_context_uses_recent_turns_for_domain_and_web_policy():
+    from services.intelligence import build_intent_context
+
+    result = build_intent_context(
+        "Et demain ?",
+        [{"role": "user", "content": "Quelle météo à Dakar ?"}],
+    )
+
+    assert result["intent"] == "weather"
+    assert result["location"] == "dakar"
+    assert result["context_source"] == "conversation"
+    assert result["needs_web_search"] is True
