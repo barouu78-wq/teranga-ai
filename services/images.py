@@ -4,6 +4,8 @@ import json
 import logging
 import re
 import unicodedata
+
+from .photo_search import normalize_place_query, relevant_image_evidence
 from urllib.parse import quote, urlencode
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -105,7 +107,7 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
 
 
 def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None, urlopen_fn=None):
-    query = str(title or "").strip()
+    query = normalize_place_query(title)
     if not query:
         return []
     params = {
@@ -146,7 +148,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
 
         description = meta_text("ImageDescription")
         page_title = page.get("title", query)
-        if not _photo_matches_query(query, page_title, description):
+        if not _photo_matches_query(query, page_title, description) or not relevant_image_evidence(query, page_title, description):
             continue
 
         src = validate(info.get("url") or info.get("thumburl"))

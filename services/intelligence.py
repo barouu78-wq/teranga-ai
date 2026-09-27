@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
+from .senegal_knowledge import classify_domain, needs_fresh_web, source_domains
 
 
 SUPPORTED_LANGUAGES = ("fr", "en", "wo", "ff")
@@ -93,11 +94,9 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
     current_intent = detect_intent(message)
     current_location = detect_location(message)
     recent_users = _recent_user_messages(history)
-
     resolved_intent = current_intent
     resolved_location = current_location
     context_source = "current_message"
-
     if recent_users:
         if resolved_intent == "general_information":
             for previous in recent_users:
@@ -113,19 +112,18 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
                     resolved_location = previous_location
                     context_source = "conversation"
                     break
-
-    normalized = _normalize(message)
-    needs_web = resolved_intent in _DYNAMIC_INTENTS
-    needs_images = resolved_intent == "photos"
+    domain = classify_domain(message)
+    fresh = needs_fresh_web(domain, message) or resolved_intent in _DYNAMIC_INTENTS
     return {
         "intent": resolved_intent,
+        "domain": domain,
         "location": resolved_location,
         "language": detect_language(message),
-        "needs_web_search": needs_web,
-        "needs_images": needs_images,
+        "needs_web_search": fresh,
+        "needs_images": resolved_intent == "photos",
+        "preferred_sources": source_domains(domain),
         "has_context": bool(recent_users),
         "context_source": context_source,
         "query": message,
-        "normalized_query": normalized,
+        "normalized_query": _normalize(message),
     }
-
