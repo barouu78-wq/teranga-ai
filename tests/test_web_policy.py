@@ -27,6 +27,6 @@ def test_planner_and_sensitive_domains_keep_medium_context():
     assert search_context_size("administration") == "medium"
 
 
-def test_simple_requests_use_no_reasoning_by_default():
-    assert reasoning_effort(False, False) == "none"
+def test_fast_chat_uses_low_reasoning_by_default():
+    assert reasoning_effort(False, False) == "low"
     assert reasoning_effort(True, False) == "low"
