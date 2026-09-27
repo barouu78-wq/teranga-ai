@@ -2486,9 +2486,7 @@ function addCityImage(col,image){
       img.dataset.directFallback='1';
       img.src=item.url;
     };
-    const cap=document.createElement('small');
-    cap.textContent=item.alt+(item.credit?' · '+item.credit:'');
-    box.append(img,cap);col.appendChild(box);
+    box.append(img);col.appendChild(box);
   });
   const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
   if(googleQuery)showGoogleImages(col,googleQuery);
