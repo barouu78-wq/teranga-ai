@@ -6,3 +6,9 @@ def test_precise_goree_query():
 def test_precise_photo_relevance():
     assert relevant_image_evidence("Gorée", "Île de Gorée", "")
     assert not relevant_image_evidence("Gorée", "Yoff Beach, Dakar", "")
+
+
+def test_regional_photo_queries_stay_precise():
+    assert "Thiès" in normalize_place_query("photos de Thiès")
+    assert relevant_image_evidence("Thiès", "Thiès, Sénégal", "")
+    assert not relevant_image_evidence("Thiès", "Saint-Louis, Sénégal", "")
