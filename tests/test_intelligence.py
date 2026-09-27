@@ -40,3 +40,25 @@ def test_context_history_is_flagged_without_changing_query():
     )
     assert result["has_context"] is True
     assert result["query"] == "Et demain ?"
+
+
+def test_follow_up_inherits_previous_location():
+    result = build_intent_context(
+        "Et demain ?",
+        history=[{"role": "user", "content": "Quelle météo à Dakar aujourd'hui ?"}],
+    )
+    assert result["intent"] == "weather"
+    assert result["location"] == "dakar"
+    assert result["needs_web_search"] is True
+    assert result["context_source"] == "conversation"
+
+
+def test_follow_up_photo_inherits_previous_location():
+    result = build_intent_context(
+        "Montre-moi ça.",
+        history=[{"role": "user", "content": "Parle-moi de Gorée."}],
+    )
+    assert result["intent"] == "photos"
+    assert result["location"] == "goree"
+    assert result["needs_images"] is True
+    assert result["context_source"] == "conversation"
