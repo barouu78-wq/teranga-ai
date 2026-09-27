@@ -21,6 +21,7 @@ SOURCE_PRIORITY = (
 )
 
 SENEGAL_DOMAINS = {
+    "weather": ("météo", "meteo", "weather", "température", "temperature", "pluie", "vent", "humidité", "humidite"),
     "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
     "travel": ("voyage", "tourisme", "itinéraire", "visiter", "plage", "hôtel"),
@@ -54,10 +55,16 @@ def needs_fresh_web(domain: str, text: str) -> bool:
     )
 
 def source_domains(domain: str) -> tuple[str, ...]:
+    if domain == "weather":
+        return ("anacim.sn", "gov.sn", "who.int")
+    if domain == "transport":
+        return ("transports.gouv.sn", "gov.sn", "ansd.sn")
     if domain in {"society", "economy", "agriculture", "territory"}:
         return SOURCE_PRIORITY
     if domain in {"travel", "culture", "environment"}:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
     if domain == "administration":
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
+    if domain == "diaspora":
+        return ("diplomatie.gouv.sn", "gov.sn", "ansd.sn")
     return SOURCE_PRIORITY
