@@ -239,6 +239,33 @@ def test_photo_request_prioritizes_exact_place_commons_search(monkeypatch):
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 
+def test_photo_request_handles_goree_typo_without_falling_back_to_dakar(monkeypatch):
+    import app as app_module
+
+    calls = []
+
+    def fake_commons(title, limit=4):
+        calls.append(title)
+        return [{
+            "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Goree.jpg",
+            "alt": "Île de Gorée",
+            "credit": "Wikimédia Commons",
+        }] if "Gorée" in title else []
+
+    monkeypatch.setattr(app_module, "fetch_commons_images", fake_commons)
+    monkeypatch.setattr(
+        app_module,
+        "knowledge_image_titles",
+        lambda message, limit=4: (_ for _ in ()).throw(AssertionError("fallback Dakar should not be used")),
+    )
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+
+    images = app_module.fetch_topic_images("Montre-moi les photo de gore")
+    assert images
+    assert all("Gorée" in title for title in calls)
+    assert not any("Dakar" in title for title in calls)
+
+
 def test_commons_images_include_same_origin_proxy(monkeypatch):
     import app as app_module
     import io
@@ -373,3 +400,15 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert sitemap.count("<loc>") >= 1 + len(TOPICS) * len(LANGS)
     assert "/en/senegal-travel-guide" in sitemap
     assert "/fr/senegal-trip-planner" in sitemap
+
+
+
+def test_visual_requests_trigger_web_search_first():
+    assert should_use_web("Montre-moi des photos de Gorée") is True
+    assert should_use_web("À quoi ressemble ce lieu ?") is True
+
+
+def test_visual_system_rule_requires_web_before_requesting_user_photo():
+    import app as app_module
+    assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
+    assert "Ne demande une photo à l'utilisateur qu'après cette recherche" in app_module.SYSTEM_PROMPT
