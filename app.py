@@ -34,6 +34,7 @@ from services.security import issue_csrf, sign_token, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -607,15 +608,11 @@ def client_ip():
 
 
 def client_identity():
-    raw = request.cookies.get(IDENTITY_COOKIE, "")
-    if raw and re.fullmatch(r"[A-Za-z0-9_-]{24,80}", raw):
-        return raw
-    return secrets.token_urlsafe(24)
+    return _client_identity(request.cookies.get(IDENTITY_COOKIE, ""))
 
 
 def abuse_key(ip):
-    identity = client_identity()
-    return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
+    return _abuse_key(ip, client_identity())
 
 
 def record_abuse(identity, kind, weight=1):
