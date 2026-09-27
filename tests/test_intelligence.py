@@ -87,3 +87,18 @@ def test_senegal_context_extracts_planning_constraints():
     planner = build_planner_data(context)
     assert planner["duration_days"] == 4
     assert planner["budget_fcfa"] == 100000
+
+
+def test_build_conversation_sanitizes_and_marks_history_untrusted():
+    from services.conversation import build_conversation
+    result = build_conversation(
+        [{"role": "user", "content": "Bonjour\u200b"}, {"role": "assistant", "content": "Salut"}],
+        "Et Dakar ?",
+        max_history_items=12,
+        max_history_item_length=1400,
+        max_history_chars=10000,
+    )
+    assert "<historique_non_fiable>" in result
+    assert "Utilisateur: Bonjour" in result
+    assert "Teranga AI: Salut" in result
+    assert "<demande_utilisateur>\nEt Dakar ?" in result
