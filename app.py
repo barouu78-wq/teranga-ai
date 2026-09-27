@@ -458,10 +458,6 @@ ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
 
 
 @app.get("/image-proxy")
-def image_proxy_url(src):
-    return _image_proxy_url(src)
-
-
 def image_proxy():
     ip = client_ip()
     identity = abuse_key(ip)
