@@ -23,6 +23,7 @@ from services.international_seo import register_localized_routes, localized_site
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
+from services.intelligence import build_intent_context
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -1336,6 +1337,7 @@ def parse_chat_payload():
         "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
     }[language]
     context = infer_senegal_context(history, message)
+    intent_context = build_intent_context(message, history)
     enriched_context = context["query"]
     if context["has_place"]:
         place_line = (
@@ -1345,6 +1347,17 @@ def parse_chat_payload():
     else:
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
+    engine_intent_line = (
+        "Moteur d'intention V1 : intention="
+        + str(intent_context.get("intent") or "general_information")
+        + ", lieu="
+        + str(intent_context.get("location") or "non détecté")
+        + ", recherche_web="
+        + ("oui" if intent_context.get("needs_web_search") else "non")
+        + ", images="
+        + ("oui" if intent_context.get("needs_images") else "non")
+        + "."
+    )
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     planner_enabled = should_use_planner(context)
     planner_data = build_planner_data(context) if planner_enabled else {}
@@ -1362,7 +1375,7 @@ def parse_chat_payload():
     else:
         planner_instruction = ""
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " + planner_instruction +
+        place_line + " " + intent_line + " " + engine_intent_line + " " + constraint_line + " " + planner_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
@@ -1396,12 +1409,13 @@ def parse_chat_payload():
     return {
         "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
         "input_text": build_conversation(history, message),
-        "use_web": should_use_web(message, enriched_context),
+        "use_web": should_use_web(message, enriched_context) or bool(intent_context.get("needs_web_search")),
         "planner": planner_enabled,
         "planner_data": planner_data,
         "message": message,
         "audience": audience,
         "context": context,
+        "intent_context": intent_context,
         "contextual_query": enriched_context,
     }, None
 
