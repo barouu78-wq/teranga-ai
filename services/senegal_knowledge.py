@@ -20,6 +20,30 @@ SOURCE_PRIORITY = (
     "worldbank.org",
 )
 
+REGIONS = (
+    "Dakar", "Thiès", "Diourbel", "Fatick", "Kaolack", "Kaffrine", "Louga",
+    "Saint-Louis", "Matam", "Tambacounda", "Kédougou", "Kolda", "Sédhiou", "Ziguinchor",
+)
+
+REGION_HIGHLIGHTS = {
+    "Dakar": ("Dakar", "Gorée", "Rufisque", "Ngor", "Yoff", "Ouakam"),
+    "Thiès": ("Thiès", "Tivaouane", "Mbour", "Saly", "Joal-Fadiouth", "Popenguine"),
+    "Diourbel": ("Diourbel", "Touba", "Mbacké"),
+    "Fatick": ("Fatick", "Foundiougne", "Sokone", "Delta du Saloum"),
+    "Kaolack": ("Kaolack", "Nioro du Rip", "Médina Baye"),
+    "Kaffrine": ("Kaffrine", "Koungheul", "Birkelane"),
+    "Louga": ("Louga", "Linguère", "Dahra", "Ferlo"),
+    "Saint-Louis": ("Saint-Louis", "Podor", "Richard-Toll", "Djoudj"),
+    "Matam": ("Matam", "Ourossogui", "Kanel", "Thilogne"),
+    "Tambacounda": ("Tambacounda", "Bakel", "Niokolo-Koba"),
+    "Kédougou": ("Kédougou", "Dindéfelo", "Bandafassi", "Pays Bassari"),
+    "Kolda": ("Kolda", "Vélingara", "Haute-Casamance"),
+    "Sédhiou": ("Sédhiou", "Bounkiling", "Goudomp", "Moyenne-Casamance"),
+    "Ziguinchor": ("Ziguinchor", "Oussouye", "Cap Skirring", "Carabane"),
+}
+
+def region_highlights(region: str) -> tuple[str, ...]:
+    return REGION_HIGHLIGHTS.get(str(region or ""), ())
 SENEGAL_DOMAINS = {
     "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
@@ -41,6 +65,8 @@ DYNAMIC_DOMAINS = {
 
 def classify_domain(text: str) -> str:
     value = str(text or "").lower()
+    if any(term in value for term in ("météo", "meteo", "weather", "pluie", "température", "temperature")):
+        return "weather"
     for domain, terms in SENEGAL_DOMAINS.items():
         if any(term.lower() in value for term in terms):
             return domain
@@ -56,8 +82,14 @@ def needs_fresh_web(domain: str, text: str) -> bool:
 def source_domains(domain: str) -> tuple[str, ...]:
     if domain in {"society", "economy", "agriculture", "territory"}:
         return SOURCE_PRIORITY
+    if domain == "weather":
+        return ("meteofrance.com", "ansd.sn", "gov.sn")
     if domain in {"travel", "culture", "environment"}:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
+    if domain == "transport":
+        return ("transports.gouv.sn", "gov.sn", "ansd.sn")
+    if domain == "food":
+        return ("tourisme.gouv.sn", "ansd.sn", "gov.sn")
     if domain == "administration":
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
     return SOURCE_PRIORITY
