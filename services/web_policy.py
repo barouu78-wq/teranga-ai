@@ -27,4 +27,4 @@ def reasoning_effort(use_web: bool, planner: bool) -> str:
         return "low"
     if use_web:
         return "low"
-    return "none"
+    return "low"
