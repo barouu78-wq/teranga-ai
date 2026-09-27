@@ -13,6 +13,16 @@ PLACE_ALIASES = {
     "saloum": ("Sine-Saloum", "Saloum", "Sénégal"),
     "niokolo-koba": ("Niokolo-Koba", "Sénégal"),
     "djoudj": ("Djoudj", "Parc national des oiseaux du Djoudj", "Sénégal"),
+    "delta du saloum": ("Delta du Saloum", "Sine-Saloum", "Sénégal"),
+    "pays bassari": ("Pays Bassari", "Bassari", "Kédougou"),
+    "dindefelo": ("Dindéfelo", "Dindéfello", "Kédougou"),
+    "madeleine": ("Îles de la Madeleine", "Madeleine", "Dakar"),
+    "rufisque": ("Rufisque", "Vieux Rufisque", "Sénégal"),
+    "carabane": ("Carabane", "Casamance", "Sénégal"),
+    "popenguine": ("Popenguine", "Sénégal"),
+    "saly": ("Saly", "Saly Portudal", "Sénégal"),
+    "tivaouane": ("Tivaouane", "Sénégal"),
+    "touba": ("Touba", "Grande Mosquée de Touba", "Sénégal"),
 }
 
 def _normalize(value: str) -> str:
