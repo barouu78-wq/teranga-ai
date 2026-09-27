@@ -2489,7 +2489,7 @@ function addCityImage(col,image){
     box.append(img);col.appendChild(box);
   });
   const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
-  if(googleQuery)showGoogleImages(col,googleQuery);
+  // Keep the photo grid clean: no Google image result block or captions/details below photos.
 }
 function addMap(col,map){
   if(!map||!map.url)return;
