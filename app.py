@@ -132,6 +132,7 @@ SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
 WEB_HINTS = (
+    "photo", "photos", "image", "images", "visuel", "visuels", "montre moi", "montre-moi",
     "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
     "actuels", "actuelles", "récent", "récente", "récentes",
     "horaire", "horaires", "ouvert", "ouverte",
@@ -265,7 +266,7 @@ Si l'utilisateur demande une comparaison, présente les différences factuelles 
 Si l'utilisateur pose une question ambiguë mais que le contexte permet de comprendre raisonnablement, réponds avec l'interprétation la plus probable et signale brièvement l'hypothèse.
 Pour les messages de suivi courts comme « et là-bas ? », « et demain ? », « combien ? », « quel prix ? », « et pour lui ? », « montre-moi ça » ou « pourquoi ? », utilise d'abord le dernier sujet pertinent de la conversation. Ne demande pas de précision si un référent raisonnable est déjà présent dans les échanges. Si plusieurs référents restent réellement possibles, pose une seule question courte pour lever l'ambiguïté.
 Si tu utilises le web, ne colle pas de listes d'URLs dans le texte : les sources s'affichent à part.
-Si l'utilisateur demande des photos, réponds comme si les visuels vont être joints par l'application : ne dis jamais que tu ne peux pas afficher de photos et ne demande pas à l'utilisateur de chercher lui-même les images. Présente simplement le lieu et les visuels disponibles.
+Si l'utilisateur demande des photos, réponds comme si les visuels vont être joints par l'application : ne dis jamais que tu ne peux pas afficher de photos et ne demande pas à l'utilisateur de chercher lui-même les images. Présente simplement le lieu et les visuels disponibles. Si l'utilisateur demande d'identifier ou de comprendre un lieu, objet, personne ou situation à partir d'une information visuelle, tente d'abord une recherche web avec les éléments disponibles. Ne demande une photo à l'utilisateur qu'après cette recherche si elle ne permet pas de répondre de façon fiable.
 
 Géographie utile :
 Le Sénégal a 14 régions : Dakar, Thiès, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kédougou, Kolda, Sédhiou, Ziguinchor, Saint-Louis, Louga, Matam.
