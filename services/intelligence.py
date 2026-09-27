@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import classify_domain, needs_fresh_web, source_domains
+from .senegal_knowledge import REGION_ALIASES, classify_domain, needs_fresh_web, source_domains
 
 
 SUPPORTED_LANGUAGES = ("fr", "en", "wo", "ff")
@@ -41,6 +41,18 @@ _LOCATION_ALIASES = {
     "lac rose": ("lac rose", "lake retba", "retba"),
     "casamance": ("casamance",),
     "senegal": ("senegal", "sénégal"),
+    "diourbel": ("diourbel"),
+    "fatick": ("fatick"),
+    "kaffrine": ("kaffrine"),
+    "kaolack": ("kaolack"),
+    "kedougou": ("kedougou", "kédougou"),
+    "kolda": ("kolda"),
+    "louga": ("louga"),
+    "matam": ("matam"),
+    "sedhiou": ("sedhiou", "sédhiou"),
+    "tambacounda": ("tambacounda"),
+    "thies": ("thies", "thiès"),
+    "ziguinchor": ("ziguinchor"),
 }
 
 
