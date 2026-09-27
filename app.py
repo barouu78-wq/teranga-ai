@@ -36,6 +36,7 @@ from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _rec
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
 from services.model_params import build_model_kwargs
+from services.openai_response import create_response as _create_openai_response
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -852,28 +853,23 @@ def parse_chat_payload():
 
 
 def create_response(payload, stream):
-    kwargs = model_kwargs(payload, stream)
-    try:
-        return client.responses.create(**kwargs)
-    except Exception as exc:
-        text = f"{type(exc).__name__} {exc}".lower()
-        model_error = (
-            "model" in text
-            and (
-                "not found" in text
-                or "does not exist" in text
-                or "not available" in text
-                or "unsupported" in text
-                or "not permitted" in text
-            )
-        )
-        if model_error:
-            fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
-            fallback = dict(kwargs)
-            fallback["model"] = fallback_model
-            app.logger.warning("Modèle %s indisponible; tentative avec %s", MODEL, fallback_model)
-            return client.responses.create(**fallback)
-        raise
+    if stream:
+        kwargs = model_kwargs(payload, True)
+        try:
+            return client.responses.create(**kwargs)
+        except Exception:
+            raise
+    fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
+    return _create_openai_response(
+        client,
+        payload,
+        build_kwargs=model_kwargs,
+        model=MODEL,
+        logger=app.logger,
+        fallback_models=(fallback_model,),
+    )
+
+
 def model_kwargs(payload, stream):
     return build_model_kwargs(
         payload,
