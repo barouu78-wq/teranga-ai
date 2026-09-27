@@ -35,6 +35,7 @@ from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
+from services.request_identity import client_ip as _client_ip
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
 from services.openai_response import create_response as _create_openai_response
@@ -607,7 +608,7 @@ _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
     # Ne pas relire X-Forwarded-For directement : il peut être falsifié par un client.
-    return (request.remote_addr or "unknown")[:64]
+    return _client_ip(request.remote_addr)
 
 
 def client_identity():
