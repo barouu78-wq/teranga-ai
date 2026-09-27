@@ -509,6 +509,7 @@ from services.chat_payload import normalize_chat_input
 from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
 from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
 from services.http_headers import add_security_headers as _add_security_headers
+from services.identity_cookie import should_set_identity_cookie
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -613,7 +614,7 @@ def require_json_post(fn):
 
 @app.after_request
 def add_client_identity(response):
-    if request.path in {"/chat", "/tts", "/stt", "/image-proxy", "/exchange-rates"} and not request.cookies.get(IDENTITY_COOKIE):
+    if should_set_identity_cookie(request.path, request.cookies.get(IDENTITY_COOKIE)):
         response.set_cookie(
             IDENTITY_COOKIE,
             client_identity(),
