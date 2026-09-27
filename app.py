@@ -593,6 +593,7 @@ def fetch_topic_images(message):
 
 from services.conversation import build_conversation as _build_conversation
 from services.responses import extract_sources, event_delta
+from services.http_security import origin_allowed as _origin_allowed
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -655,21 +656,11 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 
 
 def origin_allowed():
-    if not ALLOWED_ORIGINS:
-        return True
-    origin = request.headers.get("Origin") or ""
-    referer = request.headers.get("Referer") or ""
-    if origin:
-        return origin in ALLOWED_ORIGINS
-    if not referer:
-        return False
-    try:
-        parsed = urlparse(referer)
-        referer_origin = f"{parsed.scheme}://{parsed.netloc}"
-    except Exception:
-        return False
-    return referer_origin in ALLOWED_ORIGINS
-
+    return _origin_allowed(
+        request.headers.get("Origin"),
+        request.headers.get("Referer"),
+        ALLOWED_ORIGINS,
+    )
 
 def require_json_post(fn):
     @wraps(fn)
