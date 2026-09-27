@@ -37,6 +37,8 @@ from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.images import (
     image_proxy_url,
     allowed_image_url,
+    SafeImageRedirectHandler,
+    safe_image_fetch as _safe_image_fetch,
     safe_image_fetch as _safe_image_fetch,
     should_fetch_images,
     topic_wikipedia_titles,
@@ -473,7 +475,7 @@ def image_proxy():
     if not allowed_image_url(src):
         return Response("Source image non autorisée", status=403, mimetype="text/plain")
     try:
-        content_type, data = _safe_image_fetch(src, MAX_IMAGE_BYTES, OUTBOUND_TIMEOUT)
+        content_type, data = _safe_image_fetch(src, MAX_IMAGE_BYTES, OUTBOUND_TIMEOUT, opener=_SAFE_IMAGE_OPENER)
         return Response(
             data,
             mimetype=content_type,
@@ -602,6 +604,9 @@ def fetch_topic_images(message):
 
 
 from services.conversation import build_conversation as _build_conversation
+
+_allowed_image_url = allowed_image_url
+_SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
 
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
