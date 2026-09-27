@@ -26,6 +26,7 @@ from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size
+from services.rate_limit import allowed_request as _allowed_request
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -1146,23 +1147,16 @@ def abuse_blocked(identity):
 
 
 def allowed_request(ip, log, limit, window, bucket="chat"):
-    if redis_client is not None:
-        try:
-            key = f"teranga:rl:{bucket}:{hashlib.sha256(str(ip).encode('utf-8')).hexdigest()[:40]}"
-            count = redis_client.incr(key)
-            if count == 1:
-                redis_client.expire(key, int(window))
-            return count <= limit
-        except Exception:
-            app.logger.exception("Redis rate-limit, fallback mémoire")
-    now = time.time()
-    with RATE_LOCK:
-        while log and now - log[0] > window:
-            log.popleft()
-        if len(log) >= limit:
-            return False
-        log.append(now)
-        return True
+    return _allowed_request(
+        redis_client=redis_client,
+        logger=app.logger,
+        ip=ip,
+        log=log,
+        limit=limit,
+        window=window,
+        bucket=bucket,
+        lock=RATE_LOCK,
+    )
 
 
 def public_error(exc):
