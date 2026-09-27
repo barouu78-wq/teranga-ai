@@ -412,3 +412,16 @@ def test_visual_system_rule_requires_web_before_requesting_user_photo():
     import app as app_module
     assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
     assert "Ne demande une photo à l'utilisateur qu'après cette recherche" in app_module.SYSTEM_PROMPT
+
+
+def test_pulaar_is_no_longer_an_available_ui_language():
+    import app as app_module
+    assert app_module.SAFE_LANG == frozenset({"fr", "en", "wo"})
+    assert "pulaar" not in app_module.SYSTEM_PROMPT.lower()
+
+
+def test_wolof_and_english_quality_rules_are_explicit():
+    import app as app_module
+    assert "wolof naturel et idiomatique" in app_module.SYSTEM_PROMPT.lower()
+    assert "natural, fluent english" in app_module.SYSTEM_PROMPT.lower()
+    assert "idiomatic" in app_module.SYSTEM_PROMPT.lower()
