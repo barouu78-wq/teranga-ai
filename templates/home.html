@@ -1992,6 +1992,29 @@ body.realtime-voice #hint{font-weight:650}
   .card{min-height:72px!important}
   .hero{margin-top:10px}
 }
+
+/* Teranga UI v21 — enforce the reduced desktop/mobile home composition. */
+#hero #fxWidget,
+#hero .spread,
+#hero .guide-section,
+#resetBtn,
+#voiceToggle,
+#chips{
+  display:none!important;
+}
+#hero #cards .card:nth-child(n+5){
+  display:none!important;
+}
+#hero #cards{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+@media(max-width:680px){
+  #hero #cards{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
 </style>
 
 </head>
