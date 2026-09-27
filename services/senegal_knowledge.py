@@ -65,7 +65,8 @@ def source_domains(domain: str) -> tuple[str, ...]:
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
     return SOURCE_PRIORITY
 
-def load_senegal_knowledge(path: Path) -> dict:
+def load_senegal_knowledge(path: Path | None = None) -> dict:
+    path = path or Path(__file__).resolve().parents[1] / "data" / "senegal_knowledge.json"
     try:
         with path.open("r", encoding="utf-8") as handle:
             data = json.load(handle)
