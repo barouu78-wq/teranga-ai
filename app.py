@@ -152,36 +152,6 @@ abuse_events = defaultdict(deque)
 abuse_blocks = {}
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
-# Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
-WEB_HINTS = (
-    "photo", "photos", "image", "images", "visuel", "visuels", "montre moi", "montre-moi",
-    "a quoi ressemble", "à quoi ressemble", "a quoi ça ressemble", "à quoi ça ressemble",
-    "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
-    "actuels", "actuelles", "récent", "récente", "récentes",
-    "horaire", "horaires", "ouvert", "ouverte",
-    "disponible", "disponibilité", "réservation",
-    "événement", "evenement", "météo", "meteo", "climat", "température", "temperature", "pluie", "pluies", "orage", "vent", "humidité", "humidite",
-    "actualité", "actualités", "news", "today", "now",
-    "current", "latest", "recent", "schedule", "hours",
-    "open", "available", "availability", "booking", "weather", "event",
-    "visa", "ferry", "cfa", "change", "taux",
-    "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
-    "manger", "restaurant", "resto", "où manger", "ou manger",
-    "eat", "dining", "food court",
-    "ouvert ce soir", "meilleur resto", "où se trouve", "ou se trouve",
-    "prix", "tarif", "tarifs", "coût", "cout", "combien coûte", "combien coute",
-    "price", "prices", "fare", "fares", "cost", "how much",
-    "itinéraire", "itineraire", "trajet", "transport", "bus", "brt", "ter",
-    "taxi", "péage", "peage", "car rapide", "dem dikk", "tata",
-    "billet", "billets", "ticket", "tickets", "vol", "flight", "airline",
-    "aéroport", "airport", "formalités", "formalites", "document", "documents",
-    "ambassade", "consulat", "immigration", "vaccin", "vaccination",
-    "banque", "bank", "guichet", "atm", "distributeur", "mobile money",
-    "wave", "free money", "expresso money", "yas", "free", "orange",
-    "concert", "festival", "match", "football", "salon", "foire",
-    "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
-    "urgent", "alerte", "grève", "greve", "perturbation", "incident",
-)
 
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
