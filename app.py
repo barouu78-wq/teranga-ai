@@ -773,20 +773,26 @@ def fetch_topic_images(message):
     if not photo_request:
         return None
 
-    # Pour un lieu explicite, on privilégie ses requêtes photo dédiées
-    # avant les requêtes génériques de la région.
+    # Pour un lieu explicite, on utilise uniquement ses requêtes photo dédiées.
+    # Cela évite qu'une demande précise (ex. Gorée) retombe sur des images
+    # génériques de la région de Dakar.
     specific_titles = []
     for place in SENEGAL_KNOWLEDGE.get("places", []):
         name = normalize(str(place.get("name", "")))
         aliases = [name]
         if name.startswith("ile de "):
             aliases.append(name[7:])
+            if name == "ile de goree":
+                aliases.append("gore")
         if name.startswith("île de "):
             aliases.append(name[7:])
         if any(alias and alias in text_value for alias in aliases):
             specific_titles.extend(str(q) for q in (place.get("image_queries") or []) if q)
 
-    titles = specific_titles + knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
+    if specific_titles:
+        titles = specific_titles
+    else:
+        titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
     if not titles:
         titles = ["Dakar Sénégal"]
 
