@@ -21,6 +21,7 @@ SOURCE_PRIORITY = (
 )
 
 SENEGAL_DOMAINS = {
+    "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
     "travel": ("voyage", "tourisme", "itinéraire", "visiter", "plage", "hôtel"),
     "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD"),
@@ -28,7 +29,6 @@ SENEGAL_DOMAINS = {
     "food": ("cuisine", "restaurant", "plat", "thieboudienne", "yassa", "mafé"),
     "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB"),
     "society": ("population", "éducation", "santé", "emploi", "démographie"),
-    "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "environment": ("environnement", "parc", "faune", "forêt", "climat"),
     "diaspora": ("diaspora", "Sénégal-France", "retour", "transfert"),
     "administration": ("démarche", "document", "visa", "administration", "consulat"),
