@@ -373,3 +373,15 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert sitemap.count("<loc>") >= 1 + len(TOPICS) * len(LANGS)
     assert "/en/senegal-travel-guide" in sitemap
     assert "/fr/senegal-trip-planner" in sitemap
+
+
+
+def test_visual_requests_trigger_web_search_first():
+    assert should_use_web("Montre-moi des photos de Gorée") is True
+    assert should_use_web("À quoi ressemble ce lieu ?") is True
+
+
+def test_visual_system_rule_requires_web_before_requesting_user_photo():
+    import app as app_module
+    assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
+    assert "Ne demande une photo à l'utilisateur qu'après cette recherche" in app_module.SYSTEM_PROMPT
