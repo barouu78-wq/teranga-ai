@@ -15,7 +15,7 @@ from urllib.parse import quote, urlencode, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, request, stream_with_context
+from flask import Flask, Response, g, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool
@@ -51,6 +51,18 @@ app.config["JSON_SORT_KEYS"] = False
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+
+@app.before_request
+def assign_request_id():
+    """Attach a short diagnostic identifier to every HTTP request."""
+    g.request_id = secrets.token_hex(8)
+
+
+@app.after_request
+def add_request_id_header(response):
+    response.headers["X-Request-ID"] = getattr(g, "request_id", "")
+    return response
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
