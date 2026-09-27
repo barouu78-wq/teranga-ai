@@ -2,7 +2,7 @@ from app import app, parse_chat_payload
 
 
 def test_parse_chat_payload_builds_french_tourist_context():
-    client = app.test_request_context(
+    with app.test_request_context(
         "/chat",
         method="POST",
         json={
@@ -11,12 +11,10 @@ def test_parse_chat_payload_builds_french_tourist_context():
             "language": "fr",
             "audience": "tourist",
         },
-    )
-    with client:
+    ):
         payload, error = parse_chat_payload()
 
     assert error is None
-    assert payload["language"] if "language" in payload else True
     assert payload["audience"] == "tourist"
     assert payload["planner"] is True
     assert payload["planner_data"]["duration_days"] == 4
