@@ -240,8 +240,9 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
                     resolved_location = previous_location
                     context_source = "conversation"
                     break
-    domain = classify_domain(message)
-    fresh = needs_fresh_web(domain, message) or resolved_intent in _DYNAMIC_INTENTS
+    context_query = contextual_query(history, message)
+    domain = classify_domain(context_query)
+    fresh = needs_fresh_web(domain, context_query) or resolved_intent in _DYNAMIC_INTENTS
     return {
         "intent": resolved_intent,
         "domain": domain,
