@@ -36,6 +36,7 @@ from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _rec
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
 from services.request_identity import client_ip as _client_ip
+from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
 from services.openai_response import create_response as _create_openai_response
@@ -672,15 +673,13 @@ def require_json_post(fn):
             return jsonify({"error": "Type de contenu invalide."}), 415
         if not origin_allowed():
             return jsonify({"error": "Origine non autorisée."}), 403
-        cookie_token = request.cookies.get(CSRF_COOKIE, "")
-        header_token = request.headers.get(CSRF_HEADER, "")
-        if not cookie_token or not header_token:
-            return jsonify({"error": "csrf"}), 403
-        try:
-            same = hmac.compare_digest(cookie_token, header_token)
-        except Exception:
-            same = False
-        if not same or not valid_token(cookie_token, app.config["SECRET_KEY"], CSRF_TTL):
+        if not valid_request_token(
+            request.cookies.get(CSRF_COOKIE, ""),
+            request.headers.get(CSRF_HEADER, ""),
+            secret_key=app.config["SECRET_KEY"],
+            ttl=CSRF_TTL,
+            validator=valid_token,
+        ):
             return jsonify({"error": "csrf"}), 403
         return fn(*args, **kwargs)
     return wrapper
