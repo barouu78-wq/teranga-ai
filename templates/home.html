@@ -1978,6 +1978,20 @@ body.realtime-voice #hint{font-weight:650}
   }
 }
 
+
+/* Teranga UI v20 — fewer visible choices, same complete visual identity. */
+#fxWidget,.spread,.guide-section,#resetBtn,#voiceToggle,.chips{display:none!important}
+.hero{padding-bottom:20px}
+.cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+.card{min-height:76px!important;padding:11px 12px!important}
+@media(min-width:681px){
+  .cards{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:680px){
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .card{min-height:72px!important}
+  .hero{margin-top:10px}
+}
 </style>
 
 </head>
@@ -2542,7 +2556,7 @@ function renderCards(){
   const t=T[lang];
   const cardFrag=document.createDocumentFragment();
   const chipFrag=document.createDocumentFragment();
-  t.cards.forEach((c,i)=>{
+  t.cards.slice(0,4).forEach((c,i)=>{
     const card=document.createElement('button');
     card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
     const ico=document.createElement('div');ico.className='ico';ico.innerHTML=CARD_ICONS[i%CARD_ICONS.length];
