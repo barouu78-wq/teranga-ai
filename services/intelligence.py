@@ -1,4 +1,4 @@
-""""Lightweight intent and context extraction for Teranga AI.
+"""Lightweight intent and context extraction for Teranga AI.
 
 The engine is deterministic and now resolves short follow-ups from recent
 conversation context without changing the user's original query.
