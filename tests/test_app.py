@@ -239,6 +239,33 @@ def test_photo_request_prioritizes_exact_place_commons_search(monkeypatch):
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 
+def test_photo_request_handles_goree_typo_without_falling_back_to_dakar(monkeypatch):
+    import app as app_module
+
+    calls = []
+
+    def fake_commons(title, limit=4):
+        calls.append(title)
+        return [{
+            "url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Goree.jpg",
+            "alt": "Île de Gorée",
+            "credit": "Wikimédia Commons",
+        }] if "Gorée" in title else []
+
+    monkeypatch.setattr(app_module, "fetch_commons_images", fake_commons)
+    monkeypatch.setattr(
+        app_module,
+        "knowledge_image_titles",
+        lambda message, limit=4: (_ for _ in ()).throw(AssertionError("fallback Dakar should not be used")),
+    )
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+
+    images = app_module.fetch_topic_images("Montre-moi les photo de gore")
+    assert images
+    assert all("Gorée" in title for title in calls)
+    assert not any("Dakar" in title for title in calls)
+
+
 def test_commons_images_include_same_origin_proxy(monkeypatch):
     import app as app_module
     import io
