@@ -23,6 +23,8 @@ from services.international_seo import register_localized_routes, localized_site
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
+from services.intelligence import build_intent_context
+from services.web_policy import preferred_domains, reasoning_effort, search_context_size
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -1336,6 +1338,7 @@ def parse_chat_payload():
         "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
     }[language]
     context = infer_senegal_context(history, message)
+    intent_context = build_intent_context(message, history)
     enriched_context = context["query"]
     if context["has_place"]:
         place_line = (
@@ -1361,8 +1364,22 @@ def parse_chat_payload():
         )
     else:
         planner_instruction = ""
+    preferred = tuple(intent_context.get("preferred_sources") or ())
+    if preferred:
+        source_line = (
+            "POLITIQUE DE SOURCES : pour la recherche web, privilégie ces domaines de référence : "
+            + ", ".join(preferred) + ". "
+            "Pour les faits actuels, cite uniquement les éléments réellement vérifiés par les résultats disponibles."
+        )
+    else:
+        source_line = (
+            "POLITIQUE DE SOURCES : privilégie les sources institutionnelles ou spécialisées fiables "
+            "et vérifie les faits actuels avant de les présenter comme actuels."
+        )
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " + planner_instruction +
+        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
+        "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
+        source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
@@ -1402,6 +1419,7 @@ def parse_chat_payload():
         "message": message,
         "audience": audience,
         "context": context,
+        "intent_context": intent_context,
         "contextual_query": enriched_context,
     }, None
 
@@ -1430,17 +1448,28 @@ def create_response(payload, stream):
             return client.responses.create(**fallback)
         raise
 def model_kwargs(payload, stream):
+    use_web = bool(payload["use_web"])
+    planner = bool(payload.get("planner"))
+    domain = str((payload.get("intent_context") or {}).get("domain") or "general")
+    effort = os.getenv("OPENAI_REASONING_EFFORT", reasoning_effort(use_web, planner))
     kwargs = {
         "model": MODEL,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 900 if (payload["use_web"] or payload.get("planner")) else 500,
-        "reasoning": {"effort": os.getenv("OPENAI_REASONING_EFFORT", "low")},
+        "max_output_tokens": 700 if (use_web or planner) else 500,
+        "reasoning": {"effort": effort},
         "truncation": "auto",
         "stream": stream,
     }
-    if payload["use_web"]:
-        kwargs["tools"] = [{"type": "web_search"}]
+    if use_web:
+        tool = {
+            "type": "web_search",
+            "search_context_size": search_context_size(domain, planner),
+        }
+        domains = preferred_domains(domain)
+        if domains:
+            tool["filters"] = {"allowed_domains": list(domains)}
+        kwargs["tools"] = [tool]
     return kwargs
 
 
