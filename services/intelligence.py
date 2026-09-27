@@ -150,8 +150,12 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
     }
     intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
+    currency_amounts = re.findall(
+        r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
+        text_value,
+    )
     amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
-    budget = amounts[-1].strip() if amounts else ""
+    budget = (currency_amounts[-1] if currency_amounts else amounts[-1].strip() if amounts else "")
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""
     adults_match = re.search(r"\b(\d+)\s*(?:adultes?|personnes?)(?:\s*\+\s*(\d+)\s*enfants?)?\b", text_value)
