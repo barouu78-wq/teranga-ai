@@ -58,4 +58,7 @@ def test_redis_failure_falls_back_to_memory():
 
     assert allowed_request(redis, logger, "127.0.0.1", log, 1, 60) is True
     assert allowed_request(redis, logger, "127.0.0.1", log, 1, 60) is False
-    assert logger.messages == ["Redis rate-limit, fallback mémoire"]
+    assert logger.messages == [
+        "Redis rate-limit, fallback mémoire",
+        "Redis rate-limit, fallback mémoire",
+    ]
