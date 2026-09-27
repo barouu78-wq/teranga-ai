@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import unicodedata
 from urllib.parse import quote, urlencode
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -10,6 +11,34 @@ from urllib.request import Request, urlopen
 
 logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
+
+
+def _normalize(value):
+    text = str(value or "").lower()
+    text = unicodedata.normalize("NFD", text)
+    return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+
+
+def _photo_matches_query(query, page_title, description):
+    """Reject obvious off-topic Commons results for precise place searches."""
+    q = _normalize(query)
+    evidence = _normalize(f"{page_title} {description}")
+
+    # Strict matching for places where a generic regional result is especially
+    # misleading. The query can contain accents, typos, or "ile de".
+    precise_aliases = {
+        "goree": ("goree", "ile de goree", "goree island"),
+        "ile de goree": ("goree", "goree island"),
+        "lac rose": ("lac rose", "lake retba", "retba"),
+        "joal-fadiouth": ("joal", "fadiouth"),
+        "fadiouth": ("fadiouth", "joal"),
+        "cap skirring": ("cap skirring",),
+    }
+    for key, aliases in precise_aliases.items():
+        if key in q:
+            return any(alias in evidence for alias in aliases)
+
+    return True
 
 
 def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
@@ -85,7 +114,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         "generator": "search",
         "gsrsearch": query,
         "gsrnamespace": "6",
-        "gsrlimit": str(min(max(limit * 3, 6), 20)),
+        "gsrlimit": str(min(max(limit * 4, 8), 30)),
         "prop": "imageinfo",
         "iiprop": "url|mime|thumbmime|extmetadata",
         "iiurlwidth": "960",
@@ -109,23 +138,29 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
             continue
         if thumb_mime and not thumb_mime.startswith("image/"):
             continue
-        src = validate(info.get("url") or info.get("thumburl"))
-        if not src or src in seen:
-            continue
         meta = info.get("extmetadata") or {}
 
         def meta_text(key):
             value = meta.get(key, {})
             return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
 
+        description = meta_text("ImageDescription")
+        page_title = page.get("title", query)
+        if not _photo_matches_query(query, page_title, description):
+            continue
+
+        src = validate(info.get("url") or info.get("thumburl"))
+        if not src or src in seen:
+            continue
+
         item = {
             "url": src,
             "display_url": display_url_builder(src) if display_url_builder else src,
-            "alt": meta_text("ImageDescription") or page.get("title", query),
+            "alt": description or page_title,
             "credit": "Wikimédia Commons",
             "artist": meta_text("Artist"),
             "license": meta_text("LicenseShortName"),
-            "page_url": "https://commons.wikimedia.org/wiki/" + quote(page.get("title", ""), safe=":"),
+            "page_url": "https://commons.wikimedia.org/wiki/" + quote(page_title, safe=":"),
         }
         out.append(item)
         seen.add(src)
