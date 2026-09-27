@@ -9,6 +9,6 @@ def test_tts_route_points_to_tts_handler():
 
 def test_stt_rejects_missing_csrf_without_calling_provider():
     client = app.test_client()
-    response = client.post("/stt")
+    response = client.post("/stt", headers={"Origin": "https://teranga.ai"})
     assert response.status_code == 403
     assert response.get_json()["error"] == "csrf"
