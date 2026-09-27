@@ -5,6 +5,8 @@ tested without loading the full application.
 """
 from __future__ import annotations
 
+from services.validation import normalize
+
 SOURCE_FILTERS = {
     "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
     "economy": ("ansd.sn", "gov.sn", "worldbank.org"),
