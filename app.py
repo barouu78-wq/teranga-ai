@@ -27,6 +27,7 @@ from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size
 from services.rate_limit import allowed_request as _allowed_request
+from services.senegal_knowledge import load_senegal_knowledge, format_senegal_knowledge
 from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
@@ -66,14 +67,6 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
-
-def load_senegal_knowledge():
-    try:
-        with KNOWLEDGE_PATH.open("r", encoding="utf-8") as handle:
-            data = json.load(handle)
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
