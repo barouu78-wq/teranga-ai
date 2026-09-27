@@ -117,3 +117,19 @@ def test_build_intent_context_uses_recent_turns_for_domain_and_web_policy():
     assert result["location"] == "dakar"
     assert result["context_source"] == "conversation"
     assert result["needs_web_search"] is True
+
+
+
+def test_infer_senegal_context_keeps_place_and_budget_from_recent_turn():
+    from services.intelligence import infer_senegal_context
+
+    result = infer_senegal_context(
+        [{"role": "user", "content": "Je prépare 4 jours à Gorée avec 100000 FCFA"}],
+        "Et en famille ?",
+    )
+
+    assert result["place"] == "goree"
+    assert result["budget"] == "100000 fcfa"
+    assert result["duration"] == "4 jours"
+    assert "famille" in result["constraints"]
+    assert result["context_source"] == "conversation"
