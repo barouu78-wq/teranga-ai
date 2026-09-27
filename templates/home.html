@@ -1995,10 +1995,6 @@ body.realtime-voice #hint{font-weight:650}
   .dock{width:calc(100% - 20px)!important;padding-bottom:calc(7px + env(safe-area-inset-bottom))!important;}
   .dock .meta{padding-top:4px!important;}
 }
-
-/* Teranga UI v20 — zero-friction chat: no secondary controls around the conversation. */
-#resetBtn{display:none!important}
-.dock .meta{display:none!important}
 </style>
 
 </head>
@@ -2020,6 +2016,7 @@ body.realtime-voice #hint{font-weight:650}
       <button type="button" data-lang="fr" class="on">FR</button>
       <button type="button" data-lang="en">EN</button>
       <button type="button" data-lang="wo">WO</button>
+      <button type="button" data-lang="ff">PU</button>
     </div>
     <button class="icon" id="themeBtn" type="button" title="Thème" aria-label="Thème">
       <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4M8 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -2107,7 +2104,17 @@ fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
-  vOn:'Voix IA auto on',vO
+  vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
+  shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
+  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
+  heroTitle:'L’hospitalité, en quelques questions.',
+  heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
+  hint:'Réponse en direct · Entrée pour envoyer',
+  hintTouch:'Réponse en direct',
+  cards:[
+    {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
     {q:"Parle-moi de l'île de Gorée et de la Maison des Esclaves.",t:'Gorée',d:'Histoire et photo'},
     {q:"Raconte brièvement l'histoire de Dakar et montre la ville.",t:'Histoire Dakar',d:'Ville, origine, photo'},
     {q:"Quelles sont les spécialités culinaires de chaque région du Sénégal ?",t:'Spécialités',d:'Plats du Nord, Centre, Casamance'},
@@ -2182,7 +2189,7 @@ ff:{
   ]
 }
 };
-const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN'};
+const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
 const AUDIENCE_EXTRA={
 fr:{
  resident:[['Vie quotidienne','Aide-moi à gérer ma vie quotidienne au Sénégal : transport, démarches, paiements et services.'],['Démarches','Quelles démarches administratives dois-je vérifier pour ma situation au Sénégal ?'],['Budget maison','Aide-moi à organiser mon budget mensuel en FCFA.'],['Services locaux','Comment trouver les bons services dans mon quartier ?']],
@@ -2196,6 +2203,10 @@ wo:{
  resident:[['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Services','Naka laa mëna gis services yi ci sama quartier?']],
  diaspora:[['Waxtu dellusi','Maa ngi waajal tukki walla dellusi Senegaal; jàppale ma defar yi ëpp solo.'],['Kër ak waa kër','Lan laa wara waajal ngir sama kër walla dimbali sama waa kër ci Senegaal?'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Investir','Yan mbir laa wara seet bala ma tàmbali projet walla investissement ci Senegaal?']]
 },
+ff:{
+ resident:[['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Sarwiis','No mi yiyirta sarwiis ɗe moƴƴi e quartier am?']],
+ diaspora:[['Waajta ruttorde','Mi waajtii yahdugol walla ruttorde e Senegaal; wallu-mi feewtude ko ɓuri nafde.'],['Suudu e ɓeyngu','Hol ko mi waajta ngam suudu walla wallude ɓeyngu am e Senegaal?'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Investir','Hol ko mi ƴeewta hade mi fuɗɗa projet walla investissement e Senegaal?']]
+}
 };
 const MONEY_SIM={
 fr:{
@@ -2210,6 +2221,10 @@ wo:{
 tourist:[['Xaalis & change',"Naka laa mëna soppi sama xaalis ci CFA, te lan mooy frais yi?"],['SIM & Internet',"Ban SIM walla eSIM laa wara jënd ci Senegaal ngir tukki?"]],
 merchant:[['Jël fey',"Yan yoon yu fey laa mëna jox sama clients ci Senegaal?"],['Change & fey',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
 },
+ff:{
+tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftina?'],['SIM e Internet','Hol SIM walla eSIM mi waawi moƴƴude ngam yahdugol e Senegaal?']],
+merchant:[['Jaɓɓude feyde','Hol laawol feyde mi waawi hokkude clients am e Senegaal?'],['Change e feyde','No mi doxirta feyde e CFA, change e frais e golle am?']]
+}
 };
 const FX_CACHE={EUR:655.957,USD:577.070,GBP:762.860};
 let fxRates={...FX_CACHE};
