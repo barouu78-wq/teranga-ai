@@ -27,6 +27,14 @@ def test_planner_and_sensitive_domains_keep_medium_context():
     assert search_context_size("administration") == "medium"
 
 
-def test_simple_requests_use_no_reasoning_by_default():
-    assert reasoning_effort(False, False) == "none"
+def test_fast_chat_uses_low_reasoning_by_default():
+    assert reasoning_effort(False, False) == "low"
     assert reasoning_effort(True, False) == "low"
+
+
+def test_should_use_web_detects_live_and_contextual_requests():
+    from services.web_policy import should_use_web
+
+    assert should_use_web("Quel est le prix actuel du billet ?")
+    assert should_use_web("Et demain ?", "météo à Dakar")
+    assert not should_use_web("Quelle est l'histoire de Gorée ?")

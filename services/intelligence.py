@@ -10,6 +10,7 @@ import re
 import unicodedata
 from typing import Any
 from .senegal_knowledge import classify_domain, needs_fresh_web, source_domains
+from .validation import sanitize_text
 
 
 SUPPORTED_LANGUAGES = ("fr", "en", "wo", "ff")
@@ -88,6 +89,133 @@ def _recent_user_messages(history: list[dict[str, Any]] | None, limit: int = 6) 
             break
     return messages
 
+
+
+def contextual_query(history: list[dict[str, Any]] | None, message: str, max_history_items: int = 12, max_message_length: int = 2000) -> str:
+    """Build an internal context query from recent user turns."""
+    parts: list[str] = []
+    if isinstance(history, list):
+        for item in history[-max_history_items:]:
+            if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
+                continue
+            content = sanitize_text(item.get("content", ""), 900)
+            if content:
+                parts.append(content)
+    current = str(message or "").strip()[:max_message_length]
+    recent = parts[-4:]
+    if current:
+        recent.append(current)
+    return " | ".join(recent)[-5000:]
+
+
+def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) -> dict[str, Any]:
+    """Resolve Senegal places, intents and planning constraints from recent turns."""
+    text_value = _normalize(contextual_query(history, message))
+    cities = (
+        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
+        "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
+        "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
+        "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
+        "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
+        "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
+        "almadies", "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
+    )
+    regions = (
+        "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
+        "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
+        "ziguinchor", "saint-louis", "louga", "matam",
+    )
+    aliases = {
+        "aeroport blaise diagne": "aibd", "aéroport blaise diagne": "aibd",
+        "ile de goree": "goree", "île de gorée": "goree",
+        "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
+        "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
+    }
+    normalized_place_text = text_value
+    for alias, canonical in aliases.items():
+        if _normalize(alias) in normalized_place_text:
+            normalized_place_text += " " + canonical
+    found_cities = [x for x in cities if x in normalized_place_text]
+    found_regions = [x for x in regions if x in normalized_place_text]
+    intent_groups = {
+        "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
+        "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
+        "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
+        "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
+        "travel": ("voyage", "visiter", "séjour", "sejour", "tourisme", "vacances", "plage", "goree", "gorée"),
+        "admin": ("visa", "passeport", "formalites", "formalités", "demarche", "démarche", "document"),
+        "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
+        "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
+        "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
+    }
+    intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
+    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
+    budget = amounts[-1].strip() if amounts else ""
+    duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
+    duration = duration_match.group(0) if duration_match else ""
+    constraints = []
+    if budget:
+        constraints.append("budget=" + budget)
+    if duration:
+        constraints.append("durée=" + duration)
+    if "avec mes enfants" in text_value or "en famille" in text_value:
+        constraints.append("famille")
+    if "avec enfant" in text_value or "avec enfants" in text_value:
+        constraints.append("enfants")
+    if "ce soir" in text_value:
+        constraints.append("ce soir")
+    if "demain" in text_value:
+        constraints.append("demain")
+    place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
+    return {"place": place, "has_place": bool(found_cities or found_regions), "query": text_value, "intents": intents[:4], "constraints": constraints[:5], "budget": budget, "duration": duration}
+
+
+def should_use_planner(context: dict[str, Any]) -> bool:
+    """Detect a multi-step planning request without forcing web search."""
+    intents = set(context.get("intents", []))
+    query = context.get("query", "")
+    planning_terms = (
+        "planifie", "programme", "organise", "itineraire", "itinéraire",
+        "journee", "journée", "sejour", "séjour", "vacances", "weekend",
+        "week-end", "pendant", "pour 2 jours", "pour 3 jours", "pour 4 jours",
+        "pour 5 jours", "pour une semaine", "budget",
+    )
+    return (
+        bool(intents.intersection({"travel", "transport", "food", "price"}))
+        and (bool(context.get("duration")) or bool(context.get("budget")) or any(term in query for term in planning_terms))
+    )
+
+
+def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
+    """Build a deterministic brief for plans and their budgets."""
+    budget_raw = context.get("budget", "")
+    budget_match = re.search(r"(\d[\d\s.,]*)", budget_raw or "")
+    budget_amount = None
+    if budget_match:
+        raw = re.sub(r"[\s.,]", "", budget_match.group(1))
+        try:
+            budget_amount = int(raw)
+        except ValueError:
+            budget_amount = None
+    duration_raw = context.get("duration", "")
+    duration_days = None
+    duration_match = re.search(r"(\d+)", duration_raw or "")
+    if duration_match:
+        try:
+            duration_days = int(duration_match.group(1))
+        except ValueError:
+            duration_days = None
+    if duration_days is None and "semaine" in duration_raw:
+        duration_days = 7
+    return {
+        "place": context.get("place", ""),
+        "duration": duration_raw,
+        "duration_days": duration_days,
+        "budget_raw": budget_raw,
+        "budget_fcfa": budget_amount,
+        "intents": context.get("intents", []),
+        "constraints": context.get("constraints", []),
+    }
 
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     message = str(text or "").strip()

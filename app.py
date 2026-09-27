@@ -15,17 +15,39 @@ from urllib.parse import quote, urlencode, urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, request, stream_with_context
+from flask import Flask, Response, g, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
+from config import env_bool
 from services.seo import SEO_PAGES, render_seo_page
 from services.international_seo import register_localized_routes, localized_sitemap_urls
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
-from services.intelligence import build_intent_context
-from services.web_policy import preferred_domains, reasoning_effort, search_context_size
+from services.intelligence import build_intent_context, build_planner_data, contextual_query, infer_senegal_context, should_use_planner
+from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
+from services.rate_limit import allowed_request as _allowed_request
+from services.senegal_knowledge import load_senegal_knowledge, format_senegal_knowledge
+from services.validation import normalize, sanitize_text
+from services.text import clean_answer
+from services.security import issue_csrf, sign_token, valid_token
+from services.errors import public_error
+from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
+from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
+from services.request_identity import client_ip as _client_ip
+from services.csrf import valid_request_token
+from services.model_params import build_model_kwargs
+from services.openai_response import create_response as _create_openai_response
 from services.images import (
+    image_proxy_url,
+    usable_wiki_image,
+    allowed_image_url,
+    SafeImageRedirectHandler,
+    safe_image_fetch as _safe_image_fetch,
+    should_fetch_images,
+    topic_wikipedia_titles,
+    wiki_summary,
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
     fetch_commons_images as _fetch_commons_images,
@@ -43,9 +65,21 @@ app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
+
+@app.before_request
+def assign_request_id():
+    """Attach a short diagnostic identifier to every HTTP request."""
+    g.request_id = secrets.token_hex(8)
+
+
+@app.after_request
+def add_request_id_header(response):
+    response.headers["X-Request-ID"] = getattr(g, "request_id", "")
+    return response
+
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
-TRUST_PROXY = os.getenv("TRUST_PROXY", "1") == "1"
+TRUST_PROXY = env_bool("TRUST_PROXY", True)
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 register_localized_routes(app, SITE_URL)
 
@@ -65,15 +99,7 @@ GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
-def load_senegal_knowledge():
-    try:
-        with KNOWLEDGE_PATH.open("r", encoding="utf-8") as handle:
-            data = json.load(handle)
-        return data if isinstance(data, dict) else {}
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-SENEGAL_KNOWLEDGE = load_senegal_knowledge()
+SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
 redis_client = None
@@ -121,6 +147,7 @@ ABUSE_LOG_SAMPLE = 40
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
+CSRF_TTL = 60 * 60 * 12
 
 request_log = defaultdict(deque)
 tts_request_log = defaultdict(deque)
@@ -135,118 +162,8 @@ fx_request_log = defaultdict(deque)
 web_request_log = defaultdict(deque)
 abuse_events = defaultdict(deque)
 abuse_blocks = {}
-CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
-ZERO_WIDTH_CHARS = re.compile(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]")
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
-# Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
-WEB_HINTS = (
-    "photo", "photos", "image", "images", "visuel", "visuels", "montre moi", "montre-moi",
-    "a quoi ressemble", "à quoi ressemble", "a quoi ça ressemble", "à quoi ça ressemble",
-    "aujourd'hui", "aujourd’hui", "maintenant", "actuel", "actuelle",
-    "actuels", "actuelles", "récent", "récente", "récentes",
-    "horaire", "horaires", "ouvert", "ouverte",
-    "disponible", "disponibilité", "réservation",
-    "événement", "evenement", "météo", "meteo", "climat", "température", "temperature", "pluie", "pluies", "orage", "vent", "humidité", "humidite",
-    "actualité", "actualités", "news", "today", "now",
-    "current", "latest", "recent", "schedule", "hours",
-    "open", "available", "availability", "booking", "weather", "event",
-    "visa", "ferry", "cfa", "change", "taux",
-    "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
-    "manger", "restaurant", "resto", "où manger", "ou manger",
-    "eat", "dining", "food court",
-    "ouvert ce soir", "meilleur resto", "où se trouve", "ou se trouve",
-    "prix", "tarif", "tarifs", "coût", "cout", "combien coûte", "combien coute",
-    "price", "prices", "fare", "fares", "cost", "how much",
-    "itinéraire", "itineraire", "trajet", "transport", "bus", "brt", "ter",
-    "taxi", "péage", "peage", "car rapide", "dem dikk", "tata",
-    "billet", "billets", "ticket", "tickets", "vol", "flight", "airline",
-    "aéroport", "airport", "formalités", "formalites", "document", "documents",
-    "ambassade", "consulat", "immigration", "vaccin", "vaccination",
-    "banque", "bank", "guichet", "atm", "distributeur", "mobile money",
-    "wave", "free money", "expresso money", "yas", "free", "orange",
-    "concert", "festival", "match", "football", "salon", "foire",
-    "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
-    "urgent", "alerte", "grève", "greve", "perturbation", "incident",
-)
-
-def format_senegal_knowledge(data):
-    profile = data.get("country_profile", {})
-    regions = data.get("regions", [])
-    lines = [
-        "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
-        "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
-    ]
-    modules = data.get("knowledge_modules", {})
-    if modules:
-        lines.append("MODULES NATIONAUX COMPLÉMENTAIRES :")
-        for name, module in modules.items():
-            description = module.get("description") or ""
-            if description:
-                lines.append(f"- {name}: {description}")
-            for key in ("anchors", "languages", "cultural_areas", "traditions", "important_context", "stable_knowledge", "live_topics", "modes", "key_nodes", "sectors", "regional_examples", "ecosystems", "topics", "food_topics", "daily_topics", "categories", "major_areas"):
-                values = module.get(key)
-                if values:
-                    lines.append(f"  {key}: {', '.join(map(str, values))}")
-            rule = module.get("rule")
-            if rule:
-                lines.append(f"  règle: {rule}")
-            source = module.get("live_source")
-            if source:
-                lines.append(f"  source temps réel: {source}")
-    if profile:
-        lines.append("REPÈRES NATIONAUX :")
-        lines.append(
-            f"- Capitale : {profile.get('capital')}; superficie : {profile.get('area_km2')} km²; "
-            f"langue officielle : {profile.get('official_language')}; monnaie : {profile.get('currency', {}).get('name')} ({profile.get('currency', {}).get('code')}); "
-            f"fuseau : {profile.get('time_zone')}; indépendance : {profile.get('independence_date')}."
-        )
-        geography = profile.get("geography", {})
-        if geography:
-            lines.append(
-                f"- Géographie : façade {geography.get('coastline')}; pays voisins : {', '.join(geography.get('neighboring_countries', []))}; "
-                f"grands fleuves : {', '.join(geography.get('major_rivers', []))}; zones : {', '.join(geography.get('major_geographic_areas', []))}."
-            )
-        climate = profile.get("climate", {})
-        if climate:
-            lines.append(f"- Climat : {climate.get('description')}")
-        emergencies = profile.get("emergency_numbers", [])
-        if emergencies:
-            lines.append("URGENCES : " + "; ".join(f"{x.get('service')} {x.get('number')}" for x in emergencies) + ".")
-    for region in regions:
-        places = ", ".join(region.get("places", [])[:12])
-        highlights = ", ".join(region.get("highlights", [])[:10])
-        departments = ", ".join(region.get("departments", [])[:8])
-        lines.append(
-            f"- {region.get('name')}: départements = {departments}; localités = {places}; "
-            f"points d'intérêt = {highlights}."
-        )
-    places = data.get("places", [])
-    if places:
-        lines.append("Lieux détaillés :")
-        for place in places[:60]:
-            what = "; ".join(str(place.get("what_to_see", "")).split(";")[:5])
-            lines.append(f"- {place.get('name')}: {place.get('summary', '')} À voir : {what}.")
-    domains = data.get("knowledge_scope", {}).get("domains", {})
-    if domains:
-        lines.append("DOMAINES À COUVRIR :")
-        for key, description in domains.items():
-            lines.append(f"- {key}: {description}")
-    sources = data.get("source_registry", [])
-    if sources:
-        lines.append("SOURCES DE RÉFÉRENCE :")
-        for source in sources:
-            lines.append(f"- {source.get('name')}: {source.get('role')}.")
-    reference_date = data.get("current_reference_date")
-    if reference_date:
-        lines.append(f"DATE DE RÉFÉRENCE DE LA BASE : {reference_date}. Cette date ne remplace jamais une vérification web pour une information actuelle.")
-    dynamic_topics = data.get("dynamic_topics", [])
-    if dynamic_topics:
-        lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
-    unesco = ", ".join(data.get("unesco_world_heritage", []))
-    if unesco:
-        lines.append(f"Patrimoine mondial UNESCO (une partie du patrimoine, pas toute la connaissance nationale) : {unesco}.")
-    return "\n".join(lines)
 
 SYSTEM_PROMPT = """
 Tu es Teranga AI, un assistant numérique moderne spécialisé dans le Sénégal.
@@ -531,179 +448,8 @@ Si on te demande un lieu ou un plat connu, ajoute un détail concret (quartier, 
 """
 
 
-def normalize(value):
-    value = unicodedata.normalize("NFKD", str(value or ""))
-    return "".join(ch for ch in value if not unicodedata.combining(ch)).lower().strip()
 
 
-CSRF_TTL = 60 * 60 * 12
-
-def sanitize_text(text, max_len):
-    text = ZERO_WIDTH_CHARS.sub("", CONTROL_CHARS.sub("", str(text or "")))
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = re.sub(r"[ \t]{2,}", " ", text)
-    return text.strip()[:max_len]
-
-
-def clean_answer(text):
-    text = sanitize_text(text, 8000)
-    text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
-    text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
-    text = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("```", ""), text)
-    text = re.sub(r"`([^`]+)`", r"\1", text)
-    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"__(.*?)__", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
-    text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
-    text = text.replace("**", "").replace("__", "")
-    text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text.strip()
-
-
-PHOTO_TOPICS = (
-    ("monument de la renaissance", "Monument de la Renaissance africaine"),
-    ("renaissance africaine", "Monument de la Renaissance africaine"),
-    ("maison des esclaves", "Maison des Esclaves"),
-    ("cap skirring", "Cap Skirring"),
-    ("île de gorée", "Île de Gorée"),
-    ("ile de goree", "Île de Gorée"),
-    ("saint-louis", "Saint-Louis (Sénégal)"),
-    ("saint louis", "Saint-Louis (Sénégal)"),
-    ("niokolo-koba", "Parc national du Niokolo-Koba"),
-    ("niokolo koba", "Parc national du Niokolo-Koba"),
-    ("djoudj", "Parc national des oiseaux du Djoudj"),
-    ("joal-fadiouth", "Joal-Fadiouth"),
-    ("fadiouth", "Joal-Fadiouth"),
-    ("joal", "Joal-Fadiouth"),
-    ("thiéboudienne", "Thiéboudienne"),
-    ("thieboudienne", "Thiéboudienne"),
-    ("ceebu jen", "Thiéboudienne"),
-    ("ceebu jën", "Thiéboudienne"),
-    ("café touba", "Café Touba"),
-    ("cafe touba", "Café Touba"),
-    ("lac rose", "Lac Retba"),
-    ("lac retba", "Lac Retba"),
-    ("richard-toll", "Richard-Toll"),
-    ("richard toll", "Richard-Toll"),
-    ("grande mosquée de touba", "Grande Mosquée de Touba"),
-    ("mosquée de touba", "Grande Mosquée de Touba"),
-    ("casamance", "Casamance"),
-    ("somone", "La Somone"),
-    ("yassa", "Yassa"),
-    ("bissap", "Bissap"),
-    ("mafé", "Mafé"),
-    ("maafe", "Mafé"),
-    ("diamniadio", "Diamniadio"),
-    ("guédiawaye", "Guédiawaye"),
-    ("guediawaye", "Guédiawaye"),
-    ("tambacounda", "Tambacounda"),
-    ("ziguinchor", "Ziguinchor"),
-    ("kedougou", "Kédougou"),
-    ("kédougou", "Kédougou"),
-    ("kaffrine", "Kaffrine"),
-    ("sédhiou", "Sédhiou"),
-    ("sedhiou", "Sédhiou"),
-    ("rufisque", "Rufisque"),
-    ("kaolack", "Kaolack"),
-    ("diourbel", "Diourbel"),
-    ("gorée", "Île de Gorée"),
-    ("goree", "Île de Gorée"),
-    ("mbour", "M'Bour"),
-    ("m'bour", "M'Bour"),
-    ("touba", "Touba (Sénégal)"),
-    ("thiès", "Thiès"),
-    ("thies", "Thiès"),
-    ("kolda", "Kolda"),
-    ("matam", "Matam"),
-    ("louga", "Louga"),
-    ("fatick", "Fatick"),
-    ("podor", "Podor"),
-    ("saly", "Saly Portudal"),
-    ("pikine", "Pikine"),
-    ("dakar", "Dakar"),
-    ("ndar", "Saint-Louis (Sénégal)"),
-)
-
-
-def topic_wikipedia_titles(message, limit=2):
-    lowered = message.lower()
-    found, seen = [], set()
-    for key, title in PHOTO_TOPICS:
-        if key in lowered and title not in seen:
-            seen.add(title)
-            found.append(title)
-            if len(found) >= limit:
-                break
-    return found
-
-
-def wiki_summary(lang, title):
-    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
-    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
-    with urlopen(req, timeout=2) as resp:
-        return json.loads(resp.read().decode("utf-8"))
-
-
-def usable_wiki_image(src):
-    src = str(src or "").split("?", 1)[0][:2000]
-    if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
-        return ""
-    lowered = src.lower()
-    if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
-        return ""
-    return src
-
-
-ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
-
-
-def image_proxy_url(src):
-    src = usable_wiki_image(src)
-    return f"/image-proxy?url={quote(src, safe='')}" if src else ""
-
-
-def _allowed_image_url(src):
-    parsed = urlparse(str(src or ""))
-    host = (parsed.hostname or "").lower().rstrip(".")
-    if (
-        parsed.scheme != "https"
-        or host not in ALLOWED_IMAGE_HOSTS
-        or parsed.username
-        or parsed.password
-        or parsed.port not in (None, 443)
-    ):
-        return False
-    return True
-
-
-class _SafeImageRedirectHandler(HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        if not _allowed_image_url(newurl):
-            raise ValueError("Redirection image non autorisée")
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
-
-
-_SAFE_IMAGE_OPENER = build_opener(_SafeImageRedirectHandler)
-
-
-def safe_image_fetch(src):
-    if not _allowed_image_url(src):
-        raise ValueError("Source image non autorisée")
-    req = Request(src, headers={"User-Agent": "TerangaAI/1.0"})
-    with _SAFE_IMAGE_OPENER.open(req, timeout=OUTBOUND_TIMEOUT) as upstream:
-        headers = getattr(upstream, "headers", {})
-        get_type = getattr(headers, "get_content_type", None)
-        content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
-        if not content_type.startswith("image/"):
-            raise ValueError("Type image invalide")
-        length = str(headers.get("Content-Length") or "").strip()
-        if length.isdigit() and int(length) > MAX_IMAGE_BYTES:
-            raise ValueError("Image trop volumineuse")
-        data = upstream.read(MAX_IMAGE_BYTES + 1)
-        if len(data) > MAX_IMAGE_BYTES:
-            raise ValueError("Image trop volumineuse")
-        return content_type, data
 
 
 @app.get("/image-proxy")
@@ -719,11 +465,10 @@ def image_proxy():
     src = usable_wiki_image(request.args.get("url", ""))
     if not src:
         return Response("Image invalide", status=400, mimetype="text/plain")
-    host = urlparse(src).hostname or ""
-    if host not in ALLOWED_IMAGE_HOSTS:
+    if not allowed_image_url(src):
         return Response("Source image non autorisée", status=403, mimetype="text/plain")
     try:
-        content_type, data = safe_image_fetch(src)
+        content_type, data = _safe_image_fetch(src, MAX_IMAGE_BYTES, OUTBOUND_TIMEOUT, opener=_SAFE_IMAGE_OPENER)
         return Response(
             data,
             mimetype=content_type,
@@ -754,483 +499,99 @@ def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
 
 
+
+
+
+from services.conversation import build_conversation as _build_conversation
+from services.responses import extract_sources, event_delta
+from services.http_security import origin_allowed as _origin_allowed
+from services.chat_payload import normalize_chat_input
+from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
+from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
+from services.http_headers import add_security_headers as _add_security_headers
+from services.identity_cookie import should_set_identity_cookie
+
+_allowed_image_url = allowed_image_url
+_SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
+
 def knowledge_image_titles(message, limit=4):
-    text_value = normalize(message)
-    titles = []
-    for region in SENEGAL_KNOWLEDGE.get("regions", []):
-        candidates = [region.get("name", ""), *region.get("places", []), *region.get("highlights", []), *region.get("image_queries", [])]
-        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
-            for candidate in candidates:
-                if candidate and candidate not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
-    for place in SENEGAL_KNOWLEDGE.get("places", []):
-        candidates = [place.get("name", ""), *place.get("image_queries", [])]
-        if any(normalize(str(candidate)) and normalize(str(candidate)) in text_value for candidate in candidates):
-            for candidate in candidates:
-                if candidate and candidate not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
-    return titles
+    return _knowledge_image_titles(message, SENEGAL_KNOWLEDGE, normalize=normalize, limit=limit)
 
 
 def fetch_topic_images(message):
-    text_value = normalize(message)
-    photo_request = should_fetch_images(message)
-    if not photo_request:
-        return None
-
-    # Pour un lieu explicite, on utilise uniquement ses requêtes photo dédiées.
-    # Cela évite qu'une demande précise (ex. Gorée) retombe sur des images
-    # génériques de la région de Dakar.
-    specific_titles = []
-    for place in SENEGAL_KNOWLEDGE.get("places", []):
-        name = normalize(str(place.get("name", "")))
-        aliases = [name]
-        if name.startswith("ile de "):
-            aliases.append(name[7:])
-            if name == "ile de goree":
-                aliases.append("gore")
-        if name.startswith("île de "):
-            aliases.append(name[7:])
-        if any(alias and alias in text_value for alias in aliases):
-            specific_titles.extend(str(q) for q in (place.get("image_queries") or []) if q)
-
-    if specific_titles:
-        titles = specific_titles
-    else:
-        titles = knowledge_image_titles(message, 4) + topic_wikipedia_titles(message, 4)
-    if not titles:
-        titles = ["Dakar Sénégal"]
-
-    photos = []
-    seen_titles = set()
-    seen_urls = set()
-
-    for title in titles:
-        title = str(title or "").strip()
-        if not title or title in seen_titles:
-            continue
-        seen_titles.add(title)
-
-        # Le Custom Search JSON API est fermé aux nouveaux clients Google depuis 2026.
-        # La recherche Google est maintenant rendue côté navigateur via Programmable Search Element.
-        candidates = []
-        try:
-            candidates = fetch_commons_images(title, limit=3)
-        except Exception:
-            app.logger.exception("Erreur recherche photos Commons pour %s", title)
-            candidates = []
-
-        if not candidates:
-            try:
-                fallback = fetch_city_image(title)
-                candidates = [fallback] if fallback else []
-            except Exception:
-                app.logger.exception("Erreur fallback photo pour %s", title)
-                candidates = []
-
-        for photo in candidates:
-            if not photo:
-                continue
-            photo["search_query"] = title
-            photo["display_url"] = image_proxy_url(photo.get("url", ""))
-            src = photo.get("url", "")
-            if not src or src in seen_urls:
-                continue
-            seen_urls.add(src)
-            photos.append(photo)
-            if len(photos) >= 6:
-                return photos
-
-    return photos or None
-
-
-def contextual_query(history, message):
-    """Construit une requête interne enrichie pour les suivis courts.
-    L'historique reste non fiable : il sert seulement à retrouver le dernier
-    contexte utilisateur utile, jamais à fournir des instructions système.
-    """
-    parts = []
-    if isinstance(history, list):
-        for item in history[-MAX_HISTORY_ITEMS:]:
-            if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
-                continue
-            text = sanitize_text(item.get("content", ""), 900)
-            if text:
-                parts.append(text)
-    current = sanitize_text(message, MAX_MESSAGE_LENGTH)
-    # Les derniers messages utilisateur sont les plus utiles pour les suivis.
-    recent = parts[-4:]
-    if current:
-        recent.append(current)
-    return " | ".join(recent)[-5000:]
-
-
-def infer_senegal_context(history, message):
-    text_value = normalize(contextual_query(history, message))
-    cities = (
-        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
-        "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
-        "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
-        "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
-        "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
-        "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
-        "almadies", "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
+    return _fetch_topic_images(
+        message,
+        SENEGAL_KNOWLEDGE,
+        normalize=normalize,
+        should_fetch_images=should_fetch_images,
+        topic_wikipedia_titles=topic_wikipedia_titles,
+        knowledge_image_titles=knowledge_image_titles,
+        fetch_commons_images=fetch_commons_images,
+        fetch_city_image=fetch_city_image,
+        image_proxy_url=image_proxy_url,
+        logger=app.logger,
     )
-    regions = (
-        "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
-        "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
-        "ziguinchor", "saint-louis", "louga", "matam",
-    )
-    aliases = {
-        "aeroport blaise diagne": "aibd", "aéroport blaise diagne": "aibd",
-        "ile de goree": "goree", "île de gorée": "goree",
-        "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
-        "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
-    }
-    normalized_place_text = text_value
-    for alias, canonical in aliases.items():
-        if normalize(alias) in normalized_place_text:
-            normalized_place_text += " " + canonical
-    found_cities = [x for x in cities if x in normalized_place_text]
-    found_regions = [x for x in regions if x in normalized_place_text]
-
-    intent_groups = {
-        "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
-        "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
-        "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
-        "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
-        "travel": ("voyage", "visiter", "séjour", "sejour", "tourisme", "vacances", "plage", "goree", "gorée"),
-        "admin": ("visa", "passeport", "formalites", "formalités", "demarche", "démarche", "document"),
-        "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
-        "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
-        "news": ("actualite", "actualités", "actualite", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
-    }
-    intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
-
-    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
-    budget = amounts[-1].strip() if amounts else ""
-    duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
-    duration = duration_match.group(0) if duration_match else ""
-    constraints = []
-    if budget:
-        constraints.append("budget=" + budget)
-    if duration:
-        constraints.append("durée=" + duration)
-    if "avec mes enfants" in text_value or "en famille" in text_value:
-        constraints.append("famille")
-    if "avec enfant" in text_value or "avec enfants" in text_value:
-        constraints.append("enfants")
-    if "ce soir" in text_value:
-        constraints.append("ce soir")
-    if "demain" in text_value:
-        constraints.append("demain")
-    place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
-    return {
-        "place": place,
-        "has_place": bool(found_cities or found_regions),
-        "query": text_value,
-        "intents": intents[:4],
-        "constraints": constraints[:5],
-        "budget": budget,
-        "duration": duration,
-    }
-
-
-def should_use_planner(context):
-    """Détecte une demande qui bénéficie d'un plan multi-étapes sans forcer la recherche web."""
-    intents = set(context.get("intents", []))
-    query = context.get("query", "")
-    planning_terms = (
-        "planifie", "programme", "organise", "itineraire", "itinéraire",
-        "journee", "journée", "sejour", "séjour", "vacances", "weekend",
-        "week-end", "pendant", "pour 2 jours", "pour 3 jours", "pour 4 jours",
-        "pour 5 jours", "pour une semaine", "budget",
-    )
-    has_duration = bool(context.get("duration"))
-    has_budget = bool(context.get("budget"))
-    return (
-        bool(intents.intersection({"travel", "transport", "food", "price"}))
-        and (has_duration or has_budget or any(term in query for term in planning_terms))
-    )
-
-
-def build_planner_data(context):
-    """Construit un brief déterministe pour guider les plans et leurs budgets."""
-    budget_raw = context.get("budget", "")
-    budget_match = re.search(r"(\d[\d\\s.,]*)", budget_raw or "")
-    budget_amount = None
-    if budget_match:
-        raw = re.sub(r"[\\s.,]", "", budget_match.group(1))
-        try:
-            budget_amount = int(raw)
-        except ValueError:
-            budget_amount = None
-
-    duration_raw = context.get("duration", "")
-    duration_days = None
-    duration_match = re.search(r"(\d+)", duration_raw or "")
-    if duration_match:
-        try:
-            duration_days = int(duration_match.group(1))
-        except ValueError:
-            duration_days = None
-    if duration_days is None and "semaine" in duration_raw:
-        duration_days = 7
-
-    return {
-        "place": context.get("place", ""),
-        "duration": duration_raw,
-        "duration_days": duration_days,
-        "budget_raw": budget_raw,
-        "budget_fcfa": budget_amount,
-        "intents": context.get("intents", []),
-        "constraints": context.get("constraints", []),
-    }
-
-
-def should_use_web(message, context=""):
-    lowered = normalize(message)
-    combined = normalize(f"{context} {message}")
-    current_markers = (
-        "verifie", "confirme", "a jour", "exactement", "en ce moment",
-        "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
-        "latest", "current", "right now", "as of", "verify", "check",
-        "actualite", "actualites", "news", "nouveau", "nouvelle",
-    )
-    if any(term in lowered for term in current_markers):
-        return True
-    if any(term in lowered for term in WEB_HINTS):
-        return True
-    live_entities = (
-        "president", "presidente", "ministre", "maire", "depute",
-        "gouvernement", "federation", "selectionneur", "club",
-        "election", "elections", "loi", "decret", "parlement", "politique",
-        "equipe nationale", "joueur", "chanteur", "artiste",
-        "entreprise", "restaurant", "hotel",
-    )
-    if any(term in lowered for term in live_entities):
-        return True
-
-    # Intentions qui vieillissent vite, même sans « actuel » ou « aujourd'hui ».
-    dynamic_intents = (
-        "prix", "tarif", "cout", "coût", "combien", "horaire", "horaires",
-        "ouvert", "ferme", "fermé", "disponible", "disponibilite", "disponibilité",
-        "reservation", "réservation", "billet", "ticket", "vol", "ferry",
-        "taxi", "bus", "transport", "aeroport", "aéroport", "aibd",
-        "visa", "passeport", "formalites", "formalités", "démarche", "demarche",
-        "sim", "esim", "forfait", "internet", "orange money", "wave",
-        "free money", "mobile money", "paiement", "transfert", "change",
-        "taux", "inflation", "population", "salaire", "impot", "impôt",
-        "douane", "frontiere", "frontière", "securite", "sécurité",
-        "alerte", "pluie", "meteo", "météo", "temperature", "température",
-        "greve", "grève", "travaux", "route", "circulation", "manifestation",
-        "concert", "evenement", "événement", "match", "resultat", "résultat",
-        "classement", "promotion", "offre",
-    )
-    if any(term in lowered for term in dynamic_intents):
-        return True
-    # Un suivi comme « et demain ? » peut dépendre d'un sujet dynamique
-    # présent dans le tour précédent.
-    contextual_dynamic = (
-        "meteo", "météo", "prix", "tarif", "cout", "coût", "horaire",
-        "ouvert", "disponible", "reservation", "réservation", "billet",
-        "vol", "ferry", "transport", "visa", "passeport", "sim", "esim",
-        "forfait", "orange money", "wave", "taux", "change", "securite",
-        "sécurité", "alerte", "greve", "grève", "match", "concert",
-        "evenement", "événement", "promotion", "offre",
-    )
-    return any(term in combined for term in contextual_dynamic)
-
-
-def should_fetch_images(message):
-    lowered = normalize(message)
-    explicit = (
-        "photo", "photos", "image", "images", "visuel", "visuels",
-        "montre moi", "montre-moi", "affiche", "fais voir",
-        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
-        "voir la ville", "montre la ville", "show me", "show",
-        "picture", "pictures",
-    )
-    return any(term in lowered for term in explicit)
-
-
-def build_conversation(history, message):
-    lines = []
-    if isinstance(history, list):
-        recent = history[-MAX_HISTORY_ITEMS:]
-        for index, item in enumerate(recent):
-            if not isinstance(item, dict):
-                continue
-            role = str(item.get("role", "")).lower()
-            content = sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)
-            if role not in {"user", "assistant"} or not content:
-                continue
-            if index == len(recent) - 1 and role == "user" and content == message:
-                continue
-            label = "Utilisateur" if role == "user" else "Teranga AI"
-            lines.append(f"{label}: {content}")
-    conversation = "\n".join(lines)
-    return ("<historique_non_fiable>\n" + conversation + "\n</historique_non_fiable>\n" +
-            "<demande_utilisateur>\n" + message + "\n</demande_utilisateur>")[-MAX_HISTORY_CHARS:]
 
 
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
     # Ne pas relire X-Forwarded-For directement : il peut être falsifié par un client.
-    return (request.remote_addr or "unknown")[:64]
+    return _client_ip(request.remote_addr)
 
 
 def client_identity():
-    raw = request.cookies.get(IDENTITY_COOKIE, "")
-    if raw and re.fullmatch(r"[A-Za-z0-9_-]{24,80}", raw):
-        return raw
-    return secrets.token_urlsafe(24)
+    return _client_identity(request.cookies.get(IDENTITY_COOKIE, ""))
 
 
 def abuse_key(ip):
-    identity = client_identity()
-    return hashlib.sha256(f"{ip}:{identity}".encode("utf-8")).hexdigest()[:32]
-
-
-def _redis_key(prefix, value):
-    digest = hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:40]
-    return f"teranga:abuse:{prefix}:{digest}"
+    return _abuse_key(ip, client_identity())
 
 
 def record_abuse(identity, kind, weight=1):
-    now = time.time()
-    key = str(identity)[:64]
-    if redis_client is not None:
-        try:
-            redis_key = _redis_key("score", key)
-            score = redis_client.incrbyfloat(redis_key, min(int(weight), 5))
-            redis_client.expire(redis_key, ABUSE_SCORE_WINDOW)
-            if score >= ABUSE_SCORE_THRESHOLD:
-                redis_client.setex(_redis_key("block", key), ABUSE_BLOCK_SECONDS, "1")
-                return True
-            return False
-        except Exception:
-            app.logger.exception("Redis abuse-score, fallback mémoire")
-    with RATE_LOCK:
-        events = abuse_events[key]
-        while events and now - events[0][0] > ABUSE_SCORE_WINDOW:
-            events.popleft()
-        events.append((now, kind, min(int(weight), 5)))
-        score = sum(item[2] for item in events)
-        if score >= ABUSE_SCORE_THRESHOLD:
-            abuse_blocks[key] = now + ABUSE_BLOCK_SECONDS
-            return True
-    return False
+    return _record_abuse(
+        identity,
+        kind,
+        weight,
+        redis_client=redis_client,
+        logger=app.logger,
+        events_by_key=abuse_events,
+        blocks_by_key=abuse_blocks,
+        lock=RATE_LOCK,
+        score_window=ABUSE_SCORE_WINDOW,
+        block_seconds=ABUSE_BLOCK_SECONDS,
+        score_threshold=ABUSE_SCORE_THRESHOLD,
+    )
 
 
 def abuse_blocked(identity):
-    now = time.time()
-    key = str(identity)[:64]
-    if redis_client is not None:
-        try:
-            return bool(redis_client.exists(_redis_key("block", key)))
-        except Exception:
-            app.logger.exception("Redis abuse-block, fallback mémoire")
-    with RATE_LOCK:
-        until = abuse_blocks.get(key, 0)
-        if until > now:
-            return True
-        if until:
-            abuse_blocks.pop(key, None)
-    return False
+    return _abuse_blocked(
+        identity,
+        redis_client=redis_client,
+        logger=app.logger,
+        blocks_by_key=abuse_blocks,
+        lock=RATE_LOCK,
+    )
 
 
 def allowed_request(ip, log, limit, window, bucket="chat"):
-    if redis_client is not None:
-        try:
-            key = f"teranga:rl:{bucket}:{hashlib.sha256(str(ip).encode('utf-8')).hexdigest()[:40]}"
-            count = redis_client.incr(key)
-            if count == 1:
-                redis_client.expire(key, int(window))
-            return count <= limit
-        except Exception:
-            app.logger.exception("Redis rate-limit, fallback mémoire")
-    now = time.time()
-    with RATE_LOCK:
-        while log and now - log[0] > window:
-            log.popleft()
-        if len(log) >= limit:
-            return False
-        log.append(now)
-        return True
-
-
-def public_error(exc):
-    text = f"{type(exc).__name__} {exc}".lower()
-    text = re.sub(r"(sk-[a-z0-9_-]{8,})", "[redacted-key]", text)
-    text = re.sub(r"(bearer\s+)[a-z0-9._-]{12,}", r"\1[redacted-token]", text)
-    text = re.sub(r"([?&](?:key|api_key|token|access_token)=)[^&\s]+", r"\1[redacted]", text)
-    if "timeout" in text or "timed out" in text:
-        return "La réponse a pris trop de temps. Réessaie."
-    if "429" in text or "rate limit" in text or "quota" in text:
-        return "Le service est très demandé. Réessaie dans un moment."
-    if "401" in text or "403" in text or "api key" in text or "authentication" in text:
-        return "Le service IA est mal authentifié. Vérifie OPENAI_API_KEY sur Render."
-    if "model" in text and ("not found" in text or "does not exist" in text or "not available" in text or "unsupported" in text or "not permitted" in text):
-        return "Le modèle IA configuré n'est pas disponible. Le modèle de secours va être essayé."
-    if "web_search" in text or "web search" in text:
-        return "La recherche web IA a échoué. Réessaie sans la recherche actuelle."
-    if "badrequest" in text or "invalid" in text or "parameter" in text:
-        return "La requête IA est refusée par le service. Vérifie le modèle ou les paramètres."
-    if "connection" in text or "network" in text or "502" in text or "503" in text:
-        return "Le service IA est momentanément inaccessible. Réessaie dans quelques secondes."
-    return "Le service IA a rencontré une erreur inattendue. Vérifie les logs Render puis réessaie."
-def sign_token(value):
-    digest = hmac.new(
-        app.config["SECRET_KEY"].encode("utf-8"),
-        value.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    return f"{value}.{digest}"
-
-
-def valid_token(token):
-    if not token or "." not in token:
-        return False
-    value, _, provided = token.rpartition(".")
-    expected = hmac.new(
-        app.config["SECRET_KEY"].encode("utf-8"),
-        value.encode("utf-8"),
-        hashlib.sha256,
-    ).hexdigest()
-    if not hmac.compare_digest(provided, expected):
-        return False
-    try:
-        issued_at = int(value.split(".", 1)[0])
-    except (ValueError, IndexError):
-        return False
-    return 0 <= time.time() - issued_at <= CSRF_TTL
-
-
-def issue_csrf():
-    return sign_token(f"{int(time.time())}.{secrets.token_urlsafe(24)}")
+    return _allowed_request(
+        redis_client=redis_client,
+        logger=app.logger,
+        ip=ip,
+        log=log,
+        limit=limit,
+        window=window,
+        bucket=bucket,
+        lock=RATE_LOCK,
+    )
 
 
 def origin_allowed():
-    if not ALLOWED_ORIGINS:
-        return True
-    origin = request.headers.get("Origin") or ""
-    referer = request.headers.get("Referer") or ""
-    if origin:
-        return origin in ALLOWED_ORIGINS
-    if not referer:
-        return False
-    try:
-        parsed = urlparse(referer)
-        referer_origin = f"{parsed.scheme}://{parsed.netloc}"
-    except Exception:
-        return False
-    return referer_origin in ALLOWED_ORIGINS
-
+    return _origin_allowed(
+        request.headers.get("Origin"),
+        request.headers.get("Referer"),
+        ALLOWED_ORIGINS,
+    )
 
 def require_json_post(fn):
     @wraps(fn)
@@ -1239,15 +600,13 @@ def require_json_post(fn):
             return jsonify({"error": "Type de contenu invalide."}), 415
         if not origin_allowed():
             return jsonify({"error": "Origine non autorisée."}), 403
-        cookie_token = request.cookies.get(CSRF_COOKIE, "")
-        header_token = request.headers.get(CSRF_HEADER, "")
-        if not cookie_token or not header_token:
-            return jsonify({"error": "csrf"}), 403
-        try:
-            same = hmac.compare_digest(cookie_token, header_token)
-        except Exception:
-            same = False
-        if not same or not valid_token(cookie_token):
+        if not valid_request_token(
+            request.cookies.get(CSRF_COOKIE, ""),
+            request.headers.get(CSRF_HEADER, ""),
+            secret_key=app.config["SECRET_KEY"],
+            ttl=CSRF_TTL,
+            validator=valid_token,
+        ):
             return jsonify({"error": "csrf"}), 403
         return fn(*args, **kwargs)
     return wrapper
@@ -1255,7 +614,7 @@ def require_json_post(fn):
 
 @app.after_request
 def add_client_identity(response):
-    if request.path in {"/chat", "/tts", "/stt", "/image-proxy", "/exchange-rates"} and not request.cookies.get(IDENTITY_COOKIE):
+    if should_set_identity_cookie(request.path, request.cookies.get(IDENTITY_COOKIE)):
         response.set_cookie(
             IDENTITY_COOKIE,
             client_identity(),
@@ -1269,39 +628,13 @@ def add_client_identity(response):
 
 @app.after_request
 def add_security_headers(response):
-    nonce = getattr(request, "_csp_nonce", "")
-    script_src = f"'self' 'nonce-{nonce}'" if nonce else "'self' 'unsafe-inline'"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = (
-        "camera=(), geolocation=(), microphone=(self), payment=(), usb=(), "
-        "accelerometer=(), gyroscope=(), magnetometer=()"
+    return _add_security_headers(
+        response,
+        path=request.path,
+        nonce=getattr(request, "_csp_nonce", ""),
+        is_secure=request.is_secure,
+        forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
     )
-    response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
-    response.headers["Origin-Agent-Cluster"] = "?1"
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
-    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-    response.headers["Content-Security-Policy"] = (
-        f"default-src 'self'; script-src {script_src} 'unsafe-eval' https://cse.google.com https://www.google.com https://www.gstatic.com; "
-        "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://upload.wikimedia.org https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self' https://cse.google.com https://www.google.com; media-src 'self' blob:; object-src 'none'; "
-        "frame-src https://www.google.com https://cse.google.com https://maps.google.com; "
-        "child-src https://www.google.com https://maps.google.com; "
-        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-    )
-    cached = {
-        "/icon.svg", "/og.svg", "/og.png", "/icon-192.png", "/icon-512.png",
-        "/robots.txt", "/sitemap.xml", "/manifest.webmanifest",
-    }
-    if request.path in cached:
-        response.headers["Cache-Control"] = "public, max-age=86400"
-    else:
-        response.headers["Cache-Control"] = "no-store"
-    if request.is_secure or request.headers.get("X-Forwarded-Proto") == "https":
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    response.headers.pop("Server", None)
-    return response
 
 
 @app.get("/health")
@@ -1311,26 +644,23 @@ def health():
 
 def parse_chat_payload():
     data = request.get_json(silent=True)
-    if not isinstance(data, dict):
+    normalized, error = normalize_chat_input(
+        data,
+        sanitize=sanitize_text,
+        max_message_length=MAX_MESSAGE_LENGTH,
+        max_history_items=MAX_HISTORY_ITEMS,
+        max_history_item_length=MAX_HISTORY_ITEM_LENGTH,
+        safe_languages=SAFE_LANG,
+    )
+    if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
-    message = sanitize_text(data.get("message", ""), MAX_MESSAGE_LENGTH)
-    history = data.get("history", [])
-    language = str(data.get("language", "fr")).lower()[:8]
-    if language not in SAFE_LANG:
-        language = "fr"
-    if not isinstance(history, list):
-        history = []
-    history = history[-MAX_HISTORY_ITEMS:]
-    history = [
-        {"role": str(item.get("role", "")).lower(), "content": sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH)}
-        for item in history
-        if isinstance(item, dict) and str(item.get("role", "")).lower() in {"user", "assistant"}
-    ]
-    audience = str(data.get("audience", "tourist")).lower()[:16]
-    if audience not in {"tourist", "resident", "diaspora", "merchant"}:
-        audience = "tourist"
-    if not message:
+    if error == "empty":
         return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
+
+    message = normalized["message"]
+    history = normalized["history"]
+    language = normalized["language"]
+    audience = normalized["audience"]
     language_instruction = {
         "fr": "Réponds en français naturel, avec un vocabulaire sénégalais naturel quand le contexte s'y prête.",
         "en": "Reply in natural English. Keep Senegalese names, places, dishes and cultural terms in their established form.",
@@ -1412,7 +742,7 @@ def parse_chat_payload():
     }[audience][language]
     return {
         "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
-        "input_text": build_conversation(history, message),
+        "input_text": _build_conversation(history, message, max_history_items=MAX_HISTORY_ITEMS, max_history_item_length=MAX_HISTORY_ITEM_LENGTH, max_history_chars=MAX_HISTORY_CHARS),
         "use_web": should_use_web(message, enriched_context),
         "planner": planner_enabled,
         "planner_data": planner_data,
@@ -1425,124 +755,28 @@ def parse_chat_payload():
 
 
 def create_response(payload, stream):
-    kwargs = model_kwargs(payload, stream)
-    try:
-        return client.responses.create(**kwargs)
-    except Exception as exc:
-        text = f"{type(exc).__name__} {exc}".lower()
-        model_error = (
-            "model" in text
-            and (
-                "not found" in text
-                or "does not exist" in text
-                or "not available" in text
-                or "unsupported" in text
-                or "not permitted" in text
-            )
-        )
-        if model_error:
-            fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
-            fallback = dict(kwargs)
-            fallback["model"] = fallback_model
-            app.logger.warning("Modèle %s indisponible; tentative avec %s", MODEL, fallback_model)
-            return client.responses.create(**fallback)
-        raise
+    fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
+    return _create_openai_response(
+        client,
+        payload,
+        build_kwargs=model_kwargs,
+        model=MODEL,
+        logger=app.logger,
+        stream=stream,
+        fallback_models=(fallback_model,),
+    )
+
 def model_kwargs(payload, stream):
-    use_web = bool(payload["use_web"])
-    planner = bool(payload.get("planner"))
-    domain = str((payload.get("intent_context") or {}).get("domain") or "general")
-    effort = os.getenv("OPENAI_REASONING_EFFORT", reasoning_effort(use_web, planner))
-    kwargs = {
-        "model": MODEL,
-        "instructions": payload["instructions"],
-        "input": payload["input_text"],
-        "max_output_tokens": 700 if (use_web or planner) else 500,
-        "reasoning": {"effort": effort},
-        "truncation": "auto",
-        "stream": stream,
-    }
-    if use_web:
-        tool = {
-            "type": "web_search",
-            "search_context_size": search_context_size(domain, planner),
-        }
-        domains = preferred_domains(domain)
-        if domains:
-            tool["filters"] = {"allowed_domains": list(domains)}
-        kwargs["tools"] = [tool]
-    return kwargs
+    return build_model_kwargs(
+        payload,
+        model=MODEL,
+        reasoning_effort=reasoning_effort,
+        search_context_size=search_context_size,
+        preferred_domains=preferred_domains,
+        stream=stream,
+        reasoning_override=os.getenv("OPENAI_REASONING_EFFORT") or None,
+    )
 
-
-def _field(obj, key, default=None):
-    if obj is None:
-        return default
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
-
-
-def extract_sources(*objs):
-    found = []
-    seen = set()
-
-    def add(url, title=""):
-        url = sanitize_text(url, 400)
-        if not url.startswith(("http://", "https://")):
-            return
-        key = url.split("#", 1)[0].rstrip("/").lower()
-        if key in seen or len(found) >= 5:
-            return
-        seen.add(key)
-        host = urlparse(url).netloc.replace("www.", "").lower()
-        if not host or host.endswith("openai.com") or host in {"localhost"}:
-            return
-        title = sanitize_text(title, 72) or host or "Source"
-        found.append({"title": title, "url": url})
-
-    def walk(node, depth=0):
-        if node is None or depth > 8 or len(found) >= 5:
-            return
-        if isinstance(node, (list, tuple)):
-            for item in node[:40]:
-                walk(item, depth + 1)
-            return
-        url = _field(node, "url")
-        title = _field(node, "title") or _field(node, "name") or ""
-        atype = str(_field(node, "type") or "")
-        if url and (
-            "citation" in atype
-            or atype in {"url_citation", "source"}
-            or str(url).startswith("http")
-        ):
-            add(str(url), str(title or ""))
-        for key in (
-            "annotations", "output", "content", "response", "citation",
-            "citations", "sources", "results", "action", "item",
-        ):
-            child = _field(node, key)
-            if child is not None:
-                walk(child, depth + 1)
-        if depth < 2:
-            dump = getattr(node, "model_dump", None)
-            if callable(dump):
-                try:
-                    walk(dump(), depth + 1)
-                except Exception:
-                    pass
-
-    for obj in objs:
-        walk(obj)
-    return found
-
-
-def event_delta(event):
-    etype = getattr(event, "type", "") or ""
-    if etype in {"response.output_text.delta", "response.text.delta"}:
-        return getattr(event, "delta", "") or ""
-    delta = getattr(event, "delta", None)
-    if isinstance(delta, str) and etype.endswith(".delta"):
-        return delta
-    return ""
 
 
 def complete_reply(payload):
@@ -1557,62 +791,11 @@ def complete_reply(payload):
     return text, extract_sources(response), image, lookup_map(map_query, should_fetch_map(map_query))
 
 
-FX_CACHE_TTL = 300  # 5 min : la BCEAO publie des cours de référence quotidiens
-FX_SOURCE_URL = "https://www.bceao.int/fr/cours/cours-de-reference-des-principales-devises-contre-Franc-CFA"
-_fx_cache = {
-    "at": 0.0,
-    "date": "",
-    "rates": {"EUR": 655.957, "USD": 577.070, "GBP": 762.860},
-}
-
-def _clean_html_cell(value):
-    value = re.sub(r"<[^>]+>", " ", value or "")
-    return re.sub(r"\s+", " ", value).strip()
+_fx_cache = {"at": 0.0, "date": "", "rates": dict(DEFAULT_RATES)}
 
 def fetch_bceao_rates():
     global _fx_cache
-    now = time.time()
-    if now - _fx_cache["at"] < FX_CACHE_TTL:
-        return _fx_cache
-    fallback = _fx_cache
-    try:
-        req = Request(
-            FX_SOURCE_URL,
-            headers={"User-Agent": "TerangaAI/1.0"},
-        )
-        raw = urlopen(req, timeout=5).read().decode("utf-8", "ignore")
-        cells = re.findall(r"<(?:td|th)[^>]*>(.*?)</(?:td|th)>", raw, re.I | re.S)
-        normalized = [_clean_html_cell(cell) for cell in cells]
-        aliases = {
-            "EUR": {"euro"},
-            "USD": {"dollar us", "dollar américain", "dollar americain"},
-            "GBP": {"livre sterling"},
-        }
-        rates = dict(fallback["rates"])
-        for index, cell in enumerate(normalized):
-            key = cell.casefold()
-            for code, names in aliases.items():
-                if key in names and index + 1 < len(normalized):
-                    raw_value = normalized[index + 1].replace(" ", "").replace(",", ".")
-                    try:
-                        value = float(raw_value)
-                    except ValueError:
-                        continue
-                    if value > 0:
-                        rates[code] = value
-        date_match = re.search(
-            r"Cours des devises du\s+([^<\r\n]+)",
-            raw,
-            re.I,
-        )
-        _fx_cache = {
-            "at": now,
-            "date": date_match.group(1).strip() if date_match else "",
-            "rates": rates,
-        }
-    except Exception:
-        # On conserve le dernier cours valide plutôt que d'afficher une valeur vide.
-        app.logger.warning("Rafraîchissement BCEAO indisponible; conservation du dernier cours valide.")
+    _fx_cache = _fetch_bceao_rates(_fx_cache, logger=app.logger)
     return _fx_cache
 
 @app.get("/exchange-rates")
@@ -1753,7 +936,7 @@ def realtime_call():
         same = hmac.compare_digest(cookie_token, header_token)
     except Exception:
         same = False
-    if not same or not valid_token(cookie_token):
+    if not same or not valid_token(cookie_token, app.config["SECRET_KEY"], CSRF_TTL):
         return jsonify({"error": "csrf"}), 403
 
     ip = client_ip()
@@ -1932,8 +1115,6 @@ def stt():
         return jsonify({"error": public_error(exc)}), 500
 
 
-@app.post("/tts")
-@require_json_post
 def speech_ready_text(text: str) -> str:
     """Prepare assistant text for natural speech without changing its meaning."""
     text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
@@ -1944,7 +1125,8 @@ def speech_ready_text(text: str) -> str:
     text = re.sub(r'[*_~`]+', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text[:MAX_TTS_LENGTH]
-
+@app.post("/tts")
+@require_json_post
 def tts():
     ip = client_ip()
     identity = abuse_key(ip)
@@ -1989,63 +1171,6 @@ def tts():
         app.logger.exception("Erreur /tts")
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
-
-ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-<rect rx="14" width="64" height="64" fill="#1a3d2a"/>
-<circle cx="44" cy="18" r="8" fill="#e2b34a"/>
-<path d="M32 54V28M18 36c8-2 10-10 14-10s6 8 14 10" stroke="#f3e6c8" stroke-width="3" fill="none" stroke-linecap="round"/>
-</svg>"""
-
-OG_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
-<rect width="1200" height="630" fill="#f6efe3"/>
-<circle cx="1080" cy="80" r="220" fill="#e2b34a" opacity=".45"/>
-<rect x="80" y="160" rx="28" width="96" height="96" fill="#1a3d2a"/>
-<text x="80" y="340" font-size="72" font-family="Georgia,serif" fill="#1a120c">Teranga AI</text>
-<text x="80" y="410" font-size="32" font-family="Georgia,serif" fill="#7a6d5f">L’assistant du Sénégal · FR · EN · WO</text>
-</svg>"""
-
-
-@app.get("/icon.svg")
-def icon_svg():
-    return Response(ICON_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
-
-
-@app.get("/og.svg")
-def og_svg():
-    return Response(OG_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
-
-
-def build_og_png():
-    from PIL import Image, ImageDraw, ImageFont
-    img = Image.new("RGB", (1200, 630), "#f6efe3")
-    draw = ImageDraw.Draw(img)
-    draw.ellipse((920, -140, 1340, 280), fill="#e2b34a")
-    draw.rounded_rectangle((80, 150, 196, 266), 28, fill="#1a3d2a")
-    draw.ellipse((148, 172, 180, 204), fill="#e2b34a")
-    try:
-        title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-        sub_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
-    except Exception:
-        title_font = ImageFont.load_default()
-        sub_font = title_font
-    draw.text((80, 300), "Teranga AI", fill="#1a120c", font=title_font)
-    draw.text((80, 400), "L'assistant du Senegal  ·  FR  EN  WO", fill="#7a6d5f", font=sub_font)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
-    return buf.getvalue()
-
-
-@app.get("/og.png")
-def og_png():
-    global _OG_PNG
-    if _OG_PNG is None:
-        try:
-            _OG_PNG = build_og_png()
-        except Exception:
-            app.logger.exception("og.png")
-            return og_svg()
-    return Response(_OG_PNG, mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
-
 
 
 @app.get("/a-propos")
@@ -2163,22 +1288,6 @@ def sitemap():
     return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
-def build_icon_png(size):
-    from PIL import Image, ImageDraw
-    img = Image.new("RGB", (size, size), "#1a3d2a")
-    draw = ImageDraw.Draw(img)
-    pad = size // 8
-    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=size // 5, fill="#1a3d2a")
-    sun = size // 5
-    draw.ellipse((size - pad - sun, pad, size - pad, pad + sun), fill="#e2b34a")
-    trunk_w = max(4, size // 14)
-    draw.rectangle((size // 2 - trunk_w // 2, size // 2, size // 2 + trunk_w // 2, size - pad), fill="#f3e6c8")
-    draw.arc((pad, size // 3, size - pad, size - pad // 2), start=200, end=340, fill="#f3e6c8", width=max(3, size // 18))
-    buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
-    return buf.getvalue()
-
-
 @app.get("/icon-192.png")
 def icon_192():
     try:
@@ -2248,7 +1357,7 @@ def manifest():
 
 @app.get("/csrf")
 def csrf_token():
-    token = issue_csrf()
+    token = issue_csrf(app.config["SECRET_KEY"], CSRF_TTL)
     resp = jsonify({"token": token})
     resp.set_cookie(
         CSRF_COOKIE,
@@ -2272,7 +1381,7 @@ def home():
     )
     response.set_cookie(
         CSRF_COOKIE,
-        issue_csrf(),
+        issue_csrf(app.config["SECRET_KEY"], CSRF_TTL),
         httponly=False,
         secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
         samesite="Lax",

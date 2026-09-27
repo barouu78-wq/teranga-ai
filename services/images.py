@@ -8,7 +8,7 @@ import unicodedata
 from .photo_search import normalize_place_query, relevant_image_evidence
 from urllib.parse import quote, urlencode
 from urllib.error import HTTPError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 
 logger = logging.getLogger(__name__)
@@ -206,3 +206,112 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
             logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
     _IMAGE_CACHE[title] = found
     return found
+
+
+
+PHOTO_TOPICS = (
+    ("monument de la renaissance", "Monument de la Renaissance africaine"),
+    ("renaissance africaine", "Monument de la Renaissance africaine"),
+    ("maison des esclaves", "Maison des Esclaves"),
+    ("cap skirring", "Cap Skirring"),
+    ("île de gorée", "Île de Gorée"), ("ile de goree", "Île de Gorée"),
+    ("saint-louis", "Saint-Louis (Sénégal)"), ("saint louis", "Saint-Louis (Sénégal)"),
+    ("niokolo-koba", "Parc national du Niokolo-Koba"), ("niokolo koba", "Parc national du Niokolo-Koba"),
+    ("djoudj", "Parc national des oiseaux du Djoudj"), ("joal-fadiouth", "Joal-Fadiouth"),
+    ("fadiouth", "Joal-Fadiouth"), ("joal", "Joal-Fadiouth"),
+    ("thiéboudienne", "Thiéboudienne"), ("thieboudienne", "Thiéboudienne"),
+    ("ceebu jen", "Thiéboudienne"), ("ceebu jën", "Thiéboudienne"),
+    ("café touba", "Café Touba"), ("cafe touba", "Café Touba"),
+    ("lac rose", "Lac Retba"), ("lac retba", "Lac Retba"),
+    ("richard-toll", "Richard-Toll"), ("richard toll", "Richard-Toll"),
+    ("grande mosquée de touba", "Grande Mosquée de Touba"), ("mosquée de touba", "Grande Mosquée de Touba"),
+    ("casamance", "Casamance"), ("somone", "La Somone"), ("yassa", "Yassa"), ("bissap", "Bissap"),
+    ("mafé", "Mafé"), ("maafe", "Mafé"), ("diamniadio", "Diamniadio"),
+    ("guédiawaye", "Guédiawaye"), ("guediawaye", "Guédiawaye"), ("tambacounda", "Tambacounda"),
+    ("ziguinchor", "Ziguinchor"), ("kedougou", "Kédougou"), ("kédougou", "Kédougou"),
+    ("kaffrine", "Kaffrine"), ("sédhiou", "Sédhiou"), ("sedhiou", "Sédhiou"),
+    ("rufisque", "Rufisque"), ("kaolack", "Kaolack"), ("diourbel", "Diourbel"),
+    ("gorée", "Île de Gorée"), ("goree", "Île de Gorée"), ("mbour", "M'Bour"), ("m'bour", "M'Bour"),
+    ("touba", "Touba (Sénégal)"), ("thiès", "Thiès"), ("thies", "Thiès"), ("kolda", "Kolda"),
+    ("matam", "Matam"), ("louga", "Louga"), ("fatick", "Fatick"), ("podor", "Podor"),
+    ("saly", "Saly Portudal"), ("pikine", "Pikine"), ("dakar", "Dakar"), ("ndar", "Saint-Louis (Sénégal)"),
+)
+
+
+def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
+    lowered = str(message or "").lower()
+    found, seen = [], set()
+    for key, title in PHOTO_TOPICS:
+        if key in lowered and title not in seen:
+            seen.add(title)
+            found.append(title)
+            if len(found) >= limit:
+                break
+    return found
+
+
+def wiki_summary(lang: str, title: str) -> dict:
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
+    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+    with urlopen(req, timeout=2) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
+
+def usable_wiki_image(src: object) -> str:
+    src = str(src or "").split("?", 1)[0][:2000]
+    if not src.startswith(("https://upload.wikimedia.org/", "https://thumb.wikimedia.org/")):
+        return ""
+    lowered = src.lower()
+    if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
+        return ""
+    return src
+
+
+def image_proxy_url(src: object) -> str:
+    src = usable_wiki_image(src)
+    return f"/image-proxy?url={quote(src, safe='')}" if src else ""
+
+
+def allowed_image_url(src: object) -> bool:
+    from urllib.parse import urlparse
+    parsed = urlparse(str(src or ""))
+    host = (parsed.hostname or "").lower().rstrip(".")
+    return bool(parsed.scheme == "https" and host in ALLOWED_IMAGE_HOSTS and not parsed.username and not parsed.password and parsed.port in (None, 443))
+
+class SafeImageRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not allowed_image_url(newurl):
+            raise ValueError("Redirection image non autorisée")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+def safe_image_fetch(src: object, max_bytes: int, timeout: float = 5.0, opener=None):
+    if not allowed_image_url(src):
+        raise ValueError("Source image non autorisée")
+    req = Request(str(src), headers={"User-Agent": "TerangaAI/1.0"})
+    image_opener = opener or build_opener(SafeImageRedirectHandler)
+    with image_opener.open(req, timeout=timeout) as upstream:
+        headers = getattr(upstream, "headers", {})
+        get_type = getattr(headers, "get_content_type", None)
+        content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
+        if not content_type.startswith("image/"):
+            raise ValueError("Type image invalide")
+        length = str(headers.get("Content-Length") or "").strip()
+        if length.isdigit() and int(length) > max_bytes:
+            raise ValueError("Image trop volumineuse")
+        data = upstream.read(max_bytes + 1)
+        if len(data) > max_bytes:
+            raise ValueError("Image trop volumineuse")
+        return content_type, data
+
+
+def should_fetch_images(message: object) -> bool:
+    lowered = _normalize(message)
+    explicit = (
+        "photo", "photos", "image", "images", "visuel", "visuels",
+        "montre moi", "montre-moi", "affiche", "fais voir",
+        "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
+        "voir la ville", "montre la ville", "show me", "show",
+        "picture", "pictures",
+    )
+    return any(term in lowered for term in explicit)

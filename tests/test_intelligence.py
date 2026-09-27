@@ -62,3 +62,43 @@ def test_follow_up_photo_inherits_previous_location():
     assert result["location"] == "goree"
     assert result["needs_images"] is True
     assert result["context_source"] == "conversation"
+
+
+def test_contextual_query_keeps_recent_user_turns():
+    from services.intelligence import contextual_query
+    result = contextual_query(
+        [{"role": "assistant", "content": "ignore"}, {"role": "user", "content": "Dakar"}, {"role": "user", "content": "Météo demain ?"}],
+        "Et le soir ?",
+    )
+    assert result == "Dakar | Météo demain ? | Et le soir ?"
+
+
+def test_senegal_context_extracts_planning_constraints():
+    from services.intelligence import infer_senegal_context, should_use_planner, build_planner_data
+    context = infer_senegal_context(
+        [{"role": "user", "content": "Je veux visiter Gorée"}],
+        "4 jours avec 100000 FCFA en famille",
+    )
+    assert context["place"] == "goree"
+    assert context["duration"] == "4 jours"
+    assert context["budget"] == "100000 fcfa"
+    assert "famille" in context["constraints"]
+    assert should_use_planner(context)
+    planner = build_planner_data(context)
+    assert planner["duration_days"] == 4
+    assert planner["budget_fcfa"] == 100000
+
+
+def test_build_conversation_sanitizes_and_marks_history_untrusted():
+    from services.conversation import build_conversation
+    result = build_conversation(
+        [{"role": "user", "content": "Bonjour\u200b"}, {"role": "assistant", "content": "Salut"}],
+        "Et Dakar ?",
+        max_history_items=12,
+        max_history_item_length=1400,
+        max_history_chars=10000,
+    )
+    assert "<historique_non_fiable>" in result
+    assert "Utilisateur: Bonjour" in result
+    assert "Teranga AI: Salut" in result
+    assert "<demande_utilisateur>\nEt Dakar ?" in result
