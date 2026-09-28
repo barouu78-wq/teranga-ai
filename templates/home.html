@@ -3245,6 +3245,12 @@ async function startRealtimeVoice(){
     if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error||'realtime');
     const answer=await res.text();
     await realtimePc.setRemoteDescription({type:'answer',sdp:answer});
+    if(sessionId!==realtimeSessionId||!voiceConversation||!autoVoice){
+      try{realtimePc.close();}catch(_){}
+      stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
+      if(realtimeAudio){try{realtimeAudio.pause();}catch(_){}realtimeAudio.srcObject=null;realtimeAudio.remove();}
+      return false;
+    }
     realtimeStarting=false;
     realtimeActive=true;
     document.body.classList.add('realtime-voice');

@@ -35,3 +35,15 @@ def test_closing_realtime_invalidates_existing_callbacks():
     end = html.index("\n}", start) + 2
     function = html[start:end]
     assert "realtimeSessionId++;" in function
+
+
+def test_realtime_start_rejects_stale_success_after_remote_description():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    start = html.index("async function startRealtimeVoice(){")
+    end = html.index("\n}\nasync function stopLegacyVoiceForRealtime", start) + 2
+    function = html[start:end]
+    remote = function.index("await realtimePc.setRemoteDescription")
+    guard = function.index("if(sessionId!==realtimeSessionId||!voiceConversation||!autoVoice)", remote)
+    active = function.index("realtimeActive=true;", guard)
+    assert remote < guard < active
+    assert "stream.getTracks().forEach(t=>{try{t.stop();}catch(_){} });" in function or "stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});" in function
