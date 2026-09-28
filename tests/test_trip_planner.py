@@ -328,5 +328,7 @@ def test_trip_planner_share_link_is_restorable_and_url_safe():
     assert "function decodeTrip(value)" in body
     assert "applySharedTrip();" in body
     assert "replace(/\\+/g,'-')" in body
-    assert 'new URLSearchParams(location.search).get(\'trip\')' in body
+    assert 'new URLSearchParams(location.hash.slice(1)).get(\'trip\')' in body
+    assert "location.search" not in body
+    assert "history.replaceState(null,'','#trip='+encoded)" in body
     assert '"share_id"' not in body
