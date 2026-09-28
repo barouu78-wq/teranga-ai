@@ -31,3 +31,13 @@ def test_direct_tts_response_is_scoped_to_current_speech_turn():
     assert "const speechTurn=voiceTtsTurn;" in function
     assert function.count("if(voiceTtsTurn!==speechTurn)return;") >= 5
     assert "if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}" in function
+
+
+def test_queued_tts_uses_item_generation_after_network_wait():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    marker = "async function playVoiceTtsQueue(){"
+    start = html.rindex(marker)
+    end = html.index("\n}", start) + 2
+    function = html[start:end]
+    assert "if(item.turn!==voiceTtsTurn||!autoVoice)return;" in function
+    assert "if(voiceTtsTurn!==speechTurn)return;" not in function
