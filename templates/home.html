@@ -3540,7 +3540,9 @@ function beginVoiceMode(){
   voiceStatus(lang==='fr'?'Mode vocal · parle naturellement.':lang==='en'?'Voice mode · speak naturally.':lang==='wo'?'Mode baat · wax ak yomb.':'Mode baat · haal no feewi.');
 }
 function endVoiceMode(){
+  clearVoiceSilence();
   voiceConversation=false;voiceWaitingForAnswer=false;
+  voiceDraft='';
   voiceTurnId++;
   stopVoiceCapture();stopVoiceMonitor();
   closeRealtimeVoice();
@@ -3581,6 +3583,7 @@ function setupMic(){
     rec=new SR();rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;rec.lang=voiceMap[lang];
     rec.onstart=()=>{voiceSetMicState(true);beginVoiceMode();};
     rec.onresult=e=>{
+      if(!voiceConversation)return;
       let finalText='',interimText='';
       for(let i=e.resultIndex;i<e.results.length;i++){
         const part=e.results[i][0]?.transcript||'';
@@ -3592,6 +3595,7 @@ function setupMic(){
         voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
         clearVoiceSilence();
         voiceSilenceTimer=setTimeout(()=>{
+          if(!voiceConversation)return;
           const spoken=voiceDraft.trim();voiceDraft='';
           if(spoken&&!inflight&&!voiceSTTBusy){try{rec.stop();}catch(_){}ask(spoken,true);}
         },850);
