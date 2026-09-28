@@ -177,7 +177,7 @@ def _budget(data):
         "total": total,
     }
 
-def _map_html(regions):
+def _map_html(regions, title="Carte du voyage"):
     points = [REGION_COORDS[r] for r in regions if r in REGION_COORDS]
     if not points:
         return ""
@@ -189,7 +189,7 @@ def _map_html(regions):
     east = max(longitudes) + margin
     north = max(latitudes) + margin
     bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
-    return f'<iframe title="{map_title}" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
+    return f'<iframe title="{escape(title)}" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
 def _normalize_plan(plan, fallback_text, expected_days=None):
     fallback = {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
     if not isinstance(plan, dict):
@@ -359,7 +359,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
                 "plan": plan,
                 "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]},
                 "language": lang,
-                "map_html": _map_html(regions),
+                "map_html": _map_html(regions, "Trip map" if lang == "en" else "Carte du voyage"),
             })
         except Exception:
             app.logger.exception("trip-planner")
