@@ -36,7 +36,7 @@ UI = {
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
+        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -48,7 +48,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
+        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
     },
 }
 
@@ -137,8 +137,8 @@ const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departur
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
 regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
-status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>{day} '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>{morning} :</b> '+escapeHtml(d.morning||'')+'</p><p><b>{afternoon} :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>{evening} :</b> '+escapeHtml(d.evening||'')+'</p><p><b>{transport} :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>{budget_summary}</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
+status.innerHTML='<p class="loading">{loading}</p>'; result.textContent='';
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>{day} '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>{morning} :</b> '+escapeHtml(d.morning||'')+'</p><p><b>{afternoon} :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>{evening} :</b> '+escapeHtml(d.evening||'')+'</p><p><b>{transport} :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>{budget_summary}</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='{copied}';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
