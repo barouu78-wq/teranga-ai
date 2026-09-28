@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-PLACE_ALIASES = {
+PLACE_ALIASES = {\n    "dakar": ("Dakar", "Sénégal"), "diourbel": ("Diourbel", "Sénégal"),\n    "fatick": ("Fatick", "Sénégal"), "kaffrine": ("Kaffrine", "Sénégal"),\n    "kaolack": ("Kaolack", "Sénégal"), "kedougou": ("Kédougou", "Sénégal"),\n    "kolda": ("Kolda", "Sénégal"), "louga": ("Louga", "Sénégal"), "matam": ("Matam", "Sénégal"),\n    "sedhiou": ("Sédhiou", "Sénégal"), "tambacounda": ("Tambacounda", "Sénégal"),\n    "thies": ("Thiès", "Sénégal"), "ziguinchor": ("Ziguinchor", "Casamance", "Sénégal"),\n    "delta du saloum": ("Delta du Saloum", "Sine-Saloum", "Sénégal"),\n    "pays bassari": ("Pays Bassari", "Bassari", "Kédougou"),\n    "dindefelo": ("Dindéfelo", "Dindéfello", "Kédougou"), "rufisque": ("Rufisque", "Vieux Rufisque", "Sénégal"),\n    "carabane": ("Carabane", "Casamance", "Sénégal"), "popenguine": ("Popenguine", "Sénégal"),\n    "saly": ("Saly", "Saly Portudal", "Sénégal"), "tivaouane": ("Tivaouane", "Sénégal"),\n    "touba": ("Touba", "Grande Mosquée de Touba", "Sénégal"),
     "goree": ("Gorée", "Île de Gorée", "Goree Island"),
     "lac rose": ("Lac Rose", "Lac Retba", "Lake Retba", "Sénégal"),
     "saint-louis": ("Saint-Louis", "Saint Louis", "Sénégal"),
