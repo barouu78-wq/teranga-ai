@@ -13,12 +13,12 @@ def test_trip_planner_page():
     assert 'name="arrival"' in body
 
 def test_trip_planner_rejects_invalid_json():
-    response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""})
+    response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""}, headers={"Origin": "https://teranga-ai-1.onrender.com"})
     assert response.status_code == 400
 
 
 def test_trip_planner_rejects_reversed_dates():
-    response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"})
+    response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"}, headers={"Origin": "https://teranga-ai-1.onrender.com"})
     assert response.status_code == 400
 
 
@@ -176,7 +176,7 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     app = Flask(__name__)
     trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
     client = app.test_client()
-    response = client.post("/api/trip-planner", json={
+    response = client.post("/api/trip-planner", headers={"Origin": "https://example.com"}, json={
         "arrival": "2026-10-01",
         "departure": "2026-10-03",
         "interests": "Dakar",
@@ -189,6 +189,29 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     assert "Preferred regions: none" in captured["prompt"]
     assert "Budget level: Confort" in captured["prompt"]
     assert "Pace: Équilibré" in captured["prompt"]
+
+
+def test_trip_planner_rejects_untrusted_origin():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            return type("Response", (), {"output_text": '{"summary":"ok","days":[],"practical_notes":[]}'})()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(
+        app, FakeClient(), "https://example.com", {"https://example.com"}
+    )
+    response = app.test_client().post(
+        "/api/trip-planner",
+        headers={"Origin": "https://evil.example"},
+        json={"arrival": "2026-10-01", "departure": "2026-10-03"},
+    )
+    assert response.status_code == 403
 
 
 def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_values():
