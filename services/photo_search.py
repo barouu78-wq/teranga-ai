@@ -22,7 +22,7 @@ PLACE_ALIASES = {
     "joal-fadiouth": ("Joal-Fadiouth", "Fadiouth", "Joal", "Sénégal"),
     "cap skirring": ("Cap Skirring", "Casamance", "Sénégal"),
     "toubab dialaw": ("Toubab Dialaw", "Sénégal"),
-    "saloum": ("Sine-Saloum", "Saloum", "Sénégal"),
+    "saloum": ("Delta du Saloum", "Sine-Saloum", "Saloum"),
     "niokolo-koba": ("Niokolo-Koba", "Sénégal"),
     "djoudj": ("Djoudj", "Parc national des oiseaux du Djoudj", "Sénégal"),
 }
@@ -44,5 +44,6 @@ def relevant_image_evidence(query: str, title: str, description: str = "") -> bo
     evidence = _normalize(f"{title} {description}")
     for key, aliases in PLACE_ALIASES.items():
         if _normalize(key) in low:
-            return any(_normalize(alias) in evidence for alias in aliases)
+            specific_aliases = tuple(alias for alias in aliases if _normalize(alias) not in {"senegal", "sénégal"})
+            return any(_normalize(alias) in evidence for alias in specific_aliases)
     return True
