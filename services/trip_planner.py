@@ -8,6 +8,7 @@ from services.language_quality import language_instruction
 from services.senegal_knowledge import SENEGAL_REGIONS
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
+UI_LANGS = {"fr", "en"}
 MAX_BODY_BYTES = 12000
 REGION_COORDS = {
     "Dakar": (14.7167, -17.4677), "Diourbel": (14.6500, -16.2333),
@@ -52,7 +53,7 @@ UI = {
 
 def _lang():
     lang = str(request.args.get("lang") or request.form.get("lang") or "fr").lower()[:2]
-    return lang if lang in ALLOWED_LANGS else "fr"
+    return lang if lang in UI_LANGS else "fr"
 
 def _allowed_options(lang):
     languages = [lang, "fr", "en"]
