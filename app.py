@@ -121,7 +121,6 @@ BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
-register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_commons_images, image_proxy_url)
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
@@ -275,6 +274,8 @@ def fetch_commons_image(title):
 
 def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
+
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_commons_images, image_proxy_url)
 
 
 
