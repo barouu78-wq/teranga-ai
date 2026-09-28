@@ -4,6 +4,7 @@ from flask import Response, jsonify, request
 from datetime import date
 
 from services.http_security import origin_allowed
+from services.language_quality import language_instruction
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
@@ -211,7 +212,10 @@ def _normalize_plan(plan, fallback_text, expected_days=None):
     }
 
 def _prompt(data):
-    return f"""Build a practical Senegal travel itinerary from these preferences.
+    language = data.get("lang", "fr")
+    return f"""{language_instruction(language)}
+
+Build a practical Senegal travel itinerary from these preferences.
 Arrival: {data['arrival']}
 Departure: {data['departure']}
 Travelers: {data['adults']} adults, {data['children']} children
@@ -283,7 +287,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
             return jsonify({"error": "Format de date invalide."}), 400
         if departure_date <= arrival_date:
             return jsonify({"error": "La date de départ doit être après l'arrivée."}), 400
-        data = {"arrival": str(body["arrival"])[:20], "departure": str(body["departure"])[:20],
+        data = {"lang": lang, "arrival": str(body["arrival"])[:20], "departure": str(body["departure"])[:20],
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
                 "budget": budget, "pace": pace, "surprise": bool(body.get("surprise"))}
