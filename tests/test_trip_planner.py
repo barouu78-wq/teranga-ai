@@ -431,6 +431,8 @@ def test_trip_planner_result_labels_follow_ui_language():
     assert "<h3>Day " in body
     assert "<b>Morning :</b>" in body
     assert "<h3>Indicative budget</h3>" in body
+    assert "Teranga AI is preparing your trip…" in body
+    assert "✓ Link copied" in body
     assert "<h3>Jour " not in body
     assert "<b>Matin :</b>" not in body
 
