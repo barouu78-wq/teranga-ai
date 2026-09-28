@@ -41,3 +41,18 @@ def test_trip_budget_is_structured():
         for k, x in budget.items()
         if k in {"accommodation", "food", "transport", "activities", "buffer"}
     ) == budget["total"][0]
+def test_trip_budget_categories_reconcile_after_rounding():
+    from datetime import date
+    from services.trip_planner import _budget
+
+    data = {
+        "arrival_date": date(2026, 10, 1),
+        "departure_date": date(2026, 10, 2),
+        "adults": 1,
+        "children": 0,
+        "budget": "Confort",
+    }
+    budget = _budget(data)
+    categories = ("accommodation", "food", "transport", "activities", "buffer")
+    assert sum(budget[key][0] for key in categories) == budget["total"][0]
+    assert sum(budget[key][1] for key in categories) == budget["total"][1]
