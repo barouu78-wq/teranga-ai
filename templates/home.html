@@ -99,11 +99,13 @@ async function playVoiceTtsQueue(){
       const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
+      if(voiceTtsTurn!==speechTurn)return;
       if(!blob.size)throw new Error('tts-empty');
       if(ttsCache.size>=12)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
     if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
+    if(voiceTtsTurn!==speechTurn)return;
     const url=URL.createObjectURL(blob);
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
@@ -233,6 +235,7 @@ function speakFallback(text,btn){
 async function speak(text,btn){
   if(!text)return;
   stopSpeakingForListening();
+  const speechTurn=voiceTtsTurn;
   if(btn){btn.disabled=true;btn.textContent='…';}
   const cacheKey=lang+'|'+text;
   try{
@@ -240,6 +243,7 @@ async function speak(text,btn){
     if(!blob){
       if(!cookie('teranga_csrf'))await refreshCsrf();
       const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
+      if(voiceTtsTurn!==speechTurn)return;
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
       if(!blob.size)throw new Error('tts-empty');
@@ -250,10 +254,11 @@ async function speak(text,btn){
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
-    audio.onended=()=>{const a=audio;audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
-    audio.onerror=()=>{audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
-    try{await audio.play();if(voiceConversation)startVoiceMonitor();}catch(_){audio.onerror();}
+    audio.onended=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
+    audio.onerror=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
+    try{await audio.play();if(voiceTtsTurn!==speechTurn)return;if(voiceConversation)startVoiceMonitor();}catch(_){audio.onerror();}
   }catch(_){
+    if(voiceTtsTurn!==speechTurn)return;
     if(!speakFallback(text,btn))finishSpeech(btn);
   }
 }
