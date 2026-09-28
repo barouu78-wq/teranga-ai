@@ -130,15 +130,22 @@ def _budget(data):
     low, high = BUDGET_BANDS.get(data["budget"], (70, 130))
     people = data["adults"] + data["children"]
     total_low, total_high = low * people * days, high * people * days
+    total = [round(total_low), round(total_high)]
+    accommodation = [round(total_low * 0.38), round(total_high * 0.38)]
+    food = [round(total_low * 0.22), round(total_high * 0.22)]
+    transport = [round(total_low * 0.18), round(total_high * 0.18)]
+    activities = [round(total_low * 0.17), round(total_high * 0.17)]
+    buffer = [total[0] - sum((accommodation[0], food[0], transport[0], activities[0])),
+              total[1] - sum((accommodation[1], food[1], transport[1], activities[1]))]
     return {
         "days": days,
         "people": people,
-        "accommodation": [round(total_low * 0.38), round(total_high * 0.38)],
-        "food": [round(total_low * 0.22), round(total_high * 0.22)],
-        "transport": [round(total_low * 0.18), round(total_high * 0.18)],
-        "activities": [round(total_low * 0.17), round(total_high * 0.17)],
-        "buffer": [round(total_low * 0.05), round(total_high * 0.05)],
-        "total": [round(total_low), round(total_high)],
+        "accommodation": accommodation,
+        "food": food,
+        "transport": transport,
+        "activities": activities,
+        "buffer": buffer,
+        "total": total,
     }
 
 def _map_html(regions):
