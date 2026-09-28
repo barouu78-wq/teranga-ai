@@ -36,7 +36,7 @@ from services.text import clean_answer
 from services.security import issue_csrf, sign_token, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
-from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+from services.assets import ICON_SVG, build_icon_png
 
 def icon_svg():
     return Response(ICON_SVG, mimetype="image/svg+xml")
@@ -55,9 +55,7 @@ from services.images import (
     topic_wikipedia_titles,
     wiki_summary,
     fetch_city_image as _fetch_city_image,
-    fetch_commons_image as _fetch_commons_image,
     fetch_commons_images as _fetch_commons_images,
-    fetch_google_images as _fetch_google_images,
 )
 
 load_dotenv()
@@ -233,16 +231,6 @@ def fetch_commons_images(title, limit=4):
     return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
 
 
-def fetch_google_images(title, limit=4):
-    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
-        return []
-    return _fetch_google_images(title, GOOGLE_API_KEY, GOOGLE_CSE_ID, limit, urlopen)
-
-
-def fetch_commons_image(title):
-    return _fetch_commons_image(title, usable_wiki_image, image_proxy_url, urlopen)
-
-
 def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
 
@@ -256,7 +244,7 @@ from services.conversation import build_conversation as _build_conversation
 from services.responses import _field, extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
 from services.chat_payload import normalize_chat_input
-from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
+from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, DEFAULT_RATES
 from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
 from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
