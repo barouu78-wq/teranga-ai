@@ -2397,7 +2397,7 @@ function renderAudience(){
 let lang=localStorage.getItem('teranga-lang')||'fr';
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
-let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
+let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeSessionId=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cleanReply(text){
   return String(text||'')
@@ -3043,6 +3043,7 @@ function scheduleRealtimeReconnect(){
   },delay);
 }
 function closeRealtimeVoice(){
+  realtimeSessionId++;
   clearTimeout(realtimeReconnectTimer);
   realtimeReconnectTimer=0;
   realtimeActive=false;
@@ -3158,6 +3159,7 @@ async function startRealtimeVoice(){
   if(realtimeActive||realtimeStarting)return true;
   if(!window.RTCPeerConnection||!navigator.mediaDevices?.getUserMedia)return false;
   realtimeStarting=true;
+  const sessionId=++realtimeSessionId;
   try{
     await stopLegacyVoiceForRealtime();
     const stream=await navigator.mediaDevices.getUserMedia({
@@ -3177,11 +3179,13 @@ async function startRealtimeVoice(){
     realtimeAudio.style.display='none';
     document.body.appendChild(realtimeAudio);
     realtimePc.ontrack=e=>{
+      if(sessionId!==realtimeSessionId||!realtimeAudio)return;
       const [trackStream]=e.streams;
       if(trackStream)realtimeAudio.srcObject=trackStream;
       realtimeAudio.play().catch(()=>{});
     };
     realtimePc.onconnectionstatechange=()=>{
+      if(sessionId!==realtimeSessionId)return;
       const state=realtimePc?.connectionState;
       if(state==='connected'){
         realtimeActive=true;
@@ -3200,15 +3204,18 @@ async function startRealtimeVoice(){
     };
     realtimeDc=realtimePc.createDataChannel('oai-events');
     realtimeDc.onopen=()=>{
+      if(sessionId!==realtimeSessionId)return;
       // The recent context is already injected into the server-side Realtime
       // instructions. Do not create a synthetic system message in the conversation:
       // that adds latency and can create a visible/invalid extra turn.
       realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
     };
     realtimeDc.onmessage=e=>{
+      if(sessionId!==realtimeSessionId)return;
       try{handleRealtimeEvent(JSON.parse(e.data));}catch(_){}
     };
     realtimeDc.onerror=()=>{
+      if(sessionId!==realtimeSessionId)return;
       if(voiceConversation&&autoVoice){
         realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
       }
@@ -3244,8 +3251,7 @@ async function startRealtimeVoice(){
     voiceSetMicState(true);
     return true;
   }catch(err){
-    closeRealtimeVoice();
-    realtimeStarting=false;
+    if(sessionId===realtimeSessionId)closeRealtimeVoice();
     return false;
   }
 }
