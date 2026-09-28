@@ -378,6 +378,20 @@ def test_trip_planner_form_uses_distinct_option_groups():
 
 
 
+def test_trip_planner_rejects_excessive_duration():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, object(), "https://example.com")
+    response = app.test_client().post(
+        "/api/trip-planner",
+        headers={"Origin": "https://example.com"},
+        json={"arrival": "2026-10-01", "departure": "2027-01-01"},
+    )
+    assert response.status_code == 400
+    assert response.get_json() == {"error": "La durée du voyage ne peut pas dépasser 90 jours."}
+
 def test_trip_planner_result_labels_follow_ui_language():
     from flask import Flask
     import services.trip_planner as trip_planner
