@@ -7,6 +7,7 @@ import time
 from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
+from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
 from flask import Flask, Response, g, jsonify, request
