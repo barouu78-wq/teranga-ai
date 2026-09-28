@@ -223,6 +223,33 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     assert "Pace: Équilibré" in captured["prompt"]
 
 
+def test_trip_planner_treats_only_json_true_as_surprise():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{\"summary\":\"ok\",\"days\":[],\"practical_notes\":[]}'} )()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    client = app.test_client()
+    for value, expected in [("false", "False"), (1, "False"), (True, "True")]:
+        response = client.post(
+            "/api/trip-planner",
+            headers={"Origin": "https://example.com"},
+            json={"arrival": "2026-10-01", "departure": "2026-10-03", "surprise": value},
+        )
+        assert response.status_code == 200
+        assert f"Surprise me: {expected}" in captured["prompt"]
+
+
 def test_trip_planner_rejects_untrusted_origin():
     from flask import Flask
     import services.trip_planner as trip_planner
