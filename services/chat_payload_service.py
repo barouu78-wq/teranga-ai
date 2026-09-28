@@ -1,7 +1,5 @@
 """Chat payload construction and conversation-context preparation."""
 
-from flask import jsonify
-
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
     normalized, error = normalize_chat_input(
@@ -13,9 +11,9 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         safe_languages=safe_languages,
     )
     if error == "invalid":
-        return None, (jsonify({"error": "Requête invalide."}), 400)
+        return None, "invalid"
     if error == "empty":
-        return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
+        return None, "empty"
 
     message = normalized["message"]
     history = normalized["history"]
