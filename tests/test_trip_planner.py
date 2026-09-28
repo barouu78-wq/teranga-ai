@@ -56,3 +56,36 @@ def test_trip_budget_categories_reconcile_after_rounding():
     categories = ("accommodation", "food", "transport", "activities", "buffer")
     assert sum(budget[key][0] for key in categories) == budget["total"][0]
     assert sum(budget[key][1] for key in categories) == budget["total"][1]
+
+
+def test_trip_plan_contract_falls_back_on_invalid_shape():
+    from services.trip_planner import _normalize_plan
+
+    fallback = _normalize_plan(["not", "an", "object"], "raw model output")
+    assert fallback == {"summary": "raw model output", "days": [], "practical_notes": []}
+
+
+def test_trip_plan_contract_normalizes_supported_fields():
+    from services.trip_planner import _normalize_plan
+
+    plan = _normalize_plan(
+        {
+            "summary": "Deux jours au Sénégal",
+            "days": [
+                {
+                    "day": 1,
+                    "title": "Dakar",
+                    "region": "Dakar",
+                    "morning": "Marché",
+                    "afternoon": "Gorée",
+                    "evening": "Dîner",
+                    "transport": "Taxi",
+                }
+            ],
+            "practical_notes": ["Vérifier les horaires."],
+        },
+        "fallback",
+    )
+    assert plan["summary"] == "Deux jours au Sénégal"
+    assert plan["days"][0]["region"] == "Dakar"
+    assert plan["practical_notes"] == ["Vérifier les horaires."]
