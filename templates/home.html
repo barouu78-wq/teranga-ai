@@ -246,10 +246,12 @@ async function speak(text,btn){
       if(voiceTtsTurn!==speechTurn)return;
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
+      if(voiceTtsTurn!==speechTurn)return;
       if(!blob.size)throw new Error('tts-empty');
       if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
+    if(voiceTtsTurn!==speechTurn)return;
     const url=URL.createObjectURL(blob);
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
