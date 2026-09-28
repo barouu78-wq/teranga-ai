@@ -198,7 +198,7 @@ Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
 Surprise me: {data['surprise']}
 
-Return ONLY valid JSON in the user's language. Schema: {"summary": string, "days": [{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}], "practical_notes": [string]}. Create one object per travel day.
+Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}}], "practical_notes": [string]}}. Create one object per travel day.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
 Do not invent hotels, restaurants, transport operators or reservations. If a recommendation needs current verification, say so.
