@@ -1,20 +1,16 @@
 import hashlib
-import hmac
-import io
 import json
 import os
 import secrets
 import threading
 import time
-import unicodedata
 from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
-from urllib.parse import quote, urlencode, urlparse
-from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
-from flask import Flask, Response, g, jsonify, request, stream_with_context
+from flask import Flask, Response, g, jsonify, request
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool
@@ -31,7 +27,7 @@ from services.international_seo import register_localized_routes
 
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
-from services.intelligence import build_intent_context, build_planner_data, contextual_query, infer_senegal_context, should_use_planner
+from services.intelligence import build_intent_context, build_planner_data, infer_senegal_context, should_use_planner
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
 from services.rate_limit import allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
@@ -232,8 +228,6 @@ Si une demande dépend d'une information changeante et que la recherche web est 
 
 
 
-
-_IMAGE_CACHE = {}
 
 def fetch_commons_images(title, limit=4):
     return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
