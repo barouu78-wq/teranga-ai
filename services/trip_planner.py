@@ -237,7 +237,13 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
 
     @app.post("/api/trip-planner")
     def api_trip_planner():
-        if request.content_length and request.content_length > MAX_BODY_BYTES:
+        content_length = request.content_length
+        if content_length is None and not request.environ.get("wsgi.input_terminated"):
+            return jsonify({"error": "Longueur de requête requise."}), 411
+        if content_length is not None and content_length > MAX_BODY_BYTES:
+            return jsonify({"error": "Requête trop volumineuse."}), 413
+        raw_body = request.get_data(cache=True)
+        if len(raw_body) > MAX_BODY_BYTES:
             return jsonify({"error": "Requête trop volumineuse."}), 413
         if not origin_allowed(
             request.headers.get("Origin"),
