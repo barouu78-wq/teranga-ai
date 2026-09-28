@@ -335,3 +335,16 @@ def test_trip_planner_share_link_is_restorable_and_url_safe():
     assert "const shareLang=payload.lang==='en'?'en':'fr'" in body
     assert "history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded)" in body
     assert '"share_id"' not in body
+
+
+def test_trip_planner_ui_falls_back_to_french_for_untranslated_language():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, object(), "https://example.com")
+    response = app.test_client().get("/trip-planner?lang=wo")
+    body = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert '<html lang="fr">' in body
+    assert "Construis un itinéraire personnalisé" in body
