@@ -355,6 +355,10 @@ def test_trip_planner_share_link_is_restorable_and_url_safe():
     assert "Partager ces préférences" in body
     assert "Share these preferences" in _html("https://example.com", "en")
     assert "function decodeTrip(value)" in body
+    assert "new TextEncoder().encode(JSON.stringify(payload))" in body
+    assert "new TextDecoder().decode(bytes)" in body
+    assert "unescape(" not in body
+    assert "decodeURIComponent(escape(" not in body
     assert "applySharedTrip();" in body
     assert "replace(/\\+/g,'-')" in body
     assert 'new URLSearchParams(location.hash.slice(1)).get(\'trip\')' in body
