@@ -35,3 +35,13 @@ def test_closing_realtime_invalidates_existing_callbacks():
     end = html.index("\n}", start) + 2
     function = html[start:end]
     assert "realtimeSessionId++;" in function
+
+
+def test_realtime_handshake_rechecks_session_after_network_waits():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    start = html.index("async function startRealtimeVoice(){")
+    end = html.index("\n}\nasync function stopLegacyVoiceForRealtime", start) + 2
+    function = html[start:end]
+    assert function.count("if(sessionId!==realtimeSessionId)return false;") >= 5
+    assert "if(sessionId!==realtimeSessionId||!realtimePc)return false;" in function
+    assert "if(sessionId!==realtimeSessionId)return false;\n    realtimeStarting=false;" in function
