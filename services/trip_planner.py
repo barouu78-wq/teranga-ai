@@ -3,6 +3,8 @@ from html import escape
 from flask import Response, jsonify, request
 from datetime import date
 
+from services.http_security import origin_allowed
+
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
 REGION_COORDS = {"Dakar": (14.7167, -17.4677), "Gorée": (14.6667, -17.4000), "Saint-Louis": (16.0326, -16.4818), "Petite Côte": (14.6000, -17.1000), "Sine-Saloum": (13.9000, -16.7000), "Casamance": (12.5500, -16.2800), "Kédougou": (12.5600, -12.1800)}
@@ -226,7 +228,9 @@ Do not invent hotels, restaurants, transport operators or reservations. If a rec
 If dates or preferences are inconsistent, explain the issue briefly.
 """
 
-def register_trip_planner(app, client, site_url):
+def register_trip_planner(app, client, site_url, allowed_origins=None):
+    configured_origins = {str(origin).rstrip("/") for origin in (allowed_origins or {site_url}) if str(origin).strip()}
+
     @app.get("/trip-planner")
     def trip_planner():
         return Response(_html(site_url, _lang()), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
@@ -235,9 +239,11 @@ def register_trip_planner(app, client, site_url):
     def api_trip_planner():
         if request.content_length and request.content_length > MAX_BODY_BYTES:
             return jsonify({"error": "Requête trop volumineuse."}), 413
-        origin = request.headers.get("Origin", "").rstrip("/")
-        allowed = {site_url.rstrip("/")}
-        if origin and origin not in allowed:
+        if not origin_allowed(
+            request.headers.get("Origin"),
+            request.headers.get("Referer"),
+            configured_origins,
+        ):
             return jsonify({"error": "Origine non autorisée."}), 403
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
