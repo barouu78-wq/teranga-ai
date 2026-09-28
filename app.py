@@ -25,6 +25,7 @@ from routes.stt import register_stt_route
 from routes.tts import register_tts_route
 from routes.realtime import register_realtime_route
 from routes.image_proxy import register_image_proxy_route
+from routes.chat import register_chat_route
 from services.international_seo import register_localized_routes
 
 from services.maps import lookup_map, should_fetch_map
@@ -589,116 +590,6 @@ def exchange_rates():
     })
 
 
-@app.post("/chat")
-@require_json_post
-def chat():
-    ip = client_ip()
-    identity = abuse_key(ip)
-    if abuse_blocked(ip):
-        return jsonify({"error": "Trop de demandes rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
-    if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
-        record_abuse(ip, "chat_rate", 2)
-        return jsonify({
-            "error": "Trop de demandes. Attends quelques secondes puis réessaie."
-        }), 429, {"Retry-After": "8"}
-    if not allowed_request(ip, chat_hourly_log[ip], CHAT_HOURLY_LIMIT, 3600, "chat_hour") or not allowed_request(identity, chat_hourly_log[identity], CHAT_HOURLY_LIMIT, 3600, "chat_identity"): 
-        record_abuse(ip, "chat_hourly", 3)
-        record_abuse(identity, "chat_identity_hour", 1)
-        return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
-
-    payload, error = parse_chat_payload()
-    if error:
-        return error
-    # Une recherche web consomme davantage de ressources : quota séparé.
-    if payload["use_web"]:
-        web_identity = abuse_key(client_ip())
-        if abuse_blocked(web_identity):
-            return jsonify({"error": "Trop de recherches rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
-        if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
-            record_abuse(web_identity, "web_rate", 2)
-            return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
-
-    want_json = request.headers.get("X-Teranga-Mode", "").lower() == "json"
-
-    if want_json:
-        try:
-            reply, sources, image, maps = complete_reply(payload)
-            if not reply:
-                reply = "Je n'ai pas réussi à répondre. Réessaie."
-            return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps})
-        except Exception as exc:
-            app.logger.exception("Erreur JSON /chat")
-            return jsonify({"error": public_error(exc)}), 500
-
-    def generate():
-        yielded = False
-        sources = []
-        try:
-            stream = create_response(payload, stream=True)
-            for event in stream:
-                etype = getattr(event, "type", "") or ""
-                if etype == "response.failed":
-                    failed = getattr(event, "response", None)
-                    failure = _field(failed, "error", None)
-                    message = _field(failure, "message", None) or _field(failure, "code", None) or "La réponse IA a échoué."
-                    raise RuntimeError(f"OpenAI response.failed: {message}")
-                if (
-                    "annotation" in etype
-                    or "web_search" in etype
-                    or "output_item" in etype
-                    or etype.endswith(".completed")
-                ):
-                    extra = extract_sources(event)
-                    if extra:
-                        sources = extra
-                delta = event_delta(event)
-                if delta:
-                    yielded = True
-                    yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
-                elif etype == "response.completed":
-                    text = ""
-                    resp = getattr(event, "response", None)
-                    if resp is not None:
-                        text = getattr(resp, "output_text", "") or ""
-                        sources = extract_sources(resp, event) or sources
-                    if text and not yielded:
-                        yielded = True
-                        yield json.dumps({"d": clean_answer(text)}, ensure_ascii=False) + "\n"
-            if not yielded:
-                reply, sources, image, maps = complete_reply(payload)
-                if reply:
-                    yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
-            else:
-                try:
-                    image = fetch_topic_images(payload.get("message", ""))
-                except Exception:
-                    app.logger.exception("Erreur récupération images stream; réponse texte conservée")
-                    image = None
-                map_query = payload.get("contextual_query") or payload.get("message", "")
-                maps = lookup_map(map_query, should_fetch_map(map_query))
-            if sources:
-                yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-            if image:
-                yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
-            if maps:
-                yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
-            yield json.dumps({"done": True}) + "\n"
-        except Exception as exc:
-            app.logger.exception("Erreur stream /chat")
-            # Ne relance jamais une seconde requête complète après un timeout/échec du stream.
-            # Cela évite de doubler l'attente côté navigateur.
-            yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
-
-    return Response(
-        stream_with_context(generate()),
-        mimetype="application/x-ndjson",
-        headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"},
-    )
-
-
-
-
-
 def speech_ready_text(text: str) -> str:
     """Prepare assistant text for natural speech without changing its meaning."""
     text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
@@ -710,6 +601,34 @@ def speech_ready_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text).strip()
     return text[:MAX_TTS_LENGTH]
 
+
+register_chat_route(app, {
+    "require_json_post": require_json_post,
+    "client_ip": client_ip,
+    "abuse_key": abuse_key,
+    "abuse_blocked": abuse_blocked,
+    "allowed_request": allowed_request,
+    "record_abuse": record_abuse,
+    "request_log": request_log,
+    "chat_hourly_log": chat_hourly_log,
+    "RATE_LIMIT": RATE_LIMIT,
+    "RATE_WINDOW": RATE_WINDOW,
+    "CHAT_HOURLY_LIMIT": CHAT_HOURLY_LIMIT,
+    "web_request_log": web_request_log,
+    "WEB_RATE_LIMIT": WEB_RATE_LIMIT,
+    "WEB_RATE_WINDOW": WEB_RATE_WINDOW,
+    "parse_chat_payload": parse_chat_payload,
+    "complete_reply": complete_reply,
+    "create_response": create_response,
+    "extract_sources": extract_sources,
+    "event_delta": event_delta,
+    "clean_answer": clean_answer,
+    "fetch_topic_images": fetch_topic_images,
+    "lookup_map": lookup_map,
+    "should_fetch_map": should_fetch_map,
+    "public_error": public_error,
+    "field": _field,
+})
 
 register_realtime_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "realtime_request_log": realtime_request_log, "realtime_hourly_log": realtime_hourly_log, "SAFE_LANG": SAFE_LANG, "sanitize_text": sanitize_text, "API_KEY": API_KEY, "REALTIME_RATE_LIMIT": int(os.getenv("REALTIME_RATE_LIMIT", "8")), "REALTIME_HOURLY_LIMIT": int(os.getenv("REALTIME_HOURLY_LIMIT", "24"))})
 
