@@ -176,3 +176,11 @@ def test_infer_senegal_context_does_not_treat_duration_as_budget():
 
     assert context["duration"] == "4 jours"
     assert context["budget"] == ""
+
+
+def test_build_planner_data_converts_weeks_to_days():
+    from services.intelligence import build_planner_data
+
+    planner = build_planner_data({"duration": "4 semaines"})
+
+    assert planner["duration_days"] == 28
