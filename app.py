@@ -70,11 +70,30 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 def assign_request_id():
     """Attach a short diagnostic identifier to every HTTP request."""
     g.request_id = secrets.token_hex(8)
+    g.request_started_at = time.perf_counter()
 
 
 @app.after_request
 def add_request_id_header(response):
     response.headers["X-Request-ID"] = getattr(g, "request_id", "")
+    started_at = getattr(g, "request_started_at", None)
+    if started_at is not None:
+        duration_ms = (time.perf_counter() - started_at) * 1000
+        response.headers["X-Response-Time-ms"] = f"{duration_ms:.2f}"
+        app.logger.info(
+            "http_request %s",
+            json.dumps(
+                build_request_log(
+                    request_id=g.request_id,
+                    method=request.method,
+                    path=request.path,
+                    status=response.status_code,
+                    duration_ms=duration_ms,
+                ),
+                ensure_ascii=False,
+                sort_keys=True,
+            ),
+        )
     return response
 
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -510,6 +529,7 @@ from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_
 from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
 from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
+from services.observability import build_request_log
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -841,9 +861,8 @@ def chat():
         if abuse_blocked(web_identity):
             return jsonify({"error": "Trop de recherches rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
         if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
-            return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
-        if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
             record_abuse(web_identity, "web_rate", 2)
+            return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
     want_json = request.headers.get("X-Teranga-Mode", "").lower() == "json"
 
@@ -928,15 +947,13 @@ def realtime_call():
     """Create a browser WebRTC Realtime call without exposing the API key."""
     if not origin_allowed():
         return jsonify({"error": "Origine non autorisée."}), 403
-    cookie_token = request.cookies.get(CSRF_COOKIE, "")
-    header_token = request.headers.get(CSRF_HEADER, "")
-    if not cookie_token or not header_token:
-        return jsonify({"error": "csrf"}), 403
-    try:
-        same = hmac.compare_digest(cookie_token, header_token)
-    except Exception:
-        same = False
-    if not same or not valid_token(cookie_token, app.config["SECRET_KEY"], CSRF_TTL):
+    if not valid_request_token(
+        request.cookies.get(CSRF_COOKIE, ""),
+        request.headers.get(CSRF_HEADER, ""),
+        secret_key=app.config["SECRET_KEY"],
+        ttl=CSRF_TTL,
+        validator=valid_token,
+    ):
         return jsonify({"error": "csrf"}), 403
 
     ip = client_ip()
@@ -1067,7 +1084,13 @@ def stt():
         same = hmac.compare_digest(cookie_token, header_token)
     except Exception:
         same = False
-    if not same or not valid_token(cookie_token):
+    if not valid_request_token(
+        cookie_token,
+        header_token,
+        secret_key=app.config["SECRET_KEY"],
+        ttl=CSRF_TTL,
+        validator=valid_token,
+    ):
         return jsonify({"error": "csrf"}), 403
     """Transcribe a short voice turn for hands-free conversation."""
     ip = client_ip()
