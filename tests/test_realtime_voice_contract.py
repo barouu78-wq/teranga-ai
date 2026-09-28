@@ -45,3 +45,18 @@ def test_realtime_handshake_rechecks_session_after_network_waits():
     assert function.count("if(sessionId!==realtimeSessionId)return false;") >= 5
     assert "if(sessionId!==realtimeSessionId||!realtimePc)return false;" in function
     assert "if(sessionId!==realtimeSessionId)return false;\n    realtimeStarting=false;" in function
+
+
+def test_browser_voice_stop_cancels_pending_speech_result():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    end_start = html.rindex("function endVoiceMode(){")
+    end_end = html.index("\n}", end_start) + 2
+    end_function = html[end_start:end_end]
+    assert "clearVoiceSilence();" in end_function
+    assert "voiceDraft='';" in end_function
+
+    setup_start = html.rindex("function setupMic(){")
+    setup_end = html.index("\n}\nmic.onclick=", setup_start) + 2
+    setup = html[setup_start:setup_end]
+    assert "if(!voiceConversation)return;" in setup
+    assert "if(!voiceConversation)return;\n          const spoken=voiceDraft.trim();" in setup
