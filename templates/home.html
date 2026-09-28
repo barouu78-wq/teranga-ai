@@ -3461,6 +3461,10 @@ async function startVoiceCapture(){
   const turnId=++voiceTurnId;
   try{
     const ok=await ensureVoiceStream();
+    if(!voiceConversation||turnId!==voiceTurnId){
+      voiceCaptureBusy=false;
+      return;
+    }
     if(!ok){
       if(rec){try{rec.start();}catch(_){}}
       voiceCaptureBusy=false;
