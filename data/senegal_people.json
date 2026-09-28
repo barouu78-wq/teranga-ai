@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "description": "Fiches de personnalités extraites du noyau historique de Teranga AI. Les informations contemporaines doivent être vérifiées.",
+  "people": [
+    {
+      "name": "Cheikh Ahmadou Bamba Mbacké",
+      "period": "1853-1927",
+      "text": "fondateur de la voie mouride et grande figure religieuse de l'histoire du Sénégal. Né dans le Baol, il est formé dans les sciences religieuses et développe un enseignement centré sur la foi, le savoir, le travail et la discipline spirituelle. Dans le contexte colonial, son influence inquiète l'administration française ; il est arrêté en 1895 et envoyé en exil au Gabon, puis connaît d'autres périodes d'éloignement et de surveillance. Son retour au Sénégal et son implantation à Touba structurent durablement le mouridisme. À sa mort en 1927, son héritage religieux, éducatif et social est déjà considérable. Sa mémoire est aujourd'hui centrale dans la société sénégalaise et dans la diaspora mouride. Présenter ses enseignements religieux comme des croyances et traditions, et distinguer les faits historiques des récits hagiographiques."
+    },
+    {
+      "name": "El Hadji Malick Sy",
+      "period": "vers 1855-1922",
+      "text": "grande figure de la Tijaniyya au Sénégal et érudit islamique. Originaire de la région du fleuve, il étudie et enseigne les sciences religieuses, séjourne notamment en Mauritanie et s'installe dans plusieurs villes avant de s'établir à Tivaouane en 1902. Il contribue à faire de Tivaouane un important centre d'enseignement et de diffusion de la Tijaniyya. Sa postérité religieuse passe par ses disciples, ses enseignements et la tradition intellectuelle tijane. Sa date de naissance est parfois donnée différemment selon les sources : signaler cette incertitude plutôt que d'affirmer une date unique."
+    },
+    {
+      "name": "El Hadji Omar Tall",
+      "period": "vers 1794-1864",
+      "text": "érudit musulman, chef religieux et militaire du XIXe siècle, issu du Fouta-Toro. Il joue un rôle majeur dans la diffusion de la Tijaniyya en Afrique de l'Ouest et dirige un vaste mouvement politico-religieux dans la région. Son parcours est lié à plusieurs territoires de l'actuel Sénégal, de la Mauritanie, du Mali et de la Guinée. Il meurt en 1864 dans les falaises de Bandiagara, dans le contexte des conflits de son époque. Expliquer son histoire dans le cadre ouest-africain du XIXe siècle, sans réduire son parcours à la seule résistance à la colonisation."
+    },
+    {
+      "name": "Lat Dior Ngoné Latyr Diop",
+      "period": "1842-1886",
+      "text": "damel du Cayor et l'une des principales figures de résistance à l'expansion coloniale française au XIXe siècle. Il règne dans un contexte de rivalités politiques internes, d'expansion du chemin de fer et de pression militaire française. Il alterne périodes de résistance, de déplacement et de retour au pouvoir. Il meurt en 1886 à la bataille de Dékheulé. Sa mémoire occupe une place importante dans le récit national sénégalais autour de la résistance."
+    },
+    {
+      "name": "Maba Diakhou Bâ",
+      "period": "1809-1867",
+      "text": "chef religieux et politique du Rip, dans l'actuel Sénégal, associé à un mouvement de réforme islamique et à la résistance aux forces coloniales et aux pouvoirs rivaux. Son influence s'étend dans le Saloum et le Rip. Il meurt en 1867 à la bataille de Fandane-Thiouthioune, également appelée bataille de Somb. Il faut expliquer son rôle dans le contexte politique et religieux complexe du XIXe siècle, sans le présenter comme un acteur isolé."
+    },
+    {
+      "name": "Alboury Ndiaye",
+      "period": "XIXe siècle-1901",
+      "text": "dernier grand buur du Djolof, il cherche à préserver l'autonomie de son royaume face à l'expansion coloniale. Après la défaite du Djolof, il poursuit sa résistance vers l'Est et se retrouve impliqué dans les rivalités et transformations politiques de la région. Il meurt en 1901 au Soudan français, dans l'actuel Mali. Son parcours permet d'expliquer la fin progressive des royaumes précoloniaux et la transformation de l'espace sénégalais sous la domination française."
+    },
+    {
+      "name": "Ndatte Yalla Mbodj",
+      "period": "XIXe siècle",
+      "text": "dernière grande linguère du Waalo, elle dirige le royaume avec une forte autorité politique dans un contexte de pression croissante de l'administration française. Son nom est associé à la résistance du Waalo et à la défense de son territoire et de ses intérêts politiques. Son histoire doit être replacée dans celle du royaume du Waalo, du fleuve Sénégal et des transformations du XIXe siècle. Ne pas la réduire à une simple figure guerrière : expliquer aussi son rôle de souveraine et de responsable politique."
+    },
+    {
+      "name": "Aline Sitoe Diatta",
+      "period": "vers 1920-1944",
+      "text": "figure majeure de la mémoire historique et culturelle de la Casamance. Elle est associée à une résistance à l'administration coloniale et à une mobilisation religieuse et sociale dans le contexte de la Seconde Guerre mondiale. Arrêtée par l'administration coloniale, elle est déportée hors de Casamance et meurt à Tombouctou en 1944 selon les sources historiques couramment citées. Expliquer que les récits sur son rôle spirituel et son statut d'héroïne appartiennent aussi à une mémoire et à des traditions casamançaises, et distinguer ces récits des faits documentés."
+    },
+    {
+      "name": "Blaise Diagne",
+      "period": "1872-1934",
+      "text": "né à Gorée, il devient en 1914 le premier député africain élu à la Chambre des députés française. Il utilise les institutions françaises pour défendre notamment les droits politiques des habitants des Quatre Communes du Sénégal. Pendant la Première Guerre mondiale, il est nommé commissaire général chargé du recrutement des troupes en Afrique occidentale française. Son parcours est important pour comprendre la citoyenneté, la représentation politique et les rapports entre le Sénégal et la France à l'époque coloniale."
+    },
+    {
+      "name": "Lamine Guèye",
+      "period": "1891-1968",
+      "text": "avocat, juriste, maire de Dakar et homme politique majeur de la période coloniale et des premières années de l'indépendance. Il défend l'égalité des droits et participe aux débats sur la citoyenneté et la représentation politique. La loi dite « Lamine Guèye » de 1946 est associée à l'extension de la citoyenneté française aux populations des colonies françaises. Son parcours aide à comprendre la transition entre la citoyenneté coloniale, l'autonomie politique et l'indépendance du Sénégal."
+    },
+    {
+      "name": "Léopold Sédar Senghor",
+      "period": "1906-2001",
+      "text": "poète, intellectuel et homme d'État, né à Joal. Il participe avec Aimé Césaire et d'autres intellectuels à la construction du mouvement de la Négritude, qui valorise les cultures et expériences noires face au système colonial. Il devient le premier président du Sénégal indépendant en 1960 et reste au pouvoir jusqu'en 1980. Après sa carrière politique, il continue son activité intellectuelle et littéraire ; il est élu à l'Académie française en 1983, premier Africain à y entrer. Présenter séparément son œuvre poétique, sa pensée et son action politique, car elles ne se confondent pas."
+    },
+    {
+      "name": "Cheikh Anta Diop",
+      "period": "1923-1986",
+      "text": "historien, anthropologue, scientifique et intellectuel sénégalais né à Thiaytou. Installé à Paris à partir de 1946, il étudie notamment les sciences et l'histoire et développe une pensée visant à replacer les civilisations africaines au centre de l'histoire mondiale. Ses travaux sur l'Égypte ancienne, les langues africaines, l'unité culturelle de l'Afrique et l'avenir politique du continent ont profondément influencé les débats intellectuels africains. De retour au Sénégal après l'indépendance, il travaille à Dakar et contribue au développement de la recherche scientifique. Ses thèses doivent être présentées avec leurs arguments et avec les débats scientifiques qu'elles ont suscités, sans transformer une controverse académique en fait établi."
+    },
+    {
+      "name": "Ousmane Sembène",
+      "period": "1923-2007",
+      "text": "écrivain, romancier, scénariste et cinéaste sénégalais, souvent présenté comme l'un des pionniers du cinéma africain. Ancien docker et ancien combattant, il devient écrivain puis se tourne vers le cinéma afin de toucher un public plus large. Ses œuvres abordent le colonialisme, les rapports sociaux, les inégalités, la condition des femmes et les transformations de l'Afrique après les indépendances. Parmi ses œuvres majeures figurent Les Bouts de bois de Dieu, Le Mandat et Xala. Son parcours permet de relier littérature, cinéma et critique sociale au Sénégal."
+    },
+    {
+      "name": "Mariama Bâ",
+      "period": "1929-1981",
+      "text": "écrivaine et enseignante sénégalaise, figure importante de la littérature africaine francophone. Son roman Une si longue lettre met en scène la vie, les difficultés et les choix de femmes sénégalaises dans une société traversée par des traditions, des changements sociaux et des rapports de pouvoir. Son œuvre est souvent étudiée pour sa réflexion sur la condition des femmes, le mariage, la polygamie, l'éducation et les transformations sociales. Quand Teranga AI parle d'elle, distinguer ce que le roman raconte de la biographie personnelle de l'autrice."
+    },
+    {
+      "name": "Caroline Faye Diop",
+      "period": "1923-1997",
+      "text": "enseignante, militante et femme politique sénégalaise, née à Foundiougne. Formée à l'École normale de jeunes filles de Rufisque, elle devient institutrice avant de s'engager dans la vie publique. Elle est une figure importante de la participation des femmes à la politique sénégalaise et milite pour leur émancipation et leurs droits. Les Archives du Sénégal la présentent comme une référence de l'engagement public féminin. Pour ses dates et fonctions précises, privilégier les Archives du Sénégal."
+    },
+    {
+      "name": "Djibril Tamsir Niane",
+      "period": "1932-2021",
+      "text": "historien, écrivain et chercheur guinéen, pas sénégalais. Il est important pour l'histoire culturelle de l'Afrique de l'Ouest, notamment grâce à ses travaux sur l'histoire du Mandingue et à sa contribution à la transmission des traditions historiques africaines. Teranga AI doit le présenter comme une figure ouest-africaine liée aux études historiques régionales, et non comme une personnalité sénégalaise. \nQuand l'utilisateur demande « qui est X ? », « raconte-moi l'histoire de X » ou « quelles sont les grandes figures du Sénégal », donner une réponse structurée avec identité, dates ou période, origine, rôle, contexte historique, événements majeurs, héritage et, lorsque nécessaire, les débats ou incertitudes documentaires. Pour une biographie demandée explicitement, dépasser la limite habituelle de 70 mots et viser environ 120 à 180 mots. Ne pas classer les personnes comme « la plus importante » sauf si une hiérarchie est explicitement attribuée à une source. Pour les figures religieuses, distinguer les faits historiques, les traditions et les croyances."
+    }
+  ]
+}
