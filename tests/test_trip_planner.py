@@ -89,3 +89,17 @@ def test_trip_plan_contract_normalizes_supported_fields():
     assert plan["summary"] == "Deux jours au Sénégal"
     assert plan["days"][0]["region"] == "Dakar"
     assert plan["practical_notes"] == ["Vérifier les horaires."]
+
+
+def test_trip_map_bounds_follow_selected_regions():
+    from services.trip_planner import _map_html
+
+    map_html = _map_html(["Dakar", "Kédougou"])
+    assert "bbox=" in map_html
+    assert "-18.2677%2C11.7600%2C-11.3800%2C15.5167" in map_html
+
+
+def test_trip_map_returns_empty_for_unknown_regions():
+    from services.trip_planner import _map_html
+
+    assert _map_html(["Unknown region"]) == ""
