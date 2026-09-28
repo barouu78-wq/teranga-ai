@@ -2,7 +2,6 @@ import json
 from html import escape
 from flask import Response, jsonify, request
 from datetime import date
-import hashlib
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
@@ -23,7 +22,7 @@ UI = {
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": ["Dakar", "Gorée", "Saint-Louis", "Petite Côte", "Sine-Saloum", "Casamance", "Kédougou"],
-        "surprise": "✨ Laisser Teranga AI choisir",
+        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ce voyage",
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -35,7 +34,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": ["Dakar", "Gorée", "Saint-Louis", "Petite Côte", "Sine-Saloum", "Casamance", "Kédougou"],
-        "surprise": "✨ Let Teranga AI choose",
+        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share this trip",
     },
 }
 
@@ -97,7 +96,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <section class="step" data-step="5"><h2>{regions}</h2><div class="chips">{regions_html}</div><label class="chip" style="display:inline-block;margin-top:12px"><input id="surprise" type="checkbox"><span>{surprise}</span></label>
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
-<div id="status"></div><div id="result" class="result"></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">🔗 Partager ce voyage</button></div><div id="map" class="map"></div>
+<div id="status"></div><div id="result" class="result"></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
 </div><p class="small">Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.</p>
 </main>
 <script>
@@ -105,13 +104,17 @@ const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;
 function show(i){{current=i;steps.forEach((s,n)=>s.classList.toggle('active',n===i));window.scrollTo({{top:0,behavior:'smooth'}})}}
 document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.reportValidity())show(current+1)}});
 document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
+function encodeTrip(payload){{return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'')}}
+function decodeTrip(value){{try{{const base64=value.replace(/-/g,'+').replace(/_/g,'/');const padded=base64+'='.repeat((4-base64.length%4)%4);return JSON.parse(decodeURIComponent(escape(atob(padded))))}}catch(_error){{return null}}}}
+function applySharedTrip(){{const encoded=new URLSearchParams(location.search).get('trip');if(!encoded)return;const payload=decodeTrip(encoded);if(!payload||typeof payload!=='object')return;for(const key of ['arrival','departure','adults','children']){{if(payload[key]!==undefined&&form.elements[key])form.elements[key].value=payload[key]}}for(const key of ['interests','regions']){{if(!Array.isArray(payload[key]))continue;document.querySelectorAll('input[name="'+key+'"]').forEach(input=>{{input.checked=payload[key].includes(input.value)}})}}for(const key of ['budget','pace']){{if(typeof payload[key]!=='string')continue;const input=document.querySelector('input[name="'+key+'"][value="'+CSS.escape(payload[key])+'"]');if(input)input.checked=true}}const surprise=document.getElementById('surprise');if(surprise)surprise.checked=Boolean(payload.surprise)}}
+applySharedTrip();
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
 regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));history.replaceState(null,'','/trip-planner?trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);history.replaceState(null,'','/trip-planner?trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
@@ -121,7 +124,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
         error=escape(t["error"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
-        children=escape(t["children"]), interests_html=_option_list(t["interest_options"], "interests"),
+        children=escape(t["children"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
     )
@@ -264,7 +267,6 @@ def register_trip_planner(app, client, site_url):
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
             budget_info = _budget(data)
             regions = data["regions"] or ["Dakar"]
-            share_id = hashlib.sha256(json.dumps({k: str(v) for k, v in data.items()}, sort_keys=True).encode()).hexdigest()[:12]
             try:
                 parsed_plan = json.loads(text)
             except json.JSONDecodeError:
@@ -284,7 +286,6 @@ def register_trip_planner(app, client, site_url):
                 "plan": plan,
                 "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]},
                 "language": lang,
-                "share_id": share_id,
                 "map_html": _map_html(regions),
             })
         except Exception:
