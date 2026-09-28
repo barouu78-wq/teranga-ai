@@ -978,28 +978,6 @@ def explorer_image():
 def explorer():
     return explorer_page()
 
-@app.get("/robots.txt")
-def robots():
-    body = f"User-agent: *\nAllow: /\nDisallow: /chat\nDisallow: /tts\nSitemap: {SITE_URL}/sitemap.xml\n"
-    return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
-
-
-@app.get("/sitemap.xml")
-def sitemap():
-    body = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>" + f"<url><loc>{SITE_URL}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
-        + "".join(
-            f"<url><loc>{SITE_URL}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
-            for slug in SEO_PAGES
-        )
-        + "".join(f"<url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>" for url in localized_sitemap_urls(SITE_URL))
-        + "</urlset>"
-    )
-    return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
-
-
 @app.get("/icon-192.png")
 def icon_192():
     try:
