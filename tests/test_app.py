@@ -518,3 +518,14 @@ def test_explorer_page_renders():
     assert response.status_code == 200
     assert response.content_type.startswith("text/html")
     assert "Teranga AI" in response.get_data(as_text=True)
+
+
+def test_indexnow_key_is_served():
+    client = app.test_client()
+    key = "8078ffb659c643b58bddddca48be0627"
+
+    response = client.get(f"/{key}.txt")
+
+    assert response.status_code == 200
+    assert response.get_data(as_text=True) == key
+    assert response.content_type.startswith("text/plain")

@@ -8,6 +8,8 @@ from flask import Response
 from services.international_seo import localized_sitemap_urls
 from services.seo import SEO_PAGES, render_seo_page
 
+INDEXNOW_KEY = "8078ffb659c643b58bddddca48be0627"
+
 
 def register_seo_routes(app, site_url):
     @app.get("/a-propos")
@@ -61,6 +63,10 @@ def register_seo_routes(app, site_url):
     @app.get("/diaspora-senegalaise")
     def seo_diaspora_senegalaise():
         return render_seo_page("diaspora-senegalaise", site_url)
+
+    @app.get(f"/{INDEXNOW_KEY}.txt")
+    def indexnow_key():
+        return Response(INDEXNOW_KEY, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
 
     @app.get("/robots.txt")
     def robots():
