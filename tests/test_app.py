@@ -481,3 +481,13 @@ def test_stt_uses_centralized_csrf_validation(monkeypatch):
     )
     assert response.status_code == 200
     assert response.get_json()["text"] == "bonjour"
+
+
+def test_system_prompt_uses_structured_knowledge_without_embedded_catalogue():
+    import app as app_module
+
+    assert "base structurée" in app_module.SYSTEM_PROMPT
+    assert "Figures historiques" not in app_module.SYSTEM_PROMPT
+    assert "14 régions" not in app_module.SYSTEM_PROMPT
+    assert len(app_module.SYSTEM_PROMPT) < 7000
+    assert app_module.SENEGAL_PEOPLE
