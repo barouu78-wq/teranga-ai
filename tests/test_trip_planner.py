@@ -397,17 +397,17 @@ def test_trip_planner_result_labels_follow_ui_language():
     response = app.test_client().get("/trip-planner?lang=en")
     body = response.get_data(as_text=True)
     assert response.status_code == 200
-    assert '"day": "Day"' in body
-    assert '"morning": "Morning"' in body
-    assert '"budget_summary": "Indicative budget"' in body
-    assert "Jour " not in body
-    assert "Matin :" not in body
+    assert "<h3>Day " in body
+    assert "<b>Morning :</b>" in body
+    assert "<h3>Indicative budget</h3>" in body
+    assert "<h3>Jour " not in body
+    assert "<b>Matin :</b>" not in body
 
     response = app.test_client().get("/trip-planner?lang=fr")
     body = response.get_data(as_text=True)
-    assert '"day": "Jour"' in body
-    assert '"morning": "Matin"' in body
-    assert '"budget_summary": "Budget indicatif"' in body
+    assert "<h3>Jour " in body
+    assert "<b>Matin :</b>" in body
+    assert "<h3>Budget indicatif</h3>" in body
 
 def test_trip_planner_share_link_is_restorable_and_url_safe():
     from services.trip_planner import _html
