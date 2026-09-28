@@ -74,6 +74,9 @@ def detect_location(text: str) -> str | None:
     for location, aliases in _LOCATION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
             return location
+    for region, aliases in REGION_ALIASES.items():
+        if any(_normalize(alias) in normalized for alias in aliases):
+            return _normalize(region)
     return None
 
 
