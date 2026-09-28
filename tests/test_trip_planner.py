@@ -433,6 +433,10 @@ def test_trip_planner_result_labels_follow_ui_language():
     assert "<h3>Indicative budget</h3>" in body
     assert "Teranga AI is preparing your trip…" in body
     assert "✓ Link copied" in body
+    assert "Estimates and information that may change should be verified before departure." in body
+    assert 'title="Trip map"' in body
+    assert "Les estimations et informations susceptibles de changer" not in body
+    assert 'title="Carte du voyage"' not in body
     assert "<h3>Jour " not in body
     assert "<b>Matin :</b>" not in body
 
