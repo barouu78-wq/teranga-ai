@@ -24,6 +24,7 @@ from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
 from routes.tts import register_tts_route
 from routes.realtime import register_realtime_route
+from routes.image_proxy import register_image_proxy_route
 from services.international_seo import register_localized_routes
 
 from services.maps import lookup_map, should_fetch_map
@@ -232,33 +233,6 @@ Si une demande dépend d'une information changeante et que la recherche web est 
 
 
 
-@app.get("/image-proxy")
-def image_proxy():
-    ip = client_ip()
-    identity = abuse_key(ip)
-    if abuse_blocked(ip) or abuse_blocked(identity):
-        return Response("Trop de demandes. Réessaie dans quelques minutes.", status=429, mimetype="text/plain", headers={"Retry-After": "120"})
-    if not allowed_request(ip, image_request_log[ip], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image") or not allowed_request(identity, image_request_log[identity], IMAGE_RATE_LIMIT, IMAGE_RATE_WINDOW, "image_identity"):
-        record_abuse(ip, "image_rate", 1)
-        record_abuse(identity, "image_identity_rate", 1)
-        return Response("Trop de demandes d'images. Réessaie dans un instant.", status=429, mimetype="text/plain", headers={"Retry-After": "10"})
-    src = usable_wiki_image(request.args.get("url", ""))
-    if not src:
-        return Response("Image invalide", status=400, mimetype="text/plain")
-    if not allowed_image_url(src):
-        return Response("Source image non autorisée", status=403, mimetype="text/plain")
-    try:
-        content_type, data = _safe_image_fetch(src, MAX_IMAGE_BYTES, OUTBOUND_TIMEOUT, opener=_SAFE_IMAGE_OPENER)
-        return Response(
-            data,
-            mimetype=content_type,
-            headers={"Cache-Control": "public, max-age=86400"},
-        )
-    except Exception:
-        app.logger.exception("Erreur proxy image Wikimedia")
-        return Response("Image indisponible", status=502, mimetype="text/plain")
-
-
 _IMAGE_CACHE = {}
 
 def fetch_commons_images(title, limit=4):
@@ -419,6 +393,23 @@ def add_security_headers(response):
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
     )
 
+
+register_image_proxy_route(app, {
+    "client_ip": client_ip,
+    "abuse_key": abuse_key,
+    "abuse_blocked": abuse_blocked,
+    "allowed_request": allowed_request,
+    "record_abuse": record_abuse,
+    "image_request_log": image_request_log,
+    "IMAGE_RATE_LIMIT": IMAGE_RATE_LIMIT,
+    "IMAGE_RATE_WINDOW": IMAGE_RATE_WINDOW,
+    "usable_wiki_image": usable_wiki_image,
+    "allowed_image_url": _allowed_image_url,
+    "safe_image_fetch": _safe_image_fetch,
+    "MAX_IMAGE_BYTES": MAX_IMAGE_BYTES,
+    "OUTBOUND_TIMEOUT": OUTBOUND_TIMEOUT,
+    "safe_image_opener": _SAFE_IMAGE_OPENER,
+})
 
 @app.get("/health")
 def health():
