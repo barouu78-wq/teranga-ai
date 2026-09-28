@@ -3399,6 +3399,7 @@ async function postVoiceAudio(blob,turnId){
   voiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
+    if(!voiceConversation||turnId!==voiceTurnId)return;
     const form=new FormData();
     form.append('audio',blob,'teranga-voice.webm');
     form.append('language',lang);
@@ -3412,6 +3413,7 @@ async function postVoiceAudio(blob,turnId){
     });
     if(res.status===403){
       await refreshCsrf();
+      if(!voiceConversation||turnId!==voiceTurnId)return;
       res=await fetch('/stt',{
         method:'POST',
         headers:{'X-CSRF-Token':cookie('teranga_csrf')},
@@ -3419,6 +3421,7 @@ async function postVoiceAudio(blob,turnId){
       });
     }
     const data=await res.json().catch(()=>({}));
+    if(!voiceConversation||turnId!==voiceTurnId)return;
     if(!res.ok)throw new Error(data.error||'stt');
     const text=String(data.text||'').replace(/\s+/g,' ').trim();
     if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
