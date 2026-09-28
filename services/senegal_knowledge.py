@@ -203,5 +203,4 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     dynamic_topics = data.get("dynamic_topics", [])
     if dynamic_topics:
         lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
-    return "
-".join(lines)
+    return "\n".join(lines)
