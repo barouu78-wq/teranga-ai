@@ -36,7 +36,7 @@ from services.text import clean_answer
 from services.security import issue_csrf, sign_token, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
-from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+from services.assets import ICON_SVG, build_icon_png
 
 def icon_svg():
     return Response(ICON_SVG, mimetype="image/svg+xml")
