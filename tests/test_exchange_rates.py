@@ -19,3 +19,25 @@ def test_parse_bceao_rates_keeps_fallback_for_invalid_values():
     date, rates = parse_bceao_rates("<td>Euro</td><td>n/a</td>", {"EUR": 655.957})
     assert date == ""
     assert rates["EUR"] == 655.957
+
+
+def test_fetch_bceao_rates_closes_response():
+    from services.exchange_rates import fetch_bceao_rates
+
+    class Response:
+        def __init__(self):
+            self.closed = False
+        def read(self):
+            return b"<td>Euro</td><td>655,957</td>"
+        def close(self):
+            self.closed = True
+
+    response = Response()
+    result = fetch_bceao_rates(
+        {"at": 0.0, "date": "", "rates": {"EUR": 1.0}},
+        now=1000.0,
+        fetch=lambda req, timeout: response,
+    )
+
+    assert result["rates"]["EUR"] == 655.957
+    assert response.closed is True
