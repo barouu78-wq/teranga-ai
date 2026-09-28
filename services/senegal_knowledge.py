@@ -85,18 +85,14 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
     except (OSError, json.JSONDecodeError):
         return {}
 
-def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 3, max_places: int = 8):
-    profile = data.get("country_profile", {})
-    regions = data.get("regions", [])
-    lines = [
-        "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
-        "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
-    ]
+def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 3, max_places: int = 8) -> str:
+    """Build a compact, query-focused context from structured Senegal knowledge."""
     value = str(query or "").casefold()
     lines = [
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, structurée) :",
         "Utilise ces données comme contexte factuel. Pour les informations actuelles, vérifie le web. Ne transforme pas une déduction en certitude.",
     ]
+
     profile = data.get("country_profile", {})
     if profile:
         currency = profile.get("currency", {})
@@ -104,30 +100,23 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             f"- Repères nationaux : capitale {profile.get('capital')}; monnaie {currency.get('name')} ({currency.get('code')}); "
             f"langue officielle {profile.get('official_language')}; fuseau {profile.get('time_zone')}."
         )
-        geography = profile.get("geography", {})
-        if geography:
-            lines.append(
-                f"- Géographie : voisins {', '.join(geography.get('neighboring_countries', []))}; "
-                f"fleuves {', '.join(geography.get('major_rivers', []))}; zones {', '.join(geography.get('major_geographic_areas', []))}."
-            )
 
     regions = data.get("regions", [])
+    tokens = [token for token in value.split() if len(token) > 2]
     matched_regions = []
-    if value:
-        for region in regions:
-            haystack = " ".join([
-                str(region.get("name", "")),
-                *map(str, region.get("places", [])),
-                *map(str, region.get("highlights", [])),
-                *map(str, region.get("themes", [])),
-                *map(str, region.get("foods", [])),
-            ]).casefold()
-            if any(token and token in haystack for token in value.split() if len(token) > 2):
-                matched_regions.append(region)
-    selected_regions = matched_regions[:max_regions] if matched_regions else regions[:0]
-    if selected_regions:
+    for region in regions:
+        haystack = " ".join([
+            str(region.get("name", "")),
+            *map(str, region.get("places", [])),
+            *map(str, region.get("highlights", [])),
+            *map(str, region.get("themes", [])),
+            *map(str, region.get("foods", [])),
+        ]).casefold()
+        if tokens and any(token in haystack for token in tokens):
+            matched_regions.append(region)
+    if matched_regions:
         lines.append("CONTEXTE RÉGIONAL PERTINENT :")
-        for region in selected_regions:
+        for region in matched_regions[:max_regions]:
             dossier = region.get("regional_dossier", {})
             foods = region.get("foods") or dossier.get("foods") or []
             highlights = region.get("highlights") or dossier.get("key_places") or []
@@ -140,7 +129,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             )
 
     places = data.get("places", [])
-    if value and places:
+    if tokens and places:
         matched_places = []
         for place in places:
             haystack = " ".join([
@@ -148,7 +137,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 str(place.get("history", "")), str(place.get("culture", "")),
                 str(place.get("what_to_see", "")),
             ]).casefold()
-            if any(token and token in haystack for token in value.split() if len(token) > 2):
+            if any(token in haystack for token in tokens):
                 matched_places.append(place)
         if matched_places:
             lines.append("LIEUX PERTINENTS :")
@@ -159,14 +148,14 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 )
 
     unesco = data.get("unesco_world_heritage", [])
-    if unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "saint-louis", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
+    if unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
         lines.append("PATRIMOINE MONDIAL UNESCO : " + ", ".join(unesco) + ".")
 
-    if people and value:
+    if people and tokens:
         matched_people = []
         for person in people:
             haystack = f"{person.get('name', '')} {person.get('period', '')} {person.get('text', '')}".casefold()
-            if any(token and token in haystack for token in value.split() if len(token) > 2):
+            if any(token in haystack for token in tokens):
                 matched_people.append(person)
         if matched_people:
             lines.append("PERSONNALITÉS PERTINENTES :")
@@ -174,84 +163,9 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 lines.append(f"- {person.get('name')} ({person.get('period', '')}) : {person.get('text', '')}")
 
     scope = data.get("knowledge_scope", {}).get("domains", {})
-    if scope and not value:
+    if scope and not tokens:
         lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
     dynamic_topics = data.get("dynamic_topics", [])
     if dynamic_topics:
         lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
-    sources = data.get("source_registry", [])
-    if sources and (not value or any(token in value for token in ("source", "vérifie", "actuel", "statistique"))):
-        lines.append("SOURCES DE RÉFÉRENCE : " + "; ".join(f"{s.get('name')}: {s.get('role')}" for s in sources[:10]) + ".")
-    reference_date = data.get("current_reference_date")
-    if reference_date:
-        lines.append(f"DATE DE RÉFÉRENCE DE LA BASE : {reference_date}; elle ne remplace pas une vérification web.")
-
-    if modules:
-        lines.append("MODULES NATIONAUX COMPLÉMENTAIRES :")
-        for name, module in modules.items():
-            description = module.get("description") or ""
-            if description:
-                lines.append(f"- {name}: {description}")
-            for key in ("anchors", "languages", "cultural_areas", "traditions", "important_context", "stable_knowledge", "live_topics", "modes", "key_nodes", "sectors", "regional_examples", "ecosystems", "topics", "food_topics", "daily_topics", "categories", "major_areas"):
-                values = module.get(key)
-                if values:
-                    lines.append(f"  {key}: {', '.join(map(str, values))}")
-            rule = module.get("rule")
-            if rule:
-                lines.append(f"  règle: {rule}")
-            source = module.get("live_source")
-            if source:
-                lines.append(f"  source temps réel: {source}")
-    if profile:
-        lines.append("REPÈRES NATIONAUX :")
-        lines.append(
-            f"- Capitale : {profile.get('capital')}; superficie : {profile.get('area_km2')} km²; "
-            f"langue officielle : {profile.get('official_language')}; monnaie : {profile.get('currency', {}).get('name')} ({profile.get('currency', {}).get('code')}); "
-            f"fuseau : {profile.get('time_zone')}; indépendance : {profile.get('independence_date')}."
-        )
-        geography = profile.get("geography", {})
-        if geography:
-            lines.append(
-                f"- Géographie : façade {geography.get('coastline')}; pays voisins : {', '.join(geography.get('neighboring_countries', []))}; "
-                f"grands fleuves : {', '.join(geography.get('major_rivers', []))}; zones : {', '.join(geography.get('major_geographic_areas', []))}."
-            )
-        climate = profile.get("climate", {})
-        if climate:
-            lines.append(f"- Climat : {climate.get('description')}")
-        emergencies = profile.get("emergency_numbers", [])
-        if emergencies:
-            lines.append("URGENCES : " + "; ".join(f"{x.get('service')} {x.get('number')}" for x in emergencies) + ".")
-    for region in regions:
-        places = ", ".join(region.get("places", [])[:12])
-        highlights = ", ".join(region.get("highlights", [])[:10])
-        departments = ", ".join(region.get("departments", [])[:8])
-        lines.append(
-            f"- {region.get('name')}: départements = {departments}; localités = {places}; "
-            f"points d'intérêt = {highlights}."
-        )
-    places = data.get("places", [])
-    if places:
-        lines.append("Lieux détaillés :")
-        for place in places[:60]:
-            what = "; ".join(str(place.get("what_to_see", "")).split(";")[:5])
-            lines.append(f"- {place.get('name')}: {place.get('summary', '')} À voir : {what}.")
-    domains = data.get("knowledge_scope", {}).get("domains", {})
-    if domains:
-        lines.append("DOMAINES À COUVRIR :")
-        for key, description in domains.items():
-            lines.append(f"- {key}: {description}")
-    sources = data.get("source_registry", [])
-    if sources:
-        lines.append("SOURCES DE RÉFÉRENCE :")
-        for source in sources:
-            lines.append(f"- {source.get('name')}: {source.get('role')}.")
-    reference_date = data.get("current_reference_date")
-    if reference_date:
-        lines.append(f"DATE DE RÉFÉRENCE DE LA BASE : {reference_date}. Cette date ne remplace jamais une vérification web pour une information actuelle.")
-    dynamic_topics = data.get("dynamic_topics", [])
-    if dynamic_topics:
-        lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
-    unesco = ", ".join(data.get("unesco_world_heritage", []))
-    if unesco:
-        lines.append(f"Patrimoine mondial UNESCO (une partie du patrimoine, pas toute la connaissance nationale) : {unesco}.")
     return "\n".join(lines)
