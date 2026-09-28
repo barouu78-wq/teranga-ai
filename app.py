@@ -27,6 +27,7 @@ from routes.realtime import register_realtime_route
 from routes.image_proxy import register_image_proxy_route
 from routes.chat import register_chat_route
 from routes.exchange_rates import register_exchange_rates_route
+from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 
 from services.maps import lookup_map, should_fetch_map
@@ -111,11 +112,6 @@ register_localized_routes(app, SITE_URL)
 register_seo_routes(app, SITE_URL)
 
 INDEXNOW_KEY = "8078ffb659c643b58bddddca48be0627"
-
-
-@app.route(f"/{INDEXNOW_KEY}.txt")
-def indexnow_key():
-    return Response(INDEXNOW_KEY, mimetype="text/plain")
 ALLOWED_ORIGINS = {
     origin.strip().rstrip("/")
     for origin in os.getenv("ALLOWED_ORIGINS", SITE_URL).split(",")
@@ -413,10 +409,6 @@ register_image_proxy_route(app, {
     "safe_image_opener": _SAFE_IMAGE_OPENER,
 })
 
-@app.get("/health")
-def health():
-    return jsonify({"status": "ok", "service": "teranga-ai"})
-
 
 def parse_chat_payload():
     data = request.get_json(silent=True)
@@ -633,108 +625,16 @@ register_tts_route(app, {"require_json_post": require_json_post, "client_ip": cl
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
 
-
-@app.get("/icon-192.png")
-def icon_192():
-    try:
-        return Response(build_icon_png(192), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
-    except Exception:
-        return icon_svg()
-
-
-@app.get("/icon-512.png")
-def icon_512():
-    try:
-        return Response(build_icon_png(512), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
-    except Exception:
-        return icon_svg()
-
-
-@app.get("/sw.js")
-def service_worker():
-    body = """
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
-});
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.pathname === '/chat' || url.pathname === '/tts') return;
-  if (url.pathname === '/' ) return;
-});
-"""
-    resp = Response(body.strip() + "\n", mimetype="application/javascript")
-    resp.headers["Cache-Control"] = "no-store"
-    resp.headers["Service-Worker-Allowed"] = "/"
-    return resp
-
-
-@app.get("/manifest.webmanifest")
-def manifest():
-    return Response(
-        json.dumps({
-            "id": "/",
-            "name": "Teranga AI",
-            "short_name": "Teranga",
-            "description": "Assistant du Sénégal en français, anglais, wolof et pulaar.",
-            "start_url": "/",
-            "scope": "/",
-            "display": "standalone",
-            "display_override": ["window-controls-overlay", "standalone"],
-            "orientation": "portrait-primary",
-            "lang": "fr",
-            "dir": "ltr",
-            "background_color": "#f6efe3",
-            "theme_color": "#0f6a43",
-            "categories": ["travel", "lifestyle", "utilities"],
-            "icons": [
-                {"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-                {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
-            ],
-        }),
-        mimetype="application/manifest+json",
-        headers={"Cache-Control": "public, max-age=86400"},
-    )
-
-
-@app.get("/csrf")
-def csrf_token():
-    token = issue_csrf(app.config["SECRET_KEY"], CSRF_TTL)
-    resp = jsonify({"token": token})
-    resp.set_cookie(
-        CSRF_COOKIE,
-        token,
-        httponly=False,
-        secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
-        samesite="Lax",
-        max_age=60 * 60 * 12,
-        path="/",
-    )
-    return resp
-
-
-@app.get("/")
-def home():
-    nonce = secrets.token_urlsafe(16)
-    request._csp_nonce = nonce
-    response = Response(
-        HOME_HTML.replace("__CSP_NONCE__", nonce).replace("__SITE_URL__", SITE_URL),
-        mimetype="text/html",
-    )
-    response.set_cookie(
-        CSRF_COOKIE,
-        issue_csrf(app.config["SECRET_KEY"], CSRF_TTL),
-        httponly=False,
-        secure=request.is_secure or request.headers.get("X-Forwarded-Proto") == "https",
-        samesite="Lax",
-        max_age=60 * 60 * 12,
-        path="/",
-    )
-    return response
+register_system_routes(app, {
+    "indexnow_key": INDEXNOW_KEY,
+    "issue_csrf": issue_csrf,
+    "csrf_ttl": CSRF_TTL,
+    "csrf_cookie": CSRF_COOKIE,
+    "home_html": HOME_HTML,
+    "site_url": SITE_URL,
+    "build_icon_png": build_icon_png,
+    "icon_svg": icon_svg,
+})
 
 
 if __name__ == "__main__":
