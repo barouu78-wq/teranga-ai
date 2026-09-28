@@ -236,6 +236,36 @@ def test_trip_planner_rejects_untrusted_origin():
     assert response.status_code == 403
 
 
+def test_trip_planner_prompt_preserves_requested_language_contract():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{"summary":"ok","days":[],"practical_notes":[]}'})()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    response = app.test_client().post(
+        "/api/trip-planner",
+        headers={"Origin": "https://example.com"},
+        json={
+            "lang": "wo",
+            "arrival": "2026-10-01",
+            "departure": "2026-10-03",
+        },
+    )
+    assert response.status_code == 200
+    assert "LANGUE DE SORTIE : wolof." in captured["prompt"]
+    assert "Réponds en wolof naturel" in captured["prompt"]
+
+
 def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_values():
     from flask import Flask
     import services.trip_planner as trip_planner
