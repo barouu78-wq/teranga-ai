@@ -31,6 +31,8 @@ def test_weather_context():
 def test_language_contract():
     assert detect_language("Bonjour, je veux visiter Dakar") == "fr"
     assert detect_language("Hello, I want to travel to Dakar") == "en"
+    assert detect_language("Je veux visiter Dakar à pied") == "fr"
+    assert detect_language("Hol no mbada") == "ff"
 
 
 def test_context_history_is_flagged_without_changing_query():
