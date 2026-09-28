@@ -524,41 +524,37 @@ def parse_chat_payload():
     }, None
 
 
-def create_response(payload, stream):
-    fallback_model = "gpt-5.6-luna" if MODEL == "gpt-6-luna" else "gpt-6-luna"
-    return _create_openai_response(
-        client,
-        payload,
-        build_kwargs=model_kwargs,
-        model=MODEL,
-        logger=app.logger,
-        stream=stream,
-        fallback_models=(fallback_model,),
-    )
+from services.chat_service import build_chat_service
+
+
+_CHAT_SERVICE = build_chat_service(
+    client=client,
+    model=MODEL,
+    logger=app.logger,
+    build_model_kwargs=build_model_kwargs,
+    reasoning_effort=reasoning_effort,
+    search_context_size=search_context_size,
+    preferred_domains=preferred_domains,
+    create_openai_response=_create_openai_response,
+    clean_answer=clean_answer,
+    extract_sources=extract_sources,
+    fetch_topic_images=fetch_topic_images,
+    lookup_map=lookup_map,
+    should_fetch_map=should_fetch_map,
+    reasoning_override=os.getenv("OPENAI_REASONING_EFFORT") or None,
+)
+
 
 def model_kwargs(payload, stream):
-    return build_model_kwargs(
-        payload,
-        model=MODEL,
-        reasoning_effort=reasoning_effort,
-        search_context_size=search_context_size,
-        preferred_domains=preferred_domains,
-        stream=stream,
-        reasoning_override=os.getenv("OPENAI_REASONING_EFFORT") or None,
-    )
+    return _CHAT_SERVICE["model_kwargs"](payload, stream)
 
+
+def create_response(payload, stream):
+    return _CHAT_SERVICE["create_response"](payload, stream)
 
 
 def complete_reply(payload):
-    response = create_response(payload, stream=False)
-    text = clean_answer(getattr(response, "output_text", "") or "")
-    try:
-        image = fetch_topic_images(payload.get("message", ""))
-    except Exception:
-        app.logger.exception("Erreur récupération images; réponse texte conservée")
-        image = None
-    map_query = payload.get("contextual_query") or payload.get("message", "")
-    return text, extract_sources(response), image, lookup_map(map_query, should_fetch_map(map_query))
+    return _CHAT_SERVICE["complete_reply"](payload)
 
 
 _fx_cache = {"at": 0.0, "date": "", "rates": dict(DEFAULT_RATES)}
