@@ -101,8 +101,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         }
     }[audience][language]
     return {
-        "instructions": system_prompt + "
-" + format_senegal_knowledge(SENEGAL_KNOWLEDGE, query=enriched_context, people=SENEGAL_PEOPLE) + "
+        "instructions": system_prompt + "\\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE, query=enriched_context, people=SENEGAL_PEOPLE) + "
 " + language_instruction + "
 " + audience_instruction + "
 " + context_instruction,
