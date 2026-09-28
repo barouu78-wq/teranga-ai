@@ -1,7 +1,5 @@
 import json
 import secrets
-from pathlib import Path
-
 from flask import Response, jsonify, request
 
 
