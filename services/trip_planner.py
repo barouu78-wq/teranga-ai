@@ -43,8 +43,11 @@ def _lang():
     lang = str(request.args.get("lang") or request.form.get("lang") or "fr").lower()[:2]
     return lang if lang in ALLOWED_LANGS else "fr"
 
-def _option_list(values):
-    return "".join(f'<label class="chip"><input type="checkbox" name="x" value="{escape(v)}"><span>{escape(v)}</span></label>' for v in values)
+def _option_list(values, name="x", input_type="checkbox"):
+    return "".join(
+        f'<label class="chip"><input type="{escape(input_type)}" name="{escape(name)}" value="{escape(v)}"><span>{escape(v)}</span></label>'
+        for v in values
+    )
 
 def _html(site_url, lang="fr"):
     t = UI.get(lang, UI["fr"])
@@ -104,9 +107,9 @@ document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.repo
 document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
-interests:[...document.querySelectorAll('input[name=x]:checked')].map(x=>x.value),budget:[...document.querySelectorAll('section[data-step="4"] input[name=x]:checked')].map(x=>x.value)[0]||'Confort',
-pace:[...document.querySelectorAll('section[data-step="4"] input[name=x]:checked')].map(x=>x.value)[1]||'Équilibré',
-regions:[...document.querySelectorAll('section[data-step="5"] input[name=x]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
+interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
+pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
+regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
 try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));history.replaceState(null,'','/trip-planner?trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
@@ -118,9 +121,9 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
         error=escape(t["error"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
-        children=escape(t["children"]), interests_html=_option_list(t["interest_options"]),
-        budget_html=_option_list(t["budget_options"]), pace_html=_option_list(t["pace_options"]),
-        regions_html=_option_list(t["region_options"]), surprise=escape(t["surprise"])
+        children=escape(t["children"]), interests_html=_option_list(t["interest_options"], "interests"),
+        budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
+        regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
     )
     return html
 
