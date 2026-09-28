@@ -1,5 +1,7 @@
 """Chat payload construction and conversation-context preparation."""
 
+from .language_quality import language_instruction
+
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
     normalized, error = normalize_chat_input(
@@ -19,12 +21,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     history = normalized["history"]
     language = normalized["language"]
     audience = normalized["audience"]
-    language_instruction = {
-        "fr": "Réponds en français naturel, avec un vocabulaire sénégalais naturel quand le contexte s'y prête.",
-        "en": "Reply in natural English. Keep Senegalese names, places, dishes and cultural terms in their established form.",
-        "wo": "Réponds en wolof naturel autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le wolof pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en wolof. Si l'utilisateur mélange wolof et français, comprends le mélange et réponds majoritairement en wolof.",
-        "ff": "Réponds en pulaar naturel (fuuta tooro) autant que possible. Garde les noms propres, lieux et plats dans leur forme usuelle. N'abandonne pas le pulaar pour le français simplement parce qu'une phrase est un peu plus difficile ; utilise le français seulement pour un terme technique ou un mot réellement intraduisible, puis continue en pulaar. Si l'utilisateur mélange pulaar et français, comprends le mélange et réponds majoritairement en pulaar. Respecte l'orthographe pulaar fournie par l'utilisateur quand elle est claire.",
-    }[language]
+    language_instruction_text = language_instruction(language)
     context = infer_senegal_context(history, message)
     intent_context = build_intent_context(message, history)
     enriched_context = context["query"]
