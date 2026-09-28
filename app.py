@@ -26,6 +26,7 @@ from routes.tts import register_tts_route
 from routes.realtime import register_realtime_route
 from routes.image_proxy import register_image_proxy_route
 from routes.chat import register_chat_route
+from routes.exchange_rates import register_exchange_rates_route
 from services.international_seo import register_localized_routes
 
 from services.maps import lookup_map, should_fetch_map
@@ -573,23 +574,6 @@ def fetch_bceao_rates():
     _fx_cache = _fetch_bceao_rates(_fx_cache, logger=app.logger)
     return _fx_cache
 
-@app.get("/exchange-rates")
-def exchange_rates():
-    ip = client_ip()
-    identity = abuse_key(ip)
-    if not allowed_request(ip, fx_request_log[ip], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx") or not allowed_request(identity, fx_request_log[identity], FX_RATE_LIMIT, FX_RATE_WINDOW, "fx_identity"):
-        record_abuse(ip, "fx_rate", 1)
-        record_abuse(identity, "fx_identity_rate", 1)
-        return jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}), 429, {"Retry-After": "15"}
-    data = fetch_bceao_rates()
-    return jsonify({
-        "source": "BCEAO",
-        "date": data["date"],
-        "rates": data["rates"],
-        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    })
-
-
 def speech_ready_text(text: str) -> str:
     """Prepare assistant text for natural speech without changing its meaning."""
     text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
@@ -601,6 +585,17 @@ def speech_ready_text(text: str) -> str:
     text = re.sub(r'\s+', ' ', text).strip()
     return text[:MAX_TTS_LENGTH]
 
+
+register_exchange_rates_route(app, {
+    "client_ip": client_ip,
+    "abuse_key": abuse_key,
+    "allowed_request": allowed_request,
+    "record_abuse": record_abuse,
+    "fx_request_log": fx_request_log,
+    "FX_RATE_LIMIT": FX_RATE_LIMIT,
+    "FX_RATE_WINDOW": FX_RATE_WINDOW,
+    "fetch_bceao_rates": fetch_bceao_rates,
+})
 
 register_chat_route(app, {
     "require_json_post": require_json_post,
