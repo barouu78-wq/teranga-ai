@@ -36,7 +36,7 @@ UI = {
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
+        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "note": "Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.", "map_title": "Carte du voyage", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -48,7 +48,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
+        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "note": "Estimates and information that may change should be verified before departure.", "map_title": "Trip map", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
     },
 }
 
@@ -121,7 +121,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
 <div id="status"></div><div id="result" class="result"></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
-</div><p class="small">Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.</p>
+</div><p class="small">{note}</p>
 </main>
 <script>
 const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
@@ -148,7 +148,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
         error=escape(t["error"]), day=escape(t["day"]), morning=escape(t["morning"]), afternoon=escape(t["afternoon"]), evening=escape(t["evening"]), transport=escape(t["transport"]), budget_summary=escape(t["budget_summary"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
-        children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
+        children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
     )
@@ -177,7 +177,7 @@ def _budget(data):
         "total": total,
     }
 
-def _map_html(regions):
+def _map_html(regions, title="Carte du voyage"):
     points = [REGION_COORDS[r] for r in regions if r in REGION_COORDS]
     if not points:
         return ""
@@ -189,7 +189,7 @@ def _map_html(regions):
     east = max(longitudes) + margin
     north = max(latitudes) + margin
     bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
-    return f'<iframe title="Carte du voyage" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
+    return f'<iframe title="{escape(title)}" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
 def _normalize_plan(plan, fallback_text, expected_days=None):
     fallback = {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
     if not isinstance(plan, dict):
@@ -359,7 +359,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
                 "plan": plan,
                 "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]},
                 "language": lang,
-                "map_html": _map_html(regions),
+                "map_html": _map_html(regions, "Trip map" if lang == "en" else "Carte du voyage"),
             })
         except Exception:
             app.logger.exception("trip-planner")
