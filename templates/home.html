@@ -99,13 +99,12 @@ async function playVoiceTtsQueue(){
       const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
-      if(voiceTtsTurn!==speechTurn)return;
+      if(item.turn!==voiceTtsTurn||!autoVoice)return;
       if(!blob.size)throw new Error('tts-empty');
       if(ttsCache.size>=12)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
     if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
-    if(voiceTtsTurn!==speechTurn)return;
     const url=URL.createObjectURL(blob);
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
