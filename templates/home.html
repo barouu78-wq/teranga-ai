@@ -3229,13 +3229,16 @@ async function startRealtimeVoice(){
     form.append('language',lang);
     form.append('audience',audience);
     form.append('context',realtimeContext());
+    if(sessionId!==realtimeSessionId)return false;
     let res=await fetch('/realtime-call',{
       method:'POST',
       headers:{'X-CSRF-Token':cookie('teranga_csrf')},
       body:form,credentials:'same-origin'
     });
     if(res.status===403){
+      if(sessionId!==realtimeSessionId)return false;
       await refreshCsrf();
+      if(sessionId!==realtimeSessionId)return false;
       res=await fetch('/realtime-call',{
         method:'POST',
         headers:{'X-CSRF-Token':cookie('teranga_csrf')},
@@ -3243,8 +3246,11 @@ async function startRealtimeVoice(){
       });
     }
     if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error||'realtime');
+    if(sessionId!==realtimeSessionId)return false;
     const answer=await res.text();
+    if(sessionId!==realtimeSessionId||!realtimePc)return false;
     await realtimePc.setRemoteDescription({type:'answer',sdp:answer});
+    if(sessionId!==realtimeSessionId)return false;
     realtimeStarting=false;
     realtimeActive=true;
     document.body.classList.add('realtime-voice');
