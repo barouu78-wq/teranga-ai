@@ -848,6 +848,8 @@ def speech_ready_text(text: str) -> str:
     return text[:MAX_TTS_LENGTH]
 
 
+register_stt_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "stt_request_log": stt_request_log, "stt_hourly_log": stt_hourly_log, "STT_RATE_LIMIT": STT_RATE_LIMIT, "STT_HOURLY_LIMIT": STT_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_MESSAGE_LENGTH": MAX_MESSAGE_LENGTH, "sanitize_text": sanitize_text, "public_error": public_error, "_field": _field, "client": client})
+
 register_tts_route(app, {"require_json_post": require_json_post, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "tts_request_log": tts_request_log, "tts_hourly_log": tts_hourly_log, "TTS_RATE_LIMIT": TTS_RATE_LIMIT, "TTS_HOURLY_LIMIT": TTS_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_TTS_LENGTH": MAX_TTS_LENGTH, "sanitize_text": sanitize_text, "client": client})
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
