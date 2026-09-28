@@ -91,6 +91,60 @@ def test_trip_plan_contract_normalizes_supported_fields():
     assert plan["practical_notes"] == ["Vérifier les horaires."]
 
 
+def test_trip_plan_contract_rejects_invalid_day_structure():
+    from services.trip_planner import _normalize_plan
+
+    base = {
+        "summary": "Séjour",
+        "days": [{
+            "day": 1,
+            "title": "Dakar",
+            "region": "Dakar",
+            "morning": "Marché",
+            "afternoon": "Gorée",
+            "evening": "Dîner",
+            "transport": "Taxi",
+        }],
+        "practical_notes": [],
+    }
+    assert _normalize_plan(base, "fallback", expected_days=2)["days"] == []
+    invalid = dict(base)
+    invalid["days"] = [dict(base["days"][0], day="1")]
+    assert _normalize_plan(invalid, "fallback", expected_days=1) == {
+        "summary": "fallback",
+        "days": [],
+        "practical_notes": [],
+    }
+    invalid = dict(base)
+    invalid["days"] = [dict(base["days"][0], morning="")]
+    assert _normalize_plan(invalid, "fallback", expected_days=1) == {
+        "summary": "fallback",
+        "days": [],
+        "practical_notes": [],
+    }
+
+
+def test_trip_plan_contract_trims_valid_fields():
+    from services.trip_planner import _normalize_plan
+
+    plan = _normalize_plan({
+        "summary": "  Séjour  ",
+        "days": [{
+            "day": 1,
+            "title": "  Dakar  ",
+            "region": " Dakar ",
+            "morning": " Marché ",
+            "afternoon": " Gorée ",
+            "evening": " Dîner ",
+            "transport": " Taxi ",
+        }],
+        "practical_notes": ["  Vérifier les horaires.  ", "", 42],
+    }, "fallback", expected_days=1)
+    assert plan["summary"] == "Séjour"
+    assert plan["days"][0]["title"] == "Dakar"
+    assert plan["practical_notes"] == ["Vérifier les horaires."]
+
+
 def test_trip_map_bounds_follow_selected_regions():
     from services.trip_planner import _map_html
 
