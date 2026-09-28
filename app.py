@@ -19,8 +19,8 @@ from flask import Flask, Response, g, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool
-from services.seo import SEO_PAGES, render_seo_page
-from services.international_seo import register_localized_routes, localized_sitemap_urls
+from routes.seo import register_seo_routes
+from services.international_seo import register_localized_routes
 from services.explorer import render_explorer_page
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
@@ -101,6 +101,7 @@ MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = env_bool("TRUST_PROXY", True)
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 register_localized_routes(app, SITE_URL)
+register_seo_routes(app, SITE_URL)
 
 INDEXNOW_KEY = "8078ffb659c643b58bddddca48be0627"
 
@@ -947,70 +948,6 @@ def tts():
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
 
-
-@app.get("/a-propos")
-def seo_a_propos():
-    return render_seo_page("a-propos", SITE_URL)
-
-
-@app.get("/presse")
-def seo_presse():
-    return render_seo_page("presse", SITE_URL)
-
-
-@app.get("/media-kit")
-def seo_media_kit():
-    return render_seo_page("media-kit", SITE_URL)
-
-
-@app.get("/dakar")
-def seo_dakar():
-    return render_seo_page("dakar", SITE_URL)
-
-
-@app.get("/assistant-senegal")
-def seo_assistant_senegal():
-    return render_seo_page("assistant-senegal", SITE_URL)
-
-
-@app.get("/senegal")
-def seo_senegal():
-    return render_seo_page("senegal", SITE_URL)
-
-
-@app.get("/meteo-dakar")
-def seo_meteo_dakar():
-    return render_seo_page("meteo-dakar", SITE_URL)
-
-
-@app.get("/visiter-goree")
-def seo_visiter_goree():
-    return render_seo_page("visiter-goree", SITE_URL)
-
-
-@app.get("/restaurants-dakar")
-def seo_restaurants_dakar():
-    return render_seo_page("restaurants-dakar", SITE_URL)
-
-
-@app.get("/specialites-senegal")
-def seo_specialites_senegal():
-    return render_seo_page("specialites-senegal", SITE_URL)
-
-
-@app.get("/regions-senegal")
-def seo_regions_senegal():
-    return render_seo_page("regions-senegal", SITE_URL)
-
-
-@app.get("/france-senegal")
-def seo_france_senegal():
-    return render_seo_page("france-senegal", SITE_URL)
-
-
-@app.get("/diaspora-senegalaise")
-def seo_diaspora_senegalaise():
-    return render_seo_page("diaspora-senegalaise", SITE_URL)
 
 
 
