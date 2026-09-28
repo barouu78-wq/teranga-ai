@@ -157,7 +157,7 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,
     )
-    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
+    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?(?!\s*(?:jour|jours|semaine|semaines|nuit|nuits)\b)", text_value)
     budget = (currency_amounts[-1] if currency_amounts else amounts[-1].strip() if amounts else "")
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""

@@ -167,3 +167,12 @@ def test_infer_senegal_context_keeps_place_and_budget_from_recent_turn():
     assert result["duration"] == "4 jours"
     assert "famille" in result["constraints"]
     assert result["context_source"] == "conversation"
+
+
+def test_infer_senegal_context_does_not_treat_duration_as_budget():
+    from services.intelligence import infer_senegal_context
+
+    context = infer_senegal_context([], "Je veux visiter Gorée pendant 4 jours")
+
+    assert context["duration"] == "4 jours"
+    assert context["budget"] == ""
