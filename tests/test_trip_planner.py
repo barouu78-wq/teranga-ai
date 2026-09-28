@@ -105,7 +105,8 @@ def test_trip_map_returns_empty_for_unknown_regions():
     assert _map_html(["Unknown region"]) == ""
 
 
-def test_trip_planner_normalizes_invalid_collection_and_option_inputs(monkeypatch):
+def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
+    from flask import Flask
     import services.trip_planner as trip_planner
 
     captured = {}
@@ -118,7 +119,7 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs(monkeypatc
     class FakeClient:
         responses = FakeResponses()
 
-    app = trip_planner.Flask(__name__)
+    app = Flask(__name__)
     trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
     client = app.test_client()
     response = client.post("/api/trip-planner", json={
