@@ -297,9 +297,18 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
         pace = str(body.get("pace", "Équilibré"))[:40]
         if pace not in options["pace"]:
             pace = "Équilibré"
+        arrival_value = body["arrival"]
+        departure_value = body["departure"]
+        if (
+            not isinstance(arrival_value, str)
+            or not isinstance(departure_value, str)
+            or len(arrival_value) != 10
+            or len(departure_value) != 10
+        ):
+            return jsonify({"error": "Format de date invalide."}), 400
         try:
-            arrival_date = date.fromisoformat(str(body["arrival"])[:10])
-            departure_date = date.fromisoformat(str(body["departure"])[:10])
+            arrival_date = date.fromisoformat(arrival_value)
+            departure_date = date.fromisoformat(departure_value)
         except ValueError:
             return jsonify({"error": "Format de date invalide."}), 400
         trip_days = (departure_date - arrival_date).days
