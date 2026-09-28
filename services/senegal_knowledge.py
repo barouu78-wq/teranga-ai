@@ -65,6 +65,17 @@ def source_domains(domain: str) -> tuple[str, ...]:
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
     return SOURCE_PRIORITY
 
+def load_senegal_people(path: Path | None = None) -> list[dict]:
+    path = path or Path(__file__).resolve().parents[1] / "data" / "senegal_people.json"
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        people = data.get("people", []) if isinstance(data, dict) else []
+        return people if isinstance(people, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
 def load_senegal_knowledge(path: Path | None = None) -> dict:
     path = path or Path(__file__).resolve().parents[1] / "data" / "senegal_knowledge.json"
     try:
@@ -74,14 +85,107 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
     except (OSError, json.JSONDecodeError):
         return {}
 
-def format_senegal_knowledge(data):
+def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 3, max_places: int = 8):
     profile = data.get("country_profile", {})
     regions = data.get("regions", [])
     lines = [
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, multisources) :",
         "Ne pas réduire cette base à l'UNESCO : elle couvre territoire, vie quotidienne, météo/climat, santé, mobilité, formalités, économie, culture, histoire, gastronomie, environnement et tourisme.",
     ]
-    modules = data.get("knowledge_modules", {})
+    value = str(query or "").casefold()
+    lines = [
+        "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, structurée) :",
+        "Utilise ces données comme contexte factuel. Pour les informations actuelles, vérifie le web. Ne transforme pas une déduction en certitude.",
+    ]
+    profile = data.get("country_profile", {})
+    if profile:
+        currency = profile.get("currency", {})
+        lines.append(
+            f"- Repères nationaux : capitale {profile.get('capital')}; monnaie {currency.get('name')} ({currency.get('code')}); "
+            f"langue officielle {profile.get('official_language')}; fuseau {profile.get('time_zone')}."
+        )
+        geography = profile.get("geography", {})
+        if geography:
+            lines.append(
+                f"- Géographie : voisins {', '.join(geography.get('neighboring_countries', []))}; "
+                f"fleuves {', '.join(geography.get('major_rivers', []))}; zones {', '.join(geography.get('major_geographic_areas', []))}."
+            )
+
+    regions = data.get("regions", [])
+    matched_regions = []
+    if value:
+        for region in regions:
+            haystack = " ".join([
+                str(region.get("name", "")),
+                *map(str, region.get("places", [])),
+                *map(str, region.get("highlights", [])),
+                *map(str, region.get("themes", [])),
+                *map(str, region.get("foods", [])),
+            ]).casefold()
+            if any(token and token in haystack for token in value.split() if len(token) > 2):
+                matched_regions.append(region)
+    selected_regions = matched_regions[:max_regions] if matched_regions else regions[:0]
+    if selected_regions:
+        lines.append("CONTEXTE RÉGIONAL PERTINENT :")
+        for region in selected_regions:
+            dossier = region.get("regional_dossier", {})
+            foods = region.get("foods") or dossier.get("foods") or []
+            highlights = region.get("highlights") or dossier.get("key_places") or []
+            lines.append(
+                f"- {region.get('name')}: {dossier.get('identity') or ''} "
+                f"Localités: {', '.join(region.get('places', [])[:max_places])}. "
+                f"À voir: {', '.join(highlights[:max_places])}. "
+                f"Spécialités: {', '.join(foods[:6])}. "
+                f"Pratique: {dossier.get('practical') or ''}"
+            )
+
+    places = data.get("places", [])
+    if value and places:
+        matched_places = []
+        for place in places:
+            haystack = " ".join([
+                str(place.get("name", "")), str(place.get("summary", "")),
+                str(place.get("history", "")), str(place.get("culture", "")),
+                str(place.get("what_to_see", "")),
+            ]).casefold()
+            if any(token and token in haystack for token in value.split() if len(token) > 2):
+                matched_places.append(place)
+        if matched_places:
+            lines.append("LIEUX PERTINENTS :")
+            for place in matched_places[:max_places]:
+                lines.append(
+                    f"- {place.get('name')}: {place.get('summary', '')} "
+                    f"À voir : {place.get('what_to_see', '')}."
+                )
+
+    unesco = data.get("unesco_world_heritage", [])
+    if unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "saint-louis", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
+        lines.append("PATRIMOINE MONDIAL UNESCO : " + ", ".join(unesco) + ".")
+
+    if people and value:
+        matched_people = []
+        for person in people:
+            haystack = f"{person.get('name', '')} {person.get('period', '')} {person.get('text', '')}".casefold()
+            if any(token and token in haystack for token in value.split() if len(token) > 2):
+                matched_people.append(person)
+        if matched_people:
+            lines.append("PERSONNALITÉS PERTINENTES :")
+            for person in matched_people[:4]:
+                lines.append(f"- {person.get('name')} ({person.get('period', '')}) : {person.get('text', '')}")
+
+    scope = data.get("knowledge_scope", {}).get("domains", {})
+    if scope and not value:
+        lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
+    dynamic_topics = data.get("dynamic_topics", [])
+    if dynamic_topics:
+        lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
+    sources = data.get("source_registry", [])
+    if sources and (not value or any(token in value for token in ("source", "vérifie", "actuel", "statistique"))):
+        lines.append("SOURCES DE RÉFÉRENCE : " + "; ".join(f"{s.get('name')}: {s.get('role')}" for s in sources[:10]) + ".")
+    reference_date = data.get("current_reference_date")
+    if reference_date:
+        lines.append(f"DATE DE RÉFÉRENCE DE LA BASE : {reference_date}; elle ne remplace pas une vérification web.")
+
     if modules:
         lines.append("MODULES NATIONAUX COMPLÉMENTAIRES :")
         for name, module in modules.items():
