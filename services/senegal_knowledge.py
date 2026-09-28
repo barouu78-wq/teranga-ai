@@ -85,7 +85,7 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
     except (OSError, json.JSONDecodeError):
         return {}
 
-def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 3, max_places: int = 8) -> str:
+def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 5, max_places: int = 8) -> str:
     """Build a compact, query-focused context from structured Senegal knowledge."""
     value = str(query or "").casefold()
     lines = [
