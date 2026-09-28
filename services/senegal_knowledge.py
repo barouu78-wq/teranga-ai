@@ -79,6 +79,8 @@ DYNAMIC_DOMAINS = {
 
 def classify_domain(text: str) -> str:
     value = str(text or "").lower()
+    if any(term in value for term in ("météo", "meteo", "weather", "pluie", "température", "temperature")):
+        return "weather"
     for domain, terms in SENEGAL_DOMAINS.items():
         if any(term.lower() in value for term in terms):
             return domain
@@ -98,6 +100,8 @@ def source_domains(domain: str) -> tuple[str, ...]:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
     if domain == "administration":
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
+    if domain == "weather":
+        return ("meteofrance.com", "ansd.sn", "gov.sn")
     return SOURCE_PRIORITY
 
 def load_senegal_people(path: Path | None = None) -> list[dict]:
