@@ -55,7 +55,12 @@ def fetch_bceao_rates(
         requester = fetch or urlopen
         req = Request(FX_SOURCE_URL, headers={"User-Agent": "TerangaAI/1.0"})
         response = requester(req, timeout=5)
-        raw = response.read().decode("utf-8", "ignore")
+        try:
+            raw = response.read().decode("utf-8", "ignore")
+        finally:
+            close = getattr(response, "close", None)
+            if callable(close):
+                close()
         date, rates = parse_bceao_rates(raw, dict(cache["rates"]))
         cache = {"at": now, "date": date, "rates": rates}
         return cache
