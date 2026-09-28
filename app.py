@@ -1078,12 +1078,6 @@ def stt():
         return jsonify({"error": "Origine non autorisée."}), 403
     cookie_token = request.cookies.get(CSRF_COOKIE, "")
     header_token = request.headers.get(CSRF_HEADER, "")
-    if not cookie_token or not header_token:
-        return jsonify({"error": "csrf"}), 403
-    try:
-        same = hmac.compare_digest(cookie_token, header_token)
-    except Exception:
-        same = False
     if not valid_request_token(
         cookie_token,
         header_token,
