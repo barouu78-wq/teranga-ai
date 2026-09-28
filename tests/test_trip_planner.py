@@ -103,3 +103,34 @@ def test_trip_map_returns_empty_for_unknown_regions():
     from services.trip_planner import _map_html
 
     assert _map_html(["Unknown region"]) == ""
+
+
+def test_trip_planner_normalizes_invalid_collection_and_option_inputs(monkeypatch):
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{"summary":"ok","days":[],"practical_notes":[]}'} )()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = trip_planner.Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    client = app.test_client()
+    response = client.post("/api/trip-planner", json={
+        "arrival": "2026-10-01",
+        "departure": "2026-10-03",
+        "interests": "Dakar",
+        "regions": "Dakar",
+        "budget": "not-a-budget",
+        "pace": "not-a-pace",
+    })
+    assert response.status_code == 200
+    assert "Interests: general discovery" in captured["prompt"]
+    assert "Preferred regions: none" in captured["prompt"]
+    assert "Budget level: Confort" in captured["prompt"]
+    assert "Pace: Équilibré" in captured["prompt"]
