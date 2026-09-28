@@ -137,6 +137,38 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     assert "Pace: Équilibré" in captured["prompt"]
 
 
+def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_values():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{"summary":"ok","days":[],"practical_notes":[]}'})()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    response = app.test_client().post("/api/trip-planner", json={
+        "lang": "en",
+        "arrival": "2026-10-01",
+        "departure": "2026-10-03",
+        "interests": ["Beaches", "unknown-interest", "Food"],
+        "regions": ["Dakar", "not-a-region"],
+        "budget": "Luxury",
+        "pace": "Balanced",
+    })
+    assert response.status_code == 200
+    assert "Interests: Beaches, Food" in captured["prompt"]
+    assert "Preferred regions: Dakar" in captured["prompt"]
+    assert "Budget level: Luxury" in captured["prompt"]
+    assert "Pace: Balanced" in captured["prompt"]
+
+
 def test_trip_planner_form_uses_distinct_option_groups():
     from services.trip_planner import _html
 
