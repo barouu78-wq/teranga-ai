@@ -10,6 +10,7 @@ from services.senegal_knowledge import SENEGAL_REGIONS
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 UI_LANGS = {"fr", "en"}
 MAX_BODY_BYTES = 12000
+MAX_TRIP_DAYS = 90
 REGION_COORDS = {
     "Dakar": (14.7167, -17.4677), "Diourbel": (14.6500, -16.2333),
     "Fatick": (14.3333, -16.4167), "Kaffrine": (14.1059, -15.5508),
@@ -295,8 +296,11 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
             departure_date = date.fromisoformat(str(body["departure"])[:10])
         except ValueError:
             return jsonify({"error": "Format de date invalide."}), 400
-        if departure_date <= arrival_date:
+        trip_days = (departure_date - arrival_date).days
+        if trip_days <= 0:
             return jsonify({"error": "La date de départ doit être après l'arrivée."}), 400
+        if trip_days > MAX_TRIP_DAYS:
+            return jsonify({"error": f"La durée du voyage ne peut pas dépasser {MAX_TRIP_DAYS} jours."}), 400
         data = {"lang": lang, "arrival": arrival_date.isoformat(), "departure": departure_date.isoformat(),
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
