@@ -5,10 +5,19 @@ from datetime import date
 
 from services.http_security import origin_allowed
 from services.language_quality import language_instruction
+from services.senegal_knowledge import SENEGAL_REGIONS
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
-REGION_COORDS = {"Dakar": (14.7167, -17.4677), "Gorée": (14.6667, -17.4000), "Saint-Louis": (16.0326, -16.4818), "Petite Côte": (14.6000, -17.1000), "Sine-Saloum": (13.9000, -16.7000), "Casamance": (12.5500, -16.2800), "Kédougou": (12.5600, -12.1800)}
+REGION_COORDS = {
+    "Dakar": (14.7167, -17.4677), "Diourbel": (14.6500, -16.2333),
+    "Fatick": (14.3333, -16.4167), "Kaffrine": (14.1059, -15.5508),
+    "Kaolack": (14.1500, -16.0833), "Kédougou": (12.5600, -12.1800),
+    "Kolda": (12.8833, -14.9500), "Louga": (15.6167, -16.2167),
+    "Matam": (15.6559, -13.2554), "Saint-Louis": (16.0326, -16.4818),
+    "Sédhiou": (12.7081, -15.5569), "Tambacounda": (13.7700, -13.6700),
+    "Thiès": (14.7833, -16.9167), "Ziguinchor": (12.5833, -16.2667),
+}
 BUDGET_BANDS = {"Économique": (35, 65), "Confort": (70, 130), "Premium": (140, 240), "Luxe": (260, 500), "Budget": (35, 65), "Comfort": (70, 130), "Luxury": (260, 500)}
 
 UI = {
@@ -24,7 +33,7 @@ UI = {
         "budget_options": ["Économique", "Confort", "Premium", "Luxe"],
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
-        "region_options": ["Dakar", "Gorée", "Saint-Louis", "Petite Côte", "Sine-Saloum", "Casamance", "Kédougou"],
+        "region_options": list(SENEGAL_REGIONS),
         "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ce voyage",
     },
     "en": {
@@ -36,7 +45,7 @@ UI = {
         "adults": "Adults", "children": "Children",
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
-        "region_options": ["Dakar", "Gorée", "Saint-Louis", "Petite Côte", "Sine-Saloum", "Casamance", "Kédougou"],
+        "region_options": list(SENEGAL_REGIONS),
         "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share this trip",
     },
 }
@@ -273,7 +282,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
         interests_value = body.get("interests", [])
         regions_value = body.get("regions", [])
         interests = [x[:80] for x in interests_value if isinstance(x, str) and x in options["interests"]][:9] if isinstance(interests_value, list) else []
-        regions = [x[:80] for x in regions_value if isinstance(x, str) and x in options["regions"]][:7] if isinstance(regions_value, list) else []
+        regions = [x[:80] for x in regions_value if isinstance(x, str) and x in options["regions"]][:14] if isinstance(regions_value, list) else []
         budget = str(body.get("budget", "Confort"))[:40]
         if budget not in options["budget"]:
             budget = "Confort"
