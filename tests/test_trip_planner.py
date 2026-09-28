@@ -12,6 +12,28 @@ def test_trip_planner_page():
     assert "/api/trip-planner" in body
     assert 'name="arrival"' in body
 
+def test_trip_planner_rejects_oversized_body_without_content_length():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    class FakeClient:
+        class responses:
+            @staticmethod
+            def create(**kwargs):
+                raise AssertionError("OpenAI should not be called")
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    payload = '{"arrival":"2026-10-01","departure":"2026-10-03","padding":"' + ("x" * 13000) + '"}'
+    response = app.test_client().post(
+        "/api/trip-planner",
+        headers={"Origin": "https://example.com", "Content-Type": "application/json"},
+        data=payload,
+        environ_overrides={"CONTENT_LENGTH": ""},
+    )
+    assert response.status_code == 413
+
+
 def test_trip_planner_rejects_invalid_json():
     response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""}, headers={"Origin": "https://teranga-ai-1.onrender.com"})
     assert response.status_code == 400
