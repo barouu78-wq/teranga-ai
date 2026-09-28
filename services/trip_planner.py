@@ -3,7 +3,6 @@ from html import escape
 from flask import Response, jsonify, request
 from datetime import date
 import hashlib
-from urllib.parse import quote
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 MAX_BODY_BYTES = 12000
@@ -155,6 +154,33 @@ def _map_html(regions):
     bbox = "-18.2%2C11.8%2C-11.0%2C17.0"
     return f'<iframe title="Carte du voyage" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
 
+def _normalize_plan(plan, fallback_text):
+    if not isinstance(plan, dict):
+        return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+    summary = plan.get("summary")
+    days = plan.get("days")
+    notes = plan.get("practical_notes")
+    if not isinstance(summary, str) or not isinstance(days, list) or not isinstance(notes, list):
+        return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+    normalized_days = []
+    for item in days:
+        if not isinstance(item, dict):
+            return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+        normalized_days.append({
+            "day": item.get("day"),
+            "title": str(item.get("title", "")),
+            "region": str(item.get("region", "")),
+            "morning": str(item.get("morning", "")),
+            "afternoon": str(item.get("afternoon", "")),
+            "evening": str(item.get("evening", "")),
+            "transport": str(item.get("transport", "")),
+        })
+    return {
+        "summary": summary[:3000],
+        "days": normalized_days,
+        "practical_notes": [str(note)[:500] for note in notes if isinstance(note, str)][:20],
+    }
+
 def _prompt(data):
     return f"""Build a practical Senegal travel itinerary from these preferences.
 Arrival: {data['arrival']}
@@ -225,9 +251,10 @@ def register_trip_planner(app, client, site_url):
             regions = data["regions"] or ["Dakar"]
             share_id = hashlib.sha256(json.dumps({k: str(v) for k, v in data.items()}, sort_keys=True).encode()).hexdigest()[:12]
             try:
-                plan = json.loads(text)
+                parsed_plan = json.loads(text)
             except json.JSONDecodeError:
-                plan = {"summary": text[:3000], "days": [], "practical_notes": []}
+                parsed_plan = None
+            plan = _normalize_plan(parsed_plan, text)
             budget_lines = [
                 f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
                 f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
