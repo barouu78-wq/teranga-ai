@@ -16,7 +16,7 @@ def register_realtime_route(app, deps):
     SAFE_LANG=deps["SAFE_LANG"]; sanitize_text=deps["sanitize_text"]; API_KEY=deps["API_KEY"]
     REALTIME_RATE_LIMIT=deps["REALTIME_RATE_LIMIT"]; REALTIME_HOURLY_LIMIT=deps["REALTIME_HOURLY_LIMIT"]
 
-        @app.post("/realtime-call")
+    @app.post("/realtime-call")
     def realtime_call():
         """Create a browser WebRTC Realtime call without exposing the API key."""
         if not origin_allowed():
