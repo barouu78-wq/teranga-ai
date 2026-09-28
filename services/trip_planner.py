@@ -151,9 +151,15 @@ def _map_html(regions):
     points = [REGION_COORDS[r] for r in regions if r in REGION_COORDS]
     if not points:
         return ""
-    bbox = "-18.2%2C11.8%2C-11.0%2C17.0"
+    latitudes = [point[0] for point in points]
+    longitudes = [point[1] for point in points]
+    margin = 0.8
+    west = min(longitudes) - margin
+    south = min(latitudes) - margin
+    east = max(longitudes) + margin
+    north = max(latitudes) + margin
+    bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
     return f'<iframe title="Carte du voyage" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
-
 def _normalize_plan(plan, fallback_text):
     if not isinstance(plan, dict):
         return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
