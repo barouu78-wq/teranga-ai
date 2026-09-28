@@ -3,7 +3,6 @@ import hmac
 import io
 import json
 import os
-import re
 import secrets
 import threading
 import time
@@ -568,18 +567,6 @@ def fetch_bceao_rates():
     global _fx_cache
     _fx_cache = _fetch_bceao_rates(_fx_cache, logger=app.logger)
     return _fx_cache
-
-def speech_ready_text(text: str) -> str:
-    """Prepare assistant text for natural speech without changing its meaning."""
-    text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
-    text = re.sub(r'\[([^\]\n]+)\]\((?:https?://|www\.)[^)]+\)', r'\1', text)
-    text = re.sub(r'(^|\n)\s{0,3}#{1,6}\s*', r'\1', text)
-    text = re.sub(r'(^|\n)\s*[-*•]+\s+', r'\1', text)
-    text = re.sub(r'(^|\n)\s*\d+[.)]\s+', r'\1', text)
-    text = re.sub(r'[*_~`]+', '', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text[:MAX_TTS_LENGTH]
-
 
 register_exchange_rates_route(app, {
     "client_ip": client_ip,
