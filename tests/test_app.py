@@ -446,3 +446,38 @@ def test_visual_system_rule_requires_web_before_requesting_user_photo():
     import app as app_module
     assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
     assert "Ne demande une photo à l'utilisateur qu'après cette recherche" in app_module.SYSTEM_PROMPT
+
+
+def test_responses_include_response_time_header():
+    client = app.test_client()
+    response = client.get("/health")
+    assert response.status_code == 200
+    value = response.headers.get("X-Response-Time-ms")
+    assert value
+    assert float(value) >= 0
+
+
+def test_stt_uses_centralized_csrf_validation(monkeypatch):
+    import io
+    import app as app_module
+    from types import SimpleNamespace
+
+    monkeypatch.setattr(
+        app_module.client.audio.transcriptions,
+        "create",
+        lambda **kwargs: SimpleNamespace(text="bonjour"),
+    )
+    client = app.test_client()
+    csrf = client.get("/csrf")
+    token = csrf.get_json()["token"]
+    response = client.post(
+        "/stt",
+        data={"audio": (io.BytesIO(b"fake-audio"), "voice.webm"), "language": "fr"},
+        headers={
+            "Origin": app_module.SITE_URL,
+            "X-CSRF-Token": token,
+        },
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 200
+    assert response.get_json()["text"] == "bonjour"
