@@ -135,3 +135,14 @@ def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     assert "Preferred regions: none" in captured["prompt"]
     assert "Budget level: Confort" in captured["prompt"]
     assert "Pace: Équilibré" in captured["prompt"]
+
+
+def test_trip_planner_form_uses_distinct_option_groups():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert 'type="radio" name="budget"' in body
+    assert 'type="radio" name="pace"' in body
+    assert 'type="checkbox" name="interests"' in body
+    assert 'type="checkbox" name="regions"' in body
+    assert 'input[name=x]' not in body
