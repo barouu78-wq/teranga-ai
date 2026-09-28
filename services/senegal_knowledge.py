@@ -102,7 +102,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         )
 
     regions = data.get("regions", [])
-    tokens = [token for token in value.split() if len(token) > 2]
+    tokens = [token for token in value.split() if len(token) >= 4]
     matched_regions = []
     for region in regions:
         haystack = " ".join([
