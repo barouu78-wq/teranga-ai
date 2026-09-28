@@ -83,6 +83,7 @@ def test_senegal_context_extracts_planning_constraints():
     )
     assert context["place"] == "goree"
     assert context["duration"] == "4 jours"
+    assert context["budget"] == ""
     assert context["budget"] == "100000 fcfa"
     assert "famille" in context["constraints"]
     assert should_use_planner(context)
