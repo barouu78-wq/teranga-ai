@@ -235,8 +235,8 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
             duration_days = int(duration_match.group(1))
         except ValueError:
             duration_days = None
-    if duration_days is None and "semaine" in duration_raw:
-        duration_days = 7
+    if "semaine" in duration_raw:
+        duration_days = duration_days * 7 if duration_days is not None else 7
     return {
         "place": context.get("place", ""),
         "duration": duration_raw,
