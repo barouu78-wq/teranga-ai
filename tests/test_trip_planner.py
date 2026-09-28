@@ -181,6 +181,16 @@ def test_trip_map_returns_empty_for_unknown_regions():
     assert _map_html(["Unknown region"]) == ""
 
 
+
+
+def test_trip_planner_exposes_all_national_regions():
+    from services.senegal_knowledge import SENEGAL_REGIONS
+    from services.trip_planner import UI, REGION_COORDS
+
+    assert UI["fr"]["region_options"] == list(SENEGAL_REGIONS)
+    assert UI["en"]["region_options"] == list(SENEGAL_REGIONS)
+    assert set(SENEGAL_REGIONS) <= set(REGION_COORDS)
+
 def test_trip_planner_normalizes_invalid_collection_and_option_inputs():
     from flask import Flask
     import services.trip_planner as trip_planner
@@ -287,13 +297,13 @@ def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_valu
         "arrival": "2026-10-01",
         "departure": "2026-10-03",
         "interests": ["Beaches", "unknown-interest", "Food"],
-        "regions": ["Dakar", "not-a-region"],
+        "regions": ["Dakar", "Thiès", "not-a-region"],
         "budget": "Luxury",
         "pace": "Balanced",
     })
     assert response.status_code == 200
     assert "Interests: Beaches, Food" in captured["prompt"]
-    assert "Preferred regions: Dakar" in captured["prompt"]
+    assert "Preferred regions: Dakar, Thiès" in captured["prompt"]
     assert "Budget level: Luxury" in captured["prompt"]
     assert "Pace: Balanced" in captured["prompt"]
 
