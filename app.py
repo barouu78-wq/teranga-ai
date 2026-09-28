@@ -410,7 +410,7 @@ from services.chat_payload_service import build_chat_payload as _build_chat_payl
 
 
 def parse_chat_payload():
-    return _build_chat_payload(
+    payload, error = _build_chat_payload(
         request.get_json(silent=True),
         sanitize=sanitize_text,
         normalize_chat_input=normalize_chat_input,
@@ -430,6 +430,11 @@ def parse_chat_payload():
         max_history_chars=MAX_HISTORY_CHARS,
         system_prompt=SYSTEM_PROMPT,
     )
+    if error == "invalid":
+        return None, (jsonify({"error": "Requête invalide."}), 400)
+    if error == "empty":
+        return None, (jsonify({"error": "Écris un message avant d'envoyer."}), 400)
+    return payload, None
 
 
 from services.chat_service import build_chat_service

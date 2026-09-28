@@ -49,3 +49,16 @@ def test_normalize_chat_input_rejects_invalid_and_empty_payloads():
         safe_languages={"fr"},
     )
     assert error == "empty"
+
+
+def test_normalize_chat_input_contract_uses_domain_errors_only():
+    result, error = normalize_chat_input(
+        None,
+        sanitize=sanitize,
+        max_message_length=20,
+        max_history_items=12,
+        max_history_item_length=20,
+        safe_languages={"fr"},
+    )
+    assert result is None
+    assert error == "invalid"
