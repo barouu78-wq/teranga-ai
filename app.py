@@ -20,8 +20,9 @@ from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool
 from routes.seo import register_seo_routes
+from routes.explorer import register_explorer_routes
 from services.international_seo import register_localized_routes
-from services.explorer import render_explorer_page
+
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, contextual_query, infer_senegal_context, should_use_planner
@@ -120,6 +121,7 @@ BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_commons_images, image_proxy_url)
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
@@ -948,35 +950,6 @@ def tts():
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
 
-
-
-
-def explorer_page():
-    html = render_explorer_page(
-        SENEGAL_KNOWLEDGE.get("places", []),
-        SENEGAL_KNOWLEDGE.get("regions", []),
-        request.args.get("region", ""),
-    )
-    return Response(html, mimetype="text/html")
-
-
-@app.get("/explorer-image")
-def explorer_image():
-    query = request.args.get("query", "").strip()[:180]
-    if not query:
-        return jsonify({"images": []})
-    try:
-        images = fetch_commons_images(query, limit=4)
-        for item in images:
-            item["display_url"] = image_proxy_url(item.get("url", ""))
-        return jsonify({"images": images})
-    except Exception:
-        app.logger.exception("explorer-image")
-        return jsonify({"image": None})
-
-@app.get("/explorer")
-def explorer():
-    return explorer_page()
 
 @app.get("/icon-192.png")
 def icon_192():
