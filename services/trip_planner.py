@@ -198,7 +198,7 @@ Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
 Surprise me: {data['surprise']}
 
-Return ONLY valid JSON in the user's language. Schema: {"summary": string, "days": [{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}], "practical_notes": [string]}. Create one object per travel day.
+Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}}], "practical_notes": [string]}}. Create one object per travel day.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
 Do not invent hotels, restaurants, transport operators or reservations. If a recommendation needs current verification, say so.
@@ -232,10 +232,16 @@ def register_trip_planner(app, client, site_url):
             children = max(0, min(20, int(body.get("children", 0))))
         except (TypeError, ValueError):
             return jsonify({"error": "Nombre de voyageurs invalide."}), 400
-        interests = [str(x)[:80] for x in body.get("interests", []) if isinstance(x, str)][:9]
-        regions = [str(x)[:80] for x in body.get("regions", []) if isinstance(x, str)][:7]
+        interests_value = body.get("interests", [])
+        regions_value = body.get("regions", [])
+        interests = [str(x)[:80] for x in interests_value if isinstance(x, str)][:9] if isinstance(interests_value, list) else []
+        regions = [str(x)[:80] for x in regions_value if isinstance(x, str)][:7] if isinstance(regions_value, list) else []
         budget = str(body.get("budget", "Confort"))[:40]
+        if budget not in BUDGET_BANDS:
+            budget = "Confort"
         pace = str(body.get("pace", "Équilibré"))[:40]
+        if pace not in {"Relax", "Équilibré", "Intensif", "Relaxed", "Balanced", "Intensive"}:
+            pace = "Équilibré"
         try:
             arrival_date = date.fromisoformat(str(body["arrival"])[:10])
             departure_date = date.fromisoformat(str(body["departure"])[:10])
