@@ -3525,6 +3525,7 @@ function endVoiceMode(){
   voiceConversation=false;voiceWaitingForAnswer=false;
   voiceTurnId++;
   stopVoiceCapture();stopVoiceMonitor();
+  closeRealtimeVoice();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
   $('voiceToggle').textContent=T[lang].vOff;
