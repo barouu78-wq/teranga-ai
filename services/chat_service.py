@@ -30,7 +30,7 @@ def build_chat_service(
         )
 
     def create_response(payload, stream):
-        fallback_model = "gpt-5.6-luna" if model == "gpt-6-luna" else "gpt-6-luna"
+        fallback_model = "gpt-5.6-sol" if model == "gpt-5.6-luna" else "gpt-5.6-luna"
         return create_openai_response(
             client,
             payload,
