@@ -230,7 +230,7 @@ def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_valu
 
     app = Flask(__name__)
     trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
-    response = app.test_client().post("/api/trip-planner", json={
+    response = app.test_client().post("/api/trip-planner", headers={"Origin": "https://example.com"}, json={
         "lang": "en",
         "arrival": "2026-10-01",
         "departure": "2026-10-03",
