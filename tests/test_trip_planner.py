@@ -378,6 +378,22 @@ def test_trip_planner_form_uses_distinct_option_groups():
 
 
 
+def test_trip_planner_rejects_non_integer_traveler_counts():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, object(), "https://example.com")
+    for payload in ({"adults": 1.5}, {"adults": True}, {"children": 0.5}, {"children": False}):
+        payload.update({"arrival": "2026-10-01", "departure": "2026-10-03"})
+        response = app.test_client().post(
+            "/api/trip-planner",
+            headers={"Origin": "https://example.com"},
+            json=payload,
+        )
+        assert response.status_code == 400
+        assert response.get_json() == {"error": "Nombre de voyageurs invalide."}
+
 def test_trip_planner_rejects_excessive_duration():
     from flask import Flask
     import services.trip_planner as trip_planner

@@ -275,11 +275,17 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
         required = ["arrival", "departure"]
         if any(not str(body.get(k, "")).strip() for k in required):
             return jsonify({"error": "Dates manquantes."}), 400
-        try:
-            adults = max(1, min(20, int(body.get("adults", 1))))
-            children = max(0, min(20, int(body.get("children", 0))))
-        except (TypeError, ValueError):
+        adults_value = body.get("adults", 1)
+        children_value = body.get("children", 0)
+        if (
+            isinstance(adults_value, bool)
+            or isinstance(children_value, bool)
+            or not isinstance(adults_value, int)
+            or not isinstance(children_value, int)
+        ):
             return jsonify({"error": "Nombre de voyageurs invalide."}), 400
+        adults = max(1, min(20, adults_value))
+        children = max(0, min(20, children_value))
         options = _allowed_options(lang)
         interests_value = body.get("interests", [])
         regions_value = body.get("regions", [])
