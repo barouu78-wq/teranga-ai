@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import classify_domain, needs_fresh_web, source_domains
+from .senegal_knowledge import REGION_ALIASES, classify_domain, needs_fresh_web, source_domains
 from .validation import sanitize_text
 
 
@@ -74,6 +74,9 @@ def detect_location(text: str) -> str | None:
     for location, aliases in _LOCATION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
             return location
+    for region, aliases in REGION_ALIASES.items():
+        if any(_normalize(alias) in normalized for alias in aliases):
+            return _normalize(region)
     return None
 
 

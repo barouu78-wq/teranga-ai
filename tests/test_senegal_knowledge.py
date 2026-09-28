@@ -39,3 +39,21 @@ def test_structured_knowledge_does_not_require_all_regions_in_prompt():
     context = format_senegal_knowledge(data, query="Saint-Louis")
     assert "Saint-Louis" in context
     assert "Kaolack" not in context
+
+
+
+def test_all_fourteen_regions_are_covered():
+    from services.senegal_knowledge import SENEGAL_REGIONS
+    assert len(SENEGAL_REGIONS) == 14
+    assert len(set(SENEGAL_REGIONS)) == 14
+
+
+def test_regional_location_context():
+    from services.intelligence import detect_location
+    assert detect_location("Je veux visiter Kédougou") == "kedougou"
+    assert detect_location("Que voir à Ziguinchor ?") == "ziguinchor"
+
+
+def test_weather_is_a_fresh_web_domain():
+    assert classify_domain("météo à Dakar") == "weather"
+    assert "meteofrance.com" in source_domains("weather")

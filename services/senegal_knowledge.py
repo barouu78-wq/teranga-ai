@@ -9,6 +9,41 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+# Official administrative coverage: all 14 regions of Senegal.
+SENEGAL_REGIONS = (
+    "Dakar", "Diourbel", "Fatick", "Kaffrine", "Kaolack", "Kédougou", "Kolda",
+    "Louga", "Matam", "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor",
+)
+
+REGION_ALIASES = {
+    "Dakar": ("dakar",), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
+    "Kaffrine": ("kaffrine",), "Kaolack": ("kaolack",),
+    "Kédougou": ("kedougou", "kédougou"), "Kolda": ("kolda",), "Louga": ("louga",),
+    "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis"),
+    "Sédhiou": ("sedhiou", "sédhiou"), "Tambacounda": ("tambacounda",),
+    "Thiès": ("thies", "thiès"), "Ziguinchor": ("ziguinchor",),
+}
+
+REGION_HIGHLIGHTS = {
+    "Dakar": ("Dakar", "Gorée", "Rufisque", "Ngor", "Yoff", "Ouakam"),
+    "Thiès": ("Thiès", "Tivaouane", "Mbour", "Saly", "Joal-Fadiouth", "Popenguine"),
+    "Diourbel": ("Diourbel", "Touba", "Mbacké"),
+    "Fatick": ("Fatick", "Foundiougne", "Sokone", "Delta du Saloum"),
+    "Kaolack": ("Kaolack", "Nioro du Rip", "Médina Baye"),
+    "Kaffrine": ("Kaffrine", "Koungheul", "Birkelane"),
+    "Louga": ("Louga", "Linguère", "Dahra", "Ferlo"),
+    "Saint-Louis": ("Saint-Louis", "Podor", "Richard-Toll", "Djoudj"),
+    "Matam": ("Matam", "Ourossogui", "Kanel", "Thilogne"),
+    "Tambacounda": ("Tambacounda", "Bakel", "Niokolo-Koba"),
+    "Kédougou": ("Kédougou", "Dindéfelo", "Bandafassi", "Pays Bassari"),
+    "Kolda": ("Kolda", "Vélingara", "Haute-Casamance"),
+    "Sédhiou": ("Sédhiou", "Bounkiling", "Goudomp", "Moyenne-Casamance"),
+    "Ziguinchor": ("Ziguinchor", "Oussouye", "Cap Skirring", "Carabane"),
+}
+
+def region_highlights(region: str) -> tuple[str, ...]:
+    return REGION_HIGHLIGHTS.get(str(region or ""), ())
+
 SOURCE_PRIORITY = (
     "gov.sn",
     "ansd.sn",
@@ -44,6 +79,8 @@ DYNAMIC_DOMAINS = {
 
 def classify_domain(text: str) -> str:
     value = str(text or "").lower()
+    if any(term in value for term in ("météo", "meteo", "weather", "pluie", "température", "temperature")):
+        return "weather"
     for domain, terms in SENEGAL_DOMAINS.items():
         if any(term.lower() in value for term in terms):
             return domain
@@ -63,6 +100,8 @@ def source_domains(domain: str) -> tuple[str, ...]:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
     if domain == "administration":
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
+    if domain == "weather":
+        return ("meteofrance.com", "ansd.sn", "gov.sn")
     return SOURCE_PRIORITY
 
 def load_senegal_people(path: Path | None = None) -> list[dict]:
