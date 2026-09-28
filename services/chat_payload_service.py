@@ -1,11 +1,16 @@
-"""Chat payload construction and conversation-context preparation."""\n\n\ndef build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, contextual_query, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars):
+"""Chat payload construction and conversation-context preparation."""
+
+from flask import jsonify
+
+
+def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
     normalized, error = normalize_chat_input(
         data,
-        sanitize=sanitize_text,
-        max_message_length=MAX_MESSAGE_LENGTH,
-        max_history_items=MAX_HISTORY_ITEMS,
-        max_history_item_length=MAX_HISTORY_ITEM_LENGTH,
-        safe_languages=SAFE_LANG,
+        sanitize=sanitize,
+        max_message_length=max_message_length,
+        max_history_items=max_history_items,
+        max_history_item_length=max_history_item_length,
+        safe_languages=safe_languages,
     )
     if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
@@ -96,8 +101,12 @@
         }
     }[audience][language]
     return {
-        "instructions": SYSTEM_PROMPT + "\n" + format_senegal_knowledge(SENEGAL_KNOWLEDGE, query=enriched_context, people=SENEGAL_PEOPLE) + "\n" + language_instruction + "\n" + audience_instruction + "\n" + context_instruction,
-        "input_text": _build_conversation(history, message, max_history_items=MAX_HISTORY_ITEMS, max_history_item_length=MAX_HISTORY_ITEM_LENGTH, max_history_chars=MAX_HISTORY_CHARS),
+        "instructions": system_prompt + "
+" + format_senegal_knowledge(SENEGAL_KNOWLEDGE, query=enriched_context, people=SENEGAL_PEOPLE) + "
+" + language_instruction + "
+" + audience_instruction + "
+" + context_instruction,
+        "input_text": build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars),
         "use_web": should_use_web(message, enriched_context),
         "planner": planner_enabled,
         "planner_data": planner_data,
@@ -106,4 +115,4 @@
         "context": context,
         "intent_context": intent_context,
         "contextual_query": enriched_context,
-    }, None\n
+    }, None
