@@ -19,9 +19,10 @@ from flask import Flask, Response, g, jsonify, request, stream_with_context
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool
-from services.seo import SEO_PAGES, render_seo_page
-from services.international_seo import register_localized_routes, localized_sitemap_urls
-from services.explorer import render_explorer_page
+from routes.seo import register_seo_routes
+from routes.explorer import register_explorer_routes
+from services.international_seo import register_localized_routes
+
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, contextual_query, infer_senegal_context, should_use_planner
@@ -101,6 +102,7 @@ MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = env_bool("TRUST_PROXY", True)
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 register_localized_routes(app, SITE_URL)
+register_seo_routes(app, SITE_URL)
 
 INDEXNOW_KEY = "8078ffb659c643b58bddddca48be0627"
 
@@ -272,6 +274,8 @@ def fetch_commons_image(title):
 
 def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
+
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_commons_images, image_proxy_url)
 
 
 
@@ -946,121 +950,6 @@ def tts():
         app.logger.exception("Erreur /tts")
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
-
-
-@app.get("/a-propos")
-def seo_a_propos():
-    return render_seo_page("a-propos", SITE_URL)
-
-
-@app.get("/presse")
-def seo_presse():
-    return render_seo_page("presse", SITE_URL)
-
-
-@app.get("/media-kit")
-def seo_media_kit():
-    return render_seo_page("media-kit", SITE_URL)
-
-
-@app.get("/dakar")
-def seo_dakar():
-    return render_seo_page("dakar", SITE_URL)
-
-
-@app.get("/assistant-senegal")
-def seo_assistant_senegal():
-    return render_seo_page("assistant-senegal", SITE_URL)
-
-
-@app.get("/senegal")
-def seo_senegal():
-    return render_seo_page("senegal", SITE_URL)
-
-
-@app.get("/meteo-dakar")
-def seo_meteo_dakar():
-    return render_seo_page("meteo-dakar", SITE_URL)
-
-
-@app.get("/visiter-goree")
-def seo_visiter_goree():
-    return render_seo_page("visiter-goree", SITE_URL)
-
-
-@app.get("/restaurants-dakar")
-def seo_restaurants_dakar():
-    return render_seo_page("restaurants-dakar", SITE_URL)
-
-
-@app.get("/specialites-senegal")
-def seo_specialites_senegal():
-    return render_seo_page("specialites-senegal", SITE_URL)
-
-
-@app.get("/regions-senegal")
-def seo_regions_senegal():
-    return render_seo_page("regions-senegal", SITE_URL)
-
-
-@app.get("/france-senegal")
-def seo_france_senegal():
-    return render_seo_page("france-senegal", SITE_URL)
-
-
-@app.get("/diaspora-senegalaise")
-def seo_diaspora_senegalaise():
-    return render_seo_page("diaspora-senegalaise", SITE_URL)
-
-
-
-def explorer_page():
-    html = render_explorer_page(
-        SENEGAL_KNOWLEDGE.get("places", []),
-        SENEGAL_KNOWLEDGE.get("regions", []),
-        request.args.get("region", ""),
-    )
-    return Response(html, mimetype="text/html")
-
-
-@app.get("/explorer-image")
-def explorer_image():
-    query = request.args.get("query", "").strip()[:180]
-    if not query:
-        return jsonify({"images": []})
-    try:
-        images = fetch_commons_images(query, limit=4)
-        for item in images:
-            item["display_url"] = image_proxy_url(item.get("url", ""))
-        return jsonify({"images": images})
-    except Exception:
-        app.logger.exception("explorer-image")
-        return jsonify({"image": None})
-
-@app.get("/explorer")
-def explorer():
-    return explorer_page()
-
-@app.get("/robots.txt")
-def robots():
-    body = f"User-agent: *\nAllow: /\nDisallow: /chat\nDisallow: /tts\nSitemap: {SITE_URL}/sitemap.xml\n"
-    return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
-
-
-@app.get("/sitemap.xml")
-def sitemap():
-    body = (
-        '<?xml version="1.0" encoding="UTF-8"?>'
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"<url><loc>{SITE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>" + f"<url><loc>{SITE_URL}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
-        + "".join(
-            f"<url><loc>{SITE_URL}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
-            for slug in SEO_PAGES
-        )
-        + "".join(f"<url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>" for url in localized_sitemap_urls(SITE_URL))
-        + "</urlset>"
-    )
-    return Response(body, mimetype="application/xml", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/icon-192.png")
