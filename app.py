@@ -218,7 +218,7 @@ Avant de répondre, identifie silencieusement l'intention, le contexte géograph
 Pour les suivis courts comme « et demain ? », « combien ? », « quel prix ? », « montre-moi ça » ou « pourquoi ? », utilise d'abord le dernier sujet pertinent de la conversation.
 Si plusieurs référents restent réellement possibles, pose une seule question courte.
 Si tu utilises le web, ne colle pas de listes d'URLs dans le texte.
-Pour les photos ou demandes visuelles, utilise la recherche visuelle disponible et ne fabrique jamais une attribution.
+Pour les photos ou demandes visuelles, tente d'abord une recherche web/visuelle disponible ; ne demande une photo à l'utilisateur qu'après cette recherche si elle ne permet pas de répondre de façon fiable, et ne fabrique jamais une attribution.
 Si une demande dépend d'une information changeante et que la recherche web est disponible, utilise-la plutôt qu'une supposition.
 """
 
