@@ -56,7 +56,7 @@ def detect_language(text: str) -> str:
         return "en"
     if any(word in normalized.split() for word in ("nanga", "jamm", "fan", "lan")):
         return "wo"
-    if any(word in normalized.split() for word in ("a", "hol", "ko", "mi")) and "senegal" not in normalized:
+    if any(word in normalized.split() for word in ("hol", "ko", "mi")) and "senegal" not in normalized:
         return "ff"
     return "fr"
 
