@@ -33,10 +33,10 @@ from services.rate_limit import allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
 from services.text import clean_answer
-from services.security import issue_csrf, sign_token, valid_token
+from services.security import issue_csrf, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
-from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+from services.assets import ICON_SVG, build_icon_png
 
 def icon_svg():
     return Response(ICON_SVG, mimetype="image/svg+xml")
@@ -256,7 +256,7 @@ from services.conversation import build_conversation as _build_conversation
 from services.responses import _field, extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
 from services.chat_payload import normalize_chat_input
-from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
+from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, DEFAULT_RATES
 from services.image_topics import knowledge_image_titles as _knowledge_image_titles, fetch_topic_images as _fetch_topic_images
 from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
