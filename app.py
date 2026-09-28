@@ -522,7 +522,7 @@ def fetch_city_image(title):
 
 
 from services.conversation import build_conversation as _build_conversation
-from services.responses import extract_sources, event_delta
+from services.responses import _field, extract_sources, event_delta
 from services.http_security import origin_allowed as _origin_allowed
 from services.chat_payload import normalize_chat_input
 from services.exchange_rates import fetch_bceao_rates as _fetch_bceao_rates, FX_CACHE_TTL, FX_SOURCE_URL, DEFAULT_RATES
