@@ -3154,6 +3154,7 @@ function handleRealtimeEvent(ev){
   }
 }
 async function startRealtimeVoice(){
+  if(!voiceConversation||!autoVoice)return false;
   if(realtimeActive||realtimeStarting)return true;
   if(!window.RTCPeerConnection||!navigator.mediaDevices?.getUserMedia)return false;
   realtimeStarting=true;
