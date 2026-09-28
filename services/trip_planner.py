@@ -42,6 +42,16 @@ def _lang():
     lang = str(request.args.get("lang") or request.form.get("lang") or "fr").lower()[:2]
     return lang if lang in ALLOWED_LANGS else "fr"
 
+def _allowed_options(lang):
+    languages = [lang, "fr", "en"]
+    return {
+        "interests": {value for language in languages if language in UI for value in UI[language]["interest_options"]},
+        "regions": {value for language in languages if language in UI for value in UI[language]["region_options"]},
+        "budget": set(BUDGET_BANDS),
+        "pace": {"Relax", "Équilibré", "Intensif", "Relaxed", "Balanced", "Intensive"},
+    }
+
+
 def _option_list(values, name="x", input_type="checkbox"):
     return "".join(
         f'<label class="chip"><input type="{escape(input_type)}" name="{escape(name)}" value="{escape(v)}"><span>{escape(v)}</span></label>'
@@ -238,15 +248,16 @@ def register_trip_planner(app, client, site_url):
             children = max(0, min(20, int(body.get("children", 0))))
         except (TypeError, ValueError):
             return jsonify({"error": "Nombre de voyageurs invalide."}), 400
+        options = _allowed_options(lang)
         interests_value = body.get("interests", [])
         regions_value = body.get("regions", [])
-        interests = [str(x)[:80] for x in interests_value if isinstance(x, str)][:9] if isinstance(interests_value, list) else []
-        regions = [str(x)[:80] for x in regions_value if isinstance(x, str)][:7] if isinstance(regions_value, list) else []
+        interests = [x[:80] for x in interests_value if isinstance(x, str) and x in options["interests"]][:9] if isinstance(interests_value, list) else []
+        regions = [x[:80] for x in regions_value if isinstance(x, str) and x in options["regions"]][:7] if isinstance(regions_value, list) else []
         budget = str(body.get("budget", "Confort"))[:40]
-        if budget not in BUDGET_BANDS:
+        if budget not in options["budget"]:
             budget = "Confort"
         pace = str(body.get("pace", "Équilibré"))[:40]
-        if pace not in {"Relax", "Équilibré", "Intensif", "Relaxed", "Balanced", "Intensive"}:
+        if pace not in options["pace"]:
             pace = "Équilibré"
         try:
             arrival_date = date.fromisoformat(str(body["arrival"])[:10])
