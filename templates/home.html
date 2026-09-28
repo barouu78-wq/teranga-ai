@@ -3162,6 +3162,11 @@ async function startRealtimeVoice(){
     const stream=await navigator.mediaDevices.getUserMedia({
       audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
     });
+    if(!voiceConversation||!autoVoice){
+      stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
+      realtimeStarting=false;
+      return false;
+    }
     realtimeMic=stream;
     realtimePc=new RTCPeerConnection();
     realtimeAudio=document.createElement('audio');
