@@ -378,6 +378,37 @@ def test_trip_planner_form_uses_distinct_option_groups():
 
 
 
+def test_trip_planner_result_labels_follow_ui_language():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{\"summary\":\"ok\",\"days\":[],\"practical_notes\":[]}'} )()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    response = app.test_client().get("/trip-planner?lang=en")
+    body = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert '"day": "Day"' in body
+    assert '"morning": "Morning"' in body
+    assert '"budget_summary": "Indicative budget"' in body
+    assert "Jour " not in body
+    assert "Matin :" not in body
+
+    response = app.test_client().get("/trip-planner?lang=fr")
+    body = response.get_data(as_text=True)
+    assert '"day": "Jour"' in body
+    assert '"morning": "Matin"' in body
+    assert '"budget_summary": "Budget indicatif"' in body
+
 def test_trip_planner_share_link_is_restorable_and_url_safe():
     from services.trip_planner import _html
 
