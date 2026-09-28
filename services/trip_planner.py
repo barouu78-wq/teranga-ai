@@ -35,7 +35,7 @@ UI = {
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences",
+        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -47,7 +47,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences",
+        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
     },
 }
 
@@ -137,7 +137,7 @@ interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
 regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">Teranga AI prépare ton voyage…</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>Jour '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>Matin :</b> '+escapeHtml(d.morning||'')+'</p><p><b>Après-midi :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>Soir :</b> '+escapeHtml(d.evening||'')+'</p><p><b>Transport :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>Budget indicatif</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>{day} '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>{morning} :</b> '+escapeHtml(d.morning||'')+'</p><p><b>{afternoon} :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>{evening} :</b> '+escapeHtml(d.evening||'')+'</p><p><b>{transport} :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>{budget_summary}</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='✓ Lien copié';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
@@ -146,7 +146,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
-        error=escape(t["error"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
+        error=escape(t["error"]), day=escape(t["day"]), morning=escape(t["morning"]), afternoon=escape(t["afternoon"]), evening=escape(t["evening"]), transport=escape(t["transport"]), budget_summary=escape(t["budget_summary"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
         children=escape(t["children"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
@@ -315,15 +315,26 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
                 parsed_plan = None
             expected_days = max(1, (departure_date - arrival_date).days)
             plan = _normalize_plan(parsed_plan, text, expected_days)
-            budget_lines = [
-                f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
-                f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
-                f"Repas : {budget_info['food'][0]}–{budget_info['food'][1]} USD",
-                f"Transport local : {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
-                f"Activités : {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
-                f"Marge : {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
-                "Estimation hors vols internationaux, à ajuster selon saison et choix réels.",
-            ]
+            if lang == "en":
+                budget_lines = [
+                    f"Indicative total budget: {budget_info['total'][0]}–{budget_info['total'][1]} USD",
+                    f"Accommodation: {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
+                    f"Meals: {budget_info['food'][0]}–{budget_info['food'][1]} USD",
+                    f"Local transport: {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
+                    f"Activities: {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
+                    f"Buffer: {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
+                    "Estimate excluding international flights; adjust for season and actual choices.",
+                ]
+            else:
+                budget_lines = [
+                    f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
+                    f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
+                    f"Repas : {budget_info['food'][0]}–{budget_info['food'][1]} USD",
+                    f"Transport local : {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
+                    f"Activités : {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
+                    f"Marge : {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
+                    "Estimation hors vols internationaux, à ajuster selon saison et choix réels.",
+                ]
             return jsonify({
                 "itinerary": json.dumps(plan, ensure_ascii=False),
                 "plan": plan,
