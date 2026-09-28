@@ -29,7 +29,7 @@ def test_trip_planner_rejects_oversized_body_without_content_length():
         "/api/trip-planner",
         headers={"Origin": "https://example.com", "Content-Type": "application/json"},
         data=payload,
-        environ_overrides={"CONTENT_LENGTH": ""},
+        environ_overrides={"CONTENT_LENGTH": "", "wsgi.input_terminated": True},
     )
     assert response.status_code == 413
 
