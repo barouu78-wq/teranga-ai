@@ -91,21 +91,21 @@ def register_realtime_route(app, deps):
         "model": model,
         "output_modalities": ["audio"],
         "audio": {
-            "input": {
-                "noise_reduction": {"type": os.getenv("REALTIME_NOISE_REDUCTION", "far_field")},
-                "transcription": {
-                    "model": "gpt-4o-transcribe",
-                    "language": language if language in {"fr", "en"} else None,
-                    "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof, Pulaar."
-                },
-                "turn_detection": {
-                    "type": "semantic_vad",
-                    "eagerness": os.getenv("REALTIME_VAD_EAGERNESS", "medium"),
-                    "create_response": True,
-                    "interrupt_response": True
-                }
-            },
-            "output": {"voice": voice}
+        "input": {
+        "noise_reduction": {"type": os.getenv("REALTIME_NOISE_REDUCTION", "far_field")},
+        "transcription": {
+        "model": "gpt-4o-transcribe",
+        "language": language if language in {"fr", "en"} else None,
+        "prompt": "Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO, Wolof, Pulaar."
+        },
+        "turn_detection": {
+        "type": "semantic_vad",
+        "eagerness": os.getenv("REALTIME_VAD_EAGERNESS", "medium"),
+        "create_response": True,
+        "interrupt_response": True
+        }
+        },
+        "output": {"voice": voice}
         },
         "instructions": instructions,
         "reasoning": {"effort": os.getenv("REALTIME_REASONING_EFFORT", "low")},
@@ -131,18 +131,19 @@ def register_realtime_route(app, deps):
         "https://api.openai.com/v1/realtime/calls",
         data=body,
         headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": f"multipart/form-data; boundary={boundary}",
-            "Accept": "application/sdp",
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": f"multipart/form-data; boundary={boundary}",
+        "Accept": "application/sdp",
         },
         method="POST",
         )
         try:
         with urlopen(req, timeout=25) as upstream:
-            answer = upstream.read(200_000)
+        answer = upstream.read(200_000)
         return Response(answer, mimetype="application/sdp", headers={"Cache-Control": "no-store"})
         except Exception:
         app.logger.exception("Erreur /realtime-call")
         return jsonify({"error": "Impossible de démarrer la conversation vocale pour le moment."}), 502
+
 
 
