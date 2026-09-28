@@ -297,7 +297,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
             return jsonify({"error": "Format de date invalide."}), 400
         if departure_date <= arrival_date:
             return jsonify({"error": "La date de départ doit être après l'arrivée."}), 400
-        data = {"lang": lang, "arrival": str(body["arrival"])[:20], "departure": str(body["departure"])[:20],
+        data = {"lang": lang, "arrival": arrival_date.isoformat(), "departure": departure_date.isoformat(),
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
                 "budget": budget, "pace": pace, "surprise": body.get("surprise") is True}
