@@ -96,7 +96,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         }
     }[audience][language]
     return {
-        "instructions": system_prompt + "\\n" + format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people) + "\\n" + language_instruction + "\\n" + audience_instruction + "\\n" + context_instruction,
+        "instructions": system_prompt + "\\n" + format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people) + "\\n" + language_instruction_text + "\\n" + audience_instruction + "\\n" + context_instruction,
         "input_text": build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars),
         "use_web": should_use_web(message, enriched_context),
         "planner": planner_enabled,
