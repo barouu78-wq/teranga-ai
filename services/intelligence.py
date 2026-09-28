@@ -110,7 +110,8 @@ def contextual_query(history: list[dict[str, Any]] | None, message: str, max_his
 
 def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) -> dict[str, Any]:
     """Resolve Senegal places, intents and planning constraints from recent turns."""
-    text_value = _normalize(contextual_query(history, message))
+    context_query = contextual_query(history, message)
+    text_value = _normalize(context_query)
     cities = (
         "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
         "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
@@ -149,25 +150,51 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
     }
     intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
+    currency_amounts = re.findall(
+        r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
+        text_value,
+    )
     amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?", text_value)
-    budget = amounts[-1].strip() if amounts else ""
+    budget = (currency_amounts[-1] if currency_amounts else amounts[-1].strip() if amounts else "")
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""
+    adults_match = re.search(r"\b(\d+)\s*(?:adultes?|personnes?)(?:\s*\+\s*(\d+)\s*enfants?)?\b", text_value)
+    children_match = re.search(r"\b(\d+)\s*enfants?\b", text_value)
+    adults = int(adults_match.group(1)) if adults_match else None
+    children = int(adults_match.group(2)) if adults_match and adults_match.group(2) else (
+        int(children_match.group(1)) if children_match else None
+    )
+    if "en famille" in text_value and children is None:
+        children = 1
+
     constraints = []
     if budget:
         constraints.append("budget=" + budget)
     if duration:
         constraints.append("durée=" + duration)
+    if adults is not None:
+        constraints.append("adultes=" + str(adults))
+    if children is not None:
+        constraints.append("enfants=" + str(children))
     if "avec mes enfants" in text_value or "en famille" in text_value:
         constraints.append("famille")
-    if "avec enfant" in text_value or "avec enfants" in text_value:
-        constraints.append("enfants")
     if "ce soir" in text_value:
         constraints.append("ce soir")
     if "demain" in text_value:
         constraints.append("demain")
     place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
-    return {"place": place, "has_place": bool(found_cities or found_regions), "query": text_value, "intents": intents[:4], "constraints": constraints[:5], "budget": budget, "duration": duration}
+    return {
+        "place": place,
+        "has_place": bool(found_cities or found_regions),
+        "query": text_value,
+        "intents": intents[:4],
+        "constraints": constraints[:8],
+        "budget": budget,
+        "duration": duration,
+        "adults": adults,
+        "children": children,
+        "context_source": "conversation" if history and message and len(text_value) > len(_normalize(message)) else "current_message",
+    }
 
 
 def should_use_planner(context: dict[str, Any]) -> bool:
@@ -215,6 +242,9 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
         "budget_fcfa": budget_amount,
         "intents": context.get("intents", []),
         "constraints": context.get("constraints", []),
+        "adults": context.get("adults"),
+        "children": context.get("children"),
+        "family": "famille" in context.get("constraints", []),
     }
 
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -240,8 +270,9 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
                     resolved_location = previous_location
                     context_source = "conversation"
                     break
-    domain = classify_domain(message)
-    fresh = needs_fresh_web(domain, message) or resolved_intent in _DYNAMIC_INTENTS
+    context_query = contextual_query(history, message)
+    domain = classify_domain(context_query)
+    fresh = needs_fresh_web(domain, context_query) or resolved_intent in _DYNAMIC_INTENTS
     return {
         "intent": resolved_intent,
         "domain": domain,

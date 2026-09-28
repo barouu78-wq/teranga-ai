@@ -102,3 +102,66 @@ def test_build_conversation_sanitizes_and_marks_history_untrusted():
     assert "Utilisateur: Bonjour" in result
     assert "Teranga AI: Salut" in result
     assert "<demande_utilisateur>\nEt Dakar ?" in result
+
+
+
+def test_build_intent_context_uses_recent_turns_for_domain_and_web_policy():
+    from services.intelligence import build_intent_context
+
+    result = build_intent_context(
+        "Et demain ?",
+        [{"role": "user", "content": "Quelle météo à Dakar ?"}],
+    )
+
+    assert result["intent"] == "weather"
+    assert result["location"] == "dakar"
+    assert result["context_source"] == "conversation"
+    assert result["needs_web_search"] is True
+
+
+
+
+def test_infer_senegal_context_prefers_currency_amount_over_duration_number():
+    from services.intelligence import infer_senegal_context
+
+    context = infer_senegal_context(
+        [],
+        "Je prévois 100000 FCFA pour 4 jours à Gorée.",
+    )
+
+    assert context["budget"] == "100000 fcfa"
+    assert context["duration"] == "4 jours"
+
+
+def test_infer_senegal_context_extracts_traveler_counts_for_planner():
+    from services.intelligence import infer_senegal_context, build_planner_data
+
+    context = infer_senegal_context(
+        [{"role": "user", "content": "On part 4 jours à Gorée avec 2 adultes et 2 enfants pour 120000 FCFA"}],
+        "Et plutôt en famille ?",
+    )
+
+    assert context["adults"] == 2
+    assert context["children"] == 2
+    assert "adultes=2" in context["constraints"]
+    assert "enfants=2" in context["constraints"]
+
+    planner = build_planner_data(context)
+    assert planner["adults"] == 2
+    assert planner["children"] == 2
+    assert planner["family"] is True
+
+
+def test_infer_senegal_context_keeps_place_and_budget_from_recent_turn():
+    from services.intelligence import infer_senegal_context
+
+    result = infer_senegal_context(
+        [{"role": "user", "content": "Je prépare 4 jours à Gorée avec 100000 FCFA"}],
+        "Et en famille ?",
+    )
+
+    assert result["place"] == "goree"
+    assert result["budget"] == "100000 fcfa"
+    assert result["duration"] == "4 jours"
+    assert "famille" in result["constraints"]
+    assert result["context_source"] == "conversation"
