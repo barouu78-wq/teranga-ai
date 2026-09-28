@@ -42,6 +42,9 @@ from services.security import issue_csrf, sign_token, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
 from services.assets import ICON_SVG, OG_SVG, build_icon_png, build_og_png
+
+def icon_svg():
+    return Response(ICON_SVG, mimetype="image/svg+xml")
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
 from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
