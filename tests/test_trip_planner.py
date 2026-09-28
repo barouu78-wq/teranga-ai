@@ -146,3 +146,16 @@ def test_trip_planner_form_uses_distinct_option_groups():
     assert 'type="checkbox" name="interests"' in body
     assert 'type="checkbox" name="regions"' in body
     assert 'input[name=x]' not in body
+
+
+
+def test_trip_planner_share_link_is_restorable_and_url_safe():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert "function encodeTrip(payload)" in body
+    assert "function decodeTrip(value)" in body
+    assert "applySharedTrip();" in body
+    assert "replace(/\\+/g,'-')" in body
+    assert 'new URLSearchParams(location.search).get(\'trip\')' in body
+    assert '"share_id"' not in body
