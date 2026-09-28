@@ -491,3 +491,30 @@ def test_system_prompt_uses_structured_knowledge_without_embedded_catalogue():
     assert "14 régions" not in app_module.SYSTEM_PROMPT
     assert len(app_module.SYSTEM_PROMPT) < 7000
     assert app_module.SENEGAL_PEOPLE
+
+def test_system_routes_expose_expected_contracts():
+    client = app.test_client()
+
+    health = client.get("/health")
+    assert health.status_code == 200
+    assert health.get_json() == {"status": "ok", "service": "teranga-ai"}
+
+    manifest = client.get("/manifest.webmanifest")
+    assert manifest.status_code == 200
+    assert manifest.content_type.startswith("application/manifest+json")
+    assert manifest.get_json()["start_url"] == "/"
+
+
+def test_explorer_image_requires_a_query():
+    client = app.test_client()
+    response = client.get("/explorer-image")
+    assert response.status_code == 200
+    assert response.get_json() == {"images": []}
+
+
+def test_explorer_page_renders():
+    client = app.test_client()
+    response = client.get("/explorer")
+    assert response.status_code == 200
+    assert response.content_type.startswith("text/html")
+    assert "Teranga AI" in response.get_data(as_text=True)
