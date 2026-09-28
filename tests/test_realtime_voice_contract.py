@@ -60,3 +60,12 @@ def test_browser_voice_stop_cancels_pending_speech_result():
     setup = html[setup_start:setup_end]
     assert "if(!voiceConversation)return;" in setup
     assert "if(!voiceConversation)return;\n          const spoken=voiceDraft.trim();" in setup
+
+
+def test_stt_response_rechecks_voice_turn_after_network_waits():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    start = html.index("async function postVoiceAudio(")
+    end = html.index("\n}\nfunction finishVoiceRecording", start) + 2
+    function = html[start:end]
+    assert function.count("if(!voiceConversation||turnId!==voiceTurnId)return;") >= 3
+    assert "await refreshCsrf();\n      if(!voiceConversation||turnId!==voiceTurnId)return;" in function
