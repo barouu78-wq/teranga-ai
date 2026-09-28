@@ -176,31 +176,36 @@ def _map_html(regions):
     north = max(latitudes) + margin
     bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
     return f'<iframe title="Carte du voyage" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
-def _normalize_plan(plan, fallback_text):
+def _normalize_plan(plan, fallback_text, expected_days=None):
+    fallback = {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
     if not isinstance(plan, dict):
-        return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+        return fallback
     summary = plan.get("summary")
     days = plan.get("days")
     notes = plan.get("practical_notes")
-    if not isinstance(summary, str) or not isinstance(days, list) or not isinstance(notes, list):
-        return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+    if not isinstance(summary, str) or not summary.strip() or not isinstance(days, list) or not isinstance(notes, list):
+        return fallback
+    if expected_days is not None and len(days) != expected_days:
+        return fallback
+
     normalized_days = []
-    for item in days:
-        if not isinstance(item, dict):
-            return {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
+    for index, item in enumerate(days, start=1):
+        if not isinstance(item, dict) or item.get("day") != index:
+            return fallback
+        fields = ("title", "region", "morning", "afternoon", "evening", "transport")
+        values = {field: item.get(field) for field in fields}
+        if any(not isinstance(value, str) or not value.strip() for value in values.values()):
+            return fallback
         normalized_days.append({
-            "day": item.get("day"),
-            "title": str(item.get("title", "")),
-            "region": str(item.get("region", "")),
-            "morning": str(item.get("morning", "")),
-            "afternoon": str(item.get("afternoon", "")),
-            "evening": str(item.get("evening", "")),
-            "transport": str(item.get("transport", "")),
+            "day": index,
+            **{field: value.strip()[:500] for field, value in values.items()},
         })
+
+    normalized_notes = [note.strip()[:500] for note in notes if isinstance(note, str) and note.strip()][:20]
     return {
-        "summary": summary[:3000],
+        "summary": summary.strip()[:3000],
         "days": normalized_days,
-        "practical_notes": [str(note)[:500] for note in notes if isinstance(note, str)][:20],
+        "practical_notes": normalized_notes,
     }
 
 def _prompt(data):
@@ -282,7 +287,8 @@ def register_trip_planner(app, client, site_url):
                 parsed_plan = json.loads(text)
             except json.JSONDecodeError:
                 parsed_plan = None
-            plan = _normalize_plan(parsed_plan, text)
+            expected_days = max(1, (departure_date - arrival_date).days)
+            plan = _normalize_plan(parsed_plan, text, expected_days)
             budget_lines = [
                 f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
                 f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
