@@ -9,7 +9,42 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-# Official administrative coverage: all 14 regions of Senegal.\nSENEGAL_REGIONS = (\n    "Dakar", "Diourbel", "Fatick", "Kaffrine", "Kaolack", "Kédougou", "Kolda",\n    "Louga", "Matam", "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor",\n)\n\nREGION_ALIASES = {\n    "Dakar": ("dakar",), "Diourbel": ("diourbel",), "Fatick": ("fatick",),\n    "Kaffrine": ("kaffrine",), "Kaolack": ("kaolack",),\n    "Kédougou": ("kedougou", "kédougou"), "Kolda": ("kolda",), "Louga": ("louga",),\n    "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis"),\n    "Sédhiou": ("sedhiou", "sédhiou"), "Tambacounda": ("tambacounda",),\n    "Thiès": ("thies", "thiès"), "Ziguinchor": ("ziguinchor",),\n}\n\nREGION_HIGHLIGHTS = {\n    "Dakar": ("Dakar", "Gorée", "Rufisque", "Ngor", "Yoff", "Ouakam"),\n    "Thiès": ("Thiès", "Tivaouane", "Mbour", "Saly", "Joal-Fadiouth", "Popenguine"),\n    "Diourbel": ("Diourbel", "Touba", "Mbacké"),\n    "Fatick": ("Fatick", "Foundiougne", "Sokone", "Delta du Saloum"),\n    "Kaolack": ("Kaolack", "Nioro du Rip", "Médina Baye"),\n    "Kaffrine": ("Kaffrine", "Koungheul", "Birkelane"),\n    "Louga": ("Louga", "Linguère", "Dahra", "Ferlo"),\n    "Saint-Louis": ("Saint-Louis", "Podor", "Richard-Toll", "Djoudj"),\n    "Matam": ("Matam", "Ourossogui", "Kanel", "Thilogne"),\n    "Tambacounda": ("Tambacounda", "Bakel", "Niokolo-Koba"),\n    "Kédougou": ("Kédougou", "Dindéfelo", "Bandafassi", "Pays Bassari"),\n    "Kolda": ("Kolda", "Vélingara", "Haute-Casamance"),\n    "Sédhiou": ("Sédhiou", "Bounkiling", "Goudomp", "Moyenne-Casamance"),\n    "Ziguinchor": ("Ziguinchor", "Oussouye", "Cap Skirring", "Carabane"),\n}\n\ndef region_highlights(region: str) -> tuple[str, ...]:\n    return REGION_HIGHLIGHTS.get(str(region or ""), ())\n\nSOURCE_PRIORITY = (
+# Official administrative coverage: all 14 regions of Senegal.
+SENEGAL_REGIONS = (
+    "Dakar", "Diourbel", "Fatick", "Kaffrine", "Kaolack", "Kédougou", "Kolda",
+    "Louga", "Matam", "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor",
+)
+
+REGION_ALIASES = {
+    "Dakar": ("dakar",), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
+    "Kaffrine": ("kaffrine",), "Kaolack": ("kaolack",),
+    "Kédougou": ("kedougou", "kédougou"), "Kolda": ("kolda",), "Louga": ("louga",),
+    "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis"),
+    "Sédhiou": ("sedhiou", "sédhiou"), "Tambacounda": ("tambacounda",),
+    "Thiès": ("thies", "thiès"), "Ziguinchor": ("ziguinchor",),
+}
+
+REGION_HIGHLIGHTS = {
+    "Dakar": ("Dakar", "Gorée", "Rufisque", "Ngor", "Yoff", "Ouakam"),
+    "Thiès": ("Thiès", "Tivaouane", "Mbour", "Saly", "Joal-Fadiouth", "Popenguine"),
+    "Diourbel": ("Diourbel", "Touba", "Mbacké"),
+    "Fatick": ("Fatick", "Foundiougne", "Sokone", "Delta du Saloum"),
+    "Kaolack": ("Kaolack", "Nioro du Rip", "Médina Baye"),
+    "Kaffrine": ("Kaffrine", "Koungheul", "Birkelane"),
+    "Louga": ("Louga", "Linguère", "Dahra", "Ferlo"),
+    "Saint-Louis": ("Saint-Louis", "Podor", "Richard-Toll", "Djoudj"),
+    "Matam": ("Matam", "Ourossogui", "Kanel", "Thilogne"),
+    "Tambacounda": ("Tambacounda", "Bakel", "Niokolo-Koba"),
+    "Kédougou": ("Kédougou", "Dindéfelo", "Bandafassi", "Pays Bassari"),
+    "Kolda": ("Kolda", "Vélingara", "Haute-Casamance"),
+    "Sédhiou": ("Sédhiou", "Bounkiling", "Goudomp", "Moyenne-Casamance"),
+    "Ziguinchor": ("Ziguinchor", "Oussouye", "Cap Skirring", "Carabane"),
+}
+
+def region_highlights(region: str) -> tuple[str, ...]:
+    return REGION_HIGHLIGHTS.get(str(region or ""), ())
+
+SOURCE_PRIORITY = (
     "gov.sn",
     "ansd.sn",
     "tourisme.gouv.sn",
@@ -168,4 +203,5 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     dynamic_topics = data.get("dynamic_topics", [])
     if dynamic_topics:
         lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
-    return "\n".join(lines)
+    return "
+".join(lines)
