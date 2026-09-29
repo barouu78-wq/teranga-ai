@@ -152,7 +152,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
-    )
+    ).replace("__PLACE_CONTEXT_JS__", """function applyPlaceContext(){try{const context=JSON.parse(sessionStorage.getItem('teranga-place-context')||'null');if(!context||typeof context!=='object'||!context.name)return;const box=document.getElementById('place-context');if(box)box.textContent='Contexte du lieu : '+context.name+(context.region?' · '+context.region:'');if(context.region){const input=[...document.querySelectorAll('input[name="regions"]')].find(x=>x.value.toLowerCase()===String(context.region).toLowerCase());if(input)input.checked=true}}catch(_){}} applyPlaceContext();""").replace("__PLACE_CONTEXT_VALUE__", """(()=>{try{return JSON.parse(sessionStorage.getItem('teranga-place-context')||'null')?.name||''}catch(_){return ''}})()""")
     return html
 
 def _budget(data):
