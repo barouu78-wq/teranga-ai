@@ -351,7 +351,7 @@ h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
 </style>
 </head>
 <body><main>
-<nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question</a></nav>
+<nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question</a></nav><button id=\"share-page\" type=\"button\">Partager</button><script>document.getElementById("share-page").onclick=async()=>{try{if(navigator.share){await navigator.share({title:document.title,url:location.href})}else{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_){try{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}catch(_){}}};</script>
 %(related)s
 <article>
 <div class=\"kicker\">Senegal · Teranga AI</div>
