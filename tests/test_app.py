@@ -291,7 +291,7 @@ def test_photo_request_prioritizes_exact_place_commons_search(monkeypatch):
     images = fetch_topic_images("Montre-moi des photos de Gorée")
     assert images
     assert "Gorée" in calls[0][0]
-    assert calls[0][1] == 3
+    assert calls[0][1] == 4
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 
