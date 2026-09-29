@@ -2806,7 +2806,13 @@ function setupMic(){
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
-    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
+    try{
+      const safeHistory=history.slice(-12).map(item=>({
+        role:item&&item.role==='assistant'?'assistant':'user',
+        content:String(item&&item.content||'').replace(/\\s+/g,' ').trim().slice(0,1200)
+      })).filter(item=>item.content);
+      sessionStorage.setItem('teranga-history',JSON.stringify({version:1,lang,history:safeHistory}));
+    }catch(e){}
   },250);
 }
 function restore(){
