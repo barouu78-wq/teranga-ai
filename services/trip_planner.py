@@ -270,7 +270,7 @@ def _practical_prompt(lang, region, category, day=""):
         "en": {"transport": "transport", "hours": "hours and opening times", "prices": "prices and fares", "procedures": "procedures and useful documents", "services": "useful services"},
     }
     topic = labels.get(lang, labels["fr"]).get(category, category)
-    return f"""{language_instruction(lang)}\n\nGive a concise, practical answer about {topic} in {region}, Senegal. Use live web search and prioritize official or operator sources when available. Distinguish verified current facts from estimates or uncertainty. Never invent a price, schedule, phone number, address, availability or procedure. Mention when information should be rechecked before travel. If a day activity is supplied, use it only as context and do not assume it is a confirmed venue or booking. Do not include URLs in the answer because sources are returned separately.\n"""
+    return f"""{language_instruction(lang)}\n\nGive a concise, practical answer about {topic} in {region}, Senegal. Day activity context: {day or "none"}. Use live web search and prioritize official or operator sources when available. Distinguish verified current facts from estimates or uncertainty. Never invent a price, schedule, phone number, address, availability or procedure. Mention when information should be rechecked before travel. If a day activity is supplied, use it only as context and do not assume it is a confirmed venue or booking. Do not include URLs in the answer because sources are returned separately.\n"""
 
 
 def _practical_info(client, lang, region, category, day=""):
