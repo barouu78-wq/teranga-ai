@@ -1,6 +1,7 @@
 """Chat route registration."""
 
 import json
+import re
 
 from flask import Response, jsonify, request, stream_with_context
 
@@ -59,9 +60,14 @@ def register_chat_route(app, deps):
                 record_abuse(web_identity, "web_rate", 2)
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
+        message_text = str(payload.get("message", "") or "").strip().lower()
+        explicit_photo_request = bool(re.search(r"\bphotos?\b|\bimages?\b", message_text))
         photo_only = (
-            payload.get("intent_context", {}).get("intent") == "photos"
-            and set(payload.get("context", {}).get("intents", [])) <= {"photos"}
+            explicit_photo_request
+            or (
+                payload.get("intent_context", {}).get("intent") == "photos"
+                and set(payload.get("context", {}).get("intents", [])) <= {"photos"}
+            )
         )
         if photo_only:
             language = payload.get("language", "fr")
