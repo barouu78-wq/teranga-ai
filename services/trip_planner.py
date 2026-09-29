@@ -260,6 +260,7 @@ Budget level: {data['budget']}
 Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
 Selected place context: {data.get('context_place') or 'none'}
+User profile: {data.get('audience') or 'tourist'} (explicit preference; adapt priorities without inferring personal facts)
 Surprise me: {data['surprise']}
 
 Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}}], "practical_notes": [string]}}. Create one object per travel day.
