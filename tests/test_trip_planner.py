@@ -656,3 +656,9 @@ def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save()
     assert "function refreshShareLink()" in body
     assert "refreshShareLink();" in body
     assert "updatePracticalRegions();" in body
+
+
+def test_trip_planner_render_syncs_practical_regions():
+    from services.trip_planner import _html
+    body = _html("https://example.com", "fr")
+    assert "bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
