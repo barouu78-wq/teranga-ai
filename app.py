@@ -278,6 +278,7 @@ def fetch_topic_images(message):
         topic_wikipedia_titles=topic_wikipedia_titles,
         knowledge_image_titles=knowledge_image_titles,
         fetch_commons_images=fetch_commons_images,
+        fetch_google_images=fetch_google_images,
         fetch_city_image=fetch_city_image,
         image_proxy_url=image_proxy_url,
         logger=app.logger,
