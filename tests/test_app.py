@@ -682,6 +682,59 @@ def test_chat_payload_personalizes_all_audience_profiles():
 
 
 
+
+def test_chat_input_normalization_bounds_and_filters():
+    from services.chat_payload import normalize_chat_input
+
+    payload, error = normalize_chat_input(
+        {
+            "message": "x" * 2500,
+            "language": "xx",
+            "audience": "unknown",
+            "history": [
+                {"role": "user", "content": "u"} for _ in range(20)
+            ] + [
+                {"role": "system", "content": "must be rejected"},
+                {"role": "tool", "content": "must be rejected"},
+            ],
+            "context_place": " Dakar ",
+            "trip_context": "t" * 2000,
+            "trip_edit_request": "e" * 700,
+        },
+        sanitize=lambda value, limit: str(value or "")[:limit],
+        max_message_length=2000,
+        max_history_items=12,
+        max_history_item_length=1400,
+        safe_languages={"fr", "en", "wo", "ff"},
+    )
+
+    assert error is None
+    assert payload["message"] == "x" * 2000
+    assert payload["language"] == "fr"
+    assert payload["audience"] == "tourist"
+    assert len(payload["history"]) == 12
+    assert all(item["role"] == "user" for item in payload["history"])
+    assert payload["context_place"] == "Dakar"
+    assert len(payload["trip_context"]) == 1600
+    assert len(payload["trip_edit_request"]) == 500
+
+
+def test_chat_input_normalization_rejects_empty_message():
+    from services.chat_payload import normalize_chat_input
+
+    payload, error = normalize_chat_input(
+        {"message": "   ", "language": "fr"},
+        sanitize=lambda value, limit: str(value or "")[:limit],
+        max_message_length=2000,
+        max_history_items=12,
+        max_history_item_length=1400,
+        safe_languages={"fr", "en", "wo", "ff"},
+    )
+
+    assert payload is None
+    assert error == "empty"
+
+
 def test_explorer_image_gallery_has_direct_fallback():
     from app import app
 
