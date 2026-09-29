@@ -118,7 +118,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <section class="step" data-step="4"><h2>{budget}</h2><div class="chips">{budget_html}</div><h2 style="margin-top:22px">{pace}</h2><div class="chips">{pace_html}</div>
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="button" data-next>{cont}</button></div></section>
 <section class="step" data-step="5"><h2>{regions}</h2><div class="chips">{regions_html}</div><label class="chip" style="display:inline-block;margin-top:12px"><input id="surprise" type="checkbox"><span>{surprise}</span></label>
-<div id="place-context" class="small"></div><div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
+<div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
 <div id="status"></div><div id="result" class="result"></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
 </div><p class="small">{note}</p>
@@ -132,12 +132,11 @@ function encodeTrip(payload){{const bytes=new TextEncoder().encode(JSON.stringif
 function decodeTrip(value){{try{{const base64=value.replace(/-/g,'+').replace(/_/g,'/');const padded=base64+'='.repeat((4-base64.length%4)%4);const binary=atob(padded);const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes))}}catch(_error){{return null}}}}
 function applySharedTrip(){{const encoded=new URLSearchParams(location.hash.slice(1)).get('trip');if(!encoded)return;const payload=decodeTrip(encoded);if(!payload||typeof payload!=='object')return;for(const key of ['arrival','departure','adults','children']){{if(payload[key]!==undefined&&form.elements[key])form.elements[key].value=payload[key]}}for(const key of ['interests','regions']){{if(!Array.isArray(payload[key]))continue;document.querySelectorAll('input[name="'+key+'"]').forEach(input=>{{input.checked=payload[key].includes(input.value)}})}}for(const key of ['budget','pace']){{if(typeof payload[key]!=='string')continue;const input=document.querySelector('input[name="'+key+'"][value="'+CSS.escape(payload[key])+'"]');if(input)input.checked=true}}const surprise=document.getElementById('surprise');if(surprise)surprise.checked=Boolean(payload.surprise)}}
 applySharedTrip();
-__PLACE_CONTEXT_JS__
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
-regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),context_place:__PLACE_CONTEXT_VALUE__,surprise:document.getElementById('surprise').checked}};
+regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),context_place:new URLSearchParams(location.search).get('place')||'',surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">{loading}</p>'; result.textContent='';
 try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>{day} '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>{morning} :</b> '+escapeHtml(d.morning||'')+'</p><p><b>{afternoon} :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>{evening} :</b> '+escapeHtml(d.evening||'')+'</p><p><b>{transport} :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>{budget_summary}</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='{copied}';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
@@ -152,7 +151,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"])
-    ).replace("__PLACE_CONTEXT_JS__", """function applyPlaceContext(){try{const context=JSON.parse(sessionStorage.getItem('teranga-place-context')||'null');if(!context||typeof context!=='object'||!context.name)return;const box=document.getElementById('place-context');if(box)box.textContent='Contexte du lieu : '+context.name+(context.region?' · '+context.region:'');if(context.region){const input=[...document.querySelectorAll('input[name="regions"]')].find(x=>x.value.toLowerCase()===String(context.region).toLowerCase());if(input)input.checked=true}}catch(_){}} applyPlaceContext();""").replace("__PLACE_CONTEXT_VALUE__", """(()=>{try{return JSON.parse(sessionStorage.getItem('teranga-place-context')||'null')?.name||''}catch(_){return ''}})()""")
+    )
     return html
 
 def _budget(data):
