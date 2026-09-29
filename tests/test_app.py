@@ -650,7 +650,7 @@ def test_home_has_narrow_mobile_layout_rules():
     html = app.test_client().get("/").get_data(as_text=True)
 
     assert "@media(max-width:520px)" in html
-    assert ".spread{display:grid;grid-template-columns:1fr}" in html
+    assert ".spread{display:grid;grid-template-columns:1fr;gap:7px}" in html
 
 
 def test_trip_planner_has_mobile_action_layout():
