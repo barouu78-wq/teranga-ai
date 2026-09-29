@@ -571,3 +571,35 @@ def test_regional_seo_page_and_sitemap():
     assert "/regions/dakar" in body
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/regions/dakar" in sitemap
+
+
+def test_trip_planner_carries_explicit_audience_into_prompt():
+    from services.trip_planner import _prompt
+
+    data = {
+        "lang": "fr",
+        "arrival": "2026-10-01",
+        "departure": "2026-10-04",
+        "adults": 2,
+        "children": 0,
+        "interests": ["Culture & histoire"],
+        "budget": "Confort",
+        "pace": "Équilibré",
+        "regions": ["Dakar"],
+        "audience": "diaspora",
+        "context_place": "Gorée",
+        "surprise": False,
+    }
+    prompt = _prompt(data)
+    assert "User profile: diaspora" in prompt
+    assert "explicit preference" in prompt
+
+
+def test_trip_planner_page_reads_and_shares_audience_profile():
+    client = app.test_client()
+    response = client.get("/trip-planner?lang=fr&audience=diaspora")
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "teranga-audience" in body
+    assert "audienceQuery" in body
+    assert "audience:audience" in body
