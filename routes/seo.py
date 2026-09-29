@@ -96,7 +96,7 @@ def register_seo_routes(app, site_url):
             + "".join(
                 f"<url><loc>{site_url}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
                 for slug in SEO_PAGES
-            )
+            )\n            + "".join(\n                f"<url><loc>{site_url}/regions/{region_slug(region)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>"\n                for region in REGION_SEO_NAMES\n            )
             + "".join(
                 f"<url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>"
                 for url in localized_sitemap_urls(site_url)
