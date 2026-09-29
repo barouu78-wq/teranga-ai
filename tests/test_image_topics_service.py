@@ -51,3 +51,35 @@ def test_fetch_topic_images_prefers_specific_place_queries_and_deduplicates():
         "https://upload.wikimedia.org/b.jpg",
     ]
     assert all(item["search_query"] == "Île de Gorée waterfront" for item in result)
+
+
+def test_fetch_topic_images_prefers_google_and_can_return_eight_images():
+    google_calls = []
+    commons_calls = []
+
+    def google(title, limit=8):
+        google_calls.append((title, limit))
+        return [{"url": f"https://images.example/{i}.jpg", "display_url": f"https://thumb.example/{i}.jpg"} for i in range(8)]
+
+    def commons(title, limit=4):
+        commons_calls.append((title, limit))
+        return []
+
+    knowledge = {"regions": [{"name": "Dakar", "places": [], "highlights": [], "image_queries": ["Dakar Sénégal"]}], "places": []}
+    result = fetch_topic_images(
+        "Montre-moi des photos de Dakar",
+        knowledge,
+        normalize=lambda value: str(value).lower(),
+        should_fetch_images=lambda value: True,
+        topic_wikipedia_titles=lambda value, limit: [],
+        fetch_commons_images=commons,
+        fetch_google_images=google,
+        fetch_city_image=lambda title: None,
+        image_proxy_url=lambda src: src,
+        logger=type("Logger", (), {"exception": lambda *args: None})(),
+    )
+
+    assert google_calls == [("Dakar", 8)]
+    assert commons_calls == []
+    assert len(result) == 8
+    assert {item["search_query"] for item in result} == {"Dakar"}
