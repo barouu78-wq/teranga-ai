@@ -751,3 +751,14 @@ def test_trip_planner_exposes_chat_review_action():
     assert "teranga-trip-context" in body
 
 
+
+
+def test_trip_planner_supports_confirmed_itinerary_edit():
+    from app import app
+
+    body = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    assert 'id="trip-edit-proposal"' in body
+    assert "replace_day_region" in body
+    assert "apply-trip-edit" in body
+    assert "cancel-trip-edit" in body

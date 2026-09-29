@@ -74,6 +74,15 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         )
     else:
         planner_instruction = ""
+    trip_edit_proposal = None
+    edit_match = re.search(r"\b(?:remplace|change|modifier|modifie|replace|edit)\s+(?:le\s+)?(?:jour|day)\s*(\d+)\s+(?:par|avec|to)\s+([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ -]{1,59})", trip_edit_request, re.I)
+    if edit_match and trip_context:
+        day = max(1, min(14, int(edit_match.group(1))))
+        target = edit_match.group(2).strip(" .,!?:;")
+        region_names = {name.casefold(): name for name in ("Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor")}
+        region = region_names.get(target.casefold())
+        if region:
+            trip_edit_proposal = {"action": "replace_day_region", "day": day, "region": region, "requires_confirmation": True}
     preferred = tuple(intent_context.get("preferred_sources") or ())
     if preferred:
         source_line = (
@@ -138,4 +147,5 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "contextual_query": enriched_context,
         "trip_context": trip_context,
         "trip_edit_request": trip_edit_request,
+        "trip_edit_proposal": trip_edit_proposal,
     }, None

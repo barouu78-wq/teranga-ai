@@ -2515,7 +2515,7 @@ function addMsg(role,text,opts){
   scrollStage(true);
   return {row,b,col};
 }
-function addActs(col,text){
+function addActs(col,text,itineraryEdit){
   const acts=document.createElement('div');acts.className='acts';
   const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
   listen.onclick=()=>speak(text,listen);
@@ -2530,6 +2530,12 @@ function addActs(col,text){
       else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
     }catch(e){}
   };
+  if(itineraryEdit&&itineraryEdit.requires_confirmation){
+    try{sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))}catch(_){}
+    const edit=document.createElement('button');edit.type='button';edit.textContent=lang==="en"?"Review trip change":"Revoir la modification";
+    edit.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
+    acts.appendChild(edit);
+  }
   if((sessionStorage.getItem("teranga-trip-context")||"").trim()){
     const planner=document.createElement("button");planner.type="button";planner.textContent=lang==="en"?"Adjust in Planner":"Ajuster dans le Planner";
     planner.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
@@ -2864,8 +2870,8 @@ async function ask(preset,fromVoice=false){
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),40000);
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:sessionStorage.getItem('teranga-trip-edit-request')||''});
-  let reply='', sources=[], image=null, map=null;
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
+  let reply='', sources=[], image=null, map=null, itineraryEdit=null;
   try{
     const res=await postJSON('/chat',body);
     if(!res.ok){
@@ -2909,6 +2915,7 @@ async function ask(preset,fromVoice=false){
         if(ev.s)sources=ev.s;
         if(ev.img)image=ev.img;
         if(ev.map)map=ev.map;
+        if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
       }
     }
     if(buf.trim()){
@@ -2931,13 +2938,14 @@ async function ask(preset,fromVoice=false){
       if(data.sources)sources=data.sources;
       if(data.image)image=data.image;
       if(data.map)map=data.map;
+      if(data.itinerary_edit)itineraryEdit=data.itinerary_edit;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
     if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
     else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
-    addActs(wait.col,reply);
+    addActs(wait.col,reply,itineraryEdit);
     addCityImage(wait.col,image);
     addMap(wait.col,map);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
