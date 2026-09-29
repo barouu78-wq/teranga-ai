@@ -42,6 +42,7 @@ def normalize_chat_input(
 
     context_place = sanitize(data.get("context_place", ""), 120).strip()
     trip_context = sanitize(data.get("trip_context", ""), 1600).strip()
+    trip_edit_request = sanitize(data.get("trip_edit_request", ""), 500).strip()
 
     if not message:
         return None, "empty"
@@ -53,4 +54,5 @@ def normalize_chat_input(
         "audience": audience,
         "context_place": context_place,
         "trip_context": trip_context,
+        "trip_edit_request": trip_edit_request,
     }, None
