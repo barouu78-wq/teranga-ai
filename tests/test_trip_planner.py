@@ -638,6 +638,10 @@ def test_trip_planner_exposes_voice_playback_controls():
     assert 'fetch("/csrf"' in body
     assert 'tripVoiceTurn' in body
     assert 'tripVoiceCache' in body
+    assert 'function createTripVoiceAudio(url)' in body
+    assert 'AudioContext||window.webkitAudioContext' in body
+    assert 'compressor.threshold.value=-18' in body
+    assert 'gain.gain.value=1.08' in body
     assert 'speechSynthesis' in body
     assert "Écouter" in body
     assert "Arrêter" in body
