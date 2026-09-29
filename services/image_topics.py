@@ -53,10 +53,11 @@ def fetch_topic_images(
     topic_wikipedia_titles: Callable[[object, int], Sequence[str]],
     knowledge_image_titles: Callable[[object, int], Sequence[str]] | None = None,
     fetch_commons_images: Callable[..., list[dict]],
+    fetch_google_images: Callable[..., list[dict]] | None = None,
     fetch_city_image: Callable[[str], dict | None],
     image_proxy_url: Callable[[object], str],
     logger,
-    max_photos: int = 6,
+    max_photos: int = 8,
 ) -> list[dict] | None:
     text_value = normalize(message)
     if not should_fetch_images(message):
@@ -94,26 +95,47 @@ def fetch_topic_images(
     seen_titles: set[str] = set()
     seen_urls: set[str] = set()
 
+    # Google Images is the primary provider for chat visual requests. One
+    # focused query is enough to return a larger, faster gallery without
+    # multiplying outbound image-search calls.
+    primary_title = next((str(title or "").strip() for title in titles if str(title or "").strip()), "Dakar Sénégal")
+    if fetch_google_images:
+        try:
+            candidates = fetch_google_images(primary_title, limit=max_photos)
+        except Exception:
+            logger.exception("Erreur recherche Google Images pour %s", primary_title)
+            candidates = []
+        for photo in candidates:
+            if not photo:
+                continue
+            photo["search_query"] = primary_title
+            src = photo.get("url", "")
+            if not src or src in seen_urls:
+                continue
+            seen_urls.add(src)
+            photos.append(photo)
+            if len(photos) >= max_photos:
+                return photos
+
+    # Wikimedia remains a relevance-oriented fallback when Google returns too
+    # few results or is temporarily unavailable.
     for title in titles:
         title = str(title or "").strip()
         if not title or title in seen_titles:
             continue
         seen_titles.add(title)
-
         try:
-            candidates = fetch_commons_images(title, limit=3)
+            candidates = fetch_commons_images(title, limit=min(4, max_photos - len(photos)))
         except Exception:
             logger.exception("Erreur recherche photos Commons pour %s", title)
             candidates = []
-
-        if not candidates:
+        if not candidates and len(photos) == 0:
             try:
                 fallback = fetch_city_image(title)
                 candidates = [fallback] if fallback else []
             except Exception:
                 logger.exception("Erreur fallback photo pour %s", title)
                 candidates = []
-
         for photo in candidates:
             if not photo:
                 continue
