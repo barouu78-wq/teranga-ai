@@ -2917,6 +2917,25 @@ async function ask(preset,fromVoice=false,isRetry=false){
         ask(text,fromVoice,true);
       };
       wait.col.appendChild(retry);
+      if(err.status===429){
+        const waitSeconds=Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||0));
+        if(waitSeconds){
+          retry.disabled=true;
+          retry.textContent=T[lang].retry+' · '+waitSeconds+'s';
+          let remaining=waitSeconds;
+          const timer=setInterval(()=>{
+            remaining-=1;
+            if(!retry.isConnected){clearInterval(timer);return;}
+            if(remaining<=0){
+              clearInterval(timer);
+              retry.disabled=false;
+              retry.textContent=T[lang].retry;
+            }else{
+              retry.textContent=T[lang].retry+' · '+remaining+'s';
+            }
+          },1000);
+        }
+      }
     }
   }finally{
     clearTimeout(kill);
