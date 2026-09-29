@@ -2708,16 +2708,20 @@ function setLang(next){
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
 }
-document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  audience=btn.dataset.audience;
-  localStorage.setItem('teranga-audience',audience);
+$('audienceMode').addEventListener('click',e=>{
+  const btn=e.target.closest('.audience-btn');
+  if(!btn)return;
+  const nextAudience=String(btn.dataset.audience||'').trim();
+  if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  audience=nextAudience;
+  try{localStorage.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
   if(realtimeActive){
     const wasActive=voiceConversation&&autoVoice;
     closeRealtimeVoice();
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
-}));
+});
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   document.body.dataset.theme=saved||'dark';
