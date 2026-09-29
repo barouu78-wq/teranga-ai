@@ -2380,6 +2380,14 @@ ff:{
  merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
 }
 };
+function storageGet(key,fallback=''){
+  try{
+    const value=localStorage.getItem(key);
+    return value===null?fallback:value;
+  }catch(_){
+    return fallback;
+  }
+}
 let audience=storageGet('teranga-audience','tourist');
 const audienceContext={
  tourist:{
