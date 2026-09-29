@@ -690,3 +690,13 @@ def test_trip_planner_persists_compact_context_for_chat():
     assert "teranga-trip-context" in html
     assert "persistTripContext" in html
     assert "currentPlan.days" in html
+
+
+def test_trip_planner_shows_selected_place_context():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    assert 'id="place-context"' in html
+    assert "Point de départ" in html
+    assert "teranga-place-name" in html
