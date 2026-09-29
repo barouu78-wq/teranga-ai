@@ -3686,7 +3686,7 @@ $('voiceToggle').onclick=()=>{
   }
 };
 loadFx();
-themeInit();restore();setLang(lang);setupMic();
+themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();sessionStorage.removeItem('teranga-chat-prefill');}}catch(_){}setupMic();
 
 </script>
 </body>
