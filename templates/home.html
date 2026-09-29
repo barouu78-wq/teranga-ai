@@ -2073,6 +2073,17 @@ body[data-theme="light"] #input{
   }
 }
 
+
+/* Teranga V2.1 — explicit product journeys */
+.journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 10px}
+.journey-strip button{min-height:72px;padding:11px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);text-align:left;cursor:pointer;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;transition:border-color .18s ease,transform .18s ease,background .18s ease}
+.journey-strip button:hover{transform:translateY(-1px);border-color:var(--gold)}
+.journey-strip span{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border-radius:10px;background:var(--soft);color:var(--gold)}
+.journey-strip b{font-size:12px;line-height:1.15}.journey-strip small{color:var(--mute);font-size:10px;margin-top:3px}
+body.has-chat .journey-strip{display:none}
+body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:rgba(26,18,12,.12);box-shadow:0 5px 16px rgba(26,18,12,.05)}
+@media(max-width:680px){.journey-strip{grid-template-columns:1fr}.journey-strip button{min-height:60px}}
+@media(prefers-reduced-motion:reduce){.journey-strip button{transition:none}}
 </style>
 
 </head>
@@ -2124,7 +2135,7 @@ body[data-theme="light"] #input{
   </div>
   <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
   <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
-</section><div class="cards" id="cards"></div>
+</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours rapides"><button type="button" data-journey="plan"><span>🧭</span><b id="journeyPlan">Planifier un voyage</b><small id="journeyPlanHint">Créer un itinéraire</small></button><button type="button" data-journey="discover"><span>◎</span><b id="journeyDiscover">Explorer le Sénégal</b><small id="journeyDiscoverHint">Lieux et régions</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Parler à Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -2188,6 +2199,7 @@ fr:{
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
   heroTitle:'L’hospitalité, en quelques questions.',
+  journeyPlan:'Planifier un voyage',journeyPlanHint:'Créer un itinéraire',journeyDiscover:'Explorer le Sénégal',journeyDiscoverHint:'Lieux et régions',journeyChat:'Parler à Teranga',journeyChatHint:'Poser une question',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
@@ -2210,6 +2222,7 @@ en:{
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
   heroTitle:'Hospitality, in a few questions.',
+  journeyPlan:'Plan a trip',journeyPlanHint:'Build an itinerary',journeyDiscover:'Explore Senegal',journeyDiscoverHint:'Places and regions',journeyChat:'Talk to Teranga',journeyChatHint:'Ask a question',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
@@ -2650,6 +2663,14 @@ function renderCards(){
   $('cards').replaceChildren(cardFrag);
   $('chips').replaceChildren(chipFrag);
 }
+function renderJourneyLabels(){
+  const t=T[lang];
+  $('journeyPlan').textContent=t.journeyPlan;$('journeyPlanHint').textContent=t.journeyPlanHint;
+  $('journeyDiscover').textContent=t.journeyDiscover;$('journeyDiscoverHint').textContent=t.journeyDiscoverHint;
+  $('journeyChat').textContent=t.journeyChat;$('journeyChatHint').textContent=t.journeyChatHint;
+}
+function setJourney(journey){try{sessionStorage.setItem('teranga-journey',journey)}catch(_){}}
+
 function setLang(next){
   lang=next;localStorage.setItem('teranga-lang',next);
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
@@ -2657,6 +2678,7 @@ function setLang(next){
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   const tabs=document.querySelectorAll('#tabbar button');
   if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
@@ -2691,6 +2713,13 @@ function themeInit(){
   document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
+$('journeyStrip').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-journey]'); if(!btn)return;
+  const journey=btn.dataset.journey; setJourney(journey);
+  if(journey==='plan') window.location.href='/trip-planner?lang='+(lang==='en'?'en':'fr');
+  if(journey==='discover') window.location.href='/explorer';
+  if(journey==='chat'){showHero();hideHero();input.focus();}
+});
 $('tabbar').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-tab]');
   if(!btn)return;
