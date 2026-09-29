@@ -160,10 +160,10 @@ function decodeTrip(value){{try{{const base64=value.replace(/-/g,'+').replace(/_
 function applySharedTrip(){{const encoded=new URLSearchParams(location.hash.slice(1)).get('trip');if(!encoded)return;const payload=decodeTrip(encoded);if(!payload||typeof payload!=='object')return;for(const key of ['arrival','departure','adults','children']){{if(payload[key]!==undefined&&form.elements[key])form.elements[key].value=payload[key]}}for(const key of ['interests','regions']){{if(!Array.isArray(payload[key]))continue;document.querySelectorAll('input[name="'+key+'"]').forEach(input=>{{input.checked=payload[key].includes(input.value)}})}}for(const key of ['budget','pace']){{if(typeof payload[key]!=='string')continue;const input=document.querySelector('input[name="'+key+'"][value="'+CSS.escape(payload[key])+'"]');if(input)input.checked=true}}const surprise=document.getElementById('surprise');if(surprise)surprise.checked=Boolean(payload.surprise);if(typeof payload.audience==='string'&&AUDIENCE_VALUES.includes(payload.audience)){{try{{localStorage.setItem('teranga-audience',payload.audience)}}catch(_){{}}}}if(payload.edited_plan&&Array.isArray(payload.edited_plan.days)){{currentPlan=payload.edited_plan;renderEditablePlan(currentPlan);document.getElementById('voice-result-actions').style.display='flex';document.getElementById('share').style.display='block';updateJourneySteps();updatePracticalRegions();updateMapFromPlan();}}}}
 function restoreSessionTrip(){{
 try{{
+if(new URLSearchParams(location.hash.slice(1)).get('trip'))return;
 const raw=sessionStorage.getItem('teranga-trip-plan');if(!raw)return;
 const plan=JSON.parse(raw);if(!plan||!Array.isArray(plan.days))return;
 currentPlan=plan;renderEditablePlan(currentPlan);document.getElementById('voice-result-actions').style.display='flex';document.getElementById('share').style.display='block';
-status.textContent='{copied}'==='__unused__'?'':'Itinéraire de cette session restauré.';
 }}catch(_){{}}
 }}
 applySharedTrip();restoreSessionTrip();
