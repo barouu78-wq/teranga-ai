@@ -479,3 +479,27 @@ def test_trip_planner_ui_falls_back_to_french_for_untranslated_language():
     assert response.status_code == 200
     assert '<html lang="fr">' in body
     assert "Construis un itinéraire personnalisé" in body
+
+
+def test_trip_planner_exposes_editable_itinerary_controls():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert 'id="editor-actions"' in body
+    assert 'id="add-day"' in body
+    assert 'id="save-trip"' in body
+    assert "function renderEditablePlan(plan)" in body
+    assert "function syncEditor()" in body
+    assert "data-up" in body
+    assert "data-down" in body
+    assert "data-remove" in body
+    assert "payload.edited_plan=currentPlan" in body
+
+
+def test_trip_planner_editor_controls_follow_ui_language():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "en")
+    assert "+ Add a day" in body
+    assert "Save changes" in body
+    assert "Remove" in body
