@@ -187,7 +187,7 @@ def test_home_retry_after_countdown_is_wired():
 
     assert "Retry-After" in html
     assert "retryAfter" in html
-    assert "Réessayer · " in html
+    assert "retry.textContent=T[lang].retry+' · '+waitSeconds+'s'" in html
     assert "setInterval" in html
 
 
@@ -731,6 +731,7 @@ def test_chat_input_normalization_bounds_and_filters():
     assert payload["audience"] == "tourist"
     assert len(payload["history"]) == 12
     assert all(item["role"] == "user" for item in payload["history"])
+    assert all(item["content"] == "u" for item in payload["history"])
     assert payload["context_place"] == "Dakar"
     assert len(payload["trip_context"]) == 1600
     assert len(payload["trip_edit_request"]) == 500
