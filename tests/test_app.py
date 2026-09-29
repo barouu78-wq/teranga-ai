@@ -623,13 +623,61 @@ def test_home_consumes_planner_chat_prefill():
     assert "input.value=prefill" in html
 
 
-def test_home_captures_explicit_trip_edit_request():
+def test_home_keeps_trip_edit_state_without_legacy_detector():
     from app import app
 
     html = app.test_client().get("/").get_data(as_text=True)
 
-    assert "detectTripEditRequest" in html
     assert "teranga-trip-edit-proposal" in html
+    assert "detectTripEditRequest(text)" not in html
+
+
+def test_chat_payload_personalizes_all_audience_profiles():
+    from services.chat_payload_service import build_chat_payload
+    from services.chat_payload import normalize_chat_input
+
+    def build(**kwargs):
+        return build_chat_payload(
+            kwargs.get("data"),
+            sanitize=lambda value, limit: str(value or "")[:limit],
+            normalize_chat_input=normalize_chat_input,
+            max_message_length=2000,
+            max_history_items=12,
+            max_history_item_length=1400,
+            safe_languages={"fr", "en", "wo", "ff"},
+            infer_senegal_context=lambda history, message: {
+                "has_place": False,
+                "place": "",
+                "query": message,
+                "intents": [],
+                "constraints": [],
+            },
+            build_intent_context=lambda message, history: {
+                "preferred_sources": [],
+                "intent": "general",
+                "domain": "general",
+            },
+            should_use_planner=lambda context: False,
+            build_planner_data=lambda context: {},
+            should_use_web=lambda message, context: False,
+            format_senegal_knowledge=lambda knowledge, query, people: "",
+            senegal_knowledge={},
+            senegal_people={},
+            build_conversation=lambda history, message, **kwargs: message,
+            max_history_chars=10000,
+            system_prompt="BASE",
+        )
+
+    expected = {
+        "tourist": "Profil actif : touriste.",
+        "resident": "Profil actif : résident.",
+        "diaspora": "Profil actif : diaspora.",
+        "merchant": "Profil actif : commerçant.",
+    }
+    for audience, marker in expected.items():
+        payload, error = build(data={"message": "Bonjour", "language": "fr", "audience": audience})
+        assert error is None
+        assert marker in payload["instructions"]
 
 
 
