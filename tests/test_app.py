@@ -679,3 +679,24 @@ def test_home_bounds_persisted_chat_history():
     assert "slice(0,1200)" in html
     assert "version:1" in html
     assert "safeHistory" in html
+
+
+def test_home_inline_javascript_is_syntax_valid():
+    import re
+    import shutil
+    import subprocess
+    from app import app
+
+    if not shutil.which("node"):
+        return
+    html = app.test_client().get("/").get_data(as_text=True)
+    scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, flags=re.S)
+    assert scripts
+    js = max(scripts, key=len)
+    result = subprocess.run(
+        ["node", "--check"],
+        input=js,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 0, result.stderr
