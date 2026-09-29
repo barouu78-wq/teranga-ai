@@ -158,35 +158,6 @@ function clearVoiceSilence(){
   clearTimeout(voiceSilenceTimer);
   voiceSilenceTimer=0;
 }
-function stopSpeakingForListening(){
-  if(audio){
-    try{audio.pause();}catch(_){}
-    const src=audio.src;
-    audio=null;
-    if(src)URL.revokeObjectURL(src);
-  }
-  if('speechSynthesis' in window){
-    try{window.speechSynthesis.cancel();}catch(_){}
-  }
-  voiceSpeaking=false;
-  document.body.classList.remove('assistant-speaking');
-}
-function beginVoiceMode(){
-  voiceConversation=true;
-  autoVoice=true;
-  localStorage.setItem('teranga-voice','1');
-  document.body.classList.add('voice-active');
-  $('voiceToggle').textContent=T[lang].vOn;
-}
-function endVoiceMode(){
-  clearVoiceSilence();
-  voiceConversation=false;
-  voiceWaitingForAnswer=false;
-  voiceDraft='';
-  closeRealtimeVoice();
-  document.body.classList.remove('voice-active');
-  if(rec&&listening)try{rec.stop();}catch(_){}
-}
 function commitVoiceTurn(){
   clearVoiceSilence();
   const spoken=voiceDraft.trim();
@@ -201,12 +172,6 @@ function scheduleVoiceTurn(){
   // A short pause is treated as the end of a sentence, while allowing
   // recognition to append another segment if the speaker continues.
   voiceSilenceTimer=setTimeout(commitVoiceTurn,850);
-}
-function finishSpeech(btn){
-  voiceSpeaking=false;
-  document.body.classList.remove('assistant-speaking');
-  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
-  if(voiceConversation&&!inflight&&!voiceWaitingForAnswer)resumeVoiceListening(180);
 }
 function speakFallback(text,btn){
   if(!('speechSynthesis' in window)||!text)return false;
