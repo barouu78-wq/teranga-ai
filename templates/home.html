@@ -2426,14 +2426,14 @@ async function refreshCsrf(){
     return data.token||cookie('teranga_csrf');
   }catch(e){return cookie('teranga_csrf');}
 }
-async function postJSON(url,body,extra){
-  let res=await fetch(url,{method:'POST',headers:headers(extra),body,credentials:'same-origin'});
+async function postJSON(url,body,extra,signal){
+  let res=await fetch(url,{method:'POST',headers:headers(extra),body,credentials:'same-origin',signal});
   if(res.status===403){
     const data=await res.clone().json().catch(()=>({}));
     if(String(data.error||'').includes('csrf')||String(data.error||'').includes('Jeton')){
       const token=await refreshCsrf();
       const retryExtra=Object.assign({},extra||{},token?{'X-CSRF-Token':token}:{});
-      res=await fetch(url,{method:'POST',headers:headers(retryExtra),body,credentials:'same-origin'});
+      res=await fetch(url,{method:'POST',headers:headers(retryExtra),body,credentials:'same-origin',signal});
     }
   }
   return res;
@@ -2802,7 +2802,7 @@ async function ask(preset,fromVoice=false){
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
   let reply='', sources=[], image=null, map=null, itineraryEdit=null;
   try{
-    const res=await postJSON('/chat',body);
+    const res=await postJSON('/chat',body,null,ctrl.signal);
     if(!res.ok){
       const data=await res.json().catch(()=>({}));
       throw new Error(data.error||T[lang].err);
@@ -2860,7 +2860,7 @@ async function ask(preset,fromVoice=false){
     if(paint){cancelAnimationFrame(paint);flush();}
     reply=live.trim();
     if(!reply){
-      const res2=await postJSON('/chat',body,{'X-Teranga-Mode':'json'});
+      const res2=await postJSON('/chat',body,{'X-Teranga-Mode':'json'},ctrl.signal);
       const data=await res2.json().catch(()=>({}));
       if(!res2.ok)throw new Error(data.error||T[lang].err);
       reply=(data.reply||'').trim();
