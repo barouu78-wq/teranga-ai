@@ -14,7 +14,6 @@ from config import env_bool
 from app import SENEGAL_KNOWLEDGE, app, fetch_commons_image, fetch_topic_images, image_proxy_url, lookup_map, model_kwargs, public_error, should_use_web
 
 
-
 def test_env_bool_accepts_common_true_values(monkeypatch):
     for value in ("1", "true", "TRUE", "yes", "on"):
         monkeypatch.setenv("TEST_BOOL", value)
@@ -49,6 +48,7 @@ def test_senegal_knowledge_is_multisource():
 def test_senegal_knowledge_covers_all_fourteen_regions():
     assert len(SENEGAL_KNOWLEDGE["regions"]) == 14
     assert len({region["name"] for region in SENEGAL_KNOWLEDGE["regions"]}) == 14
+
 
 def test_responses_include_request_id_header():
     client = app.test_client()
@@ -169,6 +169,26 @@ def test_chat_requires_csrf_and_json():
         headers={"X-CSRF-Token": "invalid"},
     )
     assert response.status_code == 403
+
+
+def test_chat_rate_limit_contract_exposes_retry_after():
+    from routes.chat import register_chat_route
+
+    source = Path(ROOT / "routes" / "chat.py").read_text(encoding="utf-8")
+    assert 'return jsonify({"error": "Trop de demandes rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}' in source
+    assert 'return jsonify({"error": "Trop de demandes. Attends quelques secondes puis réessaie."}), 429, {"Retry-After": "8"}' in source
+    assert 'return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}' in source
+    assert 'return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}' in source
+    assert register_chat_route is not None
+
+
+def test_home_retry_after_countdown_is_wired():
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "Retry-After" in html
+    assert "retryAfter" in html
+    assert "Réessayer · " in html
+    assert "setInterval" in html
 
 
 def test_health_does_not_expose_secret():
@@ -458,7 +478,6 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert "/fr/senegal-trip-planner" in sitemap
 
 
-
 def test_visual_requests_trigger_web_search_first():
     assert should_use_web("Montre-moi des photos de Gorée") is True
     assert should_use_web("À quoi ressemble ce lieu ?") is True
@@ -514,6 +533,7 @@ def test_system_prompt_uses_structured_knowledge_without_embedded_catalogue():
     assert len(app_module.SYSTEM_PROMPT) < 7000
     assert app_module.SENEGAL_PEOPLE
 
+
 def test_system_routes_expose_expected_contracts():
     client = app.test_client()
 
@@ -555,7 +575,7 @@ def test_indexnow_key_is_served():
 
 def test_public_seo_pages_expose_native_share_control():
     from services.seo import render_seo_page
-    body=render_seo_page("dakar","https://example.com").get_data(as_text=True)
+    body = render_seo_page("dakar", "https://example.com").get_data(as_text=True)
     assert 'id="share-page"' in body
     assert "navigator.share" in body
     assert "navigator.clipboard.writeText(location.href)" in body
@@ -680,9 +700,6 @@ def test_chat_payload_personalizes_all_audience_profiles():
         assert marker in payload["instructions"]
 
 
-
-
-
 def test_chat_input_normalization_bounds_and_filters():
     from services.chat_payload import normalize_chat_input
 
@@ -780,7 +797,6 @@ def test_home_bounds_persisted_chat_history():
     assert "slice(0,1200)" in html
     assert "version:1" in html
     assert "safeHistory" in html
-
 
 
 def test_home_audience_buttons_bind_directly():
