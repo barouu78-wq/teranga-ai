@@ -2385,6 +2385,18 @@ const audienceContext={
   wo:"Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
   ff:"Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
  },
+ resident:{
+  fr:"Profil actif : résident. Oriente vers la vie quotidienne au Sénégal : démarches, services, transport, budget, paiements et informations locales à vérifier.",
+  en:"Active profile: resident. Prioritize daily life in Senegal: paperwork, services, transport, budgets, payments and local information to verify.",
+  wo:"Profil bi mooy dëkkkat. Jox ndimbal ci dund bés bu nekk, formalité, services, yoon, budget ak fey.",
+  ff:"Profil ngol moƴƴi e ley. Hokkude ballal e dund bés bu nekk, formalités, services, laawol, budget e feyde."
+ },
+ diaspora:{
+  fr:"Profil actif : diaspora. Oriente vers la préparation de séjours et retours, la gestion à distance, la famille, les dépenses, les démarches et les projets au Sénégal. Distingue toujours les informations indicatives des règles ou tarifs à vérifier.",
+  en:"Active profile: diaspora. Prioritize preparing stays and returns, remote management, family, spending, paperwork and projects in Senegal. Clearly distinguish indicative information from rules or fees that should be verified.",
+  wo:"Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellu, doxal daga woɗnde, ɓeyngu, dépense, formalité ak projet ci Senegaal. Seetal lu wara ƴeewte.",
+  ff:"Profil ngol moƴƴi e diaspora. Hokkude ballal e waajtagol yahdugol walla artugol, doxal daga woɗnde, ɓeyngu, ceede, formalités e projette e Senegaal."
+ },
  merchant:{
   fr:"Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
   en:"Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
@@ -2708,16 +2720,20 @@ function setLang(next){
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
 }
-document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
-  audience=btn.dataset.audience;
-  localStorage.setItem('teranga-audience',audience);
+$('audienceMode').addEventListener('click',e=>{
+  const btn=e.target.closest('.audience-btn');
+  if(!btn)return;
+  const nextAudience=String(btn.dataset.audience||'').trim();
+  if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  audience=nextAudience;
+  try{localStorage.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
   if(realtimeActive){
     const wasActive=voiceConversation&&autoVoice;
     closeRealtimeVoice();
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
-}));
+});
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   document.body.dataset.theme=saved||'dark';
