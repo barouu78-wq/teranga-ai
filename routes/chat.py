@@ -59,6 +59,34 @@ def register_chat_route(app, deps):
                 record_abuse(web_identity, "web_rate", 2)
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
+        photo_only = (
+            payload.get("intent_context", {}).get("intent") == "photos"
+            and set(payload.get("context", {}).get("intents", [])) <= {"photos"}
+        )
+        if photo_only:
+            language = payload.get("language", "fr")
+            lead = "Voici quelques photos du Sénégal." if language == "fr" else "Here are some photos of Senegal."
+            if request.headers.get("X-Teranga-Mode", "").lower() == "json":
+                try:
+                    image = fetch_topic_images(payload.get("message", ""))
+                    return jsonify({"reply": lead, "sources": [], "image": image, "map": None})
+                except Exception as exc:
+                    logger.exception("Erreur photo-only /chat")
+                    return jsonify({"error": public_error(exc)}), 500
+
+            def generate_photo_only():
+                yield json.dumps({"d": lead}, ensure_ascii=False) + "\n"
+                try:
+                    image = fetch_topic_images(payload.get("message", ""))
+                    if image:
+                        yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+                    yield json.dumps({"done": True}) + "\n"
+                except Exception as exc:
+                    logger.exception("Erreur stream photo-only /chat")
+                    yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
+
+            return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
+
         if request.headers.get("X-Teranga-Mode", "").lower() == "json":
             try:
                 reply, sources, image, maps = complete_reply(payload)

@@ -224,6 +224,28 @@ def test_commons_image_lookup_returns_real_wikimedia_url(monkeypatch):
     assert result["alt"] == "Vue de Dakar"
 
 
+def test_photo_request_prefers_google_images_and_returns_multiple(monkeypatch):
+    import app as app_module
+
+    google_calls = []
+    def fake_google(title, limit=4):
+        google_calls.append((title, limit))
+        return [
+            {"url": f"https://images.example/{i}.jpg", "alt": f"Dakar {i}", "credit": "Google Images"}
+            for i in range(8)
+        ]
+
+    monkeypatch.setattr(app_module, "fetch_google_images", fake_google)
+    monkeypatch.setattr(app_module, "fetch_commons_images", lambda *args, **kwargs: [])
+    monkeypatch.setattr(app_module, "fetch_city_image", lambda title: None)
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+
+    images = app_module.fetch_topic_images("Montre-moi des photos de Dakar")
+    assert len(images) == 8
+    assert google_calls == [("Dakar", 8)]
+    assert all(item["credit"] == "Google Images" for item in images)
+
+
 def test_photo_request_routes_to_wikimedia_image(monkeypatch):
     import app as app_module
 
@@ -269,7 +291,7 @@ def test_photo_request_prioritizes_exact_place_commons_search(monkeypatch):
     images = fetch_topic_images("Montre-moi des photos de Gorée")
     assert images
     assert "Gorée" in calls[0][0]
-    assert calls[0][1] == 3
+    assert calls[0][1] == 4
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 

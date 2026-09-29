@@ -95,10 +95,12 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "ff": "Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
         }
     }[audience][language]
+    photo_only = intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"}
+    use_web = False if photo_only else should_use_web(message, enriched_context)
     return {
         "instructions": system_prompt + "\\n" + format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people) + "\\n" + language_instruction_text + "\\n" + audience_instruction + "\\n" + context_instruction,
         "input_text": build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars),
-        "use_web": should_use_web(message, enriched_context),
+        "use_web": use_web,
         "planner": planner_enabled,
         "planner_data": planner_data,
         "message": message,
