@@ -2871,7 +2871,7 @@ function restore(){
 async function ask(preset,fromVoice=false){
   const text=(preset||input.value).trim();
   const tripEdit=detectTripEditRequest(text);
-  if(tripEdit){{try{{sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(tripEdit))}}catch(_){{}}}}
+  if(tripEdit){try{sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(tripEdit))}catch(_){}}
 
   if(!text||send.disabled)return;
   hideHero();
