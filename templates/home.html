@@ -2188,6 +2188,9 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 const $ = id => document.getElementById(id);
 const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic'), stage=$('stage'), hero=$('hero');
 const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const storageGet=(key,fallback='')=>{try{return localStorage.getItem(key)??fallback}catch(_){return fallback}};
+const storageSet=(key,value)=>{try{localStorage.setItem(key,value)}catch(_) {}};
+const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
 const T={
 fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
@@ -2377,7 +2380,7 @@ ff:{
  merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
 }
 };
-let audience=localStorage.getItem('teranga-audience')||'tourist';
+let audience=storageGet('teranga-audience','tourist');
 const audienceContext={
  tourist:{
   fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
@@ -2425,9 +2428,9 @@ function renderAudience(){
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
 }
 
-let lang=localStorage.getItem('teranga-lang')||'fr';
+let lang=storageGet('teranga-lang','fr');
 if(!T[lang])lang='fr';
-let history=[], rec=null, listening=false, audio=null, autoVoice=localStorage.getItem('teranga-voice')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
+let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeSessionId=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cleanReply(text){
@@ -2733,7 +2736,7 @@ document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('cl
   }
 }));
 function themeInit(){
-  const saved=localStorage.getItem('teranga-theme');
+  const saved=storageGet('teranga-theme','');
   document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
