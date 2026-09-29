@@ -612,3 +612,12 @@ def test_home_chat_includes_adjust_planner_action():
 
     assert "Ajuster dans le Planner" in html
     assert "teranga-trip-context" in html
+
+
+def test_home_consumes_planner_chat_prefill():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "teranga-chat-prefill" in html
+    assert "input.value=prefill" in html
