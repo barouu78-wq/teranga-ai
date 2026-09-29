@@ -603,3 +603,12 @@ def test_trip_planner_page_reads_and_shares_audience_profile():
     assert "teranga-audience" in body
     assert "audienceQuery" in body
     assert "audience:audience" in body
+
+
+def test_home_chat_includes_adjust_planner_action():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "Ajuster dans le Planner" in html
+    assert "teranga-trip-context" in html
