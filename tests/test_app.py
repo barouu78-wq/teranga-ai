@@ -380,6 +380,42 @@ def test_commons_images_include_same_origin_proxy(monkeypatch):
     assert images[0]["display_url"].startswith("/image-proxy?url=")
 
 
+
+def test_openai_response_falls_back_only_on_model_unavailability():
+    from services.openai_response import create_response
+    calls = []
+    class Client:
+        class Responses:
+            @staticmethod
+            def create(**kwargs):
+                calls.append(kwargs.copy())
+                if len(calls) == 1:
+                    raise RuntimeError("model gpt-5.6-luna not available")
+                return {"model": kwargs["model"]}
+        responses = Responses()
+    result = create_response(Client(), {"message": "Bonjour"}, build_kwargs=lambda p, s: {"model": "gpt-5.6-luna"}, model="gpt-5.6-luna", logger=type("L", (), {"warning": staticmethod(lambda *a: None)})(), stream=False, fallback_models=("gpt-5.6-sol",))
+    assert result["model"] == "gpt-5.6-sol"
+    assert [x["model"] for x in calls] == ["gpt-5.6-luna", "gpt-5.6-sol"]
+
+
+def test_openai_response_does_not_fallback_on_non_model_error():
+    from services.openai_response import create_response
+    calls = []
+    class Client:
+        class Responses:
+            @staticmethod
+            def create(**kwargs):
+                calls.append(kwargs.copy())
+                raise RuntimeError("rate limit exceeded")
+        responses = Responses()
+    try:
+        create_response(Client(), {"message": "Bonjour"}, build_kwargs=lambda p, s: {"model": "gpt-5.6-luna"}, model="gpt-5.6-luna", logger=type("L", (), {"warning": staticmethod(lambda *a: None)})(), stream=False, fallback_models=("gpt-5.6-sol",))
+    except RuntimeError as exc:
+        assert "rate limit" in str(exc)
+    else:
+        raise AssertionError("non-model errors must not trigger fallback")
+    assert len(calls) == 1
+
 def test_model_uses_configured_low_reasoning_for_fast_chat():
     payload = {
         "instructions": "test",
