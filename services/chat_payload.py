@@ -40,6 +40,8 @@ def normalize_chat_input(
     if audience not in {"tourist", "resident", "diaspora", "merchant"}:
         audience = "tourist"
 
+    context_place = sanitize(data.get("context_place", ""), 120).strip()
+
     if not message:
         return None, "empty"
 
@@ -48,4 +50,5 @@ def normalize_chat_input(
         "history": normalized_history,
         "language": language,
         "audience": audience,
+        "context_place": context_place,
     }, None
