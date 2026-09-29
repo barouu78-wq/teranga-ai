@@ -722,3 +722,19 @@ def test_trip_planner_sync_editor_updates_practical_region():
     sync = html[sync_start:sync_end]
 
     assert "updateJourneySteps();updatePracticalRegions();updateMapFromPlan();persistTripContext()" in sync
+
+
+def test_trip_planner_persists_richer_itinerary_context_for_chat():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    start = html.index("function persistTripContext")
+    end = html.index("function renderEditablePlan", start)
+    persist = html[start:end]
+
+    assert 'clip(d.morning,95)' in persist
+    assert 'clip(d.afternoon,95)' in persist
+    assert 'clip(d.evening,75)' in persist
+    assert 'clip(d.transport,65)' in persist
+    assert 'JSON.stringify(candidate).length>1550' in persist
