@@ -67,3 +67,24 @@ def test_parse_chat_payload_makes_natural_photo_request_fast():
 
     assert error is None
     assert payload["use_web"] is False
+
+
+def test_parse_chat_payload_uses_selected_place_context_for_follow_up():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Que faire ici demain ?",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "context_place": "Île de Gorée",
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["context"]["place"] == "Île de Gorée"
+    assert payload["context"]["has_place"] is True
+    assert "Île de Gorée" in payload["contextual_query"]
+    assert "Île de Gorée" in payload["instructions"]

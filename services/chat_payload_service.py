@@ -25,6 +25,11 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     audience = normalized["audience"]
     language_instruction_text = language_instruction(language)
     context = infer_senegal_context(history, message)
+    selected_place = normalized.get("context_place", "")
+    if selected_place and not context.get("has_place"):
+        context["has_place"] = True
+        context["place"] = selected_place
+        context["query"] = f"{selected_place} : {message}"
     intent_context = build_intent_context(message, history)
     enriched_context = context["query"]
     if context["has_place"]:
