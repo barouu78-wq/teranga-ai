@@ -691,3 +691,20 @@ def test_home_audience_buttons_bind_directly():
     assert "['tourist','resident','diaspora','merchant']" in html
     assert "diaspora:{" in html
     assert "resident:{" in html
+
+
+def test_home_inline_javascript_parses_with_node(tmp_path):
+    import re
+    import shutil
+    import subprocess
+
+    body = app.test_client().get("/").get_data(as_text=True)
+    scripts = re.findall(r"<script[^>]*>([\\s\\S]*?)</script>", body)
+    assert scripts
+    node = shutil.which("node")
+    if not node:
+        return
+    path = tmp_path / "home.js"
+    path.write_text("\n".join(scripts), encoding="utf-8")
+    result = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
