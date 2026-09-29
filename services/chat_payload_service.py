@@ -26,17 +26,24 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     language_instruction_text = language_instruction(language)
     context = infer_senegal_context(history, message)
     selected_place = normalized.get("context_place", "")
-    if selected_place and not context.get("has_place"):
+    selected_place_from_ui = bool(selected_place and not context.get("has_place"))
+    if selected_place_from_ui:
         context["has_place"] = True
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
     intent_context = build_intent_context(message, history)
     enriched_context = context["query"]
     if context["has_place"]:
-        place_line = (
-            f"Contexte géographique détecté : {context['place']}. "
-            "Utilise ce repère pour les suivis courts, sans transformer une déduction en certitude."
-        )
+        if selected_place_from_ui:
+            place_line = (
+                f"Repère fourni par l’interface : {context['place']}. "
+                "Utilise ce lieu pour le suivi demandé, sans le présenter comme une localisation certaine de l’utilisateur."
+            )
+        else:
+            place_line = (
+                f"Contexte géographique détecté : {context['place']}. "
+                "Utilise ce repère pour les suivis courts, sans transformer une déduction en certitude."
+            )
     else:
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."

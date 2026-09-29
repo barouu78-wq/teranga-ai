@@ -19,7 +19,8 @@ def test_parse_chat_payload_builds_french_tourist_context():
     assert payload["planner"] is True
     assert payload["planner_data"]["duration_days"] == 4
     assert payload["planner_data"]["budget_fcfa"] == 100000
-    assert "Île de Gorée" in payload["instructions"] or "goree" in payload["context"]["place"]
+    assert "Île de Gorée" in payload["instructions"]
+    assert "Repère fourni par l’interface" in payload["instructions"] or "goree" in payload["context"]["place"]
 
 
 def test_parse_chat_payload_normalizes_invalid_language_and_audience():
