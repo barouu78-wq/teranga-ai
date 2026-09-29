@@ -2857,7 +2857,7 @@ async function ask(preset,fromVoice=false){
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),40000);
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||''});
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||''});
   let reply='', sources=[], image=null, map=null;
   try{
     const res=await postJSON('/chat',body);
