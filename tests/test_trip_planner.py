@@ -590,3 +590,36 @@ def test_practical_info_rejects_unknown_region_and_category():
     assert client.post("/api/practical-info", headers=headers, json={"region": "Unknown", "category": "hours"}).status_code == 400
     assert client.post("/api/practical-info", headers=headers, json={"region": "Dakar", "category": "unknown"}).status_code == 400
     assert client.post("/api/practical-info", headers={"Origin": "https://evil.example"}, json={"region": "Dakar", "category": "hours"}).status_code == 403
+
+
+def test_trip_planner_exposes_day_level_practical_actions():
+    from services.trip_planner import _html
+    body = _html("https://example.com", "fr")
+    assert 'data-day-practical="transport"' in body
+    assert 'data-day-practical="hours"' in body
+    assert 'data-day-practical="prices"' in body
+    assert "function bindDayPractical()" in body
+    assert 'loadPractical(button.dataset.dayPractical,region' in body
+    assert 'document.getElementById("practical").style.display=currentPlan.days.some(d=>d.region)?"block":"none"' in body
+
+
+def test_practical_info_passes_day_context_to_web_prompt():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["input"] = kwargs["input"]
+            return type("Response", (), {"output_text": "ok", "output": []})()
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    response = app.test_client().post(
+        "/api/practical-info", headers={"Origin": "https://example.com"},
+        json={"lang": "fr", "region": "Dakar", "category": "transport", "day": "Visite de Gorée le matin"},
+    )
+    assert response.status_code == 200
+    assert "Visite de Gorée le matin" in captured["input"]
