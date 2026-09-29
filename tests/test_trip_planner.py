@@ -700,3 +700,13 @@ def test_trip_planner_shows_selected_place_context():
     assert 'id="place-context"' in html
     assert "Point de départ" in html
     assert "teranga-place-name" in html
+
+
+def test_trip_planner_can_restore_session_trip():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    assert "restoreSessionTrip" in html
+    assert "teranga-trip-plan" in html
+    assert "new URLSearchParams(location.hash.slice(1)).get('trip')" in html
