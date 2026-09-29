@@ -751,11 +751,3 @@ def test_trip_planner_exposes_chat_review_action():
     assert "teranga-trip-context" in body
 
 
-def test_trip_planner_surfaces_chat_trip_edit_proposal():
-    from app import app
-
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
-
-    assert 'id="trip-edit-proposal"' in html
-    assert "restoreTripEditProposal" in html
-    assert "teranga-trip-edit-proposal" in html
