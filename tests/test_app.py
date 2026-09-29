@@ -551,3 +551,11 @@ def test_indexnow_key_is_served():
     assert response.status_code == 200
     assert response.get_data(as_text=True) == key
     assert response.content_type.startswith("text/plain")
+
+
+def test_public_seo_pages_expose_native_share_control():
+    from services.seo import render_seo_page
+    body=render_seo_page("dakar","https://example.com").get_data(as_text=True)
+    assert 'id="share-page"' in body
+    assert "navigator.share" in body
+    assert "navigator.clipboard.writeText(location.href)" in body
