@@ -18,7 +18,7 @@ def normalize_chat_input(
     if not isinstance(data, Mapping):
         return None, "invalid"
 
-    message = sanitize(data.get("message", ""), max_message_length)
+    message = sanitize(data.get("message", ""), max_message_length).strip()
     history = data.get("history", [])
     language = str(data.get("language", "fr")).lower()[:8]
     if language not in set(safe_languages):
@@ -29,12 +29,12 @@ def normalize_chat_input(
     normalized_history = [
         {
             "role": str(item.get("role", "")).lower(),
-            "content": sanitize(item.get("content", ""), max_history_item_length),
+            "content": sanitize(item.get("content", ""), max_history_item_length).strip(),
         }
-        for item in history[-max_history_items:]
+        for item in history
         if isinstance(item, Mapping)
         and str(item.get("role", "")).lower() in {"user", "assistant"}
-    ]
+    ][-max_history_items:]
 
     audience = str(data.get("audience", "tourist")).lower()[:16]
     if audience not in {"tourist", "resident", "diaspora", "merchant"}:
