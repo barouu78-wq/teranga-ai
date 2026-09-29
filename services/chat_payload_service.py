@@ -83,7 +83,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
+        place_line + " " + trip_context_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
