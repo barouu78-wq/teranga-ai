@@ -632,3 +632,13 @@ def test_home_captures_explicit_trip_edit_request():
     assert "teranga-trip-edit-proposal" in html
 
 
+
+
+def test_explorer_image_gallery_has_direct_fallback():
+    from app import app
+
+    html = app.test_client().get("/explorer").get_data(as_text=True)
+
+    assert "dataset.directUrl" in html
+    assert "fallbackUsed" in html
+    assert "track.appendChild(img)" in html
