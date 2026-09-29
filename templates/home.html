@@ -2716,7 +2716,7 @@ function themeInit(){
 $('journeyStrip').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-journey]'); if(!btn)return;
   const journey=btn.dataset.journey; setJourney(journey);
-  if(journey==='plan') window.location.href='/trip-planner?lang='+(lang==='en'?'en':'fr')+'&audience='+encodeURIComponent(audience);
+  if(journey==='plan'){const place=sessionStorage.getItem('teranga-place-name')||'';window.location.href='/trip-planner?lang='+(lang==='en'?'en':'fr')+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');}
   if(journey==='discover') window.location.href='/explorer';
   if(journey==='chat'){showHero();hideHero();input.focus();}
 });

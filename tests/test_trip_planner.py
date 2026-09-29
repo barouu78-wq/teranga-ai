@@ -662,3 +662,21 @@ def test_trip_planner_render_syncs_practical_regions():
     from services.trip_planner import _html
     body = _html("https://example.com", "fr")
     assert "bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
+
+
+def test_trip_planner_carries_context_place_from_query_to_session():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr&context_place=%C3%8Ele%20de%20Gor%C3%A9e").get_data(as_text=True)
+
+    assert "contextPlaceQuery" in html
+    assert "sessionStorage.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))" in html
+
+
+def test_home_planner_link_carries_selected_place_context():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "context_place=" in html
+    assert "teranga-place-name" in html
