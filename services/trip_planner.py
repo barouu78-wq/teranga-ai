@@ -158,7 +158,15 @@ document.getElementById('save-trip').onclick=()=>{{syncEditor();renumberDays();t
 function encodeTrip(payload){{const bytes=new TextEncoder().encode(JSON.stringify(payload));let binary='';bytes.forEach(byte=>binary+=String.fromCharCode(byte));return btoa(binary).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'')}}
 function decodeTrip(value){{try{{const base64=value.replace(/-/g,'+').replace(/_/g,'/');const padded=base64+'='.repeat((4-base64.length%4)%4);const binary=atob(padded);const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes))}}catch(_error){{return null}}}}
 function applySharedTrip(){{const encoded=new URLSearchParams(location.hash.slice(1)).get('trip');if(!encoded)return;const payload=decodeTrip(encoded);if(!payload||typeof payload!=='object')return;for(const key of ['arrival','departure','adults','children']){{if(payload[key]!==undefined&&form.elements[key])form.elements[key].value=payload[key]}}for(const key of ['interests','regions']){{if(!Array.isArray(payload[key]))continue;document.querySelectorAll('input[name="'+key+'"]').forEach(input=>{{input.checked=payload[key].includes(input.value)}})}}for(const key of ['budget','pace']){{if(typeof payload[key]!=='string')continue;const input=document.querySelector('input[name="'+key+'"][value="'+CSS.escape(payload[key])+'"]');if(input)input.checked=true}}const surprise=document.getElementById('surprise');if(surprise)surprise.checked=Boolean(payload.surprise);if(typeof payload.audience==='string'&&AUDIENCE_VALUES.includes(payload.audience)){{try{{localStorage.setItem('teranga-audience',payload.audience)}}catch(_){{}}}}if(payload.edited_plan&&Array.isArray(payload.edited_plan.days)){{currentPlan=payload.edited_plan;renderEditablePlan(currentPlan);document.getElementById('voice-result-actions').style.display='flex';document.getElementById('share').style.display='block';updateJourneySteps();updatePracticalRegions();updateMapFromPlan();}}}}
-applySharedTrip();
+function restoreSessionTrip(){{
+try{{
+const raw=sessionStorage.getItem('teranga-trip-plan');if(!raw)return;
+const plan=JSON.parse(raw);if(!plan||!Array.isArray(plan.days))return;
+currentPlan=plan;renderEditablePlan(currentPlan);document.getElementById('voice-result-actions').style.display='flex';document.getElementById('share').style.display='block';
+status.textContent='{copied}'==='__unused__'?'':'Itinéraire de cette session restauré.';
+}}catch(_){{}}
+}}
+applySharedTrip();restoreSessionTrip();
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
