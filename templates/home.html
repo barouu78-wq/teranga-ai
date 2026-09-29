@@ -2583,7 +2583,7 @@ function showGoogleImages(col,query){
 }
 function addCityImage(col,image){
   const list=Array.isArray(image)?image:(image&&image.url?[image]:[]);
-  list.slice(0,6).forEach(item=>{
+  list.slice(0,8).forEach(item=>{
     if(!item||!item.url)return;
     const box=document.createElement('figure');box.className='city-pic';
     const img=document.createElement('img');
