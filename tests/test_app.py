@@ -621,3 +621,12 @@ def test_home_consumes_planner_chat_prefill():
 
     assert "teranga-chat-prefill" in html
     assert "input.value=prefill" in html
+
+
+def test_home_captures_explicit_trip_edit_request():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "detectTripEditRequest" in html
+    assert "teranga-trip-edit-proposal" in html
