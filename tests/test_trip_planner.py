@@ -535,3 +535,58 @@ def test_trip_planner_exposes_numbered_route_visual():
     assert "route-line" in body
     assert "route-point" in body
     assert 'aria-label="Carte du voyage"' in body
+
+
+def test_trip_planner_exposes_practical_info_controls_and_endpoint():
+    from services.trip_planner import _html
+    body = _html("https://example.com", "fr")
+    assert 'id="practical"' in body
+    assert 'data-practical="transport"' in body
+    assert 'data-practical="hours"' in body
+    assert 'data-practical="prices"' in body
+    assert 'data-practical="procedures"' in body
+    assert 'data-practical="services"' in body
+    assert 'fetch("/api/practical-info"' in body
+
+
+def test_practical_info_uses_web_search_and_returns_sources():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return type("Response", (), {
+                "output_text": "Les horaires doivent être vérifiés avant le départ.",
+                "output": [{"type": "message", "content": [{"type": "output_text", "annotations": [{"type": "url_citation", "url": "https://example.sn/info", "title": "Source officielle"}]}]}],
+            })()
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    response = app.test_client().post(
+        "/api/practical-info",
+        headers={"Origin": "https://example.com"},
+        json={"lang": "fr", "region": "Dakar", "category": "hours"},
+    )
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["answer"].startswith("Les horaires")
+    assert payload["sources"][0]["url"] == "https://example.sn/info"
+    assert captured["tools"][0]["type"] == "web_search"
+    assert captured["input"].find("Dakar") >= 0
+
+
+def test_practical_info_rejects_unknown_region_and_category():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, object(), "https://example.com")
+    client = app.test_client()
+    headers = {"Origin": "https://example.com"}
+    assert client.post("/api/practical-info", headers=headers, json={"region": "Unknown", "category": "hours"}).status_code == 400
+    assert client.post("/api/practical-info", headers=headers, json={"region": "Dakar", "category": "unknown"}).status_code == 400
+    assert client.post("/api/practical-info", headers={"Origin": "https://evil.example"}, json={"region": "Dakar", "category": "hours"}).status_code == 403
