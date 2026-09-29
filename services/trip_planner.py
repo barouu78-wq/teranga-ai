@@ -103,7 +103,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 .place-context{{margin:0 0 16px;padding:12px 14px;border:1px solid #3b2d18;border-radius:14px;background:#171310;color:#b8a48c}}.place-context strong{{color:#f6efe3}}</style></head>
 <body><main>
 <nav><div class="logo">Teranga <em>AI</em></div><a href="/">← Teranga AI</a></nav>
-<div class="kicker">{kicker}</div><h1>{title}</h1><p class="intro">{intro}</p><div id="place-context" class="place-context" hidden></div><div id="trip-edit-proposal" class="place-context" hidden></div>
+<div class="kicker">{kicker}</div><h1>{title}</h1><p class="intro">{intro}</p><div id="place-context" class="place-context" hidden></div>
 <div class="card">
 <form id="planner">
 <section class="step active" data-step="1"><h2>{dates}</h2><div class="grid">
@@ -167,17 +167,7 @@ const plan=JSON.parse(raw);if(!plan||!Array.isArray(plan.days))return;
 currentPlan=plan;renderEditablePlan(currentPlan);document.getElementById('voice-result-actions').style.display='flex';document.getElementById('share').style.display='block';
 }}catch(_){{}}
 }}
-applySharedTrip();restoreSessionTrip();function restoreTripEditProposal(){{
-try{{
-const raw=sessionStorage.getItem('teranga-trip-edit-proposal');if(!raw)return;
-const proposal=JSON.parse(raw);if(!proposal||!proposal.day||!proposal.request)return;
-const box=document.getElementById('trip-edit-proposal');if(!box)return;
-box.hidden=false;box.innerHTML='<strong>Demande de modification — Jour '+escapeHtml(String(proposal.day))+'</strong><br><span>'+escapeHtml(proposal.request)+'</span><div class="proposal-actions"><button type="button" id="proposal-open">Ouvrir l’éditeur</button><button type="button" id="proposal-dismiss">Ignorer</button></div>';
-document.getElementById('proposal-open').onclick=()=>{{document.getElementById('editor-actions').scrollIntoView({{behavior:'smooth',block:'center'}});box.hidden=true;}};
-document.getElementById('proposal-dismiss').onclick=()=>{{box.hidden=true;sessionStorage.removeItem('teranga-trip-edit-proposal');}};
-}}catch(_){{}}
-}}
-restoreTripEditProposal();
+applySharedTrip();restoreSessionTrip();
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
