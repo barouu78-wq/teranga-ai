@@ -710,3 +710,15 @@ def test_trip_planner_can_restore_session_trip():
     assert "restoreSessionTrip" in html
     assert "teranga-trip-plan" in html
     assert "new URLSearchParams(location.hash.slice(1)).get('trip')" in html
+
+
+def test_trip_planner_sync_editor_updates_practical_region():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    sync_start = html.index("function syncEditor")
+    sync_end = html.index("function daySpeechText", sync_start)
+    sync = html[sync_start:sync_end]
+
+    assert "updateJourneySteps();updatePracticalRegions();updateMapFromPlan();persistTripContext()" in sync
