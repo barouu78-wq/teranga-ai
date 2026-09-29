@@ -2764,62 +2764,6 @@ function reset(){
   sessionStorage.removeItem('teranga-history');
 }
 let resumeVoiceTimer=0;
-function setupMic(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';return;}
-  rec=new SR();
-  rec.continuous=true;
-  rec.interimResults=true;
-  rec.maxAlternatives=1;
-  rec.lang=voiceMap[lang];
-  rec.onstart=()=>{
-    listening=true;
-    beginVoiceMode();
-    voiceWaitingForAnswer=false;
-    mic.classList.add('listen');
-    mic.setAttribute('aria-label',T[lang].voiceStop||'Arrêter la conversation vocale');
-    mic.title=T[lang].voiceStop||'Arrêter la conversation vocale';
-  };
-  rec.onresult=e=>{
-    let finalText='',interimText='';
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const part=e.results[i][0]?.transcript||'';
-      if(e.results[i].isFinal)finalText+=part+' ';
-      else interimText+=part;
-    }
-    const preview=(voiceDraft+' '+finalText+' '+interimText).replace(/\s+/g,' ').trim();
-    if(preview){
-      input.value=preview;
-      input.dispatchEvent(new Event('input',{bubbles:true}));
-    }
-    if(finalText.trim()){
-      voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
-      scheduleVoiceTurn();
-    }
-  };
-  rec.onend=()=>{
-    listening=false;
-    mic.classList.remove('listen');
-    if(voiceDraft.trim()&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
-      scheduleVoiceTurn();
-    }else if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
-      resumeVoiceListening(220);
-    }else{
-      mic.setAttribute('aria-label',T[lang].listen||'Parler');
-    }
-  };
-  rec.onerror=e=>{
-    listening=false;
-    mic.classList.remove('listen');
-    if(e&&e.error==='not-allowed'){
-      endVoiceMode();
-      autoVoice=false;
-      localStorage.setItem('teranga-voice','0');
-    }else if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight){
-      resumeVoiceListening(500);
-    }
-  };
-}
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
