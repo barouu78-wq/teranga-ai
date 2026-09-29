@@ -681,13 +681,13 @@ def test_home_bounds_persisted_chat_history():
     assert "safeHistory" in html
 
 
-def test_home_audience_selector_delegates_and_supports_diaspora():
+
+def test_home_audience_buttons_bind_directly():
     from app import app
 
     html = app.test_client().get("/").get_data(as_text=True)
 
-    assert "$('audienceMode').addEventListener('click'" in html
-    assert "nextAudience=String(btn.dataset.audience||'').trim()" in html
+    assert "document.querySelectorAll('.audience-btn').forEach" in html
     assert "['tourist','resident','diaspora','merchant']" in html
     assert "diaspora:{" in html
     assert "resident:{" in html
