@@ -634,6 +634,10 @@ def test_trip_planner_exposes_voice_playback_controls():
     assert 'data-day-voice' in body
     assert 'id="voice-practical"' in body
     assert 'function speakTripText(text)' in body
+    assert 'fetch("/tts"' in body
+    assert 'fetch("/csrf"' in body
+    assert 'tripVoiceTurn' in body
+    assert 'tripVoiceCache' in body
     assert 'speechSynthesis' in body
     assert "Écouter" in body
     assert "Arrêter" in body
