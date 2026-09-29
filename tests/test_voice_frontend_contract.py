@@ -43,6 +43,7 @@ def test_voice_stream_setup_is_scoped_to_current_turn():
     assert "const isCurrent=()=>voiceConversation&&expectedTurnId===voiceTurnId;" in function
     assert "if(!isCurrent()){" in function
     assert "await context.close()" in function
+    assert "const ok=await ensureVoiceStream(turnId);" in function
 
 
 def test_speech_synthesis_callbacks_ignore_stale_tts_turns():
