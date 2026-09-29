@@ -738,3 +738,14 @@ def test_trip_planner_persists_richer_itinerary_context_for_chat():
     assert 'clip(d.evening,75)' in persist
     assert 'clip(d.transport,65)' in persist
     assert 'JSON.stringify(candidate).length>1550' in persist
+
+
+def test_trip_planner_exposes_chat_review_action():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+
+    assert 'id="review-chat"' in body
+    assert "Demander à Teranga de revoir mon séjour" in body
+    assert "teranga-chat-prefill" in body
+    assert "teranga-trip-context" in body
