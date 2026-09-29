@@ -623,3 +623,17 @@ def test_practical_info_passes_day_context_to_web_prompt():
     )
     assert response.status_code == 200
     assert "Visite de Gorée le matin" in captured["input"]
+
+
+def test_trip_planner_exposes_voice_playback_controls():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert 'id="voice-itinerary"' in body
+    assert 'id="voice-stop"' in body
+    assert 'data-day-voice' in body
+    assert 'id="voice-practical"' in body
+    assert 'function speakTripText(text)' in body
+    assert 'speechSynthesis' in body
+    assert "Écouter" in body
+    assert "Arrêter" in body
