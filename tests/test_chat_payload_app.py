@@ -120,3 +120,37 @@ def test_parse_chat_payload_limits_trip_context():
     assert error is None
     assert len(payload["trip_context"]) == 1600
 
+
+
+def test_parse_chat_payload_preserves_bounded_trip_edit_request():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Remplace le jour 2 par Saint-Louis",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_edit_request": "Remplace le jour 2 par Saint-Louis",
+        },
+    ):
+        payload, error = parse_chat_payload()
+    assert error is None
+    assert payload["trip_edit_request"] == "Remplace le jour 2 par Saint-Louis"
+
+
+def test_parse_chat_payload_caps_trip_edit_request():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "change le jour 2",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_edit_request": "x" * 900,
+        },
+    ):
+        payload, error = parse_chat_payload()
+    assert error is None
+    assert len(payload["trip_edit_request"]) == 500
