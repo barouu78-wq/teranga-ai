@@ -2720,9 +2720,7 @@ function setLang(next){
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
 }
-$('audienceMode').addEventListener('click',e=>{
-  const btn=e.target.closest('.audience-btn');
-  if(!btn)return;
+document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
   const nextAudience=String(btn.dataset.audience||'').trim();
   if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
   audience=nextAudience;
@@ -2733,7 +2731,7 @@ $('audienceMode').addEventListener('click',e=>{
     closeRealtimeVoice();
     if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
   }
-});
+}));
 function themeInit(){
   const saved=localStorage.getItem('teranga-theme');
   document.body.dataset.theme=saved||'dark';
