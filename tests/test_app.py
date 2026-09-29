@@ -559,3 +559,14 @@ def test_public_seo_pages_expose_native_share_control():
     assert 'id="share-page"' in body
     assert "navigator.share" in body
     assert "navigator.clipboard.writeText(location.href)" in body
+
+
+def test_regional_seo_page_and_sitemap():
+    client = app.test_client()
+    response = client.get("/regions/dakar")
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "Région Dakar" in body
+    assert 'rel="canonical" href="http://localhost/regions/dakar"' in body
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    assert "http://localhost/regions/dakar" in sitemap
