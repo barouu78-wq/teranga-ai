@@ -89,3 +89,34 @@ def test_parse_chat_payload_uses_selected_place_context_for_follow_up():
     assert payload["context"]["has_place"] is True
     assert "Île de Gorée" in payload["contextual_query"]
     assert "Île de Gorée" in payload["instructions"]
+
+def test_parse_chat_payload_uses_compact_trip_context():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Peux-tu ajuster ce séjour ?",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_context": '{"summary":"Séjour Dakar et Gorée","days":[{"day":1,"region":"Dakar","title":"Plateau"},{"day":2,"region":"Dakar","title":"Gorée"}]}',
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert "Contexte d’itinéraire fourni par l’interface" in payload["instructions"]
+    assert "Séjour Dakar et Gorée" in payload["instructions"]
+
+
+def test_parse_chat_payload_limits_trip_context():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={"message": "Ajuste mon séjour", "trip_context": "x" * 3000},
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert len(payload["trip_context"]) == 1600
+

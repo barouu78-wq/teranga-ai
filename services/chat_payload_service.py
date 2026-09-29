@@ -26,12 +26,19 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     language_instruction_text = language_instruction(language)
     context = infer_senegal_context(history, message)
     selected_place = normalized.get("context_place", "")
+    trip_context = normalized.get("trip_context", "")
     selected_place_from_ui = bool(selected_place and not context.get("has_place"))
     if selected_place_from_ui:
         context["has_place"] = True
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
     intent_context = build_intent_context(message, history)
+    trip_context_line = ""
+    if trip_context:
+        trip_context_line = (
+            "Contexte d’itinéraire fourni par l’interface (modifiable par l’utilisateur) : "
+            f"{trip_context}"
+        )
     enriched_context = context["query"]
     if context["has_place"]:
         if selected_place_from_ui:
@@ -76,7 +83,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
     context_instruction = (
-        place_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
+        place_line + " " + trip_context_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
@@ -125,4 +132,5 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "context": context,
         "intent_context": intent_context,
         "contextual_query": enriched_context,
+        "trip_context": trip_context,
     }, None
