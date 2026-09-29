@@ -2530,6 +2530,11 @@ function addActs(col,text){
       else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
     }catch(e){}
   };
+  if((sessionStorage.getItem("teranga-trip-context")||"").trim()){
+    const planner=document.createElement("button");planner.type="button";planner.textContent=lang==="en"?"Adjust in Planner":"Ajuster dans le Planner";
+    planner.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
+    acts.appendChild(planner);
+  }
   acts.append(listen,copy,share);col.appendChild(acts);
 }
 let googleImageSearchSeq=0;
