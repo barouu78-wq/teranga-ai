@@ -377,3 +377,21 @@ h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
         "source": source_link,
     }
     return Response(html, mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+
+REGION_SEO_NAMES = ["Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor"]
+
+def region_slug(name):
+    import unicodedata
+    value = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower()
+    return "-".join(value.split())
+
+def render_region_page(region_name, site_url):
+    if region_name not in REGION_SEO_NAMES:
+        return None
+    slug = region_slug(region_name)
+    url = f"{site_url}/regions/{slug}"
+    title = f"Région {region_name} | Teranga AI"
+    description = f"Guide de la région de {region_name} au Sénégal avec Teranga AI : itinéraire, transport, horaires, prix et questions pratiques."
+    html = f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="{description}"><link rel="canonical" href="{url}"><meta property="og:site_name" content="Teranga AI"><meta property="og:title" content="{title}"><meta property="og:description" content="{description}"><meta property="og:type" content="website"><meta property="og:url" content="{url}"><meta property="og:image" content="{site_url}/og.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{site_url}/og.png"><title>{title}</title><style>body{{margin:0;background:#0b0907;color:#f6efe3;font:16px/1.6 system-ui,sans-serif}}main{{max-width:820px;margin:auto;padding:28px 16px 60px}}a{{color:#e2b34a;text-decoration:none}}article{{background:#171310;border:1px solid #3b2d18;border-radius:26px;padding:28px}}h1{{font:700 clamp(34px,7vw,52px)/1.05 Georgia,serif}}.muted{{color:#b8a48c}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}}button,.cta{{border:1px solid #3b2d18;border-radius:999px;padding:10px 14px;background:#20190f;color:#e2b34a;font-weight:700;cursor:pointer}}</style></head><body><main><p><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · RÉGION DU SÉNÉGAL</small><h1>Région {region_name}</h1><p class="muted">Une page de départ pour préparer un voyage dans la région de {region_name}. Teranga AI peut aider à construire un itinéraire puis à vérifier les informations pratiques qui peuvent changer.</p><div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a><button id="share-page" type="button">Partager</button></div><section><h2>Questions pratiques</h2><p>Demandez les transports, horaires, prix, démarches ou services utiles pour votre étape. Pour les informations sensibles au temps, vérifiez les sources et la date de consultation.</p></section></article></main><script>document.getElementById("share-page").onclick=async()=>{{try{{if(navigator.share){{await navigator.share({{title:document.title,url:location.href}})}}else{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}}}catch(_ ){{try{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_fallback){{}}}}}};</script></body></html>'''
+    return Response(html, mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})
