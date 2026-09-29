@@ -669,3 +669,13 @@ def test_explorer_has_mobile_tap_targets():
 
     assert "article>a{display:block" in html
     assert "min-height:40px" in html
+
+
+def test_home_bounds_persisted_chat_history():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "slice(0,1200)" in html
+    assert "version:1" in html
+    assert "safeHistory" in html

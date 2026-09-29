@@ -762,3 +762,13 @@ def test_trip_planner_supports_confirmed_itinerary_edit():
     assert "replace_day_region" in body
     assert "apply-trip-edit" in body
     assert "cancel-trip-edit" in body
+
+
+def test_trip_planner_revalidates_session_stored_edit_region():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    assert "regionIsAllowed" in html
+    assert "confirmedRegionIsAllowed" in html
+    assert "teranga-trip-edit-proposal" in html

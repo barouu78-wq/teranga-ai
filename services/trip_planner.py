@@ -172,14 +172,21 @@ try{{
 const raw=sessionStorage.getItem('teranga-trip-edit-proposal');if(!raw)return;
 const proposal=JSON.parse(raw);if(!proposal||proposal.action!=='replace_day_region'||!proposal.requires_confirmation)return;
 const box=document.getElementById('trip-edit-proposal');if(!box)return;
-const index=Number(proposal.day)-1;
+const dayNumber=Number(proposal.day);
+const index=Number.isInteger(dayNumber)?dayNumber-1:-1;
 if(!currentPlan||!Array.isArray(currentPlan.days)||index<0||index>=currentPlan.days.length)return;
+const targetRegion=String(proposal.region||'').trim();
+const regionIsAllowed=[...document.querySelectorAll('.day-region option')].some(option=>option.value===targetRegion);
+if(!regionIsAllowed){{sessionStorage.removeItem('teranga-trip-edit-proposal');return;}}
 const day=currentPlan.days[index]||{{}};
 box.hidden=false;
 box.innerHTML='<strong>'+({lang}==='en'?'Proposed change':'Modification proposée')+' — '+({lang}==='en'?'Day ':'Jour ')+escapeHtml(String(proposal.day))+'</strong><br><span>'+escapeHtml(String(day.region||''))+' → '+escapeHtml(String(proposal.region||''))+'</span><div class="proposal-actions"><button type="button" id="apply-trip-edit">'+({lang}==='en'?'Confirm':'Confirmer')+'</button><button type="button" id="cancel-trip-edit">'+({lang}==='en'?'Cancel':'Annuler')+'</button></div>';
 document.getElementById('apply-trip-edit').onclick=()=>{{
 const target=currentPlan.days[index];if(!target)return;
-target.region=String(proposal.region||'').slice(0,60);
+const confirmedRegion=String(proposal.region||'').trim();
+const confirmedRegionIsAllowed=[...document.querySelectorAll('.day-region option')].some(option=>option.value===confirmedRegion);
+if(!confirmedRegionIsAllowed){{sessionStorage.removeItem('teranga-trip-edit-proposal');box.hidden=true;return;}}
+target.region=confirmedRegion.slice(0,60);
 updateJourneySteps();updatePracticalRegions();updateMapFromPlan();persistTripContext();
 try{{sessionStorage.setItem('teranga-trip-plan',JSON.stringify(currentPlan));sessionStorage.removeItem('teranga-trip-edit-proposal')}}catch(_ ){{}}
 renderEditablePlan(currentPlan);box.hidden=true;status.textContent={lang}==='en'?'Trip change applied for this session.':'Modification appliquée pour cette session.';

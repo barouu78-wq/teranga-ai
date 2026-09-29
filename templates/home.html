@@ -2806,7 +2806,13 @@ function setupMic(){
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
-    try{sessionStorage.setItem('teranga-history',JSON.stringify({lang,history}));}catch(e){}
+    try{
+      const safeHistory=history.slice(-12).map(item=>({
+        role:item&&item.role==='assistant'?'assistant':'user',
+        content:String(item&&item.content||'').replace(/\\s+/g,' ').trim().slice(0,1200)
+      })).filter(item=>item.content);
+      sessionStorage.setItem('teranga-history',JSON.stringify({version:1,lang,history:safeHistory}));
+    }catch(e){}
   },250);
 }
 function restore(){
@@ -2816,7 +2822,7 @@ function restore(){
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
-      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim());
+      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/\\s+/g,' ').trim().slice(0,1200)})).filter(item=>item.content);
       if(!restored.length){
         sessionStorage.removeItem('teranga-history');
         return;
