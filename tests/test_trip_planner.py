@@ -503,3 +503,24 @@ def test_trip_planner_editor_controls_follow_ui_language():
     assert "+ Add a day" in body
     assert "Save changes" in body
     assert "Remove" in body
+
+
+def test_trip_planner_editor_exposes_region_and_map_sync():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert 'class="day-region"' in body
+    assert "const REGION_OPTIONS=[" in body
+    assert "const REGION_COORDS={" in body
+    assert "function updateMapFromPlan()" in body
+    assert "updateJourneySteps()" in body
+    assert "updateMapFromPlan()" in body
+    assert "openstreetmap.org/export/embed.html?bbox=" in body
+
+
+def test_trip_planner_editor_map_sync_uses_all_supported_regions():
+    from services.trip_planner import _html, REGION_COORDS
+
+    body = _html("https://example.com", "fr")
+    for region in REGION_COORDS:
+        assert f'"{region}"' in body
