@@ -136,7 +136,7 @@ form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
-regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),surprise:document.getElementById('surprise').checked}};
+regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),context_place:sessionStorage.getItem('teranga-place-name')||'',surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">{loading}</p>'; result.textContent='';
 try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};result.innerHTML='<h2>'+escapeHtml(p.summary||'')+'</h2>'+((p.days||[]).map(d=>'<article class="card"><h3>{day} '+escapeHtml(d.day||'')+' · '+escapeHtml(d.title||'')+'</h3><p><b>{morning} :</b> '+escapeHtml(d.morning||'')+'</p><p><b>{afternoon} :</b> '+escapeHtml(d.afternoon||'')+'</p><p><b>{evening} :</b> '+escapeHtml(d.evening||'')+'</p><p><b>{transport} :</b> '+escapeHtml(d.transport||'')+'</p></article>').join(''))+'<h3>{budget_summary}</h3><ul>'+((data.budget?.lines)||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ul>';status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='{copied}';}};}}
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
@@ -234,6 +234,7 @@ Interests: {', '.join(data['interests']) or 'general discovery'}
 Budget level: {data['budget']}
 Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
+Selected place context: {data.get('context_place') or 'none'}
 Surprise me: {data['surprise']}
 
 Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}}], "practical_notes": [string]}}. Create one object per travel day.
@@ -319,7 +320,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
         data = {"lang": lang, "arrival": arrival_date.isoformat(), "departure": departure_date.isoformat(),
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
-                "budget": budget, "pace": pace, "surprise": body.get("surprise") is True}
+                "budget": budget, "pace": pace, "context_place": str(body.get("context_place", ""))[:120], "surprise": body.get("surprise") is True}
         try:
             response = client.responses.create(model=app.config.get("OPENAI_TRIP_MODEL") or "gpt-5.6-luna",
                 input=_prompt(data))
