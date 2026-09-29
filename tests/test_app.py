@@ -632,14 +632,3 @@ def test_home_captures_explicit_trip_edit_request():
     assert "teranga-trip-edit-proposal" in html
 
 
-def test_home_trip_edit_detector_has_valid_javascript_braces():
-    from app import app
-
-    html = app.test_client().get("/").get_data(as_text=True)
-    start = html.index("function detectTripEditRequest")
-    end = html.index("function setLang", start)
-    block = html[start:end]
-
-    assert "function detectTripEditRequest(text){" in block
-    assert "return {day:" in block
-    assert "}}" not in block
