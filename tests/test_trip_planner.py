@@ -524,3 +524,14 @@ def test_trip_planner_editor_map_sync_uses_all_supported_regions():
     body = _html("https://example.com", "fr")
     for region in REGION_COORDS:
         assert f'"{region}"' in body
+
+
+def test_trip_planner_exposes_numbered_route_visual():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert 'id="route-visual"' in body
+    assert "function updateRouteVisual()" in body
+    assert "route-line" in body
+    assert "route-point" in body
+    assert 'aria-label="Carte du voyage"' in body
