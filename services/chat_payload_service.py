@@ -132,4 +132,5 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "context": context,
         "intent_context": intent_context,
         "contextual_query": enriched_context,
+        "trip_context": trip_context,
     }, None
