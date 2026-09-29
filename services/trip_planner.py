@@ -131,7 +131,7 @@ function show(i){{current=i;steps.forEach((s,n)=>s.classList.toggle('active',n==
 document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.reportValidity())show(current+1)}});
 document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
 let currentPlan=null;
-const AUDIENCE_VALUES=["tourist","resident","diaspora","merchant"]; const audienceStored=localStorage.getItem('teranga-audience'); const audienceQuery=new URL(window.location.href).searchParams.get('audience'); const audience=AUDIENCE_VALUES.includes(audienceStored)?audienceStored:(AUDIENCE_VALUES.includes(audienceQuery)?audienceQuery:'tourist'); if(audience!==audienceStored){{try{{localStorage.setItem('teranga-audience',audience)}}catch(_){{}}}}\nconst REGION_OPTIONS={region_options_json};
+const AUDIENCE_VALUES=["tourist","resident","diaspora","merchant"]; const contextPlaceQuery=new URL(window.location.href).searchParams.get('context_place')||''; if(contextPlaceQuery){try{sessionStorage.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))}catch(_){} } const audienceStored=localStorage.getItem('teranga-audience'); const audienceQuery=new URL(window.location.href).searchParams.get('audience'); const audience=AUDIENCE_VALUES.includes(audienceStored)?audienceStored:(AUDIENCE_VALUES.includes(audienceQuery)?audienceQuery:'tourist'); if(audience!==audienceStored){{try{{localStorage.setItem('teranga-audience',audience)}}catch(_){{}}}}\nconst REGION_OPTIONS={region_options_json};
 const REGION_COORDS={region_coords_json};
 const journeySteps=document.getElementById("journey-steps");
 function renumberDays(){{if(!currentPlan)return;currentPlan.days.forEach((d,i)=>d.day=i+1)}}
