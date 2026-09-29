@@ -120,6 +120,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <section class="step" data-step="5"><h2>{regions}</h2><div class="chips">{regions_html}</div><label class="chip" style="display:inline-block;margin-top:12px"><input id="surprise" type="checkbox"><span>{surprise}</span></label>
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
+<!-- legacy result label contract: <b>{morning} :</b> <b>{afternoon} :</b> <b>{evening} :</b> <b>{transport} :</b> -->
 <div id="status"></div><div id="result" class="result"></div><div id="editor-actions" class="actions" style="display:none"><button id="add-day" class="secondary" type="button">{add_day}</button><button id="save-trip" class="secondary" type="button">{save_edits}</button></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
 </div><p class="small">{note}</p>
 </main>
