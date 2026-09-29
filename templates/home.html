@@ -2188,6 +2188,9 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 const $ = id => document.getElementById(id);
 const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic'), stage=$('stage'), hero=$('hero');
 const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const storageGet=(key,fallback='')=>{try{return localStorage.getItem(key)??fallback}catch(_){return fallback}};
+const storageSet=(key,value)=>{try{localStorage.setItem(key,value)}catch(_) {}};
+const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
 const T={
 fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
