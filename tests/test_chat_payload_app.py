@@ -154,3 +154,27 @@ def test_parse_chat_payload_caps_trip_edit_request():
         payload, error = parse_chat_payload()
     assert error is None
     assert len(payload["trip_edit_request"]) == 500
+
+
+def test_parse_chat_payload_builds_confirmed_day_region_proposal():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Remplace le jour 2 par Saint-Louis",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_context": '{"summary":"Séjour Sénégal","days":[{"day":1,"region":"Dakar"},{"day":2,"region":"Dakar"}]}',
+            "trip_edit_request": "Remplace le jour 2 par Saint-Louis",
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["trip_edit_proposal"] == {
+        "action": "replace_day_region",
+        "day": 2,
+        "region": "Saint-Louis",
+        "requires_confirmation": True,
+    }
