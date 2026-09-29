@@ -122,7 +122,7 @@ async function playVoiceTtsQueue(){
       if(voiceConversation)startVoiceMonitor();
     });
   }catch(_){
-    if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text);
+    if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text,undefined,item.turn);
   }finally{
     voiceSpeaking=false;
     document.body.classList.remove('assistant-speaking');
@@ -209,7 +209,7 @@ function finishSpeech(btn){
   if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
   if(voiceConversation&&!inflight&&!voiceWaitingForAnswer)resumeVoiceListening(180);
 }
-function speakFallback(text,btn){
+function speakFallback(text,btn,speechTurn=voiceTtsTurn){
   if(!('speechSynthesis' in window)||!text)return false;
   try{
     document.body.classList.add('assistant-speaking');
@@ -225,8 +225,9 @@ function speakFallback(text,btn){
     const preferred=voices.find(v=>v.lang&&v.lang.toLowerCase()===base)
       ||voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(base.slice(0,2)));
     if(preferred)utterance.voice=preferred;
-    utterance.onend=()=>finishSpeech(btn);
-    utterance.onerror=()=>finishSpeech(btn);
+    const finish=()=>{if(voiceTtsTurn!==speechTurn)return;finishSpeech(btn);};
+    utterance.onend=finish;
+    utterance.onerror=finish;
     window.speechSynthesis.speak(utterance);
     if(voiceConversation)startVoiceMonitor();
     return true;
@@ -257,7 +258,7 @@ async function speak(text,btn){
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
     audio.onended=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
-    audio.onerror=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
+    audio.onerror=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn,speechTurn))finishSpeech(btn);};
     try{await audio.play();if(voiceTtsTurn!==speechTurn)return;if(voiceConversation)startVoiceMonitor();}catch(_){audio.onerror();}
   }catch(_){
     if(voiceTtsTurn!==speechTurn)return;
@@ -3337,8 +3338,9 @@ function stopVoiceCapture(){
   voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
   voiceNoiseFloor=.008;voiceNoiseSamples=0;voiceCaptureBusy=false;voiceSetMicState(false);
 }
-async function ensureVoiceStream(){
+async function ensureVoiceStream(expectedTurnId=voiceTurnId){
   if(voiceStream&&voiceStream.active&&voiceAnalyser)return true;
+  const isCurrent=()=>voiceConversation&&expectedTurnId===voiceTurnId;
   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)return false;
   const stream=await navigator.mediaDevices.getUserMedia({
     audio:{
@@ -3348,7 +3350,7 @@ async function ensureVoiceStream(){
       channelCount:1
     }
   });
-  if(!voiceConversation){
+  if(!isCurrent()){
     stream.getTracks().forEach(t=>t.stop());
     return false;
   }
@@ -3356,8 +3358,16 @@ async function ensureVoiceStream(){
   const AC=window.AudioContext||window.webkitAudioContext;
   if(!AC)throw new Error('audio-context');
   voiceAudioContext=new AC();
-  if(voiceAudioContext.state==='suspended')await voiceAudioContext.resume().catch(()=>{});
-  const source=voiceAudioContext.createMediaStreamSource(stream);
+  const context=voiceAudioContext;
+  if(context.state==='suspended')await context.resume().catch(()=>{});
+  if(!isCurrent()){
+    stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
+    try{await context.close();}catch(_){}
+    if(voiceStream===stream)voiceStream=null;
+    if(voiceAudioContext===context)voiceAudioContext=null;
+    return false;
+  }
+  const source=context.createMediaStreamSource(stream);
   voiceAnalyser=voiceAudioContext.createAnalyser();
   voiceAnalyser.fftSize=2048;
   voiceAnalyser.smoothingTimeConstant=.78;
@@ -3467,7 +3477,7 @@ async function startVoiceCapture(){
   voiceCaptureBusy=true;
   const turnId=++voiceTurnId;
   try{
-    const ok=await ensureVoiceStream();
+    const ok=await ensureVoiceStream(turnId);
     if(!voiceConversation||turnId!==voiceTurnId){
       voiceCaptureBusy=false;
       return;
