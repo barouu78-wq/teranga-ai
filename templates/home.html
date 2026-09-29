@@ -2075,7 +2075,7 @@ body[data-theme="light"] #input{
 
 
 /* Teranga V2.1 — explicit product journeys */
-.journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 10px}
+@media(max-width:520px){header{padding-left:12px;padding-right:12px;gap:6px}.brand{gap:7px}.mark{width:36px;height:36px;border-radius:12px}.brand strong{font-size:14px}.brand span{font-size:10px}.tools{gap:4px}.seg button{padding:5px 6px}.icon{width:32px;height:32px}.hero{padding:18px 16px 16px;border-radius:22px}.hero h1{font-size:25px}.spread{display:grid;grid-template-columns:1fr;gap:7px}.spread a,.spread button{width:100%;text-align:center}}\n.journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 10px}
 .journey-strip button{min-height:72px;padding:11px 12px;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);text-align:left;cursor:pointer;display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:8px;transition:border-color .18s ease,transform .18s ease,background .18s ease}
 .journey-strip button:hover{transform:translateY(-1px);border-color:var(--gold)}
 .journey-strip span{grid-row:1/3;display:grid;place-items:center;width:28px;height:28px;border-radius:10px;background:var(--soft);color:var(--gold)}

@@ -642,3 +642,30 @@ def test_explorer_image_gallery_has_direct_fallback():
     assert "dataset.directUrl" in html
     assert "fallbackUsed" in html
     assert "track.appendChild(img)" in html
+
+
+def test_home_has_narrow_mobile_layout_rules():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "@media(max-width:520px)" in html
+    assert ".spread{display:grid;grid-template-columns:1fr;gap:7px}" in html
+
+
+def test_trip_planner_has_mobile_action_layout():
+    from app import app
+
+    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+
+    assert "@media(max-width:560px)" in html
+    assert ".actions{flex-direction:column}" in html
+
+
+def test_explorer_has_mobile_tap_targets():
+    from app import app
+
+    html = app.test_client().get("/explorer").get_data(as_text=True)
+
+    assert "article>a{display:block" in html
+    assert "min-height:40px" in html
