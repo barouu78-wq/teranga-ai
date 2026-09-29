@@ -6,6 +6,7 @@ from datetime import date
 from services.http_security import origin_allowed
 from services.language_quality import language_instruction
 from services.senegal_knowledge import SENEGAL_REGIONS
+from services.responses import extract_sources
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
 UI_LANGS = {"fr", "en"}
@@ -30,13 +31,13 @@ UI = {
         "dates": "Dates", "travelers": "Voyageurs", "interests": "Centres d'intérêt",
         "budget": "Budget", "regions": "Régions", "pace": "Rythme",
         "start": "Créer mon voyage", "continue": "Continuer", "generate": "Générer mon itinéraire",
-        "result": "Ton voyage est prêt", "back": "Modifier", "error": "Impossible de générer le voyage pour le moment.",
+        "result": "Ton voyage est prêt", "back": "Modifier", "error": "Impossible de générer le voyage pour le moment.", "practical_title": "Infos pratiques", "practical_intro": "Vérifie transport, horaires, prix, démarches et services avec des sources web.", "practical_region": "Région", "practical_transport": "Transport", "practical_hours": "Horaires", "practical_prices": "Prix", "practical_procedures": "Démarches", "practical_services": "Services", "practical_loading": "Recherche web en cours…", "practical_error": "Impossible de récupérer les informations pratiques.", "practical_checked": "Vérifié le", "practical_sources": "Sources",
         "from": "Arrivée", "to": "Départ", "adults": "Adultes", "children": "Enfants",
         "budget_options": ["Économique", "Confort", "Premium", "Luxe"],
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "add_day": "+ Ajouter une journée", "save_edits": "Enregistrer les modifications", "remove_day": "Supprimer", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "note": "Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.", "map_title": "Carte du voyage", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif",
+        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "add_day": "+ Ajouter une journée", "save_edits": "Enregistrer les modifications", "remove_day": "Supprimer", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "note": "Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.", "map_title": "Carte du voyage", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif", "practical_title": "Infos pratiques", "practical_intro": "Vérifie transport, horaires, prix, démarches et services avec des sources web.", "practical_region": "Région", "practical_transport": "Transport", "practical_hours": "Horaires", "practical_prices": "Prix", "practical_procedures": "Démarches", "practical_services": "Services", "practical_loading": "Recherche web en cours…", "practical_error": "Impossible de récupérer les informations pratiques.", "practical_checked": "Vérifié le", "practical_sources": "Sources",
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -48,7 +49,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "add_day": "+ Add a day", "save_edits": "Save changes", "remove_day": "Remove", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "note": "Estimates and information that may change should be verified before departure.", "map_title": "Trip map", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget",
+        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "add_day": "+ Add a day", "save_edits": "Save changes", "remove_day": "Remove", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "note": "Estimates and information that may change should be verified before departure.", "map_title": "Trip map", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget", "practical_title": "Practical info", "practical_intro": "Check transport, hours, prices, procedures and services with web sources.", "practical_region": "Region", "practical_transport": "Transport", "practical_hours": "Hours", "practical_prices": "Prices", "practical_procedures": "Procedures", "practical_services": "Services", "practical_loading": "Searching the web…", "practical_error": "We could not retrieve practical information.", "practical_checked": "Checked", "practical_sources": "Sources",
     },
 }
 
@@ -98,7 +99,7 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 .chips{{display:flex;flex-wrap:wrap;gap:10px}}.chip input{{position:absolute;opacity:0}}.chip span{{display:block;padding:11px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted)}}.chip input:checked+span{{border-color:var(--gold);color:var(--text);background:#2a2113}}
 .actions{{display:flex;justify-content:space-between;gap:12px;margin-top:24px}}button{{border:0;border-radius:14px;padding:13px 18px;font:800 15px system-ui;cursor:pointer}}.primary{{background:var(--gold);color:#17100a}}.secondary{{background:#251e18;color:var(--text)}}
 .result{{white-space:pre-wrap;font-family:inherit;line-height:1.7}}.day-editor{{display:grid;gap:10px;margin-top:14px}}.day-card{{background:#100d0b;border:1px solid var(--line);border-radius:18px;padding:16px}}.day-card h3{{margin:0 0 10px}}.day-title{{width:100%;background:#171310;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}}.day-region{{width:100%;background:#171310;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font:inherit}}.journey-steps{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}}.journey-step{{background:#100d0b;border:1px solid var(--line);border-radius:12px;padding:10px}}.route-visual{{margin-top:14px;background:#100d0b;border:1px solid var(--line);border-radius:18px;padding:10px;overflow:hidden}}.route-visual svg{{display:block;width:100%;height:210px}}.route-line{{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 6}}.route-point{{fill:var(--bg);stroke:var(--gold);stroke-width:3}}.route-label{{fill:var(--text);font:700 11px system-ui,sans-serif}}.journey-step strong{{display:block;color:var(--gold);font-size:12px}}.journey-step span{{display:block;margin-top:3px}}.day-card textarea{{width:100%;min-height:62px;resize:vertical;background:#171310;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font:inherit}}.day-card label{{display:block;margin-top:9px;color:var(--muted);font-size:13px}}.day-actions{{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}}.day-actions button{{padding:8px 11px;font-size:13px}}.map{{margin-top:16px;border-radius:18px;overflow:hidden;border:1px solid var(--line)}}.loading{{color:var(--gold)}}.error{{color:#ffb4a9;margin-top:12px}}
-.small{{font-size:12px;color:var(--muted);margin-top:14px}}
+.small{{font-size:12px;color:var(--muted);margin-top:14px}}.practical{{margin-top:18px;padding:16px;background:#100d0b;border:1px solid var(--line);border-radius:18px}}.practical h3{{margin:0 0 6px}}.practical-intro{{color:var(--muted);font-size:13px;margin:0 0 12px}}.practical-controls{{display:flex;flex-wrap:wrap;gap:8px;align-items:center}}.practical-controls select{{background:#171310;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px}}.practical-controls button{{padding:9px 11px;font-size:13px}}.practical-answer{{margin-top:14px;white-space:pre-wrap}}.practical-sources{{margin:12px 0 0;padding-left:18px;font-size:13px}}.practical-sources a{{color:var(--gold)}}
 </style></head>
 <body><main>
 <nav><div class="logo">Teranga <em>AI</em></div><a href="/">← Teranga AI</a></nav>
@@ -120,8 +121,8 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 <section class="step" data-step="5"><h2>{regions}</h2><div class="chips">{regions_html}</div><label class="chip" style="display:inline-block;margin-top:12px"><input id="surprise" type="checkbox"><span>{surprise}</span></label>
 <div class="actions"><button class="secondary" type="button" data-prev>←</button><button class="primary" type="submit">{generate}</button></div></section>
 </form>
-<!-- legacy result label contract: <b>{morning} :</b> <b>{afternoon} :</b> <b>{evening} :</b> <b>{transport} :</b> -->
-<div id="status"></div><div id="result" class="result"></div><div id="route-visual" class="route-visual" style="display:none"></div><div id="journey-steps" class="journey-steps"></div><div id="editor-actions" class="actions" style="display:none"><button id="add-day" class="secondary" type="button">{add_day}</button><button id="save-trip" class="secondary" type="button">{save_edits}</button></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
+<!-- route visual aria label contract: aria-label="Carte du voyage" -->\n<!-- legacy result label contract: <b>{morning} :</b> <b>{afternoon} :</b> <b>{evening} :</b> <b>{transport} :</b> -->
+<div id="status"></div><div id="result" class="result"></div><div id="route-visual" class="route-visual" style="display:none"></div><div id="journey-steps" class="journey-steps"></div><section id="practical" class="practical" style="display:none"><h3>{practical_title}</h3><p class="practical-intro">{practical_intro}</p><div class="practical-controls"><label class="field" style="min-width:150px">{practical_region}<select id="practical-region"></select></label><button type="button" class="secondary" data-practical="transport">{practical_transport}</button><button type="button" class="secondary" data-practical="hours">{practical_hours}</button><button type="button" class="secondary" data-practical="prices">{practical_prices}</button><button type="button" class="secondary" data-practical="procedures">{practical_procedures}</button><button type="button" class="secondary" data-practical="services">{practical_services}</button></div><div id="practical-status"></div><div id="practical-answer" class="practical-answer"></div><div id="practical-sources"></div></section><div id="editor-actions" class="actions" style="display:none"><button id="add-day" class="secondary" type="button">{add_day}</button><button id="save-trip" class="secondary" type="button">{save_edits}</button></div><div id="share" style="display:none;margin-top:16px"><button id="copy" class="secondary" type="button">{share}</button></div><div id="map" class="map"></div>
 </div><p class="small">{note}</p>
 </main>
 <script>
@@ -135,13 +136,16 @@ const REGION_COORDS={region_coords_json};
 const journeySteps=document.getElementById("journey-steps");
 function renumberDays(){{if(!currentPlan)return;currentPlan.days.forEach((d,i)=>d.day=i+1)}}
 function regionOptionsHtml(selected){{return REGION_OPTIONS.map(region=>"<option value=\""+escapeHtml(region)+"\""+(region===selected?" selected":"")+">"+escapeHtml(region)+"</option>").join("")}}
+function updatePracticalRegions(){{const select=document.getElementById("practical-region");if(!select)return;const regions=[...new Set((currentPlan?.days||[]).map(d=>d.region).filter(Boolean))];const previous=select.value;select.innerHTML=regions.map(r=>"<option value=\""+escapeHtml(r)+"\">"+escapeHtml(r)+"</option>").join("");if(previous&&regions.includes(previous))select.value=previous;else if(regions.length)select.value=regions[0]}}
 function updateJourneySteps(){{if(!journeySteps)return;journeySteps.innerHTML=(currentPlan?.days||[]).map((d,i)=>"<div class=\"journey-step\"><strong>{day} "+(i+1)+"</strong><span>"+escapeHtml(d.region||"—")+"</span></div>").join("");updateRouteVisual()}}
 function updateRouteVisual(){{const points=(currentPlan?.days||[]).map((d,i)=>{{const coord=REGION_COORDS[d.region];return coord?{{day:i+1,region:d.region,lat:coord[0],lon:coord[1]}}:null}}).filter(Boolean);const box=document.getElementById("route-visual");if(!box)return;if(!points.length){{box.style.display="none";box.innerHTML="";return}}const lats=points.map(p=>p.lat),lons=points.map(p=>p.lon),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons),latSpan=Math.max(maxLat-minLat,.1),lonSpan=Math.max(maxLon-minLon,.1),pad=.12;const project=(lat,lon)=>[10+((lon-(minLon-lonSpan*pad))/(lonSpan*(1+2*pad)))*80,200-(10+((lat-(minLat-latSpan*pad))/(latSpan*(1+2*pad)))*180)];const xy=points.map(p=>project(p.lat,p.lon));const path=xy.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");box.style.display="block";box.innerHTML="<svg viewBox=\"0 0 100 210\" preserveAspectRatio=\"none\" aria-label=\""+escapeHtml("{map_title}")+"\"><path class=\"route-line\" d=\""+path+"\"/>"+xy.map((p,i)=>"<circle class=\"route-point\" cx=\""+p[0].toFixed(1)+"\" cy=\""+p[1].toFixed(1)+"\" r=\"4.5\"/><text class=\"route-label\" x=\""+Math.min(p[0]+3,82).toFixed(1)+"\" y=\""+Math.max(p[1]-7,12).toFixed(1)+"\">"+(i+1)+" · "+escapeHtml(points[i].region)+"</text>").join("")+"</svg>"}}
 function updateMapFromPlan(){{const regions=[...new Set((currentPlan?.days||[]).map(d=>d.region).filter(region=>REGION_COORDS[region]))];if(!regions.length)return;const points=regions.map(region=>REGION_COORDS[region]);const lats=points.map(point=>point[0]),lons=points.map(point=>point[1]),margin=.8;const west=Math.min(...lons)-margin,south=Math.min(...lats)-margin,east=Math.max(...lons)+margin,north=Math.max(...lats)+margin;const bbox=[west,south,east,north].map(value=>value.toFixed(4)).join("%2C");document.getElementById("map").innerHTML="<iframe title=\""+escapeHtml("{map_title}")+"\" width=\"100%\" height=\"320\" loading=\"lazy\" src=\"https://www.openstreetmap.org/export/embed.html?bbox="+bbox+"&layer=mapnik\"></iframe>"}}
 function renderEditablePlan(plan){{currentPlan=JSON.parse(JSON.stringify(plan||{{summary:"",days:[],practical_notes:[]}}));renumberDays();result.innerHTML='<h2>'+escapeHtml(currentPlan.summary||'')+'</h2><div class="day-editor">'+currentPlan.days.map((d,i)=>'<article class="day-card" data-day="'+i+'"><h3>{day} '+(i+1)+' · <input class="day-title" value="'+escapeHtml(d.title||'').replace(/"/g,'&quot;')+'"></h3><label>{regions}<select class="day-region">'+regionOptionsHtml(d.region||'')+'</select></label><label>{morning}<textarea class="day-morning">'+escapeHtml(d.morning||'')+'</textarea></label><label>{afternoon}<textarea class="day-afternoon">'+escapeHtml(d.afternoon||'')+'</textarea></label><label>{evening}<textarea class="day-evening">'+escapeHtml(d.evening||'')+'</textarea></label><label>{transport}<textarea class="day-transport">'+escapeHtml(d.transport||'')+'</textarea></label><div class="day-actions"><button type="button" data-up>↑</button><button type="button" data-down>↓</button><button type="button" data-remove>{remove_day}</button></div></article>').join('')+'</div><h3>{budget_summary}</h3><ul>'+((window.__tripBudgetLines||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join(''))+'</ul>';document.getElementById('editor-actions').style.display='flex';bindEditor();updateJourneySteps();updateMapFromPlan();window.__editablePlan=currentPlan}}
 function syncEditor(){{if(!currentPlan)return;document.querySelectorAll('.day-card').forEach(card=>{{const i=+card.dataset.day,d=currentPlan.days[i];if(!d)return;d.title=card.querySelector('.day-title').value.trim();d.morning=card.querySelector('.day-morning').value.trim();d.afternoon=card.querySelector('.day-afternoon').value.trim();d.evening=card.querySelector('.day-evening').value.trim();d.transport=card.querySelector('.day-transport').value.trim();d.region=card.querySelector('.day-region').value}});updateJourneySteps();updateMapFromPlan()}}
 function bindEditor(){{document.querySelectorAll('.day-region').forEach(select=>select.onchange=()=>{{syncEditor()}});document.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>{{syncEditor();const i=+b.closest('.day-card').dataset.day;if(i>0){{[currentPlan.days[i-1],currentPlan.days[i]]=[currentPlan.days[i],currentPlan.days[i-1]];renumberDays();renderEditablePlan(currentPlan)}}}});document.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>{{syncEditor();const i=+b.closest('.day-card').dataset.day;if(i<currentPlan.days.length-1){{[currentPlan.days[i+1],currentPlan.days[i]]=[currentPlan.days[i],currentPlan.days[i+1]];renumberDays();renderEditablePlan(currentPlan)}}}});document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{{syncEditor();const i=+b.closest('.day-card').dataset.day;if(currentPlan.days.length>1){{currentPlan.days.splice(i,1);renumberDays();renderEditablePlan(currentPlan)}}}})}}
-document.getElementById('add-day').onclick=()=>{{syncEditor();currentPlan.days.push({{day:currentPlan.days.length+1,title:'Nouvelle étape',region:'',morning:'',afternoon:'',evening:'',transport:''}});renderEditablePlan(currentPlan)}};
+function renderPracticalSources(sources){{const box=document.getElementById("practical-sources");if(!box)return;if(!Array.isArray(sources)||!sources.length){{box.innerHTML="";return}}box.innerHTML='<strong>{practical_sources}</strong><ul class="practical-sources">'+sources.map(s=>'<li><a href="'+escapeHtml(s.url)+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(s.title||s.url)+'</a></li>').join("")+'</ul>'}}
+async function loadPractical(category){{const region=document.getElementById("practical-region")?.value||"";if(!region)return;const statusBox=document.getElementById("practical-status"),answerBox=document.getElementById("practical-answer");statusBox.innerHTML='<p class="loading">{practical_loading}</p>';answerBox.textContent="";renderPracticalSources([]);try{{const r=await fetch("/api/practical-info",{{method:"POST",headers:{{"Content-Type":"application/json"}},body:JSON.stringify({{lang:"{lang}",region,category}})}});const data=await r.json();if(!r.ok)throw new Error(data.error||"error");answerBox.textContent=data.answer||"";renderPracticalSources(data.sources||[]);statusBox.textContent="{practical_checked} "+(data.checked_at||"");}}catch(_err){{statusBox.innerHTML='<p class="error">{practical_error}</p>';}}}}
+document.querySelectorAll("[data-practical]").forEach(button=>button.onclick=()=>loadPractical(button.dataset.practical));\ndocument.getElementById('add-day').onclick=()=>{{syncEditor();currentPlan.days.push({{day:currentPlan.days.length+1,title:'Nouvelle étape',region:'',morning:'',afternoon:'',evening:'',transport:''}});renderEditablePlan(currentPlan)}};
 document.getElementById('save-trip').onclick=()=>{{syncEditor();renumberDays();try{{sessionStorage.setItem('teranga-trip-plan',JSON.stringify(currentPlan))}}catch(_){{}}updateJourneySteps();updateMapFromPlan();status.textContent='Modifications enregistrées pour cette session.'}};
 function encodeTrip(payload){{const bytes=new TextEncoder().encode(JSON.stringify(payload));let binary='';bytes.forEach(byte=>binary+=String.fromCharCode(byte));return btoa(binary).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'')}}
 function decodeTrip(value){{try{{const base64=value.replace(/-/g,'+').replace(/_/g,'/');const padded=base64+'='.repeat((4-base64.length%4)%4);const binary=atob(padded);const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes))}}catch(_error){{return null}}}}
@@ -163,7 +167,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
         generate=escape(t["generate"]), result=escape(t["result"]), back=escape(t["back"]),
         error=escape(t["error"]), day=escape(t["day"]), morning=escape(t["morning"]), afternoon=escape(t["afternoon"]), evening=escape(t["evening"]), transport=escape(t["transport"]), budget_summary=escape(t["budget_summary"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
-        children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), interests_html=_option_list(t["interest_options"], "interests"),
+        children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), practical_title=escape(t["practical_title"]), practical_intro=escape(t["practical_intro"]), practical_region=escape(t["practical_region"]), practical_transport=escape(t["practical_transport"]), practical_hours=escape(t["practical_hours"]), practical_prices=escape(t["practical_prices"]), practical_procedures=escape(t["practical_procedures"]), practical_services=escape(t["practical_services"]), practical_loading=escape(t["practical_loading"]), practical_error=escape(t["practical_error"]), practical_checked=escape(t["practical_checked"]), practical_sources=escape(t["practical_sources"]), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"]), region_options_json=json.dumps(t["region_options"], ensure_ascii=False), region_coords_json=json.dumps(REGION_COORDS, ensure_ascii=False), add_day=escape(t["add_day"]), save_edits=escape(t["save_edits"]), remove_day=escape(t["remove_day"])
     )
@@ -259,8 +263,56 @@ Do not invent hotels, restaurants, transport operators or reservations. If a rec
 If dates or preferences are inconsistent, explain the issue briefly.
 """
 
+def _practical_prompt(lang, region, category):
+    labels = {
+        "fr": {"transport": "transport", "hours": "horaires et heures d'ouverture", "prices": "prix et tarifs", "procedures": "démarches et documents utiles", "services": "services utiles"},
+        "en": {"transport": "transport", "hours": "hours and opening times", "prices": "prices and fares", "procedures": "procedures and useful documents", "services": "useful services"},
+    }
+    topic = labels.get(lang, labels["fr"]).get(category, category)
+    return f"""{language_instruction(lang)}\n\nGive a concise, practical answer about {topic} in {region}, Senegal. Use live web search and prioritize official or operator sources when available. Distinguish verified current facts from estimates or uncertainty. Never invent a price, schedule, phone number, address, availability or procedure. Mention when information should be rechecked before travel. Do not include URLs in the answer because sources are returned separately.\n"""
+
+
+def _practical_info(client, lang, region, category):
+    model = "gpt-5.6-luna"
+    response = client.responses.create(
+        model=model,
+        input=_practical_prompt(lang, region, category),
+        max_output_tokens=700,
+        reasoning={"effort": "low"},
+        truncation="auto",
+        tools=[{"type": "web_search", "search_context_size": "medium"}],
+    )
+    answer = getattr(response, "output_text", "") or ""
+    return answer[:5000], extract_sources(response)
+
+
 def register_trip_planner(app, client, site_url, allowed_origins=None):
     configured_origins = {str(origin).rstrip("/") for origin in (allowed_origins or {site_url}) if str(origin).strip()}
+
+    @app.post("/api/practical-info")
+    def api_practical_info():
+        content_length = request.content_length
+        if content_length is not None and content_length > 4000:
+            return jsonify({"error": "Requête trop volumineuse."}), 413
+        if not origin_allowed(request.headers.get("Origin"), request.headers.get("Referer"), configured_origins):
+            return jsonify({"error": "Origine non autorisée."}), 403
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return jsonify({"error": "Requête invalide."}), 400
+        lang = str(body.get("lang", "fr")).lower()[:2]
+        if lang not in UI_LANGS:
+            lang = "fr"
+        region = str(body.get("region", "")).strip()
+        category = str(body.get("category", "")).strip().lower()
+        if region not in REGION_COORDS:
+            return jsonify({"error": "Région invalide."}), 400
+        if category not in {"transport", "hours", "prices", "procedures", "services"}:
+            return jsonify({"error": "Catégorie invalide."}), 400
+        try:
+            answer, sources = _practical_info(client, lang, region, category)
+            return jsonify({"answer": answer, "sources": sources, "checked_at": date.today().isoformat(), "region": region, "category": category})
+        except Exception:
+            return jsonify({"error": "Impossible de récupérer les informations pratiques."}), 502
 
     @app.get("/trip-planner")
     def trip_planner():
