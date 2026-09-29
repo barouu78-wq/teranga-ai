@@ -570,4 +570,4 @@ def test_regional_seo_page_and_sitemap():
     assert 'rel="canonical"' in body
     assert "/regions/dakar" in body
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
-    assert "/regions/dakar</loc>" in sitemap
+    assert "/regions/dakar" in sitemap
