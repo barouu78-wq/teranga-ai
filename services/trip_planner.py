@@ -394,7 +394,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
         data = {"lang": lang, "arrival": arrival_date.isoformat(), "departure": departure_date.isoformat(),
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
-                "budget": budget, "pace": pace, "context_place": str(body.get("context_place", ""))[:120], "surprise": body.get("surprise") is True}
+                "budget": budget, "pace": pace, "audience": audience, "context_place": str(body.get("context_place", ""))[:120], "surprise": body.get("surprise") is True}
         try:
             response = client.responses.create(model=app.config.get("OPENAI_TRIP_MODEL") or "gpt-5.6-luna",
                 input=_prompt(data))
