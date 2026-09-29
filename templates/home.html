@@ -2780,13 +2780,15 @@ function restore(){
     }
   }catch(e){}
 }
-async function ask(preset,fromVoice=false){
+async function ask(preset,fromVoice=false,isRetry=false){
   const text=(preset||input.value).trim();
   if(!text||send.disabled)return;
   hideHero();
-  addMsg('user',text,{animate:true});
-  history.push({role:'user',content:text});
-  persist();
+  if(!isRetry){
+    addMsg('user',text,{animate:true});
+    history.push({role:'user',content:text});
+    persist();
+  }
   input.value='';input.style.height='';$('count').textContent='0 / 2000';
   send.disabled=false;send.textContent=T[lang].stop;
   send.dataset.mode='stop';
@@ -2898,7 +2900,10 @@ async function ask(preset,fromVoice=false){
     if(!aborted){
       const retry=document.createElement('button');
       retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
-      retry.onclick=()=>ask(text);
+      retry.onclick=()=>{
+        if(wait.row.parentNode)wait.row.remove();
+        ask(text,fromVoice,true);
+      };
       wait.col.appendChild(retry);
     }
   }finally{
