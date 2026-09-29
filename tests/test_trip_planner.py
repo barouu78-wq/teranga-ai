@@ -635,4 +635,5 @@ def test_trip_planner_exposes_voice_playback_controls():
     assert 'id="voice-practical"' in body
     assert 'function speakTripText(text)' in body
     assert 'speechSynthesis' in body
-    assert 'voice_listen=escape(t["voice_listen"])' in body
+    assert "Écouter" in body
+    assert "Arrêter" in body
