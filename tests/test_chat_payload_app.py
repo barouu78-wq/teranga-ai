@@ -41,3 +41,16 @@ def test_parse_chat_payload_rejects_invalid_body():
 
     assert payload is None
     assert error[1] == 400
+
+
+def test_parse_chat_payload_makes_photo_only_requests_fast():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={"message": "Montre-moi des photos de Dakar", "history": [], "language": "fr"},
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["intent_context"]["intent"] == "photos"
+    assert payload["use_web"] is False
