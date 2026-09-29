@@ -2160,7 +2160,7 @@ const T={
 fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
-  timeout:'Délai dépassé. Réessaie.',err:'Service indisponible.',
+  timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
@@ -2183,7 +2183,7 @@ fr:{
 en:{
   sub:'Senegal assistant',ph:'Ask a question…',send:'Send',
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
-  timeout:'Timed out. Try again.',err:'Service unavailable.',
+  timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
@@ -2206,7 +2206,7 @@ en:{
 wo:{
   sub:'Assistant Senegaal',ph:'Laajal…',send:'Yónnee',
   welcome:'Salaam, maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
-  timeout:'Dafa yàgg. Jéemaatal.',err:'Service bañ na.',
+  timeout:'Dafa yàgg. Jéemaatal.',rateLimit:'Dañoo bari laaj léegi. Jéemaatal ci kanam.',err:'Service bañ na.',
   vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
   sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
@@ -2228,7 +2228,7 @@ wo:{
 ff:{
   sub:'Ballal Senegaal',ph:'Naamndu…',send:'Neldu',
   welcome:'Jam tan, miin woni Teranga AI. Hol ko njiɗɗaa anndude e Senegaal?',
-  timeout:'Sahaa booyii. Fuɗɗit.',err:'Sarwiis jaɓaani.',
+  timeout:'Sahaa booyii. Fuɗɗit.',rateLimit:'Naamne ɗuuɗe jooni. Fuɗɗito caggal seeɗa.',err:'Sarwiis jaɓaani.',
   vOn:'Sawtu auto on',vOff:'Sawtu auto off',listen:'Heɗo',copy:'Natal',copied:'Natalaa',
   share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
   sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
@@ -2807,7 +2807,10 @@ async function ask(preset,fromVoice=false,isRetry=false){
     const res=await postJSON('/chat',body,null,ctrl.signal);
     if(!res.ok){
       const data=await res.json().catch(()=>({}));
-      throw new Error(data.error||T[lang].err);
+      const error=new Error(data.error||T[lang].err);
+      error.status=res.status;
+      error.retryAfter=res.headers.get('Retry-After')||'';
+      throw error;
     }
     let live='', pending='', shown=false, paint=0;
     const flush=()=>{
@@ -2864,7 +2867,12 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(!reply){
       const res2=await postJSON('/chat',body,{'X-Teranga-Mode':'json'},ctrl.signal);
       const data=await res2.json().catch(()=>({}));
-      if(!res2.ok)throw new Error(data.error||T[lang].err);
+      if(!res2.ok){
+        const error=new Error(data.error||T[lang].err);
+        error.status=res2.status;
+        error.retryAfter=res2.headers.get('Retry-After')||'';
+        throw error;
+      }
       reply=(data.reply||'').trim();
       if(data.sources)sources=data.sources;
       if(data.image)image=data.image;
@@ -2893,7 +2901,11 @@ async function ask(preset,fromVoice=false,isRetry=false){
     let raw=err.message||T[lang].err;
     if(raw==='csrf'||/jeton|Load failed|Failed to fetch|network/i.test(raw))
       raw=T[lang].timeout;
-    const msg=aborted?T[lang].timeout:raw;
+    const msg=aborted
+      ?T[lang].timeout
+      :err.status===429
+        ?T[lang].rateLimit
+        :raw;
     if(dots.parentNode)dots.replaceWith(wait.b);
     wait.row.classList.remove('thinking');
     node.nodeValue=msg;
