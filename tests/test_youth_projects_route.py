@@ -17,6 +17,7 @@ def test_youth_opportunity_route_lists_matching_sources():
             "build_project_brief": lambda **kwargs: {},
             "advance_project_stage": lambda project, stage=None: project,
             "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ"}],
+            "build_project_matches": lambda project: {"category": project.get("category"), "city": project.get("city"), "partners": [], "opportunities": [], "counts": {"partners": 0, "opportunities": 0}},
         },
     )
 
@@ -25,6 +26,27 @@ def test_youth_opportunity_route_lists_matching_sources():
     assert response.status_code == 200
     assert b"BE YES" in response.data
     assert b"DER/FJ" in response.data
+
+
+def test_youth_project_matches_route_returns_match_payload():
+    app = Flask(__name__)
+
+    register_youth_project_route(
+        app,
+        {
+            "require_json_post": lambda fn: fn,
+            "sanitize_text": lambda value, max_len: str(value or "")[:max_len],
+            "build_project_brief": lambda **kwargs: {},
+            "advance_project_stage": lambda project, stage=None: project,
+            "build_project_matches": lambda project: {"category": "digital", "city": "Dakar", "partners": [{"name": "Orange"}], "opportunities": [{"title": "BE YES"}]},
+        },
+    )
+    client = app.test_client()
+    response = client.post("/api/projects/matches", json={"project": {"category": "digital", "city": "Dakar"}})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["matches"]["category"] == "digital"
+    assert data["matches"]["opportunities"][0]["title"] == "BE YES"
 
 
 def test_youth_project_plan_route_builds_project():
