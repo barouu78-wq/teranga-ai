@@ -53,8 +53,12 @@ def test_create_response_uses_selected_model():
     )
 
     service["create_response"]({"planner": True}, stream=False)
+    service["create_response"]({"planner": False, "deep_reasoning": True}, stream=False)
 
-    assert calls == [{"model": "gpt-5.6-sol", "kwargs_model": "gpt-5.6-sol"}]
+    assert calls == [
+        {"model": "gpt-5.6-sol", "kwargs_model": "gpt-5.6-sol"},
+        {"model": "gpt-5.6-sol", "kwargs_model": "gpt-5.6-sol"},
+    ]
 
 
 def test_deep_reasoning_routes_comparison():
