@@ -1,10 +1,18 @@
 """Chat response orchestration extracted from the Flask application."""
 
 
+def select_chat_model(payload, model, complex_model="gpt-5.6-sol"):
+    """Route genuinely multi-step requests to the stronger model."""
+    if model == "gpt-5.6-luna" and complex_model and payload.get("planner"):
+        return complex_model
+    return model
+
+
 def build_chat_service(
     *,
     client,
     model,
+    complex_model="gpt-5.6-sol",
     logger,
     build_model_kwargs,
     reasoning_effort,
@@ -19,9 +27,10 @@ def build_chat_service(
     reasoning_override=None,
 ):
     def model_kwargs(payload, stream):
+        active_model = select_chat_model(payload, model, complex_model)
         return build_model_kwargs(
             payload,
-            model=model,
+            model=active_model,
             reasoning_effort=reasoning_effort,
             search_context_size=search_context_size,
             preferred_domains=preferred_domains,
@@ -30,7 +39,8 @@ def build_chat_service(
         )
 
     def create_response(payload, stream):
-        fallback_model = "gpt-5.6-sol" if model == "gpt-5.6-luna" else "gpt-5.6-luna"
+        active_model = select_chat_model(payload, model, complex_model)
+        fallback_model = "gpt-5.6-luna" if active_model == complex_model else "gpt-5.6-sol" if active_model == "gpt-5.6-luna" else "gpt-5.6-luna"
         return create_openai_response(
             client,
             payload,
