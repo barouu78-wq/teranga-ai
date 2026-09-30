@@ -218,7 +218,7 @@ def should_use_planner(context: dict[str, Any]) -> bool:
 
 def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
     """Detect requests where extra reasoning is useful beyond trip planning."""
-    query = str(context.get("query") or "")
+    query = _normalize(str(context.get("query") or ""))
     intents = set(context.get("intents") or [])
     constraints = context.get("constraints") or []
     # Use word boundaries for short terms: substring matches such as
