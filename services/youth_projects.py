@@ -12,16 +12,8 @@ from typing import Any
 
 
 PROJECT_CATEGORIES = (
-    "business",
-    "agriculture",
-    "digital",
-    "creative",
-    "food",
-    "craft",
-    "commerce",
-    "tourism",
-    "environment",
-    "ai",
+    "business", "agriculture", "digital", "creative", "food",
+    "craft", "commerce", "tourism", "environment", "ai",
 )
 
 _CATEGORY_KEYWORDS = {
@@ -45,14 +37,22 @@ def _normalize(value: Any) -> str:
 
 
 def _money_amount(value: Any) -> int | None:
-    match = re.search(r"(?<!d)(d[ds.,]*)(?:s*(?:fcfa|f cfa|cfa))?", _normalize(value))
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    if isinstance(value, float):
+        return int(value) if value >= 0 else None
+    text = _normalize(value)
+    match = re.search(r"(?<!\d)(\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa))?", text)
     if not match:
         return None
-    raw = re.sub(r"[s.,]", "", match.group(1))
+    raw = re.sub(r"[\s.,]", "", match.group(1))
     try:
-        return int(raw)
+        amount = int(raw)
     except ValueError:
         return None
+    return amount if amount >= 0 else None
 
 
 def detect_project_category(idea: str, category: str | None = None) -> str:
