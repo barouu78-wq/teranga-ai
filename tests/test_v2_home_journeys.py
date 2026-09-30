@@ -7,11 +7,21 @@ HOME = Path(__file__).resolve().parents[1] / "templates" / "home.html"
 def test_home_exposes_v2_product_journeys():
     html = HOME.read_text(encoding="utf-8")
     assert 'id="journeyStrip"' in html
-    assert 'data-journey="plan"' in html
+    assert 'data-journey="travel"' in html
+    assert 'data-journey="project"' in html
     assert 'data-journey="discover"' in html
     assert 'data-journey="chat"' in html
     assert "window.location.href='/trip-planner?lang='" in html
-    assert "window.location.href='/explorer'" in html
+    assert "window.location.href='/trip-planner?lang='" in html
+
+
+def test_home_reduces_landing_to_four_primary_journeys():
+    html = HOME.read_text(encoding="utf-8")
+    assert 'data-journey="travel"' in html
+    assert 'data-journey="project"' in html
+    assert 'data-journey="discover"' in html
+    assert 'data-journey="chat"' in html
+    assert '#audienceMode{display:none!important}' in html
 
 
 def test_home_persists_selected_journey_for_session():
