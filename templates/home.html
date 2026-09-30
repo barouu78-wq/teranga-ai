@@ -2875,6 +2875,30 @@ $('projectForm')?.addEventListener('submit',async e=>{
     result.appendChild(list);
     renderProjectProgress(result,p);
     renderProjectTracking(result,p);
+    const matchBox=document.createElement('div');matchBox.className='project-progress';
+    matchBox.innerHTML='<div class="project-progress-title">🎯 Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
+    result.appendChild(matchBox);
+    try{
+      let matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));
+      if(matchRes.status===403){await refreshCsrf();matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));}
+      const matchData=await matchRes.json().catch(()=>({}));
+      if(matchRes.ok&&matchData.matches){
+        const m=matchData.matches;
+        matchBox.innerHTML='<div class="project-progress-title">🎯 Opportunités & partenaires</div>';
+        const summary=document.createElement('p');
+        summary.textContent=(m.counts?.opportunities||0)+' opportunité(s) · '+(m.counts?.partners||0)+' partenaire(s) correspondant à ton projet.';
+        matchBox.appendChild(summary);
+        if(m.opportunities?.length){
+          const ul=document.createElement('ul');ul.className='project-steps';
+          m.opportunities.slice(0,3).forEach(item=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=item.title||item.organization;const s=document.createElement('span');s.textContent=' · '+(item.organization||'');li.append(b,s);ul.appendChild(li);});
+          matchBox.appendChild(ul);
+        }
+        const links=document.createElement('div');links.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='🔎 Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='🤝 Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        links.append(opp,partner);matchBox.appendChild(links);
+      }
+    }catch(_){}
     result.hidden=false;
     try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
   }catch(err){error.textContent=err.message||T[lang].err;}
