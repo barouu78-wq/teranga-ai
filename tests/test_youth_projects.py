@@ -1,4 +1,4 @@
-from services.youth_projects import build_project_brief, detect_project_category
+from services.youth_projects import build_project_brief, detect_project_category, find_project_partners
 
 
 def test_detect_project_category_for_local_food_project():
@@ -52,3 +52,9 @@ def test_project_brief_includes_a_follow_up_tracking_model():
     assert brief["tracking"]["period"] == "30 jours"
     assert "Ventes réalisées" in brief["tracking"]["indicators"]
     assert brief["tracking"]["weekly_checklist"]
+
+
+def test_partner_directory_matches_project_category():
+    partners = find_project_partners("digital")
+    assert partners
+    assert any("Orange" in partner["name"] for partner in partners)
