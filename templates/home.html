@@ -2811,19 +2811,40 @@ function renderProjectTracking(container,project){
   box.classList.add('project-tracking');
   container.appendChild(box);
 }
+async function advanceProjectStage(container,project,stage){
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    let res=await postJSON('/api/projects/advance',JSON.stringify({project,stage}));
+    if(res.status===403){
+      await refreshCsrf();
+      res=await postJSON('/api/projects/advance',JSON.stringify({project,stage}));
+    }
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
+    Object.assign(project,data.project);
+    try{localStorage.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    renderProjectProgress(container,project);
+    renderProjectTracking(container,project);
+  }catch(_){
+    renderProjectProgress(container,project);
+  }
+}
 function renderProjectProgress(container,project){
   const labels=['Idée','Validation','Prototype','Premiers clients','Revenus'];
   const stages=Array.isArray(project.stage_order)&&project.stage_order.length===5?project.stage_order:['idea','validation','prototype','first_customers','revenue'];
   let current=stages.indexOf(project.stage); if(current<0)current=0;
   const wrap=document.createElement('div');wrap.className='project-progress';
   const title=document.createElement('div');title.className='project-progress-title';title.textContent='Progression du projet';wrap.appendChild(title);
+  const hint=document.createElement('p');hint.className='project-progress-hint';hint.textContent='Choisis la prochaine étape à travailler.';wrap.appendChild(hint);
   const row=document.createElement('div');row.className='project-stage-row';
   stages.forEach((stage,index)=>{
     const btn=document.createElement('button');btn.type='button';btn.className='project-stage '+(index===current?'on ':'')+(index<current?'done':'');btn.textContent=labels[index];
-    btn.addEventListener('click',()=>{
-      project.stage=stage;
-      renderProjectProgress(container,project);
-      try{localStorage.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    btn.disabled=index<=current;
+    btn.addEventListener('click',async()=>{
+      if(btn.disabled)return;
+      row.querySelectorAll('button').forEach(item=>item.disabled=true);
+      btn.textContent='…';
+      await advanceProjectStage(container,project,stage);
     });
     row.appendChild(btn);
   });
