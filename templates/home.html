@@ -2090,7 +2090,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 .project-close{border:0;background:var(--soft);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:22px;cursor:pointer}
 .project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.project-field{display:grid;gap:5px}.project-field.full{grid-column:1/-1}.project-field label{font-size:11px;color:var(--mute);font-weight:750}.project-field input{width:100%;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);padding:0 12px;font:inherit;outline:0}.project-field input:focus{border-color:var(--gold)}
 .project-actions{display:flex;justify-content:flex-end;margin-top:14px}.project-actions button{border:0;border-radius:14px;padding:11px 16px;background:linear-gradient(145deg,var(--sen-green),var(--sen-green-dark));color:#fff;font-weight:800;cursor:pointer}.project-actions button:disabled{opacity:.55}
-.project-error{color:#d95b52;font-size:12px;margin-top:8px}.project-result{margin-top:16px;padding:16px;border-radius:18px;background:var(--soft);border:1px solid var(--line)}.project-result h3{margin:0 0 6px;color:var(--gold)}.project-result p{margin:4px 0;color:var(--mute)}.project-steps{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.project-steps li{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.project-steps b{display:block;font-size:12px}.project-steps span{display:block;margin-top:2px;color:var(--mute);font-size:11px}
+.project-error{color:#d95b52;font-size:12px;margin-top:8px}.project-result{margin-top:16px;padding:16px;border-radius:18px;background:var(--soft);border:1px solid var(--line)}.project-result h3{margin:0 0 6px;color:var(--gold)}.project-result p{margin:4px 0;color:var(--mute)}.project-steps{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.project-steps li{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.project-progress{margin-top:14px}.project-progress-title{font-size:12px;font-weight:800;margin-bottom:8px}.project-stage-row{display:flex;gap:6px;overflow:auto;padding-bottom:3px}.project-stage{border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:11px;padding:8px 9px;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}.project-stage.on{background:var(--sen-green);border-color:var(--sen-green);color:#fff}.project-stage.done{color:var(--sen-green);border-color:var(--sen-green)}.project-steps b{display:block;font-size:12px}.project-steps span{display:block;margin-top:2px;color:var(--mute);font-size:11px}
 @media(max-width:680px){.project-modal{padding:10px;align-items:flex-end}.project-panel{max-height:92vh;border-radius:22px 22px 0 0;padding:16px}.project-grid{grid-template-columns:1fr}.project-field.full{grid-column:auto}.project-actions button{width:100%}}
 </style>
 
@@ -2780,6 +2780,26 @@ function themeInit(){
   applyThemeColor();
 }
 
+function renderProjectProgress(container,project){
+  const labels=['Idée','Validation','Prototype','Premiers clients','Revenus'];
+  const stages=Array.isArray(project.stage_order)&&project.stage_order.length===5?project.stage_order:['idea','validation','prototype','first_customers','revenue'];
+  let current=stages.indexOf(project.stage); if(current<0)current=0;
+  const wrap=document.createElement('div');wrap.className='project-progress';
+  const title=document.createElement('div');title.className='project-progress-title';title.textContent='Progression du projet';wrap.appendChild(title);
+  const row=document.createElement('div');row.className='project-stage-row';
+  stages.forEach((stage,index)=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='project-stage '+(index===current?'on ':'')+(index<current?'done':'');btn.textContent=labels[index];
+    btn.addEventListener('click',()=>{
+      project.stage=stage;
+      renderProjectProgress(container,project);
+      try{localStorage.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    });
+    row.appendChild(btn);
+  });
+  wrap.appendChild(row);
+  container.querySelector('.project-progress')?.remove();
+  container.appendChild(wrap);
+}
 function openProjectModal(){
   const modal=$('projectModal');
   if(!modal)return;
@@ -2818,7 +2838,9 @@ $('projectForm')?.addEventListener('submit',async e=>{
     const next=document.createElement('p');next.innerHTML='<strong>Prochaine action :</strong> ';const nextText=document.createTextNode(p.next_action||'Valider ton idée sur le terrain.');next.appendChild(nextText);result.appendChild(next);
     const list=document.createElement('ol');list.className='project-steps';
     (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
-    result.appendChild(list);result.hidden=false;
+    result.appendChild(list);
+    renderProjectProgress(result,p);
+    result.hidden=false;
     try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
   }catch(err){error.textContent=err.message||T[lang].err;}
   finally{button.disabled=false;button.textContent='Construire mon plan';}
