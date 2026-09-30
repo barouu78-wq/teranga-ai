@@ -8,7 +8,7 @@ def register_youth_project_route(app, deps):
     sanitize_text = deps["sanitize_text"]
     build_project_brief = deps["build_project_brief"]
     advance_project_stage = deps["advance_project_stage"]
-    find_project_partners = deps["find_project_partners"]
+    find_project_partners = deps.get("find_project_partners", lambda category="", city="": [])
     max_message_length = deps.get("max_message_length", 2000)
 
     @app.get("/partners")
