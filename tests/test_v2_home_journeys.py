@@ -40,3 +40,9 @@ def test_home_exposes_project_progression():
     assert "localStorage.setItem('teranga-project-last'" in html
     assert "Idée" in html
     assert "Premiers clients" in html
+
+
+def test_home_links_project_builder_to_partner_directory():
+    html = HOME.read_text(encoding="utf-8")
+    assert 'href="/partners"' in html
+    assert "Trouver un partenaire" in html
