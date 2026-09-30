@@ -11,7 +11,7 @@ def test_build_model_kwargs_keeps_fast_chat_defaults():
         stream=True,
     )
     assert result["model"] == "gpt-test"
-    assert result["max_output_tokens"] == 400
+    assert result["max_output_tokens"] == 350
     assert result["reasoning"] == {"effort": "low"}
     assert "tools" not in result
 
