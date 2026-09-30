@@ -1,4 +1,4 @@
-from services.youth_projects import build_project_brief, detect_project_category, find_project_partners
+from services.youth_projects import build_project_brief, build_project_matches, detect_project_category, find_project_partners
 
 
 def test_detect_project_category_for_local_food_project():
@@ -58,3 +58,17 @@ def test_partner_directory_matches_project_category():
     partners = find_project_partners("digital")
     assert partners
     assert any("Orange" in partner["name"] for partner in partners)
+
+
+def test_project_matches_return_opportunities_and_partners():
+    project = build_project_brief(
+        idea="Créer une application de commerce",
+        city="Dakar",
+        category="digital",
+    )
+    matches = build_project_matches(project)
+    assert matches["category"] == "digital"
+    assert matches["opportunities"]
+    assert matches["partners"]
+    assert matches["counts"]["opportunities"] == len(matches["opportunities"])
+    assert matches["counts"]["partners"] == len(matches["partners"])
