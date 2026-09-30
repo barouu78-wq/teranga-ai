@@ -119,9 +119,9 @@ def contextual_query(history: list[dict[str, Any]] | None, message: str, max_his
     return " | ".join(recent)[-5000:]
 
 
-def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) -> dict[str, Any]:
+def infer_senegal_context(history: list[dict[str, Any]] | None, message: str, context_query: str | None = None) -> dict[str, Any]:
     """Resolve Senegal places, intents and planning constraints from recent turns."""
-    context_query = contextual_query(history, message)
+    context_query = context_query if context_query is not None else contextual_query(history, message)
     text_value = _normalize(context_query)
     cities = (
         "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
@@ -278,7 +278,7 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
         "family": "famille" in context.get("constraints", []),
     }
 
-def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, context_query: str | None = None) -> dict[str, Any]:
     message = str(text or "").strip()
     current_intent = detect_intent(message)
     current_location = detect_location(message)
@@ -301,7 +301,7 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
                     resolved_location = previous_location
                     context_source = "conversation"
                     break
-    context_query = contextual_query(history, message)
+    context_query = context_query if context_query is not None else contextual_query(history, message)
     domain = classify_domain(context_query)
     fresh = needs_fresh_web(domain, context_query) or resolved_intent in _DYNAMIC_INTENTS
     return {
