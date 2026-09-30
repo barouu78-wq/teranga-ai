@@ -16,17 +16,17 @@ def register_youth_project_route(app, deps):
         if not isinstance(payload, dict):
             return jsonify({"error": "Requête invalide."}), 400
 
-        idea = sanitize_text(payload.get("idea", ""), max_length=max_message_length).strip()
+        idea = sanitize_text(payload.get("idea", ""), max_len=max_message_length).strip()
         if not idea:
             return jsonify({"error": "Décris ton idée de projet."}), 400
 
         brief = build_project_brief(
             idea=idea,
-            city=sanitize_text(payload.get("city", ""), max_length=80).strip(),
+            city=sanitize_text(payload.get("city", ""), max_len=80).strip(),
             budget_fcfa=payload.get("budget_fcfa"),
-            skills=sanitize_text(payload.get("skills", ""), max_length=200).strip(),
-            available_time=sanitize_text(payload.get("available_time", ""), max_length=100).strip(),
+            skills=sanitize_text(payload.get("skills", ""), max_len=200).strip(),
+            available_time=sanitize_text(payload.get("available_time", ""), max_len=100).strip(),
             goal_fcfa=payload.get("goal_fcfa"),
-            category=sanitize_text(payload.get("category", ""), max_length=40).strip(),
+            category=sanitize_text(payload.get("category", ""), max_len=40).strip(),
         )
         return jsonify({"project": brief})
