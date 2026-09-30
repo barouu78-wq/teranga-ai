@@ -124,6 +124,22 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
     except (OSError, json.JSONDecodeError):
         return {}
 
+def _knowledge_domain(query: str) -> str:
+    value = str(query or "").casefold()
+    domain_terms = {
+        "travel": ("voyage", "visiter", "séjour", "itinéraire", "plage", "hôtel"),
+        "food": ("restaurant", "manger", "cuisine", "plat", "yassa", "thiéboudienne", "mafé"),
+        "culture": ("culture", "histoire", "patrimoine", "musée", "musique", "tradition"),
+        "transport": ("transport", "ter", "brt", "taxi", "bus", "aéroport"),
+        "administration": ("visa", "passeport", "démarche", "document", "consulat"),
+        "environment": ("parc", "faune", "mangrove", "environnement", "climat", "biodiversité"),
+        "economy": ("prix", "économie", "emploi", "commerce", "entreprise"),
+    }
+    for domain, terms in domain_terms.items():
+        if any(term in value for term in terms):
+            return domain
+    return "general"
+
 def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 5, max_places: int = 8) -> str:
     """Build a compact, query-focused context from structured Senegal knowledge."""
     value = str(query or "").casefold()
@@ -204,6 +220,20 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     scope = data.get("knowledge_scope", {}).get("domains", {})
     if scope and not tokens:
         lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
+    domain = _knowledge_domain(query)
+    modules = data.get("knowledge_scope", {}).get("domains", {})
+    module = modules.get(domain)
+    if isinstance(module, dict):
+        description = module.get("description")
+        anchors = module.get("anchors") or []
+        stable = module.get("stable_knowledge") or []
+        if description:
+            lines.append(f"DOMAINE PERTINENT ({domain}) : {description}")
+        if anchors:
+            lines.append("Repères : " + ", ".join(str(item) for item in anchors[:8]) + ".")
+        if stable:
+            lines.append("Repères stables : " + " ".join(str(item) for item in stable[:3]))
+
     dynamic_topics = data.get("dynamic_topics", [])
     if dynamic_topics:
         lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
