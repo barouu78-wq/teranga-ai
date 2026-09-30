@@ -3,6 +3,30 @@ from flask import Flask
 from routes.youth_projects import register_youth_project_route
 
 
+def test_youth_opportunity_route_lists_matching_sources():
+    app = Flask(__name__)
+
+    def sanitize_text(value, max_len):
+        return str(value or "")[:max_len]
+
+    register_youth_project_route(
+        app,
+        {
+            "require_json_post": lambda fn: fn,
+            "sanitize_text": sanitize_text,
+            "build_project_brief": lambda **kwargs: {},
+            "advance_project_stage": lambda project, stage=None: project,
+            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ"}],
+        },
+    )
+
+    client = app.test_client()
+    response = client.get("/opportunities?category=digital")
+    assert response.status_code == 200
+    assert b"BE YES" in response.data
+    assert b"DER/FJ" in response.data
+
+
 def test_youth_project_plan_route_builds_project():
     app = Flask(__name__)
 
