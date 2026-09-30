@@ -10,6 +10,36 @@ from .language_quality import language_instruction
 from .intelligence import should_use_deep_reasoning
 
 
+_AUDIENCE_INSTRUCTIONS = {
+        "tourist": {
+            "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
+            "en": "Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
+            "wo": "Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
+            "ff": "Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+        },
+        "resident": {
+            "fr": "Profil actif : résident. Priorise la vie quotidienne au Sénégal : démarches, logement, budget, paiements, transport, services locaux, santé pratique et organisation du quotidien. Vérifie les règles, tarifs et horaires actuels quand ils changent.",
+            "en": "Active profile: resident. Prioritize everyday life in Senegal: paperwork, housing, budgeting, payments, transport, local services, practical health and daily organization. Verify changing rules, fees and schedules.",
+            "wo": "Profil bi mooy dundkat. Jox ndimbal ci dund bés bu nekk: formalité, kër, budget, fey, yoon, services, aar ak doxalin. Seet lu bees bu ko soxla.",
+            "ff": "Profil ngol dunndotoowo. Hokkude ballal e dund bés e Senegaal: formalité, suudu, budget, feyde, laawol, sarwiis e doxalin. Ƴeewto ko hesɗi so ina waɗi."
+        },
+        "diaspora": {
+            "fr": "Profil actif : diaspora. Priorise la préparation de séjours et retours au Sénégal, la gestion à distance, les transferts d'argent, les dépenses familiales, le logement, les projets et investissements. Sépare clairement les informations indicatives des règles ou tarifs à vérifier.",
+            "en": "Active profile: diaspora. Prioritize planning stays and returns to Senegal, remote management, money transfers, family expenses, housing, projects and investments. Clearly separate indicative information from rules or fees that must be verified.",
+            "wo": "Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellusi, doxal ci sore, yónnee xaalis, dépense famille, kër, projet ak investissement. Seet lu bees te wone ko bu leer.",
+            "ff": "Profil ngol diaspora. Hokkude ballal e waajta yahdugol walla ruttorde, doxal daga woɗnde, yónnude ceede, dépense ɓeyngu, suudu, projet e investissement. Ƴeewto ko hesɗi tee hollu ko misaal tan."
+        },
+        "merchant": {
+            "fr": "Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
+            "en": "Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
+            "wo": "Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
+            "ff": "Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
+        }
+}
+
+_REGION_NAMES = {name.casefold(): name for name in ("Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor")}
+
+
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
     normalized, error = normalize_chat_input(
         data,
@@ -84,7 +114,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     else:
         planner_instruction = ""
     trip_edit_proposal = None
-    region_names = {name.casefold(): name for name in ("Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor")}
+    region_names = _REGION_NAMES
     edit_match = re.search(
         r"\b(?:remplace|change|modifier|modifie|replace|edit)\s+(?:le\s+)?(?:jour|day)\s*(\d+)\s+(?:par|avec|to)\s+",
         trip_edit_request,
@@ -125,32 +155,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
     )
-    audience_instruction = {
-        "tourist": {
-            "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
-            "en": "Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
-            "wo": "Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
-            "ff": "Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
-        },
-        "resident": {
-            "fr": "Profil actif : résident. Priorise la vie quotidienne au Sénégal : démarches, logement, budget, paiements, transport, services locaux, santé pratique et organisation du quotidien. Vérifie les règles, tarifs et horaires actuels quand ils changent.",
-            "en": "Active profile: resident. Prioritize everyday life in Senegal: paperwork, housing, budgeting, payments, transport, local services, practical health and daily organization. Verify changing rules, fees and schedules.",
-            "wo": "Profil bi mooy dundkat. Jox ndimbal ci dund bés bu nekk: formalité, kër, budget, fey, yoon, services, aar ak doxalin. Seet lu bees bu ko soxla.",
-            "ff": "Profil ngol dunndotoowo. Hokkude ballal e dund bés e Senegaal: formalité, suudu, budget, feyde, laawol, sarwiis e doxalin. Ƴeewto ko hesɗi so ina waɗi."
-        },
-        "diaspora": {
-            "fr": "Profil actif : diaspora. Priorise la préparation de séjours et retours au Sénégal, la gestion à distance, les transferts d'argent, les dépenses familiales, le logement, les projets et investissements. Sépare clairement les informations indicatives des règles ou tarifs à vérifier.",
-            "en": "Active profile: diaspora. Prioritize planning stays and returns to Senegal, remote management, money transfers, family expenses, housing, projects and investments. Clearly separate indicative information from rules or fees that must be verified.",
-            "wo": "Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellusi, doxal ci sore, yónnee xaalis, dépense famille, kër, projet ak investissement. Seet lu bees te wone ko bu leer.",
-            "ff": "Profil ngol diaspora. Hokkude ballal e waajta yahdugol walla ruttorde, doxal daga woɗnde, yónnude ceede, dépense ɓeyngu, suudu, projet e investissement. Ƴeewto ko hesɗi tee hollu ko misaal tan."
-        },
-        "merchant": {
-            "fr": "Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
-            "en": "Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
-            "wo": "Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
-            "ff": "Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
-        }
-    }[audience][language]
+    audience_instruction = _AUDIENCE_INSTRUCTIONS[audience][language]
     photo_only = (
         bool(re.search(r"\bphotos?\b|\bimages?\b", message.lower()))
         or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
