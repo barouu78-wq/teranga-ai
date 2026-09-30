@@ -3,7 +3,7 @@
 import re
 
 from .language_quality import language_instruction
-from .intelligence import contextual_query, should_use_deep_reasoning
+from .intelligence import should_use_deep_reasoning
 
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
@@ -25,8 +25,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     language = normalized["language"]
     audience = normalized["audience"]
     language_instruction_text = language_instruction(language)
-    context_query = contextual_query(history, message)
-    context = infer_senegal_context(history, message, context_query=context_query)
+    context = infer_senegal_context(history, message)
     selected_place = normalized.get("context_place", "")
     trip_context = normalized.get("trip_context", "")
     trip_edit_request = normalized.get("trip_edit_request", "")
@@ -35,7 +34,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         context["has_place"] = True
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
-    intent_context = build_intent_context(message, history, context_query=context_query)
+    intent_context = build_intent_context(message, history)
     trip_edit_line = ""
     if trip_edit_request:
         trip_edit_line = ("Demande explicite de modification d’itinéraire fournie par l’interface : " + trip_edit_request + ". " "Ne l’applique jamais automatiquement ; prépare uniquement une proposition structurée si la demande est suffisamment précise.")
