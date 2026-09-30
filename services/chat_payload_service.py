@@ -104,7 +104,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "POLITIQUE DE SOURCES : privilégie les sources institutionnelles ou spécialisées fiables "
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
-    context_instruction = (
+    knowledge_web_line = (\n        "COMBINAISON CONNAISSANCE + WEB : utilise la connaissance locale du Sénégal pour les faits stables, les repères géographiques et culturels et le contexte. " \n        "Lorsque la recherche web est active, utilise ses résultats pour les informations susceptibles d’avoir changé et ne remplace pas silencieusement un fait local stable par une information web non vérifiée. " \n        "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."\n    )\n    context_instruction = (
         place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         source_line + " " + planner_instruction +
