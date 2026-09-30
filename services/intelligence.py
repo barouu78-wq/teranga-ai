@@ -116,7 +116,7 @@ def detect_language(text: str) -> str:
 def detect_intent(text: str) -> str:
     normalized = _normalize(text)
     for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
-        if any(re.search(r"(?<!\\w)" + re.escape(pattern) + r"(?!\\w)", normalized) for pattern in patterns):
+        if any(re.search(r"(?<!\w)" + re.escape(pattern) + r"(?!\w)", normalized) for pattern in patterns):
             return intent
     return "general_information"
 
