@@ -381,6 +381,24 @@ def test_commons_images_include_same_origin_proxy(monkeypatch):
 
 
 
+
+def test_public_error_redacts_provider_credentials():
+    from services.errors import public_error
+
+    message = public_error(RuntimeError("401 bearer abcdefghijklmnop sk-proj-1234567890?api_key=secret123"))
+    assert "abcdefghijklmnop" not in message
+    assert "sk-proj" not in message
+    assert "secret123" not in message
+    assert "mal authentifié" in message
+
+
+def test_public_error_keeps_model_failure_generic():
+    from services.errors import public_error
+
+    message = public_error(RuntimeError("model gpt-5.6-luna is not available at https://internal.example/trace/123"))
+    assert "internal.example" not in message
+    assert "Le modèle IA configuré" in message
+
 def test_openai_response_falls_back_only_on_model_unavailability():
     from services.openai_response import create_response
     calls = []
