@@ -7,6 +7,7 @@ def register_youth_project_route(app, deps):
     require_json_post = deps["require_json_post"]
     sanitize_text = deps["sanitize_text"]
     build_project_brief = deps["build_project_brief"]
+    advance_project_stage = deps["advance_project_stage"]
     max_message_length = deps.get("max_message_length", 2000)
 
     @app.post("/api/projects/plan")
@@ -30,3 +31,15 @@ def register_youth_project_route(app, deps):
             category=sanitize_text(payload.get("category", ""), max_len=40).strip(),
         )
         return jsonify({"project": brief})
+
+
+    @app.post("/api/projects/advance")
+    @require_json_post
+    def youth_project_advance():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "Requête invalide."}), 400
+        project = payload.get("project")
+        if not isinstance(project, dict):
+            return jsonify({"error": "Projet invalide."}), 400
+        return jsonify({"project": advance_project_stage(project, payload.get("stage"))})
