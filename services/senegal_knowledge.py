@@ -221,9 +221,6 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             for person in matched_people[:4]:
                 lines.append(f"- {person.get('name')} ({person.get('period', '')}) : {person.get('text', '')}")
 
-    scope = data.get("knowledge_scope", {}).get("domains", {})
-    if scope and not tokens:
-        lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
     domain = _knowledge_domain(query)
     modules = data.get("knowledge_modules", {})
     module_key = {
@@ -247,7 +244,4 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         if stable:
             lines.append("Repères stables : " + " ".join(str(item) for item in stable[:3]))
 
-    dynamic_topics = data.get("dynamic_topics", [])
-    if dynamic_topics:
-        lines.append("SUJETS À VÉRIFIER EN TEMPS RÉEL : " + ", ".join(dynamic_topics) + ".")
     return "\n".join(lines)
