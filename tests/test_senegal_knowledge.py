@@ -57,3 +57,18 @@ def test_regional_location_context():
 def test_weather_is_a_fresh_web_domain():
     assert classify_domain("météo à Dakar") == "weather"
     assert "meteofrance.com" in source_domains("weather")
+
+def test_core_senegal_destinations_are_retrievable():
+    from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    cases = {
+        "Dakar": "Dakar",
+        "Île de Gorée": "Île de Gorée",
+        "Saint-Louis": "Île de Saint-Louis",
+        "Saly": "Saly",
+        "Casamance": "Ziguinchor",
+    }
+    for query, expected in cases.items():
+        context = format_senegal_knowledge(data, query=query)
+        assert expected in context
