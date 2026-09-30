@@ -31,9 +31,13 @@ _INTENT_PATTERNS = {
         "montre-moi", "montre moi", "a quoi ressemble", "à quoi ça ressemble",
     ),
     "culture": ("culture", "tradition", "histoire", "history", "musique"),
+    "project": ("projet", "business", "entreprise", "entreprendre", "entrepreneur", "activité", "activite", "commerce", "lancer", "vendre", "clients", "clientèle", "clientele"),
+    "career": ("emploi", "travail", "job", "cv", "recrutement", "carrière", "carriere", "embauche", "métier", "metier"),
+    "education": ("formation", "étudier", "etudier", "école", "ecole", "université", "universite", "apprendre", "cours", "étudiant", "etudiant"),
+    "finance": ("argent", "financement", "budget", "revenus", "salaire", "épargne", "epargne", "investir", "crédit", "credit", "prêt", "pret"),
 }
 
-_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos"}
+_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project"}
 
 _LOCATION_ALIASES = {
     "dakar": ("dakar",),
@@ -89,6 +93,10 @@ _CONTEXT_INTENT_GROUPS = {
     "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
     "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
     "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
+    "project": ("projet", "business", "entreprise", "entreprendre", "entrepreneur", "activité", "activite", "commerce", "clients", "vendre", "lancer"),
+    "career": ("emploi", "travail", "job", "cv", "recrutement", "carriere", "carrière", "embauche", "metier", "métier"),
+    "education": ("formation", "étudier", "etudier", "école", "ecole", "université", "universite", "apprendre", "cours", "étudiant", "etudiant"),
+    "finance": ("argent", "financement", "budget", "revenus", "salaire", "épargne", "epargne", "investir", "crédit", "credit", "prêt", "pret"),
 }
 
 
@@ -242,7 +250,7 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
         "avantages", "inconvenients", "pourquoi", "comment faire", "etape",
         "plan", "organise", "optimise", "priorite", "versus", "vs",
     )
-    complex_intents = {"travel", "transport", "price", "money", "admin", "food"}
+    complex_intents = {"travel", "transport", "price", "money", "admin", "food", "project", "career", "education", "finance"}
     return (
         len(constraints) >= 2
         or (len(intents.intersection(complex_intents)) >= 2)
@@ -317,6 +325,11 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
         "language": detect_language(message),
         "needs_web_search": fresh,
         "needs_images": resolved_intent == "photos",
+        "needs_deep_reasoning": should_use_deep_reasoning({
+            "query": context_query,
+            "intents": [resolved_intent],
+            "constraints": infer_senegal_context(history, message).get("constraints", []),
+        }),
         "preferred_sources": source_domains(domain),
         "has_context": bool(recent_users),
         "context_source": context_source,
