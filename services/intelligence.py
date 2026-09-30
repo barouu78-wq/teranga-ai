@@ -301,7 +301,12 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
     resolved_location = current_location
     context_source = "current_message"
     if recent_users:
-        if resolved_intent == "general_information":
+        follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "combien", "quel prix", "qu'en est-il")
+        is_short_follow_up = len(message.split()) <= 8 and (
+            _normalize(message).startswith(tuple(_normalize(marker) for marker in follow_up_markers))
+            or "?" in message
+        )
+        if resolved_intent == "general_information" or is_short_follow_up:
             for previous in recent_users:
                 previous_intent = detect_intent(previous)
                 if previous_intent != "general_information":
