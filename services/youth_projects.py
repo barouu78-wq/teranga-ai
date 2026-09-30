@@ -67,6 +67,28 @@ def advance_project_stage(project: dict[str, Any], stage: str | None = None) -> 
     return updated
 
 
+
+PARTNER_DIRECTORY = (
+    {"name": "BNDE", "type": "Financement", "categories": ("business", "commerce", "agriculture", "digital"), "city": "Dakar", "description": "Banque dédiée notamment au financement des PME-PMI.", "url": "https://www.bnde.sn/", "contact": "contact@bnde.sn", "phone": "+221 33 829 20 20"},
+    {"name": "APIX Sénégal", "type": "Investissement & accompagnement", "categories": ("business", "commerce", "tourism", "agriculture", "digital"), "city": "Dakar", "description": "Orientation des investisseurs et accompagnement des projets d’investissement.", "url": "https://investinsenegal.sn/", "contact": "infos@apix.sn", "phone": "+221 33 849 05 55"},
+    {"name": "ADEPME", "type": "Accompagnement PME", "categories": ("business", "commerce", "digital", "food", "craft"), "city": "Dakar", "description": "Conseils et orientation pour les porteurs d’idées et dirigeants de PME.", "url": "https://www.senegalpme.sn/", "contact": "", "phone": "+221 33 869 70 70"},
+    {"name": "ASEPEX", "type": "Export & marchés", "categories": ("commerce", "agriculture", "food", "craft", "tourism"), "city": "Dakar", "description": "Appui à la promotion et au développement des exportations sénégalaises.", "url": "https://www.senegalexport.com/", "contact": "asepex@asepex.sn", "phone": "+221 33 869 20 21"},
+    {"name": "CCIAD", "type": "Réseau entreprises", "categories": ("business", "commerce", "food", "craft"), "city": "Dakar", "description": "Chambre de commerce, d’industrie et d’agriculture de Dakar.", "url": "https://www.cciad.sn/", "contact": "", "phone": "+221 33 823 71 89"},
+    {"name": "Orange Sénégal / Sonatel", "type": "Digital & partenariat", "categories": ("digital", "ai", "commerce", "business"), "city": "Dakar", "description": "Acteur télécom et numérique disposant de services aux entreprises et de dispositifs de partenariat.", "url": "https://www.orange.sn/", "contact": "serviceclient@orange-sonatel.com", "phone": "1441"},
+    {"name": "Compagnie Sucrière Sénégalaise", "type": "Agroalimentaire", "categories": ("agriculture", "food", "commerce"), "city": "Richard-Toll", "description": "Entreprise agro-industrielle avec contact public pour les demandes de partenariat.", "url": "https://www.css.sn/contact/", "contact": "", "phone": "+221 33 938 23 23"},
+)
+
+def find_project_partners(category: str = "", city: str = "") -> list[dict[str, Any]]:
+    wanted_category = _normalize(category)
+    wanted_city = _normalize(city)
+    partners = []
+    for partner in PARTNER_DIRECTORY:
+        category_match = not wanted_category or wanted_category in partner["categories"]
+        city_match = not wanted_city or wanted_city in _normalize(partner["city"]) or partner["city"] == "Dakar"
+        if category_match and city_match:
+            partners.append(dict(partner))
+    return partners
+
 def _normalize(value: Any) -> str:
     text = unicodedata.normalize("NFD", str(value or "").lower())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
