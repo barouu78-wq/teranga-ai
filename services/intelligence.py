@@ -216,6 +216,25 @@ def should_use_planner(context: dict[str, Any]) -> bool:
     )
 
 
+def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
+    """Detect requests where extra reasoning is useful beyond trip planning."""
+    query = str(context.get("query") or "")
+    intents = set(context.get("intents") or [])
+    constraints = context.get("constraints") or []
+    multi_step_terms = (
+        "compare", "compare-moi", "comparatif", "difference", "différence",
+        "choisir", "quel est le meilleur", "avantages", "inconvenients", "inconvénients",
+        "pourquoi", "comment faire", "etape", "étape", "plan", "organise", "optimise",
+        "priorite", "priorité", "entre", "versus", "vs",
+    )
+    complex_intents = {"travel", "transport", "price", "money", "admin", "food"}
+    return (
+        len(constraints) >= 2
+        or (len(intents.intersection(complex_intents)) >= 2)
+        or any(term in query for term in multi_step_terms)
+    )
+
+
 def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
     """Build a deterministic brief for plans and their budgets."""
     budget_raw = context.get("budget", "")
