@@ -3437,7 +3437,7 @@ async function postVoiceAudio(blob,turnId){
     }
     const data=await res.json().catch(()=>({}));
     if(!voiceConversation||turnId!==voiceTurnId)return;
-    if(!res.ok)throw new Error(data.error||'stt');
+    if(!res.ok){const error=new Error(data.error||'stt');error.status=res.status;error.retryAfter=res.headers.get('Retry-After')||'';throw error;}
     const text=String(data.text||'').replace(/\s+/g,' ').trim();
     if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
       endVoiceMode();
@@ -3453,11 +3453,12 @@ async function postVoiceAudio(blob,turnId){
     input.value=text;
     input.dispatchEvent(new Event('input',{bubbles:true}));
     await ask(text,true);
-  }catch(_){
+  }catch(err){
     voiceWaitingForAnswer=false;
     if(voiceConversation){
-      voiceStatus(lang==='fr'?'Je n’ai pas bien compris. Réessaie.':lang==='en'?'I didn’t quite catch that. Try again.':T[lang].hintTouch);
-      scheduleVoiceCapture(500);
+      const waitSeconds=err.status===429?Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||5)):0;
+      voiceStatus(waitSeconds?(lang==='fr'?'Trop de demandes vocales. Réessaie dans '+waitSeconds+' s.':lang==='en'?'Too many voice requests. Try again in '+waitSeconds+'s.':T[lang].hintTouch):lang==='fr'?'Je n’ai pas bien compris. Réessaie.':lang==='en'?'I didn’t quite catch that. Try again.':T[lang].hintTouch);
+      scheduleVoiceCapture(waitSeconds?waitSeconds*1000:500);
     }
   }finally{
     voiceSTTBusy=false;
