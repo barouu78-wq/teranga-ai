@@ -42,3 +42,13 @@ def test_project_stage_does_not_skip_steps():
     project = build_project_brief(idea="Vendre du jus naturel")
     updated = advance_project_stage(project, "revenue")
     assert updated["stage"] == "validation"
+
+
+def test_project_brief_includes_a_follow_up_tracking_model():
+    brief = build_project_brief(
+        idea="Vendre du jus naturel",
+        goal_fcfa=100000,
+    )
+    assert brief["tracking"]["period"] == "30 jours"
+    assert "Ventes réalisées" in brief["tracking"]["indicators"]
+    assert brief["tracking"]["weekly_checklist"]
