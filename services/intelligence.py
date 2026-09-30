@@ -52,7 +52,9 @@ def _normalize(text: str) -> str:
 
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
-    if any(word in normalized.split() for word in ("hello", "please", "where", "what", "travel")):
+    english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
+    tokens = set(normalized.split())
+    if any(word in tokens for word in english_markers) or normalized.startswith(("i ", "we ", "can ")):
         return "en"
     if any(word in normalized.split() for word in ("nanga", "jamm", "fan", "lan")):
         return "wo"
