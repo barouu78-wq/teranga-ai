@@ -2081,6 +2081,17 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 .project-error{margin-top:10px;color:#d95b52;font-size:12px}
 @media(max-width:680px){.project-modal{padding:10px}.project-panel{padding:17px;border-radius:20px}.project-grid{grid-template-columns:1fr}.project-field.full{grid-column:auto}}
 
+
+.project-modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(7,10,8,.62);backdrop-filter:blur(8px)}
+.project-modal.open{display:flex}
+.project-panel{width:min(720px,100%);max-height:min(88vh,760px);overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.35);padding:20px}
+.project-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
+.project-head h2{margin:0;color:var(--gold);font-size:22px}.project-head p{margin:5px 0 0;color:var(--mute);font-size:13px}
+.project-close{border:0;background:var(--soft);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:22px;cursor:pointer}
+.project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.project-field{display:grid;gap:5px}.project-field.full{grid-column:1/-1}.project-field label{font-size:11px;color:var(--mute);font-weight:750}.project-field input{width:100%;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);padding:0 12px;font:inherit;outline:0}.project-field input:focus{border-color:var(--gold)}
+.project-actions{display:flex;justify-content:flex-end;margin-top:14px}.project-actions button{border:0;border-radius:14px;padding:11px 16px;background:linear-gradient(145deg,var(--sen-green),var(--sen-green-dark));color:#fff;font-weight:800;cursor:pointer}.project-actions button:disabled{opacity:.55}
+.project-error{color:#d95b52;font-size:12px;margin-top:8px}.project-result{margin-top:16px;padding:16px;border-radius:18px;background:var(--soft);border:1px solid var(--line)}.project-result h3{margin:0 0 6px;color:var(--gold)}.project-result p{margin:4px 0;color:var(--mute)}.project-steps{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.project-steps li{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.project-steps b{display:block;font-size:12px}.project-steps span{display:block;margin-top:2px;color:var(--mute);font-size:11px}
+@media(max-width:680px){.project-modal{padding:10px;align-items:flex-end}.project-panel{max-height:92vh;border-radius:22px 22px 0 0;padding:16px}.project-grid{grid-template-columns:1fr}.project-field.full{grid-column:auto}.project-actions button{width:100%}}
 </style>
 
 </head>
@@ -2768,6 +2779,50 @@ function themeInit(){
   document.body.dataset.theme=saved||'dark';
   applyThemeColor();
 }
+
+function openProjectModal(){
+  const modal=$('projectModal');
+  if(!modal)return;
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  $('projectIdea')?.focus();
+}
+function closeProjectModal(){
+  const modal=$('projectModal');
+  if(!modal)return;
+  modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+}
+$('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',openProjectModal);
+$('projectClose')?.addEventListener('click',closeProjectModal);
+$('projectModal')?.addEventListener('click',e=>{if(e.target.id==='projectModal')closeProjectModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProjectModal();});
+$('projectForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const error=$('projectError'),result=$('projectResult'),button=$('projectSubmit');
+  error.textContent='';result.hidden=true;button.disabled=true;button.textContent=lang==='en'?'Building…':'Construction…';
+  const amount=value=>{const raw=String($(value)?.value||'').replace(/[^0-9]/g,'');return raw?Number(raw):null;};
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    const payload={
+      idea:$('projectIdea').value.trim(),city:$('projectCity').value.trim(),
+      budget_fcfa:amount('projectBudget'),skills:$('projectSkills').value.trim(),
+      available_time:$('projectTime').value.trim(),goal_fcfa:amount('projectGoal')
+    };
+    let res=await postJSON('/api/projects/plan',JSON.stringify(payload));
+    if(res.status===403){await refreshCsrf();res=await postJSON('/api/projects/plan',JSON.stringify(payload));}
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||T[lang].err);
+    const p=data.project||{};
+    result.innerHTML='';
+    const h=document.createElement('h3');h.textContent='🚀 '+(p.name||'Ton projet');result.appendChild(h);
+    const meta=document.createElement('p');meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');result.appendChild(meta);
+    const next=document.createElement('p');next.innerHTML='<strong>Prochaine action :</strong> ';const nextText=document.createTextNode(p.next_action||'Valider ton idée sur le terrain.');next.appendChild(nextText);result.appendChild(next);
+    const list=document.createElement('ol');list.className='project-steps';
+    (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
+    result.appendChild(list);result.hidden=false;
+    try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
+  }catch(err){error.textContent=err.message||T[lang].err;}
+  finally{button.disabled=false;button.textContent='Construire mon plan';}
+});
 $('journeyStrip').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-journey]'); if(!btn)return;
   const journey=btn.dataset.journey; setJourney(journey);
