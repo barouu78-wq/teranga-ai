@@ -139,6 +139,44 @@ def test_parse_chat_payload_preserves_bounded_trip_edit_request():
     assert payload["trip_edit_request"] == "Remplace le jour 2 par Saint-Louis"
 
 
+def test_parse_chat_payload_accepts_region_with_followup_text():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Remplace le jour 2 par Saint-Louis, s'il te plaît",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_context": '{"summary":"Séjour Sénégal","days":[{"day":1,"region":"Dakar"},{"day":2,"region":"Dakar"}]}',
+            "trip_edit_request": "Remplace le jour 2 par Saint-Louis, s'il te plaît",
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["trip_edit_proposal"]["region"] == "Saint-Louis"
+
+
+def test_parse_chat_payload_rejects_out_of_range_trip_edit_day():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Remplace le jour 99 par Saint-Louis",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+            "trip_context": '{"summary":"Séjour Sénégal","days":[{"day":1,"region":"Dakar"}]}',
+            "trip_edit_request": "Remplace le jour 99 par Saint-Louis",
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["trip_edit_proposal"] is None
+
+
 def test_parse_chat_payload_caps_trip_edit_request():
     with app.test_request_context(
         "/chat",
