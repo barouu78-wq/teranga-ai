@@ -61,7 +61,6 @@ WEB_HINTS = (
 
 def should_use_web(message, context=""):
     lowered = normalize(message)
-    combined = normalize(f"{context} {message}")
     current_markers = (
         "verifie", "confirme", "a jour", "exactement", "en ce moment",
         "pour aujourd'hui", "pour demain", "ce soir", "demain", "hier",
@@ -102,6 +101,7 @@ def should_use_web(message, context=""):
         return True
     # Un suivi comme « et demain ? » peut dépendre d'un sujet dynamique
     # présent dans le tour précédent.
+    combined = normalize(f"{context} {message}")
     contextual_dynamic = (
         "meteo", "météo", "prix", "tarif", "cout", "coût", "horaire",
         "ouvert", "disponible", "reservation", "réservation", "billet",
