@@ -738,6 +738,16 @@ def test_home_keeps_trip_edit_state_without_legacy_detector():
     assert "detectTripEditRequest(text)" not in html
 
 
+
+def test_home_trip_edit_proposal_is_persisted_and_reviewable():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "if(itineraryEdit&&itineraryEdit.requires_confirmation)" in html
+    assert "sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))" in html
+    assert 'window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)' in html
+
 def test_chat_payload_personalizes_all_audience_profiles():
     from services.chat_payload_service import build_chat_payload
     from services.chat_payload import normalize_chat_input
