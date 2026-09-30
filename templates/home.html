@@ -2320,6 +2320,15 @@ async function loadFx(){
           : lang==='ff' ? ref+' · ƴeewtaa '+checked
           : ref+' · vérifié '+checked)
         : ref;
+    }else if(res.status===429){
+      const waitSeconds=Math.min(300,Math.max(1,Number.parseInt(res.headers.get('Retry-After')||'0',10)||15));
+      $('fxUpdated').textContent=lang==='en'
+        ? 'Too many requests · retry in '+waitSeconds+'s'
+        : lang==='wo'
+          ? 'Demaal bu bare · dellusi ci '+waitSeconds+'s'
+          : lang==='ff'
+            ? 'Ɓeydugol ɗaɓɓitanɗe · fuɗɗito e '+waitSeconds+'s'
+            : 'Trop de demandes · réessaie dans '+waitSeconds+' s';
     }
   }catch(_){}
   updateFx();
