@@ -18,7 +18,7 @@ def test_youth_opportunity_route_lists_matching_sources():
             "sanitize_text": sanitize_text,
             "build_project_brief": lambda **kwargs: {},
             "advance_project_stage": lambda project, stage=None: project,
-            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ"}],
+            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ", "type": "funding"}],
             "build_project_matches": lambda project: {"category": project.get("category"), "city": project.get("city"), "partners": [], "opportunities": [], "counts": {"partners": 0, "opportunities": 0}},
         },
     )
