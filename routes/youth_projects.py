@@ -1,6 +1,6 @@
 """Teranga Projet API route registration."""
 
-from flask import jsonify, request
+from flask import jsonify, render_template, request
 
 
 def register_youth_project_route(app, deps):
@@ -8,7 +8,19 @@ def register_youth_project_route(app, deps):
     sanitize_text = deps["sanitize_text"]
     build_project_brief = deps["build_project_brief"]
     advance_project_stage = deps["advance_project_stage"]
+    find_project_partners = deps["find_project_partners"]
     max_message_length = deps.get("max_message_length", 2000)
+
+    @app.get("/partners")
+    def youth_project_partners():
+        category = sanitize_text(request.args.get("category", ""), max_len=40).strip()
+        city = sanitize_text(request.args.get("city", ""), max_len=80).strip()
+        return render_template(
+            "partners.html",
+            partners=find_project_partners(category, city),
+            selected_category=category,
+            selected_city=city,
+        )
 
     @app.post("/api/projects/plan")
     @require_json_post
