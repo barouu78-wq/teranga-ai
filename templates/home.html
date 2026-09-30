@@ -97,7 +97,12 @@ async function playVoiceTtsQueue(){
     let blob=ttsCache.get(cacheKey);
     if(!blob){
       const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
-      if(!res.ok)throw new Error('tts');
+      if(!res.ok){
+        const error=new Error('tts');
+        error.status=res.status;
+        error.retryAfter=res.headers.get('Retry-After')||'';
+        throw error;
+      }
       blob=await res.blob();
       if(item.turn!==voiceTtsTurn||!autoVoice)return;
       if(!blob.size)throw new Error('tts-empty');
