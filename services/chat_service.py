@@ -41,11 +41,12 @@ def build_chat_service(
     def create_response(payload, stream):
         active_model = select_chat_model(payload, model, complex_model)
         fallback_model = "gpt-5.6-luna" if active_model == complex_model else "gpt-5.6-sol" if active_model == "gpt-5.6-luna" else "gpt-5.6-luna"
+        logger.info("chat_model_route model=%s planner=%s", active_model, bool(payload.get("planner")))
         return create_openai_response(
             client,
             payload,
             build_kwargs=model_kwargs,
-            model=model,
+            model=active_model,
             logger=logger,
             stream=stream,
             fallback_models=(fallback_model,),
