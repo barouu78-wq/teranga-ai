@@ -2780,6 +2780,19 @@ function themeInit(){
   applyThemeColor();
 }
 
+function renderProjectTracking(container,project){
+  const tracking=project.tracking||{};
+  const box=document.createElement('div');box.className='project-progress';
+  const title=document.createElement('div');title.className='project-progress-title';title.textContent='Modèle de suivi';box.appendChild(title);
+  const objective=document.createElement('p');objective.textContent=tracking.objective||'';box.appendChild(objective);
+  const indicators=document.createElement('ul');indicators.className='project-steps';
+  (tracking.indicators||[]).forEach(item=>{const li=document.createElement('li');li.textContent=item;indicators.appendChild(li);});
+  box.appendChild(indicators);
+  const review=document.createElement('p');review.textContent=tracking.next_review||'';box.appendChild(review);
+  container.querySelector('.project-tracking')?.remove();
+  box.classList.add('project-tracking');
+  container.appendChild(box);
+}
 function renderProjectProgress(container,project){
   const labels=['Idée','Validation','Prototype','Premiers clients','Revenus'];
   const stages=Array.isArray(project.stage_order)&&project.stage_order.length===5?project.stage_order:['idea','validation','prototype','first_customers','revenue'];
@@ -2840,6 +2853,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
     result.appendChild(list);
     renderProjectProgress(result,p);
+    renderProjectTracking(result,p);
     result.hidden=false;
     try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
   }catch(err){error.textContent=err.message||T[lang].err;}
