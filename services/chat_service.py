@@ -41,7 +41,8 @@ def build_chat_service(
     def create_response(payload, stream):
         active_model = select_chat_model(payload, model, complex_model)
         fallback_model = "gpt-5.6-luna" if active_model == complex_model else "gpt-5.6-sol" if active_model == "gpt-5.6-luna" else "gpt-5.6-luna"
-        logger.info("chat_model_route model=%s planner=%s", active_model, bool(payload.get("planner")))
+        if hasattr(logger, "info"):
+            logger.info("chat_model_route model=%s planner=%s deep_reasoning=%s", active_model, bool(payload.get("planner")), bool(payload.get("deep_reasoning")))
         return create_openai_response(
             client,
             payload,
