@@ -2054,6 +2054,33 @@ body.has-chat .journey-strip{display:none}
 body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:rgba(26,18,12,.12);box-shadow:0 5px 16px rgba(26,18,12,.05)}
 @media(max-width:680px){.journey-strip{grid-template-columns:1fr}.journey-strip button{min-height:60px}}
 @media(prefers-reduced-motion:reduce){.journey-strip button{transition:none}}
+
+/* Teranga Projet v1 */
+.project-modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:18px;background:rgba(7,9,8,.62);backdrop-filter:blur(8px)}
+.project-modal.open{display:grid}
+.project-panel{width:min(680px,100%);max-height:min(90vh,760px);overflow:auto;border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 28px 80px rgba(0,0,0,.28);padding:22px}
+.project-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
+.project-head h2{margin:0;color:var(--gold);font-size:24px}
+.project-head p{margin:5px 0 0;color:var(--mute);font-size:12px}
+.project-close{border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:12px;width:36px;height:36px;cursor:pointer}
+.project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.project-field{display:flex;flex-direction:column;gap:5px}
+.project-field.full{grid-column:1/-1}
+.project-field label{font-size:11px;color:var(--mute);font-weight:700}
+.project-field input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:var(--soft);color:var(--ink);padding:11px 12px;font:inherit;outline:0}
+.project-field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,164,65,.10)}
+.project-actions{display:flex;justify-content:flex-end;margin-top:14px}
+#projectSubmit{border:0;border-radius:999px;padding:11px 18px;background:linear-gradient(160deg,var(--sen-green),var(--sen-green-dark));color:#fff;font-weight:800;cursor:pointer}
+#projectSubmit:disabled{opacity:.55;cursor:wait}
+.project-result{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.project-result h3{margin:0 0 6px;color:var(--gold);font-size:17px}
+.project-result p{margin:0 0 10px;color:var(--mute);font-size:12px}
+.project-steps{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.project-steps li{padding:10px 12px;border:1px solid var(--line);border-radius:13px;background:var(--soft);font-size:12px}
+.project-steps b{display:block;margin-bottom:3px}
+.project-error{margin-top:10px;color:#d95b52;font-size:12px}
+@media(max-width:680px){.project-modal{padding:10px}.project-panel{padding:17px;border-radius:20px}.project-grid{grid-template-columns:1fr}.project-field.full{grid-column:auto}}
+
 </style>
 
 </head>
@@ -2105,7 +2132,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
   </div>
   <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
   <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
-</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours rapides"><button type="button" data-journey="plan"><span>🧭</span><b id="journeyPlan">Planifier un voyage</b><small id="journeyPlanHint">Créer un itinéraire</small></button><button type="button" data-journey="discover"><span>◎</span><b id="journeyDiscover">Explorer le Sénégal</b><small id="journeyDiscoverHint">Lieux et régions</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Parler à Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
+</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours rapides"><button type="button" data-journey="plan"><span>🧭</span><b id="journeyPlan">Planifier un voyage</b><small id="journeyPlanHint">Créer un itinéraire</small></button><button type="button" data-journey="discover"><span>◎</span><b id="journeyDiscover">Explorer le Sénégal</b><small id="journeyDiscoverHint">Lieux et régions</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Parler à Teranga</b><small id="journeyChatHint">Poser une question</small></button><button type="button" data-journey="project"><span>🚀</span><b>Développer mon projet</b><small>Passer de l’idée à l’action</small></button></div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -2153,6 +2180,28 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
   <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
   <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
 </nav>
+</div>
+
+<div class="project-modal" id="projectModal" aria-hidden="true">
+  <section class="project-panel" role="dialog" aria-modal="true" aria-labelledby="projectTitle">
+    <div class="project-head">
+      <div><h2 id="projectTitle">🚀 Teranga Projet</h2><p>Transforme une idée en premier plan d’action, adapté à ton contexte.</p></div>
+      <button class="project-close" id="projectClose" type="button" aria-label="Fermer">×</button>
+    </div>
+    <form id="projectForm">
+      <div class="project-grid">
+        <div class="project-field full"><label for="projectIdea">Ton idée *</label><input id="projectIdea" maxlength="2000" required placeholder="Ex. vendre du jus naturel à Thiès"></div>
+        <div class="project-field"><label for="projectCity">Ville</label><input id="projectCity" maxlength="80" placeholder="Thiès"></div>
+        <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="50 000"></div>
+        <div class="project-field"><label for="projectSkills">Tes compétences</label><input id="projectSkills" maxlength="200" placeholder="Cuisine, vente…"></div>
+        <div class="project-field"><label for="projectTime">Temps disponible</label><input id="projectTime" maxlength="100" placeholder="Week-end"></div>
+        <div class="project-field"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="100 000"></div>
+      </div>
+      <div class="project-actions"><button id="projectSubmit" type="submit">Construire mon plan</button></div>
+      <div class="project-error" id="projectError" role="alert"></div>
+    </form>
+    <div class="project-result" id="projectResult" hidden></div>
+  </section>
 </div>
 <script nonce="__CSP_NONCE__">
 const $ = id => document.getElementById(id);
