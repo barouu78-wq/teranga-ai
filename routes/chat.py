@@ -2,6 +2,7 @@
 
 import json
 import re
+import time
 
 from flask import Response, jsonify, request, stream_with_context
 
@@ -104,6 +105,8 @@ def register_chat_route(app, deps):
                 return jsonify({"error": public_error(exc)}), 500
 
         def generate():
+            started_at = time.perf_counter()
+            first_output_logged = False
             yielded = False
             sources = []
             try:
@@ -121,9 +124,15 @@ def register_chat_route(app, deps):
                             sources = extra
                     delta = event_delta(event)
                     if delta:
+                        if not first_output_logged:
+                            first_output_logged = True
+                            logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
                         yielded = True
                         yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
                     elif etype == "response.completed":
+                        if not first_output_logged:
+                            first_output_logged = True
+                            logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
                         text = ""
                         resp = getattr(event, "response", None)
                         if resp is not None:
