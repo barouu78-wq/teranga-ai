@@ -7,7 +7,7 @@ def register_youth_project_route(app, deps):
     require_json_post = deps["require_json_post"]
     sanitize_text = deps["sanitize_text"]
     build_project_brief = deps["build_project_brief"]
-    advance_project_stage = deps["advance_project_stage"]
+    advance_project_stage = deps.get("advance_project_stage", lambda project, stage=None: project)
     find_project_partners = deps.get("find_project_partners", lambda category="", city="": [])
     find_youth_opportunities = deps.get("find_youth_opportunities", lambda category="", city="": [])
     build_project_matches = deps.get("build_project_matches")
