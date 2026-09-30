@@ -1,10 +1,12 @@
+from pathlib import Path
+
 from flask import Flask
 
 from routes.youth_projects import register_youth_project_route
 
 
 def test_youth_opportunity_route_lists_matching_sources():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder=str(Path(__file__).resolve().parents[1] / "templates"))
 
     def sanitize_text(value, max_len):
         return str(value or "")[:max_len]
@@ -16,7 +18,7 @@ def test_youth_opportunity_route_lists_matching_sources():
             "sanitize_text": sanitize_text,
             "build_project_brief": lambda **kwargs: {},
             "advance_project_stage": lambda project, stage=None: project,
-            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ"}],
+            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ", "type": "funding"}],
             "build_project_matches": lambda project: {"category": project.get("category"), "city": project.get("city"), "partners": [], "opportunities": [], "counts": {"partners": 0, "opportunities": 0}},
         },
     )
@@ -110,6 +112,7 @@ def test_youth_project_plan_route_rejects_empty_idea():
             "require_json_post": require_json_post,
             "sanitize_text": lambda value, max_len: str(value or "")[:max_len],
             "build_project_brief": lambda **kwargs: {},
+            "advance_project_stage": lambda project, stage=None: project,
         },
     )
 

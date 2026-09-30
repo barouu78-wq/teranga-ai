@@ -2056,7 +2056,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 @media(prefers-reduced-motion:reduce){.journey-strip button{transition:none}}
 
 /* Teranga Projet v1 */
-.project-modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:18px;background:rgba(7,9,8,.62);backdrop-filter:blur(8px)}
+.project-quick{display:grid;gap:12px}.project-helper{display:block;color:var(--mute);font-size:11px;line-height:1.45}.project-field textarea{width:100%;box-sizing:border-box;min-height:112px;resize:vertical;border:1px solid var(--line);border-radius:16px;background:var(--soft);color:var(--ink);padding:13px;font:inherit;line-height:1.45;outline:0}.project-field textarea:focus{border-color:var(--gold)}.project-field label span{font-weight:500;color:var(--mute)}.project-more{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}.project-more summary{cursor:pointer;color:var(--mute);font-size:12px;font-weight:800;list-style:none}.project-more summary::-webkit-details-marker{display:none}.project-more summary:before{content:'+';display:inline-grid;place-items:center;width:20px;height:20px;margin-right:6px;border-radius:50%;background:var(--soft);color:var(--gold)}.project-more[open] summary:before{content:'−'}.project-grid-more{margin-top:12px}@media(max-width:680px){.project-panel{max-height:92vh}.project-field textarea{min-height:96px}.project-actions{justify-content:stretch}.project-actions button{width:100%;padding:13px 16px}}.project-modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:18px;background:rgba(7,9,8,.62);backdrop-filter:blur(8px)}
 .project-modal.open{display:grid}
 .project-panel{width:min(680px,100%);max-height:min(90vh,760px);overflow:auto;border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 28px 80px rgba(0,0,0,.28);padding:22px}
 .project-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
@@ -2196,20 +2196,32 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 <div class="project-modal" id="projectModal" aria-hidden="true">
   <section class="project-panel" role="dialog" aria-modal="true" aria-labelledby="projectTitle">
     <div class="project-head">
-      <div><h2 id="projectTitle">🚀 Mon projet</h2><p>Pour les jeunes : transforme une idée en actions, premiers clients et revenus.</p></div>
+      <div><h2 id="projectTitle">🚀 Mon projet</h2><p>Une idée suffit. Teranga construit le premier plan avec toi.</p></div>
       <button class="project-close" id="projectClose" type="button" aria-label="Fermer">×</button>
     </div>
     <form id="projectForm">
-      <div class="project-grid">
-        <div class="project-field full"><label for="projectIdea">Ton idée *</label><input id="projectIdea" maxlength="2000" required placeholder="Ex. vendre du jus naturel à Thiès"></div>
-        <div class="project-field"><label for="projectCity">Ville</label><input id="projectCity" maxlength="80" placeholder="Thiès"></div>
-        <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="50 000"></div>
-        <div class="project-field"><label for="projectCategory">Domaine</label><select id="projectCategory"><option value="">Choisir un domaine</option><option value="business">Business</option><option value="agriculture">Agriculture</option><option value="digital">Digital</option><option value="creative">Créatif</option><option value="food">Alimentation</option><option value="craft">Artisanat</option><option value="commerce">Commerce</option><option value="tourism">Tourisme</option><option value="environment">Environnement</option><option value="ai">IA</option></select></div>
-        <div class="project-field"><label for="projectSkills">Tes compétences</label><input id="projectSkills" maxlength="200" placeholder="Cuisine, vente…"></div>
-        <div class="project-field"><label for="projectTime">Temps disponible</label><input id="projectTime" maxlength="100" placeholder="Week-end"></div>
-        <div class="project-field"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="100 000"></div>
+      <div class="project-quick">
+        <div class="project-field full">
+          <label for="projectIdea">Ton idée</label>
+          <textarea id="projectIdea" maxlength="2000" required rows="4" placeholder="Ex. Je veux vendre du jus naturel à Thiès"></textarea>
+          <small class="project-helper">Décris-la comme tu la dirais à un ami. Teranga s’occupe du reste.</small>
+        </div>
+        <div class="project-field full">
+          <label for="projectCity">Où veux-tu commencer ? <span>(facultatif)</span></label>
+          <input id="projectCity" maxlength="80" placeholder="Ex. Thiès, Dakar, Saint-Louis…">
+        </div>
       </div>
-      <div class="project-actions"><button id="projectSubmit" type="submit">Construire mon plan</button></div>
+      <details class="project-more">
+        <summary>Ajouter des détails (facultatif)</summary>
+        <div class="project-grid project-grid-more">
+          <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="Ex. 50 000"></div>
+          <div class="project-field"><label for="projectCategory">Domaine</label><select id="projectCategory"><option value="">Laisser Teranga choisir</option><option value="business">Business</option><option value="agriculture">Agriculture</option><option value="digital">Digital</option><option value="creative">Créatif</option><option value="food">Alimentation</option><option value="craft">Artisanat</option><option value="commerce">Commerce</option><option value="tourism">Tourisme</option><option value="environment">Environnement</option><option value="ai">IA</option></select></div>
+          <div class="project-field"><label for="projectSkills">Tes compétences</label><input id="projectSkills" maxlength="200" placeholder="Cuisine, vente…"></div>
+          <div class="project-field"><label for="projectTime">Temps disponible</label><input id="projectTime" maxlength="100" placeholder="Week-end"></div>
+          <div class="project-field full"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="Ex. 100 000"></div>
+        </div>
+      </details>
+      <div class="project-actions"><button id="projectSubmit" type="submit">🚀 Générer mon projet</button></div>
       <div class="project-error" id="projectError" role="alert"></div>
     </form>
     <div class="project-result" id="projectResult" hidden></div>
