@@ -184,3 +184,30 @@ def test_build_planner_data_converts_weeks_to_days():
     planner = build_planner_data({"duration": "4 semaines"})
 
     assert planner["duration_days"] == 28
+
+
+def test_deep_reasoning_detects_comparison():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Compare Dakar et Saint-Louis pour un séjour",
+        "intents": ["travel"],
+        "constraints": [],
+    }) is True
+
+
+def test_deep_reasoning_detects_multiple_constraints():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Quel restaurant choisir ?",
+        "intents": ["food"],
+        "constraints": ["budget=20000", "famille"],
+    }) is True
+
+
+def test_deep_reasoning_avoids_simple_question():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Quelle est la capitale du Sénégal ?",
+        "intents": ["culture"],
+        "constraints": [],
+    }) is False
