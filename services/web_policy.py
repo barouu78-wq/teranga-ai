@@ -13,6 +13,8 @@ SOURCE_FILTERS = {
     "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gov.sn", "fao.org"),
     "territory": ("ansd.sn", "gov.sn", "tourisme.gouv.sn"),
     "travel": ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn"),
+    "transport": ("transports.gouv.sn", "gov.sn", "ansd.sn"),
+    "food": ("agriculture.gouv.sn", "tourisme.gouv.sn", "gov.sn"),
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
