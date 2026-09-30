@@ -943,3 +943,19 @@ def test_trip_planner_share_link_contains_edited_plan_and_copy_action():
     assert "history.replaceState(null,'','/trip-planner?lang=" in html
     assert "navigator.clipboard.writeText(location.href)" in html
     assert "function decodeTrip(value)" in html
+
+def test_production_startup_contract():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    render = (root / "render.yaml").read_text(encoding="utf-8")
+    wsgi = (root / "wsgi.py").read_text(encoding="utf-8")
+    requirements = (root / "requirements.txt").read_text(encoding="utf-8")
+
+    assert "runtime: python" in render
+    assert "buildCommand: pip install -r requirements.txt" in render
+    assert "startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app" in render
+    assert "key: OPENAI_API_KEY" in render
+    assert "key: SECRET_KEY" in render
+    assert "from app import app" in wsgi
+    assert "gunicorn>=" in requirements
