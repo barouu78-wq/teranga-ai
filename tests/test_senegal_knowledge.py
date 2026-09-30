@@ -72,3 +72,11 @@ def test_core_senegal_destinations_are_retrievable():
     for query, expected in cases.items():
         context = format_senegal_knowledge(data, query=query)
         assert expected in context
+
+def test_knowledge_context_adds_relevant_domain():
+    from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    context = format_senegal_knowledge(data, query="Que visiter à Dakar ?")
+    assert "DOMAINE PERTINENT (travel)" in context
+    assert "Tourisme" in context or "tourisme" in context
