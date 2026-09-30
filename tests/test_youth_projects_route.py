@@ -125,9 +125,14 @@ def test_youth_project_plan_route_rejects_empty_idea():
 
 def test_youth_project_advance_route_moves_project_forward():
     app = Flask(__name__)
+    calls = []
 
     def require_json_post(fn):
         return fn
+
+    def advance_project_stage(project, stage=None):
+        calls.append((project, stage))
+        return {**project, "stage": stage or "validation"}
 
     register_youth_project_route(
         app,
@@ -135,15 +140,15 @@ def test_youth_project_advance_route_moves_project_forward():
             "require_json_post": require_json_post,
             "sanitize_text": lambda value, max_len: str(value or "")[:max_len],
             "build_project_brief": lambda **kwargs: {},
-            "advance_project_stage": lambda project, stage=None: project,
-            "advance_project_stage": lambda project, stage=None: {**project, "stage": "validation"},
+            "advance_project_stage": advance_project_stage,
         },
     )
 
     response = app.test_client().post(
         "/api/projects/advance",
-        json={"project": {"name": "Jus naturel", "stage": "idea"}},
+        json={"project": {"name": "Jus naturel", "stage": "idea"}, "stage": "validation"},
     )
 
     assert response.status_code == 200
     assert response.get_json()["project"]["stage"] == "validation"
+    assert calls == [({"name": "Jus naturel", "stage": "idea"}, "validation")]
