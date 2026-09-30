@@ -86,6 +86,7 @@ def test_youth_project_advance_route_moves_project_forward():
             "require_json_post": require_json_post,
             "sanitize_text": lambda value, max_len: str(value or "")[:max_len],
             "build_project_brief": lambda **kwargs: {},
+            "advance_project_stage": lambda project, stage=None: project,
             "advance_project_stage": lambda project, stage=None: {**project, "stage": "validation"},
         },
     )
