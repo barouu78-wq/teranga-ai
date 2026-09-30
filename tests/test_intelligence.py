@@ -243,6 +243,11 @@ def test_language_detection_handles_natural_english_requests():
     assert detect_language("Can you recommend a restaurant in Dakar?") == "en"
 
 
+def test_intent_detection_does_not_match_transport_substrings_inside_business_words():
+    assert detect_intent("Je veux lancer mon business") == "project"
+    assert detect_intent("Quel bus prendre pour Dakar ?") == "transport"
+
+
 def test_intent_engine_recognizes_project_career_education_and_finance():
     assert detect_intent("Je veux lancer mon business") == "project"
     assert detect_intent("Je cherche un emploi") == "career"
