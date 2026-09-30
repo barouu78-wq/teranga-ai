@@ -50,6 +50,8 @@ def test_home_exposes_teranga_project_builder():
     assert 'id="projectModal"' in html
     assert 'id="projectForm"' in html
     assert "postJSON('/api/projects/plan'" in html
+    assert 'id="projectCategory"' in html
+    assert 'Pour les jeunes' in html
     assert "teranga-project-last" in html
 
 
