@@ -1,6 +1,10 @@
 """Chat payload construction and conversation-context preparation."""
 
+import logging
 import re
+import time
+
+logger = logging.getLogger(__name__)
 
 from .language_quality import language_instruction
 from .intelligence import should_use_deep_reasoning
@@ -25,7 +29,9 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     language = normalized["language"]
     audience = normalized["audience"]
     language_instruction_text = language_instruction(language)
+    started_at = time.perf_counter()
     context = infer_senegal_context(history, message)
+    logger.info("chat_context_infer_ms %.2f", (time.perf_counter() - started_at) * 1000)
     selected_place = normalized.get("context_place", "")
     trip_context = normalized.get("trip_context", "")
     trip_edit_request = normalized.get("trip_edit_request", "")
@@ -34,7 +40,9 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         context["has_place"] = True
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
+    started_at = time.perf_counter()
     intent_context = build_intent_context(message, history)
+    logger.info("chat_intent_context_ms %.2f", (time.perf_counter() - started_at) * 1000)
     trip_edit_line = ""
     if trip_edit_request:
         trip_edit_line = ("Demande explicite de modification d’itinéraire fournie par l’interface : " + trip_edit_request + ". " "Ne l’applique jamais automatiquement ; prépare uniquement une proposition structurée si la demande est suffisamment précise.")
@@ -148,9 +156,15 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
     )
     use_web = False if photo_only else should_use_web(message, enriched_context)
+    started_at = time.perf_counter()
+    knowledge_context = format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people)
+    logger.info("chat_knowledge_format_ms %.2f", (time.perf_counter() - started_at) * 1000)
+    started_at = time.perf_counter()
+    conversation_input = build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars)
+    logger.info("chat_conversation_build_ms %.2f", (time.perf_counter() - started_at) * 1000)
     return {
-        "instructions": system_prompt + "\\n" + format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people) + "\\n" + language_instruction_text + "\\n" + audience_instruction + "\\n" + context_instruction,
-        "input_text": build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars),
+        "instructions": system_prompt + "\\n" + knowledge_context + "\\n" + language_instruction_text + "\\n" + audience_instruction + "\\n" + context_instruction,
+        "input_text": conversation_input,
         "use_web": use_web,
         "planner": planner_enabled,
         "deep_reasoning": should_use_deep_reasoning(context),
