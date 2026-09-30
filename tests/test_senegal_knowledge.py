@@ -80,3 +80,9 @@ def test_knowledge_context_adds_relevant_domain():
     context = format_senegal_knowledge(data, query="Que visiter à Dakar ?")
     assert "DOMAINE PERTINENT (travel)" in context
     assert "Tourisme" in context or "tourisme" in context
+
+
+def test_dynamic_source_priorities_match_web_policy():
+    assert source_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
+    assert source_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
+    assert source_domains("weather")[:2] == ("meteofrance.com", "ansd.sn")
