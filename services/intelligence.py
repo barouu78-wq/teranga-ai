@@ -251,9 +251,11 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
         "plan", "organise", "optimise", "priorite", "versus", "vs",
     )
     complex_intents = {"travel", "transport", "price", "money", "admin", "food", "project", "career", "education", "finance"}
+    decision_intents = {"project", "career", "education", "finance"}
     return (
         len(constraints) >= 2
         or (len(intents.intersection(complex_intents)) >= 2)
+        or (bool(intents.intersection(decision_intents)) and bool(constraints))
         or any(re.search(r"\b" + re.escape(term) + r"\b", query) for term in multi_step_terms)
     )
 
