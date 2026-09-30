@@ -230,3 +230,9 @@ def test_deep_reasoning_detects_explicit_versus_comparison():
         "intents": ["travel"],
         "constraints": [],
     }) is True
+
+
+def test_detect_location_resolves_structured_destination_highlights():
+    assert detect_location("Je veux visiter Saly demain") == "saly"
+    assert detect_location("Que faire au Cap Skirring ?") == "cap skirring"
+    assert detect_location("Montre-moi Dindéfelo") == "dindefelo"
