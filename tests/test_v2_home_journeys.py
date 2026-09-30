@@ -32,3 +32,11 @@ def test_home_exposes_teranga_project_builder():
     assert 'id="projectForm"' in html
     assert "postJSON('/api/projects/plan'" in html
     assert "teranga-project-last" in html
+
+
+def test_home_exposes_project_progression():
+    html = HOME.read_text(encoding="utf-8")
+    assert "function renderProjectProgress(container,project)" in html
+    assert "localStorage.setItem('teranga-project-last'" in html
+    assert "Idée" in html
+    assert "Premiers clients" in html
