@@ -2225,7 +2225,8 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
       <div class="project-error" id="projectError" role="alert"></div>
     </form>
     <div class="project-result" id="projectResult" hidden></div>
-    <div class="project-actions" style="gap:8px;flex-wrap:wrap"><a href="/opportunities" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🔎 Radar jeunesse</a><a href="/partners" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🤝 Trouver un partenaire</a></div>
+    <div class="project-actions project-result-actions" id="projectResultActions" hidden><button id="projectNew" type="button">✨ Nouvelle idée</button></div>
+    <div class="project-actions project-links" style="gap:8px;flex-wrap:wrap"><a href="/opportunities" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🔎 Radar jeunesse</a><a href="/partners" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🤝 Trouver un partenaire</a></div>
   </section>
 </div>
 <script nonce="__CSP_NONCE__">
@@ -2864,7 +2865,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProjectModal();
 $('projectForm')?.addEventListener('submit',async e=>{
   e.preventDefault();
   const error=$('projectError'),result=$('projectResult'),button=$('projectSubmit');
-  error.textContent='';result.hidden=true;button.disabled=true;button.textContent=lang==='en'?'Building…':'Construction…';
+  error.textContent='';result.hidden=true;$('projectResultActions').hidden=true;button.disabled=true;button.textContent=lang==='en'?'Building…':'Construction…';
   const amount=value=>{const raw=String($(value)?.value||'').replace(/[^0-9]/g,'');return raw?Number(raw):null;};
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
@@ -2912,9 +2913,20 @@ $('projectForm')?.addEventListener('submit',async e=>{
       }
     }catch(_){}
     result.hidden=false;
+    $('projectForm').hidden=true;
+    $('projectResultActions').hidden=false;
     try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
   }catch(err){error.textContent=err.message||T[lang].err;}
-  finally{button.disabled=false;button.textContent='Construire mon plan';}
+  finally{button.disabled=false;button.textContent='🚀 Générer mon projet';}
+});
+$('projectNew')?.addEventListener('click',()=>{
+  $('projectForm').reset();
+  $('projectForm').hidden=false;
+  $('projectResult').hidden=true;
+  $('projectResultActions').hidden=true;
+  $('projectError').textContent='';
+  document.querySelector('.project-more')?.removeAttribute('open');
+  $('projectIdea')?.focus();
 });
 $('journeyStrip').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-journey]'); if(!btn)return;
