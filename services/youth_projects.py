@@ -152,5 +152,12 @@ def build_project_brief(
         "stage_order": list(_STAGE_ORDER),
         "next_action": next_action,
         "steps": steps,
+        "tracking": {
+            "objective": f"Atteindre {goal:,} FCFA." if goal is not None else "Définir un objectif mesurable pour les 30 prochains jours.",
+            "period": "30 jours",
+            "indicators": ["Clients contactés", "Ventes réalisées", "Chiffre d’affaires (FCFA)", "Dépenses (FCFA)", "Bénéfice estimé (FCFA)"],
+            "weekly_checklist": ["Ce que j’ai fait", "Ce qui a marché", "Ce qui bloque", "Action prioritaire de la semaine suivante"],
+            "next_review": "Faire un point chaque fin de semaine et ajuster le plan.",
+        },
         "principle": "Commencer petit, tester sur le terrain, mesurer, puis investir davantage.",
     }
