@@ -89,6 +89,31 @@ def find_project_partners(category: str = "", city: str = "") -> list[dict[str, 
             partners.append(dict(partner))
     return partners
 
+
+def build_project_matches(project: dict[str, Any]) -> dict[str, Any]:
+    """Create deterministic next-step matches from a saved project brief."""
+    category = _normalize(project.get("category", "business"))
+    city = str(project.get("city", "")).strip()
+    partners = find_project_partners(category, city)
+    from services.youth_opportunities import find_youth_opportunities
+
+    opportunities = find_youth_opportunities(category, city)
+    return {
+        "category": category,
+        "city": city,
+        "partners": partners[:5],
+        "opportunities": opportunities[:5],
+        "counts": {
+            "partners": len(partners),
+            "opportunities": len(opportunities),
+        },
+        "next_action": (
+            "Choisir une opportunité à vérifier puis préparer les pièces demandées."
+            if opportunities
+            else "Vérifier les partenaires locaux puis rechercher une opportunité adaptée."
+        ),
+    }
+
 def _normalize(value: Any) -> str:
     text = unicodedata.normalize("NFD", str(value or "").lower())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
