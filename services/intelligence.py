@@ -59,6 +59,38 @@ _NORMALIZED_LOCATION_ALIASES = {
     for location, aliases in _LOCATION_ALIASES.items()
 }
 
+_CONTEXT_CITIES = (
+    "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
+    "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
+    "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
+    "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
+    "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
+    "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
+    "almadies", "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
+)
+_CONTEXT_REGIONS = (
+    "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
+    "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
+    "ziguinchor", "saint-louis", "louga", "matam",
+)
+_CONTEXT_ALIASES = {
+    "aeroport blaise diagne": "aibd", "aéroport blaise diagne": "aibd",
+    "ile de goree": "goree", "île de gorée": "goree",
+    "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
+    "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
+}
+_CONTEXT_INTENT_GROUPS = {
+    "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
+    "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
+    "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
+    "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
+    "travel": ("voyage", "visiter", "séjour", "sejour", "tourisme", "vacances", "plage", "goree", "gorée"),
+    "admin": ("visa", "passeport", "formalites", "formalités", "demarche", "démarche", "document"),
+    "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
+    "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
+    "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
+}
+
 
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
@@ -89,8 +121,6 @@ def detect_location(text: str) -> str | None:
     for region, aliases in REGION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
             return _normalize(region)
-    # Reuse the canonical regional highlights so well-known destinations
-    # such as Saly, Dindéfelo or Cap Skirring resolve consistently.
     for region, places in REGION_HIGHLIGHTS.items():
         for place in places:
             if _normalize(place) in normalized:
@@ -109,7 +139,6 @@ def _recent_user_messages(history: list[dict[str, Any]] | None, limit: int = 6) 
         if len(messages) >= limit:
             break
     return messages
-
 
 
 def contextual_query(history: list[dict[str, Any]] | None, message: str, max_history_items: int = 12, max_message_length: int = 2000) -> str:
@@ -133,44 +162,13 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     """Resolve Senegal places, intents and planning constraints from recent turns."""
     context_query = contextual_query(history, message)
     text_value = _normalize(context_query)
-    cities = (
-        "dakar", "thies", "thiès", "mbour", "saly", "somone", "touba",
-        "kaolack", "fatick", "saint-louis", "saint louis", "louga", "matam",
-        "podor", "richard-toll", "ziguinchor", "cap skirring", "kolda",
-        "sedhiou", "sédhiou", "tambacounda", "kedougou", "kédougou",
-        "rufisque", "pikine", "guediawaye", "guédiawaye", "diamniadio",
-        "ngor", "yoff", "ouakam", "alhadies", "almalies", "almaties",
-        "almadies", "aibd", "goree", "gorée", "lac rose", "saloum", "casamance",
-    )
-    regions = (
-        "dakar", "thiès", "thies", "diourbel", "fatick", "kaolack", "kaffrine",
-        "tambacounda", "kédougou", "kedougou", "kolda", "sédhiou", "sedhiou",
-        "ziguinchor", "saint-louis", "louga", "matam",
-    )
-    aliases = {
-        "aeroport blaise diagne": "aibd", "aéroport blaise diagne": "aibd",
-        "ile de goree": "goree", "île de gorée": "goree",
-        "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
-        "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
-    }
     normalized_place_text = text_value
-    for alias, canonical in aliases.items():
+    for alias, canonical in _CONTEXT_ALIASES.items():
         if _normalize(alias) in normalized_place_text:
             normalized_place_text += " " + canonical
-    found_cities = [x for x in cities if x in normalized_place_text]
-    found_regions = [x for x in regions if x in normalized_place_text]
-    intent_groups = {
-        "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
-        "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
-        "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
-        "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
-        "travel": ("voyage", "visiter", "séjour", "sejour", "tourisme", "vacances", "plage", "goree", "gorée"),
-        "admin": ("visa", "passeport", "formalites", "formalités", "demarche", "démarche", "document"),
-        "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
-        "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
-        "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
-    }
-    intents = [name for name, terms in intent_groups.items() if any(term in text_value for term in terms)]
+    found_cities = [x for x in _CONTEXT_CITIES if x in normalized_place_text]
+    found_regions = [x for x in _CONTEXT_REGIONS if x in normalized_place_text]
+    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(term in text_value for term in terms)]
     currency_amounts = re.findall(
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,
@@ -239,8 +237,6 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
     query = _normalize(str(context.get("query") or ""))
     intents = set(context.get("intents") or [])
     constraints = context.get("constraints") or []
-    # Use word boundaries for short terms: substring matches such as
-    # "entre" would otherwise classify many ordinary French questions as complex.
     multi_step_terms = (
         "compare", "comparatif", "difference", "choisir", "quel est le meilleur",
         "avantages", "inconvenients", "pourquoi", "comment faire", "etape",
