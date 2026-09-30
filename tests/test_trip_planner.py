@@ -651,7 +651,7 @@ def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save()
     from services.trip_planner import _html
 
     body = _html("https://example.com", "fr")
-    assert "payload.edited_plan&&Array.isArray(payload.edited_plan.days)" in body
+    assert "const sharedPlan=validateSharedPlan(payload.edited_plan);if(sharedPlan)" in body
     assert "renderEditablePlan(currentPlan)" in body
     assert "function refreshShareLink()" in body
     assert "refreshShareLink();" in body
