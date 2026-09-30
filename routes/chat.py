@@ -50,7 +50,9 @@ def register_chat_route(app, deps):
             record_abuse(identity, "chat_identity_hour", 1)
             return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
+        parse_started_at = time.perf_counter()
         payload, error = parse_chat_payload()
+        logger.info("chat_payload_ms %.2f", (time.perf_counter() - parse_started_at) * 1000)
         if error:
             return error
         if payload["use_web"]:
@@ -106,11 +108,13 @@ def register_chat_route(app, deps):
 
         def generate():
             started_at = time.perf_counter()
+            model_started_at = time.perf_counter()
             first_output_logged = False
             yielded = False
             sources = []
             try:
                 stream = create_response(payload, stream=True)
+                logger.info("chat_model_startup_ms %.2f", (time.perf_counter() - model_started_at) * 1000)
                 for event in stream:
                     etype = getattr(event, "type", "") or ""
                     if etype == "response.failed":
