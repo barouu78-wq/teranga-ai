@@ -4,7 +4,7 @@ from routes.youth_projects import register_youth_project_route
 
 
 def test_youth_opportunity_route_lists_matching_sources():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="../templates")
 
     def sanitize_text(value, max_len):
         return str(value or "")[:max_len]
@@ -16,7 +16,7 @@ def test_youth_opportunity_route_lists_matching_sources():
             "sanitize_text": sanitize_text,
             "build_project_brief": lambda **kwargs: {},
             "advance_project_stage": lambda project, stage=None: project,
-            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ"}],
+            "find_youth_opportunities": lambda category="", city="": [{"title": "BE YES", "organization": "DER/FJ", "type": "programme", "audience": "Jeunes", "location": "Sénégal", "description": "Accompagnement jeunesse.", "url": "https://example.com"}],
             "build_project_matches": lambda project: {"category": project.get("category"), "city": project.get("city"), "partners": [], "opportunities": [], "counts": {"partners": 0, "opportunities": 0}},
         },
     )
