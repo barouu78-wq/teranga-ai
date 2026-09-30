@@ -25,6 +25,7 @@ from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
+from services.youth_projects import build_project_brief
 
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
@@ -494,7 +495,7 @@ register_exchange_rates_route(app, {
 register_youth_project_route(app, {
     "require_json_post": require_json_post,
     "sanitize_text": sanitize_text,
-    "build_project_brief": __import__("services.youth_projects", fromlist=["build_project_brief"]).build_project_brief,
+    "build_project_brief": build_project_brief,
     "max_message_length": MAX_MESSAGE_LENGTH,
 })
 
