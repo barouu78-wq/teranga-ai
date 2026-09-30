@@ -221,15 +221,15 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     if scope and not tokens:
         lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
     domain = _knowledge_domain(query)
-    modules = data.get("knowledge_scope", {}).get("domains", {})
+    modules = data.get("knowledge_modules", {})
     module_key = {
-        "travel": "tourism",
-        "culture": "culture_history",
-        "food": "gastronomy",
-        "transport": "mobility",
-        "administration": "travel_formalities",
-        "environment": "environment_biodiversity",
-        "economy": "economy_finance",
+        "travel": "tourism_heritage",
+        "culture": "culture_languages_history",
+        "food": "food_daily_life",
+        "transport": "mobility_travel",
+        "administration": "administration_formalities",
+        "environment": "environment_agriculture",
+        "economy": "economy_society",
     }.get(domain, domain)
     module = modules.get(module_key)
     if isinstance(module, dict):
