@@ -221,17 +221,20 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
     query = str(context.get("query") or "")
     intents = set(context.get("intents") or [])
     constraints = context.get("constraints") or []
+    # Use word boundaries for short terms: substring matches such as
+    # "entre" would otherwise classify many ordinary French questions as complex.
     multi_step_terms = (
-        "compare", "compare-moi", "comparatif", "difference", "différence",
-        "choisir", "quel est le meilleur", "avantages", "inconvenients", "inconvénients",
-        "pourquoi", "comment faire", "etape", "étape", "plan", "organise", "optimise",
-        "priorite", "priorité", "entre", "versus", "vs",
+        r"\\bcompare(?:-moi)?\\b", r"\\bcomparatif\\b", r"\\bdifference\\b",
+        r"\\bchoisir\\b", r"\\bquel est le meilleur\\b", r"\\bavantages?\\b",
+        r"\\binconvenients?\\b", r"\\bpourquoi\\b", r"\\bcomment faire\\b",
+        r"\\betapes?\\b", r"\\bplan\\b", r"\\borganise(?:r)?\\b", r"\\boptimise(?:r)?\\b",
+        r"\\bpriorites?\\b", r"\\bversus\\b", r"\\bvs\\.?\\b",
     )
     complex_intents = {"travel", "transport", "price", "money", "admin", "food"}
     return (
         len(constraints) >= 2
         or (len(intents.intersection(complex_intents)) >= 2)
-        or any(term in query for term in multi_step_terms)
+        or any(re.search(term, query) for term in multi_step_terms)
     )
 
 
