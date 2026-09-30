@@ -13,6 +13,11 @@ def test_travel_source_policy():
     assert "unesco.org" in domains
 
 
+def test_weather_source_policy():
+    domains = preferred_domains("weather")
+    assert domains[:2] == ("meteofrance.com", "ansd.sn")
+
+
 def test_general_web_has_no_restrictive_domain_filter():
     assert preferred_domains("general") == ()
 
