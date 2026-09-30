@@ -31,9 +31,13 @@ _INTENT_PATTERNS = {
         "montre-moi", "montre moi", "a quoi ressemble", "à quoi ça ressemble",
     ),
     "culture": ("culture", "tradition", "histoire", "history", "musique"),
+    "project": ("projet", "business", "entreprise", "entreprendre", "entrepreneur", "activité", "activite", "commerce", "lancer", "vendre", "clients", "clientèle", "clientele"),
+    "career": ("emploi", "travail", "job", "cv", "recrutement", "carrière", "carriere", "embauche", "métier", "metier"),
+    "education": ("formation", "étudier", "etudier", "école", "ecole", "université", "universite", "apprendre", "cours", "étudiant", "etudiant"),
+    "finance": ("argent", "financement", "budget", "revenus", "salaire", "épargne", "epargne", "investir", "crédit", "credit", "prêt", "pret"),
 }
 
-_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos"}
+_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project"}
 
 _LOCATION_ALIASES = {
     "dakar": ("dakar",),
@@ -89,6 +93,10 @@ _CONTEXT_INTENT_GROUPS = {
     "money": ("change", "taux", "euro", "dollar", "livre sterling", "orange money", "wave", "transfert"),
     "culture": ("culture", "histoire", "langue", "wolof", "pulaar", "tradition", "musique", "teranga"),
     "news": ("actualite", "actualités", "news", "nouveau", "nouvelle", "aujourd'hui", "demain"),
+    "project": ("projet", "business", "entreprise", "entreprendre", "entrepreneur", "activité", "activite", "commerce", "clients", "vendre", "lancer"),
+    "career": ("emploi", "travail", "job", "cv", "recrutement", "carriere", "carrière", "embauche", "metier", "métier"),
+    "education": ("formation", "étudier", "etudier", "école", "ecole", "université", "universite", "apprendre", "cours", "étudiant", "etudiant"),
+    "finance": ("argent", "financement", "budget", "revenus", "salaire", "épargne", "epargne", "investir", "crédit", "credit", "prêt", "pret"),
 }
 
 
@@ -108,7 +116,7 @@ def detect_language(text: str) -> str:
 def detect_intent(text: str) -> str:
     normalized = _normalize(text)
     for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
-        if any(pattern in normalized for pattern in patterns):
+        if any(re.search(r"(?<!\w)" + re.escape(pattern) + r"(?!\w)", normalized) for pattern in patterns):
             return intent
     return "general_information"
 
@@ -242,10 +250,12 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
         "avantages", "inconvenients", "pourquoi", "comment faire", "etape",
         "plan", "organise", "optimise", "priorite", "versus", "vs",
     )
-    complex_intents = {"travel", "transport", "price", "money", "admin", "food"}
+    complex_intents = {"travel", "transport", "price", "money", "admin", "food", "project", "career", "education", "finance"}
+    decision_intents = {"project", "career", "education", "finance"}
     return (
         len(constraints) >= 2
         or (len(intents.intersection(complex_intents)) >= 2)
+        or (bool(intents.intersection(decision_intents)) and bool(constraints))
         or any(re.search(r"\b" + re.escape(term) + r"\b", query) for term in multi_step_terms)
     )
 
@@ -293,7 +303,12 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
     resolved_location = current_location
     context_source = "current_message"
     if recent_users:
-        if resolved_intent == "general_information":
+        follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "combien", "quel prix", "qu'en est-il")
+        is_short_follow_up = len(message.split()) <= 8 and (
+            _normalize(message).startswith(tuple(_normalize(marker) for marker in follow_up_markers))
+            or "?" in message
+        )
+        if resolved_intent == "general_information" or is_short_follow_up:
             for previous in recent_users:
                 previous_intent = detect_intent(previous)
                 if previous_intent != "general_information":
@@ -317,6 +332,11 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
         "language": detect_language(message),
         "needs_web_search": fresh,
         "needs_images": resolved_intent == "photos",
+        "needs_deep_reasoning": should_use_deep_reasoning({
+            "query": context_query,
+            "intents": [resolved_intent],
+            "constraints": infer_senegal_context(history, message).get("constraints", []),
+        }),
         "preferred_sources": source_domains(domain),
         "has_context": bool(recent_users),
         "context_source": context_source,

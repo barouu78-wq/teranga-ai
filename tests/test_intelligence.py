@@ -241,3 +241,32 @@ def test_detect_location_resolves_structured_destination_highlights():
 def test_language_detection_handles_natural_english_requests():
     assert detect_language("I want to visit Dakar") == "en"
     assert detect_language("Can you recommend a restaurant in Dakar?") == "en"
+
+
+def test_intent_detection_does_not_match_transport_substrings_inside_business_words():
+    assert detect_intent("Je veux lancer mon business") == "project"
+    assert detect_intent("Quel bus prendre pour Dakar ?") == "transport"
+
+
+def test_intent_engine_recognizes_project_career_education_and_finance():
+    assert detect_intent("Je veux lancer mon business") == "project"
+    assert detect_intent("Je cherche un emploi") == "career"
+    assert detect_intent("Je veux trouver une formation") == "education"
+    assert detect_intent("Comment obtenir un financement ?") == "finance"
+
+
+def test_intent_context_marks_complex_project_request_for_deep_reasoning():
+    result = build_intent_context(
+        "Je veux lancer un petit commerce avec 150000 FCFA et trouver mes premiers clients."
+    )
+    assert result["intent"] == "project"
+    assert result["needs_deep_reasoning"] is True
+
+
+def test_follow_up_inherits_project_intent():
+    result = build_intent_context(
+        "Et pour le budget ?",
+        history=[{"role": "user", "content": "Je veux lancer un commerce à Dakar."}],
+    )
+    assert result["intent"] == "project"
+    assert result["location"] == "dakar"
