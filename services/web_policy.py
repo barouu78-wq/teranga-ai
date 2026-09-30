@@ -18,6 +18,7 @@ SOURCE_FILTERS = {
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
+    "weather": ("meteofrance.com", "ansd.sn", "gov.sn"),
 }
 
 def preferred_domains(domain: str) -> tuple[str, ...]:
