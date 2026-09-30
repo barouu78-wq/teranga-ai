@@ -11,7 +11,7 @@ def test_build_model_kwargs_keeps_fast_chat_defaults():
         stream=True,
     )
     assert result["model"] == "gpt-test"
-    assert result["max_output_tokens"] == 500
+    assert result["max_output_tokens"] == 400
     assert result["reasoning"] == {"effort": "low"}
     assert "tools" not in result
 
@@ -31,7 +31,7 @@ def test_build_model_kwargs_adds_web_tool_and_domains():
         preferred_domains=lambda domain: ("anacim.sn", "meteo.sn"),
         stream=False,
     )
-    assert result["max_output_tokens"] == 700
+    assert result["max_output_tokens"] == 600
     assert result["tools"] == [{
         "type": "web_search",
         "search_context_size": "high",
