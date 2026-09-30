@@ -9,7 +9,26 @@ def register_youth_project_route(app, deps):
     build_project_brief = deps["build_project_brief"]
     advance_project_stage = deps["advance_project_stage"]
     find_project_partners = deps.get("find_project_partners", lambda category="", city="": [])
+    find_youth_opportunities = deps.get("find_youth_opportunities", lambda category="", city="": [])
     max_message_length = deps.get("max_message_length", 2000)
+
+    @app.get("/opportunities")
+    def youth_project_opportunities():
+        category = sanitize_text(request.args.get("category", ""), max_len=40).strip()
+        city = sanitize_text(request.args.get("city", ""), max_len=80).strip()
+        categories = (
+            ("business", "Business"), ("agriculture", "Agriculture"), ("digital", "Digital"),
+            ("creative", "Créatif"), ("food", "Alimentation"), ("craft", "Artisanat"),
+            ("commerce", "Commerce"), ("tourism", "Tourisme"), ("environment", "Environnement"),
+            ("ai", "IA"),
+        )
+        return render_template(
+            "opportunities.html",
+            opportunities=find_youth_opportunities(category, city),
+            categories=categories,
+            selected_category=category,
+            selected_city=city,
+        )
 
     @app.get("/partners")
     def youth_project_partners():
