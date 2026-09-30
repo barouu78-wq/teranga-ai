@@ -2088,7 +2088,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 .project-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:16px}
 .project-head h2{margin:0;color:var(--gold);font-size:22px}.project-head p{margin:5px 0 0;color:var(--mute);font-size:13px}
 .project-close{border:0;background:var(--soft);color:var(--ink);width:34px;height:34px;border-radius:50%;font-size:22px;cursor:pointer}
-.project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.project-field{display:grid;gap:5px}.project-field.full{grid-column:1/-1}.project-field label{font-size:11px;color:var(--mute);font-weight:750}.project-field input{width:100%;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);padding:0 12px;font:inherit;outline:0}.project-field input:focus{border-color:var(--gold)}
+.project-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.project-field{display:grid;gap:5px}.project-field.full{grid-column:1/-1}.project-field label{font-size:11px;color:var(--mute);font-weight:750}.project-field input,.project-field select{width:100%;height:44px;border:1px solid var(--line);border-radius:13px;background:var(--soft);color:var(--ink);padding:0 12px;font:inherit;outline:0}.project-field input:focus,.project-field select:focus{border-color:var(--gold)}
 .project-actions{display:flex;justify-content:flex-end;margin-top:14px}.project-actions button{border:0;border-radius:14px;padding:11px 16px;background:linear-gradient(145deg,var(--sen-green),var(--sen-green-dark));color:#fff;font-weight:800;cursor:pointer}.project-actions button:disabled{opacity:.55}
 .project-error{color:#d95b52;font-size:12px;margin-top:8px}.project-result{margin-top:16px;padding:16px;border-radius:18px;background:var(--soft);border:1px solid var(--line)}.project-result h3{margin:0 0 6px;color:var(--gold)}.project-result p{margin:4px 0;color:var(--mute)}.project-steps{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}.project-steps li{padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.project-progress{margin-top:14px}.project-progress-title{font-size:12px;font-weight:800;margin-bottom:8px}.project-stage-row{display:flex;gap:6px;overflow:auto;padding-bottom:3px}.project-stage{border:1px solid var(--line);background:var(--card);color:var(--mute);border-radius:11px;padding:8px 9px;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}.project-stage.on{background:var(--sen-green);border-color:var(--sen-green);color:#fff}.project-stage.done{color:var(--sen-green);border-color:var(--sen-green)}.project-steps b{display:block;font-size:12px}.project-steps span{display:block;margin-top:2px;color:var(--mute);font-size:11px}
 @media(max-width:680px){.project-modal{padding:10px;align-items:flex-end}.project-panel{max-height:92vh;border-radius:22px 22px 0 0;padding:16px}.project-grid{grid-template-columns:1fr}.project-field.full{grid-column:auto}.project-actions button{width:100%}}
@@ -2196,7 +2196,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
 <div class="project-modal" id="projectModal" aria-hidden="true">
   <section class="project-panel" role="dialog" aria-modal="true" aria-labelledby="projectTitle">
     <div class="project-head">
-      <div><h2 id="projectTitle">🚀 Teranga Projet</h2><p>Transforme une idée en premier plan d’action, adapté à ton contexte.</p></div>
+      <div><h2 id="projectTitle">🚀 Mon projet</h2><p>Pour les jeunes : transforme une idée en actions, premiers clients et revenus.</p></div>
       <button class="project-close" id="projectClose" type="button" aria-label="Fermer">×</button>
     </div>
     <form id="projectForm">
@@ -2204,6 +2204,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
         <div class="project-field full"><label for="projectIdea">Ton idée *</label><input id="projectIdea" maxlength="2000" required placeholder="Ex. vendre du jus naturel à Thiès"></div>
         <div class="project-field"><label for="projectCity">Ville</label><input id="projectCity" maxlength="80" placeholder="Thiès"></div>
         <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="50 000"></div>
+        <div class="project-field"><label for="projectCategory">Domaine</label><select id="projectCategory"><option value="">Choisir un domaine</option><option value="business">Business</option><option value="agriculture">Agriculture</option><option value="digital">Digital</option><option value="creative">Créatif</option><option value="food">Alimentation</option><option value="craft">Artisanat</option><option value="commerce">Commerce</option><option value="tourism">Tourisme</option><option value="environment">Environnement</option><option value="ai">IA</option></select></div>
         <div class="project-field"><label for="projectSkills">Tes compétences</label><input id="projectSkills" maxlength="200" placeholder="Cuisine, vente…"></div>
         <div class="project-field"><label for="projectTime">Temps disponible</label><input id="projectTime" maxlength="100" placeholder="Week-end"></div>
         <div class="project-field"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="100 000"></div>
@@ -2855,7 +2856,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     if(!cookie('teranga_csrf'))await refreshCsrf();
     const payload={
       idea:$('projectIdea').value.trim(),city:$('projectCity').value.trim(),
-      budget_fcfa:amount('projectBudget'),skills:$('projectSkills').value.trim(),
+      budget_fcfa:amount('projectBudget'),category:$('projectCategory').value,skills:$('projectSkills').value.trim(),
       available_time:$('projectTime').value.trim(),goal_fcfa:amount('projectGoal')
     };
     let res=await postJSON('/api/projects/plan',JSON.stringify(payload));
