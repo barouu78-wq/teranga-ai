@@ -211,3 +211,22 @@ def test_deep_reasoning_avoids_simple_question():
         "intents": ["culture"],
         "constraints": [],
     }) is False
+
+
+
+def test_deep_reasoning_does_not_trigger_on_common_word_entre():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Quel est le prix entre Dakar et Thiès ?",
+        "intents": ["price"],
+        "constraints": [],
+    }) is False
+
+
+def test_deep_reasoning_detects_explicit_versus_comparison():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Dakar versus Saint-Louis pour 3 jours",
+        "intents": ["travel"],
+        "constraints": [],
+    }) is True
