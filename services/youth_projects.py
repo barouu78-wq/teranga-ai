@@ -29,6 +29,42 @@ _CATEGORY_KEYWORDS = {
 }
 
 _STAGE_ORDER = ("idea", "validation", "prototype", "first_customers", "revenue")
+_STAGE_LABELS = {
+    "idea": "Idée",
+    "validation": "Validation",
+    "prototype": "Prototype",
+    "first_customers": "Premiers clients",
+    "revenue": "Revenus",
+}
+
+
+def advance_project_stage(project: dict[str, Any], stage: str | None = None) -> dict[str, Any]:
+    """Move a saved project to the requested next stage without persistence."""
+    current = _normalize(project.get("stage", "idea"))
+    if current not in _STAGE_ORDER:
+        current = "idea"
+    if stage:
+        target = _normalize(stage)
+        if target not in _STAGE_ORDER:
+            target = current
+        if _STAGE_ORDER.index(target) > _STAGE_ORDER.index(current) + 1:
+            target = _STAGE_ORDER[_STAGE_ORDER.index(current) + 1]
+    else:
+        index = _STAGE_ORDER.index(current)
+        target = _STAGE_ORDER[min(index + 1, len(_STAGE_ORDER) - 1)]
+    updated = dict(project)
+    updated["stage"] = target
+    updated["stage_label"] = _STAGE_LABELS[target]
+    updated["stage_index"] = _STAGE_ORDER.index(target)
+    if target == "validation":
+        updated["next_action"] = "Tester l’idée auprès de 5 personnes et noter leurs objections ou demandes."
+    elif target == "prototype":
+        updated["next_action"] = "Créer une première version simple et la montrer à de vrais utilisateurs."
+    elif target == "first_customers":
+        updated["next_action"] = "Contacter des prospects et chercher les premières commandes ou précommandes."
+    elif target == "revenue":
+        updated["next_action"] = "Mesurer les ventes, la marge et préparer le prochain investissement."
+    return updated
 
 
 def _normalize(value: Any) -> str:
@@ -111,6 +147,8 @@ def build_project_brief(
         "available_time": clean_time[:100],
         "goal_fcfa": goal,
         "stage": "idea",
+        "stage_label": _STAGE_LABELS["idea"],
+        "stage_index": 0,
         "stage_order": list(_STAGE_ORDER),
         "next_action": next_action,
         "steps": steps,
