@@ -41,7 +41,7 @@ def test_home_exposes_teranga_project_builder():
     assert 'id="projectForm"' in html
     assert "postJSON('/api/projects/plan'" in html
     assert 'id="projectCategory"' in html
-    assert 'Pour les jeunes' in html
+    assert 'Une idée suffit. Teranga construit le premier plan avec toi.' in html
     assert "teranga-project-last" in html
 
 
