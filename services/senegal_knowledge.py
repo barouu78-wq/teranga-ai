@@ -124,7 +124,25 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
     try:
         with path.open("r", encoding="utf-8") as handle:
             data = json.load(handle)
-        return data if isinstance(data, dict) else {}
+        if not isinstance(data, dict):
+            return {}
+        for region in data.get("regions", []):
+            if isinstance(region, dict):
+                region["_search_haystack"] = " ".join([
+                    str(region.get("name", "")),
+                    *map(str, region.get("places", [])),
+                    *map(str, region.get("highlights", [])),
+                    *map(str, region.get("themes", [])),
+                    *map(str, region.get("foods", [])),
+                ]).casefold()
+        for place in data.get("places", []):
+            if isinstance(place, dict):
+                place["_search_haystack"] = " ".join([
+                    str(place.get("name", "")), str(place.get("summary", "")),
+                    str(place.get("history", "")), str(place.get("culture", "")),
+                    str(place.get("what_to_see", "")),
+                ]).casefold()
+        return data
     except (OSError, json.JSONDecodeError):
         return {}
 
@@ -164,13 +182,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     tokens = [token for token in value.split() if len(token) >= 4]
     matched_regions = []
     for region in regions:
-        haystack = " ".join([
-            str(region.get("name", "")),
-            *map(str, region.get("places", [])),
-            *map(str, region.get("highlights", [])),
-            *map(str, region.get("themes", [])),
-            *map(str, region.get("foods", [])),
-        ]).casefold()
+        haystack = region.get("_search_haystack", "")
         if tokens and any(token in haystack for token in tokens):
             matched_regions.append(region)
     if matched_regions:
@@ -191,11 +203,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     if tokens and places:
         matched_places = []
         for place in places:
-            haystack = " ".join([
-                str(place.get("name", "")), str(place.get("summary", "")),
-                str(place.get("history", "")), str(place.get("culture", "")),
-                str(place.get("what_to_see", "")),
-            ]).casefold()
+            haystack = place.get("_search_haystack", "")
             if any(token in haystack for token in tokens):
                 matched_places.append(place)
         if matched_places:
