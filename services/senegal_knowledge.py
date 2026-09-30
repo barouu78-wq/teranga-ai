@@ -102,6 +102,10 @@ def source_domains(domain: str) -> tuple[str, ...]:
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
     if domain == "weather":
         return ("meteofrance.com", "ansd.sn", "gov.sn")
+    if domain == "transport":
+        return ("transports.gouv.sn", "gov.sn", "ansd.sn")
+    if domain == "food":
+        return ("agriculture.gouv.sn", "tourisme.gouv.sn", "gov.sn")
     return SOURCE_PRIORITY
 
 def load_senegal_people(path: Path | None = None) -> list[dict]:
