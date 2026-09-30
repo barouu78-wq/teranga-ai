@@ -22,6 +22,7 @@ from routes.realtime import register_realtime_route
 from routes.image_proxy import register_image_proxy_route
 from routes.chat import register_chat_route
 from routes.exchange_rates import register_exchange_rates_route
+from routes.youth_projects import register_youth_project_route
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 
@@ -488,6 +489,13 @@ register_exchange_rates_route(app, {
     "FX_RATE_LIMIT": FX_RATE_LIMIT,
     "FX_RATE_WINDOW": FX_RATE_WINDOW,
     "fetch_bceao_rates": fetch_bceao_rates,
+})
+
+register_youth_project_route(app, {
+    "require_json_post": require_json_post,
+    "sanitize_text": sanitize_text,
+    "build_project_brief": __import__("services.youth_projects", fromlist=["build_project_brief"]).build_project_brief,
+    "max_message_length": MAX_MESSAGE_LENGTH,
 })
 
 register_chat_route(app, {
