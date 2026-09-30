@@ -42,7 +42,7 @@ def register_tts_route(app, deps):
         if not allowed_request(ip, tts_request_log[ip], TTS_RATE_LIMIT, 60, "tts") or not allowed_request(identity, tts_request_log[identity], TTS_RATE_LIMIT, 60, "tts_identity"):
             record_abuse(ip, "tts_rate", 2)
             record_abuse(identity, "tts_identity_rate", 1)
-            return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429
+            return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429, {"Retry-After": "8"}
         if not allowed_request(ip, tts_hourly_log[ip], TTS_HOURLY_LIMIT, 3600, "tts_hour") or not allowed_request(identity, tts_hourly_log[identity], TTS_HOURLY_LIMIT, 3600, "tts_identity_hour"):
             record_abuse(ip, "tts_hourly", 3)
             record_abuse(identity, "tts_identity_hour", 1)
