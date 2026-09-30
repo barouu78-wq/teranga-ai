@@ -50,6 +50,16 @@ def _normalize(text: str) -> str:
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
 
+_NORMALIZED_INTENT_PATTERNS = {
+    intent: tuple(_normalize(pattern) for pattern in patterns)
+    for intent, patterns in _INTENT_PATTERNS.items()
+}
+_NORMALIZED_LOCATION_ALIASES = {
+    location: tuple(_normalize(alias) for alias in aliases)
+    for location, aliases in _LOCATION_ALIASES.items()
+}
+
+
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
     english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
@@ -65,16 +75,16 @@ def detect_language(text: str) -> str:
 
 def detect_intent(text: str) -> str:
     normalized = _normalize(text)
-    for intent, patterns in _INTENT_PATTERNS.items():
-        if any(_normalize(pattern) in normalized for pattern in patterns):
+    for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
+        if any(pattern in normalized for pattern in patterns):
             return intent
     return "general_information"
 
 
 def detect_location(text: str) -> str | None:
     normalized = _normalize(text)
-    for location, aliases in _LOCATION_ALIASES.items():
-        if any(_normalize(alias) in normalized for alias in aliases):
+    for location, aliases in _NORMALIZED_LOCATION_ALIASES.items():
+        if any(alias in normalized for alias in aliases):
             return location
     for region, aliases in REGION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
