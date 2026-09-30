@@ -59,9 +59,9 @@ def should_fetch_map(message):
 def lookup_map(message, enabled=None):
     if enabled is False:
         return None
-    lowered = str(message or "").lower()
+    lowered = _normalize(message)
     for key, query, label in MAP_PLACES:
-        if key in lowered:
+        if _normalize(key) in lowered:
             encoded_query = quote(query)
             return {
                 "label": label,
