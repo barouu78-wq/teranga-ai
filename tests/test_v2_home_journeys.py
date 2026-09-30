@@ -24,6 +24,15 @@ def test_home_reduces_landing_to_four_primary_journeys():
     assert '#audienceMode{display:none!important}' in html
 
 
+def test_home_reduces_landing_to_four_primary_journeys():
+    html = HOME.read_text(encoding="utf-8")
+    assert 'data-journey="travel"' in html
+    assert 'data-journey="project"' in html
+    assert 'data-journey="discover"' in html
+    assert 'data-journey="chat"' in html
+    assert '#audienceMode{display:none!important}' in html
+
+
 def test_home_persists_selected_journey_for_session():
     html = HOME.read_text(encoding="utf-8")
     assert "sessionStorage.setItem('teranga-journey',journey)" in html
