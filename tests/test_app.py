@@ -182,6 +182,16 @@ def test_chat_rate_limit_contract_exposes_retry_after():
     assert register_chat_route is not None
 
 
+def test_map_lookup_normalizes_accents_and_case():
+    from services.maps import lookup_map
+
+    result = lookup_map("Où est l'aéroport AIBD ?")
+    assert result and "google.com/maps" in result["url"]
+
+    result = lookup_map("OU EST L AEROPORT AIBD ?")
+    assert result and "google.com/maps" in result["url"]
+
+
 def test_home_tts_retry_after_is_wired():
     html = app.test_client().get("/").get_data(as_text=True)
 
