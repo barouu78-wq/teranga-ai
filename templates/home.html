@@ -2143,7 +2143,7 @@ body[data-theme="light"] .journey-strip button{background:#fffdf8;border-color:r
   </div>
   <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
   <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
-</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours rapides"><button type="button" data-journey="plan"><span>🧭</span><b id="journeyPlan">Planifier un voyage</b><small id="journeyPlanHint">Créer un itinéraire</small></button><button type="button" data-journey="discover"><span>◎</span><b id="journeyDiscover">Explorer le Sénégal</b><small id="journeyDiscoverHint">Lieux et régions</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Parler à Teranga</b><small id="journeyChatHint">Poser une question</small></button><button type="button" data-journey="project"><span>🚀</span><b>Développer mon projet</b><small>Passer de l’idée à l’action</small></button></div><div class="cards" id="cards"></div>
+</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours principaux"><button type="button" data-journey="travel"><span>🌍</span><b id="journeyTravel">Voyager au Sénégal</b><small id="journeyTravelHint">Explorer et planifier</small></button><button type="button" data-journey="project"><span>🚀</span><b id="journeyProject">Mon projet</b><small id="journeyProjectHint">Jeunesse · idée → revenus</small></button><button type="button" data-journey="discover"><span>🇸🇳</span><b id="journeyDiscover">Découvrir le Sénégal</b><small id="journeyDiscoverHint">Culture, histoire, gastronomie</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Assistant Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -2233,7 +2233,7 @@ fr:{
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
   heroTitle:'L’hospitalité, en quelques questions.',
-  journeyPlan:'Planifier un voyage',journeyPlanHint:'Créer un itinéraire',journeyDiscover:'Explorer le Sénégal',journeyDiscoverHint:'Lieux et régions',journeyChat:'Parler à Teranga',journeyChatHint:'Poser une question',
+  journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
@@ -2256,7 +2256,7 @@ en:{
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
   heroTitle:'Hospitality, in a few questions.',
-  journeyPlan:'Plan a trip',journeyPlanHint:'Build an itinerary',journeyDiscover:'Explore Senegal',journeyDiscoverHint:'Places and regions',journeyChat:'Talk to Teranga',journeyChatHint:'Ask a question',
+  journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Weather, rides, food, beaches, markets — Teranga guides you without inventing shifting details.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
@@ -2731,7 +2731,8 @@ function renderCards(){
 }
 function renderJourneyLabels(){
   const t=T[lang];
-  $('journeyPlan').textContent=t.journeyPlan;$('journeyPlanHint').textContent=t.journeyPlanHint;
+  $('journeyTravel').textContent=t.journeyTravel;$('journeyTravelHint').textContent=t.journeyTravelHint;
+  $('journeyProject').textContent=t.journeyProject;$('journeyProjectHint').textContent=t.journeyProjectHint;
   $('journeyDiscover').textContent=t.journeyDiscover;$('journeyDiscoverHint').textContent=t.journeyDiscoverHint;
   $('journeyChat').textContent=t.journeyChat;$('journeyChatHint').textContent=t.journeyChatHint;
 }
@@ -2825,7 +2826,23 @@ function closeProjectModal(){
   if(!modal)return;
   modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
 }
-$('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',openProjectModal);
+$('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('click',()=>{
+  setJourney('travel');
+  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience);
+});
+$('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
+  setJourney('project');
+  openProjectModal();
+});
+$('journeyStrip').querySelector('[data-journey="discover"]')?.addEventListener('click',()=>{
+  setJourney('discover');
+  ask(lang==='en'?'Help me discover Senegal: regions, culture, history and places to visit.':lang==='wo'?'Jàngal ma Senegaal: régions, aada, taarix ak barab yu ñu mëna seet.':lang==='ff'?'Wallu-mi yiytude Senegaal: diiwe, aada, taarik e nokkuuji yahrude.':'Aide-moi à découvrir le Sénégal : régions, culture, histoire et lieux à visiter.');
+});
+$('journeyStrip').querySelector('[data-journey="chat"]')?.addEventListener('click',()=>{
+  setJourney('chat');
+  hideHero();
+  input.focus();
+});
 $('projectClose')?.addEventListener('click',closeProjectModal);
 $('projectModal')?.addEventListener('click',e=>{if(e.target.id==='projectModal')closeProjectModal();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProjectModal();});
@@ -3822,3 +3839,10 @@ themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('te
 </script>
 </body>
 </html>
+<style>
+/* Teranga V2.2 — four clear entry journeys */
+#audienceMode{display:none!important}
+.journey-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:10px 0 2px}
+.journey-strip button{min-height:76px}
+@media(max-width:680px){.journey-strip{grid-template-columns:1fr 1fr;gap:8px}.journey-strip button{min-height:68px}.journey-strip small{font-size:9px}}
+</style>
