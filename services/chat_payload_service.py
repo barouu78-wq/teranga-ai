@@ -3,7 +3,7 @@
 import re
 
 from .language_quality import language_instruction
-from .intelligence import should_use_deep_reasoning
+from .intelligence import contextual_query, should_use_deep_reasoning
 
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
