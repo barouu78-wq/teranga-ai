@@ -38,3 +38,8 @@ def test_should_use_web_detects_live_and_contextual_requests():
     assert should_use_web("Quel est le prix actuel du billet ?")
     assert should_use_web("Et demain ?", "météo à Dakar")
     assert not should_use_web("Quelle est l'histoire de Gorée ?")
+
+
+def test_transport_and_food_source_policy():
+    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
+    assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
