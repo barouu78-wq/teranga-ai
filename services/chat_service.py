@@ -3,7 +3,7 @@
 
 def select_chat_model(payload, model, complex_model="gpt-5.6-sol"):
     """Route genuinely multi-step requests to the stronger model."""
-    if model == "gpt-5.6-luna" and complex_model and payload.get("planner"):
+    if model == "gpt-5.6-luna" and complex_model and (payload.get("planner") or payload.get("deep_reasoning")):
         return complex_model
     return model
 
