@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import REGION_ALIASES, classify_domain, needs_fresh_web, source_domains
+from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, classify_domain, needs_fresh_web, source_domains
 from .validation import sanitize_text
 
 
@@ -77,6 +77,12 @@ def detect_location(text: str) -> str | None:
     for region, aliases in REGION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
             return _normalize(region)
+    # Reuse the canonical regional highlights so well-known destinations
+    # such as Saly, Dindéfelo or Cap Skirring resolve consistently.
+    for region, places in REGION_HIGHLIGHTS.items():
+        for place in places:
+            if _normalize(place) in normalized:
+                return _normalize(place)
     return None
 
 
