@@ -382,6 +382,13 @@ def test_commons_images_include_same_origin_proxy(monkeypatch):
 
 
 
+
+def test_tts_short_rate_limit_exposes_retry_after():
+    from routes.tts import register_tts_route
+    source = __import__("pathlib").Path(ROOT / "routes" / "tts.py").read_text(encoding="utf-8")
+    assert 'return jsonify({"error": "Trop de demandes vocales. Réessaie dans un instant."}), 429, {"Retry-After": "8"}' in source
+    assert register_tts_route is not None
+
 def test_public_error_redacts_provider_credentials():
     from services.errors import public_error
 
