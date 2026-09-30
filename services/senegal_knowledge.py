@@ -222,7 +222,8 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         lines.append("DOMAINES COUVERTS : " + ", ".join(scope.keys()) + ".")
     domain = _knowledge_domain(query)
     modules = data.get("knowledge_scope", {}).get("domains", {})
-    module = modules.get(domain)
+    module_key = {"travel": "tourism_heritage"}.get(domain, domain)
+    module = modules.get(module_key)
     if isinstance(module, dict):
         description = module.get("description")
         anchors = module.get("anchors") or []
