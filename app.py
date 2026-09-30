@@ -25,7 +25,7 @@ from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
-from services.youth_projects import advance_project_stage, build_project_brief, find_project_partners
+from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
 from services.youth_opportunities import find_youth_opportunities
 
 from services.maps import lookup_map, should_fetch_map
@@ -500,6 +500,7 @@ register_youth_project_route(app, {
     "advance_project_stage": advance_project_stage,
     "find_project_partners": find_project_partners,
     "find_youth_opportunities": find_youth_opportunities,
+    "build_project_matches": build_project_matches,
     "max_message_length": MAX_MESSAGE_LENGTH,
 })
 
