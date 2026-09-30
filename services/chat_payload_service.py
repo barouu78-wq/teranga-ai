@@ -86,7 +86,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         if 1 <= day <= 14:
             remainder = trip_edit_request[edit_match.end():]
             region = next(
-                (canonical for key, canonical in region_names.items() if re.match(rf"{re.escape(key)}(?:\\b|\\s|$)", remainder.strip().casefold())),
+                (canonical for key, canonical in region_names.items() if re.match(rf"{re.escape(key)}(?:\b|\s|$)", remainder.strip().casefold())),
                 None,
             )
             if region:
