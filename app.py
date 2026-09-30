@@ -444,6 +444,7 @@ from services.chat_service import build_chat_service
 _CHAT_SERVICE = build_chat_service(
     client=client,
     model=MODEL,
+    complex_model=os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol"),
     logger=app.logger,
     build_model_kwargs=build_model_kwargs,
     reasoning_effort=reasoning_effort,
