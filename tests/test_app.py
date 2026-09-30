@@ -922,3 +922,13 @@ def test_home_inline_javascript_parses_with_node(tmp_path):
     path.write_text("\n".join(scripts), encoding="utf-8")
     result = subprocess.run([node, "--check", str(path)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+def test_trip_planner_validates_shared_plan_before_restore():
+    from app import app
+
+    html = app.test_client().get("/trip-planner").get_data(as_text=True)
+
+    assert "function validateSharedPlan(plan)" in html
+    assert "plan.days.length>14" in html
+    assert "REGION_OPTIONS.includes(region)" in html
+    assert "const sharedPlan=validateSharedPlan(payload.edited_plan);if(sharedPlan)" in html
