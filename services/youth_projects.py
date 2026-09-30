@@ -45,10 +45,10 @@ def _normalize(value: Any) -> str:
 
 
 def _money_amount(value: Any) -> int | None:
-    match = re.search(r"(?<!\\d)(\\d[\\d\\s.,]*)(?:\\s*(?:fcfa|f cfa|cfa))?", _normalize(value))
+    match = re.search(r"(?<!d)(d[ds.,]*)(?:s*(?:fcfa|f cfa|cfa))?", _normalize(value))
     if not match:
         return None
-    raw = re.sub(r"[\\s.,]", "", match.group(1))
+    raw = re.sub(r"[s.,]", "", match.group(1))
     try:
         return int(raw)
     except ValueError:
