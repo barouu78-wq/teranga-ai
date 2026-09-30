@@ -182,6 +182,14 @@ def test_chat_rate_limit_contract_exposes_retry_after():
     assert register_chat_route is not None
 
 
+def test_home_exchange_rate_retry_after_is_wired():
+    html = app.test_client().get("/").get_data(as_text=True)
+
+    assert "res.status===429" in html
+    assert "res.headers.get('Retry-After')" in html
+    assert "Trop de demandes · réessaie dans " in html
+
+
 def test_home_retry_after_countdown_is_wired():
     html = app.test_client().get("/").get_data(as_text=True)
 
