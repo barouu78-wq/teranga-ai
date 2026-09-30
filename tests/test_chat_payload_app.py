@@ -44,6 +44,26 @@ def test_parse_chat_payload_rejects_invalid_body():
     assert error[1] == 400
 
 
+def test_parse_chat_payload_combines_local_knowledge_with_fresh_web_policy():
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={
+            "message": "Quel est le prix actuel pour visiter Gorée ?",
+            "history": [],
+            "language": "fr",
+            "audience": "tourist",
+        },
+    ):
+        payload, error = parse_chat_payload()
+
+    assert error is None
+    assert payload["use_web"] is True
+    assert "Île de Gorée" in payload["instructions"]
+    assert "COMBINAISON CONNAISSANCE + WEB" in payload["instructions"]
+    assert "informations susceptibles d’avoir changé" in payload["instructions"]
+
+
 def test_parse_chat_payload_makes_photo_only_requests_fast():
     with app.test_request_context(
         "/chat",
