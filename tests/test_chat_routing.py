@@ -55,3 +55,11 @@ def test_create_response_uses_selected_model():
     service["create_response"]({"planner": True}, stream=False)
 
     assert calls == [{"model": "gpt-5.6-sol", "kwargs_model": "gpt-5.6-sol"}]
+
+
+def test_deep_reasoning_routes_comparison():
+    assert select_chat_model({"planner": False, "deep_reasoning": True}, "gpt-5.6-luna") == "gpt-5.6-sol"
+
+
+def test_simple_non_planner_stays_on_luna():
+    assert select_chat_model({"planner": False, "deep_reasoning": False}, "gpt-5.6-luna") == "gpt-5.6-luna"
