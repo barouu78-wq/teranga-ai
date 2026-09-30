@@ -10,6 +10,7 @@ def register_youth_project_route(app, deps):
     advance_project_stage = deps["advance_project_stage"]
     find_project_partners = deps.get("find_project_partners", lambda category="", city="": [])
     find_youth_opportunities = deps.get("find_youth_opportunities", lambda category="", city="": [])
+    build_project_matches = deps.get("build_project_matches")
     max_message_length = deps.get("max_message_length", 2000)
 
     @app.get("/opportunities")
@@ -63,6 +64,26 @@ def register_youth_project_route(app, deps):
         )
         return jsonify({"project": brief})
 
+
+    @app.post("/api/projects/matches")
+    @require_json_post
+    def youth_project_matches():
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or not isinstance(payload.get("project"), dict):
+            return jsonify({"error": "Projet invalide."}), 400
+        if build_project_matches is None:
+            project = payload["project"]
+            category = sanitize_text(project.get("category", ""), max_len=40).strip()
+            city = sanitize_text(project.get("city", ""), max_len=80).strip()
+            return jsonify({
+                "matches": {
+                    "category": category,
+                    "city": city,
+                    "partners": find_project_partners(category, city)[:5],
+                    "opportunities": find_youth_opportunities(category, city)[:5],
+                }
+            })
+        return jsonify({"matches": build_project_matches(payload["project"])})
 
     @app.post("/api/projects/advance")
     @require_json_post
