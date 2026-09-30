@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teranga Projet — Radar jeunesse</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f6efe3;background:#0b0907}
+body{margin:0;min-height:100vh;background:radial-gradient(700px 380px at 100% 0,rgba(217,164,65,.16),transparent 60%),#0b0907}
+main{width:min(960px,calc(100% - 28px));margin:0 auto;padding:28px 0 48px}
+a{color:inherit}.back{display:inline-block;margin-bottom:18px;color:#d9a441;text-decoration:none;font-weight:750}
+h1{margin:0;color:#e8c36a;font-size:clamp(30px,6vw,48px)}.intro{color:#b8a48c;max-width:65ch}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+select{border:1px solid rgba(217,164,65,.18);background:#171310;color:#f6efe3;border-radius:12px;padding:10px 12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{border:1px solid rgba(217,164,65,.14);border-radius:18px;background:#171310;padding:16px}
+.card h2{font-size:17px;margin:0 0 5px}.org{color:#d9a441;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.meta{color:#b8a48c;font-size:11px;margin:8px 0}.card p{color:#d5c7b5;font-size:13px;line-height:1.5}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(15,106,67,.18);color:#8dd1ad;font-size:10px;font-weight:800}
+.action{display:inline-block;margin-top:8px;padding:9px 12px;border-radius:10px;background:#0f6a43;color:#fff;text-decoration:none;font-size:12px;font-weight:800}
+.note{margin-top:18px;color:#9f907e;font-size:11px}
+@media(max-width:680px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="/">&larr; Retour à Teranga AI</a>
+<h1>🔎 Radar jeunesse</h1>
+<p class="intro">Des programmes, services et pistes d’accompagnement reliés à ton projet. Les dates et critères peuvent changer : ouvre toujours la source officielle avant de candidater.</p>
+<form class="filters" method="get">
+<select name="category" aria-label="Domaine">
+<option value="">Tous les domaines</option>
+{% for value,label in categories %}
+<option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+<input type="hidden" name="city" value="{{ selected_city }}">
+<button type="submit">Filtrer</button>
+</form>
+<section class="grid">
+{% for item in opportunities %}
+<article class="card">
+<div class="org">{{ item.organization }}</div>
+<h2>{{ item.title }}</h2>
+<span class="badge">{{ item.type.replace('_',' ') }}</span>
+<div class="meta">{{ item.audience }} · {{ item.location }}</div>
+<p>{{ item.description }}</p>
+<a class="action" href="{{ item.url }}" target="_blank" rel="noopener noreferrer">Vérifier sur le site officiel →</a>
+</article>
+{% else %}
+<p>Aucune piste ne correspond encore à ce filtre.</p>
+{% endfor %}
+</section>
+<p class="note">Teranga AI ne garantit pas l’éligibilité ni l’ouverture d’un programme. Vérifie les conditions, dates et pièces demandées auprès de l’organisme concerné.</p>
+</main>
+</body>
+</html>
