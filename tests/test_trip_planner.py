@@ -358,7 +358,7 @@ def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_
     body = _html("https://example.com", "fr")
     assert "function validDateStep()" in body
     assert "const arrivalInput=form.querySelector('input[name=\"arrival\"]')" in body
-    assert "const departureInput=form.querySelector('input[name=\"departure\"]')" in body
+    assert "departureInput=form.querySelector('input[name=\"departure\"]')" in body
     assert "departureInput?.setAttribute('min',arrivalInput.value)" in body
     assert "if(current===0){if(!validDateStep())return}else if(!form.reportValidity())return;" in body
     assert "La date de départ doit être après la date d&#x27;arrivée." in body
