@@ -352,6 +352,16 @@ def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_valu
     assert "Pace: Balanced" in captured["prompt"]
 
 
+def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_report_validity():
+    from services.trip_planner import _html
+
+    body = _html("https://example.com", "fr")
+    assert "function validDateStep()" in body
+    assert "if(current===0){if(!validDateStep())return}else if(!form.reportValidity())return;" in body
+    assert "La date de départ doit être après la date d&#x27;arrivée." in body
+    assert "addEventListener('click'" in body
+
+
 def test_trip_planner_form_uses_distinct_option_groups():
     from services.trip_planner import _html
 

@@ -32,7 +32,7 @@ UI = {
         "budget": "Budget", "regions": "Régions", "pace": "Rythme",
         "start": "Créer mon voyage", "continue": "Continuer", "generate": "Générer mon itinéraire",
         "result": "Ton voyage est prêt", "back": "Modifier", "error": "Impossible de générer le voyage pour le moment.", "practical_title": "Infos pratiques", "practical_intro": "Vérifie transport, horaires, prix, démarches et services avec des sources web.", "practical_region": "Région", "practical_transport": "Transport", "practical_hours": "Horaires", "practical_prices": "Prix", "practical_procedures": "Démarches", "practical_services": "Services", "practical_loading": "Recherche web en cours…", "practical_error": "Impossible de récupérer les informations pratiques.", "practical_checked": "Vérifié le", "practical_sources": "Sources", "voice_listen": "Écouter", "voice_stop": "Arrêter",
-        "from": "Arrivée", "to": "Départ", "adults": "Adultes", "children": "Enfants",
+        "from": "Arrivée", "to": "Départ", "date_error": "La date de départ doit être après la date d'arrivée.", "adults": "Adultes", "children": "Enfants",
         "budget_options": ["Économique", "Confort", "Premium", "Luxe"],
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
@@ -44,7 +44,7 @@ UI = {
         "intro": "Build a personalized Senegal itinerary in a few steps.",
         "dates": "Dates", "travelers": "Travelers", "interests": "Interests", "budget": "Budget", "regions": "Regions", "pace": "Pace",
         "start": "Create my trip", "continue": "Continue", "generate": "Generate my itinerary", "result": "Your trip is ready",
-        "back": "Edit", "error": "We could not generate the trip right now.", "from": "Arrival", "to": "Departure",
+        "back": "Edit", "error": "We could not generate the trip right now.", "date_error": "Departure must be after arrival.", "from": "Arrival", "to": "Departure",
         "adults": "Adults", "children": "Children",
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
@@ -127,9 +127,13 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 </main>
 <script>
 const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
-function show(i){{current=i;steps.forEach((s,n)=>s.classList.toggle('active',n===i));window.scrollTo({{top:0,behavior:'smooth'}})}}
-document.querySelectorAll('[data-next]').forEach(b=>b.onclick=()=>{{if(form.reportValidity())show(current+1)}});
-document.querySelectorAll('[data-prev]').forEach(b=>b.onclick=()=>show(current-1));
+function show(i){{current=Math.max(0,Math.min(i,steps.length-1));steps.forEach((s,n)=>s.classList.toggle('active',n===current));window.scrollTo({{top:0,behavior:'smooth'}})}}
+function validDateStep(){{const arrival=String(form.elements.arrival?.value||'');const departure=String(form.elements.departure?.value||'');if(!arrival||!departure){{form.reportValidity();return false}}if(arrival>=departure){{status.textContent="{date_error}";return false}}return true}}
+document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{{
+  if(current===0){{if(!validDateStep())return}}else if(!form.reportValidity())return;
+  show(current+1);
+}}));
+document.querySelectorAll('[data-prev]').forEach(b=>b.addEventListener('click',()=>show(current-1)));
 let currentPlan=null;
 const AUDIENCE_VALUES=["tourist","resident","diaspora","merchant"]; const contextPlaceQuery=new URL(window.location.href).searchParams.get('context_place')||''; if(contextPlaceQuery){{try{{sessionStorage.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))}}catch(_){{}}}} const audienceStored=localStorage.getItem('teranga-audience'); const audienceQuery=new URL(window.location.href).searchParams.get('audience'); const audience=AUDIENCE_VALUES.includes(audienceStored)?audienceStored:(AUDIENCE_VALUES.includes(audienceQuery)?audienceQuery:'tourist'); if(audience!==audienceStored){{try{{localStorage.setItem('teranga-audience',audience)}}catch(_){{}}}}\nconst REGION_OPTIONS={region_options_json};
 const placeContextBox=document.getElementById("place-context"); const placeContextName=(()=>{{try{{return sessionStorage.getItem("teranga-place-name")||""}}catch(_){{return ""}}}})(); if(placeContextBox&&placeContextName){{placeContextBox.hidden=false;placeContextBox.innerHTML="<strong>Point de départ :</strong> "+escapeHtml(placeContextName)+"<br><span>Ce repère guide le voyage sans modifier tes choix automatiquement.</span>"}}
@@ -206,7 +210,7 @@ try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
-        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]),
+        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t.get("date_error", "La date de départ doit être après la date d'arrivée.")),
         kicker=escape(t["kicker"]), dates=escape(t["dates"]), travelers=escape(t["travelers"]),
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
