@@ -357,7 +357,7 @@ def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_
 
     body = _html("https://example.com", "fr")
     assert "function validDateStep()" in body
-    assert "if(current===0){{if(!validDateStep())return}}else if(!form.reportValidity())return;" in body
+    assert "if(current===0){if(!validDateStep())return}else if(!form.reportValidity())return;" in body
     assert 'date_error: "La date de départ doit être après la date d\'arrivée."' in body
     assert "addEventListener('click'" in body
 
