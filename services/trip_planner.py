@@ -126,10 +126,10 @@ input[type=date],input[type=number]{{width:100%;background:#0e0b09;border:1px so
 </div><p class="small">{note}</p>
 </main>
 <script>
-const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); let current=0;
+const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c])); const form=document.getElementById('planner'), steps=[...document.querySelectorAll('.step')], status=document.getElementById('status'), result=document.getElementById('result'); const arrivalInput=form.querySelector('input[name="arrival"]'), departureInput=form.querySelector('input[name="departure"]'); let current=0;
 function show(i){{current=Math.max(0,Math.min(i,steps.length-1));steps.forEach((s,n)=>s.classList.toggle('active',n===current));window.scrollTo({{top:0,behavior:'smooth'}})}}
-function validDateStep(){{const arrival=String(form.elements.arrival?.value||'');const departure=String(form.elements.departure?.value||'');if(!arrival||!departure){{form.reportValidity();return false}}if(arrival>=departure){{status.textContent="{date_error}";return false}}return true}}
-document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{{
+function validDateStep(){{const arrival=String(arrivalInput?.value||'');const departure=String(departureInput?.value||'');if(!arrival||!departure){{status.textContent="{date_required}";if(!arrival)arrivalInput?.focus();else departureInput?.focus();return false}}if(arrival>=departure){{status.textContent="{date_error}";departureInput?.focus();return false}}status.textContent='';return true}}
+arrivalInput?.addEventListener('change',()=>{{if(arrivalInput.value)departureInput?.setAttribute('min',arrivalInput.value)}});\ndocument.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{{
   if(current===0){{if(!validDateStep())return}}else if(!form.reportValidity())return;
   show(current+1);
 }}));
@@ -210,7 +210,7 @@ try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-
 catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
 }};
 </script></body></html>""".format(
-        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t.get("date_error", "La date de départ doit être après la date d'arrivée.")),
+        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t.get("date_error", "La date de départ doit être après la date d'arrivée.")), date_required=escape(t.get("date_required", "Sélectionne une date d’arrivée et une date de départ.")),
         kicker=escape(t["kicker"]), dates=escape(t["dates"]), travelers=escape(t["travelers"]),
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
