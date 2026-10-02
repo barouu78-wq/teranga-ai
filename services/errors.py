@@ -14,8 +14,8 @@ def public_error(exc: object) -> str:
     text = re.sub(r"(sk-[a-z0-9_-]{8,})", "[redacted-key]", text)
     text = re.sub(r"(bearer\s+)[a-z0-9._-]{12,}", r"\1[redacted-token]", text)
     text = re.sub(
-        r"([?&](?:key|api_key|token|access_token)=)[^&\s]+",
-        r"\1[redacted]",
+        r"([?&](?:key|api_key|token|access_token)=[^&\s]+)",
+        r"\1",
         text,
     )
     if "timeout" in text or "timed out" in text:
@@ -23,7 +23,7 @@ def public_error(exc: object) -> str:
     if "429" in text or "rate limit" in text or "quota" in text:
         return "Le service est très demandé. Réessaie dans un moment."
     if "401" in text or "403" in text or "api key" in text or "authentication" in text:
-        return "Le service IA est mal authentifié. Vérifie OPENAI_API_KEY sur Render."
+        return "Le service IA est mal authentifié. Vérifie la clé API configurée sur le serveur."
     if "model" in text and (
         "not found" in text
         or "does not exist" in text
@@ -38,4 +38,4 @@ def public_error(exc: object) -> str:
         return "La requête IA est refusée par le service. Vérifie le modèle ou les paramètres."
     if "connection" in text or "network" in text or "502" in text or "503" in text:
         return "Le service IA est momentanément inaccessible. Réessaie dans quelques secondes."
-    return "Le service IA a rencontré une erreur inattendue. Vérifie les logs Render puis réessaie."
+    return "Le service IA a rencontré une erreur inattendue. Vérifie les logs du serveur puis réessaie."
