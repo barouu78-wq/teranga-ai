@@ -79,6 +79,18 @@ def build_chat_service(
             fallback_models=(fallback_model,),
         )
 
+    def complete_enrichments(payload):
+        plan = agent_plan(payload)
+        return run_enrichments(
+            plan,
+            message=payload.get("message", ""),
+            contextual_query=payload.get("contextual_query") or payload.get("message", ""),
+            fetch_images=fetch_topic_images,
+            lookup_map=lookup_map,
+            should_fetch_map=should_fetch_map,
+            logger=logger,
+        )
+
     def complete_reply(payload):
         response = create_response(payload, stream=False)
         text = clean_answer(getattr(response, "output_text", "") or "")
