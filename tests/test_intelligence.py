@@ -298,7 +298,7 @@ def test_context_intents_do_not_match_transport_inside_business_words():
     assert "transport" not in context["intents"]
 
 
-def test_project_budget_does_not_activate_trip_planner():
+def test_project_budget_activates_agent_planner():
     from services.intelligence import infer_senegal_context, should_use_planner
 
     context = infer_senegal_context([], "Je veux lancer un commerce avec 150000 FCFA.")
