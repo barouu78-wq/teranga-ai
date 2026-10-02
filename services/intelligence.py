@@ -353,6 +353,40 @@ def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def build_agent_plan(context: dict[str, Any], intent_context: dict[str, Any]) -> dict[str, Any]:
+    """Build a small, deterministic execution plan for complex requests."""
+    domain = str(intent_context.get("domain") or "general")
+    needs_web = bool(intent_context.get("needs_web_search"))
+    planner = should_use_planner(context)
+    steps: list[dict[str, Any]] = []
+
+    if needs_web:
+        steps.append({"id": "fresh_check", "action": "verify_current_information", "required": True})
+    else:
+        steps.append({"id": "local_context", "action": "use_structured_senegal_knowledge", "required": True})
+
+    if context.get("place"):
+        steps.append({"id": "place", "action": "anchor_answer_to_place", "required": True})
+
+    if planner:
+        steps.append({"id": "plan", "action": "build_ordered_plan", "required": True})
+
+    if context.get("budget") or context.get("duration") or context.get("adults") is not None or context.get("children") is not None:
+        steps.append({"id": "constraints", "action": "respect_detected_constraints", "required": True})
+
+    if domain in {"business", "employment", "education", "administration", "travel", "transport"} and needs_web:
+        steps.append({"id": "sources", "action": "prefer_authoritative_sources", "required": True})
+
+    steps.append({"id": "answer", "action": "respond_with_concrete_next_steps", "required": True})
+    return {
+        "enabled": bool(planner or needs_web or len(steps) > 2),
+        "domain": domain,
+        "steps": steps[:7],
+        "requires_fresh_verification": needs_web,
+        "requires_user_confirmation": False,
+    }
+
+
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, *, resolved_context: dict[str, Any] | None = None) -> dict[str, Any]:
     message = str(text or "").strip()
     current_intent = detect_intent(message)
