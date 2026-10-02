@@ -86,3 +86,15 @@ def test_dynamic_source_priorities_match_web_policy():
     assert source_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
     assert source_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
     assert source_domains("weather")[:2] == ("meteofrance.com", "ansd.sn")
+
+
+def test_knowledge_context_cache_reuses_same_query():
+    from services.senegal_knowledge import _KNOWLEDGE_CONTEXT_CACHE, format_senegal_knowledge, load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    _KNOWLEDGE_CONTEXT_CACHE.clear()
+    first = format_senegal_knowledge(data, query="Que visiter à Casamance ?")
+    second = format_senegal_knowledge(data, query="Que visiter à Casamance ?")
+
+    assert first == second
+    assert len(_KNOWLEDGE_CONTEXT_CACHE) == 1
