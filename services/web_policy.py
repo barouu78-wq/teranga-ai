@@ -6,6 +6,7 @@ tested without loading the full application.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
 from services.validation import normalize
 
@@ -23,14 +24,19 @@ SOURCE_FILTERS = {
     "weather": ("meteofrance.com", "ansd.sn", "gov.sn"),
 }
 
+@lru_cache(maxsize=32)
+def _compiled_term_pattern(terms: tuple[str, ...]) -> re.Pattern[str]:
+    alternatives = "|".join(
+        re.escape(term)
+        for term in sorted(set(terms), key=len, reverse=True)
+    )
+    return re.compile(rf"(?<!\\w)(?:{alternatives})(?!\\w)")
+
+
 def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
-    for term in terms:
-        if " " in term or "-" in term:
-            if term in text:
-                return True
-        elif re.search(rf"(?<!\w){re.escape(term)}(?!\w)", text):
-            return True
-    return False
+    if not text or not terms:
+        return False
+    return bool(_compiled_term_pattern(terms).search(text))
 
 
 def preferred_domains(domain: str) -> tuple[str, ...]:
