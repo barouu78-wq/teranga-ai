@@ -109,10 +109,6 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         })
         if len(out) >= limit:
             break
-    if len(_COMMONS_CACHE) >= _COMMONS_CACHE_MAX_ENTRIES:
-        oldest = min(_COMMONS_CACHE, key=lambda key: _COMMONS_CACHE[key][0])
-        _COMMONS_CACHE.pop(oldest, None)
-    _COMMONS_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
     return [dict(item) for item in out]
 
 
@@ -191,7 +187,11 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         seen.add(src)
         if len(out) >= limit:
             break
-    return out
+    if len(_COMMONS_CACHE) >= _COMMONS_CACHE_MAX_ENTRIES and cache_key not in _COMMONS_CACHE:
+        oldest = min(_COMMONS_CACHE, key=lambda key: _COMMONS_CACHE[key][0])
+        _COMMONS_CACHE.pop(oldest, None)
+    _COMMONS_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
+    return [dict(item) for item in out]
 
 
 def fetch_commons_image(title, image_validator=None, display_url_builder=None, urlopen_fn=None):

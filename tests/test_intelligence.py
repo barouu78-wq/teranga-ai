@@ -298,12 +298,12 @@ def test_context_intents_do_not_match_transport_inside_business_words():
     assert "transport" not in context["intents"]
 
 
-def test_project_budget_does_not_activate_trip_planner():
+def test_project_budget_activates_agent_planner():
     from services.intelligence import infer_senegal_context, should_use_planner
 
     context = infer_senegal_context([], "Je veux lancer un commerce avec 150000 FCFA.")
 
-    assert should_use_planner(context) is False
+    assert should_use_planner(context) is True
 
 
 def test_intent_context_reuses_web_policy_decision(monkeypatch):
@@ -332,3 +332,25 @@ def test_build_intent_context_exposes_small_structured_memory():
     assert memory["family"] is True
     assert len(memory["constraints"]) <= 8
     assert memory["source"] == "recent_conversation"
+
+
+def test_project_request_activates_agent_planner():
+    from services.intelligence import infer_senegal_context, should_use_planner
+
+    context = infer_senegal_context(
+        [],
+        "Je veux lancer un commerce avec 150000 FCFA et trouver mes premiers clients.",
+    )
+
+    assert should_use_planner(context) is True
+
+
+def test_career_request_activates_agent_planner():
+    from services.intelligence import infer_senegal_context, should_use_planner
+
+    context = infer_senegal_context(
+        [],
+        "Je cherche un emploi et je veux un plan en 3 étapes pour préparer ma candidature.",
+    )
+
+    assert should_use_planner(context) is True

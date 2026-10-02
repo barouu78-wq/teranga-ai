@@ -241,9 +241,23 @@ def should_use_planner(context: dict[str, Any]) -> bool:
         "week-end", "pendant", "pour 2 jours", "pour 3 jours", "pour 4 jours",
         "pour 5 jours", "pour une semaine", "budget",
     )
+    planning_intents = {"travel", "transport", "food", "project", "career", "education", "finance"}
+    decision_intents = {"project", "career", "education", "finance"}
+    has_planning_signal = bool(context.get("duration")) or bool(context.get("budget")) or any(
+        term in query for term in planning_terms
+    )
     return (
-        bool(intents.intersection({"travel", "transport", "food"}))
-        and (bool(context.get("duration")) or bool(context.get("budget")) or any(term in query for term in planning_terms))
+        bool(intents.intersection(planning_intents))
+        and (
+            has_planning_signal
+            or (
+                bool(intents.intersection(decision_intents))
+                and any(
+                    term in query
+                    for term in ("étape", "etape", "plan", "organise", "lancer", "trouver", "préparer", "preparer")
+                )
+            )
+        )
     )
 
 
