@@ -45,6 +45,14 @@ def test_should_use_web_detects_live_and_contextual_requests():
     assert not should_use_web("Quelle est l'histoire de Gorée ?")
 
 
+def test_should_use_web_avoids_generic_false_positives():
+    from services.web_policy import should_use_web
+
+    assert not should_use_web("Quelle est la meilleure façon de rester libre ?")
+    assert not should_use_web("Explique-moi pourquoi les couleurs changent.")
+    assert not should_use_web("Combien font 2 + 2 ?")
+
+
 def test_transport_and_food_source_policy():
     assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
     assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
