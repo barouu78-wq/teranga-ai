@@ -14,8 +14,8 @@ def public_error(exc: object) -> str:
     text = re.sub(r"(sk-[a-z0-9_-]{8,})", "[redacted-key]", text)
     text = re.sub(r"(bearer\s+)[a-z0-9._-]{12,}", r"\1[redacted-token]", text)
     text = re.sub(
-        r"([?&](?:key|api_key|token|access_token)=[^&\s]+)",
-        r"\1",
+        r"([?&](?:key|api_key|token|access_token)=)[^&\s]+",
+        r"\1[redacted]",
         text,
     )
     if "timeout" in text or "timed out" in text:
