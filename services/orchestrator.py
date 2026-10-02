@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import re
 from typing import Any, Callable
+from concurrent.futures import ThreadPoolExecutor
 
 
 @dataclass(frozen=True)
@@ -74,6 +75,7 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     )
 
 
+
 def run_enrichments(
     plan: AgentPlan,
     *,
@@ -84,20 +86,31 @@ def run_enrichments(
     should_fetch_map: Callable[[str], bool],
     logger: Any = None,
 ) -> tuple[Any, Any]:
-    """Run selected enrichments independently; one optional tool cannot block another."""
-    image = None
-    map_result = None
-    if plan.use_images:
+    """Run selected enrichments independently, in parallel when both are selected."""
+    def fetch_image_result():
         try:
-            image = fetch_images(message)
+            return fetch_images(message)
         except Exception:
             if logger is not None and hasattr(logger, "exception"):
                 logger.exception("agent_image_enrichment_failed")
-    if plan.use_map:
+            return None
+
+    def fetch_map_result():
         try:
             query = contextual_query or message
-            map_result = lookup_map(query, should_fetch_map(query))
+            return lookup_map(query, should_fetch_map(query))
         except Exception:
             if logger is not None and hasattr(logger, "exception"):
                 logger.exception("agent_map_enrichment_failed")
-    return image, map_result
+            return None
+
+    if plan.use_images and plan.use_map:
+        with ThreadPoolExecutor(max_workers=2, thread_name_prefix="chat-enrichment") as executor:
+            image_future = executor.submit(fetch_image_result)
+            map_future = executor.submit(fetch_map_result)
+            return image_future.result(), map_future.result()
+    if plan.use_images:
+        return fetch_image_result(), None
+    if plan.use_map:
+        return None, fetch_map_result()
+    return None, None

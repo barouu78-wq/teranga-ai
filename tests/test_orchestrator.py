@@ -1,3 +1,5 @@
+from threading import Barrier
+
 from services.orchestrator import AgentPlan, build_agent_plan, run_enrichments
 
 
@@ -64,6 +66,29 @@ def test_image_failure_does_not_block_map():
     assert image is None
     assert map_result == {"query": "Gorée"}
     assert calls == [("Gorée", True)]
+
+
+def test_selected_enrichments_run_in_parallel():
+    barrier = Barrier(2)
+
+    def fetch_images(_):
+        barrier.wait(timeout=2)
+        return ["image"]
+
+    def lookup_map(*_):
+        barrier.wait(timeout=2)
+        return {"map": True}
+
+    image, map_result = run_enrichments(
+        AgentPlan(model="gpt-5.6-luna", use_images=True, use_map=True),
+        message="Dakar",
+        contextual_query="Dakar",
+        fetch_images=fetch_images,
+        lookup_map=lookup_map,
+        should_fetch_map=lambda _: True,
+    )
+    assert image == ["image"]
+    assert map_result == {"map": True}
 
 
 def test_map_failure_does_not_block_image():
