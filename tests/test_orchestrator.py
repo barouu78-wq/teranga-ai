@@ -138,3 +138,27 @@ def test_planner_exposes_explicit_build_plan_step():
     )
     assert "build_plan" in plan.steps
     assert plan.steps.index("build_plan") < plan.steps.index("generate_response")
+
+
+def test_planner_exposes_workflow_type_from_intent():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "intent_context": {"intent": "career", "needs_images": False},
+            "message": "Organise ma recherche d emploi",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.workflow == "career"
+
+
+def test_non_planner_keeps_general_workflow():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "intent_context": {"intent": "finance", "needs_images": False},
+            "message": "Quel est le taux ?",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.workflow == "general"
