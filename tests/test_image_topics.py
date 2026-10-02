@@ -49,3 +49,31 @@ def test_knowledge_image_titles_requires_complete_place_terms():
     knowledge = {"places": [{"name": "Dakar", "image_queries": ["Dakar"]}]}
     assert knowledge_image_titles("Le Dakarien parle de transport", knowledge, normalize=lambda value: str(value or "").lower()) == []
     assert knowledge_image_titles("Photos de Dakar", knowledge, normalize=lambda value: str(value or "").lower()) == ["Dakar"]
+
+
+def test_fetch_topic_images_requires_complete_structured_place_terms():
+    from services.image_topics import fetch_topic_images
+
+    calls = []
+
+    def commons(query, limit=4):
+        calls.append(query)
+        return []
+
+    knowledge = {"places": [{"name": "Dakar", "image_queries": ["Dakar Sénégal"]}]}
+    result = fetch_topic_images(
+        message="Le Dakarien parle de transport",
+        knowledge=knowledge,
+        normalize=lambda value: str(value or "").lower(),
+        should_fetch_images=lambda _message: True,
+        topic_wikipedia_titles=lambda _message, _limit: [],
+        knowledge_image_titles=lambda _message, _limit: [],
+        fetch_commons_images=commons,
+        fetch_google_images=None,
+        fetch_city_image=lambda _title: None,
+        image_proxy_url=lambda src: src,
+        logger=type("Logger", (), {"exception": staticmethod(lambda *args, **kwargs: None)})(),
+        max_photos=8,
+    )
+    assert result is None
+    assert calls == []
