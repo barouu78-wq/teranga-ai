@@ -53,7 +53,7 @@ WEB_HINTS = (
     "aéroport", "airport", "formalités", "formalites", "document", "documents",
     "ambassade", "consulat", "immigration", "vaccin", "vaccination",
     "banque", "bank", "guichet", "atm", "distributeur", "mobile money",
-    "wave", "free money", "expresso money", "yas", "free", "orange",
+    "wave", "free money", "expresso money", "yas", "orange money",
     "concert", "festival", "match", "football", "salon", "foire",
     "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
     "urgent", "alerte", "grève", "greve", "perturbation", "incident",
@@ -83,7 +83,7 @@ def should_use_web(message, context=""):
 
     # Intentions qui vieillissent vite, même sans « actuel » ou « aujourd'hui ».
     dynamic_intents = (
-        "prix", "tarif", "cout", "coût", "combien", "horaire", "horaires",
+        "prix", "tarif", "cout", "coût", "horaire", "horaires",
         "ouvert", "ferme", "fermé", "disponible", "disponibilite", "disponibilité",
         "reservation", "réservation", "billet", "ticket", "vol", "ferry",
         "taxi", "bus", "transport", "aeroport", "aéroport", "aibd",
