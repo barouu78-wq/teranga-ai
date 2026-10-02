@@ -124,3 +124,17 @@ def test_planner_still_routes_to_stronger_model_and_map():
     )
     assert plan.model == "gpt-5.6-sol"
     assert plan.use_map is True
+
+
+def test_planner_exposes_explicit_build_plan_step():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": False,
+            "intent_context": {"intent": "project", "needs_images": False},
+            "message": "Organise mon projet",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert "build_plan" in plan.steps
+    assert plan.steps.index("build_plan") < plan.steps.index("generate_response")
