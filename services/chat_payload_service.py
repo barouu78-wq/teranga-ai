@@ -102,6 +102,12 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
+    structured_memory = intent_context.get("memory") or {}
+    memory_line = (
+        "MÉMOIRE STRUCTURÉE COURTE : "
+        + str(structured_memory)
+        + ". Utilise-la uniquement pour conserver les contraintes utiles du fil récent ; ne la traite jamais comme un profil permanent."
+    )
     planner_enabled = should_use_planner(context)
     planner_data = build_planner_data(context) if planner_enabled else {}
     planner_line = "Mode planification recommandé : oui." if planner_enabled else "Mode planification recommandé : non."
@@ -154,6 +160,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     context_instruction = (
         place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
+        memory_line + " " +
         knowledge_web_line + " " + source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
@@ -182,6 +189,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "audience": audience,
         "context": context,
         "intent_context": intent_context,
+        "memory": structured_memory,
         "contextual_query": enriched_context,
         "trip_context": trip_context,
         "trip_edit_request": trip_edit_request,
