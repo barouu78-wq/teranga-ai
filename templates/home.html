@@ -2971,6 +2971,7 @@ function reset(){
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
   sessionStorage.removeItem('teranga-history');
+  localStorage.removeItem('teranga-history');
 }
 let resumeVoiceTimer=0;
 function persist(){
@@ -2981,13 +2982,15 @@ function persist(){
         role:item&&item.role==='assistant'?'assistant':'user',
         content:String(item&&item.content||'').replace(/\\s+/g,' ').trim().slice(0,1200)
       })).filter(item=>item.content);
-      sessionStorage.setItem('teranga-history',JSON.stringify({version:1,lang,history:safeHistory}));
+      const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
+      sessionStorage.setItem('teranga-history',payload);
+      localStorage.setItem('teranga-history',payload);
     }catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=sessionStorage.getItem('teranga-history');
+    const raw=sessionStorage.getItem('teranga-history')||localStorage.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
@@ -2995,6 +2998,7 @@ function restore(){
       const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/\\s+/g,' ').trim().slice(0,1200)})).filter(item=>item.content);
       if(!restored.length){
         sessionStorage.removeItem('teranga-history');
+        localStorage.removeItem('teranga-history');
         return;
       }
       history=restored;
