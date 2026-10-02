@@ -2,8 +2,10 @@ services:
   - type: web
     name: teranga-ai
     runtime: python
+    plan: 2c-8g
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app
+    healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
         sync: false
@@ -11,3 +13,7 @@ services:
         generateValue: true
       - key: OPENAI_MODEL
         value: gpt-5.6-luna
+      - key: SITE_URL
+        value: https://teranga-ai.fr
+      - key: ALLOWED_ORIGINS
+        value: https://teranga-ai.fr,https://www.teranga-ai.fr,https://teranga-ai-1.onrender.com

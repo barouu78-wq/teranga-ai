@@ -955,7 +955,11 @@ def test_production_startup_contract():
 
     assert "runtime: python" in render
     assert "buildCommand: pip install -r requirements.txt" in render
-    assert "startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app" in render
+    assert "startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app" in render
+    assert "healthCheckPath: /health" in render
+    assert "plan: 2c-8g" in render
+    assert "value: https://teranga-ai.fr" in render
+    assert "key: ALLOWED_ORIGINS" in render
     assert "key: OPENAI_API_KEY" in render
     assert "key: SECRET_KEY" in render
     assert "from app import app" in wsgi
