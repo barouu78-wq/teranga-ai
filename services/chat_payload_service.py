@@ -103,6 +103,14 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     planner_enabled = should_use_planner(context)
+    conversation_memory = intent_context.get("conversation_memory") or {}
+    memory_line = (
+        "MÉMOIRE DE TRAVAIL (issue uniquement des derniers échanges) : lieux="
+        + ", ".join(conversation_memory.get("places", []))
+        + "; sujets=" + ", ".join(conversation_memory.get("topics", []))
+        + "; contraintes=" + ", ".join(conversation_memory.get("constraints", []))
+        + ". Utilise-la seulement pour assurer la continuité ; ne transforme jamais une déduction en fait personnel certain."
+    )
     planner_data = build_planner_data(context) if planner_enabled else {}
     planner_line = "Mode planification recommandé : oui." if planner_enabled else "Mode planification recommandé : non."
     if planner_enabled:
@@ -152,7 +160,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."
     )
     context_instruction = (
-        place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
+        place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + memory_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         knowledge_web_line + " " + source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
