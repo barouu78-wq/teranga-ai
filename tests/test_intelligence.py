@@ -332,3 +332,40 @@ def test_build_intent_context_exposes_small_structured_memory():
     assert memory["family"] is True
     assert len(memory["constraints"]) <= 8
     assert memory["source"] == "recent_conversation"
+
+
+def test_structured_conversation_memory_keeps_actionable_context_only():
+    from services.intelligence import build_conversation_memory
+
+    result = build_conversation_memory([
+        {"role": "user", "content": "Je prépare 4 jours à Gorée avec 100000 FCFA."},
+        {"role": "assistant", "content": "Voici une idée de séjour."},
+        {"role": "user", "content": "Je veux aussi voyager en famille."},
+    ])
+
+    assert result["source"] == "recent_conversation"
+    assert "goree" in result["places"]
+    assert "4 jours" in result["constraints"]
+    assert "100000 fcfa" in result["constraints"]
+    assert "famille" in result["constraints"]
+    assert "travel" in result["topics"]
+
+
+def test_structured_conversation_memory_is_empty_without_history():
+    from services.intelligence import build_conversation_memory
+
+    assert build_conversation_memory([]) == {
+        "places": [],
+        "constraints": [],
+        "topics": [],
+        "source": "none",
+    }
+
+
+def test_intent_context_exposes_structured_conversation_memory():
+    result = build_intent_context(
+        "Et pour les repas ?",
+        history=[{"role": "user", "content": "Je prépare 4 jours à Gorée avec 100000 FCFA."}],
+    )
+    assert "conversation_memory" in result
+    assert "goree" in result["conversation_memory"]["places"]
