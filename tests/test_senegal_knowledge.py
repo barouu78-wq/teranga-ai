@@ -98,3 +98,22 @@ def test_knowledge_context_cache_reuses_same_query():
 
     assert first == second
     assert len(_KNOWLEDGE_CONTEXT_CACHE) == 1
+
+
+def test_knowledge_context_routes_education_module():
+    from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    context = format_senegal_knowledge(data, query="Je cherche une formation à Dakar")
+    assert "DOMAINE PERTINENT (education)" in context
+    assert "formation" in context.lower()
+
+
+def test_knowledge_context_routes_business_and_employment_to_economy_module():
+    from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    business = format_senegal_knowledge(data, query="Comment lancer une entreprise au Sénégal ?")
+    employment = format_senegal_knowledge(data, query="Je cherche un emploi au Sénégal")
+    assert "DOMAINE PERTINENT (economy)" in business
+    assert "DOMAINE PERTINENT (economy)" in employment
