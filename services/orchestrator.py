@@ -47,7 +47,17 @@ def _needs_map(payload: dict[str, Any]) -> bool:
     return False
 
 
-_PLANNER_WORKFLOW_ALIASES = {\n    "trip_planning": "travel",\n    "travel": "travel",\n    "project": "project",\n    "career": "career",\n    "education": "education",\n    "finance": "finance",\n}\n\n\ndef build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
+_PLANNER_WORKFLOW_ALIASES = {
+    "trip_planning": "travel",
+    "travel": "travel",
+    "project": "project",
+    "career": "career",
+    "education": "education",
+    "finance": "finance",
+}
+
+
+def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
     """Build a bounded plan from the decisions already computed upstream."""
     planner = bool(payload.get("planner"))
     deep_reasoning = bool(payload.get("deep_reasoning"))
