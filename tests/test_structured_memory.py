@@ -1,5 +1,6 @@
 from services.intelligence import build_structured_memory
 
+
 def test_structured_memory_separates_temporary_context():
     memory = build_structured_memory({
         "query": "Je vais à Dakar pour 3 jours avec mes enfants",
@@ -14,6 +15,7 @@ def test_structured_memory_separates_temporary_context():
     assert memory["temporary"]["family"] is True
     assert memory["durable_candidates"] == []
 
+
 def test_structured_memory_only_marks_explicit_preferences_as_candidates():
     memory = build_structured_memory({
         "query": "Je préfère les trajets en train",
@@ -21,6 +23,14 @@ def test_structured_memory_only_marks_explicit_preferences_as_candidates():
     })
     assert memory["temporary"]["place"] == "dakar"
     assert memory["durable_candidates"] == ["les trajets en train"]
+
+
+def test_structured_memory_normalizes_preference_candidate_whitespace():
+    memory = build_structured_memory({
+        "query": "J'aime    les   trajets   en   train",
+    })
+    assert memory["durable_candidates"] == ["les trajets en train"]
+
 
 def test_structured_memory_is_bounded():
     memory = build_structured_memory({
