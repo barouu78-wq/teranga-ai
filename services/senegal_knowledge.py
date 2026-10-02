@@ -269,6 +269,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         "administration": "administration_formalities",
         "environment": "environment_agriculture",
         "economy": "economy_society",
+        "business": "economy_society",
+        "employment": "economy_society",
+        "education": "education_sports_events",
+        "society": "economy_society",
+        "agriculture": "environment_agriculture",
     }.get(domain, domain)
     module = modules.get(module_key)
     if isinstance(module, dict):
