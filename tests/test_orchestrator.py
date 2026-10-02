@@ -66,7 +66,7 @@ def test_image_failure_does_not_block_map():
     assert calls == [("Gorée", True)]
 
 
-def test_map_failure_does_not_block_image():
+def test_selected_enrichments_run_in_parallel():\n    barrier = Barrier(2)\n\n    def fetch_images(_):\n        barrier.wait(timeout=2)\n        return ["image"]\n\n    def lookup_map(*_):\n        barrier.wait(timeout=2)\n        return {"map": True}\n\n    image, map_result = run_enrichments(\n        AgentPlan(model="gpt-5.6-luna", use_images=True, use_map=True),\n        message="Dakar",\n        contextual_query="Dakar",\n        fetch_images=fetch_images,\n        lookup_map=lookup_map,\n        should_fetch_map=lambda _: True,\n    )\n    assert image == ["image"]\n    assert map_result == {"map": True}\n\n\ndef test_map_failure_does_not_block_image():
     def fetch_images(message):
         return ["image"]
 
