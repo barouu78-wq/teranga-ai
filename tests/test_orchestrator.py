@@ -162,3 +162,19 @@ def test_non_planner_keeps_general_workflow():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+
+
+def test_planner_normalizes_trip_workflow_to_travel():
+    plan = build_agent_plan(
+        {"planner": True, "intent_context": {"intent": "trip_planning"}},
+        model="gpt-5.6-luna",
+    )
+    assert plan.workflow == "travel"
+
+
+def test_planner_rejects_unknown_workflow_values():
+    plan = build_agent_plan(
+        {"planner": True, "intent_context": {"intent": "unknown_internal_intent"}},
+        model="gpt-5.6-luna",
+    )
+    assert plan.workflow == "general"

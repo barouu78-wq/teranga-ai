@@ -47,6 +47,16 @@ def _needs_map(payload: dict[str, Any]) -> bool:
     return False
 
 
+_PLANNER_WORKFLOW_ALIASES = {
+    "trip_planning": "travel",
+    "travel": "travel",
+    "project": "project",
+    "career": "career",
+    "education": "education",
+    "finance": "finance",
+}
+
+
 def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
     """Build a bounded plan from the decisions already computed upstream."""
     planner = bool(payload.get("planner"))
@@ -55,7 +65,8 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     intent_context = payload.get("intent_context") or {}
     use_images = bool(intent_context.get("needs_images")) and not planner
     use_map = _needs_map(payload)
-    workflow = str(intent_context.get("intent") or "general") if planner else "general"
+    requested_workflow = str(intent_context.get("intent") or "").strip().lower()
+    workflow = _PLANNER_WORKFLOW_ALIASES.get(requested_workflow, "general") if planner else "general"
     active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
     if use_web:
