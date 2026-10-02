@@ -65,15 +65,18 @@ SENEGAL_DOMAINS = {
     "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD"),
     "culture": ("culture", "histoire", "patrimoine", "musique", "tradition", "art"),
     "food": ("cuisine", "restaurant", "plat", "thieboudienne", "yassa", "mafé"),
-    "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB"),
+    "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB", "business", "entrepreneur", "entreprendre"),
+    "education": ("éducation", "formation", "école", "université", "apprendre", "cours", "étudiant"),
+    "employment": ("emploi", "recrutement", "embauche", "carrière", "métier", "cv"),
     "society": ("population", "éducation", "santé", "emploi", "démographie"),
     "environment": ("environnement", "parc", "faune", "forêt", "climat"),
     "diaspora": ("diaspora", "Sénégal-France", "retour", "transfert"),
     "administration": ("démarche", "document", "visa", "administration", "consulat"),
+    "business": ("business", "entreprise", "commerce", "entrepreneur", "entreprendre", "clients", "vente"),
 }
 
 DYNAMIC_DOMAINS = {
-    "weather", "transport", "restaurant", "travel", "administration",
+    "weather", "transport", "restaurant", "travel", "administration", "business", "employment", "education",
     "prices", "events", "news", "flights",
 }
 
@@ -94,7 +97,7 @@ def needs_fresh_web(domain: str, text: str) -> bool:
     )
 
 def source_domains(domain: str) -> tuple[str, ...]:
-    if domain in {"society", "economy", "agriculture", "territory"}:
+    if domain in {"society", "economy", "agriculture", "territory", "business", "employment", "education"}:
         return SOURCE_PRIORITY
     if domain in {"travel", "culture", "environment"}:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
