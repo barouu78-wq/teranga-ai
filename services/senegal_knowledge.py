@@ -85,7 +85,7 @@ def _contains_domain_term(value: str, term: str) -> bool:
     normalized = str(term or "").casefold().strip()
     if not normalized:
         return False
-    pattern = r"(?<!\\w)" + re.escape(normalized) + r"(?!\\w)"
+    pattern = r"(?<!\w)" + re.escape(normalized) + r"(?!\w)"
     return bool(re.search(pattern, value))
 
 
