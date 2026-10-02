@@ -346,11 +346,11 @@ def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
             value = re.sub(r"\\s+", " ", match.group(1)).strip(" .,:;")
             if value:
                 durable_candidates.append(value[:120])
-    return {
-        "temporary": temporary,
-        "durable_candidates": durable_candidates[:2],
-        "source": "recent_conversation",
-    }
+    result = dict(temporary)
+    result["temporary"] = temporary
+    result["durable_candidates"] = durable_candidates[:2]
+    result["source"] = "recent_conversation"
+    return result
 
 
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, *, resolved_context: dict[str, Any] | None = None) -> dict[str, Any]:
