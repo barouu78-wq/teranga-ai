@@ -162,9 +162,27 @@ def _knowledge_domain(query: str) -> str:
             return domain
     return "general"
 
+_KNOWLEDGE_CONTEXT_CACHE: dict[tuple[int, int, str, int, int], str] = {}
+_KNOWLEDGE_CONTEXT_CACHE_MAX = 128
+
+
+def _knowledge_cache_get(key: tuple[int, int, str, int, int]) -> str | None:
+    return _KNOWLEDGE_CONTEXT_CACHE.get(key)
+
+
+def _knowledge_cache_store(key: tuple[int, int, str, int, int], value: str) -> None:
+    if len(_KNOWLEDGE_CONTEXT_CACHE) >= _KNOWLEDGE_CONTEXT_CACHE_MAX and key not in _KNOWLEDGE_CONTEXT_CACHE:
+        _KNOWLEDGE_CONTEXT_CACHE.pop(next(iter(_KNOWLEDGE_CONTEXT_CACHE)), None)
+    _KNOWLEDGE_CONTEXT_CACHE[key] = value
+
+
 def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = None, max_regions: int = 5, max_places: int = 8) -> str:
     """Build a compact, query-focused context from structured Senegal knowledge."""
     value = str(query or "").casefold()
+    cache_key = (id(data), id(people), value, max_regions, max_places)
+    cached = _knowledge_cache_get(cache_key)
+    if cached is not None:
+        return cached
     lines = [
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, structurée) :",
         "Utilise ces données comme contexte factuel. Pour les informations actuelles, vérifie le web. Ne transforme pas une déduction en certitude.",
@@ -252,4 +270,6 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         if stable:
             lines.append("Repères stables : " + " ".join(str(item) for item in stable[:3]))
 
-    return "\n".join(lines)
+    result = "\n".join(lines)
+    _knowledge_cache_store(cache_key, result)
+    return result
