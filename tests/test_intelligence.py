@@ -287,3 +287,20 @@ def test_build_intent_context_reuses_precomputed_context(monkeypatch):
 
     assert result["intent"] == "trip_planning"
     assert result["context_source"] == "conversation"
+
+
+def test_context_intents_do_not_match_transport_inside_business_words():
+    from services.intelligence import infer_senegal_context
+
+    context = infer_senegal_context([], "Je veux lancer mon business à Dakar avec 150000 FCFA.")
+
+    assert "project" in context["intents"]
+    assert "transport" not in context["intents"]
+
+
+def test_project_budget_does_not_activate_trip_planner():
+    from services.intelligence import infer_senegal_context, should_use_planner
+
+    context = infer_senegal_context([], "Je veux lancer un commerce avec 150000 FCFA.")
+
+    assert should_use_planner(context) is False
