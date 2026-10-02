@@ -317,7 +317,12 @@ def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
     return memory
 
 
-def build_conversation_memory(history: list[dict[str, Any]] | None, *, max_items: int = 8) -> dict[str, Any]:
+def build_conversation_memory(
+    history: list[dict[str, Any]] | None,
+    *,
+    max_items: int = 8,
+    resolved_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Extract a small, non-sensitive working memory from recent user turns.
 
     This is derived on each request rather than persisted as a permanent profile.
@@ -329,15 +334,17 @@ def build_conversation_memory(history: list[dict[str, Any]] | None, *, max_items
         return {"places": [], "constraints": [], "topics": [], "source": "none"}
 
     combined = " | ".join(recent)
-    context = infer_senegal_context(history, recent[0] if recent else "")
+    context = resolved_context if resolved_context is not None else infer_senegal_context(
+        history, recent[0]
+    )
     places: list[str] = []
     for message in recent:
         place = detect_location(message)
         if place and place not in places:
             places.append(place)
-    for place in (context.get("place"),):
-        if place and place not in places:
-            places.append(place)
+    place = context.get("place")
+    if place and place not in places:
+        places.append(place)
 
     topic_names = ("travel", "transport", "food", "culture", "project", "career", "education", "finance")
     normalized = _normalize(combined)
@@ -346,16 +353,6 @@ def build_conversation_memory(history: list[dict[str, Any]] | None, *, max_items
         if any(_contains_term(normalized, term) for term in _CONTEXT_INTENT_GROUPS.get(topic, ()))
     ]
     constraints = list(context.get("constraints") or [])
-    if len(constraints) < 8:
-        for message in recent:
-            message_context = infer_senegal_context([{"role": "user", "content": message}], message)
-            for item in message_context.get("constraints") or []:
-                if item not in constraints:
-                    constraints.append(item)
-                if len(constraints) >= 8:
-                    break
-            if len(constraints) >= 8:
-                break
     return {
         "places": places[:4],
         "constraints": constraints[:8],
@@ -392,7 +389,7 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
                     context_source = "conversation"
                     break
     context_data = resolved_context if resolved_context is not None else infer_senegal_context(history, message)
-    memory = build_conversation_memory(history)
+    memory = build_conversation_memory(history, resolved_context=context_data)
     context_query = str(context_data.get("query") or "") or contextual_query(history, message)
     domain = classify_domain(context_query)
     fresh = should_use_web(message, context_query)
