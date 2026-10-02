@@ -1,4 +1,4 @@
-from services.orchestrator import AgentPlan, build_agent_plan, run_enrichments
+from threading import Barrier\n\nfrom services.orchestrator import AgentPlan, build_agent_plan, run_enrichments
 
 
 def test_map_is_not_selected_for_simple_question():
