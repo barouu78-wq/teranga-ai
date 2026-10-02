@@ -248,11 +248,19 @@ PHOTO_TOPICS = (
 )
 
 
+def _contains_text_term(text: object, term: object) -> bool:
+    normalized_text = _normalize(text)
+    normalized_term = _normalize(term).strip()
+    if not normalized_term:
+        return False
+    pattern = r"(?<!\w)" + re.escape(normalized_term) + r"(?!\w)"
+    return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
+
+
 def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
-    lowered = str(message or "").lower()
     found, seen = [], set()
     for key, title in PHOTO_TOPICS:
-        if key in lowered and title not in seen:
+        if _contains_text_term(message, key) and title not in seen:
             seen.add(title)
             found.append(title)
             if len(found) >= limit:
@@ -324,4 +332,4 @@ def should_fetch_images(message: object) -> bool:
         "voir la ville", "montre la ville", "show me", "show",
         "picture", "pictures",
     )
-    return any(term in lowered for term in explicit)
+    return any(_contains_text_term(lowered, term) for term in explicit)
