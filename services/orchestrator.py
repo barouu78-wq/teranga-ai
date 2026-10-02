@@ -58,6 +58,8 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     steps = ["prepare_context"]
     if use_web:
         steps.append("web_retrieval")
+    if planner:
+        steps.append("build_plan")
     steps.append("generate_response")
     if use_images:
         steps.append("image_enrichment")
