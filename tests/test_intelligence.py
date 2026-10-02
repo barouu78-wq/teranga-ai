@@ -270,3 +270,19 @@ def test_follow_up_inherits_project_intent():
     )
     assert result["intent"] == "project"
     assert result["location"] == "dakar"
+
+
+def test_build_intent_context_reuses_precomputed_context(monkeypatch):
+    import services.intelligence as intelligence
+
+    def fail_if_called(*args, **kwargs):
+        raise AssertionError("infer_senegal_context should not run twice")
+
+    monkeypatch.setattr(intelligence, "infer_senegal_context", fail_if_called)
+    result = intelligence.build_intent_context(
+        "Et pour le budget ?",
+        history=[{"role": "user", "content": "Je prépare un voyage à Dakar pendant 4 jours."}],
+        resolved_context={"constraints": ["durée=4 jours"], "place": "dakar"},
+    )
+
+    assert result["needs_deep_reasoning"] is True
