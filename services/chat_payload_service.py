@@ -176,7 +176,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "input_text": conversation_input,
         "use_web": use_web,
         "planner": planner_enabled,
-        "deep_reasoning": should_use_deep_reasoning(context),
+        "deep_reasoning": bool(intent_context.get("needs_deep_reasoning")),
         "planner_data": planner_data,
         "message": message,
         "audience": audience,
