@@ -18,7 +18,7 @@ def test_fetch_city_image_uses_fresh_cache(monkeypatch):
 
 def test_fetch_city_image_expires_cache(monkeypatch):
     images._IMAGE_CACHE.clear()
-    clock = iter((100.0, 100.0, 1000.0, 1000.0))
+    clock = iter((100.0, 100.0, 1000.0, 1000.0, 1000.0))
     monkeypatch.setattr(images.time, "monotonic", lambda: next(clock))
 
     calls = []
