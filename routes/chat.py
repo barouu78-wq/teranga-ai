@@ -25,6 +25,7 @@ def register_chat_route(app, deps):
     parse_chat_payload = deps["parse_chat_payload"]
     complete_reply = deps["complete_reply"]
     create_response = deps["create_response"]
+    run_chat_enrichments = deps.get("run_chat_enrichments")
     extract_sources = deps["extract_sources"]
     event_delta = deps["event_delta"]
     clean_answer = deps["clean_answer"]
@@ -150,13 +151,11 @@ def register_chat_route(app, deps):
                     if reply:
                         yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
-                    try:
-                        image = fetch_topic_images(payload.get("message", ""))
-                    except Exception:
-                        logger.exception("Erreur récupération images stream; réponse texte conservée")
+                    if run_chat_enrichments:
+                        image, maps = run_chat_enrichments(payload)
+                    else:
                         image = None
-                    map_query = payload.get("contextual_query") or payload.get("message", "")
-                    maps = lookup_map(map_query, should_fetch_map(map_query))
+                        maps = None
                 if sources:
                     yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
                 if image:
