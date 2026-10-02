@@ -21,6 +21,7 @@ class AgentPlan:
     use_images: bool = False
     use_map: bool = False
     planner: bool = False
+    workflow: str = "general"
     deep_reasoning: bool = False
     steps: tuple[str, ...] = field(default_factory=tuple)
 
@@ -54,6 +55,7 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     intent_context = payload.get("intent_context") or {}
     use_images = bool(intent_context.get("needs_images")) and not planner
     use_map = _needs_map(payload)
+    workflow = str(intent_context.get("intent") or "general") if planner else "general"
     active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
     if use_web:
@@ -72,6 +74,7 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         use_images=use_images,
         use_map=use_map,
         planner=planner,
+        workflow=workflow,
         deep_reasoning=deep_reasoning,
         steps=tuple(steps),
     )
