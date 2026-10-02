@@ -98,3 +98,17 @@ def test_knowledge_context_cache_reuses_same_query():
 
     assert first == second
     assert len(_KNOWLEDGE_CONTEXT_CACHE) == 1
+
+
+def test_knowledge_domain_routes_business_and_employment():
+    from services.senegal_knowledge import _knowledge_domain
+
+    assert _knowledge_domain("Je veux lancer une entreprise au Sénégal") == "business"
+    assert _knowledge_domain("Je cherche un emploi à Dakar") == "employment"
+
+
+def test_knowledge_domain_routes_education_and_diaspora():
+    from services.senegal_knowledge import _knowledge_domain
+
+    assert _knowledge_domain("Quelle formation suivre au Sénégal ?") == "education"
+    assert _knowledge_domain("Je prépare mon retour depuis la diaspora") == "diaspora"
