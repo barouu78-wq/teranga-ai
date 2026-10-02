@@ -109,7 +109,7 @@ def fetch_topic_images(
                 aliases.append("gore")
         if name.startswith("île de "):
             aliases.append(name[7:])
-        if any(alias and alias in text_value for alias in aliases):
+        if any(_contains_normalized_term(text_value, alias, normalize) for alias in aliases):
             specific_titles.extend(
                 str(query)
                 for query in (place.get("image_queries") or [])
