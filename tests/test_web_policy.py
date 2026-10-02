@@ -56,3 +56,10 @@ def test_should_use_web_avoids_generic_false_positives():
 def test_transport_and_food_source_policy():
     assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
     assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
+
+
+def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
+    from services.web_policy import should_use_web
+
+    assert should_use_web("Quel est le taux de change euro FCFA ?") is True
+    assert should_use_web("Explique le changement de couleur.") is False
