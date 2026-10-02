@@ -31,7 +31,7 @@ def _needs_map(payload: dict[str, Any]) -> bool:
         return True
     if intent_context.get("location") and intent in {"photos", "general_information", "culture"}:
         query = str(payload.get("message") or "").lower()
-        return any(term in query for term in ("où", "ou ", "carte", "localiser", "situe", "situé", "route"))
+        return any(\n            _contains_query_term(query, term)\n            for term in ("où", "ou", "carte", "localiser", "situe", "situé", "route")\n        )
     return False
 
 
