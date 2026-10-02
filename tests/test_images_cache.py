@@ -45,7 +45,7 @@ def test_fetch_city_image_cache_is_bounded(monkeypatch):
 
     assert len(images._IMAGE_CACHE) == 2
     assert "Dakar" not in images._IMAGE_CACHE
-\n\n\ndef test_fetch_commons_images_uses_fresh_cache(monkeypatch):
+def test_fetch_commons_images_uses_fresh_cache(monkeypatch):
     images._COMMONS_CACHE.clear()
     calls = []
 
