@@ -338,6 +338,9 @@ def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
         r"\bj aime\b(.{0,120})",
         r"\bj'aime\b(.{0,120})",
         r"\bje veux toujours\b(.{0,120})",
+        r"\bi prefer\b(.{0,120})",
+        r"\bi like\b(.{0,120})",
+        r"\bi always want\b(.{0,120})",
     )
     durable_candidates = []
     for pattern in preference_patterns:
