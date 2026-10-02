@@ -83,6 +83,12 @@ _CONTEXT_ALIASES = {
     "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
     "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
 }
+
+def _contains_term(text: str, term: str) -> bool:
+    if " " in term or "-" in term:
+        return term in text
+    return bool(re.search(r"(?<!\\w)" + re.escape(term) + r"(?!\\w)", text))
+
 _CONTEXT_INTENT_GROUPS = {
     "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
     "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
@@ -176,7 +182,7 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
             normalized_place_text += " " + canonical
     found_cities = [x for x in _CONTEXT_CITIES if x in normalized_place_text]
     found_regions = [x for x in _CONTEXT_REGIONS if x in normalized_place_text]
-    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(term in text_value for term in terms)]
+    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(text_value, term) for term in terms)]
     currency_amounts = re.findall(
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,
@@ -235,7 +241,7 @@ def should_use_planner(context: dict[str, Any]) -> bool:
         "pour 5 jours", "pour une semaine", "budget",
     )
     return (
-        bool(intents.intersection({"travel", "transport", "food", "price"}))
+        bool(intents.intersection({"travel", "transport", "food"}))
         and (bool(context.get("duration")) or bool(context.get("budget")) or any(term in query for term in planning_terms))
     )
 
