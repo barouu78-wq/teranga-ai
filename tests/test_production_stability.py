@@ -14,6 +14,13 @@ def test_public_errors_do_not_reference_render():
     assert "Render" not in errors
 
 
+def test_public_errors_redact_query_tokens():
+    from services.errors import public_error
+
+    message = public_error(ValueError("https://example.test/?api_key=super-secret-token"))
+    assert "super-secret-token" not in message
+
+
 def test_docker_runtime_uses_coolify_port_and_exec():
     docker = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert "exec gunicorn wsgi:app" in docker
