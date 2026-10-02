@@ -158,7 +158,7 @@ SEO_PAGES = {
             ("Nom", "Teranga AI"),
             ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais, wolof et pulaar."),
             ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
-            ("Lien officiel", "https://teranga-ai-1.onrender.com/"),
+            ("Lien officiel", site_url + "/"),
         ],
         "faq": [
             ("Peut-on reprendre la description courte ?", "Oui, en conservant le nom Teranga AI et en renvoyant vers le site officiel."),
