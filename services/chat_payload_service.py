@@ -71,7 +71,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
     started_at = time.perf_counter()
-    intent_context = build_intent_context(message, history)
+    intent_context = build_intent_context(message, history, resolved_context=context)
     logger.info("chat_intent_context_ms %.2f", (time.perf_counter() - started_at) * 1000)
     trip_edit_line = ""
     if trip_edit_request:
