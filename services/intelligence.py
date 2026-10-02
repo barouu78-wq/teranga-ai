@@ -301,6 +301,22 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
         "family": "famille" in context.get("constraints", []),
     }
 
+def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
+    """Return a small, safe, reusable memory snapshot from conversation context."""
+    memory = {}
+    for key in ("place", "budget", "duration", "adults", "children"):
+        value = context.get(key)
+        if value not in (None, "", []):
+            memory[key] = value
+    constraints = list(context.get("constraints") or [])
+    if constraints:
+        memory["constraints"] = constraints[:8]
+    if "famille" in constraints:
+        memory["family"] = True
+    memory["source"] = "recent_conversation"
+    return memory
+
+
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, *, resolved_context: dict[str, Any] | None = None) -> dict[str, Any]:
     message = str(text or "").strip()
     current_intent = detect_intent(message)
@@ -350,4 +366,5 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
         "context_source": context_source,
         "query": message,
         "normalized_query": _normalize(message),
+        "memory": build_structured_memory(context_data),
     }
