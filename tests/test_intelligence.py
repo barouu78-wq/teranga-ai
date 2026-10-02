@@ -303,7 +303,7 @@ def test_project_budget_activates_agent_planner():
 
     context = infer_senegal_context([], "Je veux lancer un commerce avec 150000 FCFA.")
 
-    assert should_use_planner(context) is False
+    assert should_use_planner(context) is True
 
 
 def test_intent_context_reuses_web_policy_decision(monkeypatch):
