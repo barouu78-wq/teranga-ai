@@ -69,7 +69,7 @@ def knowledge_image_titles(
         if not isinstance(place, Mapping):
             continue
         candidates = [place.get("name", ""), *(place.get("image_queries", []) or [])]
-        if any(normalize(candidate) and normalize(candidate) in text_value for candidate in candidates):
+        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
             for candidate in candidates:
                 if candidate and str(candidate) not in titles:
                     titles.append(str(candidate))
