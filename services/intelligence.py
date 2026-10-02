@@ -316,19 +316,41 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
     }
 
 def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
-    """Return a small, safe, reusable memory snapshot from conversation context."""
-    memory = {}
+    """Return a bounded memory snapshot, separating temporary context from explicit preferences."""
+    temporary = {}
     for key in ("place", "budget", "duration", "adults", "children"):
         value = context.get(key)
         if value not in (None, "", []):
-            memory[key] = value
+            temporary[key] = value
+
     constraints = list(context.get("constraints") or [])
     if constraints:
-        memory["constraints"] = constraints[:8]
+        temporary["constraints"] = constraints[:8]
     if "famille" in constraints:
-        memory["family"] = True
-    memory["source"] = "recent_conversation"
-    return memory
+        temporary["family"] = True
+
+    # Only explicit preference language becomes a durable candidate. In this
+    # layer it is never persisted; callers may choose whether to retain it.
+    query = _normalize(str(context.get("query") or ""))
+    preference_patterns = (
+        r"\bje prefere\b(.{0,120})",
+        r"\bje préfère\b(.{0,120})",
+        r"\bj aime\b(.{0,120})",
+        r"\bj'aime\b(.{0,120})",
+        r"\bje veux toujours\b(.{0,120})",
+    )
+    durable_candidates = []
+    for pattern in preference_patterns:
+        match = re.search(pattern, query)
+        if match:
+            value = re.sub(r"\\s+", " ", match.group(1)).strip(" .,:;")
+            if value:
+                durable_candidates.append(value[:120])
+    return {
+        "temporary": temporary,
+        "durable_candidates": durable_candidates[:2],
+        "source": "recent_conversation",
+    }
 
 
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, *, resolved_context: dict[str, Any] | None = None) -> dict[str, Any]:
