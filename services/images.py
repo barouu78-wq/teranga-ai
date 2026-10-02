@@ -4,6 +4,7 @@ import json
 import logging
 import re
 import unicodedata
+import time
 
 from .photo_search import normalize_place_query, relevant_image_evidence
 from urllib.parse import quote, urlencode
@@ -13,6 +14,8 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
+_IMAGE_CACHE_TTL_SECONDS = 900
+_IMAGE_CACHE_MAX_ENTRIES = 128
 
 
 def _normalize(value):
@@ -179,8 +182,12 @@ def fetch_commons_image(title, image_validator=None, display_url_builder=None, u
 def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
     if not title:
         return None
-    if title in _IMAGE_CACHE:
-        return _IMAGE_CACHE[title]
+    cached = _IMAGE_CACHE.get(title)
+    if cached is not None:
+        cached_at, cached_value = cached
+        if time.monotonic() - cached_at < _IMAGE_CACHE_TTL_SECONDS:
+            return cached_value
+        _IMAGE_CACHE.pop(title, None)
     english = title.replace(" (Sénégal)", "").replace(" (Senegal)", "")
     found = None
     for lang, page in (("fr", title), ("en", english)):
@@ -204,7 +211,10 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
             found = fetch_commons_image(title, image_validator=image_validator)
         except Exception:
             logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
-    _IMAGE_CACHE[title] = found
+    if len(_IMAGE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES:
+        oldest = min(_IMAGE_CACHE, key=lambda key: _IMAGE_CACHE[key][0])
+        _IMAGE_CACHE.pop(oldest, None)
+    _IMAGE_CACHE[title] = (time.monotonic(), found)
     return found
 
 
