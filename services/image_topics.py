@@ -176,7 +176,8 @@ def fetch_topic_images(
             seen_urls.add(src)
             photos.append(photo)
             if len(photos) >= max_photos:
-                return photos
+                _store_topic_images(cache_key, photos)
+                return [dict(photo) for photo in photos]
 
     if photos:
         _store_topic_images(cache_key, photos)
