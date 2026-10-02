@@ -39,3 +39,17 @@ def test_structured_memory_is_bounded():
     })
     assert len(memory["temporary"]["constraints"]) == 8
     assert len(memory["durable_candidates"][0]) <= 120
+
+
+def test_structured_memory_extracts_explicit_english_preferences():
+    memory = build_structured_memory({
+        "query": "I prefer    train   trips",
+    })
+    assert memory["durable_candidates"] == ["train trips"]
+
+
+def test_structured_memory_does_not_persist_implicit_english_context():
+    memory = build_structured_memory({
+        "query": "I am travelling to Dakar next week",
+    })
+    assert memory["durable_candidates"] == []
