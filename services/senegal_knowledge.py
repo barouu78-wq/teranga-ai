@@ -167,7 +167,11 @@ def _knowledge_domain(query: str) -> str:
         "transport": ("transport", "ter", "brt", "taxi", "bus", "aéroport"),
         "administration": ("visa", "passeport", "démarche", "document", "consulat"),
         "environment": ("parc", "faune", "mangrove", "environnement", "climat", "biodiversité"),
-        "economy": ("prix", "économie", "emploi", "commerce", "entreprise"),
+        "business": ("business", "entreprise", "commerce", "entrepreneur", "entreprendre", "clients", "vente", "projet"),
+        "employment": ("emploi", "recrutement", "embauche", "carrière", "métier", "cv", "travail"),
+        "education": ("formation", "éducation", "école", "université", "étudier", "apprendre", "cours"),
+        "diaspora": ("diaspora", "retour", "transfert", "sénégal-france"),
+        "economy": ("prix", "économie", "salaire", "revenus", "investir", "financement"),
     }
     for domain, terms in domain_terms.items():
         if any(term in value for term in terms):
@@ -269,6 +273,9 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         "administration": "administration_formalities",
         "environment": "environment_agriculture",
         "economy": "economy_society",
+        "business": "economy_society",
+        "employment": "economy_society",
+        "diaspora": "economy_society",
     }.get(domain, domain)
     module = modules.get(module_key)
     if isinstance(module, dict):
