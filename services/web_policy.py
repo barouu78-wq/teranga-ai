@@ -40,7 +40,7 @@ WEB_HINTS = (
     "actualité", "actualités", "news", "today", "now",
     "current", "latest", "recent", "schedule", "hours",
     "open", "available", "availability", "booking", "weather", "event",
-    "visa", "ferry", "cfa", "change", "taux",
+    "visa", "ferry", "cfa", "taux de change", "taux",
     "sim", "orange money", "week-end", "weekend", "ce soir", "demain",
     "manger", "restaurant", "resto", "où manger", "ou manger",
     "eat", "dining", "food court",
