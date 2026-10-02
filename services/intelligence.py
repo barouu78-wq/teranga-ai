@@ -294,7 +294,7 @@ def build_planner_data(context: dict[str, Any]) -> dict[str, Any]:
         "family": "famille" in context.get("constraints", []),
     }
 
-def build_intent_context(text: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def build_intent_context(\n    text: str,\n    history: list[dict[str, Any]] | None = None,\n    *,\n    resolved_context: dict[str, Any] | None = None,\n) -> dict[str, Any]:
     message = str(text or "").strip()
     current_intent = detect_intent(message)
     current_location = detect_location(message)
@@ -335,7 +335,7 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None)
         "needs_deep_reasoning": should_use_deep_reasoning({
             "query": context_query,
             "intents": [resolved_intent],
-            "constraints": infer_senegal_context(history, message).get("constraints", []),
+            "constraints": context_data.get("constraints", []),
         }),
         "preferred_sources": source_domains(domain),
         "has_context": bool(recent_users),
