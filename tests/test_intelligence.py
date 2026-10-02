@@ -319,4 +319,4 @@ def test_intent_context_reuses_web_policy_decision(monkeypatch):
     result = intelligence.build_intent_context("Quelle est l'histoire de Gorée ?")
 
     assert result["needs_web_search"] is True
-    assert calls == [("Quelle est l'histoire de Gorée ?", "quelle est l'histoire de gorée ?")]
+    assert calls == [("Quelle est l'histoire de Gorée ?", "quelle est l'histoire de goree ?")]
