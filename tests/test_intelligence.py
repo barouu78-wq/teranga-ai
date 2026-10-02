@@ -320,3 +320,15 @@ def test_intent_context_reuses_web_policy_decision(monkeypatch):
 
     assert result["needs_web_search"] is True
     assert calls == [("Quelle est l'histoire de Gorée ?", "quelle est l'histoire de goree ?")]
+
+def test_build_intent_context_exposes_small_structured_memory():
+    result = build_intent_context(
+        "Je prépare 4 jours à Gorée avec 100000 FCFA en famille.",
+    )
+    memory = result["memory"]
+    assert memory["place"] == "goree"
+    assert memory["budget"] == "100000 fcfa"
+    assert memory["duration"] == "4 jours"
+    assert memory["family"] is True
+    assert len(memory["constraints"]) <= 8
+    assert memory["source"] == "recent_conversation"
