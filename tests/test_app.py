@@ -960,3 +960,53 @@ def test_production_startup_contract():
     assert "key: SECRET_KEY" in render
     assert "from app import app" in wsgi
     assert "gunicorn>=" in requirements
+
+
+def test_structured_memory_separates_temporary_constraints_from_preferences():
+    from services.intelligence import build_structured_memory
+
+    memory = build_structured_memory({
+        "query": "Je préfère les plages calmes",
+        "place": "saly",
+        "budget": "150000 fcfa",
+        "duration": "3 jours",
+        "adults": 2,
+        "children": 1,
+        "constraints": ["budget=150000 fcfa", "durée=3 jours", "famille"],
+    })
+
+    assert memory["temporary"]["place"] == "saly"
+    assert memory["temporary"]["budget"] == "150000 fcfa"
+    assert memory["temporary"]["family"] is True
+    assert memory["durable_candidates"] == ["les plages calmes"]
+    assert memory["source"] == "recent_conversation"
+
+
+def test_agent_plan_orders_fresh_verification_before_answer():
+    from services.intelligence import build_agent_plan
+
+    plan = build_agent_plan(
+        {
+            "place": "Dakar",
+            "budget": "100000 fcfa",
+            "duration": "2 jours",
+            "adults": 2,
+            "children": None,
+            "constraints": ["budget=100000 fcfa", "durée=2 jours"],
+        },
+        {"domain": "travel", "needs_web_search": True},
+    )
+
+    assert plan["enabled"] is True
+    assert plan["requires_fresh_verification"] is True
+    assert [step["id"] for step in plan["steps"]][:2] == ["fresh_check", "place"]
+    assert plan["steps"][-1]["id"] == "answer"
+
+
+def test_senegal_domain_routes_business_and_employment_to_dynamic_sources():
+    from services.senegal_knowledge import classify_domain, needs_fresh_web, source_domains
+
+    assert classify_domain("Je veux créer une entreprise au Sénégal") == "economy"
+    assert classify_domain("Je cherche un emploi à Dakar") == "economy"
+    assert needs_fresh_web("business", "entreprise") is True
+    assert "gov.sn" in source_domains("business")
