@@ -9,7 +9,8 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, classify_domain, needs_fresh_web, source_domains
+from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, classify_domain, source_domains
+from .web_policy import should_use_web
 from .validation import sanitize_text
 
 
@@ -331,7 +332,7 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
     context_data = resolved_context if resolved_context is not None else infer_senegal_context(history, message)
     context_query = str(context_data.get("query") or "") or contextual_query(history, message)
     domain = classify_domain(context_query)
-    fresh = needs_fresh_web(domain, context_query) or resolved_intent in _DYNAMIC_INTENTS
+    fresh = should_use_web(message, context_query)
     return {
         "intent": resolved_intent,
         "domain": domain,
