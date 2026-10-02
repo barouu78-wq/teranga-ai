@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from services.validation import normalize
 import re
+import re
 
 SOURCE_FILTERS = {
     "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
@@ -28,6 +29,16 @@ def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
             if term in text:
                 return True
         elif re.search(rf"(?<!\\w){re.escape(term)}(?!\\w)", text):
+            return True
+    return False
+
+
+def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
+    for term in terms:
+        if " " in term or "-" in term:
+            if term in text:
+                return True
+        elif re.search(rf"(?<!\w){re.escape(term)}(?!\w)", text):
             return True
     return False
 
