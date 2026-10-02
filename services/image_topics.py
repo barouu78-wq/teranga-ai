@@ -35,7 +35,7 @@ def _contains_normalized_term(text: object, candidate: object, normalize: Callab
     if not normalized_candidate:
         return False
     normalized_text = normalize(text)
-    pattern = r"(?<!\\w)" + re.escape(normalized_candidate) + r"(?!\\w)"
+    pattern = r"(?<!\w)" + re.escape(normalized_candidate) + r"(?!\w)"
     return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
 
 
