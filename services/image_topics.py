@@ -2,7 +2,31 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable, Mapping, Sequence
+
+
+_TOPIC_IMAGE_CACHE: dict[tuple[str, int, int, int, int], tuple[float, list[dict]]] = {}
+_TOPIC_IMAGE_CACHE_TTL = 300.0
+_TOPIC_IMAGE_CACHE_MAX = 128
+
+
+def _cached_topic_images(key: tuple[str, int, int, int, int]) -> list[dict] | None:
+    cached = _TOPIC_IMAGE_CACHE.get(key)
+    if not cached:
+        return None
+    stored_at, photos = cached
+    if time.monotonic() - stored_at >= _TOPIC_IMAGE_CACHE_TTL:
+        _TOPIC_IMAGE_CACHE.pop(key, None)
+        return None
+    return [dict(photo) for photo in photos]
+
+
+def _store_topic_images(key: tuple[str, int, int, int, int], photos: list[dict]) -> None:
+    if len(_TOPIC_IMAGE_CACHE) >= _TOPIC_IMAGE_CACHE_MAX:
+        oldest_key = min(_TOPIC_IMAGE_CACHE, key=lambda item: _TOPIC_IMAGE_CACHE[item][0])
+        _TOPIC_IMAGE_CACHE.pop(oldest_key, None)
+    _TOPIC_IMAGE_CACHE[key] = (time.monotonic(), [dict(photo) for photo in photos])
 
 
 def knowledge_image_titles(
@@ -99,6 +123,10 @@ def fetch_topic_images(
     # focused query is enough to return a larger, faster gallery without
     # multiplying outbound image-search calls.
     primary_title = next((str(title or "").strip() for title in titles if str(title or "").strip()), "Dakar Sénégal")
+    cache_key = (normalize(primary_title), max_photos, id(fetch_google_images), id(fetch_commons_images), id(fetch_city_image))
+    cached = _cached_topic_images(cache_key)
+    if cached is not None:
+        return cached
     if fetch_google_images:
         try:
             candidates = fetch_google_images(primary_title, limit=max_photos)
@@ -115,7 +143,8 @@ def fetch_topic_images(
             seen_urls.add(src)
             photos.append(photo)
             if len(photos) >= max_photos:
-                return photos
+                _store_topic_images(cache_key, photos)
+                return [dict(photo) for photo in photos]
 
     # Wikimedia remains a relevance-oriented fallback when Google returns too
     # few results or is temporarily unavailable.
@@ -147,6 +176,10 @@ def fetch_topic_images(
             seen_urls.add(src)
             photos.append(photo)
             if len(photos) >= max_photos:
-                return photos
+                _store_topic_images(cache_key, photos)
+                return [dict(photo) for photo in photos]
 
-    return photos or None
+    if photos:
+        _store_topic_images(cache_key, photos)
+        return [dict(photo) for photo in photos]
+    return None
