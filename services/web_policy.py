@@ -6,6 +6,7 @@ tested without loading the full application.
 from __future__ import annotations
 
 from services.validation import normalize
+import re
 
 SOURCE_FILTERS = {
     "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
@@ -20,6 +21,16 @@ SOURCE_FILTERS = {
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
     "weather": ("meteofrance.com", "ansd.sn", "gov.sn"),
 }
+
+def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
+    for term in terms:
+        if " " in term or "-" in term:
+            if term in text:
+                return True
+        elif re.search(rf"(?<!\\w){re.escape(term)}(?!\\w)", text):
+            return True
+    return False
+
 
 def preferred_domains(domain: str) -> tuple[str, ...]:
     return SOURCE_FILTERS.get(str(domain or ""), ())
@@ -67,9 +78,9 @@ def should_use_web(message, context=""):
         "latest", "current", "right now", "as of", "verify", "check",
         "actualite", "actualites", "news", "nouveau", "nouvelle",
     )
-    if any(term in lowered for term in current_markers):
+    if _contains_any(lowered, current_markers):
         return True
-    if any(term in lowered for term in WEB_HINTS):
+    if _contains_any(lowered, WEB_HINTS):
         return True
     live_entities = (
         "president", "presidente", "ministre", "maire", "depute",
@@ -78,7 +89,7 @@ def should_use_web(message, context=""):
         "equipe nationale", "joueur", "chanteur", "artiste",
         "entreprise", "restaurant", "hotel",
     )
-    if any(term in lowered for term in live_entities):
+    if _contains_any(lowered, live_entities):
         return True
 
     # Intentions qui vieillissent vite, même sans « actuel » ou « aujourd'hui ».
@@ -97,7 +108,7 @@ def should_use_web(message, context=""):
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre",
     )
-    if any(term in lowered for term in dynamic_intents):
+    if _contains_any(lowered, dynamic_intents):
         return True
     # Un suivi comme « et demain ? » peut dépendre d'un sujet dynamique
     # présent dans le tour précédent.
@@ -110,7 +121,7 @@ def should_use_web(message, context=""):
         "sécurité", "alerte", "greve", "grève", "match", "concert",
         "evenement", "événement", "promotion", "offre",
     )
-    return any(term in combined for term in contextual_dynamic)
+    return _contains_any(combined, contextual_dynamic)
 
 
 
