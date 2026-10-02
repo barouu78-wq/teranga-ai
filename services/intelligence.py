@@ -343,7 +343,7 @@ def build_structured_memory(context: dict[str, Any]) -> dict[str, Any]:
     for pattern in preference_patterns:
         match = re.search(pattern, query)
         if match:
-            value = re.sub(r"\\s+", " ", match.group(1)).strip(" .,:;")
+            value = re.sub(r"\s+", " ", match.group(1)).strip(" .,:;")
             if value:
                 durable_candidates.append(value[:120])
     result = dict(temporary)
