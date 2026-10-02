@@ -2,7 +2,7 @@ from services.senegal_knowledge import classify_domain
 
 
 def test_domain_matching_uses_complete_terms():
-    assert classify_domain("Je cherche un business au Sénégal.") == "economy"
+    assert classify_domain("Je cherche un business au Sénégal.") == "business"
 
 
 def test_transport_term_does_not_match_inside_unrelated_word():
