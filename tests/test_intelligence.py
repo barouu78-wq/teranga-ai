@@ -260,9 +260,7 @@ def test_intent_context_marks_complex_project_request_for_deep_reasoning():
         "Je veux lancer un petit commerce avec 150000 FCFA et trouver mes premiers clients."
     )
     assert result["intent"] == "project"
-    assert result["intent"] == "trip_planning"
-    assert result["context_source"] == "conversation"
-
+    assert result["needs_deep_reasoning"] is True
 
 def test_follow_up_inherits_project_intent():
     result = build_intent_context(
@@ -286,4 +284,5 @@ def test_build_intent_context_reuses_precomputed_context(monkeypatch):
         resolved_context={"constraints": ["durée=4 jours"], "place": "dakar"},
     )
 
-    assert result["needs_deep_reasoning"] is True
+    assert result["intent"] == "trip_planning"
+    assert result["context_source"] == "conversation"
