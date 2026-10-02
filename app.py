@@ -475,6 +475,10 @@ def complete_reply(payload):
     return _CHAT_SERVICE["complete_reply"](payload)
 
 
+def run_chat_enrichments(payload):
+    return _CHAT_SERVICE["complete_enrichments"](payload)
+
+
 _fx_cache = {"at": 0.0, "date": "", "rates": dict(DEFAULT_RATES)}
 
 def fetch_bceao_rates():
@@ -521,6 +525,7 @@ register_chat_route(app, {
     "WEB_RATE_WINDOW": WEB_RATE_WINDOW,
     "parse_chat_payload": parse_chat_payload,
     "complete_reply": complete_reply,
+    "run_chat_enrichments": run_chat_enrichments,
     "create_response": create_response,
     "extract_sources": extract_sources,
     "event_delta": event_delta,
