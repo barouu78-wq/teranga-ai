@@ -118,4 +118,5 @@ def build_chat_service(
         "model_kwargs": model_kwargs,
         "create_response": create_response,
         "complete_reply": complete_reply,
+        "complete_enrichments": complete_enrichments,
     }
