@@ -164,6 +164,14 @@ def test_non_planner_keeps_general_workflow():
     assert plan.workflow == "general"
 
 
+def test_planner_normalizes_trip_workflow_case_and_whitespace():
+    plan = build_agent_plan(
+        {"planner": True, "intent_context": {"intent": "  TRIP_PLANNING  "}},
+        model="gpt-5.6-luna",
+    )
+    assert plan.workflow == "travel"
+
+
 def test_planner_normalizes_trip_workflow_to_travel():
     plan = build_agent_plan(
         {"planner": True, "intent_context": {"intent": "trip_planning"}},
