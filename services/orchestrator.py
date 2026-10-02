@@ -70,7 +70,13 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         use_images=use_images,
         use_map=use_map,
         planner=planner,
-        deep_reasoning=dedef run_enrichments(
+        deep_reasoning=deep_reasoning,
+        steps=tuple(steps),
+    )
+
+
+
+def run_enrichments(
     plan: AgentPlan,
     *,
     message: str,
@@ -80,7 +86,7 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     should_fetch_map: Callable[[str], bool],
     logger: Any = None,
 ) -> tuple[Any, Any]:
-    """Run selected enrichments independently; parallelize independent tools."""
+    """Run selected enrichments independently, in parallel when both are selected."""
     def fetch_image_result():
         try:
             return fetch_images(message)
@@ -98,16 +104,13 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
                 logger.exception("agent_map_enrichment_failed")
             return None
 
-    image = None
-    map_result = None
     if plan.use_images and plan.use_map:
         with ThreadPoolExecutor(max_workers=2, thread_name_prefix="chat-enrichment") as executor:
             image_future = executor.submit(fetch_image_result)
             map_future = executor.submit(fetch_map_result)
-            image = image_future.result()
-            map_result = map_future.result()
-    elif plan.use_images:
-        image = fetch_image_result()
-    elif plan.use_map:
-        map_result = fetch_map_result()
-    return image, map_result
+            return image_future.result(), map_future.result()
+    if plan.use_images:
+        return fetch_image_result(), None
+    if plan.use_map:
+        return None, fetch_map_result()
+    return None, None
