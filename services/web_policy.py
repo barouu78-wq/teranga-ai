@@ -30,7 +30,7 @@ def _compiled_term_pattern(terms: tuple[str, ...]) -> re.Pattern[str]:
         re.escape(term)
         for term in sorted(set(terms), key=len, reverse=True)
     )
-    return re.compile(rf"(?<!\\w)(?:{alternatives})(?!\\w)")
+    return re.compile(rf"(?<!\w)(?:{alternatives})(?!\w)")
 
 
 def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
