@@ -87,7 +87,7 @@ _CONTEXT_ALIASES = {
 def _contains_term(text: str, term: str) -> bool:
     if " " in term or "-" in term:
         return term in text
-    return bool(re.search(r"(?<!\\w)" + re.escape(term) + r"(?!\\w)", text))
+    return bool(re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", text))
 
 _CONTEXT_INTENT_GROUPS = {
     "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
