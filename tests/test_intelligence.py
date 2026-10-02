@@ -304,3 +304,19 @@ def test_project_budget_does_not_activate_trip_planner():
     context = infer_senegal_context([], "Je veux lancer un commerce avec 150000 FCFA.")
 
     assert should_use_planner(context) is False
+
+
+def test_intent_context_reuses_web_policy_decision(monkeypatch):
+    import services.intelligence as intelligence
+
+    calls = []
+    monkeypatch.setattr(
+        intelligence,
+        "should_use_web",
+        lambda message, context="": calls.append((message, context)) or True,
+    )
+
+    result = intelligence.build_intent_context("Quelle est l'histoire de Gorée ?")
+
+    assert result["needs_web_search"] is True
+    assert calls == [("Quelle est l'histoire de Gorée ?", "quelle est l'histoire de gorée ?")]
