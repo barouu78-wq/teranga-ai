@@ -41,3 +41,11 @@ def test_fetch_topic_images_caches_repeated_google_lookup():
 
     assert first == second
     assert calls == [("Dakar Sénégal", 8)]
+
+
+def test_knowledge_image_titles_requires_complete_place_terms():
+    from services.image_topics import knowledge_image_titles
+
+    knowledge = {"places": [{"name": "Dakar", "image_queries": ["Dakar"]}]}
+    assert knowledge_image_titles("Le Dakarien parle de transport", knowledge, normalize=lambda value: str(value or "").lower()) == []
+    assert knowledge_image_titles("Photos de Dakar", knowledge, normalize=lambda value: str(value or "").lower()) == ["Dakar"]

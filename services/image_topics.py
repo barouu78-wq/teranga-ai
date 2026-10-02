@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Callable, Mapping, Sequence
 
@@ -29,6 +30,15 @@ def _store_topic_images(key: tuple[str, int, int, int, int], photos: list[dict])
     _TOPIC_IMAGE_CACHE[key] = (time.monotonic(), [dict(photo) for photo in photos])
 
 
+def _contains_normalized_term(text: object, candidate: object, normalize: Callable[[object], str]) -> bool:
+    normalized_candidate = normalize(candidate).strip()
+    if not normalized_candidate:
+        return False
+    normalized_text = normalize(text)
+    pattern = r"(?<!\w)" + re.escape(normalized_candidate) + r"(?!\w)"
+    return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
+
+
 def knowledge_image_titles(
     message: object,
     knowledge: Mapping[str, object],
@@ -48,7 +58,7 @@ def knowledge_image_titles(
             *(region.get("highlights", []) or []),
             *(region.get("image_queries", []) or []),
         ]
-        if any(normalize(candidate) and normalize(candidate) in text_value for candidate in candidates):
+        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
             for candidate in candidates:
                 if candidate and str(candidate) not in titles:
                     titles.append(str(candidate))
@@ -59,7 +69,7 @@ def knowledge_image_titles(
         if not isinstance(place, Mapping):
             continue
         candidates = [place.get("name", ""), *(place.get("image_queries", []) or [])]
-        if any(normalize(candidate) and normalize(candidate) in text_value for candidate in candidates):
+        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
             for candidate in candidates:
                 if candidate and str(candidate) not in titles:
                     titles.append(str(candidate))
