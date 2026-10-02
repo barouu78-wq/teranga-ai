@@ -164,7 +164,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         bool(re.search(r"\bphotos?\b|\bimages?\b", message.lower()))
         or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
     )
-    use_web = False if photo_only else should_use_web(message, enriched_context)
+    use_web = False if photo_only else bool(intent_context.get("needs_web_search"))
     started_at = time.perf_counter()
     knowledge_context = format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people)
     logger.info("chat_knowledge_format_ms %.2f", (time.perf_counter() - started_at) * 1000)
