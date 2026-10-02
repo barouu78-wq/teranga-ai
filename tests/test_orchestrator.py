@@ -13,6 +13,28 @@ def test_map_is_not_selected_for_simple_question():
     assert plan.steps == ("prepare_context", "generate_response", "finalize")
 
 
+def test_map_is_not_selected_for_substring_match():
+    plan = build_agent_plan(
+        {
+            "intent_context": {"intent": "general_information", "location": "dakar"},
+            "message": "Parle-moi de la routeur de Dakar.",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.use_map is False
+
+
+def test_map_is_selected_for_standalone_route_hint():
+    plan = build_agent_plan(
+        {
+            "intent_context": {"intent": "general_information", "location": "dakar"},
+            "message": "Quelle route prendre pour Dakar ?",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.use_map is True
+
+
 def test_map_is_selected_for_transport():
     plan = build_agent_plan(
         {"intent_context": {"intent": "transport", "location": "dakar"}, "message": "Comment aller à Dakar ?"},

@@ -7,6 +7,7 @@ by request intent and each optional tool is isolated from the others.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Callable
 
 
@@ -23,6 +24,12 @@ class AgentPlan:
     steps: tuple[str, ...] = field(default_factory=tuple)
 
 
+def _contains_query_term(query: str, term: str) -> bool:
+    """Match a map hint as a complete word or phrase, not a substring."""
+    pattern = r"(?<!\w)" + re.escape(term) + r"(?!\w)"
+    return bool(re.search(pattern, query))
+
+
 def _needs_map(payload: dict[str, Any]) -> bool:
     """Select maps only for location/route-oriented requests."""
     intent_context = payload.get("intent_context") or {}
@@ -31,7 +38,10 @@ def _needs_map(payload: dict[str, Any]) -> bool:
         return True
     if intent_context.get("location") and intent in {"photos", "general_information", "culture"}:
         query = str(payload.get("message") or "").lower()
-        return any(term in query for term in ("où", "ou ", "carte", "localiser", "situe", "situé", "route"))
+        return any(
+            _contains_query_term(query, term)
+            for term in ("où", "ou", "carte", "localiser", "situe", "situé", "route")
+        )
     return False
 
 
