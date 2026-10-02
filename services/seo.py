@@ -1,5 +1,8 @@
 from flask import Response
 import json
+import os
+
+SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
 
 SEO_PAGES = {
     "senegal": {
@@ -158,7 +161,7 @@ SEO_PAGES = {
             ("Nom", "Teranga AI"),
             ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais, wolof et pulaar."),
             ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
-            ("Lien officiel", site_url + "/"),
+            ("Lien officiel", SITE_URL + "/"),
         ],
         "faq": [
             ("Peut-on reprendre la description courte ?", "Oui, en conservant le nom Teranga AI et en renvoyant vers le site officiel."),
