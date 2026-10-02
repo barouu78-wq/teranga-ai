@@ -1,6 +1,7 @@
 """Map lookup helpers for Teranga AI."""
 
 from urllib.parse import quote
+import re
 import unicodedata
 
 
@@ -46,22 +47,40 @@ MAP_PLACES = (
 )
 
 
-MAP_INTENTS = ("ou se trouve", "ou est", "adresse", "localisation", "localiser", "itineraire", "trajet", "route", "distance", "pres de", "sur la carte", "carte", "map", "where is", "how to get", "comment aller")
+MAP_INTENTS = (
+    "ou se trouve", "ou est", "adresse", "localisation", "localiser",
+    "itineraire", "trajet", "route", "distance", "pres de", "sur la carte",
+    "carte", "map", "where is", "how to get", "comment aller",
+)
+
 
 def _normalize(text):
     text = unicodedata.normalize("NFKD", str(text or "")).encode("ascii", "ignore").decode("ascii")
     return " ".join(text.lower().split())
 
+
+def _contains_place(text, place):
+    """Match a place as a complete token/phrase, not an arbitrary substring."""
+    normalized_text = _normalize(text)
+    normalized_place = _normalize(place)
+    return bool(
+        re.search(
+            r"(?<![a-z0-9])" + re.escape(normalized_place) + r"(?![a-z0-9])",
+            normalized_text,
+        )
+    )
+
+
 def should_fetch_map(message):
-    return any(term in _normalize(message) for term in MAP_INTENTS)
+    return any(_contains_place(message, term) for term in MAP_INTENTS)
 
 
 def lookup_map(message, enabled=None):
     if enabled is False:
         return None
-    lowered = _normalize(message)
-    for key, query, label in MAP_PLACES:
-        if _normalize(key) in lowered:
+    # Prefer the most specific place phrase when aliases overlap.
+    for key, query, label in sorted(MAP_PLACES, key=lambda item: len(item[0]), reverse=True):
+        if _contains_place(message, key):
             encoded_query = quote(query)
             return {
                 "label": label,
