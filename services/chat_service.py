@@ -1,5 +1,7 @@
 """Chat response orchestration extracted from the Flask application."""
 
+import time
+
 from .orchestrator import build_agent_plan, run_enrichments
 
 
@@ -80,8 +82,9 @@ def build_chat_service(
         )
 
     def complete_enrichments(payload):
+        started_at = time.perf_counter()
         plan = agent_plan(payload)
-        return run_enrichments(
+        result = run_enrichments(
             plan,
             message=payload.get("message", ""),
             contextual_query=payload.get("contextual_query") or payload.get("message", ""),
@@ -90,23 +93,14 @@ def build_chat_service(
             should_fetch_map=should_fetch_map,
             logger=logger,
         )
+        if hasattr(logger, "info"):
+            logger.info("chat_enrichment_ms %.2f", (time.perf_counter() - started_at) * 1000)
+        return result
 
     def complete_reply(payload):
         response = create_response(payload, stream=False)
         text = clean_answer(getattr(response, "output_text", "") or "")
-        plan = agent_plan(payload)
-        try:
-            image, map_result = run_enrichments(
-                plan,
-                message=payload.get("message", ""),
-                contextual_query=payload.get("contextual_query") or payload.get("message", ""),
-                fetch_images=fetch_topic_images,
-                lookup_map=lookup_map,
-                should_fetch_map=should_fetch_map,
-            )
-        except Exception:
-            logger.exception("Erreur enrichissement agent; réponse texte conservée")
-            image, map_result = None, None
+        image, map_result = complete_enrichments(payload)
         return (
             text,
             extract_sources(response),
