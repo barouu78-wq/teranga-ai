@@ -1,8 +1,7 @@
 """Bounded agent orchestration for Teranga AI.
 
-This module turns an already-resolved chat payload into one deterministic
-execution plan. It deliberately does not implement an autonomous loop:
-planning, model selection, and enrichment remain bounded and observable.
+Planning is deterministic and bounded. Tool enrichment is explicitly selected
+by request intent and each optional tool is isolated from the others.
 """
 
 from __future__ import annotations
@@ -24,27 +23,27 @@ class AgentPlan:
     steps: tuple[str, ...] = field(default_factory=tuple)
 
 
-def build_agent_plan(
-    payload: dict[str, Any],
-    *,
-    model: str,
-    complex_model: str = "gpt-5.6-sol",
-) -> AgentPlan:
+def _needs_map(payload: dict[str, Any]) -> bool:
+    """Select maps only for location/route-oriented requests."""
+    intent_context = payload.get("intent_context") or {}
+    intent = str(intent_context.get("intent") or "")
+    if intent in {"trip_planning", "transport"}:
+        return True
+    if intent_context.get("location") and intent in {"photos", "general_information", "culture"}:
+        query = str(payload.get("message") or "").lower()
+        return any(term in query for term in ("où", "ou ", "carte", "localiser", "situe", "situé", "route"))
+    return False
+
+
+def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
     """Build a bounded plan from the decisions already computed upstream."""
     planner = bool(payload.get("planner"))
     deep_reasoning = bool(payload.get("deep_reasoning"))
     use_web = bool(payload.get("use_web"))
     intent_context = payload.get("intent_context") or {}
-
     use_images = bool(intent_context.get("needs_images")) and not planner
-    use_map = bool(payload.get("contextual_query") or payload.get("message"))
-
-    active_model = (
-        complex_model
-        if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning)
-        else model
-    )
-
+    use_map = _needs_map(payload)
+    active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
     if use_web:
         steps.append("web_retrieval")
@@ -54,7 +53,6 @@ def build_agent_plan(
     if use_map:
         steps.append("map_enrichment")
     steps.append("finalize")
-
     return AgentPlan(
         model=active_model,
         use_web=use_web,
@@ -74,15 +72,22 @@ def run_enrichments(
     fetch_images: Callable[[str], Any],
     lookup_map: Callable[[str, bool], Any],
     should_fetch_map: Callable[[str], bool],
+    logger: Any = None,
 ) -> tuple[Any, Any]:
-    """Run only the bounded enrichments selected by the plan."""
+    """Run selected enrichments independently; one optional tool cannot block another."""
     image = None
     map_result = None
     if plan.use_images:
-        image = fetch_images(message)
+        try:
+            image = fetch_images(message)
+        except Exception:
+            if logger is not None and hasattr(logger, "exception"):
+                logger.exception("agent_image_enrichment_failed")
     if plan.use_map:
-        map_result = lookup_map(
-            contextual_query or message,
-            should_fetch_map(contextual_query or message),
-        )
+        try:
+            query = contextual_query or message
+            map_result = lookup_map(query, should_fetch_map(query))
+        except Exception:
+            if logger is not None and hasattr(logger, "exception"):
+                logger.exception("agent_map_enrichment_failed")
     return image, map_result
