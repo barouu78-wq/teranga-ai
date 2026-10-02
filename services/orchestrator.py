@@ -35,27 +35,15 @@ def _needs_map(payload: dict[str, Any]) -> bool:
     return False
 
 
-def build_agent_plan(
-    payload: dict[str, Any],
-    *,
-    model: str,
-    complex_model: str = "gpt-5.6-sol",
-) -> AgentPlan:
+def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
     """Build a bounded plan from the decisions already computed upstream."""
     planner = bool(payload.get("planner"))
     deep_reasoning = bool(payload.get("deep_reasoning"))
     use_web = bool(payload.get("use_web"))
     intent_context = payload.get("intent_context") or {}
-
     use_images = bool(intent_context.get("needs_images")) and not planner
     use_map = _needs_map(payload)
-
-    active_model = (
-        complex_model
-        if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning)
-        else model
-    )
-
+    active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
     if use_web:
         steps.append("web_retrieval")
@@ -65,7 +53,6 @@ def build_agent_plan(
     if use_map:
         steps.append("map_enrichment")
     steps.append("finalize")
-
     return AgentPlan(
         model=active_model,
         use_web=use_web,
