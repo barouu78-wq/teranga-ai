@@ -1,5 +1,6 @@
 """Chat payload construction and conversation-context preparation."""
 
+import inspect
 import logging
 import re
 import time
@@ -71,7 +72,10 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         context["place"] = selected_place
         context["query"] = f"{selected_place} : {message}"
     started_at = time.perf_counter()
-    intent_context = build_intent_context(message, history)
+    if "resolved_context" in inspect.signature(build_intent_context).parameters:
+        intent_context = build_intent_context(message, history, resolved_context=context)
+    else:
+        intent_context = build_intent_context(message, history)
     logger.info("chat_intent_context_ms %.2f", (time.perf_counter() - started_at) * 1000)
     trip_edit_line = ""
     if trip_edit_request:
