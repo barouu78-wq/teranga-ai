@@ -7,6 +7,7 @@ when fresh web evidence is required.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 # Official administrative coverage: all 14 regions of Senegal.
@@ -80,12 +81,20 @@ DYNAMIC_DOMAINS = {
     "prices", "events", "news", "flights",
 }
 
+def _contains_domain_term(value: str, term: str) -> bool:
+    normalized = str(term or "").casefold().strip()
+    if not normalized:
+        return False
+    pattern = r"(?<!\\w)" + re.escape(normalized) + r"(?!\\w)"
+    return bool(re.search(pattern, value))
+
+
 def classify_domain(text: str) -> str:
-    value = str(text or "").lower()
-    if any(term in value for term in ("météo", "meteo", "weather", "pluie", "température", "temperature")):
+    value = str(text or "").casefold()
+    if any(_contains_domain_term(value, term) for term in ("météo", "meteo", "weather", "pluie", "température", "temperature")):
         return "weather"
     for domain, terms in SENEGAL_DOMAINS.items():
-        if any(term.lower() in value for term in terms):
+        if any(_contains_domain_term(value, term) for term in terms):
             return domain
     return "general"
 
