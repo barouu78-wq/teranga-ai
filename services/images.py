@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
 _IMAGE_CACHE_TTL_SECONDS = 900
 _IMAGE_CACHE_MAX_ENTRIES = 128
+_COMMONS_CACHE: dict[tuple[str, int, int, int, int], tuple[float, list[dict]]] = {}
+_COMMONS_CACHE_TTL_SECONDS = 300
+_COMMONS_CACHE_MAX_ENTRIES = 128
 
 
 def _normalize(value):
@@ -106,13 +109,30 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         })
         if len(out) >= limit:
             break
-    return out
+    if len(_COMMONS_CACHE) >= _COMMONS_CACHE_MAX_ENTRIES:
+        oldest = min(_COMMONS_CACHE, key=lambda key: _COMMONS_CACHE[key][0])
+        _COMMONS_CACHE.pop(oldest, None)
+    _COMMONS_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
+    return [dict(item) for item in out]
 
 
 def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None, urlopen_fn=None):
     query = normalize_place_query(title)
     if not query:
         return []
+    cache_key = (
+        _normalize(query),
+        int(limit),
+        id(image_validator),
+        id(display_url_builder),
+        id(urlopen_fn),
+    )
+    cached = _COMMONS_CACHE.get(cache_key)
+    if cached is not None:
+        cached_at, cached_value = cached
+        if time.monotonic() - cached_at < _COMMONS_CACHE_TTL_SECONDS:
+            return [dict(item) for item in cached_value]
+        _COMMONS_CACHE.pop(cache_key, None)
     params = {
         "action": "query",
         "format": "json",
