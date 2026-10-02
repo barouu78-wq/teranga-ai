@@ -18,8 +18,13 @@ def build_model_kwargs(
 ) -> dict[str, Any]:
     use_web = bool(payload["use_web"])
     planner = bool(payload.get("planner"))
+    deep_reasoning = bool(payload.get("deep_reasoning"))
     domain = str((payload.get("intent_context") or {}).get("domain") or "general")
+
     effort = reasoning_override or reasoning_effort(use_web, planner)
+    if not reasoning_override and (planner or deep_reasoning) and model != "gpt-5.6-luna":
+        effort = "medium"
+
     kwargs: dict[str, Any] = {
         "model": model,
         "instructions": payload["instructions"],
