@@ -253,7 +253,7 @@ def _contains_text_term(text: object, term: object) -> bool:
     normalized_term = _normalize(term).strip()
     if not normalized_term:
         return False
-    pattern = r"(?<![\\w])" + re.escape(normalized_term) + r"(?![\\w])"
+    pattern = r"(?<!\w)" + re.escape(normalized_term) + r"(?!\w)"
     return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
 
 
