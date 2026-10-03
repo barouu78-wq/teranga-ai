@@ -121,3 +121,11 @@ def test_health_source_priority_matches_web_policy():
 def test_health_domain_classification_and_freshness():
     assert classify_domain("Quels sont les services de santé à Dakar ?") == "health"
     assert needs_fresh_web("health", "Quels centres sont ouverts aujourd’hui ?")
+
+def test_knowledge_domain_routes_health():
+    from services.senegal_knowledge import _knowledge_domain, format_senegal_knowledge, load_senegal_knowledge
+
+    assert _knowledge_domain("Quels services de santé sont disponibles ?") == "health"
+    data = load_senegal_knowledge()
+    context = format_senegal_knowledge(data, query="Quels services de santé sont disponibles ?")
+    assert "DOMAINE PERTINENT (health)" in context
