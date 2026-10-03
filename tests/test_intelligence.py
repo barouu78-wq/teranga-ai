@@ -354,3 +354,17 @@ def test_career_request_activates_agent_planner():
     )
 
     assert should_use_planner(context) is True
+
+
+
+def test_health_intent_and_context_are_recognized():
+    from services.intelligence import build_intent_context, detect_intent, infer_senegal_context
+
+    message = "Quels services de santé sont disponibles à Dakar ?"
+    assert detect_intent(message) == "health"
+    context = infer_senegal_context([], message)
+    assert "health" in context["intents"]
+    result = build_intent_context(message)
+    assert result["intent"] == "health"
+    assert result["domain"] == "health"
+    assert result["needs_web_search"] is True
