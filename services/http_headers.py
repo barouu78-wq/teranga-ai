@@ -32,6 +32,7 @@ def add_security_headers(
         "accelerometer=(), gyroscope=(), magnetometer=()"
     )
     response.headers["X-Permitted-Cross-Domain-Policies"] = "none"
+    response.headers["X-DNS-Prefetch-Control"] = "off"
     response.headers["Origin-Agent-Cluster"] = "?1"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
@@ -52,7 +53,7 @@ def add_security_headers(
     )
     if is_secure or forwarded_proto == "https":
         response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
+            "max-age=63072000; includeSubDomains"
         )
     response.headers.pop("Server", None)
     return response
