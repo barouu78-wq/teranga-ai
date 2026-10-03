@@ -67,6 +67,7 @@ SENEGAL_DOMAINS = {
     "culture": ("culture", "histoire", "patrimoine", "musique", "tradition", "art"),
     "food": ("cuisine", "restaurant", "plat", "thieboudienne", "yassa", "mafé"),
     "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB", "business", "entrepreneur", "entreprendre"),
+    "health": ("santé", "vaccination", "hôpital", "pharmacie", "urgence", "SAMU", "maladie"),
     "education": ("éducation", "formation", "école", "université", "apprendre", "cours", "étudiant"),
     "employment": ("emploi", "recrutement", "embauche", "carrière", "métier", "cv"),
     "society": ("population", "éducation", "santé", "emploi", "démographie"),
@@ -78,7 +79,7 @@ SENEGAL_DOMAINS = {
 
 DYNAMIC_DOMAINS = {
     "weather", "transport", "restaurant", "travel", "administration", "business", "employment", "education",
-    "prices", "events", "news", "flights",
+    "prices", "events", "news", "flights", "health",
 }
 
 def _contains_domain_term(value: str, term: str) -> bool:

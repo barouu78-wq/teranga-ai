@@ -116,3 +116,8 @@ def test_knowledge_domain_routes_education_and_diaspora():
 
 def test_health_source_priority_matches_web_policy():
     assert source_domains("health")[:2] == ("sante.gouv.sn", "who.int")
+
+
+def test_health_domain_classification_and_freshness():
+    assert classify_domain("Quels sont les services de santé à Dakar ?") == "health"
+    assert needs_fresh_web("health", "Quels centres sont ouverts aujourd’hui ?")
