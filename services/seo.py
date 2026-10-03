@@ -362,6 +362,27 @@ def render_seo_page(slug, site_url):
     related_html = ""
     if related:
         related_html = '<nav class="related">Voir aussi : %s<a href="/explorer">Explorer</a></nav>' % related
+    international_map = {
+        "senegal": "senegal-travel-guide",
+        "dakar": "dakar-travel-guide",
+        "visiter-goree": "goree-island",
+        "restaurants-dakar": "where-to-eat-in-dakar",
+        "transport-dakar": "senegal-transport",
+        "meteo-dakar": "senegal-weather",
+        "aibd-dakar": "dakar-airport-to-city",
+    }
+    international_html = ""
+    if slug in international_map:
+        topic = international_map[slug]
+        international_html = (
+            '<nav class="international" aria-label="Guides internationaux">'
+            'Guides internationaux : '
+            + ' | '.join(
+                f'<a href="/{lang}/{topic}">{label}</a>'
+                for lang, label in (("en", "English"), ("es", "Español"), ("de", "Deutsch"), ("it", "Italiano"))
+            )
+            + '</nav>'
+        )
     if slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
@@ -418,6 +439,7 @@ def render_seo_page(slug, site_url):
 <title>%(title)s</title>
 <script type=\"application/ld+json\">%(ld)s</script>
 <style>
+.international{margin:0 0 16px;font-size:13px;color:#b8a48c}.international a{margin-left:8px}
 :root{color-scheme:dark;--bg:#0b0907;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}
 *{box-sizing:border-box}body{margin:0;background:#0b0907;color:var(--text);font:16px/1.65 system-ui,sans-serif}
 main{width:min(860px,100%% - 32px);margin:auto;padding:28px 0 56px}
@@ -438,6 +460,7 @@ h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
 <body><main>
 <nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question</a></nav><button id=\"share-page\" type=\"button\">Partager</button><script>document.getElementById("share-page").onclick=async()=>{try{if(navigator.share){await navigator.share({title:document.title,url:location.href})}else{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_){try{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}catch(_){}}};</script>
 %(related)s
+%(international)s
 <article>
 <div class=\"kicker\">Senegal · Teranga AI</div>
 <h1>%(h1)s</h1>
@@ -455,6 +478,7 @@ h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
         "site": site_url,
         "ld": ld_json,
         "related": related_html,
+        "international": international_html,
         "h1": page["h1"],
         "intro": page["intro"],
         "sections": sections,

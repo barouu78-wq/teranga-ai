@@ -114,6 +114,8 @@ def should_use_web(message, context=""):
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre",
+        "sante", "santé", "vaccination", "vaccin", "hopital", "hôpital",
+        "pharmacie", "urgence", "samu", "maladie",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
