@@ -106,8 +106,10 @@ def needs_fresh_web(domain: str, text: str) -> bool:
     )
 
 def source_domains(domain: str) -> tuple[str, ...]:
-    if domain in {"society", "economy", "agriculture", "territory", "business", "employment", "education", "health"}:
+    if domain in {"society", "economy", "agriculture", "territory", "business", "employment", "education"}:
         return SOURCE_PRIORITY
+    if domain == "health":
+        return ("sante.gouv.sn", "who.int", "samusocial.sn")
     if domain in {"travel", "culture", "environment"}:
         return ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn")
     if domain == "administration":
