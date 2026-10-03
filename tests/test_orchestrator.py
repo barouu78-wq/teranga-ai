@@ -186,3 +186,39 @@ def test_planner_rejects_unknown_workflow_values():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+
+
+def test_static_question_routes_to_local_knowledge():
+    plan = build_agent_plan(
+        {"intent_context": {"intent": "culture", "location": "goree"}, "message": "Quelle est l'histoire de Gorée ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "local"
+    assert plan.action_strategy == "answer"
+
+
+def test_dynamic_restaurant_request_routes_to_web_and_action():
+    plan = build_agent_plan(
+        {"use_web": True, "intent_context": {"intent": "restaurant", "location": "dakar", "has_context": True}, "message": "Où manger ce soir ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "hybrid"
+    assert plan.action_strategy == "act"
+
+
+def test_photo_request_routes_to_images_without_forcing_web_strategy():
+    plan = build_agent_plan(
+        {"use_web": False, "intent_context": {"intent": "photos", "location": "goree", "needs_images": True}, "message": "Montre-moi Gorée"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.use_images is True
+    assert plan.source_strategy == "local"
+
+
+def test_followup_preserves_hybrid_context_when_web_is_required():
+    plan = build_agent_plan(
+        {"use_web": True, "intent_context": {"intent": "restaurant", "location": "dakar", "has_context": True}, "message": "Et demain ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "hybrid"
+    assert plan.action_strategy == "act"
