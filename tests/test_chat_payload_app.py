@@ -254,4 +254,4 @@ def test_parse_chat_payload_follow_up_keeps_weather_source_policy():
     assert error is None
     assert payload["use_web"] is True
     assert payload["intent_context"]["domain"] == "weather"
-    assert payload["intent_context"]["preferred_sources"][:2] == ("meteofrance.com", "ansd.sn")
+    assert payload["intent_context"]["preferred_sources"][:2] == ("anacim.sn", "ansd.sn")
