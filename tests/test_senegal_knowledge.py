@@ -112,3 +112,7 @@ def test_knowledge_domain_routes_education_and_diaspora():
 
     assert _knowledge_domain("Quelle formation suivre au Sénégal ?") == "education"
     assert _knowledge_domain("Je prépare mon retour depuis la diaspora") == "diaspora"
+
+
+def test_health_source_priority_matches_web_policy():
+    assert source_domains("health")[:2] == ("sante.gouv.sn", "who.int")
