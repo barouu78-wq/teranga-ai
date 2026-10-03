@@ -268,7 +268,7 @@ def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
     constraints = context.get("constraints") or []
     multi_step_terms = (
         "compare", "comparatif", "difference", "choisir", "quel est le meilleur",
-        "avantages", "inconvenients", "pourquoi", "comment faire", "etape",
+        "avantages", "inconvenients", "etape",
         "plan", "organise", "optimise", "priorite", "versus", "vs",
     )
     complex_intents = {"travel", "transport", "price", "money", "admin", "food", "project", "career", "education", "finance"}
