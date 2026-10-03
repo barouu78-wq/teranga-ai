@@ -67,7 +67,9 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     use_map = _needs_map(payload)
     requested_workflow = str(intent_context.get("intent") or "").strip().lower()
     workflow = _PLANNER_WORKFLOW_ALIASES.get(requested_workflow, "general") if planner else "general"
-    active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
+    # Deep reasoning is an execution signal, not a model-upgrade signal.
+    # Only bounded multi-step planner workflows justify the stronger model.
+    active_model = complex_model if model == "gpt-5.6-luna" and complex_model and planner else model
     steps = ["prepare_context"]
     if use_web:
         steps.append("web_retrieval")
