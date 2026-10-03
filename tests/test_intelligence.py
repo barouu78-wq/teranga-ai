@@ -368,3 +368,41 @@ def test_health_intent_and_context_are_recognized():
     assert result["intent"] == "health"
     assert result["domain"] == "health"
     assert result["needs_web_search"] is True
+
+
+def test_generic_why_question_stays_on_fast_reasoning_path():
+    from services.intelligence import should_use_deep_reasoning
+
+    assert should_use_deep_reasoning({
+        "query": "Pourquoi le thiéboudiène est-il populaire au Sénégal ?",
+        "intents": ["culture"],
+        "constraints": [],
+    }) is False
+
+
+def test_generic_how_question_stays_on_fast_reasoning_path():
+    from services.intelligence import should_use_deep_reasoning
+
+    assert should_use_deep_reasoning({
+        "query": "Comment faire du thiéboudiène ?",
+        "intents": ["food"],
+        "constraints": [],
+    }) is False
+
+
+def test_multi_constraint_trip_request_still_uses_deep_reasoning():
+    from services.intelligence import should_use_deep_reasoning
+
+    assert should_use_deep_reasoning({
+        "query": "Organise un séjour de 3 jours à Saly avec 150000 FCFA",
+        "intents": ["travel"],
+        "constraints": ["budget=150000 fcfa", "durée=3 jours"],
+    }) is True
+
+
+def test_project_budget_request_still_activates_planner():
+    from services.intelligence import infer_senegal_context, should_use_planner
+
+    context = infer_senegal_context([], "Je veux lancer un commerce avec 500000 FCFA.")
+
+    assert should_use_planner(context) is True
