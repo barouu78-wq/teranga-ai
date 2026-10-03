@@ -354,3 +354,12 @@ def test_career_request_activates_agent_planner():
     )
 
     assert should_use_planner(context) is True
+
+
+def test_deep_reasoning_does_not_trigger_for_generic_why_question():
+    from services.intelligence import should_use_deep_reasoning
+    assert should_use_deep_reasoning({
+        "query": "Pourquoi le ciel est bleu au Sénégal ?",
+        "intents": ["culture"],
+        "constraints": [],
+    }) is False
