@@ -29,7 +29,7 @@ def build_model_kwargs(
         "model": model,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 600 if (use_web or planner) else 400,
+        "max_output_tokens": 520 if (use_web or planner) else 320,
         "reasoning": {"effort": effort},
         "truncation": "auto",
         "stream": stream,
