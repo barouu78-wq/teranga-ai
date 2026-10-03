@@ -24,6 +24,8 @@ class AgentPlan:
     workflow: str = "general"
     deep_reasoning: bool = False
     steps: tuple[str, ...] = field(default_factory=tuple)
+    source_strategy: str = "local"
+    action_strategy: str = "answer"
 
 
 def _contains_query_term(query: str, term: str) -> bool:
@@ -65,7 +67,16 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     intent_context = payload.get("intent_context") or {}
     use_images = bool(intent_context.get("needs_images")) and not planner
     use_map = _needs_map(payload)
+    has_local_context = bool(payload.get("senegal_knowledge") or intent_context.get("location") or intent_context.get("has_context"))
+    if use_web and has_local_context:
+        source_strategy = "hybrid"
+    elif use_web:
+        source_strategy = "web"
+    else:
+        source_strategy = "local"
+    action_intents = {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"}
     requested_workflow = str(intent_context.get("intent") or "").strip().lower()
+    action_strategy = "act" if requested_workflow in action_intents and (planner or use_map or use_web) else "answer"
     workflow = _PLANNER_WORKFLOW_ALIASES.get(requested_workflow, "general") if planner else "general"
     active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
@@ -88,6 +99,8 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         workflow=workflow,
         deep_reasoning=deep_reasoning,
         steps=tuple(steps),
+        source_strategy=source_strategy,
+        action_strategy=action_strategy,
     )
 
 
