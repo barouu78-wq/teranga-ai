@@ -275,6 +275,8 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         "economy": "economy_society",
         "business": "economy_society",
         "employment": "economy_society",
+        "education": "education_sports_events",
+        "health": "health_safety",
         "diaspora": "economy_society",
     }.get(domain, domain)
     module = modules.get(module_key)
