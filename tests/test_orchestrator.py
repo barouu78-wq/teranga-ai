@@ -186,3 +186,17 @@ def test_planner_rejects_unknown_workflow_values():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+
+
+def test_deep_reasoning_does_not_upgrade_simple_non_planner_request():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "deep_reasoning": True,
+            "intent_context": {"intent": "general_information", "needs_images": False},
+            "message": "Pourquoi le ciel est bleu ?",
+        },
+        model="gpt-5.6-luna",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-luna"
