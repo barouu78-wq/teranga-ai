@@ -39,6 +39,26 @@ def register_seo_routes(app, site_url):
     def seo_assistant_senegal():
         return render_seo_page("assistant-senegal", site_url)
 
+    @app.get("/ia-senegal")
+    def seo_ia_senegal():
+        return render_seo_page("ia-senegal", site_url)
+
+    @app.get("/assistant-ia-dakar")
+    def seo_assistant_ia_dakar():
+        return render_seo_page("assistant-ia-dakar", site_url)
+
+    @app.get("/transport-dakar")
+    def seo_transport_dakar():
+        return render_seo_page("transport-dakar", site_url)
+
+    @app.get("/aibd-dakar")
+    def seo_aibd_dakar():
+        return render_seo_page("aibd-dakar", site_url)
+
+    @app.get("/visiter-dakar")
+    def seo_visiter_dakar():
+        return render_seo_page("visiter-dakar", site_url)
+
     @app.get("/senegal")
     def seo_senegal():
         return render_seo_page("senegal", site_url)
