@@ -471,12 +471,65 @@ def region_slug(name):
     value = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").lower()
     return "-".join(value.split())
 
+REGION_CONTENT = {
+    "Dakar": ("capitale et région côtière", "Dakar, Plateau, Gorée, Ngor, Almadies", "voyage, culture, transport, gastronomie et sorties"),
+    "Diourbel": ("région du centre du Sénégal", "Diourbel, Touba et Mbacké", "culture, patrimoine, déplacements et découverte du centre"),
+    "Fatick": ("région entre Sine et Saloum", "Fatick, Foundiougne et les îles du Saloum", "Sine-Saloum, nature, villages, patrimoine et itinéraires"),
+    "Kaffrine": ("région du centre", "Kaffrine et les localités du bassin arachidier", "routes, vie locale, culture et découverte du centre"),
+    "Kaolack": ("carrefour commercial du centre-ouest", "Kaolack et le Saloum", "marchés, transport, culture et itinéraires"),
+    "Kédougou": ("région du sud-est", "Kédougou, pays Bassari et reliefs du Sénégal oriental", "nature, randonnée, patrimoine et voyage"),
+    "Kolda": ("région de Haute-Casamance", "Kolda et les territoires de Haute-Casamance", "culture, nature, gastronomie et déplacements"),
+    "Louga": ("région du nord-ouest", "Louga et le Ferlo", "culture, routes, découverte du nord et étapes"),
+    "Matam": ("région du nord-est le long du fleuve Sénégal", "Matam et la vallée du fleuve", "culture, fleuve, déplacements et patrimoine"),
+    "Saint-Louis": ("région historique du nord", "Saint-Louis, langue de Barbarie et vallée du fleuve", "patrimoine, culture, nature et voyage"),
+    "Sédhiou": ("région de Casamance", "Sédhiou et la moyenne Casamance", "culture, nature, fleuve et découverte de la Casamance"),
+    "Tambacounda": ("région du Sénégal oriental", "Tambacounda et les portes du Sénégal oriental", "nature, routes, parcs et itinéraires"),
+    "Thiès": ("région de l'ouest autour de la Petite Côte", "Thiès, Tivaouane, Mbour et la Petite Côte", "plages, transport, patrimoine et tourisme"),
+    "Ziguinchor": ("région de Basse-Casamance", "Ziguinchor, Oussouye, Cap Skirring et la Casamance", "plages, culture, nature, gastronomie et voyage"),
+}
+
 def render_region_page(region_name, site_url):
     if region_name not in REGION_SEO_NAMES:
         return None
     slug = region_slug(region_name)
     url = f"{site_url}/regions/{slug}"
-    title = f"Région {region_name} | Teranga AI"
-    description = f"Guide de la région de {region_name} au Sénégal avec Teranga AI : itinéraire, transport, horaires, prix et questions pratiques."
-    html = f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="{description}"><link rel="canonical" href="{url}"><meta property="og:site_name" content="Teranga AI"><meta property="og:title" content="{title}"><meta property="og:description" content="{description}"><meta property="og:type" content="website"><meta property="og:url" content="{url}"><meta property="og:image" content="{site_url}/og.png"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{site_url}/og.png"><title>{title}</title><style>body{{margin:0;background:#0b0907;color:#f6efe3;font:16px/1.6 system-ui,sans-serif}}main{{max-width:820px;margin:auto;padding:28px 16px 60px}}a{{color:#e2b34a;text-decoration:none}}article{{background:#171310;border:1px solid #3b2d18;border-radius:26px;padding:28px}}h1{{font:700 clamp(34px,7vw,52px)/1.05 Georgia,serif}}.muted{{color:#b8a48c}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}}button,.cta{{border:1px solid #3b2d18;border-radius:999px;padding:10px 14px;background:#20190f;color:#e2b34a;font-weight:700;cursor:pointer}}</style></head><body><main><p><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · RÉGION DU SÉNÉGAL</small><h1>Région {region_name}</h1><p class="muted">Une page de départ pour préparer un voyage dans la région de {region_name}. Teranga AI peut aider à construire un itinéraire puis à vérifier les informations pratiques qui peuvent changer.</p><div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a><button id="share-page" type="button">Partager</button></div><section><h2>Questions pratiques</h2><p>Demandez les transports, horaires, prix, démarches ou services utiles pour votre étape. Pour les informations sensibles au temps, vérifiez les sources et la date de consultation.</p></section></article></main><script>document.getElementById("share-page").onclick=async()=>{{try{{if(navigator.share){{await navigator.share({{title:document.title,url:location.href}})}}else{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}}}catch(_ ){{try{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_fallback){{}}}}}};</script></body></html>'''
+    descriptor, places, topics = REGION_CONTENT.get(
+        region_name,
+        ("région du Sénégal", region_name, "voyage et informations pratiques"),
+    )
+    title = f"Région {region_name} au Sénégal : guide pratique | Teranga AI"
+    description = f"Guide de la région de {region_name} au Sénégal : {places}. Repères pour {topics}, avec informations actuelles à vérifier."
+    ld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "WebPage", "name": title, "description": description, "url": url, "inLanguage": "fr"},
+            {"@type": "BreadcrumbList", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "Accueil", "item": site_url + "/"},
+                {"@type": "ListItem", "position": 2, "name": "14 régions du Sénégal", "item": site_url + "/regions-senegal"},
+                {"@type": "ListItem", "position": 3, "name": region_name, "item": url}
+            ]}
+        ]
+    }
+    ld_json = json.dumps(ld, ensure_ascii=True).replace("<", "\\u003c")
+    related = "".join(
+        f'<a href="/regions/{region_slug(name)}">{name}</a>'
+        for name in REGION_SEO_NAMES if name != region_name
+    )
+    html = f'''<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow"><meta name="description" content="{description}">
+<link rel="canonical" href="{url}"><meta property="og:site_name" content="Teranga AI"><meta property="og:title" content="{title}">
+<meta property="og:description" content="{description}"><meta property="og:type" content="article"><meta property="og:url" content="{url}">
+<meta property="og:image" content="{site_url}/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{site_url}/og.png">
+<title>{title}</title><script type="application/ld+json">{ld_json}</script>
+<style>body{{margin:0;background:#0b0907;color:#f6efe3;font:16px/1.65 system-ui,sans-serif}}main{{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 60px}}a{{color:#e2b34a;text-decoration:none}}article{{background:#171310;border:1px solid #3b2d18;border-radius:26px;padding:28px}}h1{{font:700 clamp(34px,7vw,52px)/1.05 Georgia,serif;margin:10px 0 14px}}h2{{font-size:20px;margin-bottom:6px}}.muted{{color:#b8a48c}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}}.cta{{border:1px solid #3b2d18;border-radius:999px;padding:10px 14px;background:#20190f;color:#e2b34a;font-weight:700}}section{{border-top:1px solid #3b2d18;padding:18px 0}}.related{{display:flex;gap:8px;flex-wrap:wrap;font-size:13px}}</style>
+</head><body><main><p><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
+<h1>Région {region_name}</h1><p class="muted">{region_name} est une {descriptor}. Repères de lieux : {places}.</p>
+<section><h2>Que découvrir ?</h2><p>Cette page sert de point de départ pour {topics}. Demandez à Teranga AI un itinéraire adapté à vos dates, votre budget et votre moyen de transport.</p></section>
+<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
+<section><h2>Préparer votre étape</h2><p>Précisez votre ville de départ, votre destination, la durée du séjour et vos centres d'intérêt pour obtenir une proposition plus utile.</p></section>
+<div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a></div>
+<section><h2>Autres régions</h2><div class="related">{related}</div></section>
+</article></main></body></html>'''
     return Response(html, mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})
