@@ -161,7 +161,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     context_instruction = (
         place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
-        "PLAN D’EXÉCUTION : " + str(agent_plan) + ". " +
+        "MODE D’EXÉCUTION : " + ("planification" if planner_enabled else "réponse directe") + ". " +
         memory_line + " " +
         knowledge_web_line + " " + source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
