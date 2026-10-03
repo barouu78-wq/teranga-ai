@@ -15,7 +15,7 @@ def test_travel_source_policy():
 
 def test_weather_source_policy():
     domains = preferred_domains("weather")
-    assert domains[:2] == ("meteofrance.com", "ansd.sn")
+    assert domains[:2] == ("anacim.sn", "ansd.sn")
 
 
 def test_general_web_has_no_restrictive_domain_filter():
@@ -63,3 +63,7 @@ def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
 
     assert should_use_web("Quel est le taux de change euro FCFA ?") is True
     assert should_use_web("Explique le changement de couleur.") is False
+
+
+def test_weather_prioritizes_senegal_meteorological_authority():
+    assert preferred_domains("weather")[0] == "anacim.sn"

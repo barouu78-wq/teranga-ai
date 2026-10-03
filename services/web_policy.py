@@ -21,7 +21,7 @@ SOURCE_FILTERS = {
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
-    "weather": ("meteofrance.com", "ansd.sn", "gov.sn"),
+    "weather": ("anacim.sn", "ansd.sn", "gov.sn"),
 }
 
 @lru_cache(maxsize=32)
