@@ -186,3 +186,4 @@ def test_planner_rejects_unknown_workflow_values():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+\n\ndef test_deep_reasoning_keeps_fast_model_without_planner():\n    plan = build_agent_plan(\n        {\n            "planner": False,\n            "deep_reasoning": True,\n            "use_web": False,\n            "intent_context": {"intent": "general_information", "needs_images": False},\n            "message": "Comment faire une comparaison ?",\n        },\n        model="gpt-5.6-luna",\n        complex_model="gpt-5.6-sol",\n    )\n    assert plan.model == "gpt-5.6-luna"\n    assert plan.deep_reasoning is True\n
