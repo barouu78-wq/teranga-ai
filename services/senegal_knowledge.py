@@ -113,7 +113,7 @@ def source_domains(domain: str) -> tuple[str, ...]:
     if domain == "administration":
         return ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn")
     if domain == "weather":
-        return ("meteofrance.com", "ansd.sn", "gov.sn")
+        return ("anacim.sn", "ansd.sn", "gov.sn")
     if domain == "transport":
         return ("transports.gouv.sn", "gov.sn", "ansd.sn")
     if domain == "food":

@@ -56,7 +56,7 @@ def test_regional_location_context():
 
 def test_weather_is_a_fresh_web_domain():
     assert classify_domain("météo à Dakar") == "weather"
-    assert "meteofrance.com" in source_domains("weather")
+    assert "anacim.sn" in source_domains("weather")
 
 def test_core_senegal_destinations_are_retrievable():
     from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
@@ -85,7 +85,7 @@ def test_knowledge_context_adds_relevant_domain():
 def test_dynamic_source_priorities_match_web_policy():
     assert source_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
     assert source_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
-    assert source_domains("weather")[:2] == ("meteofrance.com", "ansd.sn")
+    assert source_domains("weather")[:2] == ("anacim.sn", "ansd.sn")
 
 
 def test_knowledge_context_cache_reuses_same_query():
