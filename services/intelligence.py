@@ -422,7 +422,7 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
                     break
     context_data = resolved_context if resolved_context is not None else infer_senegal_context(history, message)
     context_query = str(context_data.get("query") or "") or contextual_query(history, message)
-    domain = classify_domain(context_query)
+    domain = resolved_intent if resolved_intent in {"health"} else classify_domain(context_query)
     fresh = should_use_web(message, context_query)
     return {
         "intent": resolved_intent,
