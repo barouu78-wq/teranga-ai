@@ -129,3 +129,18 @@ def test_knowledge_domain_routes_health():
     data = load_senegal_knowledge()
     context = format_senegal_knowledge(data, query="Quels services de santé sont disponibles ?")
     assert "DOMAINE PERTINENT (health)" in context
+
+
+def test_knowledge_metadata_exposes_provenance_freshness_and_confidence():
+    from services.senegal_knowledge import knowledge_metadata
+    meta = knowledge_metadata("travel")
+    assert meta["freshness"] == "fresh_required"
+    assert meta["confidence"] == "high"
+    assert "tourisme.gouv.sn" in meta["source_priority"]
+
+
+def test_knowledge_context_exposes_provenance_metadata():
+    from services.senegal_knowledge import format_senegal_knowledge, load_senegal_knowledge
+    context = format_senegal_knowledge(load_senegal_knowledge(), query="Que visiter à Gorée ?")
+    assert "Provenance:" in context
+    assert "confiance=high" in context
