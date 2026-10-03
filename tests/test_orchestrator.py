@@ -186,3 +186,78 @@ def test_planner_rejects_unknown_workflow_values():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+
+
+def test_simple_question_stays_on_luna():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "deep_reasoning": False,
+            "use_web": False,
+            "intent_context": {"intent": "general_information"},
+            "message": "C'est quoi le thiéboudiène ?",
+        },
+        model="gpt-5.6-luna",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-luna"
+
+
+def test_deep_reasoning_without_planner_stays_on_luna():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "deep_reasoning": True,
+            "use_web": False,
+            "intent_context": {"intent": "culture"},
+            "message": "Compare deux traditions sénégalaises.",
+        },
+        model="gpt-5.6-luna",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-luna"
+
+
+def test_web_without_planner_stays_on_luna():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "deep_reasoning": False,
+            "use_web": True,
+            "intent_context": {"intent": "weather"},
+            "message": "Quelle météo à Dakar demain ?",
+        },
+        model="gpt-5.6-luna",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-luna"
+
+
+def test_explicit_planner_uses_sol():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "deep_reasoning": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning"},
+            "message": "Prépare un séjour de 3 jours.",
+        },
+        model="gpt-5.6-luna",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-sol"
+
+
+def test_existing_sol_model_is_not_downgraded():
+    plan = build_agent_plan(
+        {
+            "planner": False,
+            "deep_reasoning": False,
+            "use_web": False,
+            "intent_context": {"intent": "general_information"},
+            "message": "Réponds simplement.",
+        },
+        model="gpt-5.6-sol",
+        complex_model="gpt-5.6-sol",
+    )
+    assert plan.model == "gpt-5.6-sol"
