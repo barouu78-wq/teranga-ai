@@ -173,6 +173,7 @@ def _knowledge_domain(query: str) -> str:
         "business": ("business", "entreprise", "commerce", "entrepreneur", "entreprendre", "clients", "vente", "projet"),
         "employment": ("emploi", "recrutement", "embauche", "carrière", "métier", "cv", "travail"),
         "education": ("formation", "éducation", "école", "université", "étudier", "apprendre", "cours"),
+        "health": ("santé", "vaccination", "hôpital", "pharmacie", "urgence", "samu", "maladie"),
         "diaspora": ("diaspora", "retour", "transfert", "sénégal-france"),
         "economy": ("prix", "économie", "salaire", "revenus", "investir", "financement"),
     }
