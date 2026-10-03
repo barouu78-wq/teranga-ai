@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Tests and local tooling
+tests/
+pytest.ini
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local artifacts
+*.log
+*.tmp
+*.swp

@@ -224,7 +224,7 @@ def test_health_does_not_expose_secret():
 
 
 def test_public_error_classifies_auth_and_bad_request():
-    assert "OPENAI_API_KEY" in public_error(Exception("401 invalid api key"))
+    assert "clé API configurée" in public_error(Exception("401 invalid api key"))
     assert "requête IA" in public_error(Exception("BadRequestError invalid parameter"))
 
 

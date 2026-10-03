@@ -35,12 +35,12 @@ def test_trip_planner_rejects_oversized_body_without_content_length():
 
 
 def test_trip_planner_rejects_invalid_json():
-    response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""}, headers={"Origin": "https://teranga-ai-1.onrender.com"})
+    response = app.test_client().post("/api/trip-planner", json={"arrival": "", "departure": ""}, headers={"Origin": "https://teranga-ai.fr"})
     assert response.status_code == 400
 
 
 def test_trip_planner_rejects_reversed_dates():
-    response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"}, headers={"Origin": "https://teranga-ai-1.onrender.com"})
+    response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"}, headers={"Origin": "https://teranga-ai.fr"})
     assert response.status_code == 400
 
 

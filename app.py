@@ -108,7 +108,7 @@ def add_request_id_header(response):
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = env_bool("TRUST_PROXY", True)
-SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
 register_localized_routes(app, SITE_URL)
 register_seo_routes(app, SITE_URL)
 

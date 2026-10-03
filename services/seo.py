@@ -2,7 +2,7 @@ from flask import Response
 import json
 import os
 
-SITE_URL = os.getenv("SITE_URL", "https://teranga-ai-1.onrender.com").rstrip("/")
+SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
 
 SEO_PAGES = {
     "senegal": {
