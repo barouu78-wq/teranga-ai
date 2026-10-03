@@ -22,6 +22,7 @@ _INTENT_PATTERNS = {
         "sejour", "séjour", "vacances", "planifier", "planning",
     ),
     "weather": ("meteo", "météo", "weather", "temps"),
+    "health": ("santé", "sante", "vaccination", "hôpital", "hopital", "pharmacie", "urgence", "samu", "maladie"),
     "transport": (
         "transport", "bus", "taxi", "car", "aeroport", "aéroport",
         "airport", "ter", "train",
@@ -38,7 +39,7 @@ _INTENT_PATTERNS = {
     "finance": ("argent", "financement", "budget", "revenus", "salaire", "épargne", "epargne", "investir", "crédit", "credit", "prêt", "pret"),
 }
 
-_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project"}
+_DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project", "health"}
 
 _LOCATION_ALIASES = {
     "dakar": ("dakar",),
@@ -92,6 +93,7 @@ def _contains_term(text: str, term: str) -> bool:
 
 _CONTEXT_INTENT_GROUPS = {
     "weather": ("meteo", "météo", "pluie", "temperature", "température", "vent", "chaleur"),
+    "health": ("sante", "santé", "vaccination", "hopital", "hôpital", "pharmacie", "urgence", "samu", "maladie"),
     "transport": ("trajet", "itineraire", "itinéraire", "taxi", "bus", "ferry", "vol", "aeroport", "aéroport", "transport", "route"),
     "food": ("restaurant", "manger", "repas", "plat", "ceebu", "thiéb", "yassa", "mafe", "dibi"),
     "price": ("prix", "tarif", "cout", "coût", "combien", "budget", "fcfa", "cfa"),
