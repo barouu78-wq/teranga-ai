@@ -65,6 +65,12 @@ from services.images import (
 
 load_dotenv()
 
+RUNTIME_ENV = os.getenv("TERANGA_ENV", "development").strip().lower()
+if RUNTIME_ENV == "production":
+    _configured_secret = os.getenv("SECRET_KEY", "").strip()
+    if len(_configured_secret) < 32:
+        raise RuntimeError("SECRET_KEY doit être configurée en production avec au moins 32 caractères.")
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
 _stable = os.getenv("SECRET_KEY") or os.getenv("OPENAI_API_KEY") or "teranga-ai"
@@ -73,6 +79,13 @@ app.config["JSON_SORT_KEYS"] = False
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+if RUNTIME_ENV == "production":
+    app.config["TRUSTED_HOSTS"] = [
+        "teranga-ai.fr",
+        "www.teranga-ai.fr",
+        "127.0.0.1",
+        "localhost",
+    ]
 
 
 @app.before_request

@@ -22,5 +22,5 @@ def test_add_security_headers_uses_nonce_and_hsts():
 
     assert response.headers["Cache-Control"] == "public, max-age=86400"
     assert "'nonce-abc123'" in response.headers["Content-Security-Policy"]
-    assert response.headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+    assert response.headers["Strict-Transport-Security"] == "max-age=63072000; includeSubDomains"
     assert "Server" not in response.headers

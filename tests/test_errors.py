@@ -3,7 +3,7 @@ from services.errors import public_error
 
 def test_public_error_redacts_api_key_and_maps_authentication():
     message = public_error(RuntimeError("401 api_key=sk-abcdefghijklmnopqrstuvwxyz"))
-    assert message == "Le service IA est mal authentifié. Vérifie la clé API configurée sur le serveur."
+    assert message == "Le service IA est momentanément indisponible. Réessaie dans quelques secondes."
     assert "sk-" not in message
 
 
@@ -16,4 +16,4 @@ def test_public_error_maps_provider_rate_limit():
 
 
 def test_public_error_maps_unknown_failure():
-    assert public_error(RuntimeError("unexpected failure")) == "Le service IA a rencontré une erreur inattendue. Vérifie les logs du serveur puis réessaie."
+    assert public_error(RuntimeError("unexpected failure")) == "Le service IA a rencontré une erreur inattendue. Réessaie dans quelques secondes."

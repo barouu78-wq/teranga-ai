@@ -224,7 +224,7 @@ def test_health_does_not_expose_secret():
 
 
 def test_public_error_classifies_auth_and_bad_request():
-    assert "clé API configurée" in public_error(Exception("401 invalid api key"))
+    assert "momentanément indisponible" in public_error(Exception("401 invalid api key"))
     assert "requête IA" in public_error(Exception("BadRequestError invalid parameter"))
 
 
@@ -421,7 +421,7 @@ def test_public_error_redacts_provider_credentials():
     assert "abcdefghijklmnop" not in message
     assert "sk-proj" not in message
     assert "secret123" not in message
-    assert "mal authentifié" in message
+    assert "momentanément indisponible" in message
 
 
 def test_public_error_keeps_model_failure_generic():
