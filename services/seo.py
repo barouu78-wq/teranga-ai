@@ -256,6 +256,88 @@ SEO_PAGES = {
         ],
         "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "Sénégal ↔ France"), ("meteo-dakar", "Météo Dakar"), ("regions-senegal", "14 régions")],
     },
+
+    "ia-senegal": {
+        "title": "IA au Sénégal : intelligence artificielle et usages | Teranga AI",
+        "description": "Découvrez comment utiliser l'intelligence artificielle au Sénégal pour apprendre, travailler, créer, traduire et gagner du temps avec Teranga AI.",
+        "h1": "IA au Sénégal",
+        "intro": "Teranga AI rend l'IA plus simple à découvrir et à utiliser pour les personnes au Sénégal, en France et dans la diaspora.",
+        "sections": [
+            ("Pour apprendre et travailler", "Rédaction, résumé, traduction, recherche d'idées, analyse de documents, programmation et préparation de projets."),
+            ("Pour les usages locaux", "Questions sur Dakar, les régions, les transports, le voyage, la culture, la gastronomie et la vie pratique."),
+            ("Plusieurs modèles", "Teranga AI réunit plusieurs modèles d'IA dans une même expérience. Les capacités et informations disponibles peuvent évoluer.")
+        ],
+        "faq": [
+            ("Comment utiliser l'IA au Sénégal ?", "Vous pouvez utiliser Teranga AI en ligne pour poser des questions, rédiger, traduire, analyser et préparer des projets."),
+            ("L'IA peut-elle aider pour des questions sur le Sénégal ?", "Oui. Teranga AI est conçu autour de nombreux usages liés au Sénégal ; les informations sensibles ou changeantes doivent être vérifiées.")
+        ],
+        "related": [("assistant-senegal", "Assistant Sénégal"), ("dakar", "Dakar"), ("france-senegal", "Sénégal ↔ France")]
+    },
+    "assistant-ia-dakar": {
+        "title": "Assistant IA Dakar : transport, sorties et vie pratique | Teranga AI",
+        "description": "Assistant IA pour Dakar : transport, AIBD, Gorée, météo, sorties, quartiers, restaurants et questions pratiques.",
+        "h1": "Assistant IA Dakar",
+        "intro": "Posez une question sur Dakar et obtenez une réponse adaptée à votre situation, votre quartier, votre budget ou votre programme.",
+        "sections": [
+            ("Transport et arrivée", "Demandez comment organiser un trajet depuis AIBD, entre quartiers ou vers Gorée. Les horaires et tarifs se vérifient le jour du déplacement."),
+            ("Sorties et tourisme", "Préparez une journée, un week-end ou une visite selon vos centres d'intérêt : culture, plage, gastronomie, histoire ou famille."),
+            ("Vie quotidienne", "Demandez une explication, une traduction, une idée de programme ou une aide à la rédaction en lien avec votre quotidien à Dakar.")
+        ],
+        "faq": [
+            ("Que peut-on demander à l'assistant IA de Dakar ?", "Transport, météo, tourisme, sorties, gastronomie, traduction, rédaction et informations pratiques."),
+            ("Peut-il préparer une journée à Dakar ?", "Oui. Indiquez votre point de départ, le temps disponible, votre budget et vos centres d'intérêt.")
+        ],
+        "related": [("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-goree", "Visiter Gorée")]
+    },
+    "transport-dakar": {
+        "title": "Transport Dakar : trajets, taxis, bus et déplacements | Teranga AI",
+        "description": "Guide pratique du transport à Dakar : trajets, taxis, bus et déplacements depuis AIBD. Vérifiez les horaires et tarifs actuels.",
+        "h1": "Transport à Dakar",
+        "intro": "Préparez vos déplacements à Dakar avec Teranga AI. Donnez votre point de départ, votre destination et l'heure souhaitée.",
+        "sections": [
+            ("Dans Dakar", "Selon le trajet, plusieurs solutions peuvent être pertinentes : taxi, transport collectif ou véhicule avec chauffeur. Les disponibilités et tarifs doivent être vérifiés."),
+            ("Depuis AIBD", "L'aéroport Blaise Diagne se trouve à Diass, à l'extérieur de Dakar. Indiquez votre quartier ou destination pour préparer le trajet."),
+            ("Vers Gorée", "Pour Gorée, le trajet implique le ferry depuis Dakar. Vérifiez les horaires et conditions de traversée avant de partir.")
+        ],
+        "faq": [
+            ("Comment préparer un trajet à Dakar ?", "Indiquez votre départ, votre destination, l'heure et vos contraintes de budget ou de confort."),
+            ("Les prix sont-ils fixes ?", "Non. Les prix et disponibilités peuvent changer ; vérifiez les informations actuelles avant le déplacement.")
+        ],
+        "related": [("aibd-dakar", "AIBD → Dakar"), ("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Gorée")]
+    },
+    "aibd-dakar": {
+        "title": "AIBD vers Dakar : comment rejoindre la capitale | Teranga AI",
+        "description": "Comment aller de l'aéroport AIBD à Dakar : préparez votre trajet selon votre quartier, votre heure d'arrivée et vos contraintes.",
+        "h1": "AIBD → Dakar",
+        "intro": "L'aéroport international Blaise Diagne (AIBD) est situé à Diass. Teranga AI peut vous aider à préparer la suite de votre trajet vers Dakar.",
+        "sections": [
+            ("Avant le départ", "Préparez votre destination exacte à Dakar, votre heure d'arrivée et le nombre de voyageurs. Cela permet de comparer les options pertinentes."),
+            ("Arrivée à l'aéroport", "Les services et horaires peuvent évoluer. Vérifiez les informations auprès des opérateurs et sources officielles avant votre trajet."),
+            ("Besoin d'un itinéraire", "Demandez à Teranga AI une proposition adaptée à votre quartier, votre budget et votre heure d'arrivée.")
+        ],
+        "faq": [
+            ("AIBD est-il à Dakar ?", "Non. L'aéroport Blaise Diagne est situé à Diass, dans la région de Thiès, à l'extérieur de Dakar."),
+            ("Peut-on préparer son trajet avec Teranga AI ?", "Oui. Indiquez votre heure d'arrivée et votre destination finale pour obtenir des repères à vérifier avant le départ.")
+        ],
+        "related": [("transport-dakar", "Transport Dakar"), ("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar")]
+    },
+    "visiter-dakar": {
+        "title": "Visiter Dakar : que voir et que faire | Teranga AI",
+        "description": "Visiter Dakar : quartiers, culture, plages, gastronomie, Gorée et idées de sorties pour organiser votre séjour.",
+        "h1": "Visiter Dakar",
+        "intro": "Dakar se découvre par ses quartiers, son littoral, sa culture, sa gastronomie et ses lieux historiques.",
+        "sections": [
+            ("Culture et histoire", "Explorez les lieux culturels et historiques de Dakar et préparez une excursion à Gorée selon votre temps disponible."),
+            ("Quartiers et littoral", "Plateau, Médina, Ngor, Almadies et Ouakam offrent des ambiances différentes. Choisissez selon votre activité et votre budget."),
+            ("Une journée sur mesure", "Demandez à Teranga AI de construire un programme selon votre heure de départ, votre budget, votre moyen de transport et vos centres d'intérêt.")
+        ],
+        "faq": [
+            ("Que faire à Dakar en une journée ?", "Indiquez vos centres d'intérêt et votre budget ; Teranga AI peut proposer un programme à vérifier selon les horaires du jour."),
+            ("Peut-on visiter Gorée depuis Dakar ?", "Oui. Gorée se visite depuis Dakar en ferry ; vérifiez les horaires de traversée avant votre départ.")
+        ],
+        "related": [("dakar", "Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("transport-dakar", "Transport Dakar")]
+    },
+
 }
 
 
