@@ -113,7 +113,7 @@ def should_use_web(message, context=""):
         "alerte", "pluie", "meteo", "météo", "temperature", "température",
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
-        "classement", "promotion", "offre",
+        "classement", "promotion", "offre", "sante", "santé", "hopital", "hôpital", "pharmacie", "urgence", "vaccination",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
