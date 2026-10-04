@@ -88,6 +88,16 @@ Voir .env.example pour les variables attendues :
 - quotas optionnels : TRIP_*, PRACTICAL_*, EXPLORER_IMAGE_*
 - ANALYTICS_SCRIPT_URL, ANALYTICS_SITE_ID : mesure d’audience sans cookie (Plausible, Umami), désactivée par défaut
 
+## 🤝 Widget partenaire
+
+Un site partenaire (hôtel, agence, média…) ajoute une ligne :
+
+```html
+<script src="https://teranga-ai.fr/widget.js" data-partner="mon-hotel" data-lang="fr" defer></script>
+```
+
+Un bouton « Une question sur le Sénégal ? » ouvre Teranga AI sur teranga-ai.fr (petite fenêtre sur ordinateur, nouvel onglet sur mobile). Le widget ne lit ni ne transmet aucune donnée du site partenaire ; `data-partner` arrive en `utm_source` pour la mesure d'audience. Options : `data-lang` (fr, en, wo), `data-position` (right, left), `data-question` (question pré-remplie).
+
 ## 🎯 Vision
 
 Teranga AI évolue vers un **guide numérique du Sénégal** : un point d’entrée unique pour explorer un lieu, comprendre son histoire, trouver sa cuisine, voir des photos et poser une question pratique.

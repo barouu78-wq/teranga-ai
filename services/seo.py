@@ -215,6 +215,7 @@ SEO_PAGES = {
             ("Hôtels, restaurants et tourisme", "Aidez vos clients à trouver des repères sur Dakar, les transports, la météo, les quartiers, les spécialités et les lieux à visiter."),
             ("Commerçants et services", "Utilisez Teranga AI comme point de découverte pour les questions fréquentes : horaires à vérifier, itinéraires, langues, produits, services et informations pratiques."),
             ("Entreprises et partenaires", "Nous pouvons étudier un pilote, une intégration, une campagne de visibilité ou un partenariat éditorial avec des acteurs au Sénégal et en France."),
+            ("Un bouton Teranga AI sur votre site", "Ajoutez une ligne à votre site : <code>&lt;script src=\"https://teranga-ai.fr/widget.js\" data-partner=\"votre-nom\" data-lang=\"fr\" defer&gt;&lt;/script&gt;</code>. Un bouton « Une question sur le Sénégal ? » ouvre Teranga AI pour vos visiteurs, sans lire ni transmettre aucune donnée de votre site. Options : data-lang (fr, en, wo), data-position (right, left), data-question (question pré-remplie)."),
             ("Une présence qui se partage", "Le site, les pages thématiques, les réseaux sociaux, les médias et les annuaires peuvent relayer Teranga AI. L’objectif est de construire une présence cohérente, sans spam ni fausses affiliations.")
         ],
         "faq": [
