@@ -1,4 +1,4 @@
-from services.action_executor import ALLOWED_ACTIONS, execute_action
+from services.action_executor import ALLOWED_ACTIONS, execute_action, prepare_action
 
 
 def test_unsupported_action_is_rejected():
@@ -30,3 +30,19 @@ def test_confirmed_action_executes_only_supplied_handler():
 def test_allowlist_is_explicit():
     assert "prepare_trip_plan" in ALLOWED_ACTIONS
     assert "delete_user" not in ALLOWED_ACTIONS
+
+
+
+def test_prepare_action_creates_request_without_execution():
+    result = prepare_action("prepare_trip_plan")
+    assert result.status == "prepared"
+    assert result.executed is False
+    assert result.requires_confirmation is True
+    assert result.request_id
+
+
+def test_prepare_unsupported_action_is_safe():
+    result = prepare_action("delete_user")
+    assert result.status == "unsupported"
+    assert result.executed is False
+    assert result.request_id
