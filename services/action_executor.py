@@ -36,11 +36,23 @@ class ActionExecutionResult:
 
 
 def prepare_action(action: str) -> ActionExecutionResult:
-    """Create an idempotent-looking action request without executing it."""
-    execution_request_id = request_id or uuid4().hex
+    """Create a fresh preparation request without executing anything."""
+    request_id = uuid4().hex
     if action not in ALLOWED_ACTIONS:
-        return ActionExecutionResult(action=action, status="unsupported", executed=False, requires_confirmation=False, request_id=request_id)
-    return ActionExecutionResult(action=action, status="prepared", executed=False, requires_confirmation=True, request_id=request_id)
+        return ActionExecutionResult(
+            action=action,
+            status="unsupported",
+            executed=False,
+            requires_confirmation=False,
+            request_id=request_id,
+        )
+    return ActionExecutionResult(
+        action=action,
+        status="prepared",
+        executed=False,
+        requires_confirmation=True,
+        request_id=request_id,
+    )
 
 
 def execute_action(
@@ -51,7 +63,7 @@ def execute_action(
     handlers: dict[str, Callable[[], Any]] | None = None,
 ) -> ActionExecutionResult:
     """Execute only an allowlisted handler after explicit confirmation."""
-    request_id = uuid4().hex
+    execution_request_id = request_id or uuid4().hex
     if action not in ALLOWED_ACTIONS:
         return ActionExecutionResult(
             action=action,
