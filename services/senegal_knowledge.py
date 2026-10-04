@@ -254,11 +254,18 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
 
     places = data.get("places", [])
     if tokens and places:
-        matched_places = []
-        for place in places:
+        # Classement par pertinence : un mot présent dans le nom du lieu compte
+        # triple (« fort de Sédhiou », « marché de Diaobé ») ; sinon l'ordre du
+        # fichier faisait passer Gorée ou Mbour avant le lieu demandé.
+        scored = []
+        for index, place in enumerate(places):
             haystack = place.get("_search_haystack", "")
-            if any(token in haystack for token in tokens):
-                matched_places.append(place)
+            name = str(place.get("name", "")).casefold()
+            hits = sum(1 for token in tokens if token in haystack)
+            if hits:
+                score = hits + 2 * sum(1 for token in tokens if token in name)
+                scored.append((-score, index, place))
+        matched_places = [place for _, _, place in sorted(scored, key=lambda item: item[:2])]
         if matched_places:
             lines.append("LIEUX PERTINENTS :")
             for place in matched_places[:max_places]:

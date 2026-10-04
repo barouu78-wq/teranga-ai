@@ -39,6 +39,16 @@ def _contains_normalized_term(text: object, candidate: object, normalize: Callab
     return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
 
 
+_SHORT_NAME = re.compile(r"^.*?\b(?:de|du|des|d')\s+(?:la\s+|l')?(.+)$", re.IGNORECASE)
+
+
+def _short_place_name(name: str) -> str:
+    """« Île de Gorée » → « Gorée » ; « Parc national de la Langue de Barbarie » → « Langue de Barbarie »."""
+    match = _SHORT_NAME.match(str(name or "").strip())
+    short = match.group(1).strip() if match else ""
+    return short if len(short) >= 4 else ""
+
+
 def knowledge_image_titles(
     message: object,
     knowledge: Mapping[str, object],
@@ -49,32 +59,41 @@ def knowledge_image_titles(
     text_value = normalize(message)
     titles: list[str] = []
 
-    for region in knowledge.get("regions", []) or []:
-        if not isinstance(region, Mapping):
+    def collect(candidates) -> bool:
+        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
+            for candidate in candidates:
+                if candidate and str(candidate) not in titles:
+                    titles.append(str(candidate))
+                    if len(titles) >= limit:
+                        return True
+        return False
+
+    # Le lieu précis passe avant sa région (« désert de Lompoul » avant « Louga »).
+    # Le nom court (« Gorée » pour « Île de Gorée ») sert aussi à reconnaître le
+    # lieu, mais seules ses requêtes d'images sont proposées.
+    for place in knowledge.get("places", []) or []:
+        if not isinstance(place, Mapping):
             continue
-        candidates = [
+        name = str(place.get("name", ""))
+        candidates = [name, *(place.get("image_queries", []) or [])]
+        short = _short_place_name(name)
+        if (
+            short
+            and not any(_contains_normalized_term(text_value, c, normalize) for c in candidates)
+            and _contains_normalized_term(text_value, short, normalize)
+        ):
+            candidates = [short, *(c for c in candidates if c)]
+        if collect(candidates):
+            return titles
+
+    for region in knowledge.get("regions", []) or []:
+        if isinstance(region, Mapping) and collect([
             region.get("name", ""),
             *(region.get("places", []) or []),
             *(region.get("highlights", []) or []),
             *(region.get("image_queries", []) or []),
-        ]
-        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
-            for candidate in candidates:
-                if candidate and str(candidate) not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
-
-    for place in knowledge.get("places", []) or []:
-        if not isinstance(place, Mapping):
-            continue
-        candidates = [place.get("name", ""), *(place.get("image_queries", []) or [])]
-        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
-            for candidate in candidates:
-                if candidate and str(candidate) not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return titles
+        ]):
+            return titles
     return titles
 
 
