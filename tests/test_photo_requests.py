@@ -31,11 +31,11 @@ def photo_client(monkeypatch):
     token = client.get("/csrf", base_url="https://teranga-ai.fr").get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
 
-    def ask(message, language="fr"):
+    def ask(message, language="fr", history=None):
         image_topics._TOPIC_IMAGE_CACHE.clear()
         response = client.post(
             "/chat",
-            json={"message": message, "language": language},
+            json={"message": message, "language": language, "history": history or []},
             headers={"X-CSRF-Token": token, "Origin": "https://teranga-ai.fr"},
             base_url="https://teranga-ai.fr",
         )
@@ -83,3 +83,26 @@ def test_city_request_is_not_captured_by_a_landmark_short_name():
     titles = knowledge_image_titles("montre moi les photos de Dakar")
     assert titles[0] == "Dakar"
     assert not any("Corniche" in title for title in titles)
+
+
+SALY = [
+    {"role": "user", "content": "montre moi des photos de Saly"},
+    {"role": "assistant", "content": "Voici quelques photos pour « Saly ». Souhaitez-vous voir encore plus de photos de Saly ou d'une autre plage ?"},
+]
+
+
+def test_yes_after_photo_offer_keeps_the_subject(photo_client):
+    state, ask = photo_client
+    text, images = ask("Oui", history=SALY + [{"role": "user", "content": "Oui"}])
+    assert images
+    assert text == "Voici quelques photos pour « Saly »."
+    assert state["queries"] and all("Saly" in query for query in state["queries"])
+
+
+def test_question_after_photos_is_not_a_photo_request():
+    from services.chat_payload_service import photo_request
+
+    assert photo_request("Parle moi des personnages de sénégalais", SALY) == (False, "")
+    assert photo_request("Oui", [{"role": "assistant", "content": "Voici quelques photos."}]) == (False, "")
+    assert photo_request("Oui", [{"role": "assistant", "content": "Tu veux un itinéraire ?"}]) == (False, "")
+    assert photo_request("oui merci", SALY) == (True, "montre moi des photos de Saly")

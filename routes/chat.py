@@ -66,15 +66,8 @@ def register_chat_route(app, deps):
                 record_abuse(web_identity, "web_rate", 2)
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
-        message_text = str(payload.get("message", "") or "").strip().lower()
-        explicit_photo_request = bool(re.search(r"\b(?:photos?|images?|nataal)\b", message_text))
-        photo_only = (
-            explicit_photo_request
-            or (
-                payload.get("intent_context", {}).get("intent") == "photos"
-                and set(payload.get("context", {}).get("intents", [])) <= {"photos"}
-            )
-        )
+        photo_only = bool(payload.get("photo_only"))
+        photo_query = str(payload.get("photo_query") or payload.get("message", ""))
         if photo_only:
             language = payload.get("language", "fr")
 
@@ -82,6 +75,8 @@ def register_chat_route(app, deps):
                 # Le texte nomme le sujet réellement cherché et ne promet jamais
                 # des photos absentes.
                 subject = str(((image or [{}])[0] or {}).get("search_query") or "").strip()
+                # « Saly Sénégal » est une précision de recherche, pas le sujet.
+                subject = re.sub(r"\s+s[ée]n[ée]gal$", "", subject, flags=re.I) or subject
                 if language == "en":
                     if image:
                         return f"Here are some photos for “{subject}”." if subject else "Here are some photos."
@@ -92,7 +87,7 @@ def register_chat_route(app, deps):
 
             if request.headers.get("X-Teranga-Mode", "").lower() == "json":
                 try:
-                    image = fetch_topic_images(payload.get("message", ""))
+                    image = fetch_topic_images(photo_query)
                     return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
@@ -100,7 +95,7 @@ def register_chat_route(app, deps):
 
             def generate_photo_only():
                 try:
-                    image = fetch_topic_images(payload.get("message", ""))
+                    image = fetch_topic_images(photo_query)
                     yield json.dumps({"d": photo_lead(image)}, ensure_ascii=False) + "\n"
                     if image:
                         yield json.dumps({"img": image}, ensure_ascii=False) + "\n"

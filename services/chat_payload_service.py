@@ -135,6 +135,43 @@ def _format_memory(memory) -> str:
 _REGION_NAMES = {name.casefold(): name for name in ("Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor")}
 
 
+_PHOTO_WORDS = re.compile(r"\b(?:photos?|images?|nataal)\b", re.I)
+_SHORT_YES = re.compile(
+    r"^(?:oui|ouais|yes|yep|ok|okay|d'?accord|waaw|waw|encore|volontiers|vas[- ]y|go|"
+    r"bien s[uû]r|avec plaisir|please|sure|plus)(?:[\s,]+(?:oui|merci|stp|s'il te pla[iî]t|please|encore|vas[- ]y))*[\s!.]*$",
+    re.I,
+)
+
+
+def photo_request(message: str, history) -> tuple[bool, str]:
+    """Décide si le message demande des photos, et avec quelle requête.
+
+    Seul le message courant compte : une demande explicite, ou un « oui » court
+    qui répond à une proposition de photos. Le sujet d'un « oui » est celui de
+    la dernière demande de photos de l'utilisateur (« photos de Saly »), jamais
+    le mot « oui » lui-même. L'intention héritée de l'historique ne suffit pas :
+    « Parle-moi des personnages sénégalais » doit aller au modèle.
+    """
+    text = str(message or "").strip()
+    if _PHOTO_WORDS.search(text):
+        return True, text
+    if not _SHORT_YES.match(text) or not isinstance(history, (list, tuple)):
+        return False, ""
+    turns = [item for item in history if isinstance(item, dict)]
+    if turns and turns[-1].get("role") == "user" and str(turns[-1].get("content", "")).strip() == text:
+        turns = turns[:-1]
+    last_assistant = next((t for t in reversed(turns) if t.get("role") == "assistant"), None)
+    offer = str((last_assistant or {}).get("content", ""))
+    if "?" not in offer or not _PHOTO_WORDS.search(offer):
+        return False, ""
+    subject = next(
+        (str(t.get("content", "")).strip() for t in reversed(turns)
+         if t.get("role") == "user" and _PHOTO_WORDS.search(str(t.get("content", "")))),
+        "",
+    )
+    return (True, subject) if subject else (False, "")
+
+
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
     normalized, error = normalize_chat_input(
         data,
@@ -249,10 +286,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "POLITIQUE DE SOURCES : privilégie les sources institutionnelles ou spécialisées fiables "
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
-    photo_only = (
-        bool(re.search(r"\b(?:photos?|images?|nataal)\b", message.lower()))
-        or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
-    )
+    photo_only, photo_query = photo_request(message, history)
     use_web = False if photo_only else bool(intent_context.get("needs_web_search"))
     context_instruction = " ".join(
         part for part in (
@@ -305,6 +339,8 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "action_request": ({**build_action_request({**context, "action_confirmed": action_confirmed, "action_request_id": action_request_id}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" and not action_confirmed else {})}),
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
+        "photo_only": photo_only,
+        "photo_query": photo_query,
         "trip_context": trip_context,
         "trip_edit_request": trip_edit_request,
         "trip_edit_proposal": trip_edit_proposal,
