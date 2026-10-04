@@ -56,7 +56,7 @@ def register_realtime_route(app, deps):
         if not sdp or len(sdp) > 200_000:
             return jsonify({"error": "Session vocale invalide."}), 400
 
-        from services.voice_quality import voice_instruction, transcription_prompt, tts_instruction
+        from services.voice_quality import voice_instruction
 
         language_name = {
             "fr": "français",

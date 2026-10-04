@@ -397,7 +397,7 @@ def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
 
 def wiki_summary(lang: str, title: str) -> dict:
     url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
-    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai-1.onrender.com)"})
+    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai.fr)"})
     with urlopen(req, timeout=2) as resp:
         return json.loads(resp.read().decode("utf-8"))
 

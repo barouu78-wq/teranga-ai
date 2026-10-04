@@ -3,4 +3,4 @@
 Routing is registered directly on the Flask app in app.py so Render/Gunicorn
 uses the same route table as local development.
 """
-from app import app
+from app import app  # noqa: F401  (point d’entrée Gunicorn)
