@@ -19,6 +19,7 @@ def register_system_routes(app, deps):
     site_url = deps["site_url"]
     build_icon_png = deps["build_icon_png"]
     icon_svg = deps["icon_svg"]
+    redis_client = deps.get("redis_client")
 
     @app.route(f"/{indexnow_key}.txt")
     def indexnow():
@@ -26,7 +27,16 @@ def register_system_routes(app, deps):
 
     @app.get("/health")
     def health():
-        return jsonify({"status": "ok", "service": "teranga-ai"})
+        # « redis » permet de vérifier la configuration REDIS_URL après un
+        # déploiement. Le site reste « ok » sans Redis (limites en mémoire).
+        if redis_client is None:
+            redis_state = "disabled"
+        else:
+            try:
+                redis_state = "ok" if redis_client.ping() else "unavailable"
+            except Exception:
+                redis_state = "unavailable"
+        return jsonify({"status": "ok", "service": "teranga-ai", "redis": redis_state}), 200, {"Cache-Control": "no-store"}
 
     # Images partagées (aperçus WhatsApp/Facebook, favicon) : référencées par
     # toutes les pages, elles doivent toujours répondre.
