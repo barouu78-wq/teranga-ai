@@ -3,6 +3,8 @@
 Route registration is kept separate from application orchestration.
 """
 
+from html import escape
+
 from flask import Response
 
 from services.international_seo import localized_sitemap_urls
@@ -10,7 +12,8 @@ from services.seo import SEO_PAGES, REGION_SEO_NAMES, render_region_page, region
 
 
 
-def register_seo_routes(app, site_url):
+def register_seo_routes(app, site_url, places=None):
+    place_ids = [str(place["id"]) for place in places or [] if place.get("id")]
 
     @app.get("/regions/<slug>")
     def seo_region(slug):
@@ -74,6 +77,14 @@ def register_seo_routes(app, site_url):
             + "".join(
                 f"<url><loc>{url}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>"
                 for url in localized_sitemap_urls(site_url)
+            )
+            + (
+                f"<url><loc>{site_url}/lieux</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
+                if place_ids else ""
+            )
+            + "".join(
+                f"<url><loc>{site_url}/lieux/{escape(place_id)}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>"
+                for place_id in place_ids
             )
             + "</urlset>"
         )

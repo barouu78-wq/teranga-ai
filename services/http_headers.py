@@ -46,8 +46,8 @@ def add_security_headers(
         "img-src 'self' data: blob: https://upload.wikimedia.org "
         "https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
         "connect-src 'self' https://cse.google.com https://www.google.com" + extra + "; "
-        "media-src 'self' blob:; object-src 'none'; "
-        "frame-src https://www.google.com https://cse.google.com https://maps.google.com; "
+        "media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; "
+        "frame-src https://www.google.com https://cse.google.com https://maps.google.com https://www.openstreetmap.org; "
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )

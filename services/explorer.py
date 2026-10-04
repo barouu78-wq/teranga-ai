@@ -9,7 +9,7 @@ def render_explorer_page(places, regions, selected_region=""):
     for place in places:
         cards.append(
             '<article data-place="{name}" data-region="{region}" data-summary="{summary}" data-lat="{lat}" data-lon="{lon}"><div class="gallery" data-query="{photo}"><div class="gallery-track"></div><div class="gallery-credit">Wikimedia Commons</div></div><small>{type} · {region}</small><h2>{name}</h2><p>{summary}</p>'
-            '<a href="/?q={query}" data-place-action="chat">Demander à Teranga →</a> <a href="/trip-planner" data-place-action="plan">Planifier depuis ce lieu</a> '
+            '<a href="/lieux/{pid}">Fiche du lieu</a> <a href="/?q={query}" data-place-action="chat">Demander à Teranga →</a> <a href="/trip-planner" data-place-action="plan">Planifier depuis ce lieu</a> '
             '<a href="https://www.openstreetmap.org/?mlat={lat}&mlon={lon}" target="_blank" rel="noopener">Carte</a></article>'.format(
                 type=escape(str(place.get("type", "lieu"))), region=escape(str(place.get("region", ""))),
                 name=escape(str(place.get("name", ""))),
@@ -17,6 +17,7 @@ def render_explorer_page(places, regions, selected_region=""):
                 summary=escape(str(place.get("summary", ""))),
                 query=escape(quote("Parle-moi de " + str(place.get("name", "")))),
                 lat=escape(str(place.get("latitude", ""))), lon=escape(str(place.get("longitude", ""))),
+                pid=escape(quote(str(place.get("id", "")))),
             )
         )
     region_links = " · ".join(
