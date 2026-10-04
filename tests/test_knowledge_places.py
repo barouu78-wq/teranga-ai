@@ -26,7 +26,10 @@ def test_places_are_complete_and_located_in_senegal():
 
 
 def test_new_places_cite_their_sources():
-    for place_id in ("desert-de-lompoul", "langue-de-barbarie", "marche-de-diaobe", "fort-pinet-laprade-sedhiou", "kaffrine"):
+    for place_id in (
+        "desert-de-lompoul", "langue-de-barbarie", "marche-de-diaobe", "fort-pinet-laprade-sedhiou", "kaffrine",
+        "kaolack", "mbacke", "reserve-de-fathala", "kafountine", "mlomp", "musee-theodore-monod", "manufactures-thies",
+    ):
         place = next(p for p in DATA["places"] if p["id"] == place_id)
         assert place.get("sources"), place_id
 
@@ -57,3 +60,19 @@ def test_image_titles_prefer_the_specific_place():
     assert "Île de Gorée" in knowledge_image_titles("photos de Gorée")
     assert knowledge_image_titles("photos du désert de Lompoul")[0] == "Désert de Lompoul"
     assert knowledge_image_titles("images de Dakar")[0] == "Dakar"
+
+
+def test_sources_are_https_links_and_precision_is_declared():
+    for place in DATA["places"]:
+        for url in place.get("sources", []):
+            assert url.startswith("https://"), (place["id"], url)
+        assert place.get("coordinates_precision", "exact") in {"exact", "approximate"}, place["id"]
+
+
+def test_wolof_contract_carries_official_orthography_and_safe_phrases():
+    from services.language_quality import language_instruction
+
+    wolof = language_instruction("wo")
+    assert "Jërëjëf" in wolof and "ñ, ŋ" in wolof and "Dalal ak jàmm" in wolof
+    assert "Jërëjëf" not in language_instruction("fr")
+    assert "Repères" not in language_instruction("en")

@@ -68,10 +68,10 @@ wo:{
   cards:[
     {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk',d:'Asamaan, tàngaay ak ngelaw'},
     {q:"Nettali Gorée ak Maison des Esclaves.",t:'Gorée',d:'Tàriix ak nataal'},
-    {q:"Nettali sama ndakaru Dakaar, wone dëkk bi.",t:'Tàriix Dakaar',d:'Dëkk, tàriix, nataal'},
+    {q:"Nettali ma taariixu Ndakaaru, te won ma dëkk bi.",t:'Tàriix Dakaar',d:'Dëkk, tàriix, nataal'},
     {q:'Ban ñam aju ci réegion yu Senegaal?',t:'Ñam réegion',d:'Nord, centre, Kasamans'},
     {q:'Fan laa wara lekk ci Dakaar: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Lekk',d:'Quartier, teex walla marché'},
-    {q:'Wan nga ma géographie Senegaal: régions, dëkk yu mag ak Kasamans.',t:'Réegion',d:'14 régions ak dëkk yu mag'}
+    {q:'Won ma géographie Senegaal: régions, dëkk yu mag ak Kasamans.',t:'Réegion',d:'14 régions ak dëkk yu mag'}
   ]
 },
 ff:{

@@ -2563,6 +2563,146 @@
         "https://en.wikipedia.org/wiki/Kaffrine_region",
         "https://en.wikipedia.org/wiki/Kaffrine"
       ]
+    },
+    {
+      "id": "kaolack",
+      "name": "Kaolack",
+      "type": "locality",
+      "region": "Kaolack",
+      "locality": "Kaolack",
+      "summary": "Ville-port sur la rive nord du Saloum, capitale régionale et grand carrefour commercial du bassin arachidier.",
+      "history": "Kaolack s'étend sur la rive nord du Saloum, à une centaine de kilomètres de son embouchure. Port fluvial, elle exporte arachide et sel, produit dans les salines voisines du fleuve. La cité religieuse de Médina Baye fait partie de l'agglomération.",
+      "what_to_see": "Grand marché central; salines au bord du Saloum; Médina Baye et sa grande mosquée",
+      "latitude": 14.017,
+      "longitude": -16.25,
+      "image_queries": [
+        "Kaolack Sénégal",
+        "marché central Kaolack"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Kaolack",
+        "https://www.britannica.com/place/Kaolack"
+      ]
+    },
+    {
+      "id": "mbacke",
+      "name": "Mbacké",
+      "type": "locality",
+      "region": "Diourbel",
+      "locality": "Mbacké",
+      "summary": "Ville du Baol fondée en 1796, berceau de la famille de Cheikh Ahmadou Bamba, qui forme avec Touba la deuxième agglomération du Sénégal.",
+      "history": "Mbacké (ou Mbacké-Baol) a été fondée en 1796 par Mame Maram, arrière-grand-père de Cheikh Ahmadou Bamba, sur une terre accordée par le damel du Baol Amari Ngoné Ndella Fall. Chef-lieu de département de la région de Diourbel, à environ 190 km à l'est de Dakar, elle est aujourd'hui soudée à Touba.",
+      "what_to_see": "Quartiers historiques de Mbacké; marché; proximité de Touba et de sa Grande Mosquée",
+      "latitude": 14.7917,
+      "longitude": -15.9083,
+      "image_queries": [
+        "Mbacké Sénégal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Mback%C3%A9"
+      ]
+    },
+    {
+      "id": "reserve-de-fathala",
+      "name": "Réserve de Fathala",
+      "type": "natural_site",
+      "region": "Fatick",
+      "locality": "Missirah",
+      "summary": "Réserve animalière d'environ 6 000 ha de forêt protégée, connue pour l'élan de Derby (éland géant de l'Ouest), à 5 km de la frontière gambienne.",
+      "history": "La réserve occupe une partie de la forêt de Fathala, dans la zone terrestre du parc national du Delta du Saloum, près de Missirah et de Karang. Elle participe à la conservation de l'élan de Derby et accueille girafes, rhinocéros, hippotragues, cobes, colobes bais et buffles.",
+      "what_to_see": "Safari en véhicule; élans de Derby; girafes et rhinocéros; forêt de Fathala",
+      "latitude": 13.655,
+      "longitude": -16.4433,
+      "image_queries": [
+        "Fathala Sénégal réserve",
+        "élan de Derby Fathala"
+      ],
+      "sources": [
+        "https://au-senegal.com/excursion-fathala,17621.html",
+        "https://www.czu.cz/en/r-9423-projects-and-partnerships/r-10647-africa/r-12604-senegal/the-conservation-and-breeding-of-the-western-giant-eland-in-.html"
+      ]
+    },
+    {
+      "id": "kafountine",
+      "name": "Kafountine",
+      "type": "coastal_site",
+      "region": "Ziguinchor",
+      "locality": "Kafountine",
+      "summary": "Grand village de pêche de Basse-Casamance (département de Bignona), avec ses plages, ses pirogues et ses fumeries de poisson.",
+      "history": "Kafountine est l'un des piliers de la pêche artisanale en Casamance : la production annuelle de la zone est estimée entre 40 000 et 70 000 tonnes. La commune regroupe plusieurs villages, dont Abéné, Diana, Colomba, Kabadio et Niafarang.",
+      "what_to_see": "Plage et débarquement des pirogues; fumeries de poisson; Abéné voisin; bolongs et oiseaux",
+      "latitude": 12.93,
+      "longitude": -16.74,
+      "image_queries": [
+        "Kafountine Casamance",
+        "pirogues Kafountine"
+      ],
+      "sources": [
+        "https://au-senegal.com/kafountine-un-village-de-casamance,2424.html",
+        "https://fr.allafrica.com/stories/202507010242.html"
+      ]
+    },
+    {
+      "id": "mlomp",
+      "name": "Mlomp",
+      "type": "cultural_site",
+      "region": "Ziguinchor",
+      "locality": "Oussouye",
+      "summary": "Village diola entre Oussouye et Elinkine, réputé pour ses cases à étage en banco et son fromager centenaire.",
+      "history": "Mlomp conserve plusieurs maisons traditionnelles à étage construites en banco, rares en Afrique de l'Ouest ; l'une d'elles abrite un petit musée d'outils et de symboles de la culture diola. Un fromager de plus de 400 ans domine le village.",
+      "what_to_see": "Cases à étage en banco; musée du village; fromager géant; route vers Elinkine et Carabane",
+      "latitude": 12.55,
+      "longitude": -16.59,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Mlomp case à étage",
+        "Mlomp Casamance"
+      ],
+      "sources": [
+        "https://lepetitjournal.com/dakar/oussouye-mlomp-pointe-saint-georges-la-casamance-en-velo-258311"
+      ]
+    },
+    {
+      "id": "musee-theodore-monod",
+      "name": "Musée Théodore-Monod d'art africain",
+      "type": "museum",
+      "region": "Dakar",
+      "locality": "Plateau",
+      "summary": "L'un des plus anciens musées d'art d'Afrique de l'Ouest, place Soweto au Plateau, rattaché à l'IFAN.",
+      "history": "Le musée dépend de l'Institut fondamental d'Afrique noire (IFAN), créé en 1936 et dirigé par Théodore Monod à partir de 1938. Le bâtiment de la place Soweto est devenu musée après le rattachement de l'IFAN à l'université de Dakar en 1960 ; il porte le nom de Théodore Monod depuis 2007. Ses collections dépassent 9 000 objets des arts et traditions d'Afrique de l'Ouest.",
+      "what_to_see": "Masques et statuaire d'Afrique de l'Ouest; textiles et objets du quotidien; expositions temporaires (Biennale de Dakar)",
+      "latitude": 14.6676,
+      "longitude": -17.4353,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Musée Théodore Monod Dakar",
+        "IFAN Dakar musée"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Th%C3%A9odore_Monod_African_Art_Museum",
+        "https://au-senegal.com/musee-theodore-monod-d-art-africain-ex-ifan,1918.html"
+      ]
+    },
+    {
+      "id": "manufactures-thies",
+      "name": "Manufactures sénégalaises des arts décoratifs",
+      "type": "cultural_site",
+      "region": "Thiès",
+      "locality": "Thiès",
+      "summary": "Atelier de tapisserie créé en 1966 à Thiès à l'initiative de Senghor, dont les œuvres ornent l'ONU et l'Union africaine.",
+      "history": "Inaugurée le 4 décembre 1966 sous le nom de Manufacture nationale de tapisserie (« Un art nouveau pour une nation nouvelle », disait Senghor), l'institution tisse à la main des tapisseries murales en éditions limitées d'après des artistes sénégalais. Ses pièces décorent notamment le siège des Nations unies à New York et celui de l'Union africaine à Addis-Abeba.",
+      "what_to_see": "Ateliers de tissage; salle d'exposition des tapisseries; centre-ville de Thiès",
+      "latitude": 14.7886,
+      "longitude": -16.9246,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Manufactures sénégalaises des arts décoratifs Thiès",
+        "tapisserie Thiès"
+      ],
+      "sources": [
+        "https://au-senegal.com/au-coeur-des-manufactures-senegalaises-des-arts-decoratifs,10763.html",
+        "https://www.dakaractu.com/Senegal-le-nouveau-souffle-des-manufactures-de-Thies-fleuron-culturel-de-Senghor_a247804.html"
+      ]
     }
   ],
   "authoritative_sources": [
