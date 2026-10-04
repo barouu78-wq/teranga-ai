@@ -105,7 +105,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_agent_plan({**context, "action_confirmed": action_confirmed}, intent_context)
+    agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model="gpt-5.6-luna")
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + str(structured_memory)
