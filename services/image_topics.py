@@ -149,11 +149,11 @@ def fetch_topic_images(
         if name.startswith("île de "):
             aliases.append(name[7:])
         if any(_contains_normalized_term(text_value, alias, normalize) for alias in aliases):
-            specific_titles.extend(
-                str(query)
-                for query in (place.get("image_queries") or [])
-                if query
-            )
+            image_queries = [str(query) for query in (place.get("image_queries") or []) if query]
+            # A recognized place must remain specific even when its optional
+            # image_queries metadata is empty. This also handles short aliases
+            # such as "gore" for Île de Gorée without falling back to Dakar.
+            specific_titles.extend(image_queries or [str(place.get("name", "")).strip()])
 
     discovered_titles = (
         knowledge_image_titles(message, 4)
