@@ -162,12 +162,15 @@ def fetch_topic_images(
     if _contains_normalized_term(normalized_message, "gore", normalize) or _contains_normalized_term(normalized_message, "goree", normalize):
         specific_titles.append("Île de Gorée")
 
-    discovered_titles = (
-        knowledge_image_titles(message, 4)
-        if knowledge_image_titles
-        else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4)
-    )
-    discovered_titles = list(discovered_titles) + list(topic_wikipedia_titles(message, 4))
+    if specific_titles:
+        discovered_titles = []
+    else:
+        discovered_titles = (
+            knowledge_image_titles(message, 4)
+            if knowledge_image_titles
+            else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4)
+        )
+        discovered_titles = list(discovered_titles) + list(topic_wikipedia_titles(message, 4))
 
     primary_title = _build_primary_query(message, specific_titles, discovered_titles, normalize)
     titles = list(specific_titles or discovered_titles or [primary_title])
