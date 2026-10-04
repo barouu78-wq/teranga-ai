@@ -78,6 +78,45 @@ def knowledge_image_titles(
     return titles
 
 
+def _build_primary_query(
+    message: object,
+    specific_titles: Sequence[str],
+    discovered_titles: Sequence[str],
+    normalize: Callable[[object], str],
+) -> str:
+    """Build an image query from the actual request instead of a generic Dakar fallback."""
+    specific = next((str(title).strip() for title in specific_titles if str(title).strip()), "")
+    if specific:
+        return specific
+
+    discovered = next((str(title).strip() for title in discovered_titles if str(title).strip()), "")
+    if discovered:
+        return discovered
+
+    raw = str(message or "").strip()
+    normalized = normalize(raw)
+    if not normalized:
+        return "Sénégal"
+
+    # Keep the user's visual intent while removing conversational filler.
+    filler = (
+        "montre moi", "montre-moi", "montre", "affiche", "affiche moi",
+        "affiche-moi", "fais voir", "je veux voir", "donne moi", "donne-moi",
+        "des photos de", "des photos du", "des photos d", "photo de", "photos de",
+        "photo du", "photos du", "photo d", "photos d",
+    )
+    query = raw
+    for prefix in filler:
+        if normalize(query).startswith(normalize(prefix) + " "):
+            query = query[len(prefix):].strip(" :,-")
+            break
+    if not normalize(query):
+        query = "Sénégal"
+    if "senegal" not in normalize(query):
+        query = f"{query} Sénégal"
+    return query[:180]
+
+
 def fetch_topic_images(
     message: object,
     knowledge: Mapping[str, object],
@@ -110,33 +149,49 @@ def fetch_topic_images(
         if name.startswith("île de "):
             aliases.append(name[7:])
         if any(_contains_normalized_term(text_value, alias, normalize) for alias in aliases):
-            specific_titles.extend(
-                str(query)
-                for query in (place.get("image_queries") or [])
-                if query
-            )
+            image_queries = [str(query) for query in (place.get("image_queries") or []) if query]
+            # A recognized place must remain specific even when its optional
+            # image_queries metadata is empty. This also handles short aliases
+            # such as "gore" for Île de Gorée without falling back to Dakar.
+            specific_titles.extend(image_queries or [str(place.get("name", "")).strip()])
 
-    titles = (
-        specific_titles
-        if specific_titles
-        else (knowledge_image_titles(message, 4) if knowledge_image_titles else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4))
-        + list(topic_wikipedia_titles(message, 4))
-    )
-    if not titles:
-        titles = ["Dakar Sénégal"]
+    # Keep a few high-value Senegal place aliases resilient even when
+    # structured knowledge is incomplete. These are search hints, not a
+    # replacement for the knowledge base.
+    normalized_message = normalize(message)
+    if _contains_normalized_term(normalized_message, "gore", normalize) or _contains_normalized_term(normalized_message, "goree", normalize):
+        specific_titles.append("Île de Gorée")
+
+    if specific_titles:
+        discovered_titles = []
+    else:
+        discovered_titles = (
+            knowledge_image_titles(message, 4)
+            if knowledge_image_titles
+            else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4)
+        )
+        discovered_titles = list(discovered_titles) + list(topic_wikipedia_titles(message, 4))
+
+    primary_title = _build_primary_query(message, specific_titles, discovered_titles, normalize)
+    titles = list(specific_titles or discovered_titles or [primary_title])
 
     photos: list[dict] = []
     seen_titles: set[str] = set()
     seen_urls: set[str] = set()
 
-    # Google Images is the primary provider for chat visual requests. One
-    # focused query is enough to return a larger, faster gallery without
-    # multiplying outbound image-search calls.
-    primary_title = next((str(title or "").strip() for title in titles if str(title or "").strip()), "Dakar Sénégal")
-    cache_key = (normalize(primary_title), max_photos, id(fetch_google_images), id(fetch_commons_images), id(fetch_city_image))
+    # Cache by the actual visual request so different requests do not reuse
+    # the same generic Dakar gallery.
+    cache_key = (
+        normalize(primary_title),
+        max_photos,
+        id(fetch_google_images),
+        id(fetch_commons_images),
+        id(fetch_city_image),
+    )
     cached = _cached_topic_images(cache_key)
     if cached is not None:
         return cached
+
     if fetch_google_images:
         try:
             candidates = fetch_google_images(primary_title, limit=max_photos)
