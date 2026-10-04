@@ -98,6 +98,13 @@ def register_seo_routes(app, site_url):
             f"Allow: /\n"
             f"Disallow: /chat\n"
             f"Disallow: /tts\n"
+            f"Disallow: /stt\n"
+            f"Disallow: /realtime-call\n"
+            f"Disallow: /csrf\n"
+            f"Disallow: /api/\n"
+            f"Disallow: /image-proxy\n"
+            f"Disallow: /explorer-image\n"
+            f"Disallow: /exchange-rates\n"
             f"Sitemap: {site_url}/sitemap.xml\n"
         )
         return Response(

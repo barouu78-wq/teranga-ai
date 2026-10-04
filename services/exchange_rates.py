@@ -67,4 +67,6 @@ def fetch_bceao_rates(
     except Exception:
         if logger is not None:
             logger.warning("Rafraîchissement BCEAO indisponible; conservation du dernier cours valide.")
-        return cache
+        # Repousse le prochain essai d'un TTL : sinon, pendant une panne BCEAO,
+        # chaque requête bloquerait un thread jusqu'au timeout réseau.
+        return {**cache, "at": now}
