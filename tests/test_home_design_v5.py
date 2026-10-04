@@ -20,3 +20,13 @@ def test_mobile_safe_area_is_preserved():
     html = HOME.read_text(encoding="utf-8")
     assert "env(safe-area-inset-top)" in html
     assert "env(safe-area-inset-bottom)" in html
+
+
+def test_journey_buttons_have_single_deterministic_handlers():
+    html = HOME.read_text(encoding="utf-8")
+    assert '[data-journey="travel"]?.addEventListener' in html
+    assert '[data-journey="project"]?.addEventListener' in html
+    assert '[data-journey="discover"]?.addEventListener' in html
+    assert '[data-journey="chat"]?.addEventListener' in html
+    assert "Journey buttons are wired individually above" in html
+    assert "journey==='discover') window.location.href='/explorer'" not in html
