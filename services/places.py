@@ -181,11 +181,24 @@ def render_places_index(places, site_url: str) -> str:
     blocks = []
     for region in sorted(by_region):
         cards = "".join(
-            f'<a class="card" href="/lieux/{quote(str(p["id"]))}"><strong>{escape(str(p.get("name", "")))}</strong>'
+            f'<a class="card" href="/lieux/{quote(str(p["id"]))}" data-type="{escape(str(p.get("type", "")))}" '
+            f'data-text="{escape(_search_text(p))}"><strong>{escape(str(p.get("name", "")))}</strong>'
             f'<br><small>{escape(TYPE_LABELS.get(str(p.get("type", "")), "Lieu"))} · {escape(str(p.get("summary", ""))[:100])}</small></a>'
             for p in by_region[region]
         )
-        blocks.append(f'<section><h2>{escape(region)}</h2><div class="grid">{cards}</div></section>')
+        blocks.append(f'<section data-region-block><h2>{escape(region)}</h2><div class="grid">{cards}</div></section>')
+    types = sorted({str(p.get("type", "")) for p in places or [] if p.get("id") and p.get("type") in TYPE_LABELS},
+                   key=lambda t: TYPE_LABELS[t])
+    options = "".join(f'<option value="{escape(t)}">{escape(TYPE_LABELS[t])}</option>' for t in types)
+    # Recherche instantanée : sans JavaScript, la page reste une liste complète.
+    search = (
+        '<form class="place-search" role="search" onsubmit="return false">'
+        '<label>Rechercher un lieu <input type="search" id="place-q" placeholder="Gorée, plage, Casamance…" autocomplete="off"></label>'
+        f'<label>Type <select id="place-type"><option value="">Tous</option>{options}</select></label>'
+        '<p class="muted" id="place-count" aria-live="polite"></p></form>'
+    )
+    # Script statique (et non inline) : la page reste en cache public sans nonce CSP.
+    script = '<script src="/static/places-search.js" defer></script>'
     ld = {
         "@context": "https://schema.org",
         "@type": "ItemList",
@@ -201,8 +214,19 @@ def render_places_index(places, site_url: str) -> str:
         + '<main class="wide"><article><div class="kicker">Guide</div>'
         + "<h1>Lieux du Sénégal</h1>"
         + f'<p class="muted">{escape(description)}</p>'
+        + search
         + "".join(blocks)
         + "</article></main>"
         + site_footer()
+        + script
         + "</body></html>"
     )
+
+
+def _search_text(place) -> str:
+    """Texte de recherche sans accents : nom, région, localité, type et résumé."""
+    import unicodedata
+
+    raw = " ".join(str(place.get(k, "")) for k in ("name", "region", "locality", "summary", "what_to_see"))
+    raw += " " + TYPE_LABELS.get(str(place.get("type", "")), "")
+    return "".join(c for c in unicodedata.normalize("NFD", raw.lower()) if unicodedata.category(c) != "Mn")
