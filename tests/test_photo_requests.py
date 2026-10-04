@@ -106,3 +106,23 @@ def test_question_after_photos_is_not_a_photo_request():
     assert photo_request("Oui", [{"role": "assistant", "content": "Voici quelques photos."}]) == (False, "")
     assert photo_request("Oui", [{"role": "assistant", "content": "Tu veux un itinéraire ?"}]) == (False, "")
     assert photo_request("oui merci", SALY) == (True, "montre moi des photos de Saly")
+
+
+def test_yes_after_offer_in_a_normal_answer_uses_the_question():
+    from services.chat_payload_service import photo_request
+
+    history = [
+        {"role": "user", "content": "Parle-moi de Saly"},
+        {"role": "assistant", "content": "Saly est une station balnéaire… Veux-tu voir des photos de Saly ?"},
+    ]
+    assert photo_request("oui", history) == (True, "photos : Parle-moi de Saly")
+
+
+def test_yes_after_offer_in_a_normal_answer_shows_the_place(photo_client):
+    state, ask = photo_client
+    history = [
+        {"role": "user", "content": "Parle-moi de Saly"},
+        {"role": "assistant", "content": "Saly est une station balnéaire. Veux-tu voir des photos de Saly ?"},
+    ]
+    text, images = ask("oui", history=history)
+    assert images and text == "Voici quelques photos pour « Saly »."

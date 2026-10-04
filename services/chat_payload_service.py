@@ -164,11 +164,13 @@ def photo_request(message: str, history) -> tuple[bool, str]:
     offer = str((last_assistant or {}).get("content", ""))
     if "?" not in offer or not _PHOTO_WORDS.search(offer):
         return False, ""
-    subject = next(
-        (str(t.get("content", "")).strip() for t in reversed(turns)
-         if t.get("role") == "user" and _PHOTO_WORDS.search(str(t.get("content", "")))),
-        "",
-    )
+    user_turns = [str(t.get("content", "")).strip() for t in turns if t.get("role") == "user"]
+    # Sujet : la dernière demande de photos, sinon la dernière question
+    # (« Parle-moi de Saly » suivie d'une proposition de photos).
+    subject = next((t for t in reversed(user_turns) if _PHOTO_WORDS.search(t)), "")
+    if not subject:
+        question = next((t for t in reversed(user_turns) if t), "")
+        subject = f"photos : {question}" if question else ""
     return (True, subject) if subject else (False, "")
 
 
