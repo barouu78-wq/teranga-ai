@@ -11,6 +11,8 @@ import re
 from typing import Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
+from .action_executor import ALLOWED_ACTIONS
+
 
 @dataclass(frozen=True)
 class AgentPlan:
@@ -67,6 +69,8 @@ def build_action_request(payload: dict[str, Any], plan: AgentPlan) -> dict[str, 
     if plan.action == "answer":
         return {"enabled": False, "action": "answer", "execution_mode": "answer", "requires_confirmation": False}
     confirmed = bool(payload.get("action_confirmed"))
+    if plan.action not in ALLOWED_ACTIONS:
+        return {"enabled": False, "action": plan.action, "execution_mode": "unsupported", "requires_confirmation": False}
     execution_mode = "execute" if confirmed else "prepare"
     return {
         "enabled": True,
