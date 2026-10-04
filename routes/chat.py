@@ -6,6 +6,8 @@ import time
 
 from flask import Response, jsonify, request, stream_with_context
 
+from services.shared_answers import sign_answer
+
 
 def register_chat_route(app, deps):
     require_json_post = deps["require_json_post"]
@@ -33,6 +35,7 @@ def register_chat_route(app, deps):
     clean_answer = deps["clean_answer"]
     fetch_topic_images = deps["fetch_topic_images"]
     public_error = deps["public_error"]
+    share_secret = deps.get("share_secret", "")
     field = deps["field"]
     logger = deps.get("logger", app.logger)
 
@@ -109,7 +112,8 @@ def register_chat_route(app, deps):
                 reply, sources, image, maps = complete_reply(payload)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
-                return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
+                share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
+                return jsonify({"reply": reply, "share": share, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 500
@@ -120,6 +124,7 @@ def register_chat_route(app, deps):
             first_output_logged = False
             yielded = False
             sources = []
+            answer_parts = []
             # Les enrichissements (images, carte) tournent pendant que le modèle écrit.
             enrichments = (
                 start_chat_enrichments(payload)
@@ -146,6 +151,7 @@ def register_chat_route(app, deps):
                             first_output_logged = True
                             logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
                         yielded = True
+                        answer_parts.append(delta)
                         yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
                     elif etype == "response.completed":
                         if not first_output_logged:
@@ -158,10 +164,12 @@ def register_chat_route(app, deps):
                             sources = extract_sources(resp, event) or sources
                         if text and not yielded:
                             yielded = True
-                            yield json.dumps({"d": clean_answer(text)}, ensure_ascii=False) + "\n"
+                            answer_parts.append(clean_answer(text))
+                            yield json.dumps({"d": answer_parts[-1]}, ensure_ascii=False) + "\n"
                 if not yielded:
                     reply, sources, image, maps = complete_reply(payload)
                     if reply:
+                        answer_parts.append(reply)
                         yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
                     if enrichments is not None:
@@ -183,6 +191,9 @@ def register_chat_route(app, deps):
                     yield json.dumps({"ux": payload["ux_hints"]}, ensure_ascii=False) + "\n"
                 if payload.get("action_request"):
                     yield json.dumps({"action": payload["action_request"]}, ensure_ascii=False) + "\n"
+                share = sign_answer(share_secret, payload.get("message", ""), clean_answer("".join(answer_parts)), sources, payload.get("language", "fr"))
+                if share:
+                    yield json.dumps({"share": share}) + "\n"
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")

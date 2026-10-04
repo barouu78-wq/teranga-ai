@@ -16,6 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool, env_list
 from routes.seo import register_seo_routes
 from routes.places import register_place_routes
+from routes.share import register_share_routes
 from services.site_layout import register_layout_globals
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
@@ -150,6 +151,7 @@ SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
 register_layout_globals(app)
 register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
+register_share_routes(app, SITE_URL)
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
@@ -615,6 +617,7 @@ register_chat_route(app, {
     "lookup_map": lookup_map,
     "should_fetch_map": should_fetch_map,
     "public_error": public_error,
+    "share_secret": app.config["SECRET_KEY"],
     "field": _field,
 })
 
