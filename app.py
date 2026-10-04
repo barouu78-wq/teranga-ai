@@ -292,6 +292,7 @@ from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
 from services.observability import build_request_log
 from services.analytics import analytics_config, inject_analytics
+from services.compression import gzip_response
 
 # Mesure d'audience optionnelle (Plausible, Umami…) : désactivée sans ANALYTICS_SCRIPT_URL.
 ANALYTICS = analytics_config(os.getenv("ANALYTICS_SCRIPT_URL"), os.getenv("ANALYTICS_SITE_ID"))
@@ -440,6 +441,13 @@ def add_client_identity(response):
             samesite="Lax",
         )
     return response
+
+
+@app.after_request
+def compress_response(response):
+    # Enregistré avant add_security_headers : Flask exécute les after_request
+    # en ordre inverse, la compression intervient donc en tout dernier.
+    return gzip_response(response, request.headers.get("Accept-Encoding", ""))
 
 
 @app.after_request
