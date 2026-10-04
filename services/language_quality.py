@@ -41,6 +41,19 @@ LANGUAGE_RULES = {
             "lorsqu'elles sont claires."
         ),
         "avoid": "français traduit mot à mot, faux mots wolof ou longues phrases françaises",
+        # Repères sûrs (orthographe officielle CLAD) : ils ancrent le registre
+        # courant sans imposer un lexique complet.
+        "reference": (
+            "Orthographe : alphabet officiel du wolof (à, é, ë, ó, ñ, ŋ ; consonnes "
+            "doubles comme dans « jërëjëf » ; mb, nd, ng, nj notés tels quels). "
+            "Formules courantes : Salaam aleekum / Maalekum salaam ; Na nga def ? "
+            "– Maa ngi fi rekk ; Jërëjëf (merci) ; Waaw (oui) ; Déedéet (non) ; "
+            "Dalal ak jàmm (bienvenue) ; Ñaata la ? (combien ça coûte ?) ; "
+            "Fan la … nekk ? (où se trouve … ?) ; Ba beneen yoon (à la prochaine). "
+            "Temps : tey (aujourd'hui), démb (hier), suba (demain). "
+            "Garde tels quels les noms usuels : ceebu jën, yassa, mafé, car rapide, "
+            "Ndiaga Ndiaye, taxi, TER, BRT, Teraanga."
+        ),
     },
     "ff": {
         "name": "pulaar (Fuuta Tooro)",
@@ -63,9 +76,11 @@ LANGUAGE_RULES = {
 def language_instruction(language):
     """Return a complete, explicit language contract for one supported language."""
     rules = LANGUAGE_RULES.get(language, LANGUAGE_RULES["fr"])
+    reference = f"Repères : {rules['reference']} " if rules.get("reference") else ""
     return (
         f"LANGUE DE SORTIE : {rules['name']}. "
         f"{rules['instruction']} "
+        f"{reference}"
         f"À éviter : {rules['avoid']}. "
         "Avant d'envoyer la réponse, vérifie silencieusement que la langue demandée "
         "reste dominante, que les phrases sont terminées et que tu n'as pas fabriqué "

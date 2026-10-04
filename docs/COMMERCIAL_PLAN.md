@@ -75,6 +75,6 @@ Suivre chaque mois :
 
 ## 8. Feuille de route produit
 - Court terme : stabilité et sécurité en production (Redis partagé, `TERANGA_ENV=production`, quotas), mesure d'audience.
-- Intelligence : enrichir la base de connaissances (lieux, régions, personnalités) et la qualité du wolof ; remettre le pulaar dans l'interface quand sa qualité est validée.
+- Intelligence : base de connaissances portée à 56 lieux sourcés (Kaolack, Mbacké, Fathala, Kafountine, Mlomp, musée Théodore-Monod, Manufactures de Thiès ajoutés) ; repères d’orthographe officielle et formules sûres pour le wolof ; à faire : relecture du wolof de l’interface par un locuteur natif ; remettre le pulaar dans l'interface quand sa qualité est validée.
 - Produit : fiches indexables par lieu (/lieux, fait) ; partage des réponses par lien signé (/partage, fait) ; itinéraires enrichis avec les lieux vérifiés de la base et liens vers leurs fiches (fait).
 - Partenaires : widget à une ligne (`/widget.js`, fait) à proposer lors des pilotes ; chaque partenaire est mesuré via `utm_source`.
