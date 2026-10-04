@@ -103,7 +103,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_agent_plan(context, intent_context)
+    agent_plan = build_agent_plan({**context, "action_confirmed": bool(normalized.get("action_confirmed"))}, intent_context)
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + str(structured_memory)
@@ -193,6 +193,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
+        "action_request": __import__("services.orchestrator", fromlist=["build_action_request"]).build_action_request({**context, "action_confirmed": bool(normalized.get("action_confirmed"))}, agent_plan),
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
