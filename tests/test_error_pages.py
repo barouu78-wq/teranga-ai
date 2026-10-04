@@ -36,7 +36,8 @@ def test_ai_failure_in_json_mode_is_503_with_retry_after(monkeypatch):
     def broken(*_args, **_kwargs):
         raise RuntimeError("connection reset")
 
-    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", broken)
+    # Mode JSON : passe par complete_reply ; aucun appel réseau réel.
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", broken)
     client = app_module.app.test_client()
     token = client.get("/csrf", base_url=B).get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
