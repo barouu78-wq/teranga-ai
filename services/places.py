@@ -230,3 +230,50 @@ def _search_text(place) -> str:
     raw = " ".join(str(place.get(k, "")) for k in ("name", "region", "locality", "summary", "what_to_see"))
     raw += " " + TYPE_LABELS.get(str(place.get("type", "")), "")
     return "".join(c for c in unicodedata.normalize("NFD", raw.lower()) if unicodedata.category(c) != "Mn")
+
+
+def _norm(text: object) -> str:
+    import unicodedata
+
+    raw = unicodedata.normalize("NFD", str(text or "").lower())
+    return " ".join("".join(c if c.isalnum() else " " for c in raw if unicodedata.category(c) != "Mn").split())
+
+
+def _mentions(text: str, term: str) -> bool:
+    return bool(term) and f" {term} " in f" {text} "
+
+
+def mentioned_places(text: object, places, limit: int = 2) -> list[dict]:
+    """Fiches /lieux citées dans une question (« Parle-moi de Gorée » → Île de Gorée).
+
+    Le nom complet prime ; à défaut, le nom court (« Gorée »), sauf s'il désigne
+    une région ou un autre lieu (« Sédhiou » renvoie à la ville, pas au fort).
+    """
+    from services.image_topics import _short_place_name
+
+    value = _norm(text)
+    if not value:
+        return []
+    usable = [p for p in places or [] if p.get("id") and p.get("name")]
+    full_names = {_norm(p["name"]) for p in usable}
+    regions = {_norm(p.get("region", "")) for p in usable}
+    def names(place):
+        # « Lac Rose / Lac Retba » : chaque partie compte ; plus les alias explicites.
+        parts = [part.strip() for part in str(place["name"]).split("/")]
+        return [_norm(n) for n in parts + list(place.get("aliases") or []) if str(n).strip()]
+
+    found = [p for p in usable if any(_mentions(value, n) for n in names(p))]
+    if not found:
+        for place in usable:
+            short = _norm(_short_place_name(str(place["name"])))
+            if short and short not in regions and short not in full_names and _mentions(value, short):
+                found.append(place)
+    found.sort(key=lambda p: len(str(p["name"])), reverse=True)
+    result, seen = [], set()
+    for place in found:
+        if place["id"] not in seen:
+            seen.add(place["id"])
+            result.append({"id": str(place["id"]), "name": str(place["name"])})
+        if len(result) >= limit:
+            break
+    return result

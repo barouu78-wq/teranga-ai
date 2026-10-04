@@ -1767,6 +1767,10 @@
         "Île Saint-Louis Sénégal",
         "Pont Faidherbe Sénégal",
         "Saint-Louis Sénégal architecture"
+      ],
+      "aliases": [
+        "Saint-Louis",
+        "Ndar"
       ]
     },
     {
@@ -1783,6 +1787,9 @@
       "image_queries": [
         "Djoudj Sénégal",
         "Parc national des oiseaux du Djoudj"
+      ],
+      "aliases": [
+        "Djoudj"
       ]
     },
     {
@@ -1800,6 +1807,10 @@
         "Niokolo-Koba Sénégal",
         "Parc national Niokolo Koba Sénégal",
         "rivière Niokolo Koba Sénégal"
+      ],
+      "aliases": [
+        "Niokolo-Koba",
+        "Niokolo Koba"
       ]
     },
     {
@@ -1817,6 +1828,10 @@
         "Delta du Saloum Sénégal",
         "mangrove Saloum Sénégal",
         "Toubacouta Sénégal"
+      ],
+      "aliases": [
+        "Sine-Saloum",
+        "Sine Saloum"
       ]
     },
     {
@@ -1935,6 +1950,10 @@
       "image_queries": [
         "Monument Renaissance africaine Dakar",
         "Ouakam Dakar Sénégal"
+      ],
+      "aliases": [
+        "Monument de la Renaissance",
+        "Renaissance africaine"
       ]
     },
     {
@@ -1950,6 +1969,9 @@
       "longitude": -17.445,
       "image_queries": [
         "Musée Civilisations Noires Dakar"
+      ],
+      "aliases": [
+        "MCN"
       ]
     },
     {
@@ -1982,6 +2004,10 @@
       "image_queries": [
         "Lac Rose Sénégal",
         "Lac Retba Sénégal"
+      ],
+      "aliases": [
+        "Lac Rose",
+        "Lac Retba"
       ]
     },
     {
@@ -2444,6 +2470,9 @@
       "sources": [
         "https://lesoleil.sn/enquetes/reserve-de-bandia-un-joyau-ecologique-exceptionnel/",
         "https://au-senegal.com/reserve-de-bandia,2865.html"
+      ],
+      "aliases": [
+        "Bandia"
       ]
     },
     {
@@ -2620,6 +2649,9 @@
       "sources": [
         "https://au-senegal.com/excursion-fathala,17621.html",
         "https://www.czu.cz/en/r-9423-projects-and-partnerships/r-10647-africa/r-12604-senegal/the-conservation-and-breeding-of-the-western-giant-eland-in-.html"
+      ],
+      "aliases": [
+        "Fathala"
       ]
     },
     {
@@ -2681,6 +2713,10 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Th%C3%A9odore_Monod_African_Art_Museum",
         "https://au-senegal.com/musee-theodore-monod-d-art-africain-ex-ifan,1918.html"
+      ],
+      "aliases": [
+        "Musée Théodore-Monod",
+        "Musée de l'IFAN"
       ]
     },
     {
@@ -2702,6 +2738,10 @@
       "sources": [
         "https://au-senegal.com/au-coeur-des-manufactures-senegalaises-des-arts-decoratifs,10763.html",
         "https://www.dakaractu.com/Senegal-le-nouveau-souffle-des-manufactures-de-Thies-fleuron-culturel-de-Senghor_a247804.html"
+      ],
+      "aliases": [
+        "MSAD",
+        "Manufactures de Thiès"
       ]
     },
     {

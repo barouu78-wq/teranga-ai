@@ -455,6 +455,18 @@ function addCityImage(col,image){
   const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
   // Keep the photo grid clean: no Google image result block or captions/details below photos.
 }
+// Lien vers la fiche /lieux des lieux cités dans la question.
+function addPlaceLinks(col,places){
+  const list=(Array.isArray(places)?places:[]).filter(p=>p&&typeof p.id==='string'&&/^[a-z0-9-]+$/.test(p.id)).slice(0,2);
+  if(!list.length)return;
+  const box=document.createElement('div');box.className='place-links';
+  list.forEach(p=>{
+    const a=document.createElement('a');a.href='/lieux/'+p.id;
+    a.textContent=(lang==='en'?'📍 Place guide: ':'📍 Fiche : ')+String(p.name||'');
+    box.appendChild(a);
+  });
+  col.appendChild(box);
+}
 function addMap(col,map){
   if(!map||!map.url)return;
   const box=document.createElement('div');box.className='city-map';
@@ -836,7 +848,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),40000);
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
-  let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='';
+  let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[];
   try{
     const res=await postJSON('/chat',body,null,ctrl.signal);
     if(!res.ok){
@@ -885,6 +897,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.map)map=ev.map;
         if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
         if(ev.share)shareToken=ev.share;
+        if(Array.isArray(ev.places))places=ev.places;
       }
     }
     if(buf.trim()){
@@ -896,6 +909,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.img)image=ev.img;
         if(ev.map)map=ev.map;
         if(ev.share)shareToken=ev.share;
+        if(Array.isArray(ev.places))places=ev.places;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
     if(paint){cancelAnimationFrame(paint);flush();}
@@ -915,6 +929,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       if(data.map)map=data.map;
       if(data.itinerary_edit)itineraryEdit=data.itinerary_edit;
       if(data.share)shareToken=data.share;
+      if(Array.isArray(data.places))places=data.places;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
@@ -924,6 +939,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addActs(wait.col,reply,itineraryEdit,shareToken);
     addCityImage(wait.col,image);
     addMap(wait.col,map);
+    addPlaceLinks(wait.col,places);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);

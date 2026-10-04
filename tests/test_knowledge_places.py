@@ -103,3 +103,35 @@ def test_places_index_has_accent_free_search_without_inline_script():
     assert 'data-text="ile de goree' in html.lower() or "goree" in html
     assert '<script src="/static/places-search.js" defer></script>' in html
     assert "nonce=" not in html  # page en cache public : pas de nonce CSP
+
+
+def test_chat_question_names_the_place_pages_it_mentions():
+    from services.places import mentioned_places
+
+    places = DATA["places"]
+    ids = lambda q: [p["id"] for p in mentioned_places(q, places)]  # noqa: E731
+    assert ids("Parle-moi de Gorée") == ["goree"]
+    assert ids("que voir à Saint-Louis ?") == ["saint-louis"]
+    assert set(ids("le lac Rose et Saly")) == {"lac-rose", "saly"}
+    assert ids("météo à Dakar") == []  # « Corniche de Dakar » ne capte pas Dakar
+    assert ids("Parle moi des personnages de sénégalais") == []
+
+
+def test_chat_stream_sends_place_links(monkeypatch):
+    import json
+    from types import SimpleNamespace
+
+    import app as app_module
+
+    def fake_stream(payload, stream=True):
+        yield SimpleNamespace(type="response.output_text.delta", delta="Gorée est une île.")
+
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", fake_stream)
+    client = app_module.app.test_client()
+    base = "https://teranga-ai.fr"
+    token = client.get("/csrf", base_url=base).get_json()["token"]
+    client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
+    response = client.post("/chat", json={"message": "Parle-moi de Gorée", "language": "fr"},
+                           headers={"X-CSRF-Token": token, "Origin": base}, base_url=base)
+    events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line]
+    assert {"places": [{"id": "goree", "name": "Île de Gorée"}]} in events

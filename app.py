@@ -638,6 +638,7 @@ register_chat_route(app, {
     "should_fetch_map": should_fetch_map,
     "public_error": public_error,
     "share_secret": app.config["SECRET_KEY"],
+    "knowledge_places": SENEGAL_KNOWLEDGE.get("places", []),
     "field": _field,
 })
 
