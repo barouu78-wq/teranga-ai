@@ -4171,3 +4171,58 @@ body[data-theme="dark"] .journey-strip small{color:#b8a48c}
   .journey-strip b{font-size:10px}.journey-strip small{display:none}
 }
 @media(prefers-reduced-motion:reduce){.journey-strip button{transition:none}}
+
+
+/* Teranga Design V2 — conversation-first workspace */
+@media(min-width:681px){
+  body.has-chat #stage{
+    grid-template-columns:minmax(0,1fr) 250px!important;
+    gap:14px!important;
+    padding-bottom:122px!important;
+  }
+  body.has-chat #messages{
+    width:min(820px,100%)!important;
+    padding:10px 12px 28px!important;
+  }
+  body.has-chat #hero{
+    display:none!important;
+  }
+  body.has-chat .guide-section{
+    display:block!important;
+    max-height:calc(100vh - 110px)!important;
+    overflow:auto!important;
+    scrollbar-width:thin;
+  }
+  body.has-chat .guide-links a{
+    font-size:11px!important;
+    padding:10px 11px!important;
+  }
+  body.has-chat .dock{
+    width:min(850px,calc(100% - 320px))!important;
+    bottom:12px!important;
+  }
+}
+@media(max-width:680px){
+  body.has-chat #stage{
+    padding:4px 10px 8px!important;
+  }
+  body.has-chat #messages{
+    padding:6px 2px 12px!important;
+  }
+  body.has-chat .msg{margin-bottom:10px!important}
+  body.has-chat .col{max-width:91%!important}
+  body.has-chat .bubble{padding:10px 12px!important;border-radius:16px!important}
+  body.has-chat .assistant .bubble{border-bottom-left-radius:6px!important}
+  body.has-chat .user .bubble{border-bottom-right-radius:6px!important}
+  body.has-chat .dock{
+    padding-top:5px!important;
+    border-top:1px solid rgba(15,106,67,.08);
+  }
+  body.has-chat .chips{padding-bottom:5px!important}
+  body.has-chat .chips button{font-size:10px!important;padding:6px 10px!important}
+}
+.hero-signature,.journey-strip{contain:layout paint}
+.journey-strip button:focus-visible,.audience-btn:focus-visible{
+  outline:2px solid var(--sen-gold);
+  outline-offset:2px;
+}
