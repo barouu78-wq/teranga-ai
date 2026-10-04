@@ -106,6 +106,18 @@ def needs_fresh_web(domain: str, text: str) -> bool:
                                        "cette semaine", "prix", "ouvert", "horaires")
     )
 
+def knowledge_metadata(domain: str, *, dynamic: bool | None = None) -> dict[str, object]:
+    """Expose provenance policy alongside structured knowledge."""
+    is_dynamic = domain in DYNAMIC_DOMAINS if dynamic is None else bool(dynamic)
+    return {
+        "domain": domain or "general",
+        "source_priority": source_domains(domain),
+        "freshness": "fresh_required" if is_dynamic else "stable",
+        "confidence": "high" if source_domains(domain) else "medium",
+        "requires_web_verification": is_dynamic,
+    }
+
+
 def source_domains(domain: str) -> tuple[str, ...]:
     if domain in {"society", "economy", "agriculture", "territory", "business", "employment", "education"}:
         return SOURCE_PRIORITY
@@ -203,8 +215,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     cached = _knowledge_cache_get(cache_key)
     if cached is not None:
         return cached
+    domain = _knowledge_domain(query)
+    metadata = knowledge_metadata(domain)
     lines = [
         "BASE DE CONNAISSANCES NATIONALE DU SÉNÉGAL (référence interne, structurée) :",
+        f"Provenance: priorité {', '.join(metadata['source_priority'][:4]) or 'interne'}; fraîcheur={metadata['freshness']}; confiance={metadata['confidence']}.",
         "Utilise ces données comme contexte factuel. Pour les informations actuelles, vérifie le web. Ne transforme pas une déduction en certitude.",
     ]
 
@@ -267,7 +282,6 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             for person in matched_people[:4]:
                 lines.append(f"- {person.get('name')} ({person.get('period', '')}) : {person.get('text', '')}")
 
-    domain = _knowledge_domain(query)
     modules = data.get("knowledge_modules", {})
     module_key = {
         "travel": "tourism_heritage",
