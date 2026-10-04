@@ -195,7 +195,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
-        "action_request": build_action_request({**context, "action_confirmed": action_confirmed}, intent_context),
+        "action_request": build_action_request({**context, "action_confirmed": action_confirmed}, agent_plan),
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
