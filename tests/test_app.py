@@ -1,3 +1,4 @@
+from home_source import served_home
 import os
 import sys
 from pathlib import Path
@@ -193,14 +194,14 @@ def test_map_lookup_normalizes_accents_and_case():
 
 
 def test_home_tts_retry_after_is_wired():
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "error.retryAfter=res.headers.get('Retry-After')||''" in html
     assert "error.status=res.status" in html
 
 
 def test_home_exchange_rate_retry_after_is_wired():
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "res.status===429" in html
     assert "res.headers.get('Retry-After')" in html
@@ -208,7 +209,7 @@ def test_home_exchange_rate_retry_after_is_wired():
 
 
 def test_home_retry_after_countdown_is_wired():
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "Retry-After" in html
     assert "retryAfter" in html
@@ -714,7 +715,7 @@ def test_trip_planner_page_reads_and_shares_audience_profile():
 def test_home_chat_includes_adjust_planner_action():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "Ajuster dans le Planner" in html
     assert "teranga-trip-context" in html
@@ -723,7 +724,7 @@ def test_home_chat_includes_adjust_planner_action():
 def test_home_consumes_planner_chat_prefill():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "teranga-chat-prefill" in html
     assert "input.value=prefill" in html
@@ -732,7 +733,7 @@ def test_home_consumes_planner_chat_prefill():
 def test_home_keeps_trip_edit_state_without_legacy_detector():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "teranga-trip-edit-proposal" in html
     assert "detectTripEditRequest(text)" not in html
@@ -742,7 +743,7 @@ def test_home_keeps_trip_edit_state_without_legacy_detector():
 def test_home_trip_edit_proposal_is_persisted_and_reviewable():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "if(itineraryEdit&&itineraryEdit.requires_confirmation)" in html
     assert "sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))" in html
@@ -862,7 +863,7 @@ def test_explorer_image_gallery_has_direct_fallback():
 def test_home_has_narrow_mobile_layout_rules():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "@media(max-width:520px)" in html
     assert ".spread{display:grid;grid-template-columns:1fr;gap:7px}" in html
@@ -889,7 +890,7 @@ def test_explorer_has_mobile_tap_targets():
 def test_home_bounds_persisted_chat_history():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "slice(0,1200)" in html
     assert "version:2" in html
@@ -900,7 +901,7 @@ def test_home_bounds_persisted_chat_history():
 def test_home_audience_buttons_bind_directly():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "document.querySelectorAll('.audience-btn').forEach" in html
     assert "['tourist','resident','diaspora','merchant']" in html
@@ -913,7 +914,7 @@ def test_home_inline_javascript_parses_with_node(tmp_path):
     import shutil
     import subprocess
 
-    body = app.test_client().get("/").get_data(as_text=True)
+    body = served_home(app.test_client())
     scripts = re.findall(r"<script[^>]*>([\\s\\S]*?)</script>", body)
     assert scripts
     node = shutil.which("node")

@@ -1,8 +1,9 @@
+from home_source import home_source
 from pathlib import Path
 
 
 def test_voice_mode_stop_closes_realtime_session():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     marker = "function endVoiceMode(){"
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2
@@ -12,7 +13,7 @@ def test_voice_mode_stop_closes_realtime_session():
 
 
 def test_voice_capture_start_cancels_after_stream_wait():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     marker = "async function startVoiceCapture(){"
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2
@@ -23,7 +24,7 @@ def test_voice_capture_start_cancels_after_stream_wait():
 
 
 def test_direct_tts_response_is_scoped_to_current_speech_turn():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     marker = "async function speak(text,btn){"
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2
@@ -34,7 +35,7 @@ def test_direct_tts_response_is_scoped_to_current_speech_turn():
 
 
 def test_queued_tts_uses_item_generation_after_network_wait():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     marker = "async function playVoiceTtsQueue(){"
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2

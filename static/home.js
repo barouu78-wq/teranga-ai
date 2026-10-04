@@ -1,0 +1,1693 @@
+const $ = id => document.getElementById(id);
+const messages=$('messages'), input=$('input'), send=$('send'), mic=$('mic'), stage=$('stage'), hero=$('hero');
+const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+const storageGet=(key,fallback='')=>{try{return localStorage.getItem(key)??fallback}catch(_){return fallback}};
+const storageSet=(key,value)=>{try{localStorage.setItem(key,value)}catch(_) {}};
+const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
+const T={
+fr:{
+  sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
+  welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
+  timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
+  vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
+  shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
+  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
+  heroTitle:'Votre assistant pour le Sénégal.',
+  journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
+  heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
+  hint:'Réponse en direct · Entrée pour envoyer',
+  hintTouch:'Réponse en direct',
+  cards:[
+    {q:"Quel temps fait-il à Dakar aujourd'hui ?",t:'Météo Dakar',d:'Ciel, chaleur et vent du jour'},
+    {q:"Parle-moi de l'île de Gorée et de la Maison des Esclaves.",t:'Gorée',d:'Histoire et photo'},
+    {q:"Raconte brièvement l'histoire de Dakar et montre la ville.",t:'Histoire Dakar',d:'Ville, origine, photo'},
+    {q:"Quelles sont les spécialités culinaires de chaque région du Sénégal ?",t:'Spécialités',d:'Plats du Nord, Centre, Casamance'},
+    {q:"Où manger à Dakar selon le quartier : Plateau, Médina, Almadies, Ngor, Ouakam ?",t:'Où manger',d:'Quartier, plage ou marché'},
+    {q:"Présente la géographie du Sénégal : régions, grandes villes et Casamance.",t:'Régions',d:'14 régions et grandes villes'}
+  ]
+},
+en:{
+  sub:'Senegal assistant',ph:'Ask a question…',send:'Send',
+  welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
+  timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
+  vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
+  sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
+  shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
+  install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
+  heroTitle:'Your assistant for Senegal.',
+  journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
+  heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
+  hint:'Live answers · Enter to send',
+  hintTouch:'Live answers',
+  cards:[
+    {q:'What is the weather like in Dakar today?',t:'Dakar weather',d:'Sky, heat and wind today'},
+    {q:'Tell me about Goree Island and the House of Slaves.',t:'Goree',d:'History and photo'},
+    {q:'Briefly tell the history of Dakar and show the city.',t:'Dakar history',d:'City, origin, photo'},
+    {q:'What are the regional food specialties across Senegal?',t:'Specialties',d:'Dishes from North, Center, Casamance'},
+    {q:'Where should I eat in Dakar by area: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Where to eat',d:'Neighborhood, beach or market'},
+    {q:'Explain the geography of Senegal: regions, main cities and Casamance.',t:'Regions',d:'14 regions and main cities'}
+  ]
+},
+wo:{
+  sub:'Assistant Senegaal',ph:'Laajal…',send:'Yónnee',
+  welcome:'Salaam, maa ngi doon Teranga AI. Lan nga bëgg xam ci Senegaal?',
+  timeout:'Dafa yàgg. Jéemaatal.',rateLimit:'Dañoo bari laaj léegi. Jéemaatal ci kanam.',err:'Service bañ na.',
+  vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
+  share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
+  sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
+  shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
+  install:'Yebal app bi',navHome:'Accueil',navDiscover:'Xam',navChat:'Waxtaan',navProfile:'Profil',
+  journeyTravel:'Tukki ci Senegaal',journeyTravelHint:'Seet ak waajal',journeyProject:'Sama projet',journeyProjectHint:'Xale yi · xalaat → xaalis',journeyDiscover:'Xam Senegaal',journeyDiscoverHint:'Aada, taarix, ñam',journeyChat:'Assistant Teranga',journeyChatHint:'Laaj benn mbir',
+  heroTitle:'Sa ndimbal ci Senegaal.',
+  heroText:'Taw, taksi, ñam, aada ak dund — jaabaw yu leer, te du sos lu dul dëgg.',
+  hint:'Tontu ci kaw · Enter ngir yónnee',
+  hintTouch:'Tontu ci kaw',
+  cards:[
+    {q:"Lan mooy tàkk-tàkk Dakaar tey?",t:'Tàkk-tàkk',d:'Asamaan, tàngaay ak ngelaw'},
+    {q:"Nettali Gorée ak Maison des Esclaves.",t:'Gorée',d:'Tàriix ak nataal'},
+    {q:"Nettali sama ndakaru Dakaar, wone dëkk bi.",t:'Tàriix Dakaar',d:'Dëkk, tàriix, nataal'},
+    {q:'Ban ñam aju ci réegion yu Senegaal?',t:'Ñam réegion',d:'Nord, centre, Kasamans'},
+    {q:'Fan laa wara lekk ci Dakaar: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Lekk',d:'Quartier, teex walla marché'},
+    {q:'Wan nga ma géographie Senegaal: régions, dëkk yu mag ak Kasamans.',t:'Réegion',d:'14 régions ak dëkk yu mag'}
+  ]
+},
+ff:{
+  sub:'Ballal Senegaal',ph:'Naamndu…',send:'Neldu',
+  welcome:'Jam tan, miin woni Teranga AI. Hol ko njiɗɗaa anndude e Senegaal?',
+  timeout:'Sahaa booyii. Fuɗɗit.',rateLimit:'Naamne ɗuuɗe jooni. Fuɗɗito caggal seeɗa.',err:'Sarwiis jaɓaani.',
+  vOn:'Sawtu auto on',vOff:'Sawtu auto off',listen:'Heɗo',copy:'Natal',copied:'Natalaa',
+  share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
+  sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
+  shareText:'Teranga AI — ballal Senegaal (farayse, english, wolof).',
+  install:'Aaf app',navHome:'Jaɓɓorgo',navDiscover:'Yiytu',navChat:'Yeewtere',navProfile:'Profil',
+  journeyTravel:'Yahrude e Senegaal',journeyTravelHint:'Yiytu e waajta',journeyProject:'Projet am',journeyProjectHint:'Sukaaɓe · miijo → ceede',journeyDiscover:'Anndu Senegaal',journeyDiscoverHint:'Aada, taarik, ñaamdu',journeyChat:'Ballal Teranga',journeyChatHint:'Naamnu ɗum',
+  heroTitle:'Ballal maa e Senegaal.',
+  heroText:'Kaanawol, taksi, ñaamdu, aada e dund — jaabawol ɗoɗɗo, wonaa ɗum fefindaa.',
+  hint:'Jaabawol e sahaa. Sawtu nde ɓadiima pulaar.',
+  hintTouch:'Jaabawol e sahaa. Sawtu ɓadiima.',
+  cards:[
+    {q:'Hol kaanawol Dakaar hannde?',t:'Kaanawol',d:'Dakaar hannde'},
+    {q:'Haal Gorée e Maison des Esclaves.',t:'Gorée',d:'Aada e natal'},
+    {q:'Hol ñaamdu Dakaar e diiwe: Plateau, Medina, Almadies, Ngor, Ouakam?',t:'Ñaamdu',d:'Diiwal, geec walla luumo'},
+    {q:'Hol geografi Senegaal: diiwe, gure mawɗe e Kasamans?',t:'Diiwe',d:'Diiwe 14 e gure'},
+    {q:'Haal Aada Dakaar e hollu wuro ngo.',t:'Aada Dakaar',d:'Wuro, aada, natal'},
+    {q:'Hol ñaamdu diiwe Senegaal kala?',t:'Ñaamdu diiwe',d:'Fuuta, hakkunde, Kasamans'}
+  ]
+}
+};
+const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
+const AUDIENCE_EXTRA={
+fr:{
+ resident:[['Vie quotidienne','Aide-moi à gérer ma vie quotidienne au Sénégal : transport, démarches, paiements et services.'],['Démarches','Quelles démarches administratives dois-je vérifier pour ma situation au Sénégal ?'],['Budget maison','Aide-moi à organiser mon budget mensuel en FCFA.'],['Services locaux','Comment trouver les bons services dans mon quartier ?']],
+ diaspora:[['Préparer mon retour','Je prépare un séjour ou un retour au Sénégal : aide-moi à organiser les priorités.'],['Maison & famille','Quelles choses dois-je prévoir pour gérer une maison ou aider ma famille au Sénégal ?'],['Argent à distance','Comment organiser mes transferts et dépenses au Sénégal en limitant les frais ?'],['Investir','Quelles informations dois-je vérifier avant un projet ou un investissement au Sénégal ?']]
+},
+en:{
+ resident:[['Daily life','Help me manage daily life in Senegal: transport, paperwork, payments and services.'],['Paperwork','Which administrative requirements should I verify for my situation in Senegal?'],['Home budget','Help me organize my monthly budget in CFA francs.'],['Local services','How can I find the right services in my area?']],
+ diaspora:[['Plan my return','I am preparing a stay or return to Senegal. Help me organize the priorities.'],['Home & family','What should I plan for managing a home or helping family in Senegal?'],['Money from abroad','How can I organize transfers and spending in Senegal while limiting fees?'],['Investing','What should I verify before a project or investment in Senegal?']]
+},
+wo:{
+ resident:[['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Services','Naka laa mëna gis services yi ci sama quartier?']],
+ diaspora:[['Waxtu dellusi','Maa ngi waajal tukki walla dellusi Senegaal; jàppale ma defar yi ëpp solo.'],['Kër ak waa kër','Lan laa wara waajal ngir sama kër walla dimbali sama waa kër ci Senegaal?'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Investir','Yan mbir laa wara seet bala ma tàmbali projet walla investissement ci Senegaal?']]
+},
+ff:{
+ resident:[['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Sarwiis','No mi yiyirta sarwiis ɗe moƴƴi e quartier am?']],
+ diaspora:[['Waajta ruttorde','Mi waajtii yahdugol walla ruttorde e Senegaal; wallu-mi feewtude ko ɓuri nafde.'],['Suudu e ɓeyngu','Hol ko mi waajta ngam suudu walla wallude ɓeyngu am e Senegaal?'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Investir','Hol ko mi ƴeewta hade mi fuɗɗa projet walla investissement e Senegaal?']]
+}
+};
+const MONEY_SIM={
+fr:{
+tourist:[['Argent & change',"Convertis mon argent en FCFA et explique-moi les frais à prévoir."],['SIM & Internet',"Quelle SIM ou eSIM choisir au Sénégal pour un séjour touristique ?"]],
+merchant:[['Encaisser',"Quels moyens de paiement puis-je proposer à mes clients au Sénégal ?"],['Change & paiements',"Comment gérer les paiements en FCFA, le change et les frais pour mon activité ?"]]
+},
+en:{
+tourist:[['Money & exchange','Convert my money to CFA francs and explain the fees I should expect.'],['SIM & internet','Which SIM or eSIM should I choose for a tourist stay in Senegal?']],
+merchant:[['Accept payments','Which payment methods can I offer customers in Senegal?'],['Exchange & payments','How should I manage CFA payments, exchange and fees for my business?']]
+},
+wo:{
+tourist:[['Xaalis & change',"Naka laa mëna soppi sama xaalis ci CFA, te lan mooy frais yi?"],['SIM & Internet',"Ban SIM walla eSIM laa wara jënd ci Senegaal ngir tukki?"]],
+merchant:[['Jël fey',"Yan yoon yu fey laa mëna jox sama clients ci Senegaal?"],['Change & fey',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
+},
+ff:{
+tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftina?'],['SIM e Internet','Hol SIM walla eSIM mi waawi moƴƴude ngam yahdugol e Senegaal?']],
+merchant:[['Jaɓɓude feyde','Hol laawol feyde mi waawi hokkude clients am e Senegaal?'],['Change e feyde','No mi doxirta feyde e CFA, change e frais e golle am?']]
+}
+};
+const FX_CACHE={EUR:655.957,USD:577.070,GBP:762.860};
+let fxRates={...FX_CACHE};
+function formatCfa(v){return new Intl.NumberFormat(lang==='en'?'en-US':'fr-FR',{maximumFractionDigits:0}).format(Math.round(v))+' FCFA';}
+function updateFx(){
+  const amount=Math.max(0,Number(String($('fxAmount').value).replace(',','.'))||0);
+  const from=$('fxFrom').value;
+  $('fxResult').textContent=formatCfa(amount*(fxRates[from]||FX_CACHE[from]||655.957));
+}
+function formatFxDate(value){
+  if(!value)return '';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '';
+  try{
+    return new Intl.DateTimeFormat(
+      lang==='en'?'en-US':lang==='wo'?'wo':lang==='ff'?'ff':'fr-FR',
+      {weekday:'long',day:'numeric',month:'long',year:'numeric'}
+    ).format(date);
+  }catch(_){
+    return date.toLocaleDateString();
+  }
+}
+async function loadFx(){
+  try{
+    const res=await fetch('/exchange-rates',{cache:'no-store'});
+    if(res.ok){
+      const data=await res.json();
+      if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};
+      const ref=data.date?('Taux de référence du '+data.date):'Taux de référence BCEAO';
+      const checked=formatFxDate(data.checked_at);
+      $('fxUpdated').textContent=checked
+        ? (lang==='en' ? ref.replace('Taux de référence du ','Reference rate ')+' · checked '+checked
+          : lang==='wo' ? ref+' · seet '+checked
+          : lang==='ff' ? ref+' · ƴeewtaa '+checked
+          : ref+' · vérifié '+checked)
+        : ref;
+    }else if(res.status===429){
+      const waitSeconds=Math.min(300,Math.max(1,Number.parseInt(res.headers.get('Retry-After')||'0',10)||15));
+      $('fxUpdated').textContent=lang==='en'
+        ? 'Too many requests · retry in '+waitSeconds+'s'
+        : lang==='wo'
+          ? 'Demaal bu bare · dellusi ci '+waitSeconds+'s'
+          : lang==='ff'
+            ? 'Ɓeydugol ɗaɓɓitanɗe · fuɗɗito e '+waitSeconds+'s'
+            : 'Trop de demandes · réessaie dans '+waitSeconds+' s';
+    }
+  }catch(_){}
+  updateFx();
+}
+$('fxAmount').addEventListener('input',updateFx);$('fxFrom').addEventListener('change',updateFx);
+setInterval(loadFx,10*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
+const AUDIENCE={
+fr:{
+ tourist:[['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
+ merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
+},
+en:{
+ tourist:[['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
+ merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
+},
+wo:{
+ tourist:[['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Yoon',"Naka laa dem AIBD ba sama hôtel, te ñaata laa wara def budget?"],['Budget',"Ñaata laa wara def budget bés bu nekk ci Senegaal?"],['Jëfandikoo',"Yan ndigal yu am solo laa wara xam ngir visiter Dakar ak Gorée?"],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
+ merchant:[['Njëg ak marge',"Jàppale ma defar njëg ak marge ci sama produit."],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['WhatsApp',"Naka laa mëna tëral commande yi ci WhatsApp?"],['Fey',"Yan yoon yu fey laa mëna jëfandikoo ngir sama clients?"],['Stock',"Jàppale ma tëral stock bi te moytu rupture."],['Client toubab',"Naka laa mëna dalal te jaay ak client turist bu jóge biti?"]]
+},
+ff:{
+ tourist:[['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Laawol','No mbaydi mi AIBD haa hôtel am, e hol ko mi heftin e budget?'],['Budget','Hol budget mi waɗa ñalawma e Senegaal?'],['Jokkondiral','Hol cuɓe mawɗe mi anndu ngam yahrude Dakar e Gorée?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
+ merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
+}
+};
+let audience=storageGet('teranga-audience','tourist');
+const audienceContext={
+ tourist:{
+  fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
+  en:"Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
+  wo:"Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
+  ff:"Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+ },
+ resident:{
+  fr:"Profil actif : résident. Oriente vers la vie quotidienne au Sénégal : démarches, services, transport, budget, paiements et informations locales à vérifier.",
+  en:"Active profile: resident. Prioritize daily life in Senegal: paperwork, services, transport, budgets, payments and local information to verify.",
+  wo:"Profil bi mooy dëkkkat. Jox ndimbal ci dund bés bu nekk, formalité, services, yoon, budget ak fey.",
+  ff:"Profil ngol moƴƴi e ley. Hokkude ballal e dund bés bu nekk, formalités, services, laawol, budget e feyde."
+ },
+ diaspora:{
+  fr:"Profil actif : diaspora. Oriente vers la préparation de séjours et retours, la gestion à distance, la famille, les dépenses, les démarches et les projets au Sénégal. Distingue toujours les informations indicatives des règles ou tarifs à vérifier.",
+  en:"Active profile: diaspora. Prioritize preparing stays and returns, remote management, family, spending, paperwork and projects in Senegal. Clearly distinguish indicative information from rules or fees that should be verified.",
+  wo:"Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellu, doxal daga woɗnde, ɓeyngu, dépense, formalité ak projet ci Senegaal. Seetal lu wara ƴeewte.",
+  ff:"Profil ngol moƴƴi e diaspora. Hokkude ballal e waajtagol yahdugol walla artugol, doxal daga woɗnde, ɓeyngu, ceede, formalités e projette e Senegaal."
+ },
+ merchant:{
+  fr:"Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
+  en:"Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
+  wo:"Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
+  ff:"Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
+ }
+};
+
+function renderAudience(){
+  const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
+  const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
+  $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
+  $('audienceResident').textContent=labels[2];$('audienceResidentHint').textContent=labels[3];
+  $('audienceDiaspora').textContent=labels[4];$('audienceDiasporaHint').textContent=labels[5];
+  $('audienceMerchant').textContent=labels[6];$('audienceMerchantHint').textContent=labels[7];
+  document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+  const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
+  const cards=rows.map(([t,q])=>({t,q,d:''}));
+  const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
+  cards.forEach((c,i)=>{
+    const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
+    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=cardIcon(c.t);
+    const b=document.createElement('b');b.textContent=c.t;card.append(ico,b);frag.appendChild(card);
+    const chip=document.createElement('button');chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;chip.setAttribute('aria-label',c.t);chips.appendChild(chip);
+  });
+  $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
+}
+
+let lang=storageGet('teranga-lang','fr');
+if(!T[lang])lang='fr';
+let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
+let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeSessionId=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
+let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+function cleanReply(text){
+  return String(text||'')
+    .replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''))
+    .replace(/`([^`]+)`/g,'$1')
+    .replace(/\*\*([^*]+)\*\*/g,'$1')
+    .replace(/__([^_]+)__/g,'$1')
+    .replace(/(^|\s)\*([^*\n]+)\*(?=\s|$|[.,;!?])/g,'$1$2')
+    .replace(/\*\*/g,'')
+    .replace(/__/g,'')
+    .replace(/^#{1,6}\s+/gm,'')
+    .replace(/^\s*[-*•]\s+/gm,'')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
+}
+function cookie(name){
+  const m=document.cookie.match(new RegExp('(?:^|; )'+name+'=([^;]*)'));
+  return m?decodeURIComponent(m[1]):'';
+}
+function headers(extra){
+  return Object.assign({'Content-Type':'application/json','X-CSRF-Token':cookie('teranga_csrf')}, extra||{});
+}
+async function refreshCsrf(){
+  try{
+    const res=await fetch('/csrf',{credentials:'same-origin',cache:'no-store'});
+    const data=await res.json().catch(()=>({}));
+    return data.token||cookie('teranga_csrf');
+  }catch(e){return cookie('teranga_csrf');}
+}
+async function postJSON(url,body,extra,signal){
+  let res=await fetch(url,{method:'POST',headers:headers(extra),body,credentials:'same-origin',signal});
+  if(res.status===403){
+    const data=await res.clone().json().catch(()=>({}));
+    if(String(data.error||'').includes('csrf')||String(data.error||'').includes('Jeton')){
+      const token=await refreshCsrf();
+      const retryExtra=Object.assign({},extra||{},token?{'X-CSRF-Token':token}:{});
+      res=await fetch(url,{method:'POST',headers:headers(retryExtra),body,credentials:'same-origin',signal});
+    }
+  }
+  return res;
+}
+function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
+function setChatMode(on){
+  document.body.classList.toggle('has-chat',on);
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
+  hero.classList.toggle('is-hidden',on);
+}
+function hideHero(){setChatMode(true);}
+function showHero(){setChatMode(false);}
+function applyThemeColor(){
+  const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
+  $('themeColor').content=dark?'#100d0a':'#f6f0e5';
+}
+function sharePayload(){
+  const url=location.origin+'/';
+  return {title:'Teranga AI',text:T[lang].shareText+' '+url,url};
+}
+function bindShare(){
+  const p=sharePayload();
+  const wa=$('waShare');
+  if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
+  const copy=$('copyLink');
+  if(copy)copy.textContent=T[lang].copyLink;
+  const inst=$('installBtn');
+  if(inst)inst.textContent=T[lang].install;
+}
+async function shareApp(){
+  const p=sharePayload();
+  try{
+    if(navigator.share){await navigator.share(p);return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}
+  window.open('https://wa.me/?text='+encodeURIComponent(p.text),'_blank','noopener');
+}
+function nearBottom(){
+  return stage.scrollHeight - stage.scrollTop - stage.clientHeight < 80;
+}
+function scrollStage(force){
+  if(!force && !stickToBottom)return;
+  if(scrollRaf)return;
+  scrollRaf=requestAnimationFrame(()=>{
+    scrollRaf=0;
+    stage.scrollTop=stage.scrollHeight;
+  });
+}
+function addMsg(role,text,opts){
+  const row=document.createElement('div');
+  row.className='msg '+role+((opts&&opts.animate&&!reduceMotion)?' is-new':'');
+  if(role==='assistant'){
+    const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
+  }
+  const col=document.createElement('div');col.className='col';
+  const b=document.createElement('div');b.className='bubble';
+  b.appendChild(document.createTextNode(text||''));
+  col.appendChild(b);row.appendChild(col);
+  messages.appendChild(row);
+  scrollStage(true);
+  return {row,b,col};
+}
+function addActs(col,text,itineraryEdit){
+  const acts=document.createElement('div');acts.className='acts';
+  const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
+  listen.onclick=()=>speak(text,listen);
+  const copy=document.createElement('button');copy.type='button';copy.textContent=T[lang].copy;
+  copy.onclick=async()=>{
+    try{await navigator.clipboard.writeText(text);copy.textContent=T[lang].copied;setTimeout(()=>copy.textContent=T[lang].copy,1200);}catch(e){}
+  };
+  const share=document.createElement('button');share.type='button';share.textContent=T[lang].share;
+  share.onclick=async()=>{
+    try{
+      if(navigator.share)await navigator.share({title:'Teranga AI',text});
+      else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
+    }catch(e){}
+  };
+  if(itineraryEdit&&itineraryEdit.requires_confirmation){
+    try{sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))}catch(_){}
+    const edit=document.createElement('button');edit.type='button';edit.textContent=lang==="en"?"Review trip change":"Revoir la modification";
+    edit.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
+    acts.appendChild(edit);
+  }
+  if((sessionStorage.getItem("teranga-trip-context")||"").trim()){
+    const planner=document.createElement("button");planner.type="button";planner.textContent=lang==="en"?"Adjust in Planner":"Ajuster dans le Planner";
+    planner.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
+    acts.appendChild(planner);
+  }
+  acts.append(listen,copy,share);col.appendChild(acts);
+}
+let googleImageSearchSeq=0;
+function showGoogleImages(col,query){
+  query=String(query||'').trim();
+  if(!query)return;
+  const section=document.createElement('section');
+  section.className='google-images';
+  section.style.cssText='margin:10px 0;padding:12px;border:1px solid rgba(226,179,74,.18);border-radius:18px;background:rgba(255,255,255,.035);';
+  const title=document.createElement('div');
+  title.textContent='Images Google';
+  title.style.cssText='font-weight:700;margin-bottom:8px;';
+  const host=document.createElement('div');
+  const id='google-images-'+(++googleImageSearchSeq);
+  host.id=id;
+  section.append(title,host);
+  col.appendChild(section);
+  const render=()=>{
+    if(!(window.google&&google.search&&google.search.cse&&google.search.cse.element))return false;
+    try{
+      google.search.cse.element.render({
+        div:id,
+        tag:'searchresults-only',
+        gname:id,
+        attributes:{
+          enableImageSearch:true,
+          defaultToImageSearch:true,
+          disableWebSearch:true,
+          imageSearchLayout:'classic',
+          imageSearchResultSetSize:'8',
+          safeSearch:'active',
+          image_type:'photo'
+        }
+      });
+      const run=()=>{
+        const el=google.search.cse.element.getElement(id);
+        if(el&&typeof el.execute==='function'){el.execute(query);return true;}
+        return false;
+      };
+      if(!run()){
+        let tries=0;
+        const timer=setInterval(()=>{if(run()||++tries>30)clearInterval(timer);},200);
+      }
+      return true;
+    }catch(e){return false;}
+  };
+  if(!render()){
+    let tries=0;
+    const timer=setInterval(()=>{if(render()||++tries>50)clearInterval(timer);},200);
+  }
+}
+function addCityImage(col,image){
+  const list=Array.isArray(image)?image:(image&&image.url?[image]:[]);
+  const gallery=document.createElement('div');gallery.className='city-gallery';
+  list.slice(0,8).forEach(item=>{
+    if(!item||!item.url)return;
+    const box=document.createElement('figure');box.className='city-pic';
+    const img=document.createElement('img');
+    const proxy=item.display_url||('/image-proxy?url='+encodeURIComponent(item.url));
+    img.src=proxy;img.alt=item.alt||'';img.loading='lazy';
+    img.onerror=()=>{
+      if(img.dataset.directFallback)return;
+      img.dataset.directFallback='1';
+      img.src=item.url;
+    };
+    box.append(img);gallery.appendChild(box);
+  });
+  if(gallery.children.length)col.appendChild(gallery);
+  const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
+  // Keep the photo grid clean: no Google image result block or captions/details below photos.
+}
+function addMap(col,map){
+  if(!map||!map.url)return;
+  const box=document.createElement('div');box.className='city-map';
+  if(map.embed){
+    const frame=document.createElement('iframe');
+    frame.src=map.embed;frame.loading='lazy';frame.referrerPolicy='no-referrer-when-downgrade';
+    frame.title=map.label||'Carte';frame.allowFullscreen=true;
+    box.appendChild(frame);
+  }
+  const a=document.createElement('a');
+  a.href=map.url;a.target='_blank';a.rel='noopener noreferrer';
+  a.textContent='Ouvrir dans Google Maps'+(map.label?' · '+map.label:'');
+  box.appendChild(a);col.appendChild(box);
+}
+function addSources(col,sources){
+  if(!sources||!sources.length)return;
+  const box=document.createElement('div');box.className='sources';
+  const label=document.createElement('b');label.textContent=T[lang].sources;box.appendChild(label);
+  sources.slice(0,5).forEach(src=>{
+    if(!src||!src.url)return;
+    const a=document.createElement('a');
+    a.href=src.url;a.target='_blank';a.rel='noopener noreferrer';
+    a.textContent=src.title||src.url.replace(/^https?:\/\/(www\.)?/,'');
+    box.appendChild(a);
+  });
+  if(box.childElementCount>1)col.appendChild(box);
+}
+function resumeVoiceListening(delay=220){
+  if(!voiceConversation||voiceSpeaking||voiceWaitingForAnswer||inflight)return;
+  if(!rec)return;
+  clearTimeout(resumeVoiceTimer);
+  resumeVoiceTimer=setTimeout(()=>{
+    if(!voiceConversation||voiceSpeaking||voiceWaitingForAnswer||inflight||listening)return;
+    try{rec.start();}catch(_){}
+  },delay);
+}
+
+const CARD_ICONS={
+  weather:'<svg viewBox="0 0 24 24" fill="none"><path d="M8 4.5V3M3.5 8H2M4.8 4.8 3.8 3.8M12.2 4.8l1-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10.5 8.6A3.5 3.5 0 0 0 5 10.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7.5 19h9a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 7.3 13 3 3 0 0 0 7.5 19Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  route:'<svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="18" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M18 9.5s3-3.1 3-5.2a3 3 0 0 0-6 0c0 2.1 3 5.2 3 5.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  money:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="13" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/><circle cx="16.5" cy="14.5" r="1.4" fill="currentColor"/></svg>',
+  safety:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6l-7-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2.2 2.2L15.5 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  food:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18a9 9 0 0 1-18 0Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 8c0-1.5 1-1.5 1-3M12 8c0-1.5 1-1.5 1-3M16 8c0-1.5 1-1.5 1-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  culture:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 9 12 4l9 5H3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 9v9M9.5 9v9M14.5 9v9M19 9v9M3 20h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  place:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11" r="2.2" stroke="currentColor" stroke-width="1.7"/></svg>',
+};
+const CARD_ICON_RULES=[
+  ['weather',/m[ée]t[ée]o|weather|climat|pluie|tenue|t[àa]kk/i],
+  ['money',/budget|prix|price|co[ûu]t|cost|fcfa|argent|money|xaalis|transfert|transfer|marge|taux|change|ceede|feyde/i],
+  ['safety',/s[ée]curit|safety|safe|aar|kisal|sant[ée]|health/i],
+  ['food',/manger|eat|lekk|sp[ée]cialit|ñam|plat|cuisine|food|restaurant|resto|ñaamdu/i],
+  ['route',/itin[ée]raire|trajet|route|transport|taxi|bus|ferry|a[ée]roport|aibd|yoon|laawol|kaanawol|voyage|trip/i],
+  ['culture',/histoire|history|t[àa]riix|culture|aada|patrimoine|heritage|mus[ée]e/i],
+];
+function cardIcon(title){
+  const rule=CARD_ICON_RULES.find(([,re])=>re.test(String(title||'')));
+  return CARD_ICONS[rule?rule[0]:'place'];
+}
+function renderCards(){
+  if(lastLang===lang)return;
+  lastLang=lang;
+  const t=T[lang];
+  const cardFrag=document.createDocumentFragment();
+  const chipFrag=document.createDocumentFragment();
+  t.cards.slice(0,4).forEach((c,i)=>{
+    const card=document.createElement('button');
+    card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
+    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=cardIcon(c.t);
+    const b=document.createElement('b');b.textContent=c.t;
+    card.append(ico,b);cardFrag.appendChild(card);
+    const chip=document.createElement('button');
+    chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;chip.setAttribute('aria-label',c.t);
+    chipFrag.appendChild(chip);
+  });
+  $('cards').replaceChildren(cardFrag);
+  $('chips').replaceChildren(chipFrag);
+}
+function renderJourneyLabels(){
+  const t=T[lang];
+  $('journeyTravel').textContent=t.journeyTravel;$('journeyTravelHint').textContent=t.journeyTravelHint;
+  $('journeyProject').textContent=t.journeyProject;$('journeyProjectHint').textContent=t.journeyProjectHint;
+  $('journeyDiscover').textContent=t.journeyDiscover;$('journeyDiscoverHint').textContent=t.journeyDiscoverHint;
+  $('journeyChat').textContent=t.journeyChat;$('journeyChatHint').textContent=t.journeyChatHint;
+}
+function setJourney(journey){try{sessionStorage.setItem('teranga-journey',journey)}catch(_){}}
+function setLang(next){
+  lang=next;localStorage.setItem('teranga-lang',next);
+  document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
+  const t=T[lang];
+  $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
+  $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
+  $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  renderJourneyLabels();
+  $('hint').textContent=isTouch()?t.hintTouch:t.hint;
+  const tabs=document.querySelectorAll('#tabbar button');
+  if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
+  if(tabs[1])tabs[1].lastChild.nodeValue=t.navDiscover;
+  if(tabs[2])tabs[2].lastChild.nodeValue=t.navChat;
+  if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
+  document.documentElement.lang=next==='wo'?'wo':next;
+  renderCards();
+  renderAudience();
+  $('fxTitle').textContent=lang==='en'?'Currency converter':lang==='wo'?'Soppi xaalis':lang==='ff'?'Waylugol ceede':'Convertisseur';
+  $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
+  bindShare();
+  if(rec)rec.lang=voiceMap[lang];
+  if(realtimeActive){
+    const wasActive=voiceConversation&&autoVoice;
+    closeRealtimeVoice();
+    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
+  }
+}
+document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const nextAudience=String(btn.dataset.audience||'').trim();
+  if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  audience=nextAudience;
+  try{localStorage.setItem('teranga-audience',audience)}catch(_){}
+  renderAudience();
+  if(realtimeActive){
+    const wasActive=voiceConversation&&autoVoice;
+    closeRealtimeVoice();
+    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
+  }
+}));
+function themeInit(){
+  const saved=storageGet('teranga-theme','');
+  document.body.dataset.theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  applyThemeColor();
+}
+
+function renderProjectTracking(container,project){
+  const tracking=project.tracking||{};
+  const box=document.createElement('div');box.className='project-progress';
+  const title=document.createElement('div');title.className='project-progress-title';title.textContent='Modèle de suivi';box.appendChild(title);
+  const objective=document.createElement('p');objective.textContent=tracking.objective||'';box.appendChild(objective);
+  const indicators=document.createElement('ul');indicators.className='project-steps';
+  (tracking.indicators||[]).forEach(item=>{const li=document.createElement('li');li.textContent=item;indicators.appendChild(li);});
+  box.appendChild(indicators);
+  const review=document.createElement('p');review.textContent=tracking.next_review||'';box.appendChild(review);
+  container.querySelector('.project-tracking')?.remove();
+  box.classList.add('project-tracking');
+  container.appendChild(box);
+}
+async function advanceProjectStage(container,project,stage){
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    let res=await postJSON('/api/projects/advance',JSON.stringify({project,stage}));
+    if(res.status===403){
+      await refreshCsrf();
+      res=await postJSON('/api/projects/advance',JSON.stringify({project,stage}));
+    }
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
+    Object.assign(project,data.project);
+    try{localStorage.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    renderProjectProgress(container,project);
+    renderProjectTracking(container,project);
+  }catch(_){
+    renderProjectProgress(container,project);
+  }
+}
+function renderProjectProgress(container,project){
+  const labels=['Idée','Validation','Prototype','Premiers clients','Revenus'];
+  const stages=Array.isArray(project.stage_order)&&project.stage_order.length===5?project.stage_order:['idea','validation','prototype','first_customers','revenue'];
+  let current=stages.indexOf(project.stage); if(current<0)current=0;
+  const wrap=document.createElement('div');wrap.className='project-progress';
+  const title=document.createElement('div');title.className='project-progress-title';title.textContent='Progression du projet';wrap.appendChild(title);
+  const hint=document.createElement('p');hint.className='project-progress-hint';hint.textContent='Choisis la prochaine étape à travailler.';wrap.appendChild(hint);
+  const row=document.createElement('div');row.className='project-stage-row';
+  stages.forEach((stage,index)=>{
+    const btn=document.createElement('button');btn.type='button';btn.className='project-stage '+(index===current?'on ':'')+(index<current?'done':'');btn.textContent=labels[index];
+    btn.disabled=index<=current;
+    btn.addEventListener('click',async()=>{
+      if(btn.disabled)return;
+      row.querySelectorAll('button').forEach(item=>item.disabled=true);
+      btn.textContent='…';
+      await advanceProjectStage(container,project,stage);
+    });
+    row.appendChild(btn);
+  });
+  wrap.appendChild(row);
+  container.querySelector('.project-progress')?.remove();
+  container.appendChild(wrap);
+}
+function openProjectModal(){
+  const modal=$('projectModal');
+  if(!modal)return;
+  modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  $('projectIdea')?.focus();
+}
+function closeProjectModal(){
+  const modal=$('projectModal');
+  if(!modal)return;
+  modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+}
+$('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('click',()=>{
+  setJourney('travel');
+  const place=sessionStorage.getItem('teranga-place-name')||'';
+  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');
+});
+$('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
+  setJourney('project');
+  openProjectModal();
+});
+$('journeyStrip').querySelector('[data-journey="discover"]')?.addEventListener('click',()=>{
+  setJourney('discover');
+  ask(lang==='en'?'Help me discover Senegal: regions, culture, history and places to visit.':lang==='wo'?'Jàngal ma Senegaal: régions, aada, taarix ak barab yu ñu mëna seet.':lang==='ff'?'Wallu-mi yiytude Senegaal: diiwe, aada, taarik e nokkuuji yahrude.':'Aide-moi à découvrir le Sénégal : régions, culture, histoire et lieux à visiter.');
+});
+$('journeyStrip').querySelector('[data-journey="chat"]')?.addEventListener('click',()=>{
+  setJourney('chat');
+  hideHero();
+  input.focus();
+});
+$('projectClose')?.addEventListener('click',closeProjectModal);
+$('projectModal')?.addEventListener('click',e=>{if(e.target.id==='projectModal')closeProjectModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProjectModal();});
+$('projectForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const error=$('projectError'),result=$('projectResult'),button=$('projectSubmit');
+  error.textContent='';result.hidden=true;$('projectResultActions').hidden=true;button.disabled=true;button.textContent=lang==='en'?'Building…':'Construction…';
+  const amount=value=>{const raw=String($(value)?.value||'').replace(/[^0-9]/g,'');return raw?Number(raw):null;};
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    const payload={
+      idea:$('projectIdea').value.trim(),city:$('projectCity').value.trim(),
+      budget_fcfa:amount('projectBudget'),category:$('projectCategory').value,skills:$('projectSkills').value.trim(),
+      available_time:$('projectTime').value.trim(),goal_fcfa:amount('projectGoal')
+    };
+    let res=await postJSON('/api/projects/plan',JSON.stringify(payload));
+    if(res.status===403){await refreshCsrf();res=await postJSON('/api/projects/plan',JSON.stringify(payload));}
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||T[lang].err);
+    const p=data.project||{};
+    result.innerHTML='';
+    const h=document.createElement('h3');h.textContent='🚀 '+(p.name||'Ton projet');result.appendChild(h);
+    const meta=document.createElement('p');meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');result.appendChild(meta);
+    const next=document.createElement('p');next.innerHTML='<strong>Prochaine action :</strong> ';const nextText=document.createTextNode(p.next_action||'Valider ton idée sur le terrain.');next.appendChild(nextText);result.appendChild(next);
+    const list=document.createElement('ol');list.className='project-steps';
+    (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
+    result.appendChild(list);
+    renderProjectProgress(result,p);
+    renderProjectTracking(result,p);
+    const matchBox=document.createElement('div');matchBox.className='project-progress';
+    matchBox.innerHTML='<div class="project-progress-title">🎯 Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
+    result.appendChild(matchBox);
+    try{
+      let matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));
+      if(matchRes.status===403){await refreshCsrf();matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));}
+      const matchData=await matchRes.json().catch(()=>({}));
+      if(matchRes.ok&&matchData.matches){
+        const m=matchData.matches;
+        matchBox.innerHTML='<div class="project-progress-title">🎯 Opportunités & partenaires</div>';
+        const summary=document.createElement('p');
+        summary.textContent=(m.counts?.opportunities||0)+' opportunité(s) · '+(m.counts?.partners||0)+' partenaire(s) correspondant à ton projet.';
+        matchBox.appendChild(summary);
+        if(m.opportunities?.length){
+          const ul=document.createElement('ul');ul.className='project-steps';
+          m.opportunities.slice(0,3).forEach(item=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=item.title||item.organization;const s=document.createElement('span');s.textContent=' · '+(item.organization||'');li.append(b,s);ul.appendChild(li);});
+          matchBox.appendChild(ul);
+        }
+        const links=document.createElement('div');links.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='🔎 Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='🤝 Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        links.append(opp,partner);matchBox.appendChild(links);
+      }
+    }catch(_){}
+    result.hidden=false;
+    $('projectForm').hidden=true;
+    $('projectResultActions').hidden=false;
+    try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
+  }catch(err){error.textContent=err.message||T[lang].err;}
+  finally{button.disabled=false;button.textContent='🚀 Générer mon projet';}
+});
+$('projectNew')?.addEventListener('click',()=>{
+  $('projectForm').reset();
+  $('projectForm').hidden=false;
+  $('projectResult').hidden=true;
+  $('projectResultActions').hidden=true;
+  $('projectError').textContent='';
+  document.querySelector('.project-more')?.removeAttribute('open');
+  $('projectIdea')?.focus();
+});
+// Journey buttons are wired individually above so each action has one deterministic handler.
+$('tabbar').addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-tab]');
+  if(!btn)return;
+  const tab=btn.dataset.tab;
+  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
+  if(tab!=='profile')document.body.classList.remove('show-profile');
+  if(tab==='home'){showHero();stage.scrollTop=0;}
+  if(tab==='discover'){window.location.href='/explorer';}
+  if(tab==='chat'){input.focus();}
+  // Profil : choisir son profil (touriste, résident…) ; le thème reste sur le bouton de l'en-tête.
+  if(tab==='profile'){showHero();document.body.classList.add('show-profile');stage.scrollTop=0;$('audienceMode')?.querySelector('.audience-btn.on')?.focus();}
+});
+function reset(){
+  if(history.length&&!confirm(T[lang].resetAsk))return;
+  if(inflight)inflight.abort();
+  history=[];messages.replaceChildren();showHero();
+  sessionStorage.removeItem('teranga-history');
+  localStorage.removeItem('teranga-history');
+}
+let resumeVoiceTimer=0;
+function persist(){
+  clearTimeout(persistTimer);
+  persistTimer=setTimeout(()=>{
+    try{
+      const safeHistory=history.slice(-12).map(item=>({
+        role:item&&item.role==='assistant'?'assistant':'user',
+        content:String(item&&item.content||'').replace(/\\s+/g,' ').trim().slice(0,1200)
+      })).filter(item=>item.content);
+      const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
+      sessionStorage.setItem('teranga-history',payload);
+      localStorage.setItem('teranga-history',payload);
+    }catch(e){}
+  },250);
+}
+function restore(){
+  try{
+    const raw=sessionStorage.getItem('teranga-history')||localStorage.getItem('teranga-history');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    if(data.lang&&T[data.lang])lang=data.lang;
+    if(Array.isArray(data.history)&&data.history.length){
+      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/\\s+/g,' ').trim().slice(0,1200)})).filter(item=>item.content);
+      if(!restored.length){
+        sessionStorage.removeItem('teranga-history');
+        localStorage.removeItem('teranga-history');
+        return;
+      }
+      history=restored;
+      hideHero();
+      const frag=document.createDocumentFragment();
+      history.forEach(item=>{
+        const row=document.createElement('div');
+        row.className='msg '+item.role;
+        if(item.role==='assistant'){
+          const av=document.createElement('div');av.className='avatar';av.textContent='🌴';row.appendChild(av);
+        }
+        const col=document.createElement('div');col.className='col';
+        const b=document.createElement('div');b.className='bubble';
+        b.textContent=cleanReply(item.content||'');
+        col.appendChild(b);
+        if(item.role==='assistant'){
+          addActs(col,item.content||'');
+          addCityImage(col,item.image);
+          addMap(col,item.map);
+          addSources(col,item.sources);
+        }
+        row.appendChild(col);
+        frag.appendChild(row);
+      });
+      messages.appendChild(frag);
+      stage.scrollTop=stage.scrollHeight;
+    }
+  }catch(e){}
+}
+async function ask(preset,fromVoice=false,isRetry=false){
+  const text=(preset||input.value).trim();
+  if(!text||send.disabled)return;
+  hideHero();
+  if(!isRetry){
+    addMsg('user',text,{animate:true});
+    history.push({role:'user',content:text});
+    persist();
+  }
+  input.value='';input.style.height='';$('count').textContent='0 / 2000';
+  send.disabled=false;send.textContent=T[lang].stop;
+  send.dataset.mode='stop';
+  const wait=addMsg('assistant','',{animate:true});
+  wait.row.classList.add('thinking');
+  const node=wait.b.firstChild;
+  const cursor=document.createElement('span');cursor.className='cursor';
+  const dots=document.createElement('div');dots.className='typing';
+  dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
+  wait.b.replaceWith(dots);
+  const ctrl=new AbortController();inflight=ctrl;
+  const kill=setTimeout(()=>ctrl.abort(),40000);
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
+  let reply='', sources=[], image=null, map=null, itineraryEdit=null;
+  try{
+    const res=await postJSON('/chat',body,null,ctrl.signal);
+    if(!res.ok){
+      const data=await res.json().catch(()=>({}));
+      const error=new Error(data.error||T[lang].err);
+      error.status=res.status;
+      error.retryAfter=res.headers.get('Retry-After')||'';
+      throw error;
+    }
+    let live='', pending='', shown=false, paint=0;
+    const flush=()=>{
+      paint=0;
+      if(!pending)return;
+      live+=pending;pending='';
+      if(!shown){
+        dots.replaceWith(wait.b);
+        wait.row.classList.remove('thinking');
+        wait.b.classList.add('live');
+        if(!reduceMotion)wait.b.appendChild(cursor);
+        shown=true;
+      }
+      node.nodeValue=cleanReply(live);
+      scrollStage();
+    };
+    const queue=chunk=>{
+      pending+=chunk;
+      feedVoiceStreamTts(chunk);
+      if(!paint)paint=requestAnimationFrame(flush);
+    };
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const {value,done}=await reader.read();
+      if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const parts=buf.split('\n');buf=parts.pop();
+      for(let i=0;i<parts.length;i++){
+        const line=parts[i];
+        if(!line)continue;
+        let ev;try{ev=JSON.parse(line);}catch{continue;}
+        if(ev.error)throw new Error(ev.error);
+        if(ev.d)queue(ev.d);
+        if(ev.s)sources=ev.s;
+        if(ev.img)image=ev.img;
+        if(ev.map)map=ev.map;
+        if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
+      }
+    }
+    if(buf.trim()){
+      try{
+        const ev=JSON.parse(buf);
+        if(ev.error)throw new Error(ev.error);
+        if(ev.d)queue(ev.d);
+        if(ev.s)sources=ev.s;
+        if(ev.img)image=ev.img;
+        if(ev.map)map=ev.map;
+      }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
+    }
+    if(paint){cancelAnimationFrame(paint);flush();}
+    reply=live.trim();
+    if(!reply){
+      const res2=await postJSON('/chat',body,{'X-Teranga-Mode':'json'},ctrl.signal);
+      const data=await res2.json().catch(()=>({}));
+      if(!res2.ok){
+        const error=new Error(data.error||T[lang].err);
+        error.status=res2.status;
+        error.retryAfter=res2.headers.get('Retry-After')||'';
+        throw error;
+      }
+      reply=(data.reply||'').trim();
+      if(data.sources)sources=data.sources;
+      if(data.image)image=data.image;
+      if(data.map)map=data.map;
+      if(data.itinerary_edit)itineraryEdit=data.itinerary_edit;
+      pending=reply;flush();
+    }
+    reply=cleanReply(reply);
+    if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
+    else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
+    wait.b.classList.remove('live');
+    addActs(wait.col,reply,itineraryEdit);
+    addCityImage(wait.col,image);
+    addMap(wait.col,map);
+    // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
+    history.push({role:'assistant',content:reply,sources,image,map});
+    history=history.slice(-12);
+    persist();
+    if(autoVoice&&reply){
+      voiceWaitingForAnswer=true;
+      flushVoiceStreamTts(reply);
+      if(!voiceStreamTtsCount&&!voiceTtsQueue.length)queueVoiceSpeech(reply);
+    }
+  }catch(err){
+    const aborted=err.name==='AbortError';
+    let raw=err.message||T[lang].err;
+    if(raw==='csrf'||/jeton|Load failed|Failed to fetch|network/i.test(raw))
+      raw=T[lang].timeout;
+    const msg=aborted
+      ?T[lang].timeout
+      :err.status===429
+        ?T[lang].rateLimit
+        :raw;
+    if(dots.parentNode)dots.replaceWith(wait.b);
+    wait.row.classList.remove('thinking');
+    node.nodeValue=msg;
+    if(!aborted){
+      const retry=document.createElement('button');
+      retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
+      retry.onclick=()=>{
+        if(wait.row.parentNode)wait.row.remove();
+        ask(text,fromVoice,true);
+      };
+      wait.col.appendChild(retry);
+      if(err.status===429){
+        const waitSeconds=Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||0));
+        if(waitSeconds){
+          retry.disabled=true;
+          retry.textContent=T[lang].retry+' · '+waitSeconds+'s';
+          let remaining=waitSeconds;
+          const timer=setInterval(()=>{
+            remaining-=1;
+            if(!retry.isConnected){clearInterval(timer);return;}
+            if(remaining<=0){
+              clearInterval(timer);
+              retry.disabled=false;
+              retry.textContent=T[lang].retry;
+            }else{
+              retry.textContent=T[lang].retry+' · '+remaining+'s';
+            }
+          },1000);
+        }
+      }
+    }
+  }finally{
+    clearTimeout(kill);
+    inflight=null;
+    send.dataset.mode='';
+    send.disabled=false;
+    send.textContent=T[lang].send;
+    if(voiceConversation&&autoVoice&&!voiceSpeaking&&!voiceSTTBusy){
+      voiceWaitingForAnswer=false;
+      voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
+      setTimeout(startVoiceCapture,140);
+    }else if(!voiceConversation)input.focus();
+  }
+}
+$('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
+$('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+$('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+send.onclick=()=>{
+  if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
+  ask();
+};
+mic.onclick=async()=>{
+  if(listening||realtimeActive||realtimeStarting){endVoiceMode();return;}
+  beginVoiceMode();
+  const ok=await startRealtimeVoice();
+  if(!ok&&rec){try{rec.start();}catch(_){}}
+};
+$('resetBtn').onclick=reset;
+$('shareAppBtn').onclick=shareApp;
+$('copyLink').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(location.origin+'/');
+    $('copyLink').textContent=T[lang].linkCopied;
+    setTimeout(()=>$('copyLink').textContent=T[lang].copyLink,1200);
+  }catch(e){shareApp();}
+};
+$('themeBtn').onclick=()=>{
+  const next=document.body.dataset.theme==='dark'?'light':'dark';
+  document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
+  applyThemeColor();
+};
+$('voiceToggle').onclick=async()=>{
+  autoVoice=!autoVoice;
+  localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
+  if(autoVoice){
+    beginVoiceMode();
+    stopSpeakingForListening();
+    const ok=await startRealtimeVoice();
+    if(!ok&&rec&&!listening)try{rec.start();}catch(_){}
+  }else{
+    endVoiceMode();
+    stopSpeakingForListening();
+    mic.classList.remove('listen');
+  }
+};
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
+let countRaf=0;
+input.addEventListener('input',()=>{
+  input.style.height='auto';
+  const h=Math.min(input.scrollHeight,130);
+  input.style.height=h+'px';
+  if(!countRaf)countRaf=requestAnimationFrame(()=>{
+    countRaf=0;$('count').textContent=input.value.length+' / 2000';
+  });
+});
+stage.addEventListener('scroll',()=>{stickToBottom=nearBottom();},{passive:true});
+if(window.visualViewport){
+  const place=()=>{
+    document.body.style.setProperty('--vvh',visualViewport.height+'px');
+    if(document.body.classList.contains('has-chat'))scrollStage(true);
+  };
+  visualViewport.addEventListener('resize',place);place();
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredInstall=e;
+  const btn=$('installBtn');if(btn)btn.hidden=false;
+});
+$('installBtn').onclick=async()=>{
+  if(!deferredInstall)return;
+  deferredInstall.prompt();
+  await deferredInstall.userChoice.catch(()=>{});
+  deferredInstall=null;$('installBtn').hidden=true;
+};
+/* Teranga Voice Realtime — direct speech-to-speech WebRTC with semantic turn detection. */
+function realtimeEvent(payload){
+  if(!realtimeDc||realtimeDc.readyState!=='open')return;
+  try{realtimeDc.send(JSON.stringify(payload));}catch(_){}
+}
+function realtimeContext(){
+  return history.slice(-8)
+    .map(item=>String(item.role||'')+': '+String(item.content||'').trim())
+    .filter(Boolean).join('\n').slice(-3200);
+}
+function waitForIceGathering(pc,timeout=2200){
+  if(pc.iceGatheringState==='complete')return Promise.resolve();
+  return new Promise(resolve=>{
+    let done=false;
+    const finish=()=>{if(done)return;done=true;clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve();};
+    const check=()=>{if(pc.iceGatheringState==='complete')finish();};
+    const timer=setTimeout(finish,timeout);
+    pc.addEventListener('icegatheringstatechange',check);
+  });
+}
+function scheduleRealtimeReconnect(){
+  clearTimeout(realtimeReconnectTimer);
+  if(!voiceConversation||!autoVoice||realtimeStarting||realtimeActive)return;
+  const attempt=Math.min(6,realtimeReconnectAttempts++);
+  const delay=Math.min(5000,350*Math.pow(1.7,attempt));
+  realtimeReconnectTimer=setTimeout(async()=>{
+    realtimeReconnectTimer=0;
+    if(!voiceConversation||!autoVoice||realtimeActive)return;
+    const ok=await startRealtimeVoice();
+    if(ok)realtimeReconnectAttempts=0;
+    else scheduleRealtimeReconnect();
+  },delay);
+}
+function closeRealtimeVoice(){
+  realtimeSessionId++;
+  clearTimeout(realtimeReconnectTimer);
+  realtimeReconnectTimer=0;
+  realtimeActive=false;
+  realtimeStarting=false;
+  if(realtimeDc){try{realtimeDc.close();}catch(_){}realtimeDc=null;}
+  if(realtimePc){try{realtimePc.close();}catch(_){}realtimePc=null;}
+  if(realtimeMic){realtimeMic.getTracks().forEach(t=>{try{t.stop();}catch(_){} });realtimeMic=null;}
+  if(realtimeAudio){try{realtimeAudio.pause();}catch(_){}realtimeAudio.srcObject=null;realtimeAudio.remove();realtimeAudio=null;}
+  realtimeAssistantRows.clear();
+  realtimeAssistantText.clear();
+  document.body.classList.remove('realtime-voice','assistant-speaking');
+  voiceSpeaking=false;
+  voiceSetMicState(false);
+}
+function realtimeVoiceStatus(text){voiceStatus(text);}
+function addRealtimeUserTranscript(text){
+  text=String(text||'').replace(/\s+/g,' ').trim();
+  if(!text)return;
+  addMsg('user',text,{animate:true});
+  history.push({role:'user',content:text});
+  history=history.slice(-12);
+  persist();
+}
+function realtimeAssistantRow(itemId){
+  let row=realtimeAssistantRows.get(itemId);
+  if(row)return row;
+  row=addMsg('assistant','',{animate:true});
+  realtimeAssistantRows.set(itemId,row);
+  realtimeAssistantText.set(itemId,'');
+  return row;
+}
+function addRealtimeAssistantTranscript(itemId,text){
+  text=cleanReply(text||'');
+  if(!text)return;
+  const row=realtimeAssistantRow(itemId);
+  realtimeAssistantText.set(itemId,text);
+  row.b.textContent=text;
+  row.row.classList.remove('thinking');
+  if(!row.col.querySelector('.acts'))addActs(row.col,text);
+  scrollStage();
+}
+function finishRealtimeAssistant(itemId,text){
+  text=cleanReply(text||realtimeAssistantText.get(itemId)||'');
+  if(!text)return;
+  const row=realtimeAssistantRow(itemId);
+  row.b.textContent=text;
+  row.row.classList.remove('thinking');
+  if(!row.col.querySelector('.acts'))addActs(row.col,text);
+  history.push({role:'assistant',content:text});
+  history=history.slice(-12);
+  persist();
+}
+function handleRealtimeEvent(ev){
+  if(!ev||!ev.type)return;
+  if(ev.type==='input_audio_buffer.speech_started'){
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+    return;
+  }
+  if(ev.type==='input_audio_buffer.speech_stopped'){
+    realtimeVoiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m understanding…':lang==='wo'?'Maa ngi dégg…':'Mi heɓii…');
+    return;
+  }
+  if(ev.type==='response.created'){
+    voiceSpeaking=true;
+    document.body.classList.add('assistant-speaking');
+    realtimeVoiceStatus(lang==='fr'?'Teranga répond…':lang==='en'?'Teranga is answering…':lang==='wo'?'Teranga ngi tontu…':'Teranga jaaba…');
+    return;
+  }
+  if(ev.type==='conversation.item.input_audio_transcription.completed'){
+    addRealtimeUserTranscript(ev.transcript||'');
+    return;
+  }
+  if(ev.type==='response.output_audio_transcript.delta'){
+    const current=(realtimeAssistantText.get(ev.item_id)||'')+(ev.delta||'');
+    addRealtimeAssistantTranscript(ev.item_id,current);
+    return;
+  }
+  if(ev.type==='response.output_audio_transcript.done'){
+    finishRealtimeAssistant(ev.item_id,ev.transcript||'');
+    return;
+  }
+  if(ev.type==='response.output_audio.done'){
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+    return;
+  }
+  if(ev.type==='response.done'){
+    if(ev.response?.status==='failed'){
+      realtimeVoiceStatus(lang==='fr'?'La réponse vocale a rencontré un problème.':lang==='en'?'The voice response had a problem.':T[lang].err);
+    }
+    return;
+  }
+  if(ev.type==='response.cancelled'){
+    voiceSpeaking=false;
+    document.body.classList.remove('assistant-speaking');
+    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+    return;
+  }
+  if(ev.type==='conversation.item.input_audio_transcription.failed'){
+    realtimeVoiceStatus(lang==='fr'?'Je n’ai pas bien compris. Répète-moi ça.':lang==='en'?'I didn’t catch that. Please say it again.':T[lang].hintTouch);
+    return;
+  }
+  if(ev.type==='error'){
+    realtimeVoiceStatus(lang==='fr'?'La voix rencontre un problème.':lang==='en'?'Voice encountered a problem.':T[lang].err);
+    return;
+  }
+}
+async function startRealtimeVoice(){
+  if(!voiceConversation||!autoVoice)return false;
+  if(realtimeActive||realtimeStarting)return true;
+  if(!window.RTCPeerConnection||!navigator.mediaDevices?.getUserMedia)return false;
+  realtimeStarting=true;
+  const sessionId=++realtimeSessionId;
+  try{
+    await stopLegacyVoiceForRealtime();
+    const stream=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
+    });
+    if(!voiceConversation||!autoVoice){
+      stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
+      realtimeStarting=false;
+      return false;
+    }
+    realtimeMic=stream;
+    realtimePc=new RTCPeerConnection();
+    realtimeAudio=document.createElement('audio');
+    realtimeAudio.autoplay=true;
+    realtimeAudio.playsInline=true;
+    realtimeAudio.setAttribute('aria-hidden','true');
+    realtimeAudio.style.display='none';
+    document.body.appendChild(realtimeAudio);
+    realtimePc.ontrack=e=>{
+      if(sessionId!==realtimeSessionId||!realtimeAudio)return;
+      const [trackStream]=e.streams;
+      if(trackStream)realtimeAudio.srcObject=trackStream;
+      realtimeAudio.play().catch(()=>{});
+    };
+    realtimePc.onconnectionstatechange=()=>{
+      if(sessionId!==realtimeSessionId)return;
+      const state=realtimePc?.connectionState;
+      if(state==='connected'){
+        realtimeActive=true;
+        realtimeStarting=false;
+        realtimeReconnectAttempts=0;
+        document.body.classList.add('realtime-voice');
+        realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+        voiceSetMicState(true);
+      }else if(['failed','closed','disconnected'].includes(state)&&realtimeActive){
+        closeRealtimeVoice();
+        if(voiceConversation&&autoVoice){
+          realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
+          scheduleRealtimeReconnect();
+        }
+      }
+    };
+    realtimeDc=realtimePc.createDataChannel('oai-events');
+    realtimeDc.onopen=()=>{
+      if(sessionId!==realtimeSessionId)return;
+      // The recent context is already injected into the server-side Realtime
+      // instructions. Do not create a synthetic system message in the conversation:
+      // that adds latency and can create a visible/invalid extra turn.
+      realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+    };
+    realtimeDc.onmessage=e=>{
+      if(sessionId!==realtimeSessionId)return;
+      try{handleRealtimeEvent(JSON.parse(e.data));}catch(_){}
+    };
+    realtimeDc.onerror=()=>{
+      if(sessionId!==realtimeSessionId)return;
+      if(voiceConversation&&autoVoice){
+        realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
+      }
+    };
+    realtimePc.addTrack(stream.getAudioTracks()[0],stream);
+    const offer=await realtimePc.createOffer({offerToReceiveAudio:true});
+    await realtimePc.setLocalDescription(offer);
+    await waitForIceGathering(realtimePc);
+    const form=new FormData();
+    form.append('sdp',realtimePc.localDescription?.sdp||'','teranga-offer.sdp');
+    form.append('language',lang);
+    form.append('audience',audience);
+    form.append('context',realtimeContext());
+    if(sessionId!==realtimeSessionId)return false;
+    let res=await fetch('/realtime-call',{
+      method:'POST',
+      headers:{'X-CSRF-Token':cookie('teranga_csrf')},
+      body:form,credentials:'same-origin'
+    });
+    if(res.status===403){
+      if(sessionId!==realtimeSessionId)return false;
+      await refreshCsrf();
+      if(sessionId!==realtimeSessionId)return false;
+      res=await fetch('/realtime-call',{
+        method:'POST',
+        headers:{'X-CSRF-Token':cookie('teranga_csrf')},
+        body:form,credentials:'same-origin'
+      });
+    }
+    if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error||'realtime');
+    if(sessionId!==realtimeSessionId)return false;
+    const answer=await res.text();
+    if(sessionId!==realtimeSessionId||!realtimePc)return false;
+    await realtimePc.setRemoteDescription({type:'answer',sdp:answer});
+    if(sessionId!==realtimeSessionId)return false;
+    realtimeStarting=false;
+    realtimeActive=true;
+    document.body.classList.add('realtime-voice');
+    voiceSetMicState(true);
+    return true;
+  }catch(err){
+    if(sessionId===realtimeSessionId)closeRealtimeVoice();
+    return false;
+  }
+}
+async function stopLegacyVoiceForRealtime(){
+  try{clearVoiceRestart?.();}catch(_){}
+  try{if(rec&&listening)rec.stop();}catch(_){}
+  try{stopVoiceCapture?.();}catch(_){}
+  voiceWaitingForAnswer=false;
+  voiceSpeaking=false;
+}
+
+/* Teranga Voice v13 — hands-free conversation, persistent mic, adaptive VAD and barge-in.
+   Goal: speak naturally, pause, get an answer, and continue without touching the screen. */
+let voiceStream=null, voiceRecorder=null, voiceAudioContext=null, voiceAnalyser=null, voiceVADTimer=0;
+let voiceChunks=[], voiceCaptureBusy=false, voiceSTTBusy=false;
+let voiceSpeechStarted=false, voiceSpeechStartedAt=0, voiceLastLoudAt=0, voiceNoiseFloor=.008;
+let voiceNoiseSamples=0, voiceMonitorData=null, voiceBargeInStartedAt=0, voiceRestartTimer=0;
+let voiceRecorderMime='';
+let voiceTurnId=0;
+
+const VOICE_SILENCE_MS=720;
+const VOICE_MIN_SPEECH_MS=180;
+const VOICE_MAX_MS=30000;
+const VOICE_NOISE_CALIBRATION_MS=550;
+const VOICE_BARGE_MS=220;
+const VOICE_RESTART_MS=90;
+
+function voiceStatus(text){
+  if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
+}
+function voiceSetMicState(on){
+  listening=!!on;
+  mic.classList.toggle('listen',!!on);
+  mic.setAttribute('aria-label',on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler'));
+  mic.title=on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler');
+}
+function clearVoiceRestart(){
+  clearTimeout(voiceRestartTimer);
+  voiceRestartTimer=0;
+}
+function scheduleVoiceCapture(delay=VOICE_RESTART_MS){
+  clearVoiceRestart();
+  if(!voiceConversation||voiceSpeaking||voiceSTTBusy||inflight)return;
+  voiceRestartTimer=setTimeout(()=>{voiceRestartTimer=0;startVoiceCapture();},delay);
+}
+function rmsFromAnalyser(){
+  if(!voiceAnalyser)return 0;
+  voiceAnalyser.getByteTimeDomainData(voiceMonitorData);
+  let sum=0;
+  for(let i=0;i<voiceMonitorData.length;i++){
+    const x=(voiceMonitorData[i]-128)/128;
+    sum+=x*x;
+  }
+  return Math.sqrt(sum/voiceMonitorData.length);
+}
+function stopVoiceRecorderOnly(){
+  clearInterval(voiceVADTimer);voiceVADTimer=0;
+  const recorder=voiceRecorder;
+  voiceRecorder=null;
+  if(recorder&&recorder.state!=='inactive'){try{recorder.stop();}catch(_){}}
+}
+function stopVoiceCapture(){
+  clearInterval(voiceVADTimer);voiceVADTimer=0;
+  clearVoiceRestart();
+  if(voiceRecorder&&voiceRecorder.state!=='inactive'){try{voiceRecorder.stop();}catch(_){}}
+  voiceRecorder=null;
+  if(voiceAudioContext){try{voiceAudioContext.close();}catch(_){}voiceAudioContext=null;}
+  voiceAnalyser=null;voiceMonitorData=null;
+  if(voiceStream){voiceStream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});voiceStream=null;}
+  voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
+  voiceNoiseFloor=.008;voiceNoiseSamples=0;voiceCaptureBusy=false;voiceSetMicState(false);
+}
+async function ensureVoiceStream(){
+  if(voiceStream&&voiceStream.active&&voiceAnalyser)return true;
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)return false;
+  const stream=await navigator.mediaDevices.getUserMedia({
+    audio:{
+      echoCancellation:true,
+      noiseSuppression:true,
+      autoGainControl:true,
+      channelCount:1
+    }
+  });
+  if(!voiceConversation){
+    stream.getTracks().forEach(t=>t.stop());
+    return false;
+  }
+  voiceStream=stream;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)throw new Error('audio-context');
+  voiceAudioContext=new AC();
+  if(voiceAudioContext.state==='suspended')await voiceAudioContext.resume().catch(()=>{});
+  const source=voiceAudioContext.createMediaStreamSource(stream);
+  voiceAnalyser=voiceAudioContext.createAnalyser();
+  voiceAnalyser.fftSize=2048;
+  voiceAnalyser.smoothingTimeConstant=.78;
+  source.connect(voiceAnalyser);
+  voiceMonitorData=new Uint8Array(voiceAnalyser.fftSize);
+  stream.getTracks().forEach(track=>{
+    track.onended=()=>{
+      if(voiceConversation&&!voiceSpeaking&&!voiceSTTBusy&&!inflight){
+        voiceStream=null;voiceAnalyser=null;scheduleVoiceCapture(400);
+      }
+    };
+  });
+  return true;
+}
+function startVoiceMonitor(){
+  if(!voiceStream||!voiceAnalyser)return;
+  // The same microphone stream is used for listening and barge-in.
+  // This avoids asking for the microphone twice and improves echo cancellation.
+  if(!voiceSpeaking)return;
+  const started=Date.now();
+  voiceBargeInStartedAt=0;
+  const tick=()=>{
+    if(!voiceSpeaking||!voiceAnalyser)return;
+    const rms=rmsFromAnalyser();
+    const threshold=Math.max(.025,voiceNoiseFloor*2.6+.012);
+    const now=Date.now();
+    if(rms>threshold){
+      if(!voiceBargeInStartedAt)voiceBargeInStartedAt=now;
+      if(now-voiceBargeInStartedAt>=VOICE_BARGE_MS&&now-started>300){
+        voiceBargeInStartedAt=0;
+        stopSpeakingForListening();
+        scheduleVoiceCapture(40);
+        return;
+      }
+    }else voiceBargeInStartedAt=0;
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function stopVoiceMonitor(){
+  voiceBargeInStartedAt=0;
+}
+async function postVoiceAudio(blob,turnId){
+  if(!blob||!blob.size||voiceSTTBusy||!voiceConversation||turnId!==voiceTurnId)return;
+  voiceSTTBusy=true;voiceWaitingForAnswer=true;
+  voiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+  try{
+    if(!cookie('teranga_csrf'))await refreshCsrf();
+    if(!voiceConversation||turnId!==voiceTurnId)return;
+    const form=new FormData();
+    form.append('audio',blob,'teranga-voice.webm');
+    form.append('language',lang);
+    const recentVoiceContext=history.slice(-8)
+      .map(item=>String(item.content||'').trim()).filter(Boolean).join(' ').slice(-2400);
+    if(recentVoiceContext)form.append('context',recentVoiceContext);
+    let res=await fetch('/stt',{
+      method:'POST',
+      headers:{'X-CSRF-Token':cookie('teranga_csrf')},
+      body:form,credentials:'same-origin'
+    });
+    if(res.status===403){
+      await refreshCsrf();
+      if(!voiceConversation||turnId!==voiceTurnId)return;
+      res=await fetch('/stt',{
+        method:'POST',
+        headers:{'X-CSRF-Token':cookie('teranga_csrf')},
+        body:form,credentials:'same-origin'
+      });
+    }
+    const data=await res.json().catch(()=>({}));
+    if(!voiceConversation||turnId!==voiceTurnId)return;
+    if(!res.ok){const error=new Error(data.error||'stt');error.status=res.status;error.retryAfter=res.headers.get('Retry-After')||'';throw error;}
+    const text=String(data.text||'').replace(/\s+/g,' ').trim();
+    if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
+      endVoiceMode();
+      voiceStatus(lang==='fr'?'Mode vocal arrêté.':lang==='en'?'Voice mode stopped.':T[lang].hintTouch);
+      return;
+    }
+    if(!text){
+      voiceWaitingForAnswer=false;
+      voiceStatus(lang==='fr'?'Je n’ai pas bien entendu. Parle encore.':lang==='en'?'I didn’t catch that. Try again.':T[lang].hintTouch);
+      scheduleVoiceCapture(280);
+      return;
+    }
+    input.value=text;
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    await ask(text,true);
+  }catch(err){
+    voiceWaitingForAnswer=false;
+    if(voiceConversation){
+      const waitSeconds=err.status===429?Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||5)):0;
+      voiceStatus(waitSeconds?(lang==='fr'?'Trop de demandes vocales. Réessaie dans '+waitSeconds+' s.':lang==='en'?'Too many voice requests. Try again in '+waitSeconds+'s.':T[lang].hintTouch):lang==='fr'?'Je n’ai pas bien compris. Réessaie.':lang==='en'?'I didn’t quite catch that. Try again.':T[lang].hintTouch);
+      scheduleVoiceCapture(waitSeconds?waitSeconds*1000:500);
+    }
+  }finally{
+    voiceSTTBusy=false;
+  }
+}
+function finishVoiceRecording(){
+  clearInterval(voiceVADTimer);voiceVADTimer=0;
+  const recorder=voiceRecorder;
+  voiceRecorder=null;
+  if(!recorder)return;
+  try{recorder.stop();}catch(_){}
+}
+async function startVoiceCapture(){
+  if(!voiceConversation||voiceSpeaking||inflight||voiceSTTBusy||voiceCaptureBusy)return;
+  voiceCaptureBusy=true;
+  const turnId=++voiceTurnId;
+  try{
+    const ok=await ensureVoiceStream();
+    if(!voiceConversation||turnId!==voiceTurnId){
+      voiceCaptureBusy=false;
+      return;
+    }
+    if(!ok){
+      if(rec){try{rec.start();}catch(_){}}
+      voiceCaptureBusy=false;
+      return;
+    }
+    voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
+    voiceNoiseFloor=.008;voiceNoiseSamples=0;
+    voiceSetMicState(true);
+    voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+
+    if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))voiceRecorderMime='audio/webm;codecs=opus';
+    else if(MediaRecorder.isTypeSupported('audio/webm'))voiceRecorderMime='audio/webm';
+    else if(MediaRecorder.isTypeSupported('audio/mp4'))voiceRecorderMime='audio/mp4';
+    else voiceRecorderMime='';
+    voiceRecorder=new MediaRecorder(
+      voiceStream,
+      voiceRecorderMime?{mimeType:voiceRecorderMime,audioBitsPerSecond:64000}:undefined
+    );
+    const recorder=voiceRecorder;
+    const startedAt=Date.now();
+    recorder.ondataavailable=e=>{if(e.data?.size)voiceChunks.push(e.data);};
+    recorder.onerror=()=>{if(voiceConversation)scheduleVoiceCapture(350);};
+    recorder.onstop=()=>{
+      const type=recorder.mimeType||voiceRecorderMime||'audio/webm';
+      const blob=new Blob(voiceChunks,{type});
+      const hadSpeech=voiceSpeechStarted;
+      const speechMs=voiceSpeechStartedAt?Date.now()-voiceSpeechStartedAt:0;
+      voiceChunks=[];
+      voiceSetMicState(false);
+      voiceCaptureBusy=false;
+      if(hadSpeech&&speechMs>=VOICE_MIN_SPEECH_MS&&blob.size>900){
+        postVoiceAudio(blob,turnId);
+      }else if(voiceConversation&&!voiceSpeaking&&!voiceSTTBusy&&!inflight){
+        scheduleVoiceCapture(120);
+      }
+    };
+    recorder.start(80);
+    const data=voiceMonitorData;
+    voiceVADTimer=setInterval(()=>{
+      if(!voiceAnalyser||recorder.state==='inactive')return;
+      const rms=rmsFromAnalyser();
+      const now=Date.now();
+      const elapsed=now-startedAt;
+      if(!voiceSpeechStarted&&elapsed<VOICE_NOISE_CALIBRATION_MS){
+        voiceNoiseSamples++;
+        voiceNoiseFloor=voiceNoiseSamples===1?rms:(voiceNoiseFloor*.9+rms*.1);
+      }
+      const threshold=Math.max(.012,voiceNoiseFloor*2.05+.0055);
+      if(rms>threshold){
+        if(!voiceSpeechStarted){
+          voiceSpeechStarted=true;
+          voiceSpeechStartedAt=now;
+          voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'Listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+        }
+        voiceLastLoudAt=now;
+      }
+      // End only after a real speech turn followed by a stable pause.
+      if(voiceSpeechStarted&&voiceLastLoudAt&&now-voiceLastLoudAt>VOICE_SILENCE_MS){
+        finishVoiceRecording();
+      }else if(elapsed>VOICE_MAX_MS){
+        finishVoiceRecording();
+      }
+    },55);
+  }catch(_){
+    voiceCaptureBusy=false;
+    voiceSetMicState(false);
+    if(rec){
+      try{rec.start();}catch(_){}
+    }else{
+      endVoiceMode();
+      voiceStatus(lang==='fr'?'Microphone indisponible.':lang==='en'?'Microphone unavailable.':'Micro indisponible.');
+    }
+  }
+}
+function beginVoiceMode(){
+  voiceConversation=true;autoVoice=true;
+  localStorage.setItem('teranga-voice','1');
+  document.body.classList.add('voice-active');
+  $('voiceToggle').textContent=T[lang].vOn;
+  voiceStatus(lang==='fr'?'Mode vocal · parle naturellement.':lang==='en'?'Voice mode · speak naturally.':lang==='wo'?'Mode baat · wax ak yomb.':'Mode baat · haal no feewi.');
+}
+function endVoiceMode(){
+  clearVoiceSilence();
+  voiceConversation=false;voiceWaitingForAnswer=false;
+  voiceDraft='';
+  voiceTurnId++;
+  stopVoiceCapture();stopVoiceMonitor();
+  closeRealtimeVoice();
+  if(rec&&listening){try{rec.stop();}catch(_){}}
+  document.body.classList.remove('voice-active');
+  $('voiceToggle').textContent=T[lang].vOff;
+  voiceStatus(T[lang].hintTouch);
+}
+function stopSpeakingForListening(){
+  clearVoiceTtsQueue();
+  if(audio){
+    try{audio.pause();}catch(_){}
+    const src=audio.src;
+    audio=null;
+    if(src)URL.revokeObjectURL(src);
+  }
+  if('speechSynthesis' in window){
+    try{window.speechSynthesis.cancel();}catch(_){}
+  }
+  voiceSpeaking=false;
+  voiceTtsPlaying=false;
+  document.body.classList.remove('assistant-speaking');
+}
+function finishSpeech(btn){
+  voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
+  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+  if(voiceConversation&&!inflight&&!voiceSTTBusy){
+    voiceWaitingForAnswer=false;
+    voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
+    scheduleVoiceCapture(180);
+  }
+}
+function setupMic(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  // Prefer the same server STT pipeline for all browsers. Browser SpeechRecognition
+  // remains a lightweight fallback when MediaRecorder/getUserMedia is unavailable.
+  if(SR){
+    rec=new SR();rec.continuous=true;rec.interimResults=true;rec.maxAlternatives=1;rec.lang=voiceMap[lang];
+    rec.onstart=()=>{voiceSetMicState(true);beginVoiceMode();};
+    rec.onresult=e=>{
+      if(!voiceConversation)return;
+      let finalText='',interimText='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const part=e.results[i][0]?.transcript||'';
+        if(e.results[i].isFinal)finalText+=part+' ';else interimText+=part;
+      }
+      const preview=(voiceDraft+' '+finalText+' '+interimText).replace(/\s+/g,' ').trim();
+      if(preview){input.value=preview;input.dispatchEvent(new Event('input',{bubbles:true}));}
+      if(finalText.trim()){
+        voiceDraft=(voiceDraft+' '+finalText).replace(/\s+/g,' ').trim();
+        clearVoiceSilence();
+        voiceSilenceTimer=setTimeout(()=>{
+          if(!voiceConversation)return;
+          const spoken=voiceDraft.trim();voiceDraft='';
+          if(spoken&&!inflight&&!voiceSTTBusy){try{rec.stop();}catch(_){}ask(spoken,true);}
+        },850);
+      }
+    };
+    rec.onend=()=>{
+      voiceSetMicState(false);
+      if(voiceConversation&&!voiceSpeaking&&!voiceWaitingForAnswer&&!inflight&&!voiceCaptureBusy)scheduleVoiceCapture(180);
+    };
+    rec.onerror=e=>{
+      voiceSetMicState(false);
+      if(e?.error==='not-allowed'){autoVoice=false;localStorage.setItem('teranga-voice','0');endVoiceMode();}
+      else if(voiceConversation&&!voiceSpeaking&&!inflight)scheduleVoiceCapture(450);
+    };
+  }
+  if(!navigator.mediaDevices?.getUserMedia&&!rec){
+    mic.disabled=true;mic.title='Micro non disponible sur ce navigateur';
+  }
+}
+mic.onclick=()=>{
+  if(voiceSpeaking){
+    stopSpeakingForListening();
+    beginVoiceMode();
+    startVoiceCapture();
+    return;
+  }
+  if(listening||voiceCaptureBusy){endVoiceMode();return;}
+  beginVoiceMode();
+  startVoiceCapture();
+};
+$('voiceToggle').onclick=()=>{
+  autoVoice=!autoVoice;
+  localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  if(autoVoice){
+    beginVoiceMode();
+    stopSpeakingForListening();
+    startVoiceCapture();
+  }else{
+    endVoiceMode();
+    stopSpeakingForListening();
+  }
+};
+loadFx();
+themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();sessionStorage.removeItem('teranga-chat-prefill');}}catch(_){}setupMic();
