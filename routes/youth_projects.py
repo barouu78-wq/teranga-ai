@@ -2,8 +2,11 @@
 
 from flask import jsonify, render_template, request
 
+from services.site_layout import register_layout_globals
+
 
 def register_youth_project_route(app, deps):
+    register_layout_globals(app)  # en-tête/pied communs utilisés par les gabarits
     require_json_post = deps["require_json_post"]
     sanitize_text = deps["sanitize_text"]
     build_project_brief = deps["build_project_brief"]

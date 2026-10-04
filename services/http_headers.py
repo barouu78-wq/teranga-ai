@@ -58,7 +58,9 @@ def add_security_headers(
         )
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Cache-Control"] = (
-        "public, max-age=86400" if path in CACHED_ASSETS else "no-store"
+        "public, max-age=86400" if path in CACHED_ASSETS
+        else "public, max-age=3600" if path.startswith("/static/")
+        else "no-store"
     )
     if path == "/image-proxy" and response.status_code == 200:
         response.headers["Cache-Control"] = "public, max-age=86400"

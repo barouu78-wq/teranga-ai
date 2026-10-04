@@ -8,7 +8,7 @@ def test_trip_planner_page():
     response = app.test_client().get("/trip-planner")
     assert response.status_code == 200
     body = response.get_data(as_text=True)
-    assert "Senegal Trip Planner" in body
+    assert "Planificateur de voyage au Sénégal" in body
     assert "/api/trip-planner" in body
     assert 'name="arrival"' in body
 

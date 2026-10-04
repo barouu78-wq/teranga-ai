@@ -6,6 +6,8 @@ import json
 from html import escape
 from urllib.parse import quote
 
+from services.site_layout import HEAD_ASSETS, site_footer, site_header
+
 TYPE_LABELS = {
     "heritage": "Patrimoine",
     "natural_site": "Site naturel",
@@ -18,25 +20,6 @@ TYPE_LABELS = {
     "monument": "Monument",
     "museum": "Musée",
 }
-
-_STYLE = (
-    "body{margin:0;background:#0b0907;color:#f6efe3;font:16px/1.65 system-ui,sans-serif}"
-    "main{width:min(960px,calc(100% - 32px));margin:auto;padding:28px 0 60px}a{color:#e2b34a;text-decoration:none}"
-    "article{background:#171310;border:1px solid #3b2d18;border-radius:26px;padding:28px}"
-    "h1{font:700 clamp(32px,7vw,50px)/1.08 Georgia,serif;margin:8px 0 12px}h2{font-size:20px;margin:0 0 6px}"
-    ".muted{color:#b8a48c}.kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#b8a48c}"
-    "section{border-top:1px solid #3b2d18;padding:18px 0}"
-    ".actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}"
-    ".cta{border:1px solid #3b2d18;border-radius:999px;padding:10px 14px;background:#20190f;color:#e2b34a;font-weight:700}"
-    ".gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px}"
-    ".gallery img{width:100%;height:160px;object-fit:cover;border-radius:14px;background:#20190f}"
-    ".credit{font-size:12px;color:#b8a48c;margin-top:6px}"
-    "iframe{width:100%;height:300px;border:0;border-radius:16px}"
-    "ul{padding-left:20px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}"
-    ".card{border:1px solid #3b2d18;border-radius:18px;padding:14px;background:#171310}"
-    ".card small{color:#b8a48c}"
-)
-
 
 def place_index(places) -> dict[str, dict]:
     return {str(place.get("id")): place for place in places or [] if place.get("id")}
@@ -68,7 +51,7 @@ def _head(title, description, url, site_url, ld):
         f'<meta property="og:type" content="article"><meta property="og:url" content="{escape(url)}">'
         f'<meta property="og:image" content="{escape(site_url)}/og.png"><meta name="twitter:card" content="summary_large_image">'
         f'<title>{escape(title)}</title><script type="application/ld+json">{ld_json}</script>'
-        f"<style>{_STYLE}</style></head>"
+        f"{HEAD_ASSETS}</head>"
     )
 
 
@@ -168,12 +151,14 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
     )
     return (
         _head(title, description, url, site_url, ld)
-        + '<body><main><p><a href="/lieux">← Tous les lieux du Sénégal</a></p><article>'
+        + "<body>" + site_header("/lieux")
+        + '<main><p class="related"><a href="/lieux">← Tous les lieux du Sénégal</a></p><article>'
         + f'<div class="kicker">{escape(type_label)} · {escape(region)}</div>'
         + f"<h1>{escape(name)}</h1><p class=\"muted\">{escape(summary)}</p>"
         + actions
         + "".join(sections)
         + "</article></main>"
+        + site_footer()
         + script
         + "</body></html>"
     )
@@ -207,9 +192,12 @@ def render_places_index(places, site_url: str) -> str:
     }
     return (
         _head(title, description, url, site_url, ld)
-        + '<body><main><p><a href="/">← Teranga AI</a></p><article><div class="kicker">Guide</div>'
+        + "<body>" + site_header("/lieux")
+        + '<main class="wide"><article><div class="kicker">Guide</div>'
         + "<h1>Lieux du Sénégal</h1>"
         + f'<p class="muted">{escape(description)}</p>'
         + "".join(blocks)
-        + "</article></main></body></html>"
+        + "</article></main>"
+        + site_footer()
+        + "</body></html>"
     )
