@@ -22,8 +22,11 @@ def add_security_headers(
     nonce: str = "",
     is_secure: bool = False,
     forwarded_proto: str = "",
+    extra_script_origins: tuple[str, ...] = (),
 ):
     script_src = f"'self' 'nonce-{nonce}'" if nonce else "'self' 'unsafe-inline'"
+    # Origines optionnelles (mesure d'audience) : autorisées pour le script et ses envois.
+    extra = "".join(" " + origin for origin in extra_script_origins if origin)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -38,11 +41,11 @@ def add_security_headers(
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; script-src {script_src} 'unsafe-eval' "
-        "https://cse.google.com https://www.google.com https://www.gstatic.com; "
+        "https://cse.google.com https://www.google.com https://www.gstatic.com" + extra + "; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https://upload.wikimedia.org "
         "https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self' https://cse.google.com https://www.google.com; "
+        "connect-src 'self' https://cse.google.com https://www.google.com" + extra + "; "
         "media-src 'self' blob:; object-src 'none'; "
         "frame-src https://www.google.com https://cse.google.com https://maps.google.com; "
         "child-src https://www.google.com https://maps.google.com; "

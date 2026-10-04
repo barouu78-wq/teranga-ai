@@ -86,6 +86,7 @@ Voir .env.example pour les variables attendues :
 - REDIS_URL
 - GOOGLE_API_KEY, GOOGLE_CSE_ID (images Explorer)
 - quotas optionnels : TRIP_*, PRACTICAL_*, EXPLORER_IMAGE_*
+- ANALYTICS_SCRIPT_URL, ANALYTICS_SITE_ID : mesure d’audience sans cookie (Plausible, Umami), désactivée par défaut
 
 ## 🎯 Vision
 

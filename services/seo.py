@@ -7,17 +7,17 @@ SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
 SEO_PAGES = {
     "senegal": {
         "title": "Guide Senegal : Dakar, Goree, 14 regions | Teranga AI",
-        "description": "Guide pratique du Senegal : Dakar, Goree, meteo, ou manger, AIBD. Assistant gratuit en francais, wolof et pulaar.",
+        "description": "Guide pratique du Senegal : Dakar, Goree, meteo, ou manger, AIBD. Assistant gratuit en francais, anglais et wolof.",
         "h1": "Guide du Senegal",
         "intro": "Teranga AI aide a s'orienter au Senegal : une question, une reponse courte. Horaires et tarifs se verifient le jour J.",
         "sections": [
             ("Que demander", "Meteo Dakar, ferry Goree, trajet AIBD, ceebu jen, quartiers pour manger, les 14 regions."),
             ("Reperes", "14 regions. Dakar pour l'arrivee. Saint-Louis, Lac Rose, Petite Cote, Touba, Casamance au sud."),
-            ("Langues", "Francais, anglais, wolof et pulaar."),
+            ("Langues", "Francais, anglais et wolof."),
         ],
         "faq": [
             ("Teranga AI est-il gratuit ?", "Oui. Aucune inscription n'est obligatoire."),
-            ("Ca marche dans quelle langue ?", "Francais, anglais, wolof et pulaar."),
+            ("Ca marche dans quelle langue ?", "Francais, anglais et wolof."),
         ],
         "related": [("meteo-dakar", "Meteo Dakar"), ("visiter-goree", "Goree"), ("regions-senegal", "14 regions")],
     },
@@ -93,7 +93,7 @@ SEO_PAGES = {
         "sections": [
             ("Pour le Sénégal", "Dakar, AIBD, transport, météo, régions, gastronomie, culture et informations pratiques."),
             ("Pour la France", "Questions de voyage, préparation du séjour, repères culturels, langues et informations utiles pour la diaspora sénégalaise."),
-            ("Langues", "Français, anglais, wolof et pulaar, selon la demande."),
+            ("Langues", "Français, anglais et wolof, selon la demande."),
         ],
         "faq": [
             ("Teranga AI fonctionne-t-il depuis la France ?", "Oui. Le service est accessible sur le web depuis la France comme depuis le Sénégal."),
@@ -113,7 +113,7 @@ SEO_PAGES = {
         ],
         "faq": [
             ("L'assistant est-il réservé aux voyageurs ?", "Non. Il s'adresse aussi aux résidents, à la diaspora et aux commerçants."),
-            ("Peut-on parler wolof ou pulaar ?", "Oui, Teranga AI prend en charge le wolof et le pulaar en plus du français et de l'anglais."),
+            ("Peut-on parler wolof ?", "Oui, Teranga AI propose le wolof en plus du français et de l'anglais. Le pulaar est en cours d'amélioration et n'est pas encore proposé dans l'interface."),
         ],
         "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
     },
@@ -124,13 +124,13 @@ SEO_PAGES = {
         "intro": "Teranga AI est un assistant numérique pensé autour du Sénégal et accessible depuis le Sénégal, la France et la diaspora.",
         "sections": [
             ("Un assistant pour le Sénégal", "Teranga AI aide à trouver des repères sur Dakar, les régions, les transports, la météo, la culture, la gastronomie et les langues."),
-            ("Pour plusieurs publics", "Voyageurs, résidents, diaspora et commerçants peuvent poser leurs questions en français, anglais, wolof ou pulaar."),
+            ("Pour plusieurs publics", "Voyageurs, résidents, diaspora et commerçants peuvent poser leurs questions en français, anglais ou wolof."),
             ("Partenariats et soutien", "Teranga AI peut travailler avec des entreprises, médias, acteurs du tourisme, écoles et écosystèmes tech. Un soutien peut prendre la forme d’un pilote, d’un partenariat, d’une mise en relation ou d’un financement du développement."),
             ("Informations à vérifier", "Pour les horaires, tarifs, formalités et autres informations susceptibles de changer, Teranga AI peut rechercher des sources récentes et invite à vérifier les informations officielles.")
         ],
         "faq": [
             ("Teranga AI est-il accessible depuis le Sénégal ?", "Oui, le service est accessible sur le web depuis le Sénégal."),
-            ("Quelles langues sont disponibles ?", "Français, anglais, wolof et pulaar.")
+            ("Quelles langues sont disponibles ?", "Français, anglais et wolof. Le pulaar est en cours d'amélioration.")
         ],
         "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal"), ("diaspora-senegalaise", "Diaspora sénégalaise")]
     },
@@ -142,7 +142,7 @@ SEO_PAGES = {
         "sections": [
             ("Pour les partenaires", "Les médias, entreprises et organisations peuvent demander une présentation du projet, proposer un pilote ou contribuer à sa visibilité. Le kit média présente les usages et ressources disponibles."),
             ("Présentation courte", "Teranga AI est un assistant numérique consacré au Sénégal. Il répond aux questions pratiques sur les villes, régions, voyage, transport, culture, gastronomie, météo et langues."),
-            ("Présentation longue", "Pensé pour les personnes au Sénégal et pour la diaspora, Teranga AI permet de poser une question en français, anglais, wolof ou pulaar. Pour les informations changeantes, l'assistant peut rechercher des sources récentes."),
+            ("Présentation longue", "Pensé pour les personnes au Sénégal et pour la diaspora, Teranga AI permet de poser une question en français, anglais ou wolof. Pour les informations changeantes, l'assistant peut rechercher des sources récentes."),
             ("Contact presse", "Pour une demande média, utilisez les coordonnées de contact publiées par Teranga AI sur son site. Ne reprenez pas une information sensible sans la vérifier."),
         ],
         "faq": [
@@ -159,7 +159,7 @@ SEO_PAGES = {
         "sections": [
             ("Partenariat", "Le kit peut servir de base à une présentation auprès d’un média, d’un partenaire, d’un incubateur ou d’un financeur intéressé par l’IA et les usages numériques au Sénégal."),
             ("Nom", "Teranga AI"),
-            ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais, wolof et pulaar."),
+            ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais et wolof."),
             ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
             ("Lien officiel", SITE_URL + "/"),
         ],
@@ -242,7 +242,7 @@ SEO_PAGES = {
     },
     "assistant-senegal": {
         "title": "Assistant Sénégal : informations pratiques, voyage et Dakar | Teranga AI",
-        "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais, wolof et pulaar.",
+        "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais et wolof.",
         "h1": "Assistant Sénégal",
         "intro": "Teranga AI est un assistant numérique consacré au Sénégal. Posez une question sur Dakar, un trajet, une région, la météo, la culture ou la vie pratique.",
         "sections": [
@@ -251,7 +251,7 @@ SEO_PAGES = {
             ("Pour le Sénégal et la diaspora", "Le service est accessible depuis le Sénégal, la France et ailleurs. Vous pouvez préciser votre ville, votre région ou votre contexte pour obtenir une réponse plus ciblée."),
         ],
         "faq": [
-            ("Quelles langues peut-on utiliser ?", "Teranga AI prend en charge le français, l'anglais, le wolof et le pulaar."),
+            ("Quelles langues peut-on utiliser ?", "Teranga AI propose le français, l'anglais et le wolof."),
             ("Peut-on préparer un voyage au Sénégal ?", "Oui. Demandez des informations sur les lieux, transports, météo, culture et repères pratiques, puis vérifiez les informations susceptibles de changer."),
         ],
         "related": [("senegal", "Guide du Sénégal"), ("france-senegal", "Sénégal ↔ France"), ("meteo-dakar", "Météo Dakar"), ("regions-senegal", "14 régions")],
