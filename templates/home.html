@@ -4308,3 +4308,58 @@ body[data-theme="dark"] .tabbar button.on:after{background:#e8c36a}
 body[data-theme="dark"] body:not(.has-chat) .journey-strip button{background:rgba(28,23,19,.88)}
 @media(prefers-reduced-motion:reduce){.tabbar button{transition:none}}
 </style>
+
+
+<style>
+/* Teranga Design V4 — composer centré sur l'action */
+.dock .composer{
+  border:1px solid rgba(15,106,67,.14);
+  background:rgba(255,253,248,.96);
+  box-shadow:0 12px 30px rgba(52,38,20,.08);
+  transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease;
+}
+.dock .composer:focus-within{
+  border-color:rgba(15,106,67,.34);
+  box-shadow:0 16px 36px rgba(52,38,20,.12),0 0 0 3px rgba(217,164,65,.10);
+}
+#input{
+  min-height:42px;
+  font-size:15px;
+}
+#input::placeholder{color:#968776;opacity:1}
+#send,.dock #mic,.dock #voiceToggle{
+  min-width:40px;min-height:40px;
+  border-radius:13px;
+}
+#send{background:var(--nav-green);color:#fff;border-color:transparent}
+#send:disabled{opacity:.48}
+#send:focus-visible,#mic:focus-visible,#voiceToggle:focus-visible,#input:focus-visible{
+  outline:2px solid var(--nav-gold);
+  outline-offset:2px;
+}
+.chips{
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.chips::-webkit-scrollbar{display:none}
+.chips button{
+  border:1px solid rgba(15,106,67,.11);
+  background:rgba(255,253,248,.88);
+  color:#315142;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.chips button:hover{background:#fff;border-color:rgba(15,106,67,.24);transform:translateY(-1px)}
+@media(max-width:680px){
+  .dock{padding-left:9px!important;padding-right:9px!important}
+  .dock .composer{border-radius:19px;box-shadow:0 8px 22px rgba(52,38,20,.08)}
+  #input{font-size:16px;min-height:40px}
+  #send,.dock #mic,.dock #voiceToggle{min-width:38px;min-height:38px}
+  .chips{gap:6px;overflow-x:auto;flex-wrap:nowrap!important;padding-left:2px;padding-right:2px}
+  .chips button{flex:0 0 auto;font-size:10px;padding:6px 9px}
+}
+body[data-theme="dark"] .dock .composer{background:rgba(22,18,14,.96);border-color:rgba(217,164,65,.15);box-shadow:0 12px 30px rgba(0,0,0,.24)}
+body[data-theme="dark"] .dock .composer:focus-within{border-color:rgba(217,164,65,.34);box-shadow:0 16px 36px rgba(0,0,0,.28),0 0 0 3px rgba(217,164,65,.08)}
+body[data-theme="dark"] #input::placeholder{color:#9d8c79}
+body[data-theme="dark"] .chips button{background:rgba(28,23,19,.92);color:#d8c8b4;border-color:rgba(217,164,65,.12)}
+@media(prefers-reduced-motion:reduce){.dock .composer,.chips button{transition:none}}
+</style>
