@@ -2974,13 +2974,7 @@ $('projectNew')?.addEventListener('click',()=>{
   document.querySelector('.project-more')?.removeAttribute('open');
   $('projectIdea')?.focus();
 });
-$('journeyStrip').addEventListener('click',e=>{
-  const btn=e.target.closest('button[data-journey]'); if(!btn)return;
-  const journey=btn.dataset.journey; setJourney(journey);
-  if(journey==='plan'){const place=sessionStorage.getItem('teranga-place-name')||'';window.location.href='/trip-planner?lang='+(lang==='en'?'en':'fr')+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');}
-  if(journey==='discover') window.location.href='/explorer';
-  if(journey==='chat'){showHero();hideHero();input.focus();}
-});
+// Journey buttons are wired individually above so each action has one deterministic handler.
 $('tabbar').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-tab]');
   if(!btn)return;
