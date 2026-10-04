@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Callable
+from uuid import uuid4
 
 
 ALLOWED_ACTIONS = frozenset(
@@ -31,6 +32,15 @@ class ActionExecutionResult:
     executed: bool
     requires_confirmation: bool
     result: Any = None
+    request_id: str = ""
+
+
+def prepare_action(action: str) -> ActionExecutionResult:
+    """Create an idempotent-looking action request without executing it."""
+    request_id = uuid4().hex
+    if action not in ALLOWED_ACTIONS:
+        return ActionExecutionResult(action=action, status="unsupported", executed=False, requires_confirmation=False, request_id=request_id)
+    return ActionExecutionResult(action=action, status="prepared", executed=False, requires_confirmation=True, request_id=request_id)
 
 
 def execute_action(
@@ -40,12 +50,14 @@ def execute_action(
     handlers: dict[str, Callable[[], Any]] | None = None,
 ) -> ActionExecutionResult:
     """Execute only an allowlisted handler after explicit confirmation."""
+    request_id = uuid4().hex
     if action not in ALLOWED_ACTIONS:
         return ActionExecutionResult(
             action=action,
             status="unsupported",
             executed=False,
             requires_confirmation=False,
+            request_id=request_id,
         )
 
     if not confirmed:
@@ -54,6 +66,7 @@ def execute_action(
             status="confirmation_required",
             executed=False,
             requires_confirmation=True,
+            request_id=request_id,
         )
 
     handler = (handlers or {}).get(action)
@@ -63,6 +76,7 @@ def execute_action(
             status="not_implemented",
             executed=False,
             requires_confirmation=False,
+            request_id=request_id,
         )
 
     return ActionExecutionResult(
@@ -71,4 +85,5 @@ def execute_action(
         executed=True,
         requires_confirmation=False,
         result=handler(),
+        request_id=request_id,
     )
