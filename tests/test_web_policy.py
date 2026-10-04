@@ -15,7 +15,13 @@ def test_travel_source_policy():
 
 def test_weather_source_policy():
     domains = preferred_domains("weather")
-    assert domains[:2] == ("meteofrance.com", "ansd.sn")
+    assert domains[:2] == ("anacim.sn", "ansd.sn")
+    assert "meteofrance.com" not in domains
+
+
+def test_weather_prioritizes_senegal_meteorological_authority():
+    domains = preferred_domains("weather")
+    assert domains[0] == "anacim.sn"
 
 
 def test_general_web_has_no_restrictive_domain_filter():
