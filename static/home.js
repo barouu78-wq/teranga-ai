@@ -354,7 +354,7 @@ function addMsg(role,text,opts){
   scrollStage(true);
   return {row,b,col};
 }
-function addActs(col,text,itineraryEdit){
+function addActs(col,text,itineraryEdit,shareToken){
   const acts=document.createElement('div');acts.className='acts';
   const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
   listen.onclick=()=>speak(text,listen);
@@ -365,8 +365,10 @@ function addActs(col,text,itineraryEdit){
   const share=document.createElement('button');share.type='button';share.textContent=T[lang].share;
   share.onclick=async()=>{
     try{
-      if(navigator.share)await navigator.share({title:'Teranga AI',text});
-      else {await navigator.clipboard.writeText(text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
+      // Lien signé par le serveur : la réponse partagée ne peut pas être falsifiée.
+      const url=shareToken?location.origin+'/partage'+(lang==='en'?'?lang=en':'')+'#'+shareToken:'';
+      if(navigator.share)await navigator.share(url?{title:'Teranga AI',url}:{title:'Teranga AI',text});
+      else {await navigator.clipboard.writeText(url||text);share.textContent=T[lang].copied;setTimeout(()=>share.textContent=T[lang].share,1200);}
     }catch(e){}
   };
   if(itineraryEdit&&itineraryEdit.requires_confirmation){
@@ -830,7 +832,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   const ctrl=new AbortController();inflight=ctrl;
   const kill=setTimeout(()=>ctrl.abort(),40000);
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
-  let reply='', sources=[], image=null, map=null, itineraryEdit=null;
+  let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='';
   try{
     const res=await postJSON('/chat',body,null,ctrl.signal);
     if(!res.ok){
@@ -878,6 +880,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.img)image=ev.img;
         if(ev.map)map=ev.map;
         if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
+        if(ev.share)shareToken=ev.share;
       }
     }
     if(buf.trim()){
@@ -888,6 +891,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.s)sources=ev.s;
         if(ev.img)image=ev.img;
         if(ev.map)map=ev.map;
+        if(ev.share)shareToken=ev.share;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
     if(paint){cancelAnimationFrame(paint);flush();}
@@ -906,13 +910,14 @@ async function ask(preset,fromVoice=false,isRetry=false){
       if(data.image)image=data.image;
       if(data.map)map=data.map;
       if(data.itinerary_edit)itineraryEdit=data.itinerary_edit;
+      if(data.share)shareToken=data.share;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
     if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
     else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
-    addActs(wait.col,reply,itineraryEdit);
+    addActs(wait.col,reply,itineraryEdit,shareToken);
     addCityImage(wait.col,image);
     addMap(wait.col,map);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
