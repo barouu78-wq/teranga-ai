@@ -262,7 +262,7 @@ def fetch_commons_image(title):
 def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
 
-register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_commons_images, image_proxy_url)
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url)
 
 
 
