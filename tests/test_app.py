@@ -1014,3 +1014,17 @@ def test_senegal_domain_routes_business_and_employment_to_dynamic_sources():
     assert classify_domain("Je cherche un emploi à Dakar") == "economy"
     assert needs_fresh_web("business", "entreprise") is True
     assert "gov.sn" in source_domains("business")
+
+
+def test_robots_blocks_api_and_proxy_endpoints():
+    body = app.test_client().get("/robots.txt").get_data(as_text=True)
+    for path in ("/chat", "/api/", "/image-proxy", "/explorer-image", "/realtime-call"):
+        assert f"Disallow: {path}\n" in body
+    assert "Disallow: /explorer\n" not in body
+    assert "Sitemap: " in body
+
+
+def test_indexnow_workflow_targets_canonical_domain():
+    workflow = (ROOT / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
+    assert "onrender.com" not in workflow
+    assert '"host": "teranga-ai.fr"' in workflow
