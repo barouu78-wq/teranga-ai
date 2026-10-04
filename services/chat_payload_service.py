@@ -162,12 +162,17 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "Lorsque la recherche web est active, utilise ses résultats pour les informations susceptibles d’avoir changé et ne remplace pas silencieusement un fait local stable par une information web non vérifiée. "
         "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."
     )
+    weather_response_line = (
+        "MÉTÉO : pour toute demande météo actuelle ou prévisionnelle, utilise la recherche web active et les résultats de la source autorisée. "
+        "Pour le Sénégal, privilégie ANACIM. Donne la température ou les conditions réellement vérifiées, précise la période ou la date de validité et indique clairement la source. "
+        "Si aucune donnée météo actuelle fiable n'est disponible, dis-le explicitement sans inventer et ne remplace pas ANACIM par une autre source non autorisée."
+    )
     context_instruction = (
         place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         "PLAN D’EXÉCUTION : " + str(agent_plan) + ". " +
         memory_line + " " +
-        knowledge_web_line + " " + source_line + " " + planner_instruction +
+        knowledge_web_line + " " + weather_response_line + " " + source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
