@@ -16,3 +16,10 @@ def test_visible_language_selector_excludes_pulaar():
     assert 'data-lang="fr"' in html
     assert 'data-lang="en"' in html
     assert 'data-lang="wo"' in html
+
+
+def test_explorer_uses_google_images_before_wikimedia_fallback():
+    route = (Path(__file__).resolve().parents[1] / "routes" / "explorer.py").read_text(encoding="utf-8")
+    assert "fetch_google_images(query, limit=4)" in route
+    assert "if not images:" in route
+    assert "fetch_commons_images(query, limit=4)" in route
