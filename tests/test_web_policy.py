@@ -69,3 +69,11 @@ def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
 
     assert should_use_web("Quel est le taux de change euro FCFA ?") is True
     assert should_use_web("Explique le changement de couleur.") is False
+
+
+def test_health_source_policy_and_freshness():
+    from services.web_policy import should_use_web
+
+    domains = preferred_domains("health")
+    assert domains[:2] == ("sante.gouv.sn", "gov.sn")
+    assert should_use_web("Quels services de santé sont disponibles à Dakar ?") is True
