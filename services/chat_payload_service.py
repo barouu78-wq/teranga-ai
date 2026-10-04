@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 from .language_quality import language_instruction
 from .intelligence import build_agent_plan, should_use_deep_reasoning
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
+from .action_executor import prepare_action
 
 
 _AUDIENCE_INSTRUCTIONS = {
@@ -195,7 +196,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
-        "action_request": build_action_request({**context, "action_confirmed": action_confirmed}, agent_plan),
+        "action_request": {**build_action_request({**context, "action_confirmed": action_confirmed}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" else {})},
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
