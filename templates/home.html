@@ -4226,3 +4226,85 @@ body[data-theme="dark"] .journey-strip small{color:#b8a48c}
   outline:2px solid var(--sen-gold);
   outline-offset:2px;
 }
+
+
+<style>
+/* Teranga Design V3 — navigation compacte et hiérarchie visuelle */
+:root{
+  --nav-green:#0f6a43;
+  --nav-gold:#d9a441;
+  --nav-ink:#20372c;
+}
+.tabbar{
+  position:relative;
+  z-index:45;
+  min-height:58px;
+  border-top:1px solid rgba(15,106,67,.10)!important;
+  box-shadow:0 -8px 24px rgba(52,38,20,.06);
+}
+.tabbar button{
+  position:relative;
+  min-height:44px;
+  border-radius:12px;
+  transition:background .16s ease,color .16s ease,transform .16s ease;
+}
+.tabbar button.on{
+  background:rgba(15,106,67,.08);
+  color:var(--nav-green);
+}
+.tabbar button.on:after{
+  content:"";
+  position:absolute;
+  left:50%;bottom:3px;
+  width:18px;height:3px;
+  transform:translateX(-50%);
+  border-radius:999px;
+  background:var(--nav-gold);
+}
+.tabbar button:focus-visible{
+  outline:2px solid var(--nav-gold);
+  outline-offset:2px;
+}
+.journey-strip button{
+  min-width:0;
+  overflow:hidden;
+}
+.journey-strip b,.journey-strip small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+body:not(.has-chat) .journey-strip{
+  margin-top:14px;
+}
+body:not(.has-chat) .journey-strip button{
+  min-height:70px;
+  background:rgba(255,253,248,.88);
+  box-shadow:0 6px 16px rgba(52,38,20,.04);
+}
+body:not(.has-chat) .journey-strip button:hover{
+  box-shadow:0 10px 22px rgba(52,38,20,.08);
+}
+@media(max-width:680px){
+  .tabbar{
+    display:grid!important;
+    grid-template-columns:repeat(4,1fr);
+    padding:4px 8px calc(5px + env(safe-area-inset-bottom))!important;
+    background:rgba(247,240,229,.97)!important;
+  }
+  .tabbar button{font-size:9px;padding:5px 2px;min-height:42px}
+  .tabbar svg{width:17px;height:17px}
+  body.has-chat .tabbar{display:grid!important}
+  body:not(.has-chat) .tabbar{display:grid!important}
+  body:not(.has-chat) .journey-strip{margin-top:10px}
+  body:not(.has-chat) .journey-strip button{min-height:64px}
+}
+body[data-theme="dark"] .tabbar{
+  border-top-color:rgba(217,164,65,.12)!important;
+  box-shadow:0 -8px 24px rgba(0,0,0,.18);
+}
+body[data-theme="dark"] .tabbar button.on{background:rgba(217,164,65,.10);color:#e8c36a}
+body[data-theme="dark"] .tabbar button.on:after{background:#e8c36a}
+body[data-theme="dark"] body:not(.has-chat) .journey-strip button{background:rgba(28,23,19,.88)}
+@media(prefers-reduced-motion:reduce){.tabbar button{transition:none}}
+</style>
