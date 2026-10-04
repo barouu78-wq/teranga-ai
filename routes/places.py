@@ -2,7 +2,7 @@
 
 import secrets
 
-from flask import Response, request
+from flask import Response, abort, request
 
 from services.places import place_index, render_place_page, render_places_index
 
@@ -23,7 +23,7 @@ def register_place_routes(app, knowledge, site_url):
     def place_page(place_id):
         place = by_id.get(place_id)
         if place is None:
-            return Response("Lieu introuvable", status=404, mimetype="text/plain")
+            abort(404)
         nonce = secrets.token_urlsafe(16)
         # Lu par add_security_headers : le script de galerie est autorisé par nonce.
         request._csp_nonce = nonce

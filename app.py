@@ -17,6 +17,7 @@ from config import env_bool, env_list
 from routes.seo import register_seo_routes
 from routes.places import register_place_routes
 from routes.share import register_share_routes
+from services.error_pages import render_not_found, render_server_error
 from services.site_layout import register_layout_globals
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
@@ -152,6 +153,21 @@ register_layout_globals(app)
 register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
 register_share_routes(app, SITE_URL)
+
+
+@app.errorhandler(404)
+def not_found(_error):
+    # API : réponse JSON ; navigateur : page 404 aux couleurs du site.
+    if request.path.startswith("/api/") or request.accept_mimetypes.best == "application/json":
+        return jsonify({"error": "Introuvable."}), 404
+    return render_not_found(request.path, SENEGAL_KNOWLEDGE.get("places", [])), 404, {"Content-Type": "text/html; charset=utf-8"}
+
+
+@app.errorhandler(500)
+def server_error(_error):
+    if request.path.startswith("/api/") or request.path in {"/chat", "/stt", "/tts", "/realtime-call"}:
+        return jsonify({"error": "Erreur temporaire. Réessaie dans quelques instants."}), 500
+    return render_server_error(), 500, {"Content-Type": "text/html; charset=utf-8"}
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None

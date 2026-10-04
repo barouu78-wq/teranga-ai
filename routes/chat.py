@@ -92,7 +92,7 @@ def register_chat_route(app, deps):
                     return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
-                    return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 500
+                    return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
 
             def generate_photo_only():
                 try:
@@ -116,7 +116,7 @@ def register_chat_route(app, deps):
                 return jsonify({"reply": reply, "share": share, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
-                return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 500
+                return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
 
         def generate():
             started_at = time.perf_counter()
