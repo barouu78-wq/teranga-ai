@@ -49,6 +49,21 @@ def _photo_matches_query(query, page_title, description):
     return True
 
 
+def _google_photo_matches_query(query, alt, page_url):
+    """Reject obvious off-topic city results from Google Images."""
+    q = _normalize(query)
+    evidence = _normalize(f"{alt} {page_url}")
+    strict_exclusions = {
+        "dakar": ("saly", "saly portudal", "mbour", "somone", "popenguine"),
+        "saly": ("dakar", "saint louis", "thies"),
+    }
+    for city, excluded in strict_exclusions.items():
+        if _contains_text_term(q, city):
+            if any(_contains_text_term(evidence, term) for term in excluded):
+                return False
+    return True
+
+
 def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
     """Recherche d'images via Google Custom Search JSON API."""
     query = str(query or "").strip()
@@ -100,10 +115,13 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         if key in seen:
             continue
         seen.add(key)
+        alt = str(item.get("title") or query)[:160]
+        if not _google_photo_matches_query(query, alt, context):
+            continue
         out.append({
             "url": original,
             "display_url": thumbnail,
-            "alt": str(item.get("title") or query)[:160],
+            "alt": alt,
             "credit": "Google Images",
             "page_url": context,
         })
