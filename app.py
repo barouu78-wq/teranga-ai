@@ -1,10 +1,10 @@
 import hashlib
+import hmac
 import json
 import os
 import secrets
 import threading
 import time
-from collections import defaultdict, deque
 from functools import wraps
 from pathlib import Path
 from urllib.request import build_opener, urlopen
@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from flask import Flask, Response, g, jsonify, request
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
-from config import env_bool
+from config import env_bool, env_list
 from routes.seo import register_seo_routes
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
@@ -32,7 +32,7 @@ from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, infer_senegal_context, should_use_planner
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
-from services.rate_limit import allowed_request as _allowed_request
+from services.rate_limit import BoundedStore, allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
 from services.text import clean_answer
@@ -43,7 +43,7 @@ from services.assets import ICON_SVG, build_icon_png
 
 def icon_svg():
     return Response(ICON_SVG, mimetype="image/svg+xml")
-from services.identity import client_identity as _client_identity, abuse_key as _abuse_key
+from services.identity import client_identity as _client_identity, abuse_key as _abuse_key, rate_limit_identity as _rate_limit_identity
 from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
@@ -73,19 +73,28 @@ if RUNTIME_ENV == "production":
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 4 * 1024 * 1024
-_stable = os.getenv("SECRET_KEY") or os.getenv("OPENAI_API_KEY") or "teranga-ai"
-app.config["SECRET_KEY"] = hashlib.sha256(_stable.encode("utf-8")).hexdigest()
+_configured_secret_key = os.getenv("SECRET_KEY", "").strip()
+if _configured_secret_key:
+    app.config["SECRET_KEY"] = hashlib.sha256(_configured_secret_key.encode("utf-8")).hexdigest()
+else:
+    # Développement uniquement (la production exige SECRET_KEY, cf. ci-dessus).
+    # Dérivation HMAC séparée par un libellé : la clé reste identique entre
+    # workers Gunicorn sans réutiliser la clé OpenAI telle quelle.
+    _fallback_material = os.getenv("OPENAI_API_KEY", "").strip() or secrets.token_hex(32)
+    app.config["SECRET_KEY"] = hmac.new(
+        _fallback_material.encode("utf-8"), b"teranga-ai/flask-secret-key/v1", hashlib.sha256
+    ).hexdigest()
 app.config["JSON_SORT_KEYS"] = False
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 if RUNTIME_ENV == "production":
-    app.config["TRUSTED_HOSTS"] = [
-        "teranga-ai.fr",
-        "www.teranga-ai.fr",
-        "127.0.0.1",
-        "localhost",
-    ]
+    # Surchargeable via TRUSTED_HOSTS (liste séparée par des virgules) pour
+    # ajouter un domaine d'hébergement sans modifier le code.
+    app.config["TRUSTED_HOSTS"] = env_list(
+        "TRUSTED_HOSTS",
+        "teranga-ai.fr,www.teranga-ai.fr,127.0.0.1,localhost",
+    )
 
 
 @app.before_request
@@ -154,7 +163,6 @@ if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
 client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
-register_trip_planner(app, client, SITE_URL, ALLOWED_ORIGINS)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800
@@ -187,19 +195,22 @@ CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 CSRF_TTL = 60 * 60 * 12
 
-request_log = defaultdict(deque)
-tts_request_log = defaultdict(deque)
-chat_hourly_log = defaultdict(deque)
-tts_hourly_log = defaultdict(deque)
-stt_request_log = defaultdict(deque)
-stt_hourly_log = defaultdict(deque)
-realtime_request_log = defaultdict(deque)
-realtime_hourly_log = defaultdict(deque)
-image_request_log = defaultdict(deque)
-fx_request_log = defaultdict(deque)
-web_request_log = defaultdict(deque)
-abuse_events = defaultdict(deque)
-abuse_blocks = {}
+# Stockage mémoire borné (LRU) : un flot d'IP ou d'identités distinctes ne peut
+# plus faire croître indéfiniment la mémoire du processus.
+request_log = BoundedStore()
+tts_request_log = BoundedStore()
+chat_hourly_log = BoundedStore()
+tts_hourly_log = BoundedStore()
+stt_request_log = BoundedStore()
+stt_hourly_log = BoundedStore()
+realtime_request_log = BoundedStore()
+realtime_hourly_log = BoundedStore()
+image_request_log = BoundedStore()
+fx_request_log = BoundedStore()
+web_request_log = BoundedStore()
+guarded_request_log = BoundedStore()
+abuse_events = BoundedStore()
+abuse_blocks = BoundedStore(factory=None)
 SAFE_LANG = frozenset({"fr", "en", "wo", "ff"})
 
 
@@ -262,7 +273,6 @@ def fetch_commons_image(title):
 def fetch_city_image(title):
     return _fetch_city_image(title, wiki_summary, usable_wiki_image, sanitize_text)
 
-register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url)
 
 
 
@@ -312,7 +322,9 @@ def client_identity():
 
 
 def abuse_key(ip):
-    return _abuse_key(ip, client_identity())
+    # Sans cookie valide, l'identité est fixe : sinon chaque requête sans cookie
+    # obtiendrait une nouvelle identité et contournerait les limites par identité.
+    return _abuse_key(ip, _rate_limit_identity(request.cookies.get(IDENTITY_COOKIE, "")))
 
 
 def record_abuse(identity, kind, weight=1):
@@ -352,6 +364,34 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
         bucket=bucket,
         lock=RATE_LOCK,
     )
+
+
+# Quotas des routes protégées par rate_guard : (par minute, par heure).
+GUARDED_LIMITS = {
+    "trip_planner": (int(os.getenv("TRIP_RATE_LIMIT", "4")), int(os.getenv("TRIP_HOURLY_LIMIT", "20"))),
+    "practical_info": (int(os.getenv("PRACTICAL_RATE_LIMIT", "8")), int(os.getenv("PRACTICAL_HOURLY_LIMIT", "40"))),
+    "explorer_image": (int(os.getenv("EXPLORER_IMAGE_RATE_LIMIT", "60")), int(os.getenv("EXPLORER_IMAGE_HOURLY_LIMIT", "400"))),
+}
+
+
+def rate_guard(bucket):
+    """Return a 429 response when the caller exceeds the bucket quota, else None."""
+    per_minute, per_hour = GUARDED_LIMITS[bucket]
+    ip = client_ip()
+    identity = abuse_key(ip)
+    if abuse_blocked(ip) or abuse_blocked(identity):
+        return jsonify({"error": "Trop de demandes rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
+    for window, limit, suffix, retry in ((60, per_minute, "", "15"), (3600, per_hour, "_hour", "300")):
+        for key, name in ((ip, bucket + suffix), (identity, bucket + suffix + "_identity")):
+            if not allowed_request(key, guarded_request_log[name + ":" + key], limit, window, name):
+                record_abuse(ip, bucket + "_rate", 2)
+                record_abuse(identity, bucket + "_identity_rate", 1)
+                return jsonify({"error": "Trop de demandes. Réessaie dans un instant."}), 429, {"Retry-After": retry}
+    return None
+
+
+register_trip_planner(app, client, SITE_URL, ALLOWED_ORIGINS, rate_guard=rate_guard)
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=rate_guard)
 
 
 def origin_allowed():

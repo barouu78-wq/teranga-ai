@@ -48,9 +48,17 @@ def add_security_headers(
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
+    if path == "/image-proxy":
+        # Contenu tiers relayé depuis notre origine : aucun script, document isolé.
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+        )
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Cache-Control"] = (
         "public, max-age=86400" if path in CACHED_ASSETS else "no-store"
     )
+    if path == "/image-proxy" and response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=86400"
     if is_secure or forwarded_proto == "https":
         response.headers["Strict-Transport-Security"] = (
             "max-age=63072000; includeSubDomains"

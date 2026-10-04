@@ -1,5 +1,6 @@
 """Rendu de la page Explorer de Teranga AI."""
 
+from html import escape
 from urllib.parse import quote
 
 
@@ -10,14 +11,16 @@ def render_explorer_page(places, regions, selected_region=""):
             '<article data-place="{name}" data-region="{region}" data-summary="{summary}" data-lat="{lat}" data-lon="{lon}"><div class="gallery" data-query="{photo}"><div class="gallery-track"></div><div class="gallery-credit">Wikimedia Commons</div></div><small>{type} · {region}</small><h2>{name}</h2><p>{summary}</p>'
             '<a href="/?q={query}" data-place-action="chat">Demander à Teranga →</a> <a href="/trip-planner" data-place-action="plan">Planifier depuis ce lieu</a> '
             '<a href="https://www.openstreetmap.org/?mlat={lat}&mlon={lon}" target="_blank" rel="noopener">Carte</a></article>'.format(
-                type=place.get("type", "lieu"), region=place.get("region", ""), name=place.get("name", ""),
-                photo=quote((place.get("image_queries") or [place.get("name", "")])[0]),
-                summary=place.get("summary", ""), query=quote("Parle-moi de " + place.get("name", "")),
-                lat=place.get("latitude", ""), lon=place.get("longitude", ""),
+                type=escape(str(place.get("type", "lieu"))), region=escape(str(place.get("region", ""))),
+                name=escape(str(place.get("name", ""))),
+                photo=escape(quote(str((place.get("image_queries") or [place.get("name", "")])[0]))),
+                summary=escape(str(place.get("summary", ""))),
+                query=escape(quote("Parle-moi de " + str(place.get("name", "")))),
+                lat=escape(str(place.get("latitude", ""))), lon=escape(str(place.get("longitude", ""))),
             )
         )
     region_links = " · ".join(
-        '<a href="/explorer?region={id}">{name}</a>'.format(id=quote(r.get("id", "")), name=r.get("name", ""))
+        '<a href="/explorer?region={id}">{name}</a>'.format(id=escape(quote(str(r.get("id", "")))), name=escape(str(r.get("name", ""))))
         for r in regions
     )
     selected = (selected_region or "").strip().lower()

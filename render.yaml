@@ -11,6 +11,10 @@ services:
         sync: false
       - key: SECRET_KEY
         generateValue: true
+      - key: TERANGA_ENV
+        value: production
+      - key: TRUSTED_HOSTS
+        value: teranga-ai.fr,www.teranga-ai.fr,teranga-ai-1.onrender.com,127.0.0.1,localhost
       - key: OPENAI_MODEL
         value: gpt-5.6-luna
       - key: SITE_URL

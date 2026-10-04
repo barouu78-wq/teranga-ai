@@ -41,7 +41,7 @@ def register_chat_route(app, deps):
     def chat():
         ip = client_ip()
         identity = abuse_key(ip)
-        if abuse_blocked(ip):
+        if abuse_blocked(ip) or abuse_blocked(identity):
             return jsonify({"error": "Trop de demandes rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
         if not allowed_request(ip, request_log[ip], RATE_LIMIT, RATE_WINDOW, "chat"):
             record_abuse(ip, "chat_rate", 2)

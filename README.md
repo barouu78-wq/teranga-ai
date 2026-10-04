@@ -4,16 +4,18 @@
 
 Teranga AI combine une conversation courte et naturelle avec des données structurées sur le Sénégal : régions, villes, lieux, culture, histoire, cuisine et informations pratiques.
 
-🌐 **Démo :** https://teranga-ai-1.onrender.com
+🌐 **Site :** https://teranga-ai.fr
 📦 **Dépôt :** https://github.com/barouu78-wq/teranga-ai
 
 ## ✨ Ce que fait Teranga AI
 
 - 🗺️ **Explorer le Sénégal** — 14 régions et des fiches de lieux avec coordonnées et liens cartographiques.
-- 📸 **Photos de lieux** — recherche d’images Wikimedia Commons avec proxy same-origin pour fiabiliser l’affichage.
+- 📸 **Photos de lieux** — Google Images (Custom Search) en source principale, Wikimedia Commons en secours via un proxy same-origin sécurisé.
 - 🍲 **Cuisine sénégalaise** — spécialités et repères par région ou quartier.
 - 🏛️ **Culture & histoire** — personnalités, patrimoine, traditions et repères historiques.
-- 🤖 **Assistant IA** — réponses en français, anglais, wolof et pulaar.
+- 🤖 **Assistant IA** — réponses en français, anglais et wolof (le pulaar reste compris côté serveur mais n’est plus proposé dans le sélecteur).
+- 🎙️ **Voix** — transcription, synthèse vocale et conversation vocale temps réel.
+- 🧳 **Planificateur de voyage** — itinéraires et informations pratiques (/trip-planner).
 - 🔎 **Recherche web ciblée** — utilisée surtout pour les informations susceptibles de changer : météo, horaires, prix, événements, transports, etc.
 - 📈 **SEO** — pages guides dédiées au Sénégal, aux régions, à Gorée, à la météo et aux spécialités.
 - 🧪 **Tests + CI** — tests automatisés avec GitHub Actions.
@@ -29,18 +31,16 @@ Quelques entrées couvertes : Gorée, Saint-Louis, Djoudj, Niokolo-Koba, Sine-Sa
 Le projet reste volontairement simple :
 
     teranga-ai/
-    ├── app.py                         # application Flask + orchestration
-    ├── services/
-    │   ├── seo.py                     # pages et contenu SEO
-    │   ├── images.py                  # recherche et cache des images Wikimedia
-    │   ├── explorer.py                # rendu de la page Explorer
-    │   └── maps.py                    # recherche et liens cartographiques
-    ├── templates/
-    │   └── home.html                  # interface web principale
-    ├── data/
-    │   └── senegal_knowledge.json     # données structurées du Sénégal
+    ├── app.py                         # application Flask : configuration et câblage des routes
+    ├── wsgi.py                        # point d’entrée Gunicorn
+    ├── routes/                        # routes HTTP (chat, voix, images, explorer, SEO…)
+    ├── services/                      # logique métier et sécurité (rate limit, CSRF, images…)
+    ├── templates/                     # interface web (home.html, partenaires, opportunités)
+    ├── data/                          # données structurées du Sénégal
+    ├── tests/                         # tests pytest
     ├── .github/workflows/tests.yml    # CI GitHub Actions
-    ├── render.yaml                    # déploiement Render
+    ├── Dockerfile                     # image de production (Coolify)
+    ├── render.yaml                    # déploiement Render (alternatif)
     ├── requirements.txt               # dépendances production
     └── requirements-dev.txt           # dépendances de développement
 
@@ -65,21 +65,27 @@ Le découpage de app.py est progressif afin de réduire le risque de régression
 
 La CI exécute automatiquement les tests sur les pushes vers main, les pull requests et peut être lancée manuellement.
 
-## ☁️ Déploiement Render
+## ☁️ Déploiement
 
-Le fichier render.yaml décrit le service web et utilise Gunicorn.
+La production utilise le Dockerfile (Coolify) avec Gunicorn. render.yaml reste disponible comme alternative.
 
-Les secrets, notamment OPENAI_API_KEY, restent configurés dans Render et ne sont jamais commités.
+En production, définir TERANGA_ENV=production : l’application refuse alors de démarrer sans SECRET_KEY d’au moins 32 caractères et n’accepte que les hôtes listés dans TRUSTED_HOSTS.
+
+Avec plusieurs workers ou instances, configurer REDIS_URL pour partager la limitation de débit ; sans Redis, chaque worker compte séparément (mémoire bornée).
+
+Les secrets, notamment OPENAI_API_KEY, restent configurés sur l’hébergeur et ne sont jamais commités.
 
 ## 🔐 Configuration
 
 Voir .env.example pour les variables attendues :
 
-- OPENAI_API_KEY
+- OPENAI_API_KEY (obligatoire)
+- TERANGA_ENV, SECRET_KEY, TRUSTED_HOSTS (production)
+- ALLOWED_ORIGINS, SITE_URL, TRUST_PROXY
 - OPENAI_MODEL
-- SECRET_KEY
-- TRUST_PROXY
-- ALLOWED_ORIGINS
+- REDIS_URL
+- GOOGLE_API_KEY, GOOGLE_CSE_ID (images Explorer)
+- quotas optionnels : TRIP_*, PRACTICAL_*, EXPLORER_IMAGE_*
 
 ## 🎯 Vision
 

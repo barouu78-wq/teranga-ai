@@ -32,6 +32,7 @@ def register_stt_route(app, deps):
 
     @app.post("/stt")
     def stt():
+        """Transcribe a short voice turn for hands-free conversation."""
         if not origin_allowed():
             return jsonify({"error": "Origine non autorisée."}), 403
         cookie_token = request.cookies.get(CSRF_COOKIE, "")
@@ -44,9 +45,8 @@ def register_stt_route(app, deps):
             validator=valid_token,
         ):
             return jsonify({"error": "csrf"}), 403
-        """Transcribe a short voice turn for hands-free conversation."""
         from services.voice_quality import transcription_prompt
-    
+
         ip = client_ip()
         identity = abuse_key(ip)
         if abuse_blocked(ip) or abuse_blocked(identity):
