@@ -58,6 +58,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         return None, "empty"
 
     action_confirmed = data.get("action_confirmed") is True
+    action_request_id = str(data.get("action_request_id") or "").strip()
     message = normalized["message"]
     history = normalized["history"]
     language = normalized["language"]
@@ -196,7 +197,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
-        "action_request": {**build_action_request({**context, "action_confirmed": action_confirmed}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" else {})},
+        "action_request": ({**build_action_request({**context, "action_confirmed": action_confirmed, "action_request_id": action_request_id}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" and not action_confirmed else {})}),
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
