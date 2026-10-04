@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 from .language_quality import language_instruction
 from .intelligence import build_agent_plan, should_use_deep_reasoning
+from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
+from .action_executor import prepare_action
 
 
 _AUDIENCE_INSTRUCTIONS = {
@@ -55,6 +57,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     if error == "empty":
         return None, "empty"
 
+    action_confirmed = data.get("action_confirmed") is True
     message = normalized["message"]
     history = normalized["history"]
     language = normalized["language"]
@@ -103,7 +106,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_agent_plan(context, intent_context)
+    agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model="gpt-5.6-luna")
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + str(structured_memory)
@@ -193,6 +196,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
+        "action_request": {**build_action_request({**context, "action_confirmed": action_confirmed}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" else {})},
         "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
