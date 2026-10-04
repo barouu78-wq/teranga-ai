@@ -1041,3 +1041,11 @@ def test_every_seo_page_in_sitemap_is_served():
         response = client.get(f"/{slug}")
         assert response.status_code == 200, slug
     assert "Teranga AI pour les entreprises" in client.get("/pour-les-entreprises").get_data(as_text=True)
+
+
+def test_public_error_speaks_english_and_hides_technical_advice():
+    from services.errors import public_error
+
+    assert public_error(Exception("timed out"), "en").startswith("The answer took too long")
+    assert "Vérifie le modèle" not in public_error(Exception("BadRequestError invalid parameter"))
+    assert public_error(Exception("connection reset"), "wo").startswith("Le service IA")

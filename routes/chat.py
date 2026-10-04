@@ -32,8 +32,6 @@ def register_chat_route(app, deps):
     event_delta = deps["event_delta"]
     clean_answer = deps["clean_answer"]
     fetch_topic_images = deps["fetch_topic_images"]
-    lookup_map = deps["lookup_map"]
-    should_fetch_map = deps["should_fetch_map"]
     public_error = deps["public_error"]
     field = deps["field"]
     logger = deps.get("logger", app.logger)
@@ -91,7 +89,7 @@ def register_chat_route(app, deps):
                     return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
-                    return jsonify({"error": public_error(exc)}), 500
+                    return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 500
 
             def generate_photo_only():
                 try:
@@ -102,7 +100,7 @@ def register_chat_route(app, deps):
                     yield json.dumps({"done": True}) + "\n"
                 except Exception as exc:
                     logger.exception("Erreur stream photo-only /chat")
-                    yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
+                    yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
@@ -114,7 +112,7 @@ def register_chat_route(app, deps):
                 return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
-                return jsonify({"error": public_error(exc)}), 500
+                return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 500
 
         def generate():
             started_at = time.perf_counter()
@@ -188,6 +186,6 @@ def register_chat_route(app, deps):
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
-                yield json.dumps({"error": public_error(exc)}, ensure_ascii=False) + "\n"
+                yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
         return Response(stream_with_context(generate()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
