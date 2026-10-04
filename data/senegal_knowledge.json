@@ -26,7 +26,8 @@
         "Musée des Civilisations Noires",
         "Monument de la Renaissance africaine",
         "Corniche",
-        "îles de la Madeleine"
+        "îles de la Madeleine",
+        "île de Ngor"
       ],
       "departments": [
         "Dakar",
@@ -168,7 +169,8 @@
         "Tivaouane",
         "Joal-Fadiouth",
         "Popenguine",
-        "Petite-Côte"
+        "Petite-Côte",
+        "réserve de Bandia"
       ],
       "departments": [
         "Mbour",
@@ -288,7 +290,8 @@
       "highlights": [
         "Grande Mosquée de Touba",
         "patrimoine mouride",
-        "Magal de Touba"
+        "Magal de Touba",
+        "Grande Mosquée de Diourbel"
       ],
       "departments": [
         "Bambey",
@@ -747,12 +750,14 @@
         "Kébémer",
         "Linguère",
         "Dahra",
-        "Ferlo"
+        "Ferlo",
+        "Lompoul"
       ],
       "highlights": [
         "Ferlo",
         "pastoralisme",
-        "élevage"
+        "élevage",
+        "désert de Lompoul"
       ],
       "departments": [
         "Kébémer",
@@ -869,7 +874,9 @@
         "Île de Saint-Louis",
         "Pont Faidherbe",
         "Parc national des oiseaux du Djoudj",
-        "fleuve Sénégal"
+        "fleuve Sénégal",
+        "Langue de Barbarie",
+        "lac de Guiers"
       ],
       "departments": [
         "Dagana",
@@ -1342,12 +1349,15 @@
         "Kolda",
         "Vélingara",
         "Médina Yoro Foulah",
-        "Dabo"
+        "Dabo",
+        "Diaobé"
       ],
       "highlights": [
         "Haute-Casamance",
         "agriculture",
-        "cultures peules et mandingues"
+        "cultures peules et mandingues",
+        "arbre de Moussa Molo",
+        "marché de Diaobé"
       ],
       "departments": [
         "Kolda",
@@ -1460,7 +1470,8 @@
         "Moyenne-Casamance",
         "fleuve Casamance",
         "mangroves",
-        "bolongs"
+        "bolongs",
+        "fort Pinet-Laprade"
       ],
       "departments": [
         "Bounkiling",
@@ -1847,15 +1858,19 @@
       "name": "Cascades de Dindéfello",
       "type": "natural_site",
       "region": "Kédougou",
-      "locality": "Salémata",
-      "summary": "Site naturel de la région de Kédougou associé aux paysages du Pays Bassari.",
-      "history": "Falaises, végétation et cascade dans le sud-est du Sénégal.",
+      "locality": "Kédougou",
+      "summary": "Cascade d'environ 100 m dans le département de Kédougou (arrondissement de Bandafassi), au cœur des paysages du Sénégal oriental.",
+      "history": "La cascade naît sur le mont Dandé ; la commune de Dindéfélo gère une réserve naturelle communautaire où vivent notamment des chimpanzés.",
       "what_to_see": "Cascade; falaises; sentiers; paysages",
       "latitude": 12.37,
       "longitude": -12.33,
       "image_queries": [
         "Cascades Dindéfello Sénégal",
         "Dindéfello Sénégal"
+      ],
+      "sources": [
+        "https://www.vie-publique.sn/collectivites-territoriales/communes/dindefelo",
+        "https://au-senegal.com/la-cascade-de-dindefelo-havre-de-fraicheur-au-senegal-oriental,10119.html"
       ]
     },
     {
@@ -2349,6 +2364,204 @@
       "longitude": -12.45,
       "image_queries": [
         "rivière Gambie Niokolo Koba Sénégal"
+      ]
+    },
+    {
+      "id": "desert-de-lompoul",
+      "name": "Désert de Lompoul",
+      "type": "natural_site",
+      "region": "Louga",
+      "locality": "Kébémer",
+      "summary": "Petit désert de dunes ocre entre Lompoul-sur-Mer et Kébémer, à mi-chemin entre Dakar et Saint-Louis.",
+      "history": "Étendue d'environ 18 km² à moins de 10 km de l'océan ; ses dunes de sable très fin atteignent 40 à 50 m de hauteur.",
+      "what_to_see": "Dunes ocre; couchers de soleil; bivouacs sous tente; balades dans le sable",
+      "latitude": 15.4624,
+      "longitude": -16.688,
+      "image_queries": [
+        "Désert de Lompoul Sénégal",
+        "Lompoul dunes Sénégal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Lompoul_desert",
+        "https://au-senegal.com/le-desert-de-lompoul,15569.html"
+      ]
+    },
+    {
+      "id": "langue-de-barbarie",
+      "name": "Parc national de la Langue de Barbarie",
+      "type": "natural_site",
+      "region": "Saint-Louis",
+      "locality": "Gandiol",
+      "summary": "Parc national d'environ 2 000 hectares à l'embouchure du fleuve Sénégal, au sud de Saint-Louis.",
+      "history": "Créé par décret du 9 janvier 1976 dans le terroir historique du Gandiol ; l'un des principaux sites de conservation des oiseaux marins du pays, avec un îlot accueillant une cinquantaine d'espèces.",
+      "what_to_see": "Îlot aux oiseaux; sternes et goélands; estuaire du fleuve Sénégal; balades en pirogue",
+      "latitude": 15.885,
+      "longitude": -16.508,
+      "image_queries": [
+        "Parc national de la Langue de Barbarie",
+        "Langue de Barbarie Saint-Louis Sénégal"
+      ],
+      "sources": [
+        "https://rsisd10.unepgrid.ch/RISapp/files/RISrep/SN2467RIS_2202_fr.pdf",
+        "https://www.ndarinfo.com/Connais-tu-le-Parc-national-de-la-Langue-de-Barbarie_a5904.html"
+      ]
+    },
+    {
+      "id": "lac-de-guiers",
+      "name": "Lac de Guiers",
+      "type": "natural_site",
+      "region": "Saint-Louis",
+      "locality": "Richard-Toll",
+      "summary": "Grand lac d'eau douce du nord, au sud de Richard-Toll, entre les régions de Saint-Louis et de Louga.",
+      "history": "Long d'environ 35 km pour 17 000 hectares, alimenté par le fleuve Sénégal via le canal de la Taouey ; c'est l'une des principales sources d'eau potable de Dakar et de Louga.",
+      "what_to_see": "Rives du lac; oiseaux d'eau; paysages agricoles de la vallée",
+      "latitude": 16.25,
+      "longitude": -15.833,
+      "image_queries": [
+        "Lac de Guiers Sénégal",
+        "Lac de Guiers"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Lac_de_Guiers",
+        "https://www.ndarinfo.com/Protection-de-l-environnement-Le-lac-de-Guiers-un-ecosysteme-fragile-au-coeur-de-toutes-les-convoitises-foncieres_a6956.html"
+      ]
+    },
+    {
+      "id": "reserve-de-bandia",
+      "name": "Réserve de Bandia",
+      "type": "natural_site",
+      "region": "Thiès",
+      "locality": "Mbour",
+      "summary": "Réserve animalière de 3 500 hectares entre Sindia et Nguékokh, à environ 65 km de Dakar.",
+      "history": "Fondée en 1986 sur une partie d'un espace classé dès 1933 ; elle abrite rhinocéros blancs, girafes, zèbres, buffles, élands de Derby et plus de 120 espèces d'oiseaux.",
+      "what_to_see": "Safari en véhicule; girafes et rhinocéros; baobabs; oiseaux",
+      "latitude": 14.56,
+      "longitude": -17.03,
+      "image_queries": [
+        "Réserve de Bandia Sénégal",
+        "Bandia girafes Sénégal"
+      ],
+      "sources": [
+        "https://lesoleil.sn/enquetes/reserve-de-bandia-un-joyau-ecologique-exceptionnel/",
+        "https://au-senegal.com/reserve-de-bandia,2865.html"
+      ]
+    },
+    {
+      "id": "ile-de-ngor",
+      "name": "Île de Ngor",
+      "type": "island",
+      "region": "Dakar",
+      "locality": "Ngor",
+      "summary": "Petite île sans voitures à environ 400 m de la plage de Ngor, accessible en quelques minutes de pirogue.",
+      "history": "Île d'environ 500 m sur 200 m, connue pour ses ruelles colorées, ses plages calmes côté baie et ses vagues réputées des surfeurs au nord.",
+      "what_to_see": "Plages; ruelles; spots de surf; vue sur la pointe des Almadies",
+      "latitude": 14.7559,
+      "longitude": -17.5143,
+      "image_queries": [
+        "Île de Ngor Dakar",
+        "Ngor island Senegal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Ngor_(island)",
+        "https://au-senegal.com/evadez-vous-sur-l-ile-de-ngor,10887.html"
+      ]
+    },
+    {
+      "id": "grande-mosquee-de-diourbel",
+      "name": "Grande Mosquée de Diourbel",
+      "type": "religious_site",
+      "region": "Diourbel",
+      "locality": "Diourbel",
+      "summary": "Mosquée construite à Diourbel sous la direction de Cheikh Ahmadou Bamba, fondateur du mouridisme.",
+      "history": "Édifiée entre 1916 et 1918, pendant le séjour de Cheikh Ahmadou Bamba à Diourbel ; elle est distincte de la Grande Mosquée de Touba, inaugurée en 1963.",
+      "what_to_see": "Architecture de la mosquée; patrimoine mouride; ville de Diourbel",
+      "latitude": 14.6521,
+      "longitude": -16.234,
+      "image_queries": [
+        "Grande Mosquée de Diourbel",
+        "Diourbel Sénégal mosquée"
+      ],
+      "sources": [
+        "https://au-senegal.com/grande-mosquee-de-diourbel,2958.html"
+      ]
+    },
+    {
+      "id": "fort-pinet-laprade-sedhiou",
+      "name": "Fort Pinet-Laprade de Sédhiou",
+      "type": "heritage",
+      "region": "Sédhiou",
+      "locality": "Sédhiou",
+      "summary": "Vestige colonial face au fleuve Casamance, à Sédhiou, ancienne capitale de la Casamance.",
+      "history": "Construit entre 1836 et 1844 lorsque la France établit un poste militaire et commercial à Sédhiou ; la ville fut la capitale de la Casamance coloniale de 1883 à 1906, avant Ziguinchor. Monument classé depuis 2007, une partie abrite un centre de lecture et d'animation culturelle.",
+      "what_to_see": "Ruines du fort; berges du fleuve Casamance; ville de Sédhiou; traditions du kankourang",
+      "latitude": 12.7081,
+      "longitude": -15.5569,
+      "image_queries": [
+        "Fort Pinet-Laprade Sédhiou",
+        "Sédhiou Sénégal fleuve Casamance"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/S%C3%A9dhiou",
+        "https://au-senegal.com/a-sedhiou-le-fort-pinet-laprade-menace-par-l-oubli,17990.html"
+      ]
+    },
+    {
+      "id": "arbre-moussa-molo-kolda",
+      "name": "Arbre de Moussa Molo Baldé",
+      "type": "heritage",
+      "region": "Kolda",
+      "locality": "Kolda",
+      "summary": "Caïlcédrat géant de Kolda, emblème de la ville et mémoire du royaume du Fouladou.",
+      "history": "Situé dans le quartier de Doumassou, cet arbre est associé à l'histoire du royaume du Fouladou et de Moussa Molo Baldé ; il est devenu le symbole de Kolda et de sa région.",
+      "what_to_see": "Caïlcédrat historique; quartier de Doumassou; ville de Kolda en Haute-Casamance",
+      "latitude": 12.88,
+      "longitude": -14.95,
+      "image_queries": [
+        "Kolda Sénégal",
+        "Kolda Haute Casamance"
+      ],
+      "sources": [
+        "https://au-senegal.com/les-lieux-incontournables-a-visiter-a-kolda-et-ses-environs,17383.html"
+      ]
+    },
+    {
+      "id": "marche-de-diaobe",
+      "name": "Marché hebdomadaire de Diaobé",
+      "type": "cultural_site",
+      "region": "Kolda",
+      "locality": "Vélingara",
+      "summary": "Grand marché du mercredi à Diaobé, carrefour commercial entre le Sénégal, la Gambie, la Guinée-Bissau et la Guinée.",
+      "history": "Fondé en 1974, ce « louma » est l'un des plus importants marchés hebdomadaires de la sous-région : miel, huile de palme, pâte d'arachide, poisson séché, bétail, pain de singe.",
+      "what_to_see": "Marché du mercredi; produits du terroir; bétail; ambiance transfrontalière",
+      "latitude": 12.9167,
+      "longitude": -14.1667,
+      "image_queries": [
+        "Marché de Diaobé Sénégal",
+        "Diaobé louma"
+      ],
+      "sources": [
+        "https://au-senegal.com/les-lieux-incontournables-a-visiter-a-kolda-et-ses-environs,17383.html",
+        "https://fr.vikidia.org/wiki/March%C3%A9_de_Diaob%C3%A9"
+      ]
+    },
+    {
+      "id": "kaffrine",
+      "name": "Kaffrine",
+      "type": "locality",
+      "region": "Kaffrine",
+      "locality": "Kaffrine",
+      "summary": "Capitale régionale au cœur du bassin arachidier, sur l'axe Kaolack–Tambacounda.",
+      "history": "La région de Kaffrine a été créée en 2008 ; elle regroupe les départements de Birkelane, Kaffrine, Koungheul et Malem-Hodar. Kaffrine est la capitale du Ndoucoumane ; le mil et l'arachide y dominent l'agriculture.",
+      "what_to_see": "Marché de Kaffrine; vie rurale du bassin arachidier; journées culturelles",
+      "latitude": 14.1014,
+      "longitude": -15.5432,
+      "image_queries": [
+        "Kaffrine Sénégal",
+        "bassin arachidier Sénégal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Kaffrine_region",
+        "https://en.wikipedia.org/wiki/Kaffrine"
       ]
     }
   ],
