@@ -70,3 +70,13 @@ def test_handler_failure_is_bounded():
     )
     assert result.status == "execution_failed"
     assert result.executed is False
+
+
+def test_confirmed_execution_requires_prepared_request_id():
+    result = execute_action(
+        "prepare_trip_plan",
+        confirmed=True,
+        handlers={"prepare_trip_plan": lambda: "should-not-run"},
+    )
+    assert result.status == "confirmation_required"
+    assert result.executed is False
