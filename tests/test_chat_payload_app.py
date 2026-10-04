@@ -255,3 +255,38 @@ def test_parse_chat_payload_follow_up_keeps_weather_source_policy():
     assert payload["use_web"] is True
     assert payload["intent_context"]["domain"] == "weather"
     assert payload["intent_context"]["preferred_sources"][:2] == ("anacim.sn", "ansd.sn")
+
+
+def _instructions(message, language="fr", audience="tourist"):
+    with app.test_request_context(
+        "/chat",
+        method="POST",
+        json={"message": message, "history": [], "language": language, "audience": audience},
+    ):
+        payload, error = parse_chat_payload()
+    assert error is None
+    return payload["instructions"]
+
+
+def test_prompt_has_stable_cacheable_prefix_across_questions():
+    import os
+
+    from app import SYSTEM_PROMPT
+    from services.chat_payload_service import STATIC_RULES
+
+    first = _instructions("Raconte-moi l'histoire de Gorée")
+    second = _instructions("Quel temps fait-il à Saint-Louis demain ?")
+    prefix = os.path.commonprefix([first, second])
+    # Prompt système + règles fixes + langue + profil : identiques d'une question à l'autre.
+    assert prefix.startswith(SYSTEM_PROMPT.strip())
+    assert STATIC_RULES in prefix
+    assert "Profil actif : touriste." in prefix
+    assert len(prefix) > 4000  # au-delà du seuil de cache OpenAI (~1024 tokens)
+
+
+def test_prompt_is_clean_and_ordered():
+    text = _instructions("Je veux visiter Gorée pendant 4 jours avec 100000 FCFA en famille")
+    assert "\\n" not in text  # plus de « \n » littéraux
+    assert "AgentPlan(" not in text and "gpt-" not in text
+    assert "PLAN D’EXÉCUTION : étapes :" in text
+    assert text.index("COMBINAISON CONNAISSANCE + WEB") < text.index("Île de Gorée") < text.index("CONTEXTE DE LA DEMANDE :\n")

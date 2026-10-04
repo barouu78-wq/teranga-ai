@@ -29,12 +29,22 @@ def build_conversation(
                 continue
             label = "Utilisateur" if role == "user" else "Teranga AI"
             lines.append(f"{label}: {content}")
-    conversation = "\n".join(lines)
-    return (
-        "<historique_non_fiable>\n"
-        + conversation
-        + "\n</historique_non_fiable>\n"
-        + "<demande_utilisateur>\n"
-        + message
-        + "\n</demande_utilisateur>"
-    )[-max_history_chars:]
+    head = "<historique_non_fiable>\n"
+    tail = "\n</historique_non_fiable>\n<demande_utilisateur>\n" + message + "\n</demande_utilisateur>"
+    # Au-delà du budget, on retire les tours les plus anciens : la structure
+    # (balises, demande actuelle) reste toujours intacte.
+    budget = max_history_chars - len(head) - len(tail)
+    kept: list[str] = []
+    used = 0
+    for line in reversed(lines):
+        cost = len(line) + (1 if kept else 0)
+        if used + cost > budget:
+            break
+        kept.append(line)
+        used += cost
+    kept.reverse()
+    result = head + "\n".join(kept) + tail
+    if len(result) > max_history_chars:
+        # Demande seule plus longue que le budget : on garde sa fin, balises comprises.
+        result = head + tail[-max(0, max_history_chars - len(head)):]
+    return result
