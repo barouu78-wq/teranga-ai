@@ -175,7 +175,8 @@ redis_client = None
 if REDIS_URL:
     try:
         import redis as redis_lib
-        redis_client = redis_lib.from_url(REDIS_URL, decode_responses=True)
+        # Délais courts : un Redis injoignable ne doit jamais bloquer les requêtes.
+        redis_client = redis_lib.from_url(REDIS_URL, decode_responses=True, socket_connect_timeout=2, socket_timeout=2)
     except Exception:
         redis_client = None
 if TRUST_PROXY:
@@ -647,6 +648,7 @@ HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_t
 
 register_system_routes(app, {
     "indexnow_key": INDEXNOW_KEY,
+    "redis_client": redis_client,
     "issue_csrf": issue_csrf,
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
