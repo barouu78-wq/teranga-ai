@@ -409,8 +409,8 @@ def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> d
         "photos": ("Plus de photos", "Localiser", "Que voir ?"),
     }
     followups.extend(labels.get(intent, ("Préciser ma demande", "Comparer", "Que faire ensuite ?")))
-    if place:
-        followups = [f"{item} à {place}" if item not in {"Plus de photos", "Comparer"} and " à " not in item else item for item in followups]
+    if place and intent != "photos":
+        followups = [f"{item} à {place}" if item != "Comparer" and " à " not in item else item for item in followups]
     mode = "action" if intent in {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"} else "answer"
     if intent_context.get("needs_images"):
         mode = "visual"
