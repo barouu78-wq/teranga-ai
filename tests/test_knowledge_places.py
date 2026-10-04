@@ -93,3 +93,13 @@ def test_region_pages_and_place_pages_link_to_each_other():
     assert 'href="/lieux/kaolack"' in region and '"ItemList"' in region
     place = client.get("/lieux/kaolack", base_url="https://teranga-ai.fr").get_data(as_text=True)
     assert 'href="/regions/kaolack"' in place
+
+
+def test_places_index_has_accent_free_search_without_inline_script():
+    from app import app
+
+    html = app.test_client().get("/lieux", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert 'id="place-q"' in html and 'id="place-type"' in html
+    assert 'data-text="ile de goree' in html.lower() or "goree" in html
+    assert '<script src="/static/places-search.js" defer></script>' in html
+    assert "nonce=" not in html  # page en cache public : pas de nonce CSP
