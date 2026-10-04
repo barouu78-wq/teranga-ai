@@ -7,6 +7,7 @@ from pathlib import Path
 from flask import Response, jsonify, request
 
 from services.assets import ICON_SVG, OG_SVG, build_og_png
+from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
 
 def register_system_routes(app, deps):
@@ -78,30 +79,30 @@ def register_system_routes(app, deps):
         except Exception:
             return icon_svg()
 
+    sw_path = Path(__file__).resolve().parents[1] / "static" / "sw.js"
+
     @app.get("/sw.js")
     def service_worker():
-        body = """
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
-});
-self.addEventListener('fetch', event => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.pathname === '/chat' || url.pathname === '/tts') return;
-  if (url.pathname === '/' ) return;
-});
-"""
-        resp = Response(
-            body.strip() + "\n",
-            mimetype="application/javascript",
-        )
+        # Servi depuis la racine pour que sa portée couvre tout le site.
+        resp = Response(sw_path.read_text(encoding="utf-8"), mimetype="application/javascript")
         resp.headers["Cache-Control"] = "no-store"
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
+
+    @app.get("/offline")
+    def offline_page():
+        html = (
+            '<!doctype html><html lang="fr"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="robots" content="noindex"><title>Hors ligne | Teranga AI</title>'
+            + HEAD_ASSETS + "</head><body>" + site_header()
+            + '<main><article><span class="kicker">Connexion</span><h1>Vous êtes hors ligne</h1>'
+            '<p class="intro">Teranga AI a besoin d’internet pour répondre. Les pages que vous avez déjà ouvertes '
+            "restent consultables : utilisez le bouton retour ou rouvrez-les depuis l’historique.</p>"
+            '<div class="actions"><a class="cta primary" href="/">Réessayer</a><a class="cta" href="/lieux">Lieux déjà visités</a></div>'
+            "</article></main>" + site_footer() + "</body></html>"
+        )
+        return Response(html, mimetype="text/html")
 
     @app.get("/manifest.webmanifest")
     def manifest():
