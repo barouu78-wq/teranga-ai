@@ -20,7 +20,7 @@ def register_seo_routes(app, site_url, places=None):
         region = next((name for name in REGION_SEO_NAMES if region_slug(name) == slug), None)
         if not region:
             return Response("Not Found", status=404, mimetype="text/plain")
-        return render_region_page(region, site_url)
+        return render_region_page(region, site_url, places)
 
     # Une route par page de SEO_PAGES : le sitemap et les routes ne peuvent plus
     # diverger (deux pages du sitemap renvoyaient 404).

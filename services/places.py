@@ -6,6 +6,7 @@ import json
 from html import escape
 from urllib.parse import quote
 
+from services.seo import REGION_SEO_NAMES, region_slug
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
 TYPE_LABELS = {
@@ -129,6 +130,10 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
             for o in nearby
         )
         sections.append(f'<section><h2>À voir aussi dans la région {escape(region)}</h2><div class="grid">{links}</div></section>')
+    if region in REGION_SEO_NAMES:
+        sections.append(
+            f'<p class="related"><a href="/regions/{escape(region_slug(region))}">Guide de la région {escape(region)} →</a></p>'
+        )
 
     ask = quote(f"Parle-moi de {name}")
     plan = quote(name)

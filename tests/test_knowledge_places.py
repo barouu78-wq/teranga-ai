@@ -83,3 +83,13 @@ def test_second_batch_covers_thin_regions_with_sources():
     for place_id, region in (("louga", "Louga"), ("ourossogui", "Matam"), ("kolda", "Kolda"), ("sedhiou", "Sédhiou"), ("koungheul", "Kaffrine")):
         assert by_id[place_id]["region"] == region
         assert by_id[place_id]["sources"]
+
+
+def test_region_pages_and_place_pages_link_to_each_other():
+    from app import app
+
+    client = app.test_client()
+    region = client.get("/regions/kaolack", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert 'href="/lieux/kaolack"' in region and '"ItemList"' in region
+    place = client.get("/lieux/kaolack", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert 'href="/regions/kaolack"' in place
