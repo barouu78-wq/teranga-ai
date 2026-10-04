@@ -286,6 +286,7 @@ def test_confirmed_action_can_enter_execution_mode():
         "planner": True,
         "use_web": True,
         "action_confirmed": True,
+        "action_request_id": "prepared-restaurant-1",
         "intent_context": {"intent": "restaurant", "location": "dakar"},
         "message": "Réserve une table à Dakar",
     }
