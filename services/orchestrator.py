@@ -11,6 +11,8 @@ import re
 from typing import Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
+from .action_executor import ALLOWED_ACTIONS
+
 
 @dataclass(frozen=True)
 class AgentPlan:
@@ -27,6 +29,8 @@ class AgentPlan:
     source_strategy: str = "local"
     action_strategy: str = "answer"
     action: str = "answer"
+    execution_mode: str = "answer"
+    requires_confirmation: bool = False
 
 
 def _contains_query_term(query: str, term: str) -> bool:
@@ -58,6 +62,25 @@ _PLANNER_WORKFLOW_ALIASES = {
     "education": "education",
     "finance": "finance",
 }
+
+
+def build_action_request(payload: dict[str, Any], plan: AgentPlan) -> dict[str, Any]:
+    """Create a bounded action contract; external side effects always require confirmation."""
+    if plan.action == "answer":
+        return {"enabled": False, "action": "answer", "execution_mode": "answer", "requires_confirmation": False}
+    confirmed = bool(payload.get("action_confirmed"))
+    request_id = str(payload.get("action_request_id") or "").strip()
+    if plan.action not in ALLOWED_ACTIONS:
+        return {"enabled": False, "action": plan.action, "execution_mode": "unsupported", "requires_confirmation": False}
+    execution_mode = "execute" if confirmed and request_id else "prepare"
+    return {
+        "enabled": True,
+        "action": plan.action,
+        "execution_mode": execution_mode,
+        "requires_confirmation": execution_mode != "execute",
+        "confirmed": execution_mode == "execute",
+        "request_id": request_id,
+    }
 
 
 def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
@@ -114,6 +137,8 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         source_strategy=source_strategy,
         action_strategy=action_strategy,
         action=action,
+        execution_mode="prepare" if action != "answer" else "answer",
+        requires_confirmation=action != "answer" and not (bool(payload.get("action_confirmed")) and bool(payload.get("action_request_id"))),
     )
 
 
