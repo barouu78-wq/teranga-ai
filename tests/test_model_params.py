@@ -19,7 +19,8 @@ def test_build_model_kwargs_keeps_fast_chat_defaults():
         "instructions": "i", "input_text": "q",
     })
     assert result["model"] == "gpt-test"
-    assert result["max_output_tokens"] == 400
+    assert result["max_output_tokens"] == 800
+    assert result["prompt_cache_key"] == "teranga-chat-v1"
     assert result["reasoning"] == {"effort": "low"}
     assert "tools" not in result
 
@@ -39,7 +40,7 @@ def test_build_model_kwargs_uses_medium_for_planner_model():
         "intent_context": {"domain": "travel"},
     })
     assert result["reasoning"] == {"effort": "medium"}
-    assert result["max_output_tokens"] == 600
+    assert result["max_output_tokens"] == 1200
 
 
 def test_build_model_kwargs_keeps_luna_fast_even_for_complex_payload():
@@ -74,7 +75,7 @@ def test_build_model_kwargs_adds_web_tool_and_domains():
         preferred_domains=lambda domain: ("anacim.sn", "meteo.sn"),
         stream=False,
     )
-    assert result["max_output_tokens"] == 600
+    assert result["max_output_tokens"] == 1200
     assert result["tools"] == [{
         "type": "web_search",
         "search_context_size": "high",
