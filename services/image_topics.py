@@ -100,10 +100,19 @@ def _build_primary_query(
 
     # Keep the user's visual intent while removing conversational filler.
     filler = (
-        "montre moi", "montre-moi", "montre", "affiche", "affiche moi",
-        "affiche-moi", "fais voir", "je veux voir", "donne moi", "donne-moi",
+        # Longer conversational prefixes must come first so "montre moi des
+        # photos de Dakar" is not partially stripped to "des photos de Dakar".
+        "montre moi des photos de", "montre-moi des photos de",
+        "montre moi des photos du", "montre-moi des photos du",
+        "montre moi des photos d", "montre-moi des photos d",
+        "affiche moi des photos de", "affiche-moi des photos de",
+        "affiche moi des photos du", "affiche-moi des photos du",
+        "affiche moi des photos d", "affiche-moi des photos d",
         "des photos de", "des photos du", "des photos d", "photo de", "photos de",
         "photo du", "photos du", "photo d", "photos d",
+        "photos", "photo", "images", "image",
+        "montre moi", "montre-moi", "montre", "affiche", "affiche moi",
+        "affiche-moi", "fais voir", "je veux voir", "donne moi", "donne-moi",
     )
     query = raw
     for prefix in filler:
