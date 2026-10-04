@@ -2890,7 +2890,8 @@ function closeProjectModal(){
 }
 $('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('click',()=>{
   setJourney('travel');
-  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience);
+  const place=sessionStorage.getItem('teranga-place-name')||'';
+  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');
 });
 $('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
   setJourney('project');
