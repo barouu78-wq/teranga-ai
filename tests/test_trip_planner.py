@@ -1,3 +1,4 @@
+from home_source import served_home
 import os
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
@@ -691,7 +692,7 @@ def test_trip_planner_carries_context_place_from_query_to_session():
 def test_home_planner_link_carries_selected_place_context():
     from app import app
 
-    html = app.test_client().get("/").get_data(as_text=True)
+    html = served_home(app.test_client())
 
     assert "context_place=" in html
     assert "teranga-place-name" in html

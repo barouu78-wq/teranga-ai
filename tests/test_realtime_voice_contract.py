@@ -1,8 +1,9 @@
+from home_source import home_source
 from pathlib import Path
 
 
 def test_realtime_start_aborts_if_voice_mode_was_stopped():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("async function startRealtimeVoice(){")
     end = html.index("\n}", start) + 2
     function = html[start:end]
@@ -12,7 +13,7 @@ def test_realtime_start_aborts_if_voice_mode_was_stopped():
 
 
 def test_realtime_start_requires_active_voice_mode_before_microphone_access():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("async function startRealtimeVoice(){")
     guard = html.index("if(!voiceConversation||!autoVoice)return false;", start)
     get_user_media = html.index("navigator.mediaDevices.getUserMedia", start)
@@ -20,7 +21,7 @@ def test_realtime_start_requires_active_voice_mode_before_microphone_access():
 
 
 def test_realtime_callbacks_are_scoped_to_current_session():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("async function startRealtimeVoice(){")
     end = html.index("\n}\nasync function stopLegacyVoiceForRealtime", start) + 2
     function = html[start:end]
@@ -30,7 +31,7 @@ def test_realtime_callbacks_are_scoped_to_current_session():
 
 
 def test_closing_realtime_invalidates_existing_callbacks():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("function closeRealtimeVoice(){")
     end = html.index("\n}", start) + 2
     function = html[start:end]
@@ -38,7 +39,7 @@ def test_closing_realtime_invalidates_existing_callbacks():
 
 
 def test_realtime_handshake_rechecks_session_after_network_waits():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("async function startRealtimeVoice(){")
     end = html.index("\n}\nasync function stopLegacyVoiceForRealtime", start) + 2
     function = html[start:end]
@@ -48,7 +49,7 @@ def test_realtime_handshake_rechecks_session_after_network_waits():
 
 
 def test_browser_voice_stop_cancels_pending_speech_result():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     end_start = html.rindex("function endVoiceMode(){")
     end_end = html.index("\n}", end_start) + 2
     end_function = html[end_start:end_end]
@@ -63,7 +64,7 @@ def test_browser_voice_stop_cancels_pending_speech_result():
 
 
 def test_stt_response_rechecks_voice_turn_after_network_waits():
-    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    html = home_source()
     start = html.index("async function postVoiceAudio(")
     end = html.index("\n}\nfunction finishVoiceRecording", start) + 2
     function = html[start:end]

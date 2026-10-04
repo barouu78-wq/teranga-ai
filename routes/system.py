@@ -1,6 +1,8 @@
+import hashlib
 import json
 import secrets
 from functools import lru_cache
+from pathlib import Path
 
 from flask import Response, jsonify, request
 
@@ -155,12 +157,19 @@ self.addEventListener('fetch', event => {
         )
         return resp
 
+    # Script de l'accueil servi comme fichier statique (mis en cache par le
+    # navigateur) ; l'empreinte du contenu force le rechargement après un déploiement.
+    home_js_path = Path(__file__).resolve().parents[1] / "static" / "home.js"
+    home_js_url = "/static/home.js?v=" + hashlib.sha256(home_js_path.read_bytes()).hexdigest()[:12]
+
     @app.get("/")
     def home():
         nonce = secrets.token_urlsafe(16)
         request._csp_nonce = nonce
         response = Response(
-            home_html.replace("__CSP_NONCE__", nonce).replace("__SITE_URL__", site_url),
+            home_html.replace("__CSP_NONCE__", nonce)
+            .replace("__SITE_URL__", site_url)
+            .replace("__HOME_JS__", home_js_url),
             mimetype="text/html",
         )
         response.set_cookie(
