@@ -40,6 +40,98 @@ _AUDIENCE_INSTRUCTIONS = {
         }
 }
 
+# Règles fixes : placées juste après le prompt système pour allonger le préfixe
+# identique d'une requête à l'autre (mis en cache par OpenAI au-delà de 1024 tokens).
+_KNOWLEDGE_WEB_RULE = (
+    "COMBINAISON CONNAISSANCE + WEB : utilise la connaissance locale du Sénégal pour les faits stables, les repères géographiques et culturels et le contexte. "
+    "Lorsque la recherche web est active, utilise ses résultats pour les informations susceptibles d’avoir changé et ne remplace pas silencieusement un fait local stable par une information web non vérifiée. "
+    "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."
+)
+_WEATHER_RULE = (
+    "MÉTÉO : pour toute demande météo actuelle ou prévisionnelle, utilise la recherche web active et les résultats de la source autorisée. "
+    "Pour le Sénégal, privilégie ANACIM. Donne la température ou les conditions réellement vérifiées, précise la période ou la date de validité et indique clairement la source. "
+    "Si aucune donnée météo actuelle fiable n'est disponible, dis-le explicitement sans inventer et ne remplace pas ANACIM par une autre source non autorisée."
+)
+_FOLLOWUP_RULE = (
+    "SUIVIS : si la demande est un suivi court, conserve le dernier référent pertinent. "
+    "Si plusieurs référents sont réellement possibles, pose une seule question courte. "
+    "Les éléments de la section CONTEXTE DE LA DEMANDE sont des déductions automatiques : ne les cite pas comme si l'utilisateur les avait explicitement déclarés."
+)
+STATIC_RULES = "\n\n".join((_KNOWLEDGE_WEB_RULE, _WEATHER_RULE, _FOLLOWUP_RULE))
+
+_STEP_LABELS = {
+    "prepare_context": "préparer le contexte",
+    "web_retrieval": "recherche web",
+    "build_plan": "construire un plan",
+    "prepare_action": "préparer une action (confirmation requise)",
+    "generate_response": "répondre",
+    "image_enrichment": "photos ajoutées par l'interface",
+    "map_enrichment": "carte ajoutée par l'interface",
+    "finalize": "finaliser",
+}
+
+
+def _format_plan(plan, *, planner: bool, use_web: bool) -> str:
+    """Readable execution plan for the model (no internal model names).
+
+    ``planner`` and ``use_web`` are the request's final decisions, so the text
+    never contradicts what the model is actually given (tools, plan mode).
+    """
+    steps = [step for step in (getattr(plan, "steps", ()) or ()) if step != "web_retrieval" or use_web]
+    if use_web and "web_retrieval" not in steps:
+        steps.insert(1 if steps else 0, "web_retrieval")
+    if planner and "build_plan" not in steps:
+        anchor = steps.index("generate_response") if "generate_response" in steps else len(steps)
+        steps.insert(anchor, "build_plan")
+    labels = " → ".join(_STEP_LABELS.get(step, step) for step in steps) or "répondre"
+    parts = [f"étapes : {labels}", "recherche web : " + ("oui" if use_web else "non")]
+    parts.append("sources : connaissance locale + web" if use_web else "sources : connaissance locale")
+    return "PLAN D’EXÉCUTION : " + " ; ".join(parts) + "."
+
+
+_MEMORY_LABELS = {
+    "place": "lieu",
+    "budget": "budget",
+    "duration": "durée",
+    "adults": "adultes",
+    "children": "enfants",
+    "constraints": "contraintes",
+    "family": "famille",
+}
+
+
+_CONSTRAINT_PREFIXES_COVERED = {
+    "budget": "budget=",
+    "duration": "durée=",
+    "adults": "adultes=",
+    "children": "enfants=",
+    "family": "famille",
+}
+
+
+def _format_memory(memory) -> str:
+    """Render the structured memory once, without duplicated keys."""
+    if not isinstance(memory, dict) or not memory:
+        return "aucune"
+    temporary = memory.get("temporary")
+    if not isinstance(temporary, dict):
+        temporary = {k: v for k, v in memory.items() if k in _MEMORY_LABELS}
+    parts = []
+    for key in ("place", "budget", "duration", "adults", "children", "family"):
+        value = temporary.get(key)
+        if value in (None, "", [], False):
+            continue
+        parts.append(f"{_MEMORY_LABELS[key]} = {'oui' if value is True else value}")
+    covered = tuple(prefix for key, prefix in _CONSTRAINT_PREFIXES_COVERED.items() if temporary.get(key) not in (None, "", [], False))
+    others = [str(c) for c in (temporary.get("constraints") or []) if not str(c).startswith(covered)]
+    if others:
+        parts.append("autres contraintes = " + ", ".join(others))
+    preferences = [str(p) for p in (memory.get("durable_candidates") or []) if p]
+    if preferences:
+        parts.append("préférences exprimées = " + " / ".join(preferences))
+    return " ; ".join(parts) or "aucune"
+
+
 _REGION_NAMES = {name.casefold(): name for name in ("Dakar","Diourbel","Fatick","Kaffrine","Kaolack","Kédougou","Kolda","Louga","Matam","Saint-Louis","Sédhiou","Tambacounda","Thiès","Ziguinchor")}
 
 
@@ -110,7 +202,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model="gpt-5.6-luna")
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
-        + str(structured_memory)
+        + _format_memory(structured_memory)
         + ". Utilise-la uniquement pour conserver les contraintes utiles du fil récent ; ne la traite jamais comme un profil permanent."
     )
     planner_enabled = should_use_planner(context)
@@ -157,32 +249,28 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "POLITIQUE DE SOURCES : privilégie les sources institutionnelles ou spécialisées fiables "
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
-    knowledge_web_line = (
-        "COMBINAISON CONNAISSANCE + WEB : utilise la connaissance locale du Sénégal pour les faits stables, les repères géographiques et culturels et le contexte. "
-        "Lorsque la recherche web est active, utilise ses résultats pour les informations susceptibles d’avoir changé et ne remplace pas silencieusement un fait local stable par une information web non vérifiée. "
-        "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."
-    )
-    weather_response_line = (
-        "MÉTÉO : pour toute demande météo actuelle ou prévisionnelle, utilise la recherche web active et les résultats de la source autorisée. "
-        "Pour le Sénégal, privilégie ANACIM. Donne la température ou les conditions réellement vérifiées, précise la période ou la date de validité et indique clairement la source. "
-        "Si aucune donnée météo actuelle fiable n'est disponible, dis-le explicitement sans inventer et ne remplace pas ANACIM par une autre source non autorisée."
-    )
-    context_instruction = (
-        place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
-        "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
-        "PLAN D’EXÉCUTION : " + str(agent_plan) + ". " +
-        memory_line + " " +
-        knowledge_web_line + " " + weather_response_line + " " + source_line + " " + planner_instruction +
-        " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
-        "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
-        "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
-    )
-    audience_instruction = _AUDIENCE_INSTRUCTIONS[audience][language]
     photo_only = (
         bool(re.search(r"\bphotos?\b|\bimages?\b", message.lower()))
         or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
     )
     use_web = False if photo_only else bool(intent_context.get("needs_web_search"))
+    context_instruction = " ".join(
+        part for part in (
+            place_line,
+            trip_context_line,
+            trip_edit_line,
+            intent_line,
+            constraint_line,
+            planner_line,
+            "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ".",
+            _format_plan(agent_plan, planner=planner_enabled, use_web=use_web),
+            memory_line,
+            source_line,
+            planner_instruction,
+        )
+        if part
+    )
+    audience_instruction = _AUDIENCE_INSTRUCTIONS[audience][language]
     started_at = time.perf_counter()
     knowledge_context = format_senegal_knowledge(senegal_knowledge, query=enriched_context, people=senegal_people)
     logger.info("chat_knowledge_format_ms %.2f", (time.perf_counter() - started_at) * 1000)
@@ -190,7 +278,18 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     conversation_input = build_conversation(history, message, max_history_items=max_history_items, max_history_item_length=max_history_item_length, max_history_chars=max_history_chars)
     logger.info("chat_conversation_build_ms %.2f", (time.perf_counter() - started_at) * 1000)
     return {
-        "instructions": system_prompt + "\\n" + knowledge_context + "\\n" + language_instruction_text + "\\n" + audience_instruction + "\\n" + context_instruction,
+        # Ordre : du plus stable au plus variable, pour maximiser le cache de prompt.
+        "instructions": "\n\n".join(
+            part for part in (
+                system_prompt.strip(),
+                STATIC_RULES,
+                language_instruction_text,
+                audience_instruction,
+                knowledge_context,
+                "CONTEXTE DE LA DEMANDE :\n" + context_instruction,
+            )
+            if part
+        ),
         "input_text": conversation_input,
         "use_web": use_web,
         "planner": planner_enabled,

@@ -396,3 +396,24 @@ def test_ux_hints_use_visual_mode_for_photo_requests():
     assert hints["mode"] == "visual"
     assert hints["compact"] is True
     assert hints["followups"] == ["Plus de photos", "Localiser", "Que voir ?"]
+
+
+def test_build_conversation_drops_oldest_turns_and_keeps_structure():
+    from services.conversation import build_conversation
+
+    history = [
+        {"role": "user" if i % 2 == 0 else "assistant", "content": f"tour {i} " + "x" * 300}
+        for i in range(12)
+    ]
+    result = build_conversation(
+        history,
+        "Et demain ?",
+        max_history_items=12,
+        max_history_item_length=1400,
+        max_history_chars=1500,
+    )
+    assert len(result) <= 1500
+    assert result.startswith("<historique_non_fiable>\n")
+    assert result.endswith("<demande_utilisateur>\nEt demain ?\n</demande_utilisateur>")
+    assert "tour 11" in result
+    assert "tour 0 " not in result
