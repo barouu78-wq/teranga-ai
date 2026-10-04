@@ -626,7 +626,7 @@ def test_system_routes_expose_expected_contracts():
 
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.get_json() == {"status": "ok", "service": "teranga-ai"}
+    assert health.get_json() == {"status": "ok", "service": "teranga-ai", "redis": "disabled"}
 
     manifest = client.get("/manifest.webmanifest")
     assert manifest.status_code == 200
