@@ -92,11 +92,22 @@ def execute_action(
             request_id=execution_request_id,
         )
 
+    try:
+        result = handler()
+    except Exception:
+        return ActionExecutionResult(
+            action=action,
+            status="execution_failed",
+            executed=False,
+            requires_confirmation=False,
+            request_id=execution_request_id,
+        )
+
     return ActionExecutionResult(
         action=action,
         status="executed",
         executed=True,
         requires_confirmation=False,
-        result=handler(),
+        result=result,
         request_id=execution_request_id,
     )
