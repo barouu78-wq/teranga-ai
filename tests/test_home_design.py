@@ -7,7 +7,7 @@ HOME = Path(__file__).resolve().parents[1] / "templates" / "home.html"
 def test_home_has_senegal_signature_visual():
     html = HOME.read_text(encoding="utf-8")
     assert 'class="hero-signature"' in html
-    assert 'class="hero-lion"' in html
+    assert 'class="hero-lion"' not in html  # design v6 : signature sobre (drapeau), sans emoji
     assert 'class="hero-flag"' in html
     assert "background:#0f6a43" in html
     assert "background:#f0c63d" in html
