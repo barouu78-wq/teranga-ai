@@ -2890,7 +2890,8 @@ function closeProjectModal(){
 }
 $('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('click',()=>{
   setJourney('travel');
-  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience);
+  const place=sessionStorage.getItem('teranga-place-name')||'';
+  window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');
 });
 $('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
   setJourney('project');
@@ -2974,13 +2975,7 @@ $('projectNew')?.addEventListener('click',()=>{
   document.querySelector('.project-more')?.removeAttribute('open');
   $('projectIdea')?.focus();
 });
-$('journeyStrip').addEventListener('click',e=>{
-  const btn=e.target.closest('button[data-journey]'); if(!btn)return;
-  const journey=btn.dataset.journey; setJourney(journey);
-  if(journey==='plan'){const place=sessionStorage.getItem('teranga-place-name')||'';window.location.href='/trip-planner?lang='+(lang==='en'?'en':'fr')+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');}
-  if(journey==='discover') window.location.href='/explorer';
-  if(journey==='chat'){showHero();hideHero();input.focus();}
-});
+// Journey buttons are wired individually above so each action has one deterministic handler.
 $('tabbar').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-tab]');
   if(!btn)return;
@@ -4362,4 +4357,29 @@ body[data-theme="dark"] .dock .composer:focus-within{border-color:rgba(217,164,6
 body[data-theme="dark"] #input::placeholder{color:#9d8c79}
 body[data-theme="dark"] .chips button{background:rgba(28,23,19,.92);color:#d8c8b4;border-color:rgba(217,164,65,.12)}
 @media(prefers-reduced-motion:reduce){.dock .composer,.chips button{transition:none}}
+</style>
+
+
+<style>
+/* Teranga Design V5 — accessibilité visuelle et états système */
+:focus-visible{outline:2px solid var(--nav-gold);outline-offset:2px}
+button,a,input,textarea{touch-action:manipulation}
+button:disabled{cursor:not-allowed}
+@media(forced-colors:active){
+  .tabbar button.on,.journey-strip button:hover,.dock .composer:focus-within{border:2px solid ButtonText!important;box-shadow:none!important}
+  .tabbar button.on:after{background:ButtonText!important}
+  .hero,.card,.journey-strip button,.dock .composer,.sources a{border:1px solid ButtonText!important;box-shadow:none!important}
+}
+@media(max-width:680px){
+  header{padding-top:max(8px,env(safe-area-inset-top))!important}
+  #stage{padding-bottom:max(18px,calc(18px + env(safe-area-inset-bottom)))!important}
+  .msg{scroll-margin-bottom:120px}
+}
+@media(min-width:681px){
+  #stage{scrollbar-gutter:stable}
+  .tabbar{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
 </style>
