@@ -1,6 +1,10 @@
 import json
 import secrets
+from functools import lru_cache
+
 from flask import Response, jsonify, request
+
+from services.assets import ICON_SVG, OG_SVG, build_og_png
 
 
 def register_system_routes(app, deps):
@@ -20,6 +24,35 @@ def register_system_routes(app, deps):
     @app.get("/health")
     def health():
         return jsonify({"status": "ok", "service": "teranga-ai"})
+
+    # Images partagées (aperçus WhatsApp/Facebook, favicon) : référencées par
+    # toutes les pages, elles doivent toujours répondre.
+    @lru_cache(maxsize=4)
+    def cached_png(kind):
+        return build_og_png() if kind == "og" else build_icon_png(int(kind))
+
+    @app.get("/icon.svg")
+    def icon_svg_route():
+        return Response(ICON_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+
+    @app.get("/og.svg")
+    def og_svg():
+        return Response(OG_SVG, mimetype="image/svg+xml", headers={"Cache-Control": "public, max-age=86400"})
+
+    @app.get("/og.png")
+    def og_png():
+        try:
+            return Response(cached_png("og"), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+        except Exception:
+            app.logger.exception("og.png")
+            return og_svg()
+
+    @app.get("/favicon.ico")
+    def favicon():
+        try:
+            return Response(cached_png("48"), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
+        except Exception:
+            return icon_svg_route()
 
     @app.get("/icon-192.png")
     def icon_192():

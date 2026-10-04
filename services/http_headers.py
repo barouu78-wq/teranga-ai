@@ -12,6 +12,7 @@ CACHED_ASSETS = frozenset({
     "/robots.txt",
     "/sitemap.xml",
     "/manifest.webmanifest",
+    "/favicon.ico",
 })
 
 
