@@ -56,6 +56,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     if error == "empty":
         return None, "empty"
 
+    action_confirmed = data.get("action_confirmed") is True
     message = normalized["message"]
     history = normalized["history"]
     language = normalized["language"]
@@ -104,7 +105,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_agent_plan({**context, "action_confirmed": bool(normalized.get("action_confirmed"))}, intent_context)
+    agent_plan = build_agent_plan({**context, "action_confirmed": action_confirmed}, intent_context)
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + str(structured_memory)
