@@ -263,3 +263,48 @@ def test_action_plan_does_not_claim_action_for_static_question():
     assert plan.action_strategy == "answer"
     assert plan.action == "answer"
     assert "prepare_action" not in plan.steps
+
+
+
+def test_external_action_is_prepared_until_confirmation():
+    payload = {
+        "planner": True,
+        "use_web": True,
+        "intent_context": {"intent": "restaurant", "location": "dakar"},
+        "message": "Réserve une table à Dakar",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["enabled"] is True
+    assert request["execution_mode"] == "prepare"
+    assert request["requires_confirmation"] is True
+
+
+def test_confirmed_action_can_enter_execution_mode():
+    payload = {
+        "planner": True,
+        "use_web": True,
+        "action_confirmed": True,
+        "intent_context": {"intent": "restaurant", "location": "dakar"},
+        "message": "Réserve une table à Dakar",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["execution_mode"] == "execute"
+    assert request["requires_confirmation"] is False
+    assert request["confirmed"] is True
+
+
+def test_static_answer_has_no_action_contract():
+    payload = {
+        "intent_context": {"intent": "culture", "location": "goree"},
+        "message": "Quelle est l'histoire de Gorée ?",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["enabled"] is False
+    assert request["execution_mode"] == "answer"
+    assert request["requires_confirmation"] is False
