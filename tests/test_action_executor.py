@@ -46,3 +46,16 @@ def test_prepare_unsupported_action_is_safe():
     assert result.status == "unsupported"
     assert result.executed is False
     assert result.request_id
+
+
+
+def test_execution_preserves_prepared_request_id():
+    prepared = prepare_action("prepare_trip_plan")
+    result = execute_action(
+        "prepare_trip_plan",
+        confirmed=True,
+        request_id=prepared.request_id,
+        handlers={"prepare_trip_plan": lambda: "ok"},
+    )
+    assert result.request_id == prepared.request_id
+    assert result.executed is True
