@@ -1028,3 +1028,15 @@ def test_indexnow_workflow_targets_canonical_domain():
     workflow = (ROOT / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
     assert "onrender.com" not in workflow
     assert '"host": "teranga-ai.fr"' in workflow
+
+
+def test_every_seo_page_in_sitemap_is_served():
+    from services.seo import SEO_PAGES
+
+    client = app.test_client()
+    sitemap = client.get("/sitemap.xml").get_data(as_text=True)
+    for slug in SEO_PAGES:
+        assert f"/{slug}<" in sitemap
+        response = client.get(f"/{slug}")
+        assert response.status_code == 200, slug
+    assert "Teranga AI pour les entreprises" in client.get("/pour-les-entreprises").get_data(as_text=True)

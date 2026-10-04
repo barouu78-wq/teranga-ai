@@ -4,12 +4,13 @@
 Développer une présence identifiable de Teranga AI au Sénégal, en France et auprès de la diaspora sénégalaise.
 
 ## 1. Présence propriétaire
-- Site officiel : https://teranga-ai-1.onrender.com/
+- Site officiel : https://teranga-ai.fr/
 - Pages d'entrée : /assistant-senegal, /dakar, /senegal, /france-senegal, /diaspora-senegalaise
-- Pages commerciales : /pour-les-entreprises, /partenaires
+- Pages commerciales : /pour-les-entreprises, /partenaires (en ligne et présentes dans le sitemap)
 - Presse : /presse
 - Kit média : /media-kit
-- Sitemap et pages SEO : indexables par les moteurs de recherche.
+- Sitemap et pages SEO : indexables par les moteurs de recherche ; pages internationales en anglais, espagnol, allemand et italien.
+- Outils démontrables : /explorer (lieux et photos), /trip-planner (itinéraires et infos pratiques), conversation vocale, /opportunities et /partners (Teranga Projet pour les jeunes porteurs de projets).
 
 ## 2. Sénégal — distribution
 Priorité aux canaux légitimes et pertinents :
@@ -28,21 +29,21 @@ Priorité aux canaux légitimes et pertinents :
 
 ## 4. Messages commerciaux
 ### Présentation 1 phrase
-Teranga AI est un assistant numérique consacré au Sénégal, accessible depuis le Sénégal et la France, en français, anglais, wolof et pulaar.
+Teranga AI est un assistant numérique consacré au Sénégal, accessible depuis le Sénégal et la France, en français, anglais et wolof (le pulaar est en cours d'amélioration).
 
 ### Message partenaire
 Bonjour,
 Nous développons Teranga AI, un assistant numérique consacré au Sénégal. Il aide à répondre aux questions pratiques sur Dakar, les régions, le voyage, les transports, la météo, la culture et la vie quotidienne.
 Nous cherchons des partenaires au Sénégal et en France : médias, tourisme, entreprises, écoles, créateurs et réseaux de la diaspora.
 Nous pouvons proposer une démonstration ou un petit pilote.
-Site : https://teranga-ai-1.onrender.com/
+Site : https://teranga-ai.fr/
 
 ### Message média
 Bonjour,
-Je vous contacte au sujet de Teranga AI, un assistant numérique consacré au Sénégal. Le service permet de poser des questions sur le pays en français, anglais, wolof et pulaar.
+Je vous contacte au sujet de Teranga AI, un assistant numérique consacré au Sénégal. Le service permet de poser des questions sur le pays en français, anglais et wolof, à l'écrit comme à la voix.
 Nous pouvons fournir une démonstration, une interview ou un sujet autour de l'IA appliquée aux usages pratiques du Sénégal.
-Site : https://teranga-ai-1.onrender.com/
-Kit média : https://teranga-ai-1.onrender.com/media-kit
+Site : https://teranga-ai.fr/
+Kit média : https://teranga-ai.fr/media-kit
 
 ## 5. Règles
 - Pas de spam.
@@ -54,6 +55,8 @@ Kit média : https://teranga-ai-1.onrender.com/media-kit
 - Adapter le message à chaque média, entreprise ou communauté.
 
 ## 6. Mesure
+Outil : mesure d'audience sans cookie (Plausible ou Umami), activable par la variable d'environnement `ANALYTICS_SCRIPT_URL` (voir README). Sans elle, aucun suivi n'est chargé.
+
 Suivre chaque mois :
 - visites du site ;
 - provenance Sénégal / France / autres ;
@@ -64,5 +67,14 @@ Suivre chaque mois :
 - backlinks réellement publiés ;
 - conversions issues des campagnes.
 
-## 7. Prochaine étape
-Construire une liste de prospection qualifiée Sénégal + France, avec nom du canal, audience, contact public, type de proposition, date de contact et statut.
+## 7. Prochaines étapes
+1. Activer la mesure d'audience en production et établir une première base mensuelle.
+2. Construire une liste de prospection qualifiée Sénégal + France, avec nom du canal, audience, contact public, type de proposition, date de contact et statut.
+3. Préparer une démonstration courte (chat + voix + Explorer + planificateur) pour les rendez-vous partenaires et médias.
+4. Proposer un pilote à 2 ou 3 acteurs du tourisme (hôtel, agence, restaurant) avec des indicateurs définis à l'avance.
+
+## 8. Feuille de route produit
+- Court terme : stabilité et sécurité en production (Redis partagé, `TERANGA_ENV=production`, quotas), mesure d'audience.
+- Intelligence : enrichir la base de connaissances (lieux, régions, personnalités) et la qualité du wolof ; remettre le pulaar dans l'interface quand sa qualité est validée.
+- Produit : une fiche indexable par lieu (photos, carte, histoire, conseils), itinéraires enrichis, partage des réponses.
+- Partenaires : intégration de l'assistant sur le site d'un partenaire (widget) après un premier pilote réussi.

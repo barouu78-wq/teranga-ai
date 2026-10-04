@@ -76,7 +76,7 @@ self.addEventListener('fetch', event => {
                     "id": "/",
                     "name": "Teranga AI",
                     "short_name": "Teranga",
-                    "description": "Assistant du Sénégal en français, anglais, wolof et pulaar.",
+                    "description": "Assistant du Sénégal en français, anglais et wolof.",
                     "start_url": "/",
                     "scope": "/",
                     "display": "standalone",

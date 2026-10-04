@@ -19,77 +19,20 @@ def register_seo_routes(app, site_url):
             return Response("Not Found", status=404, mimetype="text/plain")
         return render_region_page(region, site_url)
 
-    @app.get("/a-propos")
-    def seo_a_propos():
-        return render_seo_page("a-propos", site_url)
+    # Une route par page de SEO_PAGES : le sitemap et les routes ne peuvent plus
+    # diverger (deux pages du sitemap renvoyaient 404).
+    def _make_seo_view(slug):
+        def view():
+            return render_seo_page(slug, site_url)
+        return view
 
-    @app.get("/presse")
-    def seo_presse():
-        return render_seo_page("presse", site_url)
-
-    @app.get("/media-kit")
-    def seo_media_kit():
-        return render_seo_page("media-kit", site_url)
-
-    @app.get("/dakar")
-    def seo_dakar():
-        return render_seo_page("dakar", site_url)
-
-    @app.get("/assistant-senegal")
-    def seo_assistant_senegal():
-        return render_seo_page("assistant-senegal", site_url)
-
-    @app.get("/ia-senegal")
-    def seo_ia_senegal():
-        return render_seo_page("ia-senegal", site_url)
-
-    @app.get("/assistant-ia-dakar")
-    def seo_assistant_ia_dakar():
-        return render_seo_page("assistant-ia-dakar", site_url)
-
-    @app.get("/transport-dakar")
-    def seo_transport_dakar():
-        return render_seo_page("transport-dakar", site_url)
-
-    @app.get("/aibd-dakar")
-    def seo_aibd_dakar():
-        return render_seo_page("aibd-dakar", site_url)
-
-    @app.get("/visiter-dakar")
-    def seo_visiter_dakar():
-        return render_seo_page("visiter-dakar", site_url)
-
-    @app.get("/senegal")
-    def seo_senegal():
-        return render_seo_page("senegal", site_url)
-
-    @app.get("/meteo-dakar")
-    def seo_meteo_dakar():
-        return render_seo_page("meteo-dakar", site_url)
-
-    @app.get("/visiter-goree")
-    def seo_visiter_goree():
-        return render_seo_page("visiter-goree", site_url)
-
-    @app.get("/restaurants-dakar")
-    def seo_restaurants_dakar():
-        return render_seo_page("restaurants-dakar", site_url)
-
-    @app.get("/specialites-senegal")
-    def seo_specialites_senegal():
-        return render_seo_page("specialites-senegal", site_url)
-
-    @app.get("/regions-senegal")
-    def seo_regions_senegal():
-        return render_seo_page("regions-senegal", site_url)
-
-    @app.get("/france-senegal")
-    def seo_france_senegal():
-        return render_seo_page("france-senegal", site_url)
-
-    @app.get("/diaspora-senegalaise")
-    def seo_diaspora_senegalaise():
-        return render_seo_page("diaspora-senegalaise", site_url)
+    for slug in SEO_PAGES:
+        app.add_url_rule(
+            f"/{slug}",
+            endpoint="seo_" + slug.replace("-", "_"),
+            view_func=_make_seo_view(slug),
+            methods=["GET"],
+        )
 
     @app.get("/robots.txt")
     def robots():
