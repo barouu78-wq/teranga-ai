@@ -7,7 +7,7 @@ from flask import Flask
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 
-def _app(redis_client):
+def _app(redis_client, configured=None):
     from routes.system import register_system_routes
 
     app = Flask(__name__)
@@ -15,6 +15,7 @@ def _app(redis_client):
         "indexnow_key": "k", "issue_csrf": lambda *a: "t", "csrf_ttl": 60, "csrf_cookie": "c",
         "home_html": "<html></html>", "site_url": "https://teranga-ai.fr",
         "build_icon_png": lambda size: b"", "icon_svg": "<svg/>", "redis_client": redis_client,
+        **({} if configured is None else {"redis_configured": configured}),
     })
     return app.test_client()
 
@@ -39,3 +40,8 @@ def test_health_reports_redis_state_without_failing():
 def test_redis_client_has_short_timeouts():
     source = open(os.path.join(os.path.dirname(__file__), "..", "app.py"), encoding="utf-8").read()
     assert "socket_connect_timeout=2" in source and "socket_timeout=2" in source
+
+
+def test_unreadable_redis_url_is_reported_as_misconfigured():
+    assert _app(None, configured=True).get("/health").get_json()["redis"] == "misconfigured"
+    assert _app(None, configured=False).get("/health").get_json()["redis"] == "disabled"
