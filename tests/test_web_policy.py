@@ -67,3 +67,8 @@ def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
 
 def test_weather_prioritizes_senegal_meteorological_authority():
     assert preferred_domains("weather")[0] == "anacim.sn"
+
+
+def test_health_service_questions_use_current_web_information():
+    from services.web_policy import should_use_web
+    assert should_use_web("Quels services de santé sont disponibles à Dakar ?") is True
