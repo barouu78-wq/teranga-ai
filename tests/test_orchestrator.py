@@ -222,3 +222,44 @@ def test_followup_preserves_hybrid_context_when_web_is_required():
     )
     assert plan.source_strategy == "hybrid"
     assert plan.action_strategy == "act"
+
+
+def test_action_plan_prepares_trip_action():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning", "location": "goree"},
+            "message": "Prépare mon voyage à Gorée",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "act"
+    assert plan.action == "prepare_trip_plan"
+    assert "prepare_action" in plan.steps
+
+
+def test_action_plan_prepares_project_action():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "intent_context": {"intent": "project", "location": "dakar"},
+            "message": "Organise mon projet à Dakar",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "act"
+    assert plan.action == "prepare_project_plan"
+
+
+def test_action_plan_does_not_claim_action_for_static_question():
+    plan = build_agent_plan(
+        {
+            "intent_context": {"intent": "culture", "location": "goree"},
+            "message": "Quelle est l'histoire de Gorée ?",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "answer"
+    assert plan.action == "answer"
+    assert "prepare_action" not in plan.steps
