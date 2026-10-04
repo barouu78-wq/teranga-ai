@@ -21,6 +21,7 @@ SOURCE_FILTERS = {
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
+    "health": ("sante.gouv.sn", "gov.sn", "who.int"),
     # For Senegal weather, prefer the national meteorological authority first.
     "weather": ("anacim.sn", "ansd.sn", "gov.sn"),
 }
@@ -45,7 +46,7 @@ def preferred_domains(domain: str) -> tuple[str, ...]:
 
 
 def search_context_size(domain: str, planner: bool = False) -> str:
-    return "medium" if planner or domain in {"administration", "society", "economy"} else "low"
+    return "medium" if planner or domain in {"administration", "society", "economy", "health"} else "low"
 
 
 # Uniquement les sujets vraiment changeants — évite la recherche web sur chaque question.
@@ -76,7 +77,8 @@ WEB_HINTS = (
     "wave", "free money", "expresso money", "yas", "orange money",
     "concert", "festival", "match", "football", "salon", "foire",
     "programme", "program", "calendrier", "calendar", "fermé", "ferme", "closed",
-    "urgent", "alerte", "grève", "greve", "perturbation", "incident",
+    "urgent", "urgence", "alerte", "grève", "greve", "perturbation", "incident",
+    "santé", "sante", "hôpital", "hopital", "pharmacie", "maladie",
 )
 
 def should_use_web(message, context=""):
@@ -116,6 +118,8 @@ def should_use_web(message, context=""):
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre",
+        "sante", "santé", "vaccination", "hopital", "hôpital", "pharmacie",
+        "urgence", "maladie",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
@@ -130,6 +134,8 @@ def should_use_web(message, context=""):
         "forfait", "orange money", "wave", "taux", "change", "securite",
         "sécurité", "alerte", "greve", "grève", "match", "concert",
         "evenement", "événement", "promotion", "offre",
+        "sante", "santé", "vaccination", "hopital", "hôpital", "pharmacie",
+        "urgence", "maladie",
     )
     return _contains_any(combined, contextual_dynamic)
 
