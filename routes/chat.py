@@ -67,7 +67,7 @@ def register_chat_route(app, deps):
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
 
         message_text = str(payload.get("message", "") or "").strip().lower()
-        explicit_photo_request = bool(re.search(r"\bphotos?\b|\bimages?\b", message_text))
+        explicit_photo_request = bool(re.search(r"\b(?:photos?|images?|nataal)\b", message_text))
         photo_only = (
             explicit_photo_request
             or (
@@ -77,19 +77,31 @@ def register_chat_route(app, deps):
         )
         if photo_only:
             language = payload.get("language", "fr")
-            lead = "Voici quelques photos du Sénégal." if language == "fr" else "Here are some photos of Senegal."
+
+            def photo_lead(image):
+                # Le texte nomme le sujet réellement cherché et ne promet jamais
+                # des photos absentes.
+                subject = str(((image or [{}])[0] or {}).get("search_query") or "").strip()
+                if language == "en":
+                    if image:
+                        return f"Here are some photos for “{subject}”." if subject else "Here are some photos."
+                    return "I couldn't find a reliable photo for this request. Try naming a specific place, for example Gorée, Saint-Louis or Lompoul."
+                if image:
+                    return f"Voici quelques photos pour « {subject} »." if subject else "Voici quelques photos."
+                return "Je n'ai pas trouvé de photo fiable pour cette demande. Essaie en précisant un lieu, par exemple Gorée, Saint-Louis ou Lompoul."
+
             if request.headers.get("X-Teranga-Mode", "").lower() == "json":
                 try:
                     image = fetch_topic_images(payload.get("message", ""))
-                    return jsonify({"reply": lead, "sources": [], "image": image, "map": None})
+                    return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
                     return jsonify({"error": public_error(exc)}), 500
 
             def generate_photo_only():
-                yield json.dumps({"d": lead}, ensure_ascii=False) + "\n"
                 try:
                     image = fetch_topic_images(payload.get("message", ""))
+                    yield json.dumps({"d": photo_lead(image)}, ensure_ascii=False) + "\n"
                     if image:
                         yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
                     yield json.dumps({"done": True}) + "\n"

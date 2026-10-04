@@ -250,7 +250,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
     photo_only = (
-        bool(re.search(r"\bphotos?\b|\bimages?\b", message.lower()))
+        bool(re.search(r"\b(?:photos?|images?|nataal)\b", message.lower()))
         or (intent_context.get("intent") == "photos" and set(context.get("intents", [])) <= {"photos"})
     )
     use_web = False if photo_only else bool(intent_context.get("needs_web_search"))
@@ -296,6 +296,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "deep_reasoning": bool(intent_context.get("needs_deep_reasoning")),
         "planner_data": planner_data,
         "message": message,
+        "language": language,
         "audience": audience,
         "context": context,
         "intent_context": intent_context,
