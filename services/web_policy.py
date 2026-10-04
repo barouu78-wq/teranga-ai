@@ -21,7 +21,7 @@ SOURCE_FILTERS = {
     "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
     "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
-    "weather": ("meteofrance.com", "ansd.sn", "gov.sn"),
+    "weather": ("anacim.sn", "ansd.sn", "gov.sn"),
 }
 
 @lru_cache(maxsize=32)
@@ -113,7 +113,7 @@ def should_use_web(message, context=""):
         "alerte", "pluie", "meteo", "météo", "temperature", "température",
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
-        "classement", "promotion", "offre",
+        "classement", "promotion", "offre", "sante", "santé", "hopital", "hôpital", "pharmacie", "urgence", "vaccination",
     )
     if _contains_any(lowered, dynamic_intents):
         return True

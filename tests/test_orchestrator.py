@@ -186,3 +186,183 @@ def test_planner_rejects_unknown_workflow_values():
         model="gpt-5.6-luna",
     )
     assert plan.workflow == "general"
+
+
+def test_static_question_routes_to_local_knowledge():
+    plan = build_agent_plan(
+        {"intent_context": {"intent": "culture", "location": "goree"}, "message": "Quelle est l'histoire de Gorée ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "local"
+    assert plan.action_strategy == "answer"
+
+
+def test_dynamic_restaurant_request_routes_to_web_and_action():
+    plan = build_agent_plan(
+        {"use_web": True, "intent_context": {"intent": "restaurant", "location": "dakar", "has_context": True}, "message": "Où manger ce soir ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "hybrid"
+    assert plan.action_strategy == "act"
+
+
+def test_photo_request_routes_to_images_without_forcing_web_strategy():
+    plan = build_agent_plan(
+        {"use_web": False, "intent_context": {"intent": "photos", "location": "goree", "needs_images": True}, "message": "Montre-moi Gorée"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.use_images is True
+    assert plan.source_strategy == "local"
+
+
+def test_followup_preserves_hybrid_context_when_web_is_required():
+    plan = build_agent_plan(
+        {"use_web": True, "intent_context": {"intent": "restaurant", "location": "dakar", "has_context": True}, "message": "Et demain ?"},
+        model="gpt-5.6-luna",
+    )
+    assert plan.source_strategy == "hybrid"
+    assert plan.action_strategy == "act"
+
+
+def test_action_plan_prepares_trip_action():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning", "location": "goree"},
+            "message": "Prépare mon voyage à Gorée",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "act"
+    assert plan.action == "prepare_trip_plan"
+    assert "prepare_action" in plan.steps
+
+
+def test_action_plan_prepares_project_action():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "intent_context": {"intent": "project", "location": "dakar"},
+            "message": "Organise mon projet à Dakar",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "act"
+    assert plan.action == "prepare_project_plan"
+
+
+def test_action_plan_does_not_claim_action_for_static_question():
+    plan = build_agent_plan(
+        {
+            "intent_context": {"intent": "culture", "location": "goree"},
+            "message": "Quelle est l'histoire de Gorée ?",
+        },
+        model="gpt-5.6-luna",
+    )
+    assert plan.action_strategy == "answer"
+    assert plan.action == "answer"
+    assert "prepare_action" not in plan.steps
+
+
+
+def test_external_action_is_prepared_until_confirmation():
+    payload = {
+        "planner": True,
+        "use_web": True,
+        "intent_context": {"intent": "restaurant", "location": "dakar"},
+        "message": "Réserve une table à Dakar",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["enabled"] is True
+    assert request["execution_mode"] == "prepare"
+    assert request["requires_confirmation"] is True
+
+
+def test_confirmed_action_can_enter_execution_mode():
+    payload = {
+        "planner": True,
+        "use_web": True,
+        "action_confirmed": True,
+        "action_request_id": "prepared-restaurant-1",
+        "intent_context": {"intent": "restaurant", "location": "dakar"},
+        "message": "Réserve une table à Dakar",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["execution_mode"] == "execute"
+    assert request["requires_confirmation"] is False
+    assert request["confirmed"] is True
+
+
+def test_static_answer_has_no_action_contract():
+    payload = {
+        "intent_context": {"intent": "culture", "location": "goree"},
+        "message": "Quelle est l'histoire de Gorée ?",
+    }
+    plan = build_agent_plan(payload, model="gpt-5.6-luna")
+    from services.orchestrator import build_action_request
+    request = build_action_request(payload, plan)
+    assert request["enabled"] is False
+    assert request["execution_mode"] == "answer"
+    assert request["requires_confirmation"] is False
+
+
+
+def test_action_contract_rejects_action_outside_executor_allowlist():
+    from dataclasses import replace
+    from services.orchestrator import build_action_request
+
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "restaurant", "location": "dakar"},
+        },
+        model="gpt-5.6-luna",
+    )
+    invalid = replace(plan, action="delete_user")
+    request = build_action_request({"action_confirmed": True}, invalid)
+    assert request["enabled"] is False
+    assert request["execution_mode"] == "unsupported"
+
+
+def test_confirmed_action_requires_prepared_request_id():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning"},
+            "action_confirmed": True,
+        },
+        model="gpt-5.6-luna",
+    )
+    request = __import__("services.orchestrator", fromlist=["build_action_request"]).build_action_request(
+        {"action_confirmed": True},
+        plan,
+    )
+    assert request["execution_mode"] == "prepare"
+    assert request["requires_confirmation"] is True
+
+
+def test_confirmed_action_uses_supplied_request_id():
+    from services.orchestrator import build_action_request
+
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning"},
+        },
+        model="gpt-5.6-luna",
+    )
+    request = build_action_request(
+        {"action_confirmed": True, "action_request_id": "prepared-123"},
+        plan,
+    )
+    assert request["execution_mode"] == "execute"
+    assert request["request_id"] == "prepared-123"
+    assert request["requires_confirmation"] is False

@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 from .language_quality import language_instruction
 from .intelligence import build_agent_plan, should_use_deep_reasoning
+from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
+from .action_executor import prepare_action
 
 
 _AUDIENCE_INSTRUCTIONS = {
@@ -55,6 +57,8 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     if error == "empty":
         return None, "empty"
 
+    action_confirmed = data.get("action_confirmed") is True
+    action_request_id = str(data.get("action_request_id") or "").strip()
     message = normalized["message"]
     history = normalized["history"]
     language = normalized["language"]
@@ -103,7 +107,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_agent_plan(context, intent_context)
+    agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model="gpt-5.6-luna")
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + str(structured_memory)
@@ -158,12 +162,17 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "Lorsque la recherche web est active, utilise ses résultats pour les informations susceptibles d’avoir changé et ne remplace pas silencieusement un fait local stable par une information web non vérifiée. "
         "Si les sources web contredisent la connaissance locale, privilégie la source la plus récente et fiable pour le fait dynamique, signale brièvement la différence si elle est utile, et ne transforme jamais une estimation locale en fait actuel."
     )
+    weather_response_line = (
+        "MÉTÉO : pour toute demande météo actuelle ou prévisionnelle, utilise la recherche web active et les résultats de la source autorisée. "
+        "Pour le Sénégal, privilégie ANACIM. Donne la température ou les conditions réellement vérifiées, précise la période ou la date de validité et indique clairement la source. "
+        "Si aucune donnée météo actuelle fiable n'est disponible, dis-le explicitement sans inventer et ne remplace pas ANACIM par une autre source non autorisée."
+    )
     context_instruction = (
         place_line + " " + trip_context_line + " " + trip_edit_line + " " + intent_line + " " + constraint_line + " " + planner_line + " " +
         "Domaine Sénégal détecté : " + str(intent_context.get("domain") or "general") + ". " +
         "PLAN D’EXÉCUTION : " + str(agent_plan) + ". " +
         memory_line + " " +
-        knowledge_web_line + " " + source_line + " " + planner_instruction +
+        knowledge_web_line + " " + weather_response_line + " " + source_line + " " + planner_instruction +
         " Si la demande est un suivi court, conserve le dernier référent pertinent. " +
         "Si plusieurs référents sont réellement possibles, pose une seule question courte. " +
         "Ne cite pas ces déductions comme si l'utilisateur les avait explicitement déclarées."
@@ -193,6 +202,8 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "intent_context": intent_context,
         "memory": structured_memory,
         "agent_plan": agent_plan,
+        "action_request": ({**build_action_request({**context, "action_confirmed": action_confirmed, "action_request_id": action_request_id}, agent_plan), **({"request_id": prepare_action(agent_plan.action).request_id} if agent_plan.action != "answer" and not action_confirmed else {})}),
+        "ux_hints": intent_context.get("ux_hints") or {"mode": "answer", "followups": [], "show_followups": False, "compact": True},
         "contextual_query": enriched_context,
         "trip_context": trip_context,
         "trip_edit_request": trip_edit_request,

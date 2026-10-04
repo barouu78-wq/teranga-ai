@@ -11,6 +11,8 @@ import re
 from typing import Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
+from .action_executor import ALLOWED_ACTIONS
+
 
 @dataclass(frozen=True)
 class AgentPlan:
@@ -24,6 +26,11 @@ class AgentPlan:
     workflow: str = "general"
     deep_reasoning: bool = False
     steps: tuple[str, ...] = field(default_factory=tuple)
+    source_strategy: str = "local"
+    action_strategy: str = "answer"
+    action: str = "answer"
+    execution_mode: str = "answer"
+    requires_confirmation: bool = False
 
 
 def _contains_query_term(query: str, term: str) -> bool:
@@ -57,6 +64,25 @@ _PLANNER_WORKFLOW_ALIASES = {
 }
 
 
+def build_action_request(payload: dict[str, Any], plan: AgentPlan) -> dict[str, Any]:
+    """Create a bounded action contract; external side effects always require confirmation."""
+    if plan.action == "answer":
+        return {"enabled": False, "action": "answer", "execution_mode": "answer", "requires_confirmation": False}
+    confirmed = bool(payload.get("action_confirmed"))
+    request_id = str(payload.get("action_request_id") or "").strip()
+    if plan.action not in ALLOWED_ACTIONS:
+        return {"enabled": False, "action": plan.action, "execution_mode": "unsupported", "requires_confirmation": False}
+    execution_mode = "execute" if confirmed and request_id else "prepare"
+    return {
+        "enabled": True,
+        "action": plan.action,
+        "execution_mode": execution_mode,
+        "requires_confirmation": execution_mode != "execute",
+        "confirmed": execution_mode == "execute",
+        "request_id": request_id,
+    }
+
+
 def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
     """Build a bounded plan from the decisions already computed upstream."""
     planner = bool(payload.get("planner"))
@@ -65,7 +91,25 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
     intent_context = payload.get("intent_context") or {}
     use_images = bool(intent_context.get("needs_images")) and not planner
     use_map = _needs_map(payload)
+    has_local_context = bool(payload.get("senegal_knowledge") or intent_context.get("location") or intent_context.get("has_context"))
+    if use_web and has_local_context:
+        source_strategy = "hybrid"
+    elif use_web:
+        source_strategy = "web"
+    else:
+        source_strategy = "local"
+    action_intents = {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"}
     requested_workflow = str(intent_context.get("intent") or "").strip().lower()
+    action_strategy = "act" if requested_workflow in action_intents and (planner or use_map or use_web) else "answer"
+    action = {
+        "trip_planning": "prepare_trip_plan",
+        "transport": "prepare_route",
+        "restaurant": "prepare_restaurant_options",
+        "project": "prepare_project_plan",
+        "career": "prepare_career_plan",
+        "education": "prepare_learning_plan",
+        "finance": "prepare_finance_plan",
+    }.get(requested_workflow, "answer") if action_strategy == "act" else "answer"
     workflow = _PLANNER_WORKFLOW_ALIASES.get(requested_workflow, "general") if planner else "general"
     active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
@@ -73,6 +117,8 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         steps.append("web_retrieval")
     if planner:
         steps.append("build_plan")
+    if action_strategy == "act":
+        steps.append("prepare_action")
     steps.append("generate_response")
     if use_images:
         steps.append("image_enrichment")
@@ -88,6 +134,11 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         workflow=workflow,
         deep_reasoning=deep_reasoning,
         steps=tuple(steps),
+        source_strategy=source_strategy,
+        action_strategy=action_strategy,
+        action=action,
+        execution_mode="prepare" if action != "answer" else "answer",
+        requires_confirmation=action != "answer" and not (bool(payload.get("action_confirmed")) and bool(payload.get("action_request_id"))),
     )
 
 
