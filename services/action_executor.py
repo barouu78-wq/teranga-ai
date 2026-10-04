@@ -73,7 +73,7 @@ def execute_action(
             request_id=execution_request_id,
         )
 
-    if not confirmed:
+    if not confirmed or not request_id:
         return ActionExecutionResult(
             action=action,
             status="confirmation_required",
