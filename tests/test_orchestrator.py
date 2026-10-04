@@ -308,3 +308,22 @@ def test_static_answer_has_no_action_contract():
     assert request["enabled"] is False
     assert request["execution_mode"] == "answer"
     assert request["requires_confirmation"] is False
+
+
+
+def test_action_contract_rejects_action_outside_executor_allowlist():
+    from dataclasses import replace
+    from services.orchestrator import build_action_request
+
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "restaurant", "location": "dakar"},
+        },
+        model="gpt-5.6-luna",
+    )
+    invalid = replace(plan, action="delete_user")
+    request = build_action_request({"action_confirmed": True}, invalid)
+    assert request["enabled"] is False
+    assert request["execution_mode"] == "unsupported"
