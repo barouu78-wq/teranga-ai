@@ -368,3 +368,31 @@ def test_health_intent_and_context_are_recognized():
     assert result["intent"] == "health"
     assert result["domain"] == "health"
     assert result["needs_web_search"] is True
+
+
+
+def test_ux_hints_adapt_to_action_intent_and_place():
+    from services.intelligence import build_ux_hints
+
+    hints = build_ux_hints(
+        {"intent": "restaurant", "location": "dakar", "needs_web_search": True, "needs_images": False},
+        {"place": "dakar"},
+    )
+
+    assert hints["mode"] == "fresh"
+    assert hints["show_followups"] is True
+    assert len(hints["followups"]) == 3
+    assert any("dakar" in item.lower() for item in hints["followups"])
+
+
+def test_ux_hints_use_visual_mode_for_photo_requests():
+    from services.intelligence import build_ux_hints
+
+    hints = build_ux_hints(
+        {"intent": "photos", "location": "goree", "needs_web_search": False, "needs_images": True},
+        {"place": "goree"},
+    )
+
+    assert hints["mode"] == "visual"
+    assert hints["compact"] is True
+    assert hints["followups"] == ["Plus de photos", "Localiser", "Que voir ?"]

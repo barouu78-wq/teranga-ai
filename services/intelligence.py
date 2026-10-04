@@ -392,6 +392,38 @@ def build_agent_plan(context: dict[str, Any], intent_context: dict[str, Any]) ->
     }
 
 
+def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+    """Return compact conversation UX hints so the client can adapt without extra buttons."""
+    intent = str(intent_context.get("intent") or "general_information")
+    place = str(intent_context.get("location") or context.get("place") or "").strip()
+    followups: list[str] = []
+    labels = {
+        "trip_planning": ("Budget", "Transport", "Programme détaillé"),
+        "transport": ("Itinéraire", "Prix", "Alternative"),
+        "restaurant": ("Options", "Prix", "Localiser"),
+        "project": ("Plan d'action", "Budget", "Opportunités"),
+        "career": ("Offres", "CV", "Plan d'action"),
+        "education": ("Formations", "Conditions", "Plan d'apprentissage"),
+        "finance": ("Budget", "Financement", "Comparer"),
+        "weather": ("Demain", "Cette semaine", "Prévisions"),
+        "photos": ("Plus de photos", "Localiser", "Que voir ?"),
+    }
+    followups.extend(labels.get(intent, ("Préciser ma demande", "Comparer", "Que faire ensuite ?")))
+    if place and intent != "photos":
+        followups = [f"{item} à {place}" if item != "Comparer" and " à " not in item else item for item in followups]
+    mode = "action" if intent in {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"} else "answer"
+    if intent_context.get("needs_images"):
+        mode = "visual"
+    elif intent_context.get("needs_web_search"):
+        mode = "fresh"
+    return {
+        "mode": mode,
+        "followups": followups[:3],
+        "show_followups": True,
+        "compact": True,
+    }
+
+
 def build_intent_context(text: str, history: list[dict[str, Any]] | None = None, *, resolved_context: dict[str, Any] | None = None) -> dict[str, Any]:
     message = str(text or "").strip()
     current_intent = detect_intent(message)
@@ -442,4 +474,10 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
         "query": message,
         "normalized_query": _normalize(message),
         "memory": build_structured_memory(context_data),
+        "ux_hints": build_ux_hints({
+            "intent": resolved_intent,
+            "location": resolved_location,
+            "needs_web_search": fresh,
+            "needs_images": resolved_intent == "photos",
+        }, context_data),
     }
