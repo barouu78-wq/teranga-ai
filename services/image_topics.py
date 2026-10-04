@@ -110,6 +110,7 @@ def _build_primary_query(
         "affiche moi des photos d", "affiche-moi des photos d",
         "des photos de", "des photos du", "des photos d", "photo de", "photos de",
         "photo du", "photos du", "photo d", "photos d",
+        "photos", "photo", "images", "image",
         "montre moi", "montre-moi", "montre", "affiche", "affiche moi",
         "affiche-moi", "fais voir", "je veux voir", "donne moi", "donne-moi",
     )
