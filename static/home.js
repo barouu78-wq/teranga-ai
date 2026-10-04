@@ -764,7 +764,9 @@ function persist(){
     try{
       const safeHistory=history.slice(-12).map(item=>({
         role:item&&item.role==='assistant'?'assistant':'user',
-        content:String(item&&item.content||'').replace(/\\s+/g,' ').trim().slice(0,1200)
+        content:String(item&&item.content||'').replace(/[ \t]+/g,' ').trim().slice(0,1200),
+        // Lien de partage signé : conservé pour repartager après un rechargement.
+        ...(item&&item.role==='assistant'&&typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
       sessionStorage.setItem('teranga-history',payload);
@@ -779,7 +781,7 @@ function restore(){
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
-      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/\\s+/g,' ').trim().slice(0,1200)})).filter(item=>item.content);
+      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/[ \t]+/g,' ').trim().slice(0,1200),...(typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})})).filter(item=>item.content);
       if(!restored.length){
         sessionStorage.removeItem('teranga-history');
         localStorage.removeItem('teranga-history');
@@ -799,7 +801,7 @@ function restore(){
         b.textContent=cleanReply(item.content||'');
         col.appendChild(b);
         if(item.role==='assistant'){
-          addActs(col,item.content||'');
+          addActs(col,item.content||'',null,item.share||'');
           addCityImage(col,item.image);
           addMap(col,item.map);
           addSources(col,item.sources);
@@ -923,7 +925,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addCityImage(wait.col,image);
     addMap(wait.col,map);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
-    history.push({role:'assistant',content:reply,sources,image,map});
+    history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply){

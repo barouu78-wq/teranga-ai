@@ -2703,6 +2703,104 @@
         "https://au-senegal.com/au-coeur-des-manufactures-senegalaises-des-arts-decoratifs,10763.html",
         "https://www.dakaractu.com/Senegal-le-nouveau-souffle-des-manufactures-de-Thies-fleuron-culturel-de-Senghor_a247804.html"
       ]
+    },
+    {
+      "id": "louga",
+      "name": "Louga",
+      "type": "locality",
+      "region": "Louga",
+      "locality": "Louga",
+      "summary": "Capitale régionale du Ndiambour, à une cinquantaine de kilomètres de l'Atlantique, sur l'axe Dakar–Saint-Louis.",
+      "history": "Louga se trouve dans le Ndiambour, ancienne province du Cayor. Centre de marché au bétail, la ville est reliée par la route à Saint-Louis et à Dakar ; ses environs marquent la limite nord du bassin arachidier, où vivent éleveurs peuls et agriculteurs wolofs. La région de Louga a été créée en 1976 (départements de Kébémer, Linguère et Louga). L'ANSD comptait 113 365 habitants en 2023.",
+      "what_to_see": "Marché de Louga; vie du Ndiambour; route vers le désert de Lompoul",
+      "latitude": 15.6228,
+      "longitude": -16.2242,
+      "image_queries": [
+        "Louga Sénégal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Louga",
+        "https://en.wikipedia.org/wiki/Louga_region"
+      ]
+    },
+    {
+      "id": "ourossogui",
+      "name": "Ourossogui",
+      "type": "locality",
+      "region": "Matam",
+      "locality": "Ourossogui",
+      "summary": "Ville-marché et carrefour routier du Fouta, juste au sud-ouest de Matam, sur les routes nationales N2 et N3.",
+      "history": "Ourossogui, dans la région de Matam, est un important marché et nœud de transport de la vallée du fleuve Sénégal. Sa population est passée de 13 177 habitants en 2002 à 27 222 au recensement de 2023.",
+      "what_to_see": "Marché d'Ourossogui; vallée du fleuve Sénégal; Matam voisine",
+      "latitude": 15.6,
+      "longitude": -13.317,
+      "image_queries": [
+        "Ourossogui Sénégal",
+        "Fouta Matam"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Ouro_Sogui",
+        "https://citypopulation.de/en/senegal/mun/admin/matam/SN09025200__ourossogui/"
+      ]
+    },
+    {
+      "id": "kolda",
+      "name": "Kolda",
+      "type": "locality",
+      "region": "Kolda",
+      "locality": "Kolda",
+      "summary": "Capitale de la Haute-Casamance et ancien cœur du Fouladou, au bord du fleuve Casamance.",
+      "history": "Kolda tire son nom de son fondateur, Koly Dado, installé près du fleuve Casamance. La ville est le centre du Fouladou, dernier royaume précolonial indépendant de la zone, fondé par Alpha Molo Baldé puis dirigé par Moussa Molo Baldé, jusqu'en 1903.",
+      "what_to_see": "Bords du fleuve Casamance; arbre de Moussa Molo; marché de Kolda; route vers Diaobé",
+      "latitude": 12.883,
+      "longitude": -14.95,
+      "image_queries": [
+        "Kolda Sénégal",
+        "Haute Casamance"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Kolda",
+        "https://en.wikipedia.org/wiki/Fuladu"
+      ]
+    },
+    {
+      "id": "sedhiou",
+      "name": "Sédhiou",
+      "type": "locality",
+      "region": "Sédhiou",
+      "locality": "Sédhiou",
+      "summary": "Ville au bord du fleuve Casamance, capitale de la Casamance coloniale de 1883 à 1906 et de la région de Sédhiou depuis 2008.",
+      "history": "Sédhiou était à l'origine un établissement baïnouk, à un passage du fleuve important pour les caravanes et à la limite amont de la marée sur la Casamance. Capitale de la Casamance coloniale de 1883 à 1906 (avant Ziguinchor), elle dépendait de la région de Kolda jusqu'à la création de la région de Sédhiou en 2008.",
+      "what_to_see": "Fort Pinet-Laprade; bords du fleuve Casamance; vieille ville",
+      "latitude": 12.7086,
+      "longitude": -15.5558,
+      "image_queries": [
+        "Sédhiou Sénégal",
+        "fleuve Casamance Sédhiou"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/S%C3%A9dhiou",
+        "https://en.wikipedia.org/wiki/S%C3%A9dhiou_region"
+      ]
+    },
+    {
+      "id": "koungheul",
+      "name": "Koungheul",
+      "type": "locality",
+      "region": "Kaffrine",
+      "locality": "Koungheul",
+      "summary": "Ville-étape de la région de Kaffrine, entre Kaolack et Tambacounda sur la route de l'est.",
+      "history": "Koungheul est une commune urbaine et un chef-lieu de département de la région de Kaffrine, créée en 2008. Elle jalonne l'axe routier Kaolack–Tambacounda, au cœur d'une zone agricole de mil et d'arachide.",
+      "what_to_see": "Marché de Koungheul; étape sur la route de Tambacounda et du Niokolo-Koba",
+      "latitude": 13.9833,
+      "longitude": -14.8,
+      "image_queries": [
+        "Koungheul Sénégal"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Koungheul",
+        "https://en.wikipedia.org/wiki/Kaffrine_region"
+      ]
     }
   ],
   "authoritative_sources": [

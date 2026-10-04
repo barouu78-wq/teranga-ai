@@ -45,3 +45,10 @@ def test_business_page_shows_the_snippet_as_text():
 def test_home_prefills_question_and_language_from_the_url():
     source = (ROOT / "static" / "home.js").read_text(encoding="utf-8")
     assert "urlParams.get('q')" in source and "urlParams.get('lang')" in source
+
+
+def test_restored_history_keeps_share_links_and_paragraphs():
+    source = (ROOT / "static" / "home.js").read_text(encoding="utf-8")
+    assert "share:shareToken" in source and "item.share||''" in source
+    # « /\\s+/ » dans un fichier .js cherche une barre oblique inverse, pas un espace.
+    assert "\\\\s" not in source
