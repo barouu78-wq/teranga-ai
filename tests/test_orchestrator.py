@@ -327,3 +327,41 @@ def test_action_contract_rejects_action_outside_executor_allowlist():
     request = build_action_request({"action_confirmed": True}, invalid)
     assert request["enabled"] is False
     assert request["execution_mode"] == "unsupported"
+
+
+def test_confirmed_action_requires_prepared_request_id():
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning"},
+            "action_confirmed": True,
+        },
+        model="gpt-5.6-luna",
+    )
+    request = __import__("services.orchestrator", fromlist=["build_action_request"]).build_action_request(
+        {"action_confirmed": True},
+        plan,
+    )
+    assert request["execution_mode"] == "prepare"
+    assert request["requires_confirmation"] is True
+
+
+def test_confirmed_action_uses_supplied_request_id():
+    from services.orchestrator import build_action_request
+
+    plan = build_agent_plan(
+        {
+            "planner": True,
+            "use_web": True,
+            "intent_context": {"intent": "trip_planning"},
+        },
+        model="gpt-5.6-luna",
+    )
+    request = build_action_request(
+        {"action_confirmed": True, "action_request_id": "prepared-123"},
+        plan,
+    )
+    assert request["execution_mode"] == "execute"
+    assert request["request_id"] == "prepared-123"
+    assert request["requires_confirmation"] is False
