@@ -63,3 +63,8 @@ def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
 
     assert should_use_web("Quel est le taux de change euro FCFA ?") is True
     assert should_use_web("Explique le changement de couleur.") is False
+
+
+def test_health_service_questions_use_current_web_information():
+    from services.web_policy import should_use_web
+    assert should_use_web("Quels services de santé sont disponibles à Dakar ?") is True
