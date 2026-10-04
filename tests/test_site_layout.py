@@ -47,3 +47,20 @@ def test_public_pages_no_longer_advertise_pulaar_in_footer():
 
     html = app.test_client().get("/dakar").get_data(as_text=True)
     assert "WO · PU" not in html
+
+
+def test_filter_forms_have_accessible_labels():
+    from app import app
+
+    client = app.test_client()
+    partners = client.get("/partners").get_data(as_text=True)
+    assert '<select name="category" aria-label="Secteur">' in partners
+    assert 'aria-label="Ville"' in partners
+    assert 'aria-label="Domaine"' in client.get("/opportunities").get_data(as_text=True)
+
+
+@pytest.mark.parametrize("path", ["/trip-planner?lang=fr", "/opportunities", "/partners"])
+def test_pages_have_meta_description(path):
+    from app import app
+
+    assert '<meta name="description" content="' in app.test_client().get(path).get_data(as_text=True)

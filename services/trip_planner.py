@@ -83,6 +83,7 @@ def _html(site_url, lang="fr"):
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="{site}/trip-planner">
 <meta property="og:title" content="{title} | Teranga AI">
+<meta name="description" content="{intro}">
 <meta property="og:description" content="{intro}">
 <title>{title} | Teranga AI</title>
 {head}

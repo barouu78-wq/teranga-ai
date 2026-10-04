@@ -4,11 +4,13 @@ from services.http_headers import add_security_headers
 
 
 def test_add_security_headers_sets_security_and_cache_headers():
-    response = add_security_headers(Response("ok"), path="/health")
+    response = add_security_headers(Response("{}", mimetype="application/json"), path="/health")
 
     assert response.headers["X-Frame-Options"] == "DENY"
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["Cache-Control"] == "no-store"
+    html = add_security_headers(Response("<p>ok</p>", mimetype="text/html"), path="/page")
+    assert html.headers["Cache-Control"] == "private, no-cache"
     assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
 
 

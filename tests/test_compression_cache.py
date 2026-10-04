@@ -54,8 +54,9 @@ def test_public_pages_keep_their_cache_policy_and_private_ones_do_not():
     client = app.test_client()
     assert client.get("/dakar").headers["Cache-Control"] == "public, max-age=3600"
     assert client.get("/regions/dakar").headers["Cache-Control"] == "public, max-age=3600"
-    # Accueil : nonce CSP + cookie CSRF → jamais en cache partagé.
-    assert client.get("/").headers["Cache-Control"] == "no-store"
+    # Accueil et fiche lieu : nonce CSP par requête → jamais en cache partagé,
+    # revalidés à chaque visite mais compatibles avec le retour arrière instantané.
+    assert client.get("/").headers["Cache-Control"] == "private, no-cache"
+    assert client.get("/lieux/goree").headers["Cache-Control"] == "private, no-cache"
+    # Données : jamais stockées.
     assert client.get("/csrf").headers["Cache-Control"] == "no-store"
-    # Fiche lieu : nonce CSP par requête.
-    assert client.get("/lieux/goree").headers["Cache-Control"] == "no-store"

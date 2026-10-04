@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teranga Projet — Partenaires</title>
+<meta name="description" content="Annuaire Teranga Projet : structures de financement, d’accompagnement et entreprises au Sénégal pour faire avancer ton projet.">
 {{ site_head }}
 <style>
 .hero{margin:0 0 6px}
@@ -32,7 +33,7 @@
     <p>Recherche des structures de financement, d’accompagnement, de réseau ou des entreprises avec lesquelles proposer un partenariat.</p>
   </section>
   <form class="filters" method="get">
-    <select name="category">
+    <select name="category" aria-label="Secteur">
       <option value="">Tous les secteurs</option>
       <option value="business" {{ 'selected' if selected_category=='business' else '' }}>Business</option>
       <option value="agriculture" {{ 'selected' if selected_category=='agriculture' else '' }}>Agriculture</option>
@@ -43,7 +44,7 @@
       <option value="tourism" {{ 'selected' if selected_category=='tourism' else '' }}>Tourisme</option>
       <option value="ai" {{ 'selected' if selected_category=='ai' else '' }}>IA</option>
     </select>
-    <input name="city" value="{{ selected_city }}" placeholder="Ville (ex. Thiès, Dakar)">
+    <input name="city" value="{{ selected_city }}" placeholder="Ville (ex. Thiès, Dakar)" aria-label="Ville">
     <button type="submit">Rechercher</button>
   </form>
   </div>
