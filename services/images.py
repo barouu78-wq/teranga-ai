@@ -49,8 +49,85 @@ def _photo_matches_query(query, page_title, description):
     return True
 
 
+def _google_photo_relevance_score(query, alt, page_url):
+    """Score Google Images evidence so precise place requests rank first."""
+    q = _normalize(query)
+    evidence = _normalize(f"{alt} {page_url}")
+
+    # Generic visual requests should stay broad: "plage Sénégal" may legitimately
+    # return Saly, Dakar, Somone, etc. Precision is activated only when the query
+    # contains a recognizable place.
+    place_aliases = {
+        "dakar": ("dakar",),
+        "saly": ("saly", "saly portudal"),
+        "mbour": ("mbour", "m'bour"),
+        "somone": ("somone", "la somone"),
+        "popenguine": ("popenguine",),
+        "goree": ("goree", "ile de goree", "goree island"),
+        "ile de goree": ("goree", "ile de goree", "goree island"),
+        "saint louis": ("saint louis", "saint-louis"),
+        "thies": ("thies",),
+        "rufisque": ("rufisque",),
+        "ziguinchor": ("ziguinchor",),
+        "touba": ("touba",),
+        "kaolack": ("kaolack",),
+        "kedougou": ("kedougou",),
+        "cap skirring": ("cap skirring",),
+        "lac rose": ("lac rose", "lake retba", "retba"),
+        "joal": ("joal", "fadiouth"),
+        "fadiouth": ("fadiouth", "joal"),
+    }
+
+    matched_place = None
+    for place, aliases in place_aliases.items():
+        if any(_contains_text_term(q, alias) for alias in aliases):
+            matched_place = place
+            break
+
+    score = 0
+    if matched_place:
+        aliases = place_aliases[matched_place]
+        if any(_contains_text_term(evidence, alias) for alias in aliases):
+            score += 100
+        else:
+            # A precise place was requested but the result provides no evidence
+            # for it. Keep it only as a lower-ranked candidate.
+            score -= 25
+
+        # A different Senegalese city in the evidence is a strong contradiction
+        # for a precise city request.
+        other_places = {
+            "dakar": ("saly", "mbour", "somone", "popenguine", "saint louis", "thies"),
+            "saly": ("dakar", "mbour", "somone", "saint louis", "thies"),
+            "mbour": ("dakar", "saly", "somone", "saint louis", "thies"),
+            "somone": ("dakar", "saly", "mbour", "popenguine", "saint louis"),
+            "popenguine": ("dakar", "saly", "mbour", "somone"),
+            "saint louis": ("dakar", "saly", "mbour", "thies"),
+            "thies": ("dakar", "saly", "mbour", "saint louis"),
+        }
+        for other in other_places.get(matched_place, ()):
+            if _contains_text_term(evidence, other):
+                score -= 120
+
+    # Reward meaningful query words appearing in the title/source. This helps
+    # rank "Monument de la Renaissance à Dakar" above generic Senegal results.
+    stopwords = {
+        "photo", "photos", "image", "images", "montre", "moi", "de", "du", "des",
+        "la", "le", "les", "a", "au", "aux", "en", "pour", "voir", "senegal",
+    }
+    tokens = [
+        token for token in re.findall(r"[a-z0-9]+", q)
+        if len(token) >= 3 and token not in stopwords
+    ]
+    for token in tokens:
+        if _contains_text_term(evidence, token):
+            score += 8
+
+    return score
+
+
 def _google_photo_matches_query(query, alt, page_url):
-    """Reject obvious off-topic city results from Google Images."""
+    """Reject only clearly contradictory Google Images results."""
     q = _normalize(query)
     evidence = _normalize(f"{alt} {page_url}")
     strict_exclusions = {
@@ -58,9 +135,10 @@ def _google_photo_matches_query(query, alt, page_url):
         "saly": ("dakar", "saint louis", "thies"),
     }
     for city, excluded in strict_exclusions.items():
-        if _contains_text_term(q, city):
-            if any(_contains_text_term(evidence, term) for term in excluded):
-                return False
+        if _contains_text_term(q, city) and any(
+            _contains_text_term(evidence, term) for term in excluded
+        ):
+            return False
     return True
 
 
@@ -77,7 +155,7 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         "cx": cse_id,
         "q": query,
         "searchType": "image",
-        "num": str(min(max(int(limit), 1), 10)),
+        "num": str(min(max(int(limit) * 3, 6), 10)),
         "safe": "active",
         "gl": "sn",
         "imgType": "photo",
@@ -101,8 +179,8 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         print(message, flush=True)
         raise
 
-    out, seen = [], set()
-    for item in data.get("items", []) or []:
+    candidates, seen = [], set()
+    for position, item in enumerate(data.get("items", []) or []):
         image = item.get("image") or {}
         thumbnail = image.get("thumbnailLink") or ""
         original = image.get("url") or item.get("link") or ""
@@ -118,16 +196,25 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         alt = str(item.get("title") or query)[:160]
         if not _google_photo_matches_query(query, alt, context):
             continue
-        out.append({
+        candidates.append({
             "url": original,
             "display_url": thumbnail,
             "alt": alt,
             "credit": "Google Images",
             "page_url": context,
+            "_score": _google_photo_relevance_score(query, alt, context),
+            "_position": position,
         })
-        if len(out) >= limit:
-            break
-    return [dict(item) for item in out]
+
+    # Stable ordering keeps Google's original ranking as the tie-breaker.
+    candidates.sort(key=lambda item: (-item["_score"], item["_position"]))
+    out = []
+    for item in candidates[:limit]:
+        item = dict(item)
+        item.pop("_score", None)
+        item.pop("_position", None)
+        out.append(item)
+    return out
 
 
 def fetch_commons_images(title, limit=4, image_validator=None, display_url_builder=None, urlopen_fn=None):
