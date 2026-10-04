@@ -69,8 +69,8 @@ Suivre chaque mois :
 
 ## 7. Prochaines étapes
 1. Activer la mesure d'audience en production et établir une première base mensuelle.
-2. Construire une liste de prospection qualifiée Sénégal + France, avec nom du canal, audience, contact public, type de proposition, date de contact et statut.
-3. Préparer une démonstration courte (chat + voix + Explorer + planificateur) pour les rendez-vous partenaires et médias.
+2. Construire une liste de prospection qualifiée Sénégal + France à partir du modèle `docs/prospection_modele.csv` (canal, audience et sa source, contact public, proposition, date, statut, prochaine action). N'y inscrire que des contacts publics réellement vérifiés.
+3. Démonstration de 5 minutes prête : `docs/DEMO.md` (chat, voix en wolof, planificateur, fiches lieux, partage, widget).
 4. Proposer un pilote à 2 ou 3 acteurs du tourisme (hôtel, agence, restaurant) avec des indicateurs définis à l'avance.
 
 ## 8. Feuille de route produit
