@@ -41,3 +41,21 @@ def test_fetch_bceao_rates_closes_response():
 
     assert result["rates"]["EUR"] == 655.957
     assert response.closed is True
+
+
+def test_fetch_bceao_rates_backs_off_after_failure():
+    from services.exchange_rates import DEFAULT_RATES, FX_CACHE_TTL, fetch_bceao_rates
+
+    calls = []
+
+    def failing_fetch(req, timeout=None):
+        calls.append(req)
+        raise OSError("BCEAO down")
+
+    cache = {"at": 0.0, "date": "", "rates": dict(DEFAULT_RATES)}
+    cache = fetch_bceao_rates(cache, now=10_000.0, fetch=failing_fetch)
+    cache = fetch_bceao_rates(cache, now=10_001.0, fetch=failing_fetch)
+    assert len(calls) == 1
+    assert cache["rates"] == DEFAULT_RATES
+    fetch_bceao_rates(cache, now=10_000.0 + FX_CACHE_TTL + 1, fetch=failing_fetch)
+    assert len(calls) == 2

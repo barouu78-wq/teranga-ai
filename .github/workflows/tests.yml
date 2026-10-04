@@ -17,3 +17,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
       - run: pytest -q
+      - name: Audit des dépendances (vulnérabilités connues)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
