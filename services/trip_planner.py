@@ -38,7 +38,7 @@ UI = {
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Laisser Teranga AI choisir", "share": "🔗 Partager ces préférences", "add_day": "+ Ajouter une journée", "save_edits": "Enregistrer les modifications", "review_chat": "💬 Demander à Teranga de revoir mon séjour", "remove_day": "Supprimer", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "note": "Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.", "map_title": "Carte du voyage", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif", 
+        "surprise": "✨ Laisser Teranga AI choisir", "places_label": "Fiches lieux :", "share": "🔗 Partager ces préférences", "add_day": "+ Ajouter une journée", "save_edits": "Enregistrer les modifications", "review_chat": "💬 Demander à Teranga de revoir mon séjour", "remove_day": "Supprimer", "loading": "Teranga AI prépare ton voyage…", "copied": "✓ Lien copié", "note": "Les estimations et informations susceptibles de changer doivent être vérifiées avant le départ.", "map_title": "Carte du voyage", "day": "Jour", "morning": "Matin", "afternoon": "Après-midi", "evening": "Soir", "transport": "Transport", "budget_summary": "Budget indicatif", 
     },
     "en": {
         "title": "Senegal Trip Planner", "kicker": "Teranga AI · Travel Senegal",
@@ -50,7 +50,7 @@ UI = {
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
         "region_options": list(SENEGAL_REGIONS),
-        "surprise": "✨ Let Teranga AI choose", "share": "🔗 Share these preferences", "add_day": "+ Add a day", "save_edits": "Save changes", "review_chat": "💬 Ask Teranga to review my trip", "remove_day": "Remove", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "note": "Estimates and information that may change should be verified before departure.", "map_title": "Trip map", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget", "practical_title": "Practical info", "practical_intro": "Check transport, hours, prices, procedures and services with web sources.", "practical_region": "Region", "practical_transport": "Transport", "practical_hours": "Hours", "practical_prices": "Prices", "practical_procedures": "Procedures", "practical_services": "Services", "practical_loading": "Searching the web…", "practical_error": "We could not retrieve practical information.", "practical_checked": "Checked", "practical_sources": "Sources", "voice_listen": "Listen", "voice_stop": "Stop",
+        "surprise": "✨ Let Teranga AI choose", "places_label": "Place guides:", "share": "🔗 Share these preferences", "add_day": "+ Add a day", "save_edits": "Save changes", "review_chat": "💬 Ask Teranga to review my trip", "remove_day": "Remove", "loading": "Teranga AI is preparing your trip…", "copied": "✓ Link copied", "note": "Estimates and information that may change should be verified before departure.", "map_title": "Trip map", "day": "Day", "morning": "Morning", "afternoon": "Afternoon", "evening": "Evening", "transport": "Transport", "budget_summary": "Indicative budget", "practical_title": "Practical info", "practical_intro": "Check transport, hours, prices, procedures and services with web sources.", "practical_region": "Region", "practical_transport": "Transport", "practical_hours": "Hours", "practical_prices": "Prices", "practical_procedures": "Procedures", "practical_services": "Services", "practical_loading": "Searching the web…", "practical_error": "We could not retrieve practical information.", "practical_checked": "Checked", "practical_sources": "Sources", "voice_listen": "Listen", "voice_stop": "Stop",
     },
 }
 
@@ -146,7 +146,8 @@ function updateJourneySteps(){{if(!journeySteps)return;journeySteps.innerHTML=(c
 function updateRouteVisual(){{const points=(currentPlan?.days||[]).map((d,i)=>{{const coord=REGION_COORDS[d.region];return coord?{{day:i+1,region:d.region,lat:coord[0],lon:coord[1]}}:null}}).filter(Boolean);const box=document.getElementById("route-visual");if(!box)return;if(!points.length){{box.style.display="none";box.innerHTML="";return}}const lats=points.map(p=>p.lat),lons=points.map(p=>p.lon),minLat=Math.min(...lats),maxLat=Math.max(...lats),minLon=Math.min(...lons),maxLon=Math.max(...lons),latSpan=Math.max(maxLat-minLat,.1),lonSpan=Math.max(maxLon-minLon,.1),pad=.12;const project=(lat,lon)=>[10+((lon-(minLon-lonSpan*pad))/(lonSpan*(1+2*pad)))*80,200-(10+((lat-(minLat-latSpan*pad))/(latSpan*(1+2*pad)))*180)];const xy=points.map(p=>project(p.lat,p.lon));const path=xy.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");box.style.display="block";box.innerHTML="<svg viewBox=\\"0 0 100 210\\" preserveAspectRatio=\\"none\\" aria-label=\\""+escapeHtml("{map_title}")+"\\"><path class=\\"route-line\\" d=\\""+path+"\\"/>"+xy.map((p,i)=>"<circle class=\\"route-point\\" cx=\\""+p[0].toFixed(1)+"\\" cy=\\""+p[1].toFixed(1)+"\\" r=\\"4.5\\"/><text class=\\"route-label\\" x=\\""+Math.min(p[0]+3,82).toFixed(1)+"\\" y=\\""+Math.max(p[1]-7,12).toFixed(1)+"\\">"+(i+1)+" · "+escapeHtml(points[i].region)+"</text>").join("")+"</svg>"}}
 function updateMapFromPlan(){{const regions=[...new Set((currentPlan?.days||[]).map(d=>d.region).filter(region=>REGION_COORDS[region]))];if(!regions.length)return;const points=regions.map(region=>REGION_COORDS[region]);const lats=points.map(point=>point[0]),lons=points.map(point=>point[1]),margin=.8;const west=Math.min(...lons)-margin,south=Math.min(...lats)-margin,east=Math.max(...lons)+margin,north=Math.max(...lats)+margin;const bbox=[west,south,east,north].map(value=>value.toFixed(4)).join("%2C");document.getElementById("map").innerHTML="<iframe title=\\""+escapeHtml("{map_title}")+"\\" width=\\"100%\\" height=\\"320\\" loading=\\"lazy\\" src=\\"https://www.openstreetmap.org/export/embed.html?bbox="+bbox+"&layer=mapnik\\"></iframe>"}}
 function persistTripContext(){{if(!currentPlan)return;const clip=(value,max)=>String(value||"").replace(/\\s+/g," ").trim().slice(0,max);const compact={{summary:clip(currentPlan.summary,220),days:[]}};for(let i=0;i<(currentPlan.days||[]).length&&i<14;i++){{const d=currentPlan.days[i]||{{}};const day={{day:i+1,region:clip(d.region,45),title:clip(d.title,80),morning:clip(d.morning,95),afternoon:clip(d.afternoon,95),evening:clip(d.evening,75),transport:clip(d.transport,65)}};const candidate={{summary:compact.summary,days:[...compact.days,day]}};if(JSON.stringify(candidate).length>1550)break;compact.days.push(day)}}try{{sessionStorage.setItem("teranga-trip-context",JSON.stringify(compact))}}catch(_){{}}}}
-function renderEditablePlan(plan){{currentPlan=JSON.parse(JSON.stringify(plan||{{summary:"",days:[],practical_notes:[]}}));renumberDays();result.innerHTML='<h2>'+escapeHtml(currentPlan.summary||'')+'</h2><div class="day-editor">'+currentPlan.days.map((d,i)=>'<article class="day-card" data-day="'+i+'"><h3>{day} '+(i+1)+' · <input class="day-title" value="'+escapeHtml(d.title||'').replace(/"/g,'&quot;')+'"></h3><label>{regions}<select class="day-region">'+regionOptionsHtml(d.region||'')+'</select></label><label>{morning}<textarea class="day-morning">'+escapeHtml(d.morning||'')+'</textarea></label><label>{afternoon}<textarea class="day-afternoon">'+escapeHtml(d.afternoon||'')+'</textarea></label><label>{evening}<textarea class="day-evening">'+escapeHtml(d.evening||'')+'</textarea></label><label>{transport}<textarea class="day-transport">'+escapeHtml(d.transport||'')+'</textarea></label><div class="day-actions"><button type="button" data-up>↑</button><button type="button" data-down>↓</button><button type="button" data-remove>{remove_day}</button></div><div class="voice-actions"><button type="button" class="secondary" data-day-voice>{voice_listen}</button></div><div class="day-practical"><button type="button" data-day-practical="transport">{practical_transport}</button><button type="button" data-day-practical="hours">{practical_hours}</button><button type="button" data-day-practical="prices">{practical_prices}</button></div></article>').join('')+'</div><h3>{budget_summary}</h3><ul>'+((window.__tripBudgetLines||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join(''))+'</ul>';document.getElementById('editor-actions').style.display='flex';bindEditor();bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan();document.getElementById("practical").style.display=currentPlan.days.some(d=>d.region)?"block":"none";window.__editablePlan=currentPlan;persistTripContext()}}
+function placeLinks(d){{const p=Array.isArray(d.places)?d.places:[];return p.length?'<p class="day-places">{places_label} '+p.map(x=>'<a href="'+'/lieux/'+encodeURIComponent(x.id)+'" target="_blank" rel="noopener">'+escapeHtml(x.name)+'</a>').join(' · ')+'</p>':''}}
+function renderEditablePlan(plan){{currentPlan=JSON.parse(JSON.stringify(plan||{{summary:"",days:[],practical_notes:[]}}));renumberDays();result.innerHTML='<h2>'+escapeHtml(currentPlan.summary||'')+'</h2><div class="day-editor">'+currentPlan.days.map((d,i)=>'<article class="day-card" data-day="'+i+'"><h3>{day} '+(i+1)+' · <input class="day-title" value="'+escapeHtml(d.title||'').replace(/"/g,'&quot;')+'"></h3><label>{regions}<select class="day-region">'+regionOptionsHtml(d.region||'')+'</select></label><label>{morning}<textarea class="day-morning">'+escapeHtml(d.morning||'')+'</textarea></label><label>{afternoon}<textarea class="day-afternoon">'+escapeHtml(d.afternoon||'')+'</textarea></label><label>{evening}<textarea class="day-evening">'+escapeHtml(d.evening||'')+'</textarea></label><label>{transport}<textarea class="day-transport">'+escapeHtml(d.transport||'')+'</textarea></label>'+placeLinks(d)+'<div class="day-actions"><button type="button" data-up>↑</button><button type="button" data-down>↓</button><button type="button" data-remove>{remove_day}</button></div><div class="voice-actions"><button type="button" class="secondary" data-day-voice>{voice_listen}</button></div><div class="day-practical"><button type="button" data-day-practical="transport">{practical_transport}</button><button type="button" data-day-practical="hours">{practical_hours}</button><button type="button" data-day-practical="prices">{practical_prices}</button></div></article>').join('')+'</div><h3>{budget_summary}</h3><ul>'+((window.__tripBudgetLines||[]).map(x=>'<li>'+escapeHtml(x)+'</li>').join(''))+'</ul>';document.getElementById('editor-actions').style.display='flex';bindEditor();bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan();document.getElementById("practical").style.display=currentPlan.days.some(d=>d.region)?"block":"none";window.__editablePlan=currentPlan;persistTripContext()}}
 function syncEditor(){{if(!currentPlan)return;document.querySelectorAll('.day-card').forEach(card=>{{const i=+card.dataset.day,d=currentPlan.days[i];if(!d)return;d.title=card.querySelector('.day-title').value.trim();d.morning=card.querySelector('.day-morning').value.trim();d.afternoon=card.querySelector('.day-afternoon').value.trim();d.evening=card.querySelector('.day-evening').value.trim();d.transport=card.querySelector('.day-transport').value.trim();d.region=card.querySelector('.day-region').value}});updateJourneySteps();updatePracticalRegions();updateMapFromPlan();persistTripContext()}}
 function daySpeechText(card){{if(!card)return "";const title=card.querySelector(".day-title")?.value||"";const fields=["day-morning","day-afternoon","day-evening","day-transport"].map(c=>card.querySelector("."+c)?.value||"").filter(Boolean);return [title,...fields].filter(Boolean).join(". ")}} let tripVoiceTurn=0;let tripVoiceAudio=null;const tripVoiceCache=new Map();let tripVoiceOutputContext=null;
 function createTripVoiceAudio(url){{const el=new Audio(url);el.preload="auto";el.setAttribute("playsinline","");el.volume=1;try{{const AC=window.AudioContext||window.webkitAudioContext;if(AC){{if(!tripVoiceOutputContext)tripVoiceOutputContext=new AC();if(tripVoiceOutputContext.state==="suspended")tripVoiceOutputContext.resume().catch(()=>{{}});const source=tripVoiceOutputContext.createMediaElementSource(el),gain=tripVoiceOutputContext.createGain(),compressor=tripVoiceOutputContext.createDynamicsCompressor();gain.gain.value=1.08;compressor.threshold.value=-18;compressor.knee.value=18;compressor.ratio.value=2.5;compressor.attack.value=.003;compressor.release.value=.18;source.connect(gain);gain.connect(compressor);compressor.connect(tripVoiceOutputContext.destination)}}}}catch(_){{el.volume=1}}return el}}
@@ -219,7 +220,7 @@ catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
         error=escape(t["error"]), day=escape(t["day"]), morning=escape(t["morning"]), afternoon=escape(t["afternoon"]), evening=escape(t["evening"]), transport=escape(t["transport"]), budget_summary=escape(t["budget_summary"]), **{"from": escape(t["from"]), "to": escape(t["to"]), "adults": escape(t["adults"])},
         children=escape(t["children"]), loading=escape(t["loading"]), copied=escape(t["copied"]), note=escape(t["note"]), map_title=escape(t["map_title"]), share=escape(t.get("share", "Share this trip")), practical_title=escape(t["practical_title"]), practical_intro=escape(t["practical_intro"]), practical_region=escape(t["practical_region"]), practical_transport=escape(t["practical_transport"]), practical_hours=escape(t["practical_hours"]), practical_prices=escape(t["practical_prices"]), practical_procedures=escape(t["practical_procedures"]), practical_services=escape(t["practical_services"]), practical_loading=escape(t["practical_loading"]), practical_error=escape(t["practical_error"]), practical_checked=escape(t["practical_checked"]), practical_sources=escape(t["practical_sources"]), voice_listen=escape(t["voice_listen"]), voice_stop=escape(t["voice_stop"]), interests_html=_option_list(t["interest_options"], "interests"),
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
-        regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"]), review_chat=escape(t["review_chat"]), region_options_json=json.dumps(t["region_options"], ensure_ascii=False), region_coords_json=json.dumps(REGION_COORDS, ensure_ascii=False), add_day=escape(t["add_day"]), save_edits=escape(t["save_edits"]), remove_day=escape(t["remove_day"])
+        regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"]), review_chat=escape(t["review_chat"]), region_options_json=json.dumps(t["region_options"], ensure_ascii=False), region_coords_json=json.dumps(REGION_COORDS, ensure_ascii=False), add_day=escape(t["add_day"]), save_edits=escape(t["save_edits"]), remove_day=escape(t["remove_day"]), places_label=escape(t.get("places_label", "Fiches lieux :"))
     )
 
 def _budget(data):
@@ -258,7 +259,7 @@ def _map_html(regions, title="Carte du voyage"):
     north = max(latitudes) + margin
     bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
     return f'<iframe title="{escape(title)}" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
-def _normalize_plan(plan, fallback_text, expected_days=None):
+def _normalize_plan(plan, fallback_text, expected_days=None, places_by_id=None):
     fallback = {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
     if not isinstance(plan, dict):
         return fallback
@@ -278,10 +279,17 @@ def _normalize_plan(plan, fallback_text, expected_days=None):
         values = {field: item.get(field) for field in fields}
         if any(not isinstance(value, str) or not value.strip() for value in values.values()):
             return fallback
-        normalized_days.append({
-            "day": index,
-            **{field: value.strip()[:500] for field, value in values.items()},
-        })
+        day = {"day": index, **{field: value.strip()[:500] for field, value in values.items()}}
+        # Liens vers les fiches : uniquement des identifiants réellement présents dans la base.
+        ids = item.get("places") if isinstance(item.get("places"), list) else []
+        linked = []
+        for place_id in ids:
+            place = (places_by_id or {}).get(str(place_id))
+            if place and all(entry["id"] != place["id"] for entry in linked):
+                linked.append({"id": place["id"], "name": str(place.get("name", ""))})
+        if linked:
+            day["places"] = linked[:4]
+        normalized_days.append(day)
 
     normalized_notes = [note.strip()[:500] for note in notes if isinstance(note, str) and note.strip()][:20]
     return {
@@ -290,7 +298,52 @@ def _normalize_plan(plan, fallback_text, expected_days=None):
         "practical_notes": normalized_notes,
     }
 
-def _prompt(data):
+# Centres d'intérêt du formulaire (fr/en) → types de lieux de la base.
+_INTEREST_TYPES = {
+    "plages": {"beach", "coastal_site", "island"}, "beaches": {"beach", "coastal_site", "island"},
+    "culture & histoire": {"heritage", "monument", "museum", "cultural_site", "religious_site"},
+    "culture & history": {"heritage", "monument", "museum", "cultural_site", "religious_site"},
+    "nature": {"natural_site", "coastal_site"}, "faune": {"natural_site"}, "wildlife": {"natural_site"},
+    "îles": {"island"}, "islands": {"island"},
+}
+
+
+def _knowledge_places(data, places, limit=14):
+    """Lieux vérifiés de la base, du plus pertinent au moins pertinent."""
+    regions = set(data.get("regions") or [])
+    wanted = set()
+    for interest in data.get("interests") or []:
+        wanted |= _INTEREST_TYPES.get(str(interest).casefold(), set())
+    if any(str(i).casefold() == "dakar" for i in data.get("interests") or []):
+        regions.add("Dakar")
+    context = str(data.get("context_place") or "").casefold()
+
+    def score(place):
+        name = str(place.get("name", ""))
+        return (
+            3 * bool(context and (context in name.casefold() or name.casefold() in context))
+            + 2 * (place.get("region") in regions)
+            + (place.get("type") in wanted)
+        )
+
+    pool = [p for p in places or [] if p.get("id") and (not regions or p.get("region") in regions or score(p) >= 3)]
+    return sorted(pool, key=score, reverse=True)[:limit]
+
+
+def _places_block(known):
+    if not known:
+        return ""
+    lines = "\n".join(
+        f"- {p['id']} | {p.get('name', '')} ({p.get('region', '')}): {str(p.get('summary', ''))[:140]}" for p in known
+    )
+    return (
+        "\nVerified places from the Teranga AI knowledge base (id | name (region): summary):\n" + lines + "\n"
+        "Prefer these places when they fit the trip. For each day, list in \"places\" the ids of the places "
+        "above that the day visits (only ids from this list; [] if none). Never invent an id.\n"
+    )
+
+
+def _prompt(data, known_places=()):
     language = data.get("lang", "fr")
     return f"""{language_instruction(language)}
 
@@ -305,8 +358,8 @@ Preferred regions: {', '.join(data['regions']) or 'none'}
 Selected place context: {data.get('context_place') or 'none'}
 User profile: {data.get('audience') or 'tourist'} (explicit preference; adapt priorities without inferring personal facts)
 Surprise me: {data['surprise']}
-
-Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string}}], "practical_notes": [string]}}. Create one object per travel day.
+{_places_block(known_places)}
+Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string, "places": [string]}}], "practical_notes": [string]}}. Create one object per travel day.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
 Do not invent hotels, restaurants, transport operators or reservations. If a recommendation needs current verification, say so.
@@ -336,7 +389,7 @@ def _practical_info(client, lang, region, category, day=""):
     return answer[:5000], extract_sources(response)
 
 
-def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guard=None):
+def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guard=None, places=None):
     """Register Trip Planner routes.
 
     ``rate_guard(bucket)`` returns a ready-made 429 response when the caller
@@ -458,7 +511,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
                 return blocked
         try:
             response = client.responses.create(model=app.config.get("OPENAI_TRIP_MODEL") or "gpt-5.6-luna",
-                input=_prompt(data))
+                input=_prompt(data, _knowledge_places(data, places)))
             text = getattr(response, "output_text", "") or ""
             if not text:
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
@@ -469,7 +522,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             except json.JSONDecodeError:
                 parsed_plan = None
             expected_days = max(1, (departure_date - arrival_date).days)
-            plan = _normalize_plan(parsed_plan, text, expected_days)
+            plan = _normalize_plan(parsed_plan, text, expected_days, {str(p.get("id")): p for p in places or [] if p.get("id")})
             if lang == "en":
                 budget_lines = [
                     f"Indicative total budget: {budget_info['total'][0]}–{budget_info['total'][1]} USD",
