@@ -76,3 +76,10 @@ def test_wolof_contract_carries_official_orthography_and_safe_phrases():
     assert "Jërëjëf" in wolof and "ñ, ŋ" in wolof and "Dalal ak jàmm" in wolof
     assert "Jërëjëf" not in language_instruction("fr")
     assert "Repères" not in language_instruction("en")
+
+
+def test_second_batch_covers_thin_regions_with_sources():
+    by_id = {p["id"]: p for p in DATA["places"]}
+    for place_id, region in (("louga", "Louga"), ("ourossogui", "Matam"), ("kolda", "Kolda"), ("sedhiou", "Sédhiou"), ("koungheul", "Kaffrine")):
+        assert by_id[place_id]["region"] == region
+        assert by_id[place_id]["sources"]
