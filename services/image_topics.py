@@ -102,6 +102,9 @@ def _build_primary_query(
     filler = (
         "montre moi", "montre-moi", "montre", "affiche", "affiche moi",
         "affiche-moi", "fais voir", "je veux voir", "donne moi", "donne-moi",
+        "montre moi des photos de", "montre-moi des photos de",
+        "montre moi des photos du", "montre-moi des photos du",
+        "montre moi des photos d", "montre-moi des photos d",
         "des photos de", "des photos du", "des photos d", "photo de", "photos de",
         "photo du", "photos du", "photo d", "photos d",
     )
