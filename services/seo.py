@@ -1,5 +1,7 @@
 from flask import Response
 import json
+from html import escape
+from urllib.parse import quote
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 import os
@@ -476,7 +478,7 @@ REGION_CONTENT = {
     "Ziguinchor": ("région de Basse-Casamance", "Ziguinchor, Oussouye, Cap Skirring et la Casamance", "plages, culture, nature, gastronomie et voyage"),
 }
 
-def render_region_page(region_name, site_url):
+def render_region_page(region_name, site_url, knowledge_places=None):
     if region_name not in REGION_SEO_NAMES:
         return None
     slug = region_slug(region_name)
@@ -498,6 +500,24 @@ def render_region_page(region_name, site_url):
             ]}
         ]
     }
+    # Fiches de la base de connaissances : maillage interne vers /lieux/<id>.
+    region_places = [p for p in knowledge_places or [] if p.get("id") and p.get("region") == region_name]
+    places_section = ""
+    if region_places:
+        cards = "".join(
+            f'<a class="card" href="/lieux/{quote(str(p["id"]))}"><strong>{escape(str(p.get("name", "")))}</strong>'
+            f'<br><small>{escape(str(p.get("summary", ""))[:110])}</small></a>'
+            for p in region_places
+        )
+        places_section = f'<section><h2>Lieux à visiter dans la région {escape(region_name)}</h2><div class="grid">{cards}</div></section>'
+        ld["@graph"].append({
+            "@type": "ItemList",
+            "name": f"Lieux à visiter : {region_name}",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i + 1, "url": f"{site_url}/lieux/{quote(str(p['id']))}", "name": p.get("name", "")}
+                for i, p in enumerate(region_places)
+            ],
+        })
     ld_json = json.dumps(ld, ensure_ascii=True).replace("<", "\\u003c")
     related = "".join(
         f'<a href="/regions/{region_slug(name)}">{name}</a>'
@@ -515,7 +535,7 @@ def render_region_page(region_name, site_url):
 </head><body>{site_header('/regions-senegal')}<main><p class="related"><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
 <h1>Région {region_name}</h1><p class="muted">{region_name} est une {descriptor}. Repères de lieux : {places}.</p>
 <section><h2>Que découvrir ?</h2><p>Cette page sert de point de départ pour {topics}. Demandez à Teranga AI un itinéraire adapté à vos dates, votre budget et votre moyen de transport.</p></section>
-<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
+{places_section}<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
 <section><h2>Préparer votre étape</h2><p>Précisez votre ville de départ, votre destination, la durée du séjour et vos centres d'intérêt pour obtenir une proposition plus utile.</p></section>
 <div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a></div>
 <section><h2>Autres régions</h2><div class="related">{related}</div></section>
