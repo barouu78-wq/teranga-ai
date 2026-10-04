@@ -112,7 +112,7 @@ def _google_photo_relevance_score(query, alt, page_url):
     # Reward meaningful query words appearing in the title/source. This helps
     # rank "Monument de la Renaissance à Dakar" above generic Senegal results.
     stopwords = {
-        "photo", "photos", "image", "images", "montre", "moi", "de", "du", "des",
+        "photo", "photos", "image", "images", "nataal", "montre", "moi", "de", "du", "des",
         "la", "le", "les", "a", "au", "aux", "en", "pour", "voir", "senegal",
     }
     tokens = [
@@ -460,6 +460,6 @@ def should_fetch_images(message: object) -> bool:
         "montre moi", "montre-moi", "affiche", "fais voir",
         "a quoi ressemble", "a quoi ca ressemble", "voir le lieu",
         "voir la ville", "montre la ville", "show me", "show",
-        "picture", "pictures",
+        "picture", "pictures", "nataal",
     )
     return any(_contains_text_term(lowered, term) for term in explicit)

@@ -423,7 +423,8 @@ body.has-chat #messages{padding-top:4px}
 .cursor{display:inline-block;width:7px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--gold);animation:blink .8s infinite}
 @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--accent-soft)}50%{box-shadow:0 0 0 8px transparent}}
-.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;order:3}
+.col>.sources{order:2}
 .acts button{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 12px/1 var(--font);cursor:pointer}
 .acts button:hover{color:var(--ink);border-color:var(--line-strong)}
 .sources{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--muted)}

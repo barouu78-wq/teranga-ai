@@ -68,6 +68,12 @@ def knowledge_image_titles(
                         return True
         return False
 
+    region_names = {
+        normalize(region.get("name", ""))
+        for region in knowledge.get("regions", []) or []
+        if isinstance(region, Mapping)
+    }
+
     # Le lieu précis passe avant sa région (« désert de Lompoul » avant « Louga »).
     # Le nom court (« Gorée » pour « Île de Gorée ») sert aussi à reconnaître le
     # lieu, mais seules ses requêtes d'images sont proposées.
@@ -77,6 +83,9 @@ def knowledge_image_titles(
         name = str(place.get("name", ""))
         candidates = [name, *(place.get("image_queries", []) or [])]
         short = _short_place_name(name)
+        if short and normalize(short) in region_names:
+            # « Corniche de Dakar » ne doit pas capter toute demande sur Dakar.
+            short = ""
         if (
             short
             and not any(_contains_normalized_term(text_value, c, normalize) for c in candidates)
