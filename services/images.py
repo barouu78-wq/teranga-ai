@@ -170,7 +170,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         if not _photo_matches_query(query, page_title, description) or not relevant_image_evidence(query, page_title, description):
             continue
 
-        src = validate(info.get("url") or info.get("thumburl"))
+        src = validate(info.get("thumburl") or info.get("url"))
         if not src or src in seen:
             continue
 
