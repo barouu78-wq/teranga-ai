@@ -58,11 +58,17 @@ def add_security_headers(
             "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
         )
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-    response.headers["Cache-Control"] = (
-        "public, max-age=86400" if path in CACHED_ASSETS
-        else "public, max-age=3600" if path.startswith("/static/")
-        else "no-store"
-    )
+    declared = str(response.headers.get("Cache-Control", ""))
+    if path in CACHED_ASSETS:
+        response.headers["Cache-Control"] = "public, max-age=86400"
+    elif path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=3600"
+    elif declared.startswith("public") and not nonce and "Set-Cookie" not in response.headers:
+        # Page publique et identique pour tous (pages SEO, régions, guides) :
+        # on garde la mise en cache déclarée par la route.
+        response.headers["Cache-Control"] = declared
+    else:
+        response.headers["Cache-Control"] = "no-store"
     if path == "/image-proxy" and response.status_code == 200:
         response.headers["Cache-Control"] = "public, max-age=86400"
     if is_secure or forwarded_proto == "https":
