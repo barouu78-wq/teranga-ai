@@ -41,8 +41,14 @@ def build_og_png() -> bytes:
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32
         )
     except Exception:
-        title_font = ImageFont.load_default()
-        sub_font = title_font
+        # Image Docker « slim » sans DejaVu : police intégrée de Pillow, à la
+        # bonne taille quand la version le permet (Pillow >= 10.1).
+        try:
+            title_font = ImageFont.load_default(size=72)
+            sub_font = ImageFont.load_default(size=32)
+        except TypeError:
+            title_font = ImageFont.load_default()
+            sub_font = title_font
     draw.text((80, 300), "Teranga AI", fill="#1a120c", font=title_font)
     draw.text(
         (80, 400),
