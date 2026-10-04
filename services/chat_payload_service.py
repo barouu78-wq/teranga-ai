@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 from .language_quality import language_instruction
 from .intelligence import build_agent_plan, should_use_deep_reasoning
-from .orchestrator import build_action_request
+from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
 
 
 _AUDIENCE_INSTRUCTIONS = {
