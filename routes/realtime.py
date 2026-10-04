@@ -32,8 +32,8 @@ def register_realtime_route(app, deps):
 
         ip = client_ip()
         identity = abuse_key(ip)
-        realtime_limit = int(os.getenv("REALTIME_RATE_LIMIT", "8"))
-        realtime_hourly = int(os.getenv("REALTIME_HOURLY_LIMIT", "24"))
+        realtime_limit = REALTIME_RATE_LIMIT
+        realtime_hourly = REALTIME_HOURLY_LIMIT
         if abuse_blocked(ip) or abuse_blocked(identity):
             return jsonify({"error": "Trop de conversations vocales rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
         if not allowed_request(ip, realtime_request_log[ip], realtime_limit, 60, "realtime") or not allowed_request(identity, realtime_request_log[identity], realtime_limit, 60, "realtime_identity"):

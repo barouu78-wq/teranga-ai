@@ -187,7 +187,9 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         context = image.get("contextLink") or item.get("link") or ""
         if not thumbnail or not original or not context:
             continue
-        if not thumbnail.startswith(("https://", "http://")):
+        if not thumbnail.startswith("https://"):
+            continue
+        if not str(context).startswith(("https://", "http://")):
             continue
         key = thumbnail.split("?", 1)[0].lower()
         if key in seen:
@@ -400,6 +402,9 @@ def wiki_summary(lang: str, title: str) -> dict:
         return json.loads(resp.read().decode("utf-8"))
 
 ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
+# Formats matriciels uniquement : un SVG servi depuis notre origine pourrait
+# embarquer du script actif.
+ALLOWED_IMAGE_TYPES = frozenset({"image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"})
 
 def usable_wiki_image(src: object) -> str:
     src = str(src or "").split("?", 1)[0][:2000]
@@ -437,7 +442,7 @@ def safe_image_fetch(src: object, max_bytes: int, timeout: float = 5.0, opener=N
         headers = getattr(upstream, "headers", {})
         get_type = getattr(headers, "get_content_type", None)
         content_type = get_type() if callable(get_type) else str(headers.get("Content-Type", "")).split(";", 1)[0].strip().lower()
-        if not content_type.startswith("image/"):
+        if content_type not in ALLOWED_IMAGE_TYPES:
             raise ValueError("Type image invalide")
         length = str(headers.get("Content-Length") or "").strip()
         if length.isdigit() and int(length) > max_bytes:

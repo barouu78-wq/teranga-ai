@@ -336,7 +336,13 @@ def _practical_info(client, lang, region, category, day=""):
     return answer[:5000], extract_sources(response)
 
 
-def register_trip_planner(app, client, site_url, allowed_origins=None):
+def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guard=None):
+    """Register Trip Planner routes.
+
+    ``rate_guard(bucket)`` returns a ready-made 429 response when the caller
+    exceeds its quota, or ``None``. Both API routes call OpenAI (one with web
+    search), so they must not be reachable without rate limiting.
+    """
     configured_origins = {str(origin).rstrip("/") for origin in (allowed_origins or {site_url}) if str(origin).strip()}
 
     @app.post("/api/practical-info")
@@ -346,6 +352,10 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
             return jsonify({"error": "Requête trop volumineuse."}), 413
         if not origin_allowed(request.headers.get("Origin"), request.headers.get("Referer"), configured_origins):
             return jsonify({"error": "Origine non autorisée."}), 403
+        if rate_guard is not None:
+            blocked = rate_guard("practical_info")
+            if blocked is not None:
+                return blocked
         body = request.get_json(silent=True)
         if not isinstance(body, dict):
             return jsonify({"error": "Requête invalide."}), 400
@@ -442,6 +452,10 @@ def register_trip_planner(app, client, site_url, allowed_origins=None):
                 "arrival_date": arrival_date, "departure_date": departure_date,
                 "adults": adults, "children": children, "interests": interests, "regions": regions,
                 "budget": budget, "pace": pace, "audience": audience, "context_place": str(body.get("context_place", ""))[:120], "surprise": body.get("surprise") is True}
+        if rate_guard is not None:
+            blocked = rate_guard("trip_planner")
+            if blocked is not None:
+                return blocked
         try:
             response = client.responses.create(model=app.config.get("OPENAI_TRIP_MODEL") or "gpt-5.6-luna",
                 input=_prompt(data))

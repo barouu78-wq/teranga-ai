@@ -23,3 +23,16 @@ def client_identity(cookie_value: object) -> str:
 def abuse_key(ip: object, identity: object) -> str:
     value = f"{str(ip)[:64]}:{str(identity)[:80]}"
     return hashlib.sha256(value.encode("utf-8")).hexdigest()[:32]
+
+
+def rate_limit_identity(cookie_value: object) -> str:
+    """Identity used for abuse keys.
+
+    Unlike :func:`client_identity`, a missing or invalid cookie maps to a fixed
+    value so clients that drop cookies share one per-IP bucket instead of
+    getting a fresh (unlimited) identity on every request.
+    """
+    raw = str(cookie_value or "")
+    if raw and IDENTITY_PATTERN.fullmatch(raw):
+        return raw
+    return "anonymous"
