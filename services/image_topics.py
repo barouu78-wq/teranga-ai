@@ -155,6 +155,13 @@ def fetch_topic_images(
             # such as "gore" for Île de Gorée without falling back to Dakar.
             specific_titles.extend(image_queries or [str(place.get("name", "")).strip()])
 
+    # Keep a few high-value Senegal place aliases resilient even when
+    # structured knowledge is incomplete. These are search hints, not a
+    # replacement for the knowledge base.
+    normalized_message = normalize(message)
+    if _contains_normalized_term(normalized_message, "gore", normalize) or _contains_normalized_term(normalized_message, "goree", normalize):
+        specific_titles.append("Île de Gorée")
+
     discovered_titles = (
         knowledge_image_titles(message, 4)
         if knowledge_image_titles
