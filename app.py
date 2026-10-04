@@ -177,7 +177,10 @@ if REDIS_URL:
         import redis as redis_lib
         # Délais courts : un Redis injoignable ne doit jamais bloquer les requêtes.
         redis_client = redis_lib.from_url(REDIS_URL, decode_responses=True, socket_connect_timeout=2, socket_timeout=2)
-    except Exception:
+    except Exception as exc:
+        # Adresse illisible (caractère spécial non encodé dans le mot de passe…) :
+        # on le signale sans jamais journaliser l'URL, qui contient le secret.
+        app.logger.error("REDIS_URL invalide (%s) : limites en mémoire", type(exc).__name__)
         redis_client = None
 if TRUST_PROXY:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -649,6 +652,7 @@ HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_t
 register_system_routes(app, {
     "indexnow_key": INDEXNOW_KEY,
     "redis_client": redis_client,
+    "redis_configured": bool(REDIS_URL),
     "issue_csrf": issue_csrf,
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,

@@ -20,6 +20,7 @@ def register_system_routes(app, deps):
     build_icon_png = deps["build_icon_png"]
     icon_svg = deps["icon_svg"]
     redis_client = deps.get("redis_client")
+    redis_configured = deps.get("redis_configured", redis_client is not None)
 
     @app.route(f"/{indexnow_key}.txt")
     def indexnow():
@@ -30,7 +31,8 @@ def register_system_routes(app, deps):
         # « redis » permet de vérifier la configuration REDIS_URL après un
         # déploiement. Le site reste « ok » sans Redis (limites en mémoire).
         if redis_client is None:
-            redis_state = "disabled"
+            # REDIS_URL présente mais illisible ≠ REDIS_URL absente.
+            redis_state = "misconfigured" if redis_configured else "disabled"
         else:
             try:
                 redis_state = "ok" if redis_client.ping() else "unavailable"
