@@ -76,5 +76,5 @@ Suivre chaque mois :
 ## 8. Feuille de route produit
 - Court terme : stabilité et sécurité en production (Redis partagé, `TERANGA_ENV=production`, quotas), mesure d'audience.
 - Intelligence : enrichir la base de connaissances (lieux, régions, personnalités) et la qualité du wolof ; remettre le pulaar dans l'interface quand sa qualité est validée.
-- Produit : fiches indexables par lieu (/lieux, fait) ; partage des réponses par lien signé (/partage, fait) ; itinéraires enrichis (à venir).
+- Produit : fiches indexables par lieu (/lieux, fait) ; partage des réponses par lien signé (/partage, fait) ; itinéraires enrichis avec les lieux vérifiés de la base et liens vers leurs fiches (fait).
 - Partenaires : intégration de l'assistant sur le site d'un partenaire (widget) après un premier pilote réussi.

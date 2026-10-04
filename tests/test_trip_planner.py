@@ -788,3 +788,50 @@ def test_trip_planner_revalidates_session_stored_edit_region():
     assert "regionIsAllowed" in html
     assert "confirmedRegionIsAllowed" in html
     assert "teranga-trip-edit-proposal" in html
+
+
+PLACES = [
+    {"id": "ile-de-goree", "name": "Île de Gorée", "region": "Dakar", "type": "heritage", "summary": "Île classée."},
+    {"id": "lac-rose", "name": "Lac Rose", "region": "Dakar", "type": "natural_site", "summary": "Lac salé."},
+    {"id": "djoudj", "name": "Parc du Djoudj", "region": "Saint-Louis", "type": "natural_site", "summary": "Oiseaux."},
+]
+
+
+def test_planner_prompt_lists_knowledge_places_of_the_chosen_regions():
+    import services.trip_planner as trip_planner
+
+    known = trip_planner._knowledge_places({"regions": ["Dakar"], "interests": ["Culture & histoire"]}, PLACES)
+    assert [p["id"] for p in known] == ["ile-de-goree", "lac-rose"]
+    block = trip_planner._places_block(known)
+    assert "ile-de-goree | Île de Gorée (Dakar)" in block
+    assert "Never invent an id" in block
+
+
+def test_planner_links_only_real_places_and_ignores_invented_ids():
+    from flask import Flask
+    import json
+    import services.trip_planner as trip_planner
+
+    captured = {}
+    plan = {"summary": "Dakar", "practical_notes": [], "days": [{
+        "day": 1, "title": "Gorée", "region": "Dakar", "morning": "Chaloupe", "afternoon": "Visite",
+        "evening": "Retour", "transport": "Bateau", "places": ["ile-de-goree", "inventé", "ile-de-goree"],
+    }]}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": json.dumps(plan)})()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com", places=PLACES)
+    response = app.test_client().post("/api/trip-planner", headers={"Origin": "https://example.com"}, json={
+        "arrival": "2026-10-01", "departure": "2026-10-02", "regions": ["Dakar"],
+    })
+    assert response.status_code == 200
+    assert "ile-de-goree | Île de Gorée" in captured["prompt"]
+    assert "djoudj" not in captured["prompt"]
+    assert response.get_json()["plan"]["days"][0]["places"] == [{"id": "ile-de-goree", "name": "Île de Gorée"}]
