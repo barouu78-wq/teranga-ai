@@ -16,6 +16,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool, env_list
 from routes.seo import register_seo_routes
 from routes.places import register_place_routes
+from services.site_layout import register_layout_globals
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
 from routes.tts import register_tts_route
@@ -146,6 +147,7 @@ BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
+register_layout_globals(app)
 register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
 SENEGAL_PEOPLE = load_senegal_people()

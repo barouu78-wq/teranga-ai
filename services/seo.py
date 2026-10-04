@@ -1,5 +1,7 @@
 from flask import Response
 import json
+
+from services.site_layout import HEAD_ASSETS, site_footer, site_header
 import os
 
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
@@ -361,7 +363,7 @@ def render_seo_page(slug, site_url):
     related = "".join('<a href="/%s">%s</a>' % (s, label) for s, label in page.get("related", []))
     related_html = ""
     if related:
-        related_html = '<nav class="related">Voir aussi : %s<a href="/explorer">Explorer</a></nav>' % related
+        related_html = 'Voir aussi : %s<a href="/explorer">Explorer</a><a href="/lieux">Lieux</a>' % related
     if slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
@@ -417,38 +419,20 @@ def render_seo_page(slug, site_url):
 <meta name=\"twitter:image\" content=\"%(site)s/og.png\">
 <title>%(title)s</title>
 <script type=\"application/ld+json\">%(ld)s</script>
-<style>
-:root{color-scheme:dark;--bg:#0b0907;--text:#f6efe3;--muted:#b8a48c;--gold:#e2b34a;--line:rgba(226,179,74,.18)}
-*{box-sizing:border-box}body{margin:0;background:#0b0907;color:var(--text);font:16px/1.65 system-ui,sans-serif}
-main{width:min(860px,100%% - 32px);margin:auto;padding:28px 0 56px}
-nav{display:flex;justify-content:space-between;margin-bottom:20px}
-.logo{font-weight:800}.logo em{color:var(--gold);font-style:normal}
-nav a,.cta,.related a{color:var(--gold);text-decoration:none;font-weight:750}
-.related{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 16px;font-size:14px}
-article{background:#171310;border:1px solid var(--line);border-radius:28px;padding:28px}
-.kicker{color:var(--gold);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
-h1{font:700 clamp(32px,6vw,48px)/1.08 Georgia,serif;margin:10px 0 16px}
-.intro{font-size:18px;color:var(--muted)}
-section{padding:18px 0;border-top:1px solid var(--line)}
-h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
-.ctaBox{margin-top:24px;padding:18px;border-radius:18px;background:#20190f;border:1px solid var(--line)}
-.source,footer{font-size:12px;color:var(--muted)}
-</style>
+%(head)s
 </head>
-<body><main>
-<nav><div class=\"logo\">Teranga <em>AI</em></div><a href=\"/\">Poser une question</a></nav><button id=\"share-page\" type=\"button\">Partager</button><script>document.getElementById("share-page").onclick=async()=>{try{if(navigator.share){await navigator.share({title:document.title,url:location.href})}else{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_){try{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}catch(_){}}};</script>
-%(related)s
+<body>%(header)s<main>
+<div class=\"related\">%(related)s<button id=\"share-page\" class=\"share-page\" type=\"button\">Partager</button></div><script>document.getElementById("share-page").onclick=async()=>{try{if(navigator.share){await navigator.share({title:document.title,url:location.href})}else{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_){try{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}catch(_){}}};</script>
 <article>
-<div class=\"kicker\">Senegal · Teranga AI</div>
+<div class=\"kicker\">Sénégal · Teranga AI</div>
 <h1>%(h1)s</h1>
 <p class=\"intro\">%(intro)s</p>
 %(sections)s
 %(faq)s
-<div class=\"ctaBox\"><strong>Une question precise ?</strong><p>Reponse courte, photo et carte quand le lieu est connu.</p><a class=\"cta\" href=\"/\">Ouvrir Teranga AI</a></div>
+<div class=\"ctaBox\"><strong>Une question précise ?</strong><p>Réponse courte, photo et carte quand le lieu est connu.</p><a class=\"cta primary\" href=\"/\">Ouvrir Teranga AI</a></div>
 %(source)s
 </article>
-<footer>Teranga AI · FR · EN · WO · PU</footer>
-</main></body></html>""" % {
+</main>%(footer)s</body></html>""" % {
         "description": page["description"],
         "url": url,
         "title": page["title"],
@@ -460,6 +444,9 @@ h2{font-size:20px;margin:0 0 6px}h3{font-size:16px;margin:12px 0 4px}
         "sections": sections,
         "faq": faq_html,
         "source": source_link,
+        "head": HEAD_ASSETS,
+        "header": site_header(),
+        "footer": site_footer(),
     }
     return Response(html, mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
@@ -523,13 +510,13 @@ def render_region_page(region_name, site_url):
 <meta property="og:image" content="{site_url}/og.png"><meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{site_url}/og.png">
 <title>{title}</title><script type="application/ld+json">{ld_json}</script>
-<style>body{{margin:0;background:#0b0907;color:#f6efe3;font:16px/1.65 system-ui,sans-serif}}main{{width:min(900px,calc(100% - 32px));margin:auto;padding:28px 0 60px}}a{{color:#e2b34a;text-decoration:none}}article{{background:#171310;border:1px solid #3b2d18;border-radius:26px;padding:28px}}h1{{font:700 clamp(34px,7vw,52px)/1.05 Georgia,serif;margin:10px 0 14px}}h2{{font-size:20px;margin-bottom:6px}}.muted{{color:#b8a48c}}.actions{{display:flex;gap:10px;flex-wrap:wrap;margin:24px 0}}.cta{{border:1px solid #3b2d18;border-radius:999px;padding:10px 14px;background:#20190f;color:#e2b34a;font-weight:700}}section{{border-top:1px solid #3b2d18;padding:18px 0}}.related{{display:flex;gap:8px;flex-wrap:wrap;font-size:13px}}</style>
-</head><body><main><p><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
+{HEAD_ASSETS}
+</head><body>{site_header('/regions-senegal')}<main><p class="related"><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
 <h1>Région {region_name}</h1><p class="muted">{region_name} est une {descriptor}. Repères de lieux : {places}.</p>
 <section><h2>Que découvrir ?</h2><p>Cette page sert de point de départ pour {topics}. Demandez à Teranga AI un itinéraire adapté à vos dates, votre budget et votre moyen de transport.</p></section>
 <section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
 <section><h2>Préparer votre étape</h2><p>Précisez votre ville de départ, votre destination, la durée du séjour et vos centres d'intérêt pour obtenir une proposition plus utile.</p></section>
 <div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a></div>
 <section><h2>Autres régions</h2><div class="related">{related}</div></section>
-</article></main></body></html>'''
+</article></main>{site_footer()}</body></html>'''
     return Response(html, mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})

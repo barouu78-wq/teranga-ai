@@ -4,15 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Teranga Projet — Partenaires</title>
+{{ site_head }}
 <style>
-:root{font-family:system-ui,-apple-system,sans-serif;color:#172018;background:#f7f7f3}
-body{margin:0}.wrap{max-width:1050px;margin:auto;padding:28px 18px}.top{display:flex;justify-content:space-between;gap:16px;align-items:center}.back{color:#146b3a;text-decoration:none;font-weight:800}.hero{margin:32px 0 22px}.hero h1{margin:0 0 8px;font-size:clamp(28px,5vw,46px)}.hero p{max-width:720px;color:#5d665f}.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:20px}.filters input,.filters select,.filters button{padding:13px;border:1px solid #d9ded9;border-radius:12px;background:#fff;font:inherit}.filters button{background:#146b3a;color:#fff;border-color:#146b3a;font-weight:800}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:#fff;border:1px solid #e1e5e1;border-radius:16px;padding:18px;box-shadow:0 4px 18px #00000008}.tag{display:inline-block;font-size:11px;font-weight:800;background:#eef6f0;color:#146b3a;border-radius:999px;padding:6px 9px}.card h2{margin:12px 0 5px;font-size:20px}.muted{color:#68716a;font-size:13px}.card p{line-height:1.5}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.actions a{padding:10px 12px;border-radius:10px;text-decoration:none;font-weight:800;font-size:13px}.primary{background:#146b3a;color:#fff}.secondary{border:1px solid #d9ded9;color:#26352b}.empty{padding:28px;background:#fff;border:1px dashed #cfd6cf;border-radius:16px}.note{margin-top:24px;color:#68716a;font-size:12px}@media(max-width:700px){.filters,.grid{grid-template-columns:1fr}.top{align-items:flex-start}}
+.hero{margin:0 0 6px}
+.hero h1{margin:8px 0}
+.tag{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--gold-soft);color:var(--gold);font-size:12px;font-weight:700}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.filters select,.filters input{min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-size:16px}
+.filters button{min-height:44px;padding:0 18px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:700 15px/1 var(--font);cursor:pointer}
+.card h2{margin:8px 0 4px;font-size:18px}
+.card p{color:var(--muted);font-size:15px}
+.card .actions{margin:12px 0 0}
+.card .actions a{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border-radius:999px;font-size:14px;font-weight:700;text-decoration:none}
+.card .actions .primary{background:var(--accent);color:var(--accent-ink)}
+.card .actions .secondary{border:1px solid var(--line-strong);color:var(--ink)}
+.empty,.note{color:var(--muted);font-size:14px}
+.note{margin-top:20px}
 </style>
 </head>
 <body>
-<main class="wrap">
-  <div class="top"><strong>🚀 Teranga Projet</strong><a class="back" href="/">← Retour</a></div>
-  <section class="hero">
+{{ site_header() }}
+<main class="wide">
+  <div class="panel">
+  <section class="hero" style="border:0;padding:0">
     <span class="tag">Annuaire partenaires</span>
     <h1>Trouve quelqu’un pour faire avancer ton projet.</h1>
     <p>Recherche des structures de financement, d’accompagnement, de réseau ou des entreprises avec lesquelles proposer un partenariat.</p>
@@ -32,7 +46,8 @@ body{margin:0}.wrap{max-width:1050px;margin:auto;padding:28px 18px}.top{display:
     <input name="city" value="{{ selected_city }}" placeholder="Ville (ex. Thiès, Dakar)">
     <button type="submit">Rechercher</button>
   </form>
-  <section class="grid">
+  </div>
+  <section class="grid" style="border:0;margin-top:16px">
   {% for partner in partners %}
     <article class="card">
       <span class="tag">{{ partner.type }}</span>
@@ -52,5 +67,6 @@ body{margin:0}.wrap{max-width:1050px;margin:auto;padding:28px 18px}.top{display:
   </section>
   <div class="note">Les coordonnées affichées sont des coordonnées publiques. Teranga Projet ne garantit pas qu’un organisme acceptera une demande de partenariat.</div>
 </main>
+{{ site_footer() }}
 </body>
 </html>

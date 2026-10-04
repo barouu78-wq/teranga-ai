@@ -882,8 +882,8 @@ def test_explorer_has_mobile_tap_targets():
 
     html = app.test_client().get("/explorer").get_data(as_text=True)
 
-    assert "article>a{display:block" in html
-    assert "min-height:40px" in html
+    # Liens d'action regroupés sous chaque carte, cibles tactiles >= 40px.
+    assert ".place-actions a{display:inline-flex;align-items:center;min-height:40px" in html
 
 
 def test_home_bounds_persisted_chat_history():
