@@ -65,9 +65,11 @@ def test_execution_preserves_prepared_request_id():
 
 
 def test_handler_failure_is_bounded():
+    prepared = prepare_action("prepare_trip_plan")
     result = execute_action(
         "prepare_trip_plan",
         confirmed=True,
+        request_id=prepared.request_id,
         handlers={"prepare_trip_plan": lambda: (_ for _ in ()).throw(RuntimeError("boom"))},
     )
     assert result.status == "execution_failed"
