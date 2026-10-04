@@ -102,7 +102,7 @@ def register_chat_route(app, deps):
                 reply, sources, image, maps = complete_reply(payload)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
-                return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal")})
+                return jsonify({"reply": reply, "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
                 return jsonify({"error": public_error(exc)}), 500
@@ -164,6 +164,8 @@ def register_chat_route(app, deps):
                     yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
                 if payload.get("trip_edit_proposal"):
                     yield json.dumps({"itinerary_edit": payload["trip_edit_proposal"]}, ensure_ascii=False) + "\n"
+                if payload.get("ux_hints"):
+                    yield json.dumps({"ux": payload["ux_hints"]}, ensure_ascii=False) + "\n"
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
