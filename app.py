@@ -15,6 +15,7 @@ from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool, env_list
 from routes.seo import register_seo_routes
+from routes.places import register_place_routes
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
 from routes.tts import register_tts_route
@@ -132,7 +133,6 @@ MODEL = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 TRUST_PROXY = env_bool("TRUST_PROXY", True)
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
 register_localized_routes(app, SITE_URL)
-register_seo_routes(app, SITE_URL)
 
 INDEXNOW_KEY = "8078ffb659c643b58bddddca48be0627"
 ALLOWED_ORIGINS = {
@@ -146,6 +146,8 @@ BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
+register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
+register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
 _OG_PNG = None
