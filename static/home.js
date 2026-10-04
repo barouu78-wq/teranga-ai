@@ -252,7 +252,9 @@ function renderAudience(){
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
 }
 
-let lang=storageGet('teranga-lang','fr');
+// ?lang=… (widget partenaire, pages en anglais) prime sur la langue mémorisée.
+const urlParams=(()=>{try{return new URLSearchParams(location.search)}catch(_){return new URLSearchParams()}})();
+let lang=['fr','en','wo','ff'].includes(urlParams.get('lang'))?urlParams.get('lang'):storageGet('teranga-lang','fr');
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeSessionId=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
@@ -1695,4 +1697,7 @@ $('voiceToggle').onclick=()=>{
   }
 };
 loadFx();
-themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();sessionStorage.removeItem('teranga-chat-prefill');}}catch(_){}setupMic();
+themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();sessionStorage.removeItem('teranga-chat-prefill');}}catch(_){}
+// ?q=… (fiches lieux, réponses partagées, widget) : question pré-remplie, jamais envoyée sans l'utilisateur.
+const urlQuestion=(urlParams.get('q')||'').trim().slice(0,500);
+if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Event('input'));input.focus();}setupMic();

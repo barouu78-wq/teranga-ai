@@ -52,6 +52,9 @@ def add_security_headers(
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
+    if path == "/widget.js":
+        # Script public inclus par les sites partenaires (balise <script> tierce).
+        response.headers["Cross-Origin-Resource-Policy"] = "cross-origin"
     if path == "/image-proxy":
         # Contenu tiers relayé depuis notre origine : aucun script, document isolé.
         response.headers["Content-Security-Policy"] = (

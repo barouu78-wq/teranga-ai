@@ -89,6 +89,15 @@ def register_system_routes(app, deps):
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
 
+    widget_path = Path(__file__).resolve().parents[1] / "static" / "widget.js"
+
+    @app.get("/widget.js")
+    def partner_widget():
+        # Chargé par les sites partenaires : URL stable, cache court.
+        resp = Response(widget_path.read_text(encoding="utf-8"), mimetype="application/javascript")
+        resp.headers["Cache-Control"] = "public, max-age=3600"
+        return resp
+
     @app.get("/offline")
     def offline_page():
         html = (
