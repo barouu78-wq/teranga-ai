@@ -27,5 +27,9 @@ def test_journey_buttons_have_single_deterministic_handlers():
     for journey in ("travel", "project", "discover", "chat"):
         assert f'data-journey="{journey}"' in html
     assert html.count("?.addEventListener('click'") >= 4
+    assert 'querySelector(\'[data-journey="travel"]\')' in html
+    assert 'querySelector(\'[data-journey="project"]\')' in html
+    assert 'querySelector(\'[data-journey="discover"]\')' in html
+    assert 'querySelector(\'[data-journey="chat"]\')' in html
     assert "Journey buttons are wired individually above" in html
     assert "journey==='discover') window.location.href='/explorer'" not in html
