@@ -1,8 +1,14 @@
 """Chat response orchestration extracted from the Flask application."""
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from .orchestrator import build_agent_plan, run_enrichments
+
+# Images et carte dépendent d'appels réseau lents (Google, Wikimedia) : elles
+# sont lancées en parallèle de la génération du texte au lieu de l'attendre.
+_ENRICHMENT_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="teranga-enrich")
+ENRICHMENT_TIMEOUT = 12.0
 
 
 def select_chat_model(payload, model, complex_model="gpt-5.6-sol"):
@@ -97,10 +103,23 @@ def build_chat_service(
             logger.info("chat_enrichment_ms %.2f", (time.perf_counter() - started_at) * 1000)
         return result
 
+    def start_enrichments(payload):
+        """Start image/map enrichment in the background; returns a future."""
+        return _ENRICHMENT_EXECUTOR.submit(complete_enrichments, payload)
+
+    def enrichment_result(future):
+        try:
+            return future.result(timeout=ENRICHMENT_TIMEOUT)
+        except Exception:
+            if hasattr(logger, "exception"):
+                logger.exception("chat_enrichment_failed")
+            return None, None
+
     def complete_reply(payload):
+        enrichments = start_enrichments(payload)
         response = create_response(payload, stream=False)
         text = clean_answer(getattr(response, "output_text", "") or "")
-        image, map_result = complete_enrichments(payload)
+        image, map_result = enrichment_result(enrichments)
         return (
             text,
             extract_sources(response),
@@ -113,4 +132,6 @@ def build_chat_service(
         "create_response": create_response,
         "complete_reply": complete_reply,
         "complete_enrichments": complete_enrichments,
+        "start_enrichments": start_enrichments,
+        "enrichment_result": enrichment_result,
     }

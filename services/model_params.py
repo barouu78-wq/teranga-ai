@@ -5,6 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import Any
 
+CHAT_MAX_OUTPUT_TOKENS = 800
+WEB_OR_PLANNER_MAX_OUTPUT_TOKENS = 1200
+PROMPT_CACHE_KEY = "teranga-chat-v1"
+
 
 def build_model_kwargs(
     payload: dict[str, Any],
@@ -29,10 +33,16 @@ def build_model_kwargs(
         "model": model,
         "instructions": payload["instructions"],
         "input": payload["input_text"],
-        "max_output_tokens": 600 if (use_web or planner) else 400,
+        # Les tokens de raisonnement sont décomptés de max_output_tokens : une
+        # limite trop basse tronque la réponse visible. La longueur effective
+        # reste pilotée par les consignes du prompt.
+        "max_output_tokens": WEB_OR_PLANNER_MAX_OUTPUT_TOKENS if (use_web or planner) else CHAT_MAX_OUTPUT_TOKENS,
         "reasoning": {"effort": effort},
         "truncation": "auto",
         "stream": stream,
+        # Préfixe stable (prompt système) : améliore le taux de cache côté OpenAI,
+        # donc la latence du premier token et le coût.
+        "prompt_cache_key": PROMPT_CACHE_KEY,
     }
     if use_web:
         tool: dict[str, Any] = {

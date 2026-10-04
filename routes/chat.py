@@ -26,6 +26,8 @@ def register_chat_route(app, deps):
     complete_reply = deps["complete_reply"]
     create_response = deps["create_response"]
     run_chat_enrichments = deps.get("run_chat_enrichments")
+    start_chat_enrichments = deps.get("start_chat_enrichments")
+    chat_enrichment_result = deps.get("chat_enrichment_result")
     extract_sources = deps["extract_sources"]
     event_delta = deps["event_delta"]
     clean_answer = deps["clean_answer"]
@@ -113,6 +115,12 @@ def register_chat_route(app, deps):
             first_output_logged = False
             yielded = False
             sources = []
+            # Les enrichissements (images, carte) tournent pendant que le modèle écrit.
+            enrichments = (
+                start_chat_enrichments(payload)
+                if start_chat_enrichments and chat_enrichment_result
+                else None
+            )
             try:
                 stream = create_response(payload, stream=True)
                 logger.info("chat_model_startup_ms %.2f", (time.perf_counter() - model_started_at) * 1000)
@@ -151,7 +159,9 @@ def register_chat_route(app, deps):
                     if reply:
                         yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
-                    if run_chat_enrichments:
+                    if enrichments is not None:
+                        image, maps = chat_enrichment_result(enrichments)
+                    elif run_chat_enrichments:
                         image, maps = run_chat_enrichments(payload)
                     else:
                         image = None
