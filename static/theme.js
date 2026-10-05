@@ -10,6 +10,16 @@
     2026:{korite:[3,20,2],tabaski:[5,27,2],magal:[8,2,2]},
     2027:{korite:[3,10,2],tabaski:[5,17,2],magal:[7,23,2]}
   };
+  // Les anciennes versions enregistraient « light » ou « dark » au moindre
+  // clic, ce qui bloquait le mode automatique. On remet tout le monde en
+  // « auto » une seule fois ; les choix faits ensuite sont respectés.
+  var VERSION_KEY='teranga-theme-v',VERSION='2';
+  try{
+    if(localStorage.getItem(VERSION_KEY)!==VERSION){
+      localStorage.removeItem(KEY);
+      localStorage.setItem(VERSION_KEY,VERSION);
+    }
+  }catch(e){}
   function readMode(){
     try{var v=localStorage.getItem(KEY);if(v==='light'||v==='dark'||v==='auto')return v;}catch(e){}
     return 'auto';

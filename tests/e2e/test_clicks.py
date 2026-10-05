@@ -95,6 +95,21 @@ def test_auto_theme_follows_time_of_day(page, base_url, when, theme):
     assert page.evaluate("document.documentElement.dataset.theme") == theme
 
 
+def test_old_saved_theme_no_longer_blocks_auto_mode(page, base_url):
+    import datetime
+
+    # Avant, un simple clic enregistrait « light » et figeait le thème.
+    page.add_init_script("if(!localStorage.getItem('teranga-theme-v'))localStorage.setItem('teranga-theme','light')")
+    page.clock.install(time=datetime.datetime.fromisoformat("2026-10-05T21:00:00"))
+    page.goto(base_url + "/")
+    assert page.get_attribute("#themeBtn", "data-mode") == "auto"
+    assert page.evaluate("document.body.dataset.theme") == "dark"
+    page.click("#themeBtn")
+    page.reload()
+    assert page.get_attribute("#themeBtn", "data-mode") == "light"  # un nouveau choix est gardé
+    assert page.errors == []
+
+
 def test_festive_touch_on_independence_day(page, base_url):
     import datetime
 
