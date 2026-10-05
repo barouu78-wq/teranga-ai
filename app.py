@@ -664,7 +664,7 @@ register_chat_route(app, {
     "answer_cache": ANSWER_CACHE,
     # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
     # de la base de connaissances invalide les anciennes réponses en cache.
-    "cache_model": MODEL + ":" + hashlib.sha256((BASE_DIR / "data" / "senegal_knowledge.json").read_bytes()).hexdigest()[:12],
+    "cache_model": MODEL + ":" + hashlib.sha256(b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json"))).hexdigest()[:12],
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,

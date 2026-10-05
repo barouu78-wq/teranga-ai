@@ -314,11 +314,18 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         lines.append("PATRIMOINE MONDIAL UNESCO : " + ", ".join(unesco) + ".")
 
     if people and tokens:
-        matched_people = []
+        # Une personne citée par son nom passe avant les mentions dans un texte ;
+        # le nom est comparé mot à mot (« Laye » ne désigne pas « Abdoulaye »).
+        named, mentioned = [], []
         for person in people:
-            haystack = f"{person.get('name', '')} {person.get('period', '')} {person.get('text', '')}".casefold()
-            if any(token in haystack for token in tokens):
-                matched_people.append(person)
+            name_words = set(re.findall(r"[a-z0-9]+", _fold(person.get("name", ""))))
+            haystack = _fold(f"{person.get('name', '')} {person.get('period', '')} {person.get('text', '')}")
+            name_hits = sum(1 for token in tokens if token in name_words)
+            if name_hits:
+                named.append((-name_hits, len(named), person))
+            elif any(token in haystack for token in tokens):
+                mentioned.append(person)
+        matched_people = [person for _, _, person in sorted(named, key=lambda item: item[:2])] or mentioned
         if matched_people:
             lines.append("PERSONNALITÉS PERTINENTES :")
             for person in matched_people[:4]:
