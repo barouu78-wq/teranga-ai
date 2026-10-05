@@ -7,6 +7,7 @@ import time
 from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
+from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
 
@@ -39,6 +40,17 @@ def register_chat_route(app, deps):
     public_error = deps["public_error"]
     share_secret = deps.get("share_secret", "")
     knowledge_places = deps.get("knowledge_places") or []
+    places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+
+    def places_with_booking(message, language):
+        """Fiches citées ; la première porte ses liens « Réserver » (affiliés) s'ils sont configurés."""
+        places = mentioned_places(message, knowledge_places)
+        config = affiliate_config()
+        if places and config:
+            links = booking_links(places_by_id.get(places[0]["id"], places[0]), config, language)
+            if links:
+                places[0] = {**places[0], "book": [{"label": l["label"], "href": l["href"]} for l in links]}
+        return places
     field = deps["field"]
     logger = deps.get("logger", app.logger)
     answer_cache = deps.get("answer_cache")
@@ -133,7 +145,7 @@ def register_chat_route(app, deps):
             if payload.get("action_request"):
                 events.append({"action": payload["action_request"]})
             # Lieux de la base cités dans la question : lien vers leur fiche /lieux.
-            places = mentioned_places(payload.get("message", ""), knowledge_places)
+            places = places_with_booking(payload.get("message", ""), payload.get("language", "fr"))
             if places:
                 events.append({"places": places})
             share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
@@ -152,7 +164,7 @@ def register_chat_route(app, deps):
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
                 share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
-                return jsonify({"reply": reply, "share": share, "places": mentioned_places(payload.get("message", ""), knowledge_places), "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
+                return jsonify({"reply": reply, "share": share, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr")), "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}

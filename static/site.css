@@ -133,3 +133,4 @@ body[data-ambiance="casamance"]::after{background:repeating-linear-gradient(90de
 :root:not([data-theme="light"]) body[data-ambiance="casamance"]{--accent:#7fc27a;--link:#9fd59a;--nav-gold:#7fc27a;--accent-ink:#0c1a0d}}
 :root[data-theme="dark"] body[data-ambiance="saint-louis"]{--accent:#7fb3d9;--link:#9cc6e6;--nav-gold:#7fb3d9;--accent-ink:#0b1520}
 :root[data-theme="dark"] body[data-ambiance="casamance"]{--accent:#7fc27a;--link:#9fd59a;--nav-gold:#7fc27a;--accent-ink:#0c1a0d}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;letter-spacing:.02em;vertical-align:middle}

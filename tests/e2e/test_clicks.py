@@ -285,3 +285,19 @@ def test_offline_mode_keeps_visited_guides_and_explains_chat(browser):
         assert page.locator("#messages a[href='/offline']").count() == 1
     finally:
         context.close()
+
+
+def test_chat_shows_partner_booking_links_and_drops_foreign_ones(page, base_url):
+    places = [{"id": "goree", "name": "Île de Gorée", "book": [
+        {"label": "🏨 Hôtels à Dakar", "href": "/go/hotels?q=Dakar&from=goree"},
+        {"label": "piège", "href": "https://evil.example/"},
+    ]}]
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": "Gorée est une île."}, {"places": places}), content_type="application/x-ndjson"))
+    page.goto(base_url + "/")
+    ask(page, "Parle-moi de Gorée")
+    link = page.get_by_text("🏨 Hôtels à Dakar")
+    link.wait_for(timeout=5000)
+    assert link.get_attribute("rel") == "sponsored nofollow"
+    assert "commission" in link.get_attribute("title")
+    assert page.get_by_text("piège").count() == 0
+    assert page.errors == []
