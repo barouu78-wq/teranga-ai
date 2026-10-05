@@ -62,6 +62,17 @@ def render_privacy(lang: str, contact_email: str = "") -> str:
 <p class="intro">{escape(copy['intro'])}</p>{sections}<p><small>{escape(copy['updated'])} : {_UPDATED}</small></p></article></main>{site_footer(lang)}</body></html>"""
 
 
+# Application Android (paquet PWABuilder). Ces valeurs sont publiques : le
+# fichier assetlinks.json est fait pour être lu par tous. Ajouter ici
+# l'empreinte « Clé de signature d'application » de la Play Console
+# (Intégrité de l'application) dès qu'elle est connue.
+ANDROID_APP_PACKAGE = "fr.teranga_ai"
+ANDROID_CERT_SHA256 = (
+    # Clé de signature créée par PWABuilder (signing.keystore).
+    "BB:B4:D2:27:9E:38:42:F3:71:29:3C:B8:EA:B6:01:00:D7:97:F2:01:D1:FE:17:A4:5D:8E:AA:A5:79:C0:F7:A8",
+)
+
+
 def asset_links(package: str, fingerprints: str) -> list:
     prints = [item.strip().upper() for item in str(fingerprints or "").split(",") if item.strip()]
     if not package or not prints:
@@ -89,7 +100,10 @@ def register_legal_routes(app, deps):
     def android_asset_links():
         # Prouve à Android que l'application Google Play appartient à ce site
         # (application « TWA » qui affiche teranga-ai.fr en plein écran).
-        links = asset_links(os.getenv("ANDROID_APP_PACKAGE", "").strip(), os.getenv("ANDROID_CERT_SHA256", ""))
+        links = asset_links(
+            os.getenv("ANDROID_APP_PACKAGE", "").strip() or ANDROID_APP_PACKAGE,
+            os.getenv("ANDROID_CERT_SHA256", "") or ",".join(ANDROID_CERT_SHA256),
+        )
         if not links:
             return Response("[]", status=404, mimetype="application/json")
         return Response(json.dumps(links), mimetype="application/json", headers={"Cache-Control": "public, max-age=3600"})
