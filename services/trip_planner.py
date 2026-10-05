@@ -1,4 +1,5 @@
 import json
+import os
 from html import escape
 from flask import Response, jsonify, request
 from datetime import date
@@ -207,8 +208,10 @@ interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
 regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),context_place:sessionStorage.getItem('teranga-place-name')||'',audience:audience,surprise:document.getElementById('surprise').checked}};
 status.innerHTML='<p class="loading">{loading}</p>'; result.textContent='';
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});const data=await r.json();if(!r.ok)throw new Error(data.error||'error');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};window.__tripBudgetLines=data.budget?.lines||[];renderEditablePlan(p);document.getElementById("voice-result-actions").style.display="flex";status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';syncEditor();payload.edited_plan=currentPlan;const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='{copied}';}};}}
-catch(err){{status.innerHTML='<p class="error">{error}</p>';}}
+if(form.dataset.busy==='1')return;form.dataset.busy='1';const submitBtn=form.querySelector('[type=submit]');if(submitBtn)submitBtn.disabled=true;const ctl=new AbortController();const killer=setTimeout(()=>ctl.abort(),100000);
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload),signal:ctl.signal}});const data=await r.json().catch(()=>({{}}));if(!r.ok)throw new Error(data.error||'');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};window.__tripBudgetLines=data.budget?.lines||[];renderEditablePlan(p);document.getElementById("voice-result-actions").style.display="flex";status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';syncEditor();payload.edited_plan=currentPlan;const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=async()=>{{await navigator.clipboard.writeText(location.href);document.getElementById('copy').textContent='{copied}';}};}}
+catch(err){{const p=document.createElement('p');p.className='error';p.textContent=(err&&err.name!=='AbortError'&&err.message)||'{error}';status.replaceChildren(p);}}
+finally{{clearTimeout(killer);form.dataset.busy='';if(submitBtn)submitBtn.disabled=false;}}
 }};
 </script></body></html>""".format(
         head=HEAD_ASSETS, header=site_header("/trip-planner", lang), footer=site_footer(lang),
@@ -375,10 +378,36 @@ def _practical_prompt(lang, region, category, day=""):
     return f"""{language_instruction(lang)}\n\nGive a concise, practical answer about {topic} in {region}, Senegal. Day activity context: {day or "none"}. Use live web search and prioritize official or operator sources when available. Distinguish verified current facts from estimates or uncertainty. Never invent a price, schedule, phone number, address, availability or procedure. Mention when information should be rechecked before travel. If a day activity is supplied, use it only as context and do not assume it is a confirmed venue or booking. Do not include URLs in the answer because sources are returned separately.\n"""
 
 
+# Délai sous le timeout de Gunicorn (120 s) : une réponse trop lente renvoie
+# une erreur JSON propre au lieu d'une page coupée par le serveur.
+OPENAI_TIMEOUT = float(os.getenv("TRIP_OPENAI_TIMEOUT", "90"))
+_MODEL_ERROR_MARKERS = ("not found", "does not exist", "not available", "unsupported", "not permitted")
+
+
+def _trip_models():
+    """Modèle du planificateur puis secours, comme pour le chat."""
+    chain = [os.getenv("OPENAI_TRIP_MODEL"), os.getenv("OPENAI_MODEL"), "gpt-5.6-luna", "gpt-5.6-sol"]
+    return [m for i, m in enumerate(chain) if m and m not in chain[:i]]
+
+
+def _create(client, **kwargs):
+    """responses.create avec délai borné et repli si le modèle est indisponible."""
+    api = client.with_options(timeout=OPENAI_TIMEOUT) if hasattr(client, "with_options") else client
+    last = None
+    for model in _trip_models():
+        try:
+            return api.responses.create(model=model, **kwargs)
+        except Exception as exc:  # noqa: BLE001 - repli uniquement sur « modèle indisponible »
+            text = f"{type(exc).__name__} {exc}".lower()
+            if "model" not in text or not any(m in text for m in _MODEL_ERROR_MARKERS):
+                raise
+            last = exc
+    raise last if last else RuntimeError("Aucun modèle disponible")
+
+
 def _practical_info(client, lang, region, category, day=""):
-    model = "gpt-5.6-luna"
-    response = client.responses.create(
-        model=model,
+    response = _create(
+        client,
         input=_practical_prompt(lang, region, category, day),
         max_output_tokens=700,
         reasoning={"effort": "low"},
@@ -510,8 +539,16 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             if blocked is not None:
                 return blocked
         try:
-            response = client.responses.create(model=app.config.get("OPENAI_TRIP_MODEL") or "gpt-5.6-luna",
-                input=_prompt(data, _knowledge_places(data, places)))
+            expected_days = max(1, (departure_date - arrival_date).days)
+            response = _create(
+                client,
+                input=_prompt(data, _knowledge_places(data, places)),
+                # Raisonnement court et sortie bornée : un plan de N jours tient
+                # en ~450 jetons par jour ; évite les générations interminables.
+                reasoning={"effort": "low"},
+                max_output_tokens=min(16000, 1500 + 450 * expected_days),
+                truncation="auto",
+            )
             text = getattr(response, "output_text", "") or ""
             if not text:
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
@@ -521,7 +558,6 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
                 parsed_plan = json.loads(text)
             except json.JSONDecodeError:
                 parsed_plan = None
-            expected_days = max(1, (departure_date - arrival_date).days)
             plan = _normalize_plan(parsed_plan, text, expected_days, {str(p.get("id")): p for p in places or [] if p.get("id")})
             if lang == "en":
                 budget_lines = [
@@ -550,6 +586,13 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
                 "language": lang,
                 "map_html": _map_html(regions, "Trip map" if lang == "en" else "Carte du voyage"),
             })
-        except Exception:
+        except Exception as exc:
             app.logger.exception("trip-planner")
-            return jsonify({"error": "Impossible de générer le voyage pour le moment."}), 502
+            if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
+                message = ("The trip took too long to generate. Try again with fewer days or regions."
+                           if lang == "en" else
+                           "La génération a pris trop de temps. Réessaie avec moins de jours ou de régions.")
+                return jsonify({"error": message}), 504
+            message = ("The trip planner is temporarily unavailable. Please try again in a moment."
+                       if lang == "en" else "Impossible de générer le voyage pour le moment. Réessaie dans un instant.")
+            return jsonify({"error": message}), 503, {"Retry-After": "10"}
