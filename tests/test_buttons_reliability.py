@@ -27,3 +27,11 @@ def test_long_answers_use_an_idle_timeout_and_offer_retry():
 def test_taps_have_no_300ms_delay():
     assert "touch-action:manipulation" in HTML
     assert "touch-action:manipulation" in (ROOT / "static" / "site.css").read_text(encoding="utf-8")
+
+
+def test_mic_never_stays_in_a_dead_listening_state():
+    assert "async function startVoiceOrExplain()" in JS
+    start = JS.index("async function startVoiceOrExplain()")
+    body = JS[start:JS.index("\n}", start)]
+    assert "try{ok=await startRealtimeVoice();}catch(_){ok=false;}" in body
+    assert "endVoiceMode();" in body and "voiceStatus(" in body
