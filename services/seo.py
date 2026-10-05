@@ -342,7 +342,6 @@ SEO_PAGES = {
         ],
         "related": [("dakar", "Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("transport-dakar", "Transport Dakar")]
     },
-,
 
     "voyage-senegal": {
         "title": "Voyage au Sénégal : guide, itinéraires et conseils | Teranga AI",
