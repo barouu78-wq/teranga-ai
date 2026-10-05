@@ -51,3 +51,20 @@ def test_manifest_uses_the_new_brand_colors():
 
     manifest = app.test_client().get("/manifest.webmanifest").get_json()
     assert manifest["theme_color"] == "#b5451b" and manifest["background_color"] == "#fbf3e6"
+
+
+def test_manifest_has_store_ready_screenshots_and_shortcuts():
+    from PIL import Image
+
+    from app import app
+
+    client = app.test_client()
+    manifest = client.get("/manifest.webmanifest").get_json()
+    assert {icon["purpose"] for icon in manifest["icons"]} == {"any", "maskable"}
+    assert len(manifest["shortcuts"]) == 3 and manifest["prefer_related_applications"] is False
+    for shot in manifest["screenshots"]:
+        response = client.get(shot["src"])
+        assert response.status_code == 200
+        width, height = Image.open(__import__("io").BytesIO(response.data)).size
+        assert shot["sizes"] == f"{width}x{height}"
+        assert height / width <= 2  # rapport maximal accepté par Google Play
