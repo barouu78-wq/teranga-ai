@@ -84,7 +84,7 @@ Le partenaire disparaît automatiquement après la date `until`.
 4. **Restaurants de la Corniche et des Almadies** à Dakar.
 5. **Agences de location de voiture** à Dakar et à l'aéroport AIBD.
 
-Note chaque contact dans `docs/prospection_modele.csv` (date, statut, prochaine action). Le message type se trouve dans `docs/COMMERCIAL_PLAN.md`.
+Note chaque contact dans `docs/prospection_modele.csv` (date, statut, prochaine action). Les messages WhatsApp prêts à envoyer, les relances et les réponses aux objections sont dans `docs/VENTES-MESSAGES.md`.
 
 ## Suivre les résultats
 - **Clics sur les liens de réservation** : Render → **Logs** → recherche `affiliate-click`. Chaque ligne indique le type (hôtels ou activités) et le lieu d'où vient le clic.
