@@ -897,3 +897,65 @@ def test_generate_never_reads_storage_unguarded():
     assert html.count("context_place:safePlaceName()") == 2
     script = html.split("const LS=safeStore", 1)[1]
     assert "localStorage." not in script and "sessionStorage." not in script
+
+
+def _stream_app(events_or_exc):
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            if isinstance(events_or_exc, Exception):
+                raise events_or_exc
+            return iter(events_or_exc)
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
+    return app, captured
+
+
+def _ev(kind, **attrs):
+    return type("Event", (), {"type": kind, **attrs})()
+
+
+def _stream_lines(app):
+    import json as _json
+
+    response = app.test_client().post(
+        "/api/trip-planner",
+        headers={"Origin": "https://example.com", "X-Teranga-Stream": "1"},
+        json={"arrival": "2026-10-01", "departure": "2026-10-03"},
+    )
+    assert response.status_code == 200
+    assert response.mimetype == "application/x-ndjson"
+    return [_json.loads(line) for line in response.get_data(as_text=True).splitlines() if line]
+
+
+def test_trip_planner_stream_reports_day_progress_then_result():
+    day = '{"day":%d,"title":"T","region":"Kaolack","morning":"M","afternoon":"A","evening":"E","transport":"Bus"}'
+    chunks = ['{"summary":"Saloum","days":[', day % 1, ",", day % 2, '],"practical_notes":[]}']
+    events = [_ev("response.output_text.delta", delta=c) for c in chunks]
+    app, captured = _stream_app(events)
+    lines = _stream_lines(app)
+    assert captured["stream"] is True
+    progress = [line["progress"]["day"] for line in lines if "progress" in line]
+    assert progress == [0, 1, 2]
+    result = lines[-1]["result"]
+    assert [d["day"] for d in result["plan"]["days"]] == [1, 2]
+    assert result["budget"]["lines"]
+
+
+def test_trip_planner_stream_errors_are_public_messages():
+    app, _ = _stream_app(TimeoutError("read timed out"))
+    lines = _stream_lines(app)
+    assert lines[-1]["status"] == 504
+    assert "trop de temps" in lines[-1]["error"]
+    app, _ = _stream_app(RuntimeError("secret internal detail"))
+    last = _stream_lines(app)[-1]
+    assert last["status"] == 503 and "secret" not in last["error"]
