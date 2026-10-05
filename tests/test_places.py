@@ -50,3 +50,33 @@ def test_explorer_cards_link_to_place_pages():
     from app import app
 
     assert 'href="/lieux/goree"' in app.test_client().get("/explorer").get_data(as_text=True)
+
+
+def test_place_page_shows_how_to_get_there():
+    from app import app
+
+    html = app.test_client().get("/lieux/goree").get_data(as_text=True)
+    assert "Comment y aller" in html and "gare maritime" in html
+
+
+def test_place_aliases_find_the_place_and_its_photos(monkeypatch):
+    import app as app_module
+    from services.senegal_knowledge import format_senegal_knowledge
+
+    context = format_senegal_knowledge(app_module.SENEGAL_KNOWLEDGE, query="Tell me about Pink Lake")
+    assert "- Lac Rose / Lac Retba" in context
+
+    calls = []
+
+    def fake_commons(title, limit=4):
+        calls.append(title)
+        return [{"url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Retba.jpg", "alt": "Lac Rose", "credit": "Wikimédia Commons"}]
+
+    monkeypatch.setattr(app_module, "fetch_commons_images", fake_commons)
+    monkeypatch.setattr(app_module, "topic_wikipedia_titles", lambda message, limit=4: [])
+    monkeypatch.setattr(
+        app_module, "knowledge_image_titles",
+        lambda message, limit=4: (_ for _ in ()).throw(AssertionError("le lieu doit être reconnu par son autre nom")),
+    )
+    assert app_module.fetch_topic_images("Show me photos of Pink Lake")
+    assert calls and all("Lac Rose" in title or "Retba" in title for title in calls)

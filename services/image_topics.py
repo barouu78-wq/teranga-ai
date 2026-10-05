@@ -220,6 +220,8 @@ def fetch_topic_images(
                 aliases.append("gore")
         if name.startswith("île de "):
             aliases.append(name[7:])
+        # Autres noms du lieu (« Pink Lake », « Goree Island »).
+        aliases.extend(normalize(str(alias)) for alias in (place.get("aliases") or []) if str(alias).strip())
         if any(_contains_normalized_term(text_value, alias, normalize) for alias in aliases):
             image_queries = [str(query) for query in (place.get("image_queries") or []) if query]
             # A recognized place must remain specific even when its optional

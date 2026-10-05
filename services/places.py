@@ -97,6 +97,8 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
     if what_to_see:
         items = "".join(f"<li>{escape(item)}</li>" for item in what_to_see)
         sections.append(f"<section><h2>Que voir</h2><ul>{items}</ul></section>")
+    if place.get("access"):
+        sections.append(f"<section><h2>Comment y aller</h2><p>{escape(str(place['access']))}</p></section>")
     sections.append(
         '<section><h2>Photos</h2><div class="gallery" id="gallery" '
         f'data-query="{escape(str((place.get("image_queries") or [name])[0]))}"></div>'

@@ -20,7 +20,10 @@ def test_structured_knowledge_can_focus_on_requested_region():
     data = load_senegal_knowledge()
     context = format_senegal_knowledge(data, query="Que visiter en Casamance à Ziguinchor ?")
     assert "Ziguinchor" in context
-    assert "Dakar" not in context or context.count("Dakar") < 2
+    # Les lieux de Dakar ne remplacent pas ceux de Casamance (Dakar peut
+    # apparaître dans l'accès : « ferry depuis Dakar »).
+    assert "- Île de Gorée" not in context and "- Corniche de Dakar" not in context
+    assert "- Dakar:" not in context
 
 
 def test_structured_people_are_loaded_separately():

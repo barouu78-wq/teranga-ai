@@ -42,3 +42,18 @@ def test_sitemap_pages_have_no_broken_internal_links():
                 broken.append((page, path, status[path]))
     assert not broken, broken[:20]
     assert len(pages) > 100
+
+
+def test_french_page_with_fr_prefix_redirects_and_indexnow_urls_exist():
+    import re
+    from pathlib import Path
+
+    from app import app
+
+    client = app.test_client()
+    response = client.get("/fr/visiter-goree")
+    assert response.status_code == 301 and response.headers["Location"].endswith("/visiter-goree")
+    assert client.get("/fr/inconnu").status_code == 404
+    workflow = (Path(__file__).resolve().parents[1] / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
+    for url in re.findall(r'"https://teranga-ai\.fr(/[^"]*)"', workflow):
+        assert client.get(url).status_code == 200, url

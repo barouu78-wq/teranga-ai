@@ -151,7 +151,7 @@ def detect_location(text: str) -> str | None:
     for region, aliases in REGION_ALIASES.items():
         if any(_normalize(alias) in normalized for alias in aliases):
             return _normalize(region)
-    for region, places in REGION_HIGHLIGHTS.items():
+    for places in REGION_HIGHLIGHTS.values():
         for place in places:
             if _normalize(place) in normalized:
                 return _normalize(place)

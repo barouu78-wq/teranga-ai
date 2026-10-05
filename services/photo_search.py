@@ -37,7 +37,7 @@ def normalize_place_query(query: str) -> str:
     for key, aliases in PLACE_ALIASES.items():
         if _normalize(key) in low:
             return " ".join(aliases[:3])
-    for key, aliases in PLACE_ALIASES.items():
+    for aliases in PLACE_ALIASES.values():
         specific_aliases = tuple(alias for alias in aliases if _normalize(alias) not in {"senegal", "sénégal"})
         if any(_normalize(alias) in low for alias in specific_aliases):
             return " ".join(aliases[:3])
