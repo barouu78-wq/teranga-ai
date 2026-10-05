@@ -627,6 +627,28 @@ body[data-fete] .fete-banner{display:inline-block}
 body[data-fete="independance"]:not([data-theme="dark"]) .hero-signature{background:linear-gradient(90deg,#0f6a43 0 33.3%,#f0c63d 33.3% 66.6%,#c93636 66.6%)}
 body[data-fete="nouvel-an"] .hero-signature{background:
   radial-gradient(circle at 10px 10px,#f6dfa8 2px,transparent 3px) 0 0/20px 20px,linear-gradient(90deg,#7a2c10,#c97d12)}
+/* Fêtes religieuses : décor visible de jour comme de nuit, symbole à droite. */
+body[data-fete="korite"] .hero-signature,body[data-fete="tabaski"] .hero-signature,body[data-fete="magal"] .hero-signature{height:44px;margin:0 -20px;padding:0 20px}
+body[data-fete="korite"] .hero-signature::after,body[data-fete="tabaski"] .hero-signature::after,body[data-fete="magal"] .hero-signature::after{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:24px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+/* Korité : nuit étoilée et croissant de lune doré. */
+body[data-fete="korite"] .hero-signature{background:
+  radial-gradient(circle at 6px 8px,#f6dfa8 1.2px,transparent 2px) 0 0/34px 22px,
+  radial-gradient(circle at 20px 16px,#fff6dc 1px,transparent 1.8px) 0 0/34px 22px,
+  linear-gradient(90deg,#14213d,#2b4a7a 60%,#1d2f55)}
+body[data-fete="korite"] .hero-signature::after{content:"☪";color:#f2c75c}
+body[data-fete="korite"] .fete-banner{background:#1d2f55;color:#f6dfa8}
+/* Tabaski : vert et or, motif tissé de fête. */
+body[data-fete="tabaski"] .hero-signature{background:
+  radial-gradient(circle at 12px 12px,#f2c75c 3px,transparent 4px) 0 0/24px 24px,
+  repeating-linear-gradient(135deg,#0f6a43 0 12px,#15834f 12px 24px)}
+body[data-fete="tabaski"] .hero-signature::after{content:"🐑"}
+body[data-fete="tabaski"] .fete-banner{background:#0f6a43;color:#fff6dc}
+/* Grand Magal de Touba : vert de Touba, blanc et la grande mosquée. */
+body[data-fete="magal"] .hero-signature{background:
+  radial-gradient(circle at 12px 12px,rgba(255,255,255,.85) 2px,transparent 3px) 0 0/24px 24px,
+  linear-gradient(90deg,#0a4d31,#1d7a4a 55%,#0a4d31)}
+body[data-fete="magal"] .hero-signature::after{content:"🕌"}
+body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 
 </style>
 
