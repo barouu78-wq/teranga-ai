@@ -10,84 +10,84 @@ SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
 
 SEO_PAGES = {
     "senegal": {
-        "title": "Guide Senegal : Dakar, Goree, 14 regions | Teranga AI",
-        "description": "Guide pratique du Senegal : Dakar, Goree, meteo, ou manger, AIBD. Assistant gratuit en francais, anglais et wolof.",
-        "h1": "Guide du Senegal",
-        "intro": "Teranga AI aide a s'orienter au Senegal : une question, une reponse courte. Horaires et tarifs se verifient le jour J.",
+        "title": "Guide Sénégal : Dakar, Gorée, 14 régions | Teranga AI",
+        "description": "Guide pratique du Sénégal : Dakar, Gorée, météo, où manger, AIBD. Assistant gratuit en français, anglais et wolof.",
+        "h1": "Guide du Sénégal",
+        "intro": "Teranga AI aide à s'orienter au Sénégal : une question, une réponse courte. Horaires et tarifs se vérifient le jour J.",
         "sections": [
-            ("Que demander", "Meteo Dakar, ferry Goree, trajet AIBD, ceebu jen, quartiers pour manger, les 14 regions."),
-            ("Reperes", "14 regions. Dakar pour l'arrivee. Saint-Louis, Lac Rose, Petite Cote, Touba, Casamance au sud."),
-            ("Langues", "Francais, anglais et wolof."),
+            ("Que demander", "Météo Dakar, ferry Gorée, trajet AIBD, ceebu jen, quartiers pour manger, les 14 régions."),
+            ("Repères", "14 régions. Dakar pour l'arrivée. Saint-Louis, Lac Rose, Petite Côte, Touba, Casamance au sud."),
+            ("Langues", "Français, anglais et wolof."),
         ],
         "faq": [
             ("Teranga AI est-il gratuit ?", "Oui. Aucune inscription n'est obligatoire."),
-            ("Ca marche dans quelle langue ?", "Francais, anglais et wolof."),
+            ("Ça marche dans quelle langue ?", "Français, anglais et wolof."),
         ],
-        "related": [("meteo-dakar", "Meteo Dakar"), ("visiter-goree", "Goree"), ("regions-senegal", "14 regions")],
+        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Gorée"), ("regions-senegal", "14 régions")],
     },
     "meteo-dakar": {
-        "title": "Meteo Dakar aujourd'hui : chaleur, vent, ciel | Teranga AI",
-        "description": "Meteo Dakar du jour. Demandez a Teranga AI les conditions avant Goree, Ngor ou l'aeroport AIBD.",
-        "h1": "Meteo Dakar",
-        "intro": "Le temps a Dakar change vite. Demandez la meteo a Dakar aujourd'hui pour une reponse courte.",
+        "title": "Météo Dakar aujourd'hui : chaleur, vent, ciel | Teranga AI",
+        "description": "Météo Dakar du jour. Demandez à Teranga AI les conditions avant Gorée, Ngor ou l'aéroport AIBD.",
+        "h1": "Météo Dakar",
+        "intro": "Le temps à Dakar change vite. Demandez la météo à Dakar aujourd'hui pour une réponse courte.",
         "sections": [
-            ("Questions utiles", "Meteo Dakar aujourd'hui, demain a Ngor, verifier avant le ferry Goree."),
-            ("Saisons", "Saison seche plutot novembre-mai, pluies souvent de juin a octobre. Ce sont des reperes, pas une prevision."),
-            ("Ensuite", "Ajoutez un lieu : plage, ile, AIBD. Teranga peut enchainer avec une carte."),
+            ("Questions utiles", "Météo Dakar aujourd'hui, demain à Ngor, vérifier avant le ferry Gorée."),
+            ("Saisons", "Saison sèche plutôt novembre-mai, pluies souvent de juin à octobre. Ce sont des repères, pas une prévision."),
+            ("Ensuite", "Ajoutez un lieu : plage, île, AIBD. Teranga peut enchaîner avec une carte."),
         ],
         "faq": [
-            ("La meteo est-elle en direct ?", "L'assistant peut chercher les conditions recentes. Precisez aujourd'hui ou demain."),
+            ("La météo est-elle en direct ?", "L'assistant peut chercher les conditions récentes. Précisez aujourd'hui ou demain."),
             ("Et hors Dakar ?", "Oui : Saint-Louis, Saly, Ziguinchor, Cap Skirring."),
         ],
-        "related": [("visiter-goree", "Goree"), ("restaurants-dakar", "Ou manger"), ("senegal", "Guide")],
+        "related": [("visiter-goree", "Gorée"), ("restaurants-dakar", "Où manger"), ("senegal", "Guide")],
     },
     "visiter-goree": {
-        "title": "Visiter Goree : Maison des Esclaves, ferry, photos | Teranga AI",
-        "description": "Ile de Goree : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
-        "h1": "Visiter l'ile de Goree",
-        "intro": "Goree fait face a Dakar. On y vient pour l'histoire et la Maison des Esclaves. Demandez une reponse courte, photos et carte.",
+        "title": "Visiter Gorée : Maison des Esclaves, ferry, photos | Teranga AI",
+        "description": "Île de Gorée : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
+        "h1": "Visiter l'île de Gorée",
+        "intro": "Gorée fait face à Dakar. On y vient pour l'histoire et la Maison des Esclaves. Demandez une réponse courte, photos et carte.",
         "sections": [
-            ("S'y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : a verifier le jour du depart."),
-            ("Quoi voir", "Maison des Esclaves, ruelles, musees. Comptez 2 a 4 heures."),
-            ("Question type", "Parle-moi de Goree et montre l'ile."),
+            ("S'y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : à vérifier le jour du départ."),
+            ("Quoi voir", "Maison des Esclaves, ruelles, musées. Comptez 2 à 4 heures."),
+            ("Question type", "Parle-moi de Gorée et montre l'île."),
         ],
         "faq": [
-            ("Une demi-journee suffit-elle ?", "Oui, beaucoup de visites tiennent en une matinee."),
-            ("Faut-il reserver le ferry ?", "Souvent non. Verifiez l'affluence le jour J."),
+            ("Une demi-journée suffit-elle ?", "Oui, beaucoup de visites tiennent en une matinée."),
+            ("Faut-il réserver le ferry ?", "Souvent non. Vérifiez l'affluence le jour J."),
         ],
-        "related": [("meteo-dakar", "Meteo"), ("restaurants-dakar", "Manger a Dakar"), ("senegal", "Guide")],
+        "related": [("meteo-dakar", "Météo"), ("restaurants-dakar", "Manger à Dakar"), ("senegal", "Guide")],
     },
     "restaurants-dakar": {
-        "title": "Ou manger a Dakar : Plateau, Medina, Almadies, Ngor | Teranga AI",
-        "description": "Ou manger a Dakar par quartier : Plateau, Medina, Almadies, Ngor, Ouakam. Ceebu jen, yassa, marches.",
-        "h1": "Ou manger a Dakar",
-        "intro": "On mange a Dakar par quartier, pas par meilleur resto unique. Demandez un quartier. Teranga oriente sans inventer une enseigne fermee.",
+        "title": "Où manger à Dakar : Plateau, Médina, Almadies, Ngor | Teranga AI",
+        "description": "Où manger à Dakar par quartier : Plateau, Médina, Almadies, Ngor, Ouakam. Ceebu jen, yassa, marchés.",
+        "h1": "Où manger à Dakar",
+        "intro": "On mange à Dakar par quartier, pas par meilleur resto unique. Demandez un quartier. Teranga oriente sans inventer une enseigne fermée.",
         "sections": [
-            ("Quartiers", "Plateau : centre. Medina : cuisine du quotidien. Almadies et Ngor : mer. Ouakam : mix residentiel."),
-            ("Plats", "Ceebu jen, yassa, mafe, dibi. Precisez Casamance ou Saint-Louis pour une specialite regionale."),
-            ("Marches", "Demandez pres de... plutot qu'un classement."),
+            ("Quartiers", "Plateau : centre. Médina : cuisine du quotidien. Almadies et Ngor : mer. Ouakam : mix résidentiel."),
+            ("Plats", "Ceebu jen, yassa, mafé, dibi. Précisez Casamance ou Saint-Louis pour une spécialité régionale."),
+            ("Marchés", "Demandez près de... plutôt qu'un classement."),
         ],
         "faq": [
             ("Y a-t-il des notes Google ?", "Non. L'assistant situe le quartier et le type de plat."),
             ("Hors Dakar ?", "Saint-Louis, Saly, Ziguinchor, Cap Skirring."),
         ],
-        "related": [("specialites-senegal", "Specialites"), ("visiter-goree", "Goree"), ("meteo-dakar", "Meteo")],
+        "related": [("specialites-senegal", "Spécialités"), ("visiter-goree", "Gorée"), ("meteo-dakar", "Météo")],
     },
     "specialites-senegal": {
-        "title": "Specialites du Senegal : ceebu jen, yassa, mafe | Teranga AI",
-        "description": "Cuisine senegalaise : ceebu jen, yassa, mafe, plats du Nord et de Casamance. Ou les gouter.",
-        "h1": "Specialites du Senegal",
+        "title": "Spécialités du Sénégal : ceebu jen, yassa, mafé | Teranga AI",
+        "description": "Cuisine sénégalaise : ceebu jen, yassa, mafé, plats du Nord et de Casamance. Où les goûter.",
+        "h1": "Spécialités du Sénégal",
         "intro": "La cuisine change selon la mer, le fleuve et la Casamance. Teranga cite 3 ou 4 plats, pas une liste infinie.",
         "sections": [
-            ("Plats connus", "Ceebu jen, yassa, mafe, dibi."),
-            ("Regions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fume."),
-            ("Ou chercher", "Un quartier a Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
+            ("Plats connus", "Ceebu jen, yassa, mafé, dibi."),
+            ("Régions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fumé."),
+            ("Où chercher", "Un quartier à Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
         ],
         "faq": [
             ("Quel plat est le plus cite ?", "Le ceebu jen, souvent le midi."),
             ("Y a-t-il des photos ?", "Pour certains sujets, oui, via Wikimedia."),
         ],
-        "related": [("restaurants-dakar", "Ou manger"), ("regions-senegal", "Regions"), ("senegal", "Guide")],
+        "related": [("restaurants-dakar", "Où manger"), ("regions-senegal", "Régions"), ("senegal", "Guide")],
     },
     "france-senegal": {
         "title": "Sénégal et France : voyage, diaspora, démarches | Teranga AI",
@@ -174,20 +174,20 @@ SEO_PAGES = {
         "related": [("a-propos", "À propos"), ("presse", "Presse"), ("senegal", "Guide du Sénégal")],
     },
     "regions-senegal": {
-        "title": "14 regions du Senegal : villes et carte | Teranga AI",
-        "description": "Les 14 regions du Senegal : Dakar, Thies, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
-        "h1": "Les 14 regions du Senegal",
-        "intro": "Teranga situe une region, une ville et un trajet, avec photo ou carte si le lieu est connu.",
+        "title": "14 régions du Sénégal : villes et carte | Teranga AI",
+        "description": "Les 14 régions du Sénégal : Dakar, Thiès, Saint-Louis, Ziguinchor, Tambacounda. Villes et Casamance.",
+        "h1": "Les 14 régions du Sénégal",
+        "intro": "Teranga situe une région, une ville et un trajet, avec photo ou carte si le lieu est connu.",
         "sections": [
-            ("Liste", "Dakar, Thies, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kedougou, Kolda, Sedhiou, Ziguinchor, Saint-Louis, Louga, Matam."),
-            ("Zones", "Ouest : Dakar-Thies. Nord : Saint-Louis, Louga, Matam. Sud / Casamance : Ziguinchor, Sedhiou, Kolda."),
-            ("A demander", "Presente la Casamance. Ou est Saint-Louis. Comment aller a Ziguinchor."),
+            ("Liste", "Dakar, Thiès, Diourbel, Fatick, Kaolack, Kaffrine, Tambacounda, Kédougou, Kolda, Sédhiou, Ziguinchor, Saint-Louis, Louga, Matam."),
+            ("Zones", "Ouest : Dakar-Thiès. Nord : Saint-Louis, Louga, Matam. Sud / Casamance : Ziguinchor, Sédhiou, Kolda."),
+            ("À demander", "Présente la Casamance. Où est Saint-Louis. Comment aller à Ziguinchor."),
         ],
         "faq": [
-            ("Combien de regions ?", "14 regions administratives."),
-            ("La Casamance est-elle une region ?", "C'est le Sud, sur Ziguinchor, Sedhiou et Kolda."),
+            ("Combien de régions ?", "14 régions administratives."),
+            ("La Casamance est-elle une région ?", "C'est le Sud, sur Ziguinchor, Sédhiou et Kolda."),
         ],
-        "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Goree")],
+        "related": [("senegal", "Guide"), ("specialites-senegal", "Cuisine"), ("visiter-goree", "Gorée")],
     },
 
     "dakar": {
@@ -370,12 +370,12 @@ def render_seo_page(slug, site_url):
     if slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
-            'target="_blank" rel="noopener noreferrer">Ministere du Tourisme du Senegal</a>.</p>'
+            'target="_blank" rel="noopener noreferrer">Ministère du Tourisme du Sénégal</a>.</p>'
         )
     else:
         source_link = (
             '<p class="source">Reperes : <a href="https://www.au-senegal.com/" '
-            'target="_blank" rel="noopener noreferrer">Au Senegal</a>.</p>'
+            'target="_blank" rel="noopener noreferrer">Au Sénégal</a>.</p>'
         )
     url = "%s/%s" % (site_url, slug)
     ld = {

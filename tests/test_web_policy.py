@@ -72,3 +72,18 @@ def test_weather_prioritizes_senegal_meteorological_authority():
 def test_health_service_questions_use_current_web_information():
     from services.web_policy import should_use_web
     assert should_use_web("Quels services de santé sont disponibles à Dakar ?") is True
+
+
+def test_questions_whose_answer_changes_each_year_use_the_web():
+    from services.web_policy import should_use_web
+
+    for question in (
+        "Le Magal de Touba c'est quand cette année ?",
+        "Meilleurs hôtels à Cap Skirring",
+        "Vaccins nécessaires pour le Sénégal",
+        "Combien de temps de Dakar à Cap Skirring en bateau ?",
+        "Quelles aides pour les jeunes entrepreneurs ?",
+    ):
+        assert should_use_web(question), question
+    for question in ("Quelle est la capitale du Sénégal ?", "Comment dit-on merci en wolof ?", "Qui est Léopold Sédar Senghor ?"):
+        assert not should_use_web(question), question
