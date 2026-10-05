@@ -171,7 +171,7 @@ function formatFxDate(value){
 }
 async function loadFx(){
   try{
-    const res=await fetch('/exchange-rates',{cache:'no-store'});
+    const res=await fetch('/exchange-rates',{cache:'no-store',signal:timeoutSignal(15000)});
     if(res.ok){
       const data=await res.json();
       if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};
@@ -293,14 +293,27 @@ function cookie(name){
 function headers(extra){
   return Object.assign({'Content-Type':'application/json','X-CSRF-Token':cookie('teranga_csrf')}, extra||{});
 }
+// Délai par défaut des requêtes sans signal : un serveur qui ne répond pas ne
+// doit jamais laisser un bouton bloqué sur « Construction… ».
+function timeoutSignal(ms){
+  try{if(window.AbortSignal&&AbortSignal.timeout)return AbortSignal.timeout(ms);}catch(_){}
+  const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal;
+}
+function friendlyError(err){
+  const name=err&&err.name;
+  if(name==='TimeoutError'||name==='AbortError')return T[lang].timeout;
+  if(!err||err instanceof TypeError||!err.message)return T[lang].err;
+  return err.message;
+}
 async function refreshCsrf(){
   try{
-    const res=await fetch('/csrf',{credentials:'same-origin',cache:'no-store'});
+    const res=await fetch('/csrf',{credentials:'same-origin',cache:'no-store',signal:timeoutSignal(10000)});
     const data=await res.json().catch(()=>({}));
     return data.token||cookie('teranga_csrf');
   }catch(e){return cookie('teranga_csrf');}
 }
 async function postJSON(url,body,extra,signal){
+  signal=signal||timeoutSignal(45000);
   let res=await fetch(url,{method:'POST',headers:headers(extra),body,credentials:'same-origin',signal});
   if(res.status===403){
     const data=await res.clone().json().catch(()=>({}));
@@ -703,6 +716,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeProjectModal();
 $('projectForm')?.addEventListener('submit',async e=>{
   e.preventDefault();
   const error=$('projectError'),result=$('projectResult'),button=$('projectSubmit');
+  if(button.disabled)return;
+  const idleLabel=button.textContent;
   error.textContent='';result.hidden=true;$('projectResultActions').hidden=true;button.disabled=true;button.textContent=lang==='en'?'Building…':'Construction…';
   const amount=value=>{const raw=String($(value)?.value||'').replace(/[^0-9]/g,'');return raw?Number(raw):null;};
   try{
@@ -754,8 +769,8 @@ $('projectForm')?.addEventListener('submit',async e=>{
     $('projectForm').hidden=true;
     $('projectResultActions').hidden=false;
     try{LS.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
-  }catch(err){error.textContent=err.message||T[lang].err;}
-  finally{button.disabled=false;button.textContent='🚀 Générer mon projet';}
+  }catch(err){error.textContent=friendlyError(err);}
+  finally{button.disabled=false;button.textContent=idleLabel;}
 });
 $('projectNew')?.addEventListener('click',()=>{
   $('projectForm').reset();
