@@ -68,10 +68,14 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
             blocked = rate_guard("explorer_image")
             if blocked is not None:
                 return blocked
-        # 1. Photos choisies par les rédacteurs de l'article Wikipédia du lieu :
-        #    les plus fiables (la recherche plein texte renvoie souvent rien ou hors sujet).
-        images = []
-        if title and fetch_article_images:
+        # 1. Google Images (meilleures photos) ; une panne ne prive pas des suivants.
+        try:
+            images = fetch_google_images(query, limit=4)
+        except Exception as exc:
+            app.logger.warning("explorer-image google: %s", type(exc).__name__)
+            images = []
+        # 2. Sinon, photos de l'article Wikipédia du lieu (nom complet, puis nom court).
+        if not images and title and fetch_article_images:
             for article in article_titles(title, region_names):
                 try:
                     images = fetch_article_images(article, limit=4)
@@ -80,13 +84,7 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
                     images = []
                 if images:
                     break
-        # 2. Google, puis 3. Commons ; une panne de l'un ne prive pas des autres.
-        if not images:
-            try:
-                images = fetch_google_images(query, limit=4)
-            except Exception as exc:
-                app.logger.warning("explorer-image google: %s", type(exc).__name__)
-                images = []
+        # 3. En dernier recours, recherche Wikimédia Commons.
         if not images:
             try:
                 images = fetch_commons_images(query, limit=4)

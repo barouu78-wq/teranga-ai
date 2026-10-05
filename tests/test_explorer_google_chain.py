@@ -43,7 +43,7 @@ def test_explorer_falls_back_to_commons_when_google_returns_nothing():
     assert calls == ["google", "commons"]
 
 
-def test_explorer_prefers_the_wikipedia_article_photos_of_the_place():
+def test_explorer_uses_wikipedia_article_photos_when_google_finds_nothing():
     app = Flask(__name__)
     calls = []
 
@@ -62,7 +62,8 @@ def test_explorer_prefers_the_wikipedia_article_photos_of_the_place():
     )
     data = app.test_client().get("/explorer-image?query=Île Saint-Louis Sénégal&title=Île de Saint-Louis").get_json()
     assert data["images"][0]["url"].endswith("sl.jpg")
-    assert calls == [("article", "Île de Saint-Louis"), ("article", "Saint-Louis")]
+    # Google d'abord, puis l'article du lieu (nom complet, puis nom court).
+    assert calls == [("google", "Île Saint-Louis Sénégal"), ("article", "Île de Saint-Louis"), ("article", "Saint-Louis")]
 
 
 def test_article_titles_skip_a_short_name_that_is_a_whole_region():
