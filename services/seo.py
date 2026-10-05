@@ -342,6 +342,104 @@ SEO_PAGES = {
         ],
         "related": [("dakar", "Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("transport-dakar", "Transport Dakar")]
     },
+,
+
+    "voyage-senegal": {
+        "title": "Voyage au Sénégal : guide, itinéraires et conseils | Teranga AI",
+        "description": "Préparez un voyage au Sénégal : Dakar, Gorée, Petite Côte, Casamance, transport, budget, météo et itinéraires.",
+        "h1": "Voyage au Sénégal",
+        "intro": "Préparez votre séjour selon vos dates, votre budget, votre point d'arrivée et vos envies.",
+        "sections": [
+            ("Avant de partir", "Préparez votre arrivée, vos déplacements, votre hébergement, votre budget et les lieux à découvrir."),
+            ("Où aller", "Dakar et Gorée, la Petite Côte, Saint-Louis, le Sine-Saloum, le Sénégal oriental et la Casamance offrent des expériences différentes."),
+            ("Construire son itinéraire", "Indiquez la durée, les villes souhaitées, votre budget et votre moyen de transport pour obtenir un programme adapté.")
+        ],
+        "faq": [
+            ("Peut-on préparer un voyage complet ?", "Oui. Teranga AI peut structurer un itinéraire et distinguer les informations indicatives des données à vérifier."),
+            ("Les prix et horaires sont-ils garantis ?", "Non. Les tarifs, horaires, disponibilités et conditions doivent être vérifiés avec des sources récentes.")
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("dakar", "Dakar"), ("visiter-goree", "Gorée"), ("regions-senegal", "14 régions")]
+    },
+    "transport-senegal": {
+        "title": "Transport au Sénégal : Dakar, AIBD, régions et trajets | Teranga AI",
+        "description": "Guide du transport au Sénégal : Dakar, AIBD, taxis, bus et trajets entre les villes.",
+        "h1": "Transport au Sénégal",
+        "intro": "Préparez vos déplacements en indiquant votre départ, votre destination, votre horaire et vos contraintes.",
+        "sections": [
+            ("À Dakar", "Taxis, transports collectifs et véhicules avec chauffeur peuvent répondre à des besoins différents. Les prix et disponibilités sont à vérifier."),
+            ("Depuis AIBD", "L'aéroport Blaise Diagne est à Diass, dans la région de Thiès. Indiquez votre destination finale pour comparer les options."),
+            ("Entre les régions", "Dakar, Thiès, Saint-Louis, Touba, Kaolack, Ziguinchor et les autres villes peuvent être reliées par différentes solutions selon le trajet.")
+        ],
+        "faq": [
+            ("Peut-on demander un trajet précis ?", "Oui. Donnez le départ, la destination, la date, l'heure et votre budget si vous en avez un."),
+            ("Les horaires actuels sont-ils disponibles ?", "Pour les informations susceptibles de changer, l'assistant peut rechercher des sources récentes lorsqu'elles sont disponibles.")
+        ],
+        "related": [("transport-dakar", "Transport Dakar"), ("aibd-dakar", "AIBD → Dakar"), ("dakar", "Dakar"), ("regions-senegal", "Régions")]
+    },
+    "vie-pratique-senegal": {
+        "title": "Vie pratique au Sénégal : démarches, budget, transport et services | Teranga AI",
+        "description": "Assistant pour la vie pratique au Sénégal : démarches, budget, logement, transport, services et quotidien.",
+        "h1": "Vie pratique au Sénégal",
+        "intro": "Posez une question sur le quotidien au Sénégal : budget, déplacements, démarches, services, logement ou organisation.",
+        "sections": [
+            ("Pour les résidents", "Organisez une démarche, comprenez une information, comparez des options ou préparez une liste de tâches."),
+            ("Pour les visiteurs et la diaspora", "Préparez votre séjour, vos dépenses, vos déplacements et vos démarches en précisant votre ville et votre situation."),
+            ("Informations à vérifier", "Les règles, tarifs, horaires et procédures peuvent changer. Teranga AI distingue les repères généraux des informations qui nécessitent une vérification récente.")
+        ],
+        "faq": [
+            ("Peut-on poser des questions sur toutes les régions ?", "Oui. Les connaissances et pages de Teranga AI couvrent les 14 régions du Sénégal."),
+            ("Peut-on demander une traduction ?", "Oui, notamment entre le français, l'anglais et le wolof selon la demande.")
+        ],
+        "related": [("senegal", "Guide du Sénégal"), ("regions-senegal", "14 régions"), ("france-senegal", "Sénégal ↔ France"), ("diaspora-senegalaise", "Diaspora")]
+    },
+    "emploi-senegal": {
+        "title": "Emploi au Sénégal : travail, CV et candidature | Teranga AI",
+        "description": "Aide pour l'emploi au Sénégal : CV, candidature, entretien, recherche d'opportunités et préparation professionnelle.",
+        "h1": "Emploi au Sénégal",
+        "intro": "Préparez votre recherche d'emploi, améliorez votre CV et organisez vos prochaines étapes.",
+        "sections": [
+            ("Préparer sa candidature", "Travaillez votre CV, votre lettre de motivation, votre présentation et vos réponses d'entretien."),
+            ("Chercher des opportunités", "Définissez votre métier, votre niveau, votre ville et votre secteur pour cibler les recherches pertinentes."),
+            ("Pour les jeunes", "Construisez un plan d'action : compétences, candidatures, réseau, formations et projets.")
+        ],
+        "faq": [
+            ("Peut-on améliorer un CV ?", "Oui. Vous pouvez demander une reformulation, une structure plus claire ou une adaptation à une offre."),
+            ("Les offres sont-elles vérifiées ?", "Les offres trouvées en ligne doivent être vérifiées sur leur source officielle avant toute candidature.")
+        ],
+        "related": [("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("formation-senegal", "Formation")]
+    },
+    "formation-senegal": {
+        "title": "Formation au Sénégal : études, compétences et apprentissage | Teranga AI",
+        "description": "Formation au Sénégal : compétences numériques, études, métiers, reconversion et apprentissage.",
+        "h1": "Formation au Sénégal",
+        "intro": "Identifiez les compétences à développer et préparez votre parcours d'apprentissage selon votre objectif.",
+        "sections": [
+            ("Choisir une formation", "Précisez votre niveau, votre domaine, votre ville, votre budget et le temps disponible."),
+            ("Compétences numériques", "IA, programmation, analyse de données, outils numériques et communication peuvent être travaillés progressivement."),
+            ("Passer à l'action", "Construisez un programme avec des objectifs, des exercices, un projet concret et des étapes de suivi.")
+        ],
+        "faq": [
+            ("Peut-on préparer un parcours personnalisé ?", "Oui. Indiquez votre niveau, votre objectif et le temps disponible."),
+            ("Les programmes sont-ils vérifiés ?", "Les informations actuelles doivent être vérifiées auprès de l'établissement ou de la source officielle.")
+        ],
+        "related": [("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("emploi-senegal", "Emploi")]
+    },
+    "entreprendre-senegal": {
+        "title": "Entreprendre au Sénégal : projet, business et développement | Teranga AI",
+        "description": "Créer et développer un projet au Sénégal : idée business, budget, offre, clients, partenaires et plan d'action.",
+        "h1": "Entreprendre au Sénégal",
+        "intro": "Transformez une idée en projet structuré avec un plan simple, des hypothèses claires et des prochaines étapes.",
+        "sections": [
+            ("De l'idée au projet", "Clarifiez le problème, les clients, la solution, le modèle économique et les premières actions."),
+            ("Développer une activité", "Travaillez l'offre, le prix, la marge, la communication, la vente, les paiements et la livraison."),
+            ("Trouver des partenaires", "Préparez une présentation courte et identifiez les entreprises, associations, écoles, médias ou acteurs publics pertinents.")
+        ],
+        "faq": [
+            ("Teranga AI peut-il aider à créer un projet ?", "Oui. Vous pouvez partir d'une idée et construire un plan étape par étape."),
+            ("Peut-il aider les jeunes entrepreneurs ?", "Oui. Teranga AI peut aider à structurer projets, compétences, opportunités et partenariats.")
+        ],
+        "related": [("pour-les-entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
+    },
 
 }
 
