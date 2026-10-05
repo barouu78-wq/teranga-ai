@@ -11,6 +11,7 @@ from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
 from flask import Flask, Response, g, jsonify, request
+import httpx
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import env_bool, env_list
@@ -188,7 +189,10 @@ if TRUST_PROXY:
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
 
-client = OpenAI(api_key=API_KEY, timeout=30.0, max_retries=0)
+# Lecture 50 s (une réponse avec recherche web peut dépasser 30 s avant le
+# premier octet) et une nouvelle tentative sur coupure réseau ou erreur 5xx :
+# le pire cas (2 × 50 s) reste sous le timeout de Gunicorn (120 s).
+client = OpenAI(api_key=API_KEY, timeout=httpx.Timeout(50.0, connect=10.0), max_retries=1)
 
 MAX_MESSAGE_LENGTH = 2000
 MAX_TTS_LENGTH = 1800

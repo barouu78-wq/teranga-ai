@@ -392,7 +392,8 @@ def _trip_models():
 
 def _create(client, **kwargs):
     """responses.create avec délai borné et repli si le modèle est indisponible."""
-    api = client.with_options(timeout=OPENAI_TIMEOUT) if hasattr(client, "with_options") else client
+    # Pas de nouvelle tentative : 90 s × 2 dépasserait les 120 s de Gunicorn.
+    api = client.with_options(timeout=OPENAI_TIMEOUT, max_retries=0) if hasattr(client, "with_options") else client
     last = None
     for model in _trip_models():
         try:
