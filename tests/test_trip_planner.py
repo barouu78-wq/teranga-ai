@@ -879,3 +879,11 @@ def test_planner_timeout_returns_a_clear_504():
                                       json={"arrival": "2026-11-01", "departure": "2026-11-03"})
     assert response.status_code == 504
     assert "trop de temps" in response.get_json()["error"]
+
+
+def test_practical_info_ignores_stale_responses():
+    import services.trip_planner as trip_planner
+
+    html = trip_planner._html("https://example.com", "fr")
+    assert "const seq=++practicalSeq;" in html
+    assert html.count("if(seq!==practicalSeq)return;") == 2
