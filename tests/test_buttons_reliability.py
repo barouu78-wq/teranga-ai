@@ -45,3 +45,14 @@ def test_blocked_storage_never_breaks_buttons():
     start = JS.index("async function ask(")
     body_at = JS.index("const body=JSON.stringify({message:text", start)
     assert JS.index("try{", start) < body_at  # préparé dans le bloc protégé
+
+
+def test_post_requests_have_default_timeout_and_friendly_errors():
+    js = open("static/home.js", encoding="utf-8").read()
+    start = js.index("async function postJSON(")
+    assert "signal=signal||timeoutSignal(45000);" in js[start:start + 200]
+    assert "signal:timeoutSignal(10000)" in js  # /csrf
+    assert "signal:timeoutSignal(15000)" in js  # /exchange-rates
+    # Le formulaire projet ne montre plus « Failed to fetch » et rend son libellé.
+    assert "error.textContent=friendlyError(err);" in js
+    assert "button.textContent=idleLabel;" in js
