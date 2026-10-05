@@ -28,6 +28,7 @@ from routes.image_proxy import register_image_proxy_route
 from routes.chat import register_chat_route
 from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
+from routes.legal import register_legal_routes
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -412,6 +413,7 @@ GUARDED_LIMITS = {
     "trip_planner": (int(os.getenv("TRIP_RATE_LIMIT", "4")), int(os.getenv("TRIP_HOURLY_LIMIT", "20"))),
     "practical_info": (int(os.getenv("PRACTICAL_RATE_LIMIT", "8")), int(os.getenv("PRACTICAL_HOURLY_LIMIT", "40"))),
     "explorer_image": (int(os.getenv("EXPLORER_IMAGE_RATE_LIMIT", "60")), int(os.getenv("EXPLORER_IMAGE_HOURLY_LIMIT", "400"))),
+    "report": (5, 30),
 }
 
 
@@ -634,6 +636,8 @@ register_exchange_rates_route(app, {
     "FX_RATE_WINDOW": FX_RATE_WINDOW,
     "fetch_bceao_rates": fetch_bceao_rates,
 })
+
+register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,

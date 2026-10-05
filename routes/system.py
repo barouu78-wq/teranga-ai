@@ -142,8 +142,8 @@ def register_system_routes(app, deps):
                     "orientation": "portrait-primary",
                     "lang": "fr",
                     "dir": "ltr",
-                    "background_color": "#f6efe3",
-                    "theme_color": "#0f6a43",
+                    "background_color": "#fbf3e6",
+                    "theme_color": "#b5451b",
                     "categories": ["travel", "lifestyle", "utilities"],
                     "icons": [
                         {

@@ -408,8 +408,23 @@ function addMsg(role,text,opts){
   scrollStage(true);
   return {row,b,col};
 }
-function addActs(col,text,itineraryEdit,shareToken){
+function addActs(col,text,itineraryEdit,shareToken,question){
   const acts=document.createElement('div');acts.className='acts';
+  // Signaler une réponse (exigé par Google Play pour les contenus générés par IA).
+  const report=document.createElement('button');report.type='button';report.className='report';
+  report.textContent=lang==='en'?'Report':'Signaler';
+  report.title=lang==='en'?'Report an inappropriate or wrong answer':'Signaler une réponse inappropriée ou fausse';
+  report.onclick=async()=>{
+    if(report.disabled)return;
+    if(!window.confirm(lang==='en'?'Report this answer as inappropriate or wrong?':'Signaler cette réponse comme inappropriée ou fausse ?'))return;
+    report.disabled=true;
+    try{
+      if(!cookie('teranga_csrf'))await refreshCsrf();
+      const res=await postJSON('/api/report',JSON.stringify({question:String(question||'').slice(0,500),reply:String(text||'').slice(0,1500),reason:'inappropriate'}));
+      if(!res.ok)throw new Error('report');
+      report.textContent=lang==='en'?'Reported ✓':'Signalé ✓';
+    }catch(_){report.disabled=false;report.textContent=lang==='en'?'Retry report':'Réessayer';}
+  };
   const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
   listen.onclick=()=>{
     // Deuxième appui pendant la lecture : arrêt immédiat.
@@ -440,7 +455,7 @@ function addActs(col,text,itineraryEdit,shareToken){
     planner.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
     acts.appendChild(planner);
   }
-  acts.append(listen,copy,share);col.appendChild(acts);
+  acts.append(listen,copy,share,report);col.appendChild(acts);
 }
 function addCityImage(col,image){
   const list=Array.isArray(image)?image:(image&&image.url?[image]:[]);
@@ -1000,7 +1015,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
     else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
-    addActs(wait.col,reply,itineraryEdit,shareToken);
+    addActs(wait.col,reply,itineraryEdit,shareToken,text);
     addCityImage(wait.col,image);
     addMap(wait.col,map);
     addPlaceLinks(wait.col,places);
