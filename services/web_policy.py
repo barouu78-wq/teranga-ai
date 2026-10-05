@@ -114,6 +114,14 @@ def should_use_web(message, context=""):
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre", "sante", "santé", "hopital", "hôpital", "pharmacie", "urgence", "vaccination",
+        # Ajouts du banc d'essai : réponses qui changent d'une année à l'autre.
+        "hotels", "auberge", "auberges", "logement", "hebergement",
+        "vaccin", "vaccins", "fievre jaune",
+        "bateau", "chaloupe", "navette", "traversee",
+        "cette annee", "cette semaine", "ce mois", "ce week-end", "ce weekend", "this year", "this week",
+        "magal", "tabaski", "korite", "gamou", "ramadan", "careme",
+        "aides", "subvention", "subventions", "financement", "financements",
+        "bourse", "bourses", "appel a projets", "appels a projets",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
