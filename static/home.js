@@ -1038,7 +1038,11 @@ async function ask(preset,fromVoice=false,isRetry=false){
     let raw=err.message||T[lang].err;
     if(raw==='csrf'||/jeton|Load failed|Failed to fetch|network/i.test(raw))
       raw=T[lang].timeout;
-    const msg=aborted
+    // Sans réseau : le dire clairement et proposer les guides gardés hors ligne.
+    const offline=navigator.onLine===false;
+    const msg=offline
+      ?(lang==='en'?'You are offline. Teranga needs internet to answer; guides you already opened stay available.':'Tu es hors ligne. Teranga a besoin d’internet pour répondre ; les guides déjà ouverts restent consultables.')
+      :aborted
       ?T[lang].timeout
       :err.status===429
         ?T[lang].rateLimit
@@ -1046,6 +1050,11 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(dots.parentNode)dots.replaceWith(wait.b);
     wait.row.classList.remove('thinking');
     node.nodeValue=msg;
+    if(offline){
+      const link=document.createElement('a');link.href='/offline';link.className='speak';
+      link.textContent=lang==='en'?'Saved guides':'Guides hors ligne';
+      wait.col.appendChild(link);
+    }
     // Arrêt volontaire : pas de bouton ; coupure par délai ou erreur : « Réessayer ».
     if(!aborted||timedOut){
       const retry=document.createElement('button');

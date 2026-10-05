@@ -231,3 +231,42 @@ def test_report_button_sends_question_and_answer(page, base_url):
     page.locator(".acts button.report").first.click()
     page.locator(".acts button.report", has_text="Signalé").wait_for(timeout=5000)
     assert sent == {"question": "Question test", "reply": "Réponse à signaler.", "reason": "inappropriate"}
+
+
+def test_offline_mode_keeps_visited_guides_and_explains_chat(browser):
+    import threading
+
+    from werkzeug.serving import make_server
+
+    from app import app
+
+    # Serveur propre au test : on l'arrête pour couper vraiment le réseau
+    # (le mode hors ligne simulé de Playwright n'atteint pas le service worker).
+    server = make_server("127.0.0.1", 0, app, threaded=True)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    base = f"http://127.0.0.1:{server.server_port}"
+    context = browser.new_context(service_workers="allow")
+    context.route(lambda url: not url.startswith(base), lambda route: route.abort())
+    page = context.new_page()
+    try:
+        page.goto(base + "/")
+        page.evaluate("navigator.serviceWorker.ready.then(() => true)")
+        page.reload()  # la page est maintenant contrôlée par le service worker
+        for path in ("/lieux/goree", "/visiter-goree", "/"):
+            page.goto(base + path)
+        page.wait_for_timeout(300)
+        server.shutdown()
+        server.server_close()
+        context.set_offline(True)
+        page.goto(base + "/lieux/goree")
+        assert "Gorée" in page.title()
+        page.goto(base + "/une-page-jamais-vue")
+        assert "Hors ligne" in page.title()
+        page.locator("#offline-pages a", has_text="Gorée").first.wait_for(timeout=5000)
+        page.goto(base + "/")
+        page.fill("#input", "Bonjour")
+        page.click("#send")
+        page.get_by_text("Tu es hors ligne").wait_for(timeout=5000)
+        assert page.locator("#messages a[href='/offline']").count() == 1
+    finally:
+        context.close()
