@@ -4,18 +4,36 @@ from __future__ import annotations
 
 from html import escape
 
-def asset_url(name: str) -> str:
-    """/static/<name>?v=<empreinte> : chaque déploiement change l'URL des fichiers
-    modifiés, le navigateur et le service worker chargent donc la bonne version."""
+_STATIC_DIR = None
+_VERSIONS: dict[str, tuple[int, str]] = {}
+
+
+def asset_version(name: str) -> str:
+    """Empreinte courte du fichier static/<name>, recalculée seulement s'il change."""
     import hashlib
     from pathlib import Path
 
-    path = Path(__file__).resolve().parents[1] / "static" / name
+    global _STATIC_DIR
+    if _STATIC_DIR is None:
+        _STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
+    path = _STATIC_DIR / name
     try:
+        mtime = path.stat().st_mtime_ns
+        cached = _VERSIONS.get(name)
+        if cached and cached[0] == mtime:
+            return cached[1]
         digest = hashlib.sha256(path.read_bytes()).hexdigest()[:10]
     except OSError:
-        return f"/static/{name}"
-    return f"/static/{name}?v={digest}"
+        return ""
+    _VERSIONS[name] = (mtime, digest)
+    return digest
+
+
+def asset_url(name: str) -> str:
+    """/static/<name>?v=<empreinte> : chaque déploiement change l'URL des fichiers
+    modifiés, le navigateur et le service worker chargent donc la bonne version."""
+    digest = asset_version(name)
+    return f"/static/{name}?v={digest}" if digest else f"/static/{name}"
 
 
 HEAD_ASSETS = f'<link rel="stylesheet" href="{asset_url("site.css")}"><script src="{asset_url("theme.js")}"></script>'

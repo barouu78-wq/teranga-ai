@@ -152,3 +152,60 @@ def test_fetch_article_images_filters_maps_flags_and_small_files():
     assert "titles=Dakar+%28S%C3%A9n%C3%A9gal%29" in requested[0]
     names = [p["page_url"].rsplit("/", 1)[-1] for p in photos]
     assert names == ["File:Corniche_de_Dakar.jpg", "File:Dakar_Plateau.jpg"]
+
+
+def test_photo_sources_run_in_parallel_within_budget():
+    import time
+
+    from services import image_topics
+
+    def slow(seconds, result):
+        def call(title, limit=4):
+            time.sleep(seconds)
+            return result
+        return call
+
+    started = time.perf_counter()
+    photos = image_topics.fetch_topic_images(
+        "photos de Kaolack parallel-test",
+        {"places": []},
+        normalize=lambda v: str(v or "").lower(),
+        should_fetch_images=lambda m: True,
+        topic_wikipedia_titles=lambda m, n: ["Kaolack", "Saloum"],
+        knowledge_image_titles=lambda m, n: [],
+        fetch_commons_images=slow(0.1, []),
+        fetch_google_images=slow(0.4, [{"url": "https://g/1.jpg"}]),
+        fetch_article_images=slow(0.4, [{"url": "https://upload.wikimedia.org/k%d.jpg" % i} for i in range(3)]),
+        fetch_city_image=lambda t: None,
+        image_proxy_url=lambda u: u,
+        logger=__import__("logging").getLogger("test"),
+    )
+    elapsed = time.perf_counter() - started
+    # Google + 2 articles en parallèle : ~0,4 s et non 1,2 s.
+    assert elapsed < 0.9
+    assert photos[0]["url"] == "https://g/1.jpg" and len(photos) == 4
+
+
+def test_slow_photo_source_is_abandoned_after_budget(monkeypatch):
+    import time
+
+    from services import image_topics
+
+    monkeypatch.setattr(image_topics, "PHOTO_SEARCH_BUDGET_SECONDS", 0.3)
+    started = time.perf_counter()
+    photos = image_topics.fetch_topic_images(
+        "photos de Thiès budget-test",
+        {"places": []},
+        normalize=lambda v: str(v or "").lower(),
+        should_fetch_images=lambda m: True,
+        topic_wikipedia_titles=lambda m, n: ["Thiès"],
+        knowledge_image_titles=lambda m, n: [],
+        fetch_commons_images=lambda t, limit=4: [{"url": "https://upload.wikimedia.org/c.jpg"}],
+        fetch_google_images=lambda t, limit=4: time.sleep(2) or [],
+        fetch_article_images=lambda t, limit=4: [],
+        fetch_city_image=lambda t: None,
+        image_proxy_url=lambda u: u,
+        logger=__import__("logging").getLogger("test"),
+    )
+    assert time.perf_counter() - started < 1.5
+    assert photos and photos[0]["url"].endswith("c.jpg")

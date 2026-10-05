@@ -25,7 +25,7 @@ def _cached_topic_images(key: tuple[str, int, int, int, int]) -> list[dict] | No
 
 def _store_topic_images(key: tuple[str, int, int, int, int], photos: list[dict]) -> None:
     if len(_TOPIC_IMAGE_CACHE) >= _TOPIC_IMAGE_CACHE_MAX:
-        oldest_key = min(_TOPIC_IMAGE_CACHE, key=lambda item: _TOPIC_IMAGE_CACHE[item][0])
+        oldest_key = min(list(_TOPIC_IMAGE_CACHE.items()), key=lambda entry: entry[1][0])[0]
         _TOPIC_IMAGE_CACHE.pop(oldest_key, None)
     _TOPIC_IMAGE_CACHE[key] = (time.monotonic(), [dict(photo) for photo in photos])
 
@@ -155,6 +155,39 @@ def _build_primary_query(
     return query[:180]
 
 
+# Recherches d'images en parallèle : la plus lente fixe la durée, pas la somme.
+_PHOTO_POOL = None
+PHOTO_SEARCH_BUDGET_SECONDS = 9.0
+
+
+def _run_parallel(jobs, logger, budget=None):
+    """{(source, titre): résultat} ; une source en erreur ou trop lente est ignorée."""
+    global _PHOTO_POOL
+    if not jobs:
+        return {}
+    if len(jobs) == 1:
+        kind, title, call = jobs[0]
+        try:
+            return {(kind, title): call()}
+        except Exception:
+            logger.exception("Erreur recherche photos %s pour %s", kind, title)
+            return {}
+    from concurrent.futures import ThreadPoolExecutor, wait
+
+    if _PHOTO_POOL is None:
+        _PHOTO_POOL = ThreadPoolExecutor(max_workers=8, thread_name_prefix="photos")
+    futures = {_PHOTO_POOL.submit(call): (kind, title) for kind, title, call in jobs}
+    done, _pending = wait(futures, timeout=PHOTO_SEARCH_BUDGET_SECONDS if budget is None else budget)
+    results = {}
+    for future in done:
+        kind, title = futures[future]
+        try:
+            results[(kind, title)] = future.result()
+        except Exception:
+            logger.exception("Erreur recherche photos %s pour %s", kind, title)
+    return results
+
+
 def fetch_topic_images(
     message: object,
     knowledge: Mapping[str, object],
@@ -215,7 +248,6 @@ def fetch_topic_images(
     titles = list(specific_titles or discovered_titles or [primary_title])
 
     photos: list[dict] = []
-    seen_titles: set[str] = set()
     seen_urls: set[str] = set()
 
     # Cache by the actual visual request so different requests do not reuse
@@ -232,86 +264,54 @@ def fetch_topic_images(
     if cached is not None:
         return cached
 
-    if fetch_google_images:
-        try:
-            candidates = fetch_google_images(primary_title, limit=max_photos)
-        except Exception:
-            logger.exception("Erreur recherche Google Images pour %s", primary_title)
-            candidates = []
-        for photo in candidates:
-            if not photo:
+    def add(candidates, query, proxied):
+        for photo in candidates or []:
+            src = (photo or {}).get("url", "")
+            if not src or src in seen_urls or len(photos) >= max_photos:
                 continue
-            photo["search_query"] = primary_title
-            src = photo.get("url", "")
-            if not src or src in seen_urls:
-                continue
+            photo["search_query"] = query
+            if proxied:
+                photo["display_url"] = image_proxy_url(src)
             seen_urls.add(src)
             photos.append(photo)
-            if len(photos) >= max_photos:
-                _store_topic_images(cache_key, photos)
-                return [dict(photo) for photo in photos]
 
-    # Photos des articles Wikipédia des lieux reconnus : choisies par des
-    # rédacteurs, donc pertinentes (jamais pour une requête libre comme
-    # « plage », dont l'article montrerait des plages du monde entier).
-    if fetch_article_images and len(photos) < 4:
-        for title in list(specific_titles or discovered_titles)[:2]:
-            title = str(title or "").strip()
-            if not title:
-                continue
-            try:
-                candidates = fetch_article_images(title, limit=max_photos - len(photos))
-            except Exception:
-                logger.exception("Erreur photos d'article pour %s", title)
-                candidates = []
-            for photo in candidates:
-                src = (photo or {}).get("url", "")
-                if not src or src in seen_urls:
-                    continue
-                photo["search_query"] = title
-                photo["display_url"] = image_proxy_url(src)
-                seen_urls.add(src)
-                photos.append(photo)
-            if len(photos) >= 4:
-                break
-        if len(photos) >= 4:
+    def finish():
+        if photos:
             _store_topic_images(cache_key, photos)
             return [dict(photo) for photo in photos]
+        return None
 
-    # Wikimedia remains a relevance-oriented fallback when Google returns too
-    # few results or is temporarily unavailable.
-    for title in titles:
-        title = str(title or "").strip()
-        if not title or title in seen_titles:
-            continue
-        seen_titles.add(title)
+    # Étape 1, en parallèle : Google et les photos des articles Wikipédia des
+    # lieux reconnus (choisies par des rédacteurs ; jamais pour une requête
+    # libre comme « plage », dont l'article montrerait le monde entier).
+    article_titles = [str(t or "").strip() for t in list(specific_titles or discovered_titles)[:2]]
+    article_titles = [t for t in dict.fromkeys(article_titles) if t] if fetch_article_images else []
+    jobs = []
+    if fetch_google_images:
+        jobs.append(("google", primary_title, lambda: fetch_google_images(primary_title, limit=max_photos)))
+    for title in article_titles:
+        jobs.append(("article", title, lambda title=title: fetch_article_images(title, limit=max_photos)))
+    results = _run_parallel(jobs, logger)
+    add(results.get(("google", primary_title)), primary_title, proxied=False)
+    for title in article_titles:
+        add(results.get(("article", title)), title, proxied=True)
+    if len(photos) >= 4:
+        return finish()
+
+    # Étape 2 (seulement s'il manque des photos) : recherche Commons, en
+    # parallèle sur les premiers titres.
+    commons_titles = [t for t in dict.fromkeys(str(t or "").strip() for t in titles) if t][:4]
+    jobs = [("commons", t, lambda t=t: fetch_commons_images(t, limit=4)) for t in commons_titles]
+    results = _run_parallel(jobs, logger)
+    for title in commons_titles:
+        add(results.get(("commons", title)), title, proxied=True)
+    for title in commons_titles:
+        if photos:
+            break
         try:
-            candidates = fetch_commons_images(title, limit=min(4, max_photos - len(photos)))
+            fallback = fetch_city_image(title)
         except Exception:
-            logger.exception("Erreur recherche photos Commons pour %s", title)
-            candidates = []
-        if not candidates and len(photos) == 0:
-            try:
-                fallback = fetch_city_image(title)
-                candidates = [fallback] if fallback else []
-            except Exception:
-                logger.exception("Erreur fallback photo pour %s", title)
-                candidates = []
-        for photo in candidates:
-            if not photo:
-                continue
-            photo["search_query"] = title
-            photo["display_url"] = image_proxy_url(photo.get("url", ""))
-            src = photo.get("url", "")
-            if not src or src in seen_urls:
-                continue
-            seen_urls.add(src)
-            photos.append(photo)
-            if len(photos) >= max_photos:
-                _store_topic_images(cache_key, photos)
-                return [dict(photo) for photo in photos]
-
-    if photos:
-        _store_topic_images(cache_key, photos)
-        return [dict(photo) for photo in photos]
-    return None
+            logger.exception("Erreur fallback photo pour %s", title)
+            fallback = None
+        add([fallback] if fallback else [], title, proxied=True)
+    return finish()
