@@ -182,9 +182,25 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                     str(place.get("history", "")), str(place.get("culture", "")),
                     str(place.get("what_to_see", "")),
                 ]))
+        for dish in data.get("dishes", []):
+            if isinstance(dish, dict):
+                names = [str(dish.get("name", "")), *map(str, dish.get("aliases", []))]
+                folded = sorted({_fold(name).strip() for name in names if _fold(name).strip()}, key=len, reverse=True)
+                dish["_match"] = re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(name) for name in folded) + r")(?![a-z0-9])") if folded else None
         return data
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def _matched_dishes(data: dict, folded_query: str, limit: int = 4) -> list[dict]:
+    """Plats et boissons cités dans la question (nom ou variante d'écriture)."""
+    found = []
+    for dish in data.get("dishes", []):
+        pattern = dish.get("_match") if isinstance(dish, dict) else None
+        if pattern is not None and pattern.search(folded_query):
+            found.append(dish)
+    return found[:limit]
+
 
 def _knowledge_domain(query: str) -> str:
     value = str(query or "").casefold()
@@ -307,6 +323,19 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             lines.append("PERSONNALITÉS PERTINENTES :")
             for person in matched_people[:4]:
                 lines.append(f"- {person.get('name')} ({person.get('period', '')}) : {person.get('text', '')}")
+
+    folded_query = _fold(value)
+    dishes = _matched_dishes(data, folded_query)
+    if dishes:
+        lines.append("PLATS ET BOISSONS PERTINENTS :")
+        for dish in dishes:
+            where = f" Où : {dish.get('where')}." if dish.get("where") else ""
+            lines.append(f"- {dish.get('name')} ({dish.get('kind')}) : {dish.get('text')}{where}")
+
+    phrases = data.get("wolof_phrases") or []
+    if phrases and re.search(r"(?<![a-z])wolof(?![a-z])", folded_query):
+        lines.append("PHRASES WOLOF SÛRES (orthographe officielle ; à réutiliser telles quelles, sans en inventer d'autres) :")
+        lines.append("; ".join(f"{item.get('wo')} = {item.get('fr')}" for item in phrases) + ".")
 
     modules = data.get("knowledge_modules", {})
     module_key = {

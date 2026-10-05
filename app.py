@@ -662,7 +662,9 @@ ANSWER_CACHE = AnswerCache.from_env(redis_client, logger=app.logger)
 
 register_chat_route(app, {
     "answer_cache": ANSWER_CACHE,
-    "cache_model": MODEL,
+    # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
+    # de la base de connaissances invalide les anciennes réponses en cache.
+    "cache_model": MODEL + ":" + hashlib.sha256((BASE_DIR / "data" / "senegal_knowledge.json").read_bytes()).hexdigest()[:12],
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,
