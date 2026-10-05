@@ -133,11 +133,21 @@ def _build_primary_query(
         "des photos de", "des photos du", "des photos d", "photo de", "photos de",
         "photo du", "photos du", "photo d", "photos d",
     )
+    filler = filler + (
+        "des photos", "des images de", "des images", "les photos de", "les photos",
+        "photos", "photo", "images", "image", "stp", "s'il te plait", "svp",
+    )
     query = raw
-    for prefix in filler:
-        if normalize(query).startswith(normalize(prefix) + " "):
-            query = query[len(prefix):].strip(" :,-")
-            break
+    # « montre moi des photos de plage » : on retire toutes les formules,
+    # pas seulement la première (sinon « des photos de plage » partait à Google).
+    changed = True
+    while changed:
+        changed = False
+        for prefix in sorted(filler, key=len, reverse=True):
+            if normalize(query).startswith(normalize(prefix) + " "):
+                query = query[len(prefix):].strip(" :,-")
+                changed = True
+                break
     if not normalize(query):
         query = "Sénégal"
     if "senegal" not in normalize(query):
@@ -155,6 +165,7 @@ def fetch_topic_images(
     knowledge_image_titles: Callable[[object, int], Sequence[str]] | None = None,
     fetch_commons_images: Callable[..., list[dict]],
     fetch_google_images: Callable[..., list[dict]] | None = None,
+    fetch_article_images: Callable[..., list[dict]] | None = None,
     fetch_city_image: Callable[[str], dict | None],
     image_proxy_url: Callable[[object], str],
     logger,
@@ -213,6 +224,7 @@ def fetch_topic_images(
         normalize(primary_title),
         max_photos,
         id(fetch_google_images),
+        id(fetch_article_images),
         id(fetch_commons_images),
         id(fetch_city_image),
     )
@@ -238,6 +250,33 @@ def fetch_topic_images(
             if len(photos) >= max_photos:
                 _store_topic_images(cache_key, photos)
                 return [dict(photo) for photo in photos]
+
+    # Photos des articles Wikipédia des lieux reconnus : choisies par des
+    # rédacteurs, donc pertinentes (jamais pour une requête libre comme
+    # « plage », dont l'article montrerait des plages du monde entier).
+    if fetch_article_images and len(photos) < 4:
+        for title in list(specific_titles or discovered_titles)[:2]:
+            title = str(title or "").strip()
+            if not title:
+                continue
+            try:
+                candidates = fetch_article_images(title, limit=max_photos - len(photos))
+            except Exception:
+                logger.exception("Erreur photos d'article pour %s", title)
+                candidates = []
+            for photo in candidates:
+                src = (photo or {}).get("url", "")
+                if not src or src in seen_urls:
+                    continue
+                photo["search_query"] = title
+                photo["display_url"] = image_proxy_url(src)
+                seen_urls.add(src)
+                photos.append(photo)
+            if len(photos) >= 4:
+                break
+        if len(photos) >= 4:
+            _store_topic_images(cache_key, photos)
+            return [dict(photo) for photo in photos]
 
     # Wikimedia remains a relevance-oriented fallback when Google returns too
     # few results or is temporarily unavailable.

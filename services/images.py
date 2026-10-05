@@ -240,7 +240,8 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         "action": "query",
         "format": "json",
         "generator": "search",
-        "gsrsearch": query,
+        # Photos bitmap d'au moins 1000 px : écarte cartes SVG et vignettes.
+        "gsrsearch": f"{query} filetype:bitmap filew:>999",
         "gsrnamespace": "6",
         "gsrlimit": str(min(max(limit * 4, 8), 30)),
         "prop": "imageinfo",
@@ -298,6 +299,102 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         oldest = min(_COMMONS_CACHE, key=lambda key: _COMMONS_CACHE[key][0])
         _COMMONS_CACHE.pop(oldest, None)
     _COMMONS_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
+    return [dict(item) for item in out]
+
+
+# Fichiers d'article à écarter : cartes, drapeaux, logos, schémas…
+_ARTICLE_IMAGE_EXCLUDED = (
+    "carte", "map", "locator", "location", "localisation", "flag", "drapeau", "logo",
+    "blason", "coat of arms", "coat_of_arms", "armoiries", "emblem", "embleme", "seal",
+    "icon", "icone", "plan ", "diagram", "chart", "graph", "signature", "relief",
+    "satellite", "population", "pictogram", "symbol", "stamp", "timbre", "banknote", "billet",
+)
+_ARTICLE_CACHE: dict[tuple[str, int], tuple[float, list[dict]]] = {}
+
+
+def _article_title_candidates(title):
+    """« Dakar Sénégal » → ["Dakar (Sénégal)", "Dakar"] : l'homonyme sénégalais d'abord."""
+    base = re.sub(r"\s+s[ée]n[ée]gal$", "", str(title or "").strip(), flags=re.I).strip(" ,")
+    if not base:
+        return []
+    return [f"{base} (Sénégal)", base]
+
+
+def fetch_article_images(title, limit=6, image_validator=None, display_url_builder=None, urlopen_fn=None, lang="fr"):
+    """Photos choisies par les rédacteurs de l'article Wikipédia du lieu.
+
+    Bien plus fiables qu'une recherche plein texte sur Commons, qui renvoie
+    n'importe quelle photo prise dans la ville (chantiers, déchets, ciel…).
+    """
+    candidates = _article_title_candidates(title)
+    if not candidates:
+        return []
+    cache_key = (_normalize(candidates[-1]), int(limit))
+    cached = _ARTICLE_CACHE.get(cache_key)
+    if cached is not None and time.monotonic() - cached[0] < _IMAGE_CACHE_TTL_SECONDS:
+        return [dict(item) for item in cached[1]]
+
+    opener = urlopen_fn or urlopen
+    validate = image_validator or (lambda src: str(src or ""))
+    out = []
+    for article in candidates:
+        params = {
+            "action": "query",
+            "format": "json",
+            "titles": article,
+            "redirects": "1",
+            "generator": "images",
+            "gimlimit": "50",
+            "prop": "imageinfo",
+            "iiprop": "url|mime|size|extmetadata",
+            "iiurlwidth": "1280",
+        }
+        req = Request(
+            f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(params),
+            headers={"User-Agent": "TerangaAI/1.0 (article images)"},
+        )
+        with opener(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        pages = ((data.get("query") or {}).get("pages") or {}).values()
+        seen = set()
+        for page in sorted(pages, key=lambda item: str(item.get("title", ""))):
+            info = (page.get("imageinfo") or [{}])[0]
+            name = _normalize(page.get("title", "")).replace("_", " ")
+            if str(info.get("mime") or "").lower() != "image/jpeg":
+                continue
+            if any(term in name for term in _ARTICLE_IMAGE_EXCLUDED):
+                continue
+            width, height = int(info.get("width") or 0), int(info.get("height") or 0)
+            if width < 800 or height < 500 or not 0.6 <= width / max(height, 1) <= 2.4:
+                continue
+            src = validate(info.get("thumburl") or info.get("url"))
+            if not src or src in seen:
+                continue
+            seen.add(src)
+            meta = info.get("extmetadata") or {}
+
+            def meta_text(key, meta=meta):
+                value = meta.get(key, {})
+                return re.sub(r"<[^>]+>", "", value.get("value", "")).strip() if isinstance(value, dict) else ""
+
+            # « Fichier:… » (fr) → « File:… », l'espace de noms universel de Commons.
+            file_title = "File:" + str(page.get("title", "")).split(":", 1)[-1]
+            out.append({
+                "url": src,
+                "display_url": display_url_builder(src) if display_url_builder else src,
+                "alt": (meta_text("ImageDescription") or file_title.split(":", 1)[-1].rsplit(".", 1)[0])[:300],
+                "credit": "Wikimédia Commons",
+                "artist": meta_text("Artist"),
+                "license": meta_text("LicenseShortName"),
+                "page_url": "https://commons.wikimedia.org/wiki/" + quote(file_title.replace(" ", "_"), safe=":"),
+            })
+            if len(out) >= limit:
+                break
+        if out:
+            break
+    if len(_ARTICLE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES and cache_key not in _ARTICLE_CACHE:
+        _ARTICLE_CACHE.pop(min(_ARTICLE_CACHE, key=lambda key: _ARTICLE_CACHE[key][0]), None)
+    _ARTICLE_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
     return [dict(item) for item in out]
 
 

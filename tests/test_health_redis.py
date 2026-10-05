@@ -34,7 +34,7 @@ def test_health_reports_redis_state_without_failing():
     assert _app(None).get("/health").get_json()["redis"] == "disabled"
     assert _app(_Redis()).get("/health").get_json()["redis"] == "ok"
     down = _app(_Redis(fail=True)).get("/health")
-    assert down.status_code == 200 and down.get_json() == {"status": "ok", "service": "teranga-ai", "redis": "unavailable"}
+    assert down.status_code == 200 and down.get_json()["redis"] == "unavailable"
 
 
 def test_redis_client_has_short_timeouts():
@@ -45,3 +45,17 @@ def test_redis_client_has_short_timeouts():
 def test_unreadable_redis_url_is_reported_as_misconfigured():
     assert _app(None, configured=True).get("/health").get_json()["redis"] == "misconfigured"
     assert _app(None, configured=False).get("/health").get_json()["redis"] == "disabled"
+
+
+def test_health_reports_google_images_configuration_without_secret():
+    from routes.system import register_system_routes
+
+    for configured, expected in ((True, "configured"), (False, "missing")):
+        app = Flask(__name__)
+        register_system_routes(app, {
+            "indexnow_key": "k", "issue_csrf": lambda *a: "t", "csrf_ttl": 60, "csrf_cookie": "c",
+            "home_html": "<html></html>", "site_url": "https://teranga-ai.fr",
+            "build_icon_png": lambda size: b"", "icon_svg": "<svg/>", "redis_client": None,
+            "google_images_configured": configured,
+        })
+        assert app.test_client().get("/health").get_json()["google_images"] == expected

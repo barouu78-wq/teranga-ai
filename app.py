@@ -65,6 +65,7 @@ from services.images import (
     fetch_city_image as _fetch_city_image,
     fetch_commons_image as _fetch_commons_image,
     fetch_commons_images as _fetch_commons_images,
+    fetch_article_images as _fetch_article_images,
     fetch_google_images as _fetch_google_images,
 )
 
@@ -290,6 +291,10 @@ def fetch_commons_images(title, limit=4):
     return _fetch_commons_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
 
 
+def fetch_article_images(title, limit=6):
+    return _fetch_article_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
+
+
 def fetch_google_images(title, limit=4):
     if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
         return []
@@ -340,6 +345,7 @@ def fetch_topic_images(message):
         knowledge_image_titles=knowledge_image_titles,
         fetch_commons_images=fetch_commons_images,
         fetch_google_images=fetch_google_images,
+        fetch_article_images=fetch_article_images,
         fetch_city_image=fetch_city_image,
         image_proxy_url=image_proxy_url,
         logger=app.logger,
@@ -658,6 +664,7 @@ register_system_routes(app, {
     "indexnow_key": INDEXNOW_KEY,
     "redis_client": redis_client,
     "redis_configured": bool(REDIS_URL),
+    "google_images_configured": bool(GOOGLE_API_KEY and GOOGLE_CSE_ID),
     "issue_csrf": issue_csrf,
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
