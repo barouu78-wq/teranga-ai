@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 # Official administrative coverage: all 14 regions of Senegal.
@@ -41,6 +42,18 @@ REGION_HIGHLIGHTS = {
     "Sédhiou": ("Sédhiou", "Bounkiling", "Goudomp", "Moyenne-Casamance"),
     "Ziguinchor": ("Ziguinchor", "Oussouye", "Cap Skirring", "Carabane"),
 }
+
+
+_QUERY_STOPWORDS = frozenset({
+    "raconte", "racontes", "histoire", "visiter", "visite", "quartier", "quartiers", "comment", "quelle", "quelles",
+    "quels", "quel", "pourquoi", "parle", "parler", "dans", "pour", "avec", "faire", "voir", "montre", "photos",
+    "photo", "guide", "senegal", "tell", "about", "what", "where", "history", "visit", "show", "connais",
+})
+
+
+def _fold(value) -> str:
+    text = unicodedata.normalize("NFD", str(value or "").casefold())
+    return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
 def region_highlights(region: str) -> tuple[str, ...]:
     return REGION_HIGHLIGHTS.get(str(region or ""), ())
@@ -155,20 +168,20 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
             return {}
         for region in data.get("regions", []):
             if isinstance(region, dict):
-                region["_search_haystack"] = " ".join([
+                region["_search_haystack"] = _fold(" ".join([
                     str(region.get("name", "")),
                     *map(str, region.get("places", [])),
                     *map(str, region.get("highlights", [])),
                     *map(str, region.get("themes", [])),
                     *map(str, region.get("foods", [])),
-                ]).casefold()
+                ]))
         for place in data.get("places", []):
             if isinstance(place, dict):
-                place["_search_haystack"] = " ".join([
+                place["_search_haystack"] = _fold(" ".join([
                     str(place.get("name", "")), str(place.get("summary", "")),
                     str(place.get("history", "")), str(place.get("culture", "")),
                     str(place.get("what_to_see", "")),
-                ]).casefold()
+                ]))
         return data
     except (OSError, json.JSONDecodeError):
         return {}
@@ -232,7 +245,10 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         )
 
     regions = data.get("regions", [])
-    tokens = [token for token in value.split() if len(token) >= 4]
+    # Sans accents ni apostrophes (« Gorée » = « goree », « l'histoire » =
+    # « histoire ») ; les mots de la question qui ne désignent pas un lieu
+    # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
+    tokens = [token for token in re.findall(r"[a-z0-9]+", _fold(value)) if len(token) >= 4 and token not in _QUERY_STOPWORDS]
     matched_regions = []
     for region in regions:
         haystack = region.get("_search_haystack", "")
@@ -260,7 +276,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         scored = []
         for index, place in enumerate(places):
             haystack = place.get("_search_haystack", "")
-            name = str(place.get("name", "")).casefold()
+            name = _fold(place.get("name", ""))
             hits = sum(1 for token in tokens if token in haystack)
             if hits:
                 score = hits + 2 * sum(1 for token in tokens if token in name)
@@ -268,10 +284,13 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         matched_places = [place for _, _, place in sorted(scored, key=lambda item: item[:2])]
         if matched_places:
             lines.append("LIEUX PERTINENTS :")
-            for place in matched_places[:max_places]:
+            for rank, place in enumerate(matched_places[:max_places]):
+                # Histoire détaillée pour les 3 lieux les plus pertinents : de
+                # quoi raconter comme un guide sans alourdir le contexte.
+                history = f" Histoire : {place.get('history')}" if rank < 3 and place.get("history") else ""
                 lines.append(
                     f"- {place.get('name')}: {place.get('summary', '')} "
-                    f"À voir : {place.get('what_to_see', '')}."
+                    f"À voir : {place.get('what_to_see', '')}.{history}"
                 )
 
     unesco = data.get("unesco_world_heritage", [])
