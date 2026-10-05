@@ -67,6 +67,11 @@ def _market_knowledge(knowledge: dict) -> str:
         lines.append("Marchés de référence : " + ", ".join(module["anchors"]) + ".")
     for item in module.get("stable_knowledge") or []:
         lines.append("- " + item)
+    where = module.get("where_to_buy") or []
+    if where:
+        lines.append("Où acheter : " + " ; ".join(f"{what} → {place}" for what, place in where) + ".")
+    for item in module.get("price_method") or []:
+        lines.append("- " + item)
     phrases = module.get("phrases_wolof") or []
     if phrases:
         lines.append("Phrases wolof sûres : " + " ; ".join(f"« {w} » = {fr}" for w, fr in phrases) + ".")

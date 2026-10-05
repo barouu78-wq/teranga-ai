@@ -180,8 +180,12 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                 place["_search_haystack"] = _fold(" ".join([
                     str(place.get("name", "")), str(place.get("summary", "")),
                     str(place.get("history", "")), str(place.get("culture", "")),
-                    str(place.get("what_to_see", "")),
+                    str(place.get("what_to_see", "")), str(place.get("access", "")),
+                    *map(str, place.get("aliases", []) or []),
                 ]))
+                # Nom et autres noms (« Pink Lake », « Goree Island ») : un mot
+                # trouvé ici compte davantage dans le classement.
+                place["_search_names"] = _fold(" ".join([str(place.get("name", "")), *map(str, place.get("aliases", []) or [])]))
         for dossier in data.get("history_dossiers", []):
             if isinstance(dossier, dict):
                 triggers = sorted({_fold(t).strip() for t in dossier.get("triggers", []) if _fold(t).strip()}, key=len, reverse=True)
@@ -296,7 +300,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         scored = []
         for index, place in enumerate(places):
             haystack = place.get("_search_haystack", "")
-            name = _fold(place.get("name", ""))
+            name = place.get("_search_names") or _fold(place.get("name", ""))
             hits = sum(1 for token in tokens if token in haystack)
             if hits:
                 score = hits + 2 * sum(1 for token in tokens if token in name)
@@ -308,9 +312,10 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 # Histoire détaillée pour les 3 lieux les plus pertinents : de
                 # quoi raconter comme un guide sans alourdir le contexte.
                 history = f" Histoire : {place.get('history')}" if rank < 3 and place.get("history") else ""
+                access = f" Accès : {place.get('access')}" if rank < 3 and place.get("access") else ""
                 lines.append(
                     f"- {place.get('name')}: {place.get('summary', '')} "
-                    f"À voir : {place.get('what_to_see', '')}.{history}"
+                    f"À voir : {place.get('what_to_see', '')}.{history}{access}"
                 )
 
     unesco = data.get("unesco_world_heritage", [])

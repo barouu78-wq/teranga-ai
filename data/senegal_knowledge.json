@@ -1750,7 +1750,16 @@
         "Île de Gorée Sénégal",
         "Maison des Esclaves Gorée Sénégal",
         "Castel Gorée Sénégal"
-      ]
+      ],
+      "aliases": [
+        "Gorée",
+        "Goree Island",
+        "Gorée Island",
+        "Maison des Esclaves",
+        "House of Slaves",
+        "Slave House"
+      ],
+      "access": "Chaloupe depuis la gare maritime du port de Dakar (Plateau) : environ 20 minutes de traversée, départs réguliers dans la journée ; billet aller-retour, tarif différent pour résidents et non-résidents (à vérifier sur place). L'île se visite à pied."
     },
     {
       "id": "saint-louis",
@@ -1770,8 +1779,12 @@
       ],
       "aliases": [
         "Saint-Louis",
-        "Ndar"
-      ]
+        "Ndar",
+        "Saint-Louis du Sénégal",
+        "Pont Faidherbe",
+        "Faidherbe Bridge"
+      ],
+      "access": "À environ 260 km au nord de Dakar, 4 à 5 heures de route ; minibus et « 7 places » depuis la gare routière des Baux maraîchers (Pikine). Sur place, l'île se découvre à pied ou en calèche."
     },
     {
       "id": "djoudj",
@@ -1789,8 +1802,10 @@
         "Parc national des oiseaux du Djoudj"
       ],
       "aliases": [
-        "Djoudj"
-      ]
+        "Djoudj",
+        "Djoudj bird sanctuary"
+      ],
+      "access": "À environ 60 km au nord de Saint-Louis ; visite en pirogue sur place. Meilleure période : de novembre à avril, quand les oiseaux migrateurs sont là."
     },
     {
       "id": "niokolo-koba",
@@ -1810,8 +1825,11 @@
       ],
       "aliases": [
         "Niokolo-Koba",
-        "Niokolo Koba"
-      ]
+        "Niokolo Koba",
+        "Niokolo",
+        "Niokolo-Koba National Park"
+      ],
+      "access": "Accès par Tambacounda, dans l'est du pays ; mieux vaut un guide et un véhicule adapté. Visite en saison sèche : pendant l'hivernage, une grande partie des pistes est impraticable."
     },
     {
       "id": "saloum",
@@ -1831,8 +1849,11 @@
       ],
       "aliases": [
         "Sine-Saloum",
-        "Sine Saloum"
-      ]
+        "Sine Saloum",
+        "Saloum Delta",
+        "Siné Saloum"
+      ],
+      "access": "À environ 3 heures de route au sud-est de Dakar ; on rejoint les bolongs depuis Ndangane, Palmarin, Foundiougne ou Toubacouta, puis en pirogue."
     },
     {
       "id": "bassari",
@@ -1850,6 +1871,10 @@
         "Salémata Sénégal",
         "Bandafassi Sénégal",
         "Dindéfello Sénégal"
+      ],
+      "aliases": [
+        "Bassari Country",
+        "Pays bassari"
       ]
     },
     {
@@ -1866,7 +1891,8 @@
       "image_queries": [
         "Touba Sénégal Grande Mosquée",
         "Touba Sénégal"
-      ]
+      ],
+      "access": "À environ 190 km à l'est de Dakar, par l'autoroute Ila Touba ; tenue couverte exigée, tabac et alcool interdits dans la ville."
     },
     {
       "id": "dindefello",
@@ -1886,7 +1912,12 @@
       "sources": [
         "https://www.vie-publique.sn/collectivites-territoriales/communes/dindefelo",
         "https://au-senegal.com/la-cascade-de-dindefelo-havre-de-fraicheur-au-senegal-oriental,10119.html"
-      ]
+      ],
+      "aliases": [
+        "Dindéfello",
+        "Dindefello waterfall"
+      ],
+      "access": "Près de Kédougou, dans le sud-est ; marche d'environ une demi-heure depuis le village jusqu'à la cascade, avec un guide local."
     },
     {
       "id": "joal-fadiouth",
@@ -1902,7 +1933,8 @@
       "image_queries": [
         "Joal-Fadiouth Sénégal",
         "Fadiouth Sénégal"
-      ]
+      ],
+      "access": "À environ 115 km au sud de Dakar par la route de Mbour ; l'île de Fadiouth se rejoint à pied par un long pont de bois."
     },
     {
       "id": "cap-skirring",
@@ -1918,7 +1950,8 @@
       "image_queries": [
         "Cap Skirring Sénégal",
         "plage Cap Skirring Sénégal"
-      ]
+      ],
+      "access": "Par avion (vols intérieurs selon la saison) ou par le ferry Dakar–Ziguinchor, puis environ 70 km de route depuis Ziguinchor."
     },
     {
       "id": "dakar-corniche",
@@ -1953,8 +1986,10 @@
       ],
       "aliases": [
         "Monument de la Renaissance",
-        "Renaissance africaine"
-      ]
+        "Renaissance africaine",
+        "African Renaissance Monument"
+      ],
+      "access": "Sur la colline des Mamelles à Ouakam, à l'ouest de Dakar ; taxi depuis le centre. On peut monter jusqu'à la tête de la statue (visite payante)."
     },
     {
       "id": "musee-civilisations",
@@ -1971,7 +2006,8 @@
         "Musée Civilisations Noires Dakar"
       ],
       "aliases": [
-        "MCN"
+        "MCN",
+        "Museum of Black Civilizations"
       ]
     },
     {
@@ -2007,8 +2043,11 @@
       ],
       "aliases": [
         "Lac Rose",
-        "Lac Retba"
-      ]
+        "Lac Retba",
+        "Pink Lake",
+        "Lake Retba"
+      ],
+      "access": "À environ 35 km au nord-est du centre de Dakar, une heure de route environ selon le trafic ; taxi à négocier pour l'aller-retour ou excursion organisée."
     },
     {
       "id": "tivaouane",
@@ -2316,7 +2355,8 @@
       "image_queries": [
         "Ziguinchor Sénégal",
         "fleuve Casamance Ziguinchor"
-      ]
+      ],
+      "access": "Ferry de nuit depuis Dakar, vols intérieurs, ou route via la Gambie (pont de Farafenni)."
     },
     {
       "id": "sine-ngayene",
@@ -2415,7 +2455,11 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Lompoul_desert",
         "https://au-senegal.com/le-desert-de-lompoul,15569.html"
-      ]
+      ],
+      "aliases": [
+        "Lompoul desert"
+      ],
+      "access": "Entre Dakar et Saint-Louis, à l'intérieur des terres depuis Kébémer ; on termine souvent en 4×4 jusqu'aux campements dans les dunes."
     },
     {
       "id": "langue-de-barbarie",
@@ -2478,7 +2522,8 @@
       ],
       "aliases": [
         "Bandia"
-      ]
+      ],
+      "access": "À environ 65 km de Dakar sur la route de Mbour ; visite en véhicule avec un guide de la réserve."
     },
     {
       "id": "ile-de-ngor",
@@ -3337,6 +3382,110 @@
       "sources": [
         "https://fr.wikipedia.org/wiki/Waoundé"
       ]
+    },
+    {
+      "id": "thies",
+      "name": "Thiès",
+      "type": "locality",
+      "region": "Thiès",
+      "locality": "Thiès",
+      "summary": "Deuxième agglomération du pays, ville du rail et des tapisseries, à environ 70 km à l'est de Dakar.",
+      "history": "Nœud ferroviaire de la ligne Dakar–Niger, Thiès a été le centre de la grande grève des cheminots de 1947-1948, racontée par Ousmane Sembène dans « Les Bouts de bois de Dieu ». La ville abrite les Manufactures sénégalaises des arts décoratifs, créées sous Léopold Sédar Senghor, où l'on tisse des tapisseries d'après des œuvres d'artistes.",
+      "what_to_see": "Manufactures des arts décoratifs; ancienne gare et quartier du rail; marchés",
+      "latitude": 14.791,
+      "longitude": -16.9256,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Thiès Sénégal",
+        "Manufactures sénégalaises des arts décoratifs Thiès"
+      ],
+      "access": "À environ 1 heure de Dakar par l'autoroute à péage ; nombreux « 7 places » et bus depuis Dakar."
+    },
+    {
+      "id": "tambacounda",
+      "name": "Tambacounda",
+      "type": "locality",
+      "region": "Tambacounda",
+      "locality": "Tambacounda",
+      "summary": "Grande ville carrefour de l'est du Sénégal, porte d'entrée du parc du Niokolo-Koba et du Sénégal oriental.",
+      "history": "Née autour de la ligne de chemin de fer Dakar–Niger, « Tamba » est devenue le carrefour des routes vers le Mali, la Guinée et Kédougou. C'est l'étape naturelle avant le Niokolo-Koba et le Pays Bassari ; la chaleur y est forte en saison sèche.",
+      "what_to_see": "Marché central; départ vers le Niokolo-Koba; ambiance de ville carrefour",
+      "latitude": 13.7707,
+      "longitude": -13.6673,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Tambacounda Sénégal"
+      ],
+      "access": "À environ 460 km à l'est de Dakar, une journée de route ; bus et « 7 places » depuis Dakar."
+    },
+    {
+      "id": "kedougou",
+      "name": "Kédougou",
+      "type": "locality",
+      "region": "Kédougou",
+      "locality": "Kédougou",
+      "summary": "Ville du sud-est, aux portes des collines du Pays Bassari, de Dindéfello et du fleuve Gambie.",
+      "history": "La région de Kédougou est la plus vallonnée du Sénégal, sur les contreforts du Fouta-Djalon. Les peuples bassari, bédik et peul y vivent dans des villages perchés ; le Pays Bassari est inscrit au patrimoine mondial depuis 2012. L'orpaillage traditionnel et industriel y tient une grande place.",
+      "what_to_see": "Marché; départs vers Dindéfello, Ibel, Iwol et Salémata; bords de la Gambie",
+      "latitude": 12.5579,
+      "longitude": -12.1743,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Kédougou Sénégal",
+        "Pays Bassari Kédougou"
+      ],
+      "access": "À environ 700 km de Dakar, via Tambacounda ; prévoir deux jours de route ou une étape. Meilleure période : saison sèche, de novembre à mai."
+    },
+    {
+      "id": "fatick",
+      "name": "Fatick",
+      "type": "locality",
+      "region": "Fatick",
+      "locality": "Fatick",
+      "summary": "Capitale régionale du Sine, au bord des bras de mer du Saloum.",
+      "history": "Fatick est au cœur de l'ancien royaume sérère du Sine. La ville est la ville natale de l'ancien président Macky Sall ; la région réunit des traditions sérères fortes (lutte, xooy des saltigués) et les paysages de tannes et de mangroves du Saloum.",
+      "what_to_see": "Ville et marché; tannes et bolongs voisins; route vers Foundiougne",
+      "latitude": 14.339,
+      "longitude": -16.4111,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Fatick Sénégal"
+      ],
+      "access": "À environ 150 km au sud-est de Dakar, par la route de Kaolack."
+    },
+    {
+      "id": "mosquee-divinite",
+      "name": "Mosquée de la Divinité",
+      "type": "religious_site",
+      "region": "Dakar",
+      "locality": "Ouakam",
+      "summary": "Mosquée blanche posée au bord de l'océan, au pied des falaises de Ouakam.",
+      "history": "Construite dans les années 1990 au bord de la mer à Ouakam, la mosquée de la Divinité est devenue l'une des images de la côte dakaroise, avec ses deux minarets face à l'Atlantique. On la voit bien depuis la corniche et le Monument de la Renaissance voisin.",
+      "what_to_see": "Mosquée face à l'océan; falaises de Ouakam; coucher de soleil",
+      "latitude": 14.718,
+      "longitude": -17.498,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Mosquée de la Divinité Ouakam Dakar"
+      ],
+      "access": "À Ouakam, à l'ouest de Dakar, près du Monument de la Renaissance ; tenue couverte pour approcher, et demander avant d'entrer ou de photographier les fidèles."
+    },
+    {
+      "id": "mausolee-layene",
+      "name": "Mausolée de Seydina Limamou Laye",
+      "type": "religious_site",
+      "region": "Dakar",
+      "locality": "Yoff",
+      "summary": "Lieu saint de la confrérie layène, au bord de la mer à Yoff.",
+      "history": "Seydina Limamou Laye, pêcheur lébou de Yoff, fonde la confrérie layène en 1883. Son mausolée à Yoff et celui de son fils à Cambérène sont des lieux de pèlerinage ; l'Appel de Seydina Limamou Laye y est célébré chaque année. Les Layènes, très présents chez les Lébous de la presqu'île du Cap-Vert, s'habillent souvent de blanc.",
+      "what_to_see": "Mausolée; plage et village traditionnel de Yoff; ambiance lébou",
+      "latitude": 14.758,
+      "longitude": -17.47,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Mausolée Seydina Limamou Laye Yoff"
+      ],
+      "access": "À Yoff, au nord de Dakar ; tenue couverte et discrétion, se renseigner sur place avant d'entrer."
     }
   ],
   "authoritative_sources": [
@@ -4069,6 +4218,33 @@
       "source_priority": [
         "pratiques locales",
         "guides touristiques reconnus"
+      ],
+      "where_to_buy": [
+        [
+          "tissus (wax, bazin, voiles brodés)",
+          "Marché HLM, puis un tailleur du quartier pour une tenue sur mesure"
+        ],
+        [
+          "artisanat, sculptures, bijoux, maroquinerie",
+          "Village artisanal de Soumbédioune ; Marché Kermel pour les paniers et la vannerie"
+        ],
+        [
+          "vêtements, chaussures, électronique",
+          "Sandaga et les rues voisines du Plateau ; Colobane pour la friperie"
+        ],
+        [
+          "épices, fruits, produits du quotidien",
+          "Tilène (Médina), Kermel, marchés de quartier"
+        ],
+        [
+          "poisson frais",
+          "Soumbédioune au retour des pirogues en fin d'après-midi, ou les plages de pêcheurs (Yoff, Mbour, Kayar)"
+        ]
+      ],
+      "price_method": [
+        "Sans prix de référence fiable, ne cite pas de montant : donne la méthode. Un premier prix fait à un touriste peut être bien au-dessus du prix local ; proposer d'abord environ la moitié, puis monter par petits pas jusqu'au prix maximum fixé à l'avance.",
+        "Comparer dans deux ou trois boutiques avant d'acheter, ou demander discrètement à un ami sénégalais le prix habituel.",
+        "Taxis sans compteur : toujours fixer le prix avant de monter ; demander à son hôtel ou à son hôte le tarif habituel du trajet."
       ]
     }
   },
