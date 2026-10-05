@@ -56,6 +56,59 @@ def _head(title, description, url, site_url, ld):
     )
 
 
+def place_title(name: str, region: str, limit: int = 65) -> str:
+    """Titre le plus complet qui tient dans les résultats Google (~65 caractères)."""
+    where = f" ({region})" if region and region.casefold() not in name.casefold() else ""
+    for candidate in (
+        f"{name}{where} : histoire, que voir, carte | Teranga AI",
+        f"{name}{where} : histoire et carte | Teranga AI",
+        f"{name} : histoire, que voir, carte | Teranga AI",
+        f"{name} : histoire et carte | Teranga AI",
+        f"{name} | Teranga AI",
+    ):
+        if len(candidate) <= limit:
+            return candidate
+    return name
+
+
+def place_description(place: dict, limit: int = 160) -> str:
+    """Résumé du lieu complété par sa région et sa première phrase d'histoire, ~70 à 160 caractères."""
+    import re as _re
+
+    summary = str(place.get("summary", "")).strip()
+    region = str(place.get("region", "")).strip()
+    text = (summary + (f" Région {region}." if region else "")).strip()
+    if len(text) < 110 and place.get("history"):
+        first = _re.split(r"(?<=[.!?])\s", str(place["history"]).strip(), maxsplit=1)[0]
+        if first and first not in text:
+            text = f"{text} {first}"
+    if len(text) > limit:
+        text = text[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
+    return text
+
+
+def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
+    """Questions fréquentes construites uniquement à partir des données du lieu."""
+    name = str(place.get("name", "")).split("/")[0].strip()
+    region = str(place.get("region", "")).strip()
+    locality = str(place.get("locality", "") or "").strip()
+    if not name:
+        return []
+    faq = []
+    if region:
+        where = f"à {locality}, " if locality and locality != region else ""
+        faq.append((f"Où se trouve {name} ?", f"{name} se trouve {where}dans la région de {region}, au Sénégal."))
+    if place.get("access"):
+        faq.append((f"Comment aller à {name} ?", str(place["access"])))
+    what = [item.strip() for item in str(place.get("what_to_see", "")).split(";") if item.strip()]
+    if what:
+        faq.append((f"Que voir à {name} ?", "Sur place : " + ", ".join(what) + "."))
+    others = [str(o.get("name", "")) for o in nearby if o.get("name")][:4]
+    if others:
+        faq.append((f"Que visiter près de {name} ?", f"Dans la région de {region} : " + ", ".join(others) + "."))
+    return faq
+
+
 def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> str:
     site_url = site_url.rstrip("/")
     name = str(place.get("name", ""))
@@ -65,8 +118,8 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
     history = str(place.get("history", ""))
     type_label = TYPE_LABELS.get(str(place.get("type", "")), "Lieu")
     url = place_url(site_url, place)
-    title = f"{name} ({region}) : histoire, que voir, carte | Teranga AI"
-    description = (summary + " " + (f"Région {region}." if region else "")).strip()[:300]
+    title = place_title(name, region)
+    description = place_description(place)
     coords = _coords(place)
     what_to_see = [item.strip() for item in str(place.get("what_to_see", "")).split(";") if item.strip()]
 
@@ -90,6 +143,19 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
             ]},
         ],
     }
+
+    nearby = [
+        other for other in places or []
+        if other is not place and other.get("id") and other.get("region") == region
+    ][:6]
+    faq = place_faq(place, nearby)
+    if faq:
+        ld["@graph"].append({
+            "@type": "FAQPage",
+            "mainEntity": [
+                {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq
+            ],
+        })
 
     sections = []
     if history:
@@ -121,10 +187,9 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
         "<section><h2>Infos pratiques</h2><p>Horaires, tarifs, accès et conditions de visite peuvent changer. "
         "Demandez à Teranga AI une information à jour pour votre date de visite et vérifiez-la auprès des sources officielles.</p></section>"
     )
-    nearby = [
-        other for other in places or []
-        if other is not place and other.get("id") and other.get("region") == region
-    ][:6]
+    if faq:
+        items = "".join(f"<h3>{escape(q)}</h3><p>{escape(a)}</p>" for q, a in faq)
+        sections.append(f'<section class="faq"><h2>Questions fréquentes</h2>{items}</section>')
     if nearby:
         links = "".join(
             f'<a class="card" href="/lieux/{quote(str(o["id"]))}"><strong>{escape(str(o.get("name", "")))}</strong>'
@@ -174,7 +239,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
 def render_places_index(places, site_url: str) -> str:
     site_url = site_url.rstrip("/")
     url = f"{site_url}/lieux"
-    title = "Lieux à visiter au Sénégal : patrimoine, nature, plages | Teranga AI"
+    title = "Lieux à visiter au Sénégal : patrimoine, nature | Teranga AI"
     description = "Fiches des lieux du Sénégal : Gorée, Saint-Louis, Djoudj, Sine-Saloum, Casamance, pays Bassari et plus, avec histoire, carte et photos."
     by_region: dict[str, list] = {}
     for place in places or []:

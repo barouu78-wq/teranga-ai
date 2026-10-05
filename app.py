@@ -153,7 +153,7 @@ KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
 register_layout_globals(app)
-register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
+register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []), regions=SENEGAL_KNOWLEDGE.get("regions", []), dishes=SENEGAL_KNOWLEDGE.get("dishes", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
 register_share_routes(app, SITE_URL)
 

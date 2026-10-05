@@ -106,7 +106,7 @@ SEO_PAGES = {
         "related": [("senegal", "Guide du Sénégal"), ("regions-senegal", "14 régions"), ("meteo-dakar", "Météo Dakar")],
     },
     "diaspora-senegalaise": {
-        "title": "Diaspora sénégalaise : France, Sénégal et informations pratiques | Teranga AI",
+        "title": "Diaspora sénégalaise : France ↔ Sénégal | Teranga AI",
         "description": "Assistant pour la diaspora sénégalaise en France et ailleurs : démarches, voyage, régions, culture, langues et vie pratique au Sénégal.",
         "h1": "Diaspora sénégalaise",
         "intro": "Teranga AI aide à garder un lien pratique avec le Sénégal : préparer un voyage, comprendre une démarche, retrouver une région ou découvrir une spécialité.",
@@ -191,7 +191,7 @@ SEO_PAGES = {
     },
 
     "dakar": {
-        "title": "Dakar : guide pratique, quartiers, transport et voyage | Teranga AI",
+        "title": "Dakar : quartiers, transport, que voir | Teranga AI",
         "description": "Guide de Dakar : AIBD, quartiers, transport, météo, Gorée, restaurants et repères pratiques pour habitants et voyageurs.",
         "h1": "Dakar",
         "intro": "Teranga AI vous aide à préparer ou comprendre Dakar : arrivée à AIBD, déplacements, quartiers, météo, gastronomie et sorties.",
@@ -246,7 +246,7 @@ SEO_PAGES = {
         "related": [("pour-les-entreprises", "Pour les entreprises"), ("presse", "Presse"), ("media-kit", "Kit média"), ("a-propos", "À propos")]
     },
     "assistant-senegal": {
-        "title": "Assistant Sénégal : informations pratiques, voyage et Dakar | Teranga AI",
+        "title": "Assistant Sénégal : voyage, Dakar, infos pratiques | Teranga AI",
         "description": "Assistant Sénégal en ligne : questions sur Dakar, voyage, transport, météo, culture, cuisine, régions et vie pratique, en français, anglais et wolof.",
         "h1": "Assistant Sénégal",
         "intro": "Teranga AI est un assistant numérique consacré au Sénégal. Posez une question sur Dakar, un trajet, une région, la météo, la culture ou la vie pratique.",
@@ -279,7 +279,7 @@ SEO_PAGES = {
         "related": [("assistant-senegal", "Assistant Sénégal"), ("dakar", "Dakar"), ("france-senegal", "Sénégal ↔ France")]
     },
     "assistant-ia-dakar": {
-        "title": "Assistant IA Dakar : transport, sorties et vie pratique | Teranga AI",
+        "title": "Assistant IA Dakar : transport, sorties, vie pratique",
         "description": "Assistant IA pour Dakar : transport, AIBD, Gorée, météo, sorties, quartiers, restaurants et questions pratiques.",
         "h1": "Assistant IA Dakar",
         "intro": "Posez une question sur Dakar et obtenez une réponse adaptée à votre situation, votre quartier, votre budget ou votre programme.",
@@ -295,7 +295,7 @@ SEO_PAGES = {
         "related": [("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-goree", "Visiter Gorée")]
     },
     "transport-dakar": {
-        "title": "Transport Dakar : trajets, taxis, bus et déplacements | Teranga AI",
+        "title": "Transport à Dakar : taxis, bus, TER, BRT | Teranga AI",
         "description": "Guide pratique du transport à Dakar : trajets, taxis, bus et déplacements depuis AIBD. Vérifiez les horaires et tarifs actuels.",
         "h1": "Transport à Dakar",
         "intro": "Préparez vos déplacements à Dakar avec Teranga AI. Donnez votre point de départ, votre destination et l'heure souhaitée.",
@@ -346,7 +346,47 @@ SEO_PAGES = {
 }
 
 
-def render_seo_page(slug, site_url):
+# Fiches de la base de connaissances ajoutées aux pages thématiques : contenu
+# réel et maillage interne vers /lieux (ou plats pour les pages cuisine).
+_TOP_SITES = ["goree", "saint-louis", "djoudj", "niokolo-koba", "saloum", "bassari", "lac-rose", "touba"]
+_DAKAR_SITES = ["dakar-renaissance", "musee-civilisations", "ile-de-ngor", "marche-sandaga", "soumbedioune",
+                "pointe-des-almadies", "mosquee-divinite", "iles-de-la-madeleine"]
+SEO_PAGE_PLACES = {
+    "senegal": _TOP_SITES, "regions-senegal": _TOP_SITES, "assistant-senegal": _TOP_SITES, "ia-senegal": _TOP_SITES,
+    "france-senegal": _TOP_SITES[:6], "diaspora-senegalaise": _TOP_SITES[:6],
+    "dakar": _DAKAR_SITES, "visiter-dakar": _DAKAR_SITES, "assistant-ia-dakar": _DAKAR_SITES[:6],
+    "meteo-dakar": _DAKAR_SITES[:4], "transport-dakar": ["goree", "lac-rose", "dakar-renaissance", "ile-de-ngor"],
+    "aibd-dakar": ["goree", "lac-rose", "reserve-de-bandia", "saly"],
+    "visiter-goree": ["goree", "dakar-renaissance", "musee-civilisations", "iles-de-la-madeleine"],
+}
+SEO_PAGE_DISHES = {"specialites-senegal", "restaurants-dakar"}
+
+
+def _seo_extra_html(slug, places=None, dishes=None):
+    by_id = {str(p.get("id")): p for p in places or [] if isinstance(p, dict)}
+    chosen = [by_id[i] for i in SEO_PAGE_PLACES.get(slug, []) if i in by_id]
+    parts = []
+    if chosen:
+        cards = "".join(
+            '<a class="card" href="/lieux/%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (quote(str(p["id"])), escape(str(p.get("name", ""))), escape(str(p.get("summary", ""))))
+            for p in chosen
+        )
+        parts.append('<section><h2>Lieux à découvrir</h2><div class="grid">%s</div></section>' % cards)
+        if slug == "visiter-goree" and chosen[0].get("history"):
+            parts.insert(0, "<section><h2>Histoire de l'île de Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["history"])))
+            if chosen[0].get("access"):
+                parts.insert(1, "<section><h2>Comment aller à Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["access"])))
+    if slug in SEO_PAGE_DISHES and dishes:
+        items = "".join(
+            "<h3>%s</h3><p>%s</p>" % (escape(str(d.get("name", ""))), escape(str(d.get("text", ""))))
+            for d in dishes if isinstance(d, dict) and d.get("name")
+        )
+        parts.append('<section class="faq"><h2>Plats et boissons à goûter</h2>%s</section>' % items)
+    return "".join(parts)
+
+
+def render_seo_page(slug, site_url, places=None, dishes=None):
     page = SEO_PAGES.get(slug)
     if not page:
         return None
@@ -445,7 +485,7 @@ def render_seo_page(slug, site_url):
         "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],
-        "sections": sections,
+        "sections": sections + _seo_extra_html(slug, places, dishes),
         "faq": faq_html,
         "source": source_link,
         "head": HEAD_ASSETS,
@@ -479,7 +519,38 @@ REGION_CONTENT = {
     "Ziguinchor": ("région de Basse-Casamance", "Ziguinchor, Oussouye, Cap Skirring et la Casamance", "plages, culture, nature, gastronomie et voyage"),
 }
 
-def render_region_page(region_name, site_url, knowledge_places=None):
+def _region_dossier_html(region_name, knowledge_regions):
+    """Identité, géographie, économie, culture et cuisine de la région (base de connaissances)."""
+    region = next((r for r in knowledge_regions or [] if isinstance(r, dict) and r.get("name") == region_name), None)
+    if not region:
+        return ""
+    dossier = region.get("regional_dossier") or {}
+    parts = []
+    intro = " ".join(str(x) for x in (dossier.get("identity"), dossier.get("geography")) if x)
+    if intro:
+        capital = dossier.get("capital_regionale")
+        extra = f" Capitale régionale : {escape(str(capital))}." if capital else ""
+        departments = region.get("departments") or []
+        if departments:
+            extra += " Départements : " + escape(", ".join(map(str, departments))) + "."
+        parts.append(f"<section><h2>La région en bref</h2><p>{escape(intro)}{extra}</p></section>")
+    rows = []
+    for label, values in (("Économie", dossier.get("economy")), ("Culture", dossier.get("culture")),
+                          ("Thèmes de voyage", region.get("themes")), ("À ne pas manquer", region.get("highlights"))):
+        if values:
+            rows.append(f"<li><strong>{label} :</strong> {escape(', '.join(map(str, values)))}.</li>")
+    if rows:
+        parts.append(f"<section><h2>Économie, culture et incontournables</h2><ul>{''.join(rows)}</ul></section>")
+    foods = region.get("foods") or dossier.get("foods") or []
+    if foods:
+        parts.append(
+            f"<section><h2>Que manger dans la région {escape(region_name)} ?</h2>"
+            f"<p>Spécialités à goûter : {escape(', '.join(map(str, foods)))}. Demandez à Teranga AI où les trouver et comment elles se préparent.</p></section>"
+        )
+    return "".join(parts)
+
+
+def render_region_page(region_name, site_url, knowledge_places=None, knowledge_regions=None):
     if region_name not in REGION_SEO_NAMES:
         return None
     slug = region_slug(region_name)
@@ -489,7 +560,9 @@ def render_region_page(region_name, site_url, knowledge_places=None):
         ("région du Sénégal", region_name, "voyage et informations pratiques"),
     )
     title = f"Région {region_name} au Sénégal : guide pratique | Teranga AI"
-    description = f"Guide de la région de {region_name} au Sénégal : {places}. Repères pour {topics}, avec informations actuelles à vérifier."
+    description = f"Guide de la région de {region_name} au Sénégal : {places}. Repères pour {topics}."
+    if len(description) > 160:
+        description = description[:157].rsplit(" ", 1)[0].rstrip(" ,;:") + "…"
     ld = {
         "@context": "https://schema.org",
         "@graph": [
@@ -507,7 +580,7 @@ def render_region_page(region_name, site_url, knowledge_places=None):
     if region_places:
         cards = "".join(
             f'<a class="card" href="/lieux/{quote(str(p["id"]))}"><strong>{escape(str(p.get("name", "")))}</strong>'
-            f'<br><small>{escape(str(p.get("summary", ""))[:110])}</small></a>'
+            f'<br><small>{escape(str(p.get("summary", "")))}</small></a>'
             for p in region_places
         )
         places_section = f'<section><h2>Lieux à visiter dans la région {escape(region_name)}</h2><div class="grid">{cards}</div></section>'
@@ -519,6 +592,7 @@ def render_region_page(region_name, site_url, knowledge_places=None):
                 for i, p in enumerate(region_places)
             ],
         })
+    dossier_section = _region_dossier_html(region_name, knowledge_regions)
     ld_json = json.dumps(ld, ensure_ascii=True).replace("<", "\\u003c")
     related = "".join(
         f'<a href="/regions/{region_slug(name)}">{name}</a>'
@@ -536,7 +610,7 @@ def render_region_page(region_name, site_url, knowledge_places=None):
 </head><body>{site_header('/regions-senegal')}<main><p class="related"><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
 <h1>Région {region_name}</h1><p class="muted">{region_name} est une {descriptor}. Repères de lieux : {places}.</p>
 <section><h2>Que découvrir ?</h2><p>Cette page sert de point de départ pour {topics}. Demandez à Teranga AI un itinéraire adapté à vos dates, votre budget et votre moyen de transport.</p></section>
-{places_section}<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
+{dossier_section}{places_section}<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
 <section><h2>Préparer votre étape</h2><p>Précisez votre ville de départ, votre destination, la durée du séjour et vos centres d'intérêt pour obtenir une proposition plus utile.</p></section>
 <div class="actions"><a class="cta" href="/trip-planner?region={slug}">Planifier un voyage</a><a class="cta" href="/explorer?region={slug}">Explorer les lieux</a></div>
 <section><h2>Autres régions</h2><div class="related">{related}</div></section>

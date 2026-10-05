@@ -94,6 +94,12 @@ def _trip_config(params):
     # Dans une balise <script>, « < » ne doit jamais apparaître brut.
     return json.dumps(config, ensure_ascii=False).replace("<", "\\u003c")
 
+META_DESCRIPTIONS = {
+    "fr": "Planifiez gratuitement votre voyage au Sénégal : itinéraire jour par jour selon vos dates, budget et envies (Dakar, Gorée, Saint-Louis, Casamance), avec carte.",
+    "en": "Plan your Senegal trip for free: a day-by-day itinerary based on your dates, budget and interests (Dakar, Gorée, Saint-Louis, Saloum, Casamance), with a map.",
+}
+
+
 def _html(site_url, lang="fr"):
     t = UI.get(lang, UI["fr"])
     template = """<!doctype html>
@@ -103,9 +109,10 @@ def _html(site_url, lang="fr"):
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="{site}/trip-planner">
 <meta property="og:title" content="{title} | Teranga AI">
-<meta name="description" content="{intro}">
-<meta property="og:description" content="{intro}">
+<meta name="description" content="{meta_desc}">
+<meta property="og:description" content="{meta_desc}">
 <title>{title} | Teranga AI</title>
+<script type="application/ld+json">{ld}</script>
 {head}
 <style>
 *{{box-sizing:border-box}}body{{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}}
@@ -159,7 +166,13 @@ input[type=date],input[type=number]{{width:100%;background:var(--bg);border:1px 
         budget_html=_option_list(t["budget_options"], "budget", "radio"), pace_html=_option_list(t["pace_options"], "pace", "radio"),
         regions_html=_option_list(t["region_options"], "regions"), surprise=escape(t["surprise"]), review_chat=escape(t["review_chat"]), region_options_json=json.dumps(t["region_options"], ensure_ascii=False), region_coords_json=json.dumps(REGION_COORDS, ensure_ascii=False), add_day=escape(t["add_day"]), save_edits=escape(t["save_edits"]), remove_day=escape(t["remove_day"]), places_label=escape(t.get("places_label", "Fiches lieux :"))
     )
-    return template.format(**params, trip_config=_trip_config(params), trip_js=asset_url("trip-planner.js"))
+    meta_desc = META_DESCRIPTIONS.get(lang, META_DESCRIPTIONS["fr"])
+    ld = json.dumps({
+        "@context": "https://schema.org", "@type": "WebApplication", "name": f"{t['title']} | Teranga AI",
+        "url": f"{site_url}/trip-planner", "applicationCategory": "TravelApplication", "operatingSystem": "Web",
+        "inLanguage": lang, "description": meta_desc, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+    }, ensure_ascii=True).replace("<", "\\u003c")
+    return template.format(**params, trip_config=_trip_config(params), trip_js=asset_url("trip-planner.js"), meta_desc=escape(meta_desc), ld=ld)
 
 def _budget(data):
     days = max(1, (data["departure_date"] - data["arrival_date"]).days)
