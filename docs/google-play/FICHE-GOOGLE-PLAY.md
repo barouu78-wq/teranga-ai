@@ -158,7 +158,7 @@ Une fois l'empreinte SHA-256 connue (fichier `assetlinks.json` du paquet PWABuil
 l'empreinte « Clé de signature d'application » de la Play Console → Intégrité de l'application),
 ajouter sur Render :
 
-- `ANDROID_APP_PACKAGE` = le Package ID (ex. `fr.terangaai.app`)
+- `ANDROID_APP_PACKAGE` = le Package ID : `fr.teranga_ai` (déjà inscrit dans routes/legal.py)
 - `ANDROID_CERT_SHA256` = les empreintes séparées par une virgule
 
 Vérifier ensuite : https://teranga-ai.fr/.well-known/assetlinks.json

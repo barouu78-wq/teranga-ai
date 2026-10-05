@@ -21,16 +21,24 @@ def test_privacy_contact_email_is_configurable(monkeypatch):
     assert "Google Play" in render_privacy("fr", "")
 
 
-def test_asset_links_need_package_and_fingerprint(monkeypatch):
+def test_asset_links_declare_the_android_app(monkeypatch):
     from app import app
+    from routes.legal import asset_links
 
     client = app.test_client()
     monkeypatch.delenv("ANDROID_APP_PACKAGE", raising=False)
-    assert client.get("/.well-known/assetlinks.json").status_code == 404
-    monkeypatch.setenv("ANDROID_APP_PACKAGE", "fr.teranga_ai.twa")
+    monkeypatch.delenv("ANDROID_CERT_SHA256", raising=False)
+    target = client.get("/.well-known/assetlinks.json").get_json()[0]["target"]
+    assert target["package_name"] == "fr.teranga_ai"
+    assert target["sha256_cert_fingerprints"][0].startswith("BB:B4:D2:27")
+    assert all(len(fp.split(":")) == 32 for fp in target["sha256_cert_fingerprints"])
+    # Les variables d'environnement remplacent les valeurs par défaut.
+    monkeypatch.setenv("ANDROID_APP_PACKAGE", "fr.autre.app")
     monkeypatch.setenv("ANDROID_CERT_SHA256", "aa:bb, cc:dd")
     data = client.get("/.well-known/assetlinks.json").get_json()
-    assert data[0]["target"] == {"namespace": "android_app", "package_name": "fr.teranga_ai.twa", "sha256_cert_fingerprints": ["AA:BB", "CC:DD"]}
+    assert data[0]["target"]["package_name"] == "fr.autre.app"
+    assert data[0]["target"]["sha256_cert_fingerprints"] == ["AA:BB", "CC:DD"]
+    assert asset_links("", "AA") == [] and asset_links("pkg", "") == []
 
 
 def test_report_endpoint_logs_the_answer_and_needs_csrf(caplog):
