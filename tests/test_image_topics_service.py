@@ -83,3 +83,72 @@ def test_fetch_topic_images_prefers_google_and_can_return_eight_images():
     assert commons_calls == []
     assert len(result) == 8
     assert {item["search_query"] for item in result} == {"Dakar"}
+
+
+def test_photo_query_strips_every_conversational_prefix():
+    from services.image_topics import _build_primary_query
+
+    def norm(value):
+        import unicodedata
+        text = unicodedata.normalize("NFD", str(value or "").lower())
+        return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+
+    assert _build_primary_query("montre moi des photos de plage", [], [], norm) == "plage Sénégal"
+    assert _build_primary_query("Affiche-moi des images de pirogues", [], [], norm) == "pirogues Sénégal"
+
+
+def test_article_photos_come_before_raw_commons_search():
+    from services.image_topics import fetch_topic_images
+
+    calls = []
+
+    def article(title, limit=6):
+        calls.append(("article", title))
+        return [{"url": f"https://upload.wikimedia.org/a{i}.jpg", "alt": "Dakar"} for i in range(5)]
+
+    def commons(title, limit=4):
+        calls.append(("commons", title))
+        return [{"url": "https://upload.wikimedia.org/random.jpg"}]
+
+    photos = fetch_topic_images(
+        "photos de Dakar unique-test-key",
+        {"places": []},
+        normalize=lambda v: str(v or "").lower(),
+        should_fetch_images=lambda m: True,
+        topic_wikipedia_titles=lambda m, n: ["Dakar"],
+        knowledge_image_titles=lambda m, n: [],
+        fetch_commons_images=commons,
+        fetch_google_images=lambda t, limit=4: [],
+        fetch_article_images=article,
+        fetch_city_image=lambda t: None,
+        image_proxy_url=lambda u: "/image-proxy?url=" + u,
+        logger=__import__("logging").getLogger("test"),
+    )
+    assert [c[0] for c in calls] == ["article"]
+    assert len(photos) == 5 and photos[0]["search_query"] == "Dakar"
+    assert photos[0]["display_url"].startswith("/image-proxy?url=")
+
+
+def test_fetch_article_images_filters_maps_flags_and_small_files():
+    import io
+    import json as _json
+    from services.images import _ARTICLE_CACHE, fetch_article_images
+
+    _ARTICLE_CACHE.clear()
+
+    def page(title, mime="image/jpeg", w=2000, h=1300):
+        return {"title": title, "imageinfo": [{"mime": mime, "width": w, "height": h,
+                "url": "https://upload.wikimedia.org/" + title, "thumburl": "https://upload.wikimedia.org/t/" + title}]}
+
+    pages = [page("Fichier:Dakar Plateau.jpg"), page("Fichier:Carte Dakar.jpg"), page("Fichier:Flag of Senegal.svg", "image/svg+xml"),
+             page("Fichier:Petit.jpg", w=300, h=200), page("Fichier:Corniche de Dakar.jpg")]
+    requested = []
+
+    def opener(req, timeout=5):
+        requested.append(req.full_url)
+        return io.BytesIO(_json.dumps({"query": {"pages": {str(i): p for i, p in enumerate(pages)}}}).encode())
+
+    photos = fetch_article_images("Dakar Sénégal", urlopen_fn=opener)
+    assert "titles=Dakar+%28S%C3%A9n%C3%A9gal%29" in requested[0]
+    names = [p["page_url"].rsplit("/", 1)[-1] for p in photos]
+    assert names == ["File:Corniche_de_Dakar.jpg", "File:Dakar_Plateau.jpg"]
