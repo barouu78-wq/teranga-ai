@@ -29,6 +29,8 @@ def test_new_places_cite_their_sources():
     for place_id in (
         "desert-de-lompoul", "langue-de-barbarie", "marche-de-diaobe", "fort-pinet-laprade-sedhiou", "kaffrine",
         "kaolack", "mbacke", "reserve-de-fathala", "kafountine", "mlomp", "musee-theodore-monod", "manufactures-thies",
+        "pointe-des-almadies", "parc-de-hann", "toubab-dialaw", "keur-moussa", "kayar", "mar-lodj", "pointe-de-sangomar",
+        "gandiol", "enampore", "elinkine", "abene", "nioro-du-rip", "thilogne",
     ):
         place = next(p for p in DATA["places"] if p["id"] == place_id)
         assert place.get("sources"), place_id

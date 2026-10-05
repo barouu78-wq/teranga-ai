@@ -2990,6 +2990,253 @@
       "image_queries": [
         "Marché HLM Dakar tissus"
       ]
+    },
+    {
+      "id": "pointe-des-almadies",
+      "name": "Pointe des Almadies",
+      "type": "coastal_site",
+      "region": "Dakar",
+      "locality": "Ngor",
+      "summary": "Cap rocheux au nord-ouest de la presqu'île du Cap-Vert : le point le plus occidental du continent africain.",
+      "history": "La pointe est bordée d'une barrière de récifs à fleur d'eau, la Chaussée des Almadies, signalée par un phare ; de nombreuses épaves rappellent les naufrages du passé. Son nom viendrait des petites barques taillées dans l'écorce des grands arbres par les habitants de la presqu'île. Le secteur, sur la commune de Ngor, est aujourd'hui un quartier d'hôtels, de restaurants et de spots de surf.",
+      "what_to_see": "Point le plus à l'ouest de l'Afrique; vue sur l'océan au coucher du soleil; récifs et phare; restaurants de poisson",
+      "latitude": 14.7408,
+      "longitude": -17.53,
+      "image_queries": [
+        "Pointe des Almadies Dakar",
+        "Almadies coucher de soleil Dakar"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Pointe_des_Almadies"
+      ]
+    },
+    {
+      "id": "parc-de-hann",
+      "name": "Parc forestier et zoologique de Hann",
+      "type": "natural_site",
+      "region": "Dakar",
+      "locality": "Hann Bel-Air",
+      "summary": "Grand parc boisé d'environ 60 hectares en pleine ville de Dakar, avec un zoo et un jardin ethnobotanique.",
+      "history": "Créé en 1903 par le gouverneur Martial Merlin comme jardin public et pépinière, le parc comprend une forêt classée, un arboretum, des aires de jeux et un zoo de sept hectares (lions, hyènes, crocodiles, singes, gazelles, oiseaux). Son jardin ethnobotanique, aménagé depuis 1934, présente les usages des plantes par l'homme.",
+      "what_to_see": "Promenade en forêt; zoo; jardin ethnobotanique; aires de jeux pour enfants",
+      "latitude": 14.724,
+      "longitude": -17.4331,
+      "image_queries": [
+        "Parc de Hann Dakar",
+        "zoo de Hann Dakar"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Parc_forestier_et_zoologique_de_Hann"
+      ]
+    },
+    {
+      "id": "toubab-dialaw",
+      "name": "Toubab Dialaw",
+      "type": "coastal_site",
+      "region": "Dakar",
+      "locality": "Yenne",
+      "summary": "Village de pêcheurs adossé à la falaise sur la Petite-Côte, entre Bargny et Popenguine, devenu un lieu de détente et de culture.",
+      "history": "Peuplé surtout de Lébous, le village vit de la pêche et d'un tourisme tranquille. Il abrite l'École des Sables, centre international de danses traditionnelles et contemporaines d'Afrique créé en 1998 par la chorégraphe Germaine Acogny. Une légende locale attribue à El Hadji Omar Tall une source d'eau douce jaillie sur la plage.",
+      "what_to_see": "Plage au pied de la falaise; École des Sables; balade jusqu'à Popenguine; pirogues de pêcheurs",
+      "latitude": 14.6061,
+      "longitude": -17.1503,
+      "image_queries": [
+        "Toubab Dialaw Sénégal",
+        "Toubab Dialaw plage falaise"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Toubab_Dialaw"
+      ]
+    },
+    {
+      "id": "keur-moussa",
+      "name": "Abbaye de Keur Moussa",
+      "type": "religious_site",
+      "region": "Thiès",
+      "locality": "Keur Moussa",
+      "summary": "Monastère bénédictin célèbre pour sa liturgie chantée accompagnée à la kora.",
+      "history": "Fondée par neuf moines venus de l'abbaye française de Solesmes à l'appel de l'archevêque de Dakar en 1961, l'abbaye est inaugurée en 1963 en présence du président Léopold Sédar Senghor. Elle est connue pour son adaptation africaine de l'office divin : les moines chantent accompagnés de kora et d'instruments traditionnels. La communauté, en majorité sénégalaise, compte une quarantaine de membres.",
+      "what_to_see": "Messe ou office chantés avec la kora; architecture du monastère; calme du domaine",
+      "latitude": 14.7778,
+      "longitude": -17.1242,
+      "image_queries": [
+        "Abbaye de Keur Moussa Sénégal",
+        "kora Keur Moussa"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Abbaye_de_Keur_Moussa"
+      ]
+    },
+    {
+      "id": "kayar",
+      "name": "Kayar",
+      "type": "coastal_site",
+      "region": "Thiès",
+      "locality": "Kayar",
+      "summary": "Grand port de pêche artisanale de la Grande-Côte, à environ 58 km au nord de Dakar.",
+      "history": "La pêche est la principale activité de Kayar : chaque fin d'après-midi, des centaines de pirogues débarquent sur la plage des tonnes de poissons qui approvisionnent Dakar et la presqu'île du Cap-Vert. Les pêcheurs doivent toutefois aller de plus en plus loin pour des prises plus petites.",
+      "what_to_see": "Retour des pirogues en fin d'après-midi; marché au poisson sur la plage; lac Tanma tout proche",
+      "latitude": 14.9089,
+      "longitude": -17.1241,
+      "image_queries": [
+        "Kayar pirogues Sénégal",
+        "Kayar plage pêche"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Kayar"
+      ]
+    },
+    {
+      "id": "mar-lodj",
+      "name": "Île de Mar Lodj",
+      "type": "island",
+      "region": "Fatick",
+      "locality": "Mar Lodj",
+      "summary": "Île du delta du Saloum, entre savane et mangrove, accessible en pirogue depuis Ndangane.",
+      "history": "L'île de Mar compte environ 5 000 habitants répartis en quatre villages, dont Mar Lodj et Mar Fafaco. Près de l'église, un fromager, un rônier et un caïlcédrat entremêlent leurs troncs : un symbole de l'entente entre l'islam, le christianisme et les religions traditionnelles pratiqués sur l'île. On y vit de riziculture, de pêche et d'un tourisme de campements.",
+      "what_to_see": "Traversée en pirogue depuis Ndangane; arbres entrelacés près de l'église; bolongs et mangrove; villages et campements",
+      "latitude": 14.05,
+      "longitude": -16.6667,
+      "image_queries": [
+        "Mar Lodj Sénégal",
+        "île de Mar Saloum"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Mar_Lodj"
+      ]
+    },
+    {
+      "id": "pointe-de-sangomar",
+      "name": "Pointe de Sangomar",
+      "type": "natural_site",
+      "region": "Fatick",
+      "locality": "Djiffer",
+      "summary": "Flèche de sable d'une vingtaine de kilomètres au débouché du delta du Saloum, coupée par l'océan en 1987.",
+      "history": "Menacé de longue date par l'érosion, l'étroit cordon de sable a été rompu par un raz-de-marée le 27 février 1987, donnant naissance à l'île de Sangomar. La brèche, d'un kilomètre un an plus tard, dépassait quatre kilomètres dix ans après, détruisant campements et bâtiments. Le site illustre la fragilité du littoral sénégalais face à l'érosion côtière.",
+      "what_to_see": "Île de Sangomar et brèche de 1987 (en pirogue depuis Djiffer); oiseaux marins; paysages de dunes et d'océan",
+      "latitude": 13.8239,
+      "longitude": -16.7572,
+      "image_queries": [
+        "Pointe de Sangomar Sénégal",
+        "Djiffer Sangomar"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Pointe_de_Sangomar"
+      ]
+    },
+    {
+      "id": "gandiol",
+      "name": "Gandiol",
+      "type": "locality",
+      "region": "Saint-Louis",
+      "locality": "Gandiol",
+      "summary": "Terroir de la Grande-Côte au sud de Saint-Louis, près de l'embouchure du fleuve Sénégal, entre maraîchage, pêche et Langue de Barbarie.",
+      "history": "Ancienne province du Cayor, le Gandiol regroupe plusieurs villages (Tassinère, Pilote, Mouit…) et est devenu une commune en 2014. À l'extrémité nord des Niayes, on y vit surtout du maraîchage et de la pêche. C'est la terre d'origine de l'ancien président Abdoulaye Wade.",
+      "what_to_see": "Accès au parc national de la Langue de Barbarie; embouchure du fleuve Sénégal; villages de pêcheurs; jardins maraîchers",
+      "latitude": 15.895,
+      "longitude": -16.5078,
+      "image_queries": [
+        "Gandiol Saint-Louis Sénégal",
+        "Langue de Barbarie Gandiol"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Gandiol"
+      ]
+    },
+    {
+      "id": "enampore",
+      "name": "Enampore",
+      "type": "cultural_site",
+      "region": "Ziguinchor",
+      "locality": "Enampore",
+      "summary": "Village de Basse-Casamance, entre Ziguinchor et Oussouye, connu pour sa grande case à impluvium diola.",
+      "history": "Au cœur de l'ancien royaume du Bandial, Enampore a accueilli en 1973 le premier campement rural intégré de Casamance, une formule de tourisme villageois qui s'est ensuite répandue. Sa grande case à impluvium, construite en 1974 sur le modèle de l'architecture traditionnelle et reconstruite après un incendie en 1987, se visite et sert d'hébergement. Les environs mêlent forêt de fromagers, rôniers, baobabs, bois sacrés et mangrove.",
+      "what_to_see": "Case à impluvium; architecture diola; forêt et bois sacrés (de l'extérieur); mangrove",
+      "latitude": 12.5117,
+      "longitude": -16.4489,
+      "image_queries": [
+        "Enampore case à impluvium",
+        "Enampore Casamance"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Enampore"
+      ]
+    },
+    {
+      "id": "elinkine",
+      "name": "Elinkine",
+      "type": "coastal_site",
+      "region": "Ziguinchor",
+      "locality": "Elinkine",
+      "summary": "Petit port de pêche à l'embouchure du fleuve Casamance, point d'embarquement pour l'île de Carabane.",
+      "history": "C'est à Elinkine que fut conclu en 1851 le traité entre la France et les chefs de Kagnout qui céda l'île de Carabane. Le puits d'El Hadji Omar y est classé monument historique depuis 2003. Le village vit de la pêche, de sa plage et du passage des voyageurs vers Carabane.",
+      "what_to_see": "Départ des pirogues pour Carabane; port de pêche; puits d'El Hadji Omar; plage",
+      "latitude": 12.5074,
+      "longitude": -16.6632,
+      "image_queries": [
+        "Elinkine Casamance",
+        "pirogues Elinkine Carabane"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Elinkine"
+      ]
+    },
+    {
+      "id": "abene",
+      "name": "Abéné",
+      "type": "beach",
+      "region": "Ziguinchor",
+      "locality": "Kafountine",
+      "summary": "Village côtier de Basse-Casamance, au nord de Kafountine, réputé pour ses plages et son festival de percussions.",
+      "history": "Rattaché à la commune de Kafountine dans le département de Bignona, Abéné s'est ouvert au tourisme grâce à ses grandes plages. Il accueille chaque année l'Abéné Festivalo, un festival consacré au djembé et aux percussions.",
+      "what_to_see": "Plages; Abéné Festivalo (djembé); villages voisins de Kafountine et Diana",
+      "latitude": 12.9985,
+      "longitude": -16.721,
+      "image_queries": [
+        "Abéné Casamance plage",
+        "Abéné Festivalo"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Abéné"
+      ]
+    },
+    {
+      "id": "nioro-du-rip",
+      "name": "Nioro du Rip",
+      "type": "heritage",
+      "region": "Kaolack",
+      "locality": "Nioro du Rip",
+      "summary": "Ville du sud du Saloum, à environ 60 km de Kaolack, ancienne capitale du Rip de l'almamy Maba Diakhou Bâ.",
+      "history": "Appelée d'abord Paos-Dimbar, la ville est conquise en 1861 par Maba Diakhou Bâ, qui la renomme Nioro du Rip en référence à Nioro du Sahel, prise par son allié El Hadji Omar Tall. Cheikh Ahmadou Bamba y a séjourné. Le département est riche en cercles mégalithiques, apparentés à ceux de Sine Ngayène et Wanar.",
+      "what_to_see": "Mémoire de Maba Diakhou Bâ; cercles mégalithiques des environs; marché; route vers la Gambie",
+      "latitude": 13.745,
+      "longitude": -15.7746,
+      "image_queries": [
+        "Nioro du Rip Sénégal",
+        "cercles mégalithiques Nioro"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Nioro_du_Rip"
+      ]
+    },
+    {
+      "id": "thilogne",
+      "name": "Thilogne",
+      "type": "heritage",
+      "region": "Matam",
+      "locality": "Thilogne",
+      "summary": "Ville historique du Fouta, à environ 60 km de Matam, près de la frontière mauritanienne ; ancienne capitale du Bosséa.",
+      "history": "Thilogne, aussi appelée Salndu Fuuta, aurait été fondée au XIIIᵉ siècle. Elle est la capitale politique, économique et religieuse du Bosséa et fut celle du Fouta au XVIIIᵉ siècle. Ses quartiers anciens portent encore l'organisation traditionnelle des familles de la société haalpulaar.",
+      "what_to_see": "Quartiers anciens; vie du Fouta et culture haalpulaar; fleuve Sénégal et vallée",
+      "latitude": 15.9659,
+      "longitude": -13.5916,
+      "image_queries": [
+        "Thilogne Sénégal",
+        "Thilogne Fouta"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Thilogne"
+      ]
     }
   ],
   "authoritative_sources": [
