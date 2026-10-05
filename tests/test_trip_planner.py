@@ -686,7 +686,7 @@ def test_trip_planner_carries_context_place_from_query_to_session():
     html = app.test_client().get("/trip-planner?lang=fr&context_place=%C3%8Ele%20de%20Gor%C3%A9e").get_data(as_text=True)
 
     assert "contextPlaceQuery" in html
-    assert "sessionStorage.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))" in html
+    assert "SS.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))" in html
 
 
 def test_home_planner_link_carries_selected_place_context():
@@ -887,3 +887,13 @@ def test_practical_info_ignores_stale_responses():
     html = trip_planner._html("https://example.com", "fr")
     assert "const seq=++practicalSeq;" in html
     assert html.count("if(seq!==practicalSeq)return;") == 2
+
+
+def test_generate_never_reads_storage_unguarded():
+    import services.trip_planner as trip_planner
+
+    html = trip_planner._html("https://example.com", "fr")
+    assert "context_place:sessionStorage.getItem" not in html
+    assert html.count("context_place:safePlaceName()") == 2
+    script = html.split("const LS=safeStore", 1)[1]
+    assert "localStorage." not in script and "sessionStorage." not in script
