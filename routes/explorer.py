@@ -47,18 +47,23 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
             blocked = rate_guard("explorer_image")
             if blocked is not None:
                 return blocked
+        # Google en panne ou refusé ne doit pas priver la galerie de Commons.
         try:
             images = fetch_google_images(query, limit=4)
-            if not images:
+        except Exception as exc:
+            app.logger.warning("explorer-image google: %s", type(exc).__name__)
+            images = []
+        if not images:
+            try:
                 images = fetch_commons_images(query, limit=4)
-                for item in images:
-                    item["display_url"] = image_proxy_url(item.get("url", ""))
-            if images:
-                store_images(query, images)
-            return jsonify({"images": images})
-        except Exception:
-            app.logger.exception("explorer-image")
-            return jsonify({"images": []})
+            except Exception as exc:
+                app.logger.warning("explorer-image commons: %s", type(exc).__name__)
+                images = []
+            for item in images:
+                item["display_url"] = image_proxy_url(item.get("url", ""))
+        if images:
+            store_images(query, images)
+        return jsonify({"images": images})
 
     @app.get("/explorer")
     def explorer():

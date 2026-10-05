@@ -42,14 +42,14 @@ def add_security_headers(
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        f"default-src 'self'; script-src {script_src} 'unsafe-eval' "
-        "https://cse.google.com https://www.google.com https://www.gstatic.com" + extra + "; "
+        # Plus de widget Google Custom Search : ni scripts Google ni eval.
+        f"default-src 'self'; script-src {script_src}" + extra + "; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https://upload.wikimedia.org "
         "https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self' https://cse.google.com https://www.google.com" + extra + "; "
+        "connect-src 'self'" + extra + "; "
         "media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; "
-        "frame-src https://www.google.com https://cse.google.com https://maps.google.com https://www.openstreetmap.org; "
+        "frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; "
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
