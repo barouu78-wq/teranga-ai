@@ -52,7 +52,7 @@ def render_offers_page() -> str:
     )
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Devenir partenaire de Teranga AI : hôtels, guides, restaurants | Teranga AI</title>
+<title>Devenir partenaire : hôtels, guides, restaurants | Teranga AI</title>
 <meta name="description" content="Faites connaître votre hôtel, restaurant, agence ou service de guide auprès des voyageurs qui préparent leur séjour au Sénégal avec Teranga AI.">
 <meta name="robots" content="index,follow">{HEAD_ASSETS}</head>
 <body>{site_header()}<main><article><div class="kicker">Professionnels du tourisme</div>

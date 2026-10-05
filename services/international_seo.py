@@ -10,7 +10,7 @@ TOPICS = {
     "senegal-travel-guide": {
         "en": ("Senegal Travel Guide", "Senegal Travel Guide: Dakar, Gorée, Regions & Practical Tips", "Complete Senegal travel guide for Dakar, Gorée, transport, food, weather and regional ideas.", "Plan your Senegal trip with Teranga AI."),
         "es": ("Guía de viaje de Senegal", "Guía de viaje de Senegal: Dakar, Gorée, regiones y consejos", "Guía práctica de Senegal: Dakar, Gorée, transporte, gastronomía, clima y regiones.", "Planifica tu viaje a Senegal con Teranga AI."),
-        "de": ("Senegal Reiseführer", "Senegal Reiseführer: Dakar, Gorée, Regionen & praktische Tipps", "Praktischer Senegal-Reiseführer zu Dakar, Gorée, Verkehr, Essen, Wetter und Regionen.", "Plane deine Senegal-Reise mit Teranga AI."),
+        "de": ("Senegal Reiseführer", "Senegal Reiseführer: Dakar, Gorée, Regionen, Tipps", "Praktischer Senegal-Reiseführer zu Dakar, Gorée, Verkehr, Essen, Wetter und Regionen.", "Plane deine Senegal-Reise mit Teranga AI."),
         "it": ("Guida di viaggio Senegal", "Guida di viaggio Senegal: Dakar, Gorée, regioni e consigli", "Guida pratica al Senegal: Dakar, Gorée, trasporti, cucina, meteo e regioni.", "Organizza il tuo viaggio in Senegal con Teranga AI."),
         "fr": ("Guide voyage Sénégal", "Guide voyage Sénégal : Dakar, Gorée, régions et conseils", "Guide pratique du Sénégal : Dakar, Gorée, transports, cuisine, météo et régions.", "Préparez votre voyage au Sénégal avec Teranga AI."),
     },
@@ -58,7 +58,7 @@ TOPICS = {
     },
     "senegal-transport": {
         "en": ("Senegal Transportation", "Senegal Transportation: Dakar, Intercity & Local Travel", "Overview of travel by road, rail, taxi and other options in Senegal, with current details to verify.", "Ask Teranga AI for a route based on your date and destination."),
-        "es": ("Transporte en Senegal", "Transporte en Senegal: Dakar, viajes entre ciudades y desplazamientos", "Resumen de transporte por carretera, tren, taxi y otras opciones, con datos actuales por verificar.", "Pide a Teranga AI una ruta según fecha y destino."),
+        "es": ("Transporte en Senegal", "Transporte en Senegal: Dakar y viajes entre ciudades", "Resumen de transporte por carretera, tren, taxi y otras opciones, con datos actuales por verificar.", "Pide a Teranga AI una ruta según fecha y destino."),
         "de": ("Transport im Senegal", "Transport im Senegal: Dakar, Fernverkehr & lokale Wege", "Überblick zu Straße, Bahn, Taxi und weiteren Optionen; aktuelle Details sollten geprüft werden.", "Frag Teranga AI nach einer Route mit Datum und Ziel."),
         "it": ("Trasporti in Senegal", "Trasporti in Senegal: Dakar, città e spostamenti", "Panoramica di strada, treno, taxi e altre opzioni; i dettagli attuali vanno verificati.", "Chiedi a Teranga AI un percorso per data e destinazione."),
         "fr": ("Transport au Sénégal", "Transport au Sénégal : Dakar, interurbain et déplacements", "Panorama des déplacements par route, train, taxi et autres options, avec vérification des données actuelles.", "Demandez à Teranga AI un trajet selon votre date et destination."),

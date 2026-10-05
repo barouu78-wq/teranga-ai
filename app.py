@@ -157,7 +157,7 @@ SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
 # Adresses partenaires (toujours présentées comme telles) : data/partners.json.
 PARTNERS = load_partners(BASE_DIR / "data" / "partners.json")
 register_layout_globals(app)
-register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
+register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []), regions=SENEGAL_KNOWLEDGE.get("regions", []), dishes=SENEGAL_KNOWLEDGE.get("dishes", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL, partners=PARTNERS)
 register_share_routes(app, SITE_URL)
 
