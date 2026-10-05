@@ -1022,11 +1022,26 @@ send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();
 };
+// Démarre la voix : temps réel, sinon reconnaissance du navigateur ; si rien
+// ne peut écouter, on sort proprement du mode vocal au lieu de rester bloqué.
+async function startVoiceOrExplain(){
+  let ok=false;
+  try{ok=await startRealtimeVoice();}catch(_){ok=false;}
+  if(ok||!voiceConversation)return;
+  if(rec&&!listening){try{rec.start();return;}catch(_){}}
+  else if(listening)return;
+  endVoiceMode();
+  mic.classList.remove('listen');
+  // La lecture automatique des réponses reste possible sans micro.
+  $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
+  voiceStatus(lang==='en'?'Voice is unavailable on this browser right now. You can type your question.'
+    :lang==='wo'?'Baat bi amul fii léegi. Mën nga bind sa laaj.'
+    :'La voix est indisponible sur ce navigateur pour le moment. Tu peux écrire ta question.');
+}
 mic.onclick=async()=>{
   if(listening||realtimeActive||realtimeStarting){endVoiceMode();return;}
   beginVoiceMode();
-  const ok=await startRealtimeVoice();
-  if(!ok&&rec){try{rec.start();}catch(_){}}
+  await startVoiceOrExplain();
 };
 $('resetBtn').onclick=reset;
 $('shareAppBtn').onclick=shareApp;
@@ -1049,8 +1064,7 @@ $('voiceToggle').onclick=async()=>{
   if(autoVoice){
     beginVoiceMode();
     stopSpeakingForListening();
-    const ok=await startRealtimeVoice();
-    if(!ok&&rec&&!listening)try{rec.start();}catch(_){}
+    await startVoiceOrExplain();
   }else{
     endVoiceMode();
     stopSpeakingForListening();
