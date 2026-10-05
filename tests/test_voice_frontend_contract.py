@@ -30,7 +30,10 @@ def test_direct_tts_response_is_scoped_to_current_speech_turn():
     end = html.index("\n}", start) + 2
     function = html[start:end]
     assert "const speechTurn=voiceTtsTurn;" in function
-    assert function.count("if(voiceTtsTurn!==speechTurn)return;") >= 5
+    # Chaque étape après une attente vérifie le tour via stale(), qui compare
+    # voiceTtsTurn et réactive le bouton « Écouter » si le tour est dépassé.
+    assert "const stale=()=>{if(voiceTtsTurn!==speechTurn)" in function
+    assert function.count("if(stale())return;") >= 5
     assert "if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}" in function
 
 

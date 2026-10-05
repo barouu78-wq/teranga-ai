@@ -359,7 +359,11 @@ function addMsg(role,text,opts){
 function addActs(col,text,itineraryEdit,shareToken){
   const acts=document.createElement('div');acts.className='acts';
   const listen=document.createElement('button');listen.type='button';listen.textContent=T[lang].listen;
-  listen.onclick=()=>speak(text,listen);
+  listen.onclick=()=>{
+    // Deuxième appui pendant la lecture : arrêt immédiat.
+    if(listen.dataset.speaking==='1'){stopSpeakingForListening();resetListenButton(listen);return;}
+    speak(text,listen);
+  };
   const copy=document.createElement('button');copy.type='button';copy.textContent=T[lang].copy;
   copy.onclick=async()=>{
     try{await navigator.clipboard.writeText(text);copy.textContent=T[lang].copied;setTimeout(()=>copy.textContent=T[lang].copy,1200);}catch(e){}
@@ -829,6 +833,9 @@ function restore(){
 async function ask(preset,fromVoice=false,isRetry=false){
   const text=(preset||input.value).trim();
   if(!text||send.disabled)return;
+  // Une seule question à la fois : un clic pendant une réponse ne lance pas
+  // une seconde requête (qui dérèglerait le bouton Envoyer/Arrêter).
+  if(inflight){send.classList.remove('nudge');void send.offsetWidth;send.classList.add('nudge');return;}
   hideHero();
   if(!isRetry){
     addMsg('user',text,{animate:true});
@@ -846,7 +853,10 @@ async function ask(preset,fromVoice=false,isRetry=false){
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
-  const kill=setTimeout(()=>ctrl.abort(),40000);
+  // Délai d'INACTIVITÉ : une longue réponse qui arrive encore n'est jamais coupée.
+  let kill=0,timedOut=false;
+  const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
+  arm();
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
   let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[];
   try{
@@ -884,6 +894,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     while(true){
       const {value,done}=await reader.read();
       if(done)break;
+      arm();
       buf+=dec.decode(value,{stream:true});
       const parts=buf.split('\n');buf=parts.pop();
       for(let i=0;i<parts.length;i++){
@@ -962,7 +973,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(dots.parentNode)dots.replaceWith(wait.b);
     wait.row.classList.remove('thinking');
     node.nodeValue=msg;
-    if(!aborted){
+    // Arrêt volontaire : pas de bouton ; coupure par délai ou erreur : « Réessayer ».
+    if(!aborted||timedOut){
       const retry=document.createElement('button');
       retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
       retry.onclick=()=>{
@@ -1641,10 +1653,12 @@ function stopSpeakingForListening(){
   voiceSpeaking=false;
   voiceTtsPlaying=false;
   document.body.classList.remove('assistant-speaking');
+  // La lecture est coupée : le bouton « Arrêter » redevient « Écouter ».
+  if(speakingBtn)resetListenButton(speakingBtn);
 }
 function finishSpeech(btn){
   voiceSpeaking=false;document.body.classList.remove('assistant-speaking');
-  if(btn){btn.disabled=false;btn.textContent=T[lang].listen;}
+  resetListenButton(btn);
   if(voiceConversation&&!inflight&&!voiceSTTBusy){
     voiceWaitingForAnswer=false;
     voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
