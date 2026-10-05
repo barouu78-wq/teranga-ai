@@ -238,6 +238,40 @@ def test_trip_planner_reads_streamed_plan(page, base_url):
     assert page.errors == []
 
 
+def test_trip_planner_retries_once_when_the_stream_is_cut(page, base_url):
+    # Redémarrage du serveur pendant la génération : le flux s'arrête sans résultat.
+    calls = []
+
+    def handler(route):
+        calls.append(1)
+        if len(calls) == 1:
+            route.fulfill(body=stream({"progress": {"day": 0, "total": 2}}), content_type="application/x-ndjson")
+        else:
+            route.fulfill(body=stream({"result": PLAN}), content_type="application/x-ndjson")
+
+    page.route(f"{base_url}/api/trip-planner", handler)
+    page.goto(base_url + "/trip-planner")
+    _fill_planner(page)
+    page.locator("#result", has_text="Pirogue").wait_for(timeout=8000)
+    assert len(calls) == 2
+    assert page.errors == []
+
+
+def test_trip_planner_does_not_retry_a_real_server_error(page, base_url):
+    calls = []
+
+    def handler(route):
+        calls.append(1)
+        route.fulfill(body=stream({"error": "La génération a pris trop de temps.", "status": 504}), content_type="application/x-ndjson")
+
+    page.route(f"{base_url}/api/trip-planner", handler)
+    page.goto(base_url + "/trip-planner")
+    _fill_planner(page)
+    page.locator("#status", has_text="trop de temps").wait_for(timeout=5000)
+    page.wait_for_timeout(3000)
+    assert len(calls) == 1
+
+
 def test_trip_planner_stream_error_is_shown(page, base_url):
     body = stream({"progress": {"day": 0, "total": 2}}, {"error": "La génération a pris trop de temps.", "status": 504})
     page.route(f"{base_url}/api/trip-planner", lambda r: r.fulfill(body=body, content_type="application/x-ndjson"))
