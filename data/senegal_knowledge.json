@@ -4456,6 +4456,141 @@
         "https://fr.wikipedia.org/wiki/Abdoul_Kader_Kane",
         "https://fr.wikipedia.org/wiki/Morfil_(île)"
       ]
+    },
+    {
+      "id": "djolof",
+      "title": "Empire du Djolof (Jolof)",
+      "triggers": [
+        "djolof",
+        "jolof",
+        "diolof",
+        "bourba",
+        "bour ba",
+        "ndiadiane",
+        "njaajaan",
+        "danki",
+        "alboury",
+        "albouri",
+        "empire wolof"
+      ],
+      "sections": [
+        "Fondation : selon la tradition, Ndiadiane Ndiaye (vers 1350-1370) est le premier bourba (souverain) du Djolof, même si d'autres chefs l'auraient précédé. Première capitale : Ndiayène, puis Thiengue.",
+        "Apogée : l'empire réunit comme vassaux le Cayor, le Baol, le Waalo, le Sine et le Saloum, ainsi que des parties du Fouta-Toro et du Bambouk.",
+        "Rupture de 1549 : à la bataille de Danki, près de Diourbel, le bourba Lélé Fouli Fak Ndiaye est tué par Amary Ngoné Sobel Fall, fils du chef du Cayor. Les vassaux prennent ensuite leur indépendance et le Djolof devient un royaume de l'intérieur.",
+        "Fin : le Djolof est le dernier royaume annexé par la France, au début des années 1890 ; son dernier grand bourba, Alboury Ndiaye (règne 1875-1890), résiste puis s'exile vers l'est, où il meurt.",
+        "Prudence : les origines et les dates anciennes reposent en grande partie sur la tradition orale ; les présenter comme approximatives et distinguer faits établis, traditions et interprétations."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Empire_du_Djolof"
+      ]
+    },
+    {
+      "id": "cayor",
+      "title": "Royaume du Cayor (Kajoor)",
+      "triggers": [
+        "cayor",
+        "kajoor",
+        "kayor",
+        "damel",
+        "lat dior",
+        "latdior",
+        "amary ngone",
+        "dekhele",
+        "dekheule",
+        "royaume du baol",
+        "teigne"
+      ],
+      "sections": [
+        "Naissance : le Cayor devient indépendant du Djolof en 1549, après la bataille de Danki menée par Amary Ngoné Sobel Fall. Le souverain prend le titre de damel, interprété comme « celui qui brise » le lien de vassalité. Capitale : Mboul.",
+        "Baol voisin : son souverain porte le titre de teigne ; plusieurs damels ont réuni les deux couronnes.",
+        "Lat Dior Ngoné Latyr Diop (XIXᵉ siècle) : damel et teigne, figure majeure de la résistance à la conquête française. Il s'oppose à la construction du chemin de fer Dakar–Saint-Louis, qui menace son autorité, puis entre en guerre contre les Français. Il est tué à la bataille de Dékhelé en 1886, date retenue comme la fin du royaume.",
+        "Prudence : les origines et les dates anciennes reposent en grande partie sur la tradition orale ; les présenter comme approximatives et distinguer faits établis, traditions et interprétations."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Royaume_du_Cayor",
+        "https://fr.wikipedia.org/wiki/Lat_Dior"
+      ]
+    },
+    {
+      "id": "waalo",
+      "title": "Royaume du Waalo (Oualo)",
+      "triggers": [
+        "waalo",
+        "oualo",
+        "royaume du walo",
+        "brak",
+        "nder",
+        "talaatay nder",
+        "ndate yalla",
+        "ndatte yalla",
+        "ndjeumbeut",
+        "djeumbeut",
+        "njembeut",
+        "barka mbodj"
+      ],
+      "sections": [
+        "Origine : royaume wolof du bas fleuve Sénégal, issu de l'éclatement du Djolof. Selon la tradition, Barka Mbodj, demi-frère de Ndiadiane Ndiaye, est à l'origine de la lignée des braks (souverains), élus par un conseil de grands électeurs.",
+        "Capitales successives : Njurbel (vers l'actuelle Rosso, en Mauritanie), Ndyany près de Richard-Toll, puis Nder à partir de 1733.",
+        "Nder, 1820 : face à une attaque maure, les femmes de Nder préfèrent la mort à la captivité ; ce sacrifice collectif, le Talaatay Nder (« mardi de Nder »), est l'un des grands récits de résistance du Sénégal.",
+        "Les reines : Ndjeumbeut Mbodj épouse le roi maure du Trarza pour sceller la paix ; sa sœur Ndaté Yalla Mbodj, dernière grande reine du Waalo, résiste aux Français jusqu'à sa défaite à Dioubouldou.",
+        "Fin : le Waalo est conquis et annexé par la France dans les années 1850, sous le gouverneur Faidherbe ; c'est le début de la conquête de l'intérieur.",
+        "Prudence : les origines et les dates anciennes reposent en grande partie sur la tradition orale ; les présenter comme approximatives et distinguer faits établis, traditions et interprétations."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Royaume_du_Waalo"
+      ]
+    },
+    {
+      "id": "sine",
+      "title": "Royaume du Sine",
+      "triggers": [
+        "royaume du sine",
+        "bour sine",
+        "maad a sinig",
+        "maad sinig",
+        "diakhao",
+        "guelwar",
+        "gelwaar",
+        "guelowar",
+        "maysa wali",
+        "fandane",
+        "thiouthioune",
+        "coumba ndoffene"
+      ],
+      "sections": [
+        "Origine : royaume sérère apparu avant 1400 selon la tradition. Maysa Wali, de la lignée guelwar venue du Kaabu, s'assimile aux Sérères et devient le premier roi élu par la noblesse et le peuple.",
+        "Souverain et capitale : le roi porte le titre de maad a sinig (« bour Sine » en wolof). Capitale : Diakhao.",
+        "Religion : le Sine conserve longtemps la religion traditionnelle sérère, jusqu'aux affrontements avec les mouvements musulmans au XIXᵉ siècle.",
+        "Fandane-Thiouthioune (1867) : le maad a sinig Coumba Ndoffène Famak Diouf défait les troupes du marabout Maba Diakhou Bâ, qui est tué ; Lat Dior, son allié, quitte le champ de bataille.",
+        "Après la colonisation : la royauté se maintient de façon coutumière ; le dernier roi, Mahecor Diouf, règne jusqu'en 1969, et un maad a sinig est de nouveau couronné en 2019.",
+        "Prudence : les origines et les dates anciennes reposent en grande partie sur la tradition orale ; les présenter comme approximatives et distinguer faits établis, traditions et interprétations."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Royaume_du_Sine",
+        "https://fr.wikipedia.org/wiki/Bataille_de_Fandane-Thiouthioune"
+      ]
+    },
+    {
+      "id": "saloum",
+      "title": "Royaume du Saloum",
+      "triggers": [
+        "royaume du saloum",
+        "bour saloum",
+        "maad saloum",
+        "kahone",
+        "mbegan ndour",
+        "mbey"
+      ],
+      "sections": [
+        "Origine : le territoire s'appelait d'abord Mbey ; vers 1494, selon la tradition, le roi Mbegan Ndour le renomme Saloum, d'après le marabout Saalum Suwareh.",
+        "Souverain et capitale : le roi porte le titre de maad Saloum (« bour Saloum » en wolof). Capitale : Kahone.",
+        "Peuplement : surtout sérère, avec l'installation progressive de Wolofs, de Peuls et de Mandingues ; à son apogée, le royaume s'étend du fleuve Saloum jusqu'au fleuve Gambie.",
+        "Après la colonisation : le dernier roi, Fodé Ngouye Diouf, meurt en 1969 ; la royauté coutumière est rétablie en 2017 avec un couronnement à Kahone.",
+        "Prudence : les origines et les dates anciennes reposent en grande partie sur la tradition orale ; les présenter comme approximatives et distinguer faits établis, traditions et interprétations."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Royaume_du_Saloum"
+      ]
     }
   ]
 }
