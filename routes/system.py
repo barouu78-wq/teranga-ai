@@ -7,7 +7,7 @@ from pathlib import Path
 from flask import Response, jsonify, request
 
 from services.assets import ICON_SVG, OG_SVG, build_og_png
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import asset_url, HEAD_ASSETS, site_footer, site_header
 
 
 def _related_android_app():
@@ -133,7 +133,10 @@ def register_system_routes(app, deps):
             + '<main><article><span class="kicker">Connexion</span><h1>Vous êtes hors ligne</h1>'
             '<p class="intro">Teranga AI a besoin d’internet pour répondre. Les pages que vous avez déjà ouvertes '
             "restent consultables : utilisez le bouton retour ou rouvrez-les depuis l’historique.</p>"
-            '<div class="actions"><a class="cta primary" href="/">Réessayer</a><a class="cta" href="/lieux">Lieux déjà visités</a></div>'
+            '<div class="actions"><a class="cta primary" href="/">Réessayer</a><a class="cta" href="/lieux">Tous les lieux</a></div>'
+            '<h2>Disponibles hors ligne</h2><p id="offline-empty">Ouvrez des guides et des fiches de lieux avec internet : ils resteront lisibles ici sans réseau.</p>'
+            '<ul id="offline-pages" hidden></ul>'
+            f'<script src="{asset_url("offline.js")}" defer></script>'
             "</article></main>" + site_footer() + "</body></html>"
         )
         return Response(html, mimetype="text/html")
@@ -204,8 +207,6 @@ def register_system_routes(app, deps):
     # Script de l'accueil servi comme fichier statique (mis en cache par le
     # navigateur) ; l'empreinte du contenu force le rechargement après un déploiement.
     # Même empreinte que asset_url : sinon le cache d'un an ne s'applique pas.
-    from services.site_layout import asset_url
-
     home_js_url = asset_url("home.js")
     theme_js_url = asset_url("theme.js")
 
