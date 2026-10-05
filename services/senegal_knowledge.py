@@ -182,6 +182,10 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                     str(place.get("history", "")), str(place.get("culture", "")),
                     str(place.get("what_to_see", "")),
                 ]))
+        for dossier in data.get("history_dossiers", []):
+            if isinstance(dossier, dict):
+                triggers = sorted({_fold(t).strip() for t in dossier.get("triggers", []) if _fold(t).strip()}, key=len, reverse=True)
+                dossier["_match"] = re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(t) for t in triggers) + r")(?![a-z0-9])") if triggers else None
         for dish in data.get("dishes", []):
             if isinstance(dish, dict):
                 names = [str(dish.get("name", "")), *map(str, dish.get("aliases", []))]
@@ -338,6 +342,12 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         for dish in dishes:
             where = f" Où : {dish.get('where')}." if dish.get("where") else ""
             lines.append(f"- {dish.get('name')} ({dish.get('kind')}) : {dish.get('text')}{where}")
+
+    for dossier in data.get("history_dossiers", []):
+        pattern = dossier.get("_match") if isinstance(dossier, dict) else None
+        if pattern is not None and pattern.search(folded_query):
+            lines.append(f"DOSSIER HISTORIQUE — {dossier.get('title')} :")
+            lines.extend(f"- {section}" for section in dossier.get("sections", []))
 
     phrases = data.get("wolof_phrases") or []
     if phrases and re.search(r"(?<![a-z])wolof(?![a-z])", folded_query):

@@ -36,3 +36,10 @@ def test_people_named_in_the_question_come_first_and_alone():
     section = context.split("PERSONNALITÉS PERTINENTES :")[1]
     assert "Seydina Limamou Laye" in section and "Abdoulaye Wade" not in section
     assert "Youssou Ndour" in format_senegal_knowledge(DATA, query="Parle-moi de Youssou Ndour", people=people)
+
+
+def test_fouta_history_dossier_is_injected_only_for_fouta_questions():
+    for query in ("Raconte l'histoire du Fouta-Toro", "C'est quoi la révolution torodo ?", "Qui était l'almamy Abdoul Kader Kane ?"):
+        assert "DOSSIER HISTORIQUE — Fouta-Toro" in format_senegal_knowledge(DATA, query=query)
+    for query in ("Comment aller à Toronto ?", "Que voir à Dakar ?"):
+        assert "DOSSIER HISTORIQUE" not in format_senegal_knowledge(DATA, query=query)

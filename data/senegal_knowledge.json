@@ -2144,14 +2144,19 @@
       "type": "heritage",
       "region": "Saint-Louis",
       "locality": "Podor",
-      "summary": "Ancienne escale du fleuve Sénégal.",
-      "history": "Ville historique de la vallée du fleuve et ancien point d'échanges.",
-      "what_to_see": "fleuve; escale; patrimoine architectural",
+      "summary": "Ville historique du Fouta-Toro, à l'extrémité ouest de l'île à Morphil, à environ 215 km à l'est de Saint-Louis.",
+      "history": "Ancienne escale fluviale au moment de la pénétration française, Podor est au cœur de la région historique du Fouta-Toro, entre deux bras du fleuve Sénégal. Elle conserve une mosquée omarienne en banco de style soudanais. Le chanteur Baaba Maal y est né en 1953.",
+      "what_to_see": "Quais et maisons de l'ancienne escale; mosquée en banco; coucher de soleil sur le fleuve; départ vers l'île à Morphil et Halwar",
       "latitude": 16.652,
       "longitude": -14.958,
       "image_queries": [
         "Podor Sénégal",
         "fleuve Sénégal Podor"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Podor",
+        "https://fr.wikipedia.org/wiki/Morfil_(île)",
+        "https://fr.wikipedia.org/wiki/Baaba_Maal"
       ]
     },
     {
@@ -3237,6 +3242,101 @@
       "sources": [
         "https://fr.wikipedia.org/wiki/Thilogne"
       ]
+    },
+    {
+      "id": "ile-a-morphil",
+      "name": "Île à Morphil",
+      "type": "island",
+      "region": "Saint-Louis",
+      "locality": "Podor",
+      "summary": "Plus grande île du Sénégal : une bande de terre de plus de 100 km entre le fleuve Sénégal et son bras du Doué, de Podor à Saldé, au cœur du Fouta-Toro.",
+      "history": "Vers le XIᵉ siècle, l'île était au cœur du Tékrour, l'un des premiers États musulmans d'Afrique subsaharienne. Son nom évoque l'ivoire (« morfil ») : des éléphants y vivaient encore jusqu'aux années 1960. Halwar, près de Guédé, est le village natal d'El Hadji Omar Tall, et Podor comme Guédé conservent des mosquées omariennes en banco de style soudanais.",
+      "what_to_see": "Mosquées en banco de Podor et Guédé; Halwar, village natal d'El Hadji Omar; rizières et champs de mil; paysages du fleuve et du Doué",
+      "latitude": 16.5836,
+      "longitude": -14.5838,
+      "image_queries": [
+        "Île à Morphil Sénégal",
+        "mosquée banco Podor"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Morfil_(île)"
+      ]
+    },
+    {
+      "id": "aere-lao",
+      "name": "Aéré Lao",
+      "type": "heritage",
+      "region": "Saint-Louis",
+      "locality": "Aéré Lao",
+      "summary": "Bourg historique du Fouta-Toro dans le département de Podor, sur la route nationale 2.",
+      "history": "Fondé selon la tradition au XIᵉ siècle, Aéré Lao a joué un rôle important dans l'histoire du Fouta : la tradition locale en fait une capitale des almamys à partir de 1776. L'administration coloniale y installe un cercle en 1910 ; la localité est devenue commune en 2008. C'est aujourd'hui une ville carrefour, réputée pour son commerce et sa viande.",
+      "what_to_see": "Mémoire de l'almamiat; marché; vie du Laaw et du fleuve",
+      "latitude": 16.4019,
+      "longitude": -14.3279,
+      "image_queries": [
+        "Aéré Lao Sénégal",
+        "Aéré Lao Fouta"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Aéré_Lao"
+      ]
+    },
+    {
+      "id": "cas-cas",
+      "name": "Cas-Cas (Kaskas)",
+      "type": "heritage",
+      "region": "Saint-Louis",
+      "locality": "Cas-Cas",
+      "summary": "Village ancien de l'île à Morphil, à la frontière mauritanienne, classé parmi les sites et monuments historiques du Sénégal.",
+      "history": "Situé entre deux bras du fleuve Sénégal, dans la région historique du Fouta-Toro, Cas-Cas est le chef-lieu de l'arrondissement du même nom. Son village ancien figure sur la liste des sites et monuments classés.",
+      "what_to_see": "Village ancien classé; architecture du fleuve; île à Morphil",
+      "latitude": 16.3863,
+      "longitude": -14.0654,
+      "image_queries": [
+        "Cas-Cas Podor Sénégal",
+        "Kaskas Fouta"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Cas-Cas"
+      ]
+    },
+    {
+      "id": "sinthiou-bamambe",
+      "name": "Sinthiou Bamambé",
+      "type": "heritage",
+      "region": "Matam",
+      "locality": "Sinthiou Bamambé-Banadji",
+      "summary": "Gros bourg du département de Kanel, près du fleuve, ancien fief d'almamys du Fouta.",
+      "history": "À l'époque de l'almamiat, des almamys de la famille Talla (Tallacornabé) originaires de Sinthiou Bamambé ont régné sur le Fouta. Plusieurs personnalités sénégalaises sont issues de familles du village, dont le juge Kéba Mbaye. La commune a été créée en 2008.",
+      "what_to_see": "Mémoire de l'almamiat; grandes familles du Fouta; vallée du fleuve et route N2",
+      "latitude": 15.3688,
+      "longitude": -13.1366,
+      "image_queries": [
+        "Sinthiou Bamambé Sénégal",
+        "Kanel Matam Fouta"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Sinthiou_Bamambé-Banadji"
+      ]
+    },
+    {
+      "id": "waounde",
+      "name": "Waoundé",
+      "type": "heritage",
+      "region": "Matam",
+      "locality": "Waoundé",
+      "summary": "Commune du département de Kanel, toute proche de la frontière mauritanienne, appelée Dirango jusqu'au milieu du XVIIIᵉ siècle.",
+      "history": "Ancienne cité du Damga, la province orientale du Fouta-Toro, Waoundé portait le nom de Dirango jusqu'au milieu du XVIIIᵉ siècle.",
+      "what_to_see": "Vallée du fleuve Sénégal; vie du Damga; marché local",
+      "latitude": 15.27,
+      "longitude": -12.8658,
+      "image_queries": [
+        "Waoundé Sénégal",
+        "Damga Fouta"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Waoundé"
+      ]
     }
   ],
   "authoritative_sources": [
@@ -4295,6 +4395,67 @@
       "wo": "Ba beneen yoon / Ba suba",
       "fr": "À la prochaine / À demain",
       "en": "See you next time / See you tomorrow"
+    }
+  ],
+  "history_dossiers": [
+    {
+      "id": "fouta-toro",
+      "title": "Fouta-Toro (Fuuta Tooro)",
+      "triggers": [
+        "fouta",
+        "fuuta",
+        "futa toro",
+        "toro",
+        "tooro",
+        "tekrour",
+        "tekrur",
+        "takrur",
+        "almamy",
+        "almami",
+        "almamiat",
+        "almaamiyat",
+        "denianke",
+        "denyanke",
+        "deniyanke",
+        "deniankobe",
+        "torodo",
+        "toroodo",
+        "torodbe",
+        "toorooɓe",
+        "koli tenguella",
+        "souleymane baal",
+        "abdoul kader kane",
+        "abdul kader",
+        "haalpulaar",
+        "halpulaar",
+        "toucouleur",
+        "toucouleurs",
+        "morfil",
+        "morphil",
+        "foutanke",
+        "foutankobe",
+        "podor",
+        "halwar",
+        "almamys"
+      ],
+      "sections": [
+        "Territoire : ancien royaume de la moyenne vallée du fleuve Sénégal, sur les deux rives (nord du Sénégal actuel et sud de la Mauritanie), à peu près de Dagana à Bakel. Côté sénégalais : départements de Podor (région de Saint-Louis), Matam et Kanel. Ses habitants sont les Foutankobé ; la langue est le pulaar et le Fouta est le grand foyer historique des Haalpulaar (dits aussi Toucouleurs).",
+        "Tékrour (VIIᵉ-XIVᵉ siècles environ) : le Fouta est l'héritier du Tékrour médiéval, l'un des premiers États musulmans d'Afrique subsaharienne ; selon la tradition, le roi War Jabi (XIᵉ siècle, cité par le géographe El Bekri) en fut le premier souverain musulman. La tradition orale cite ensuite plusieurs dynasties successives (Dia-Ogo, Manna, Tondyon, Lam-Termes…).",
+        "Dynastie denyanké (XVIᵉ siècle-1776) : au début du XVIᵉ siècle, le conquérant peul Koli Tenguella fonde la dynastie des Denyankés (souverains portant le titre de satigi) ; le royaume prend alors le nom de Fouta-Toro et s'affranchit de la tutelle du Djolof. Au XVIIIᵉ siècle, guerres internes entre familles régnantes, razzias et tributs imposés par les émirats maures affaiblissent le pouvoir.",
+        "Révolution torodo (1776) : des lettrés musulmans toorooɓe, formés notamment à l'école de Pir au Cayor, mènent le mouvement. Thierno Souleymane Baal renverse les Denyankés ; il meurt peu après en combattant les Maures. Il aurait recommandé que l'imam soit choisi pour son savoir et ses qualités, dans n'importe quelle famille, et que la fonction ne devienne jamais héréditaire.",
+        "Almamiat (1776-années 1850) : le Fouta devient un État islamique dirigé par un almamy, savant musulman élu par un conseil de grandes familles. Abdoul Kader Kane, premier almamy, règne de 1776 à sa mort en 1807 ; ensuite, les rivalités entre familles électrices rendent les almamys instables. Le régime interdit la vente de musulmans comme esclaves aux Européens ; la portée réelle de ses mesures contre l'esclavage est débattue par les historiens.",
+        "XIXᵉ siècle et colonisation : El Hadji Omar Tall, né à Halwar près de Podor, recrute largement au Fouta pour ses campagnes. La France annexe le Dimar (1859) puis le Damga avec Matam (1860) ; une révolte en 1862-1863 se termine par la paix de 1863 et une annexion progressive du reste du Fouta à la colonie du Sénégal.",
+        "Organisation et société : confédération de provinces (Dimar, Tooro, Laaw, Boosoya, Halaybe, Yirlaabe, Hebbiyaabe, Ngenaar, Damga). Société très hiérarchisée : lettrés toorooɓe, guerriers seɓɓe, pasteurs fulɓe, pêcheurs subalɓe, artisans et griots, captifs. Agriculture de décrue sur les terres inondables du walo et cultures de pluie sur le jeeri ; élevage, pêche, commerce de la gomme arabique.",
+        "Culture : tradition savante coranique (écoles réputées comme celle de Ciloñ), épopée de Samba Guéladio Diégui, chants de pêcheurs (pekaan), musique pulaar portée aujourd'hui notamment par Baaba Maal, né à Podor.",
+        "Prudence : l'histoire ancienne du Tékrour et du Fouta repose en partie sur la tradition orale et ses interprétations divergent ; présenter les dates anciennes comme approximatives et distinguer faits établis, traditions et débats."
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/Royaume_du_Fouta-Toro",
+        "https://fr.wikipedia.org/wiki/Denianké",
+        "https://fr.wikipedia.org/wiki/Souleymane_Baal",
+        "https://fr.wikipedia.org/wiki/Abdoul_Kader_Kane",
+        "https://fr.wikipedia.org/wiki/Morfil_(île)"
+      ]
     }
   ]
 }
