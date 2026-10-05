@@ -21,7 +21,10 @@ _INTENT_PATTERNS = {
         "voyage", "trip", "itineraire", "itinéraire", "programme",
         "sejour", "séjour", "vacances", "planifier", "planning",
     ),
-    "weather": ("meteo", "météo", "weather", "temps"),
+    # « temps » seul est exclu : « combien de temps » n'est pas une question météo.
+    "weather": ("meteo", "météo", "weather", "quel temps", "temps qu'il fait", "il fait chaud", "fait-il",
+                "pleut", "pleuvoir", "pluie", "pluies", "orage", "orages", "chaud", "chaleur",
+                "temperature", "température", "previsions", "prévisions", "forecast", "rain", "raining"),
     "health": ("santé", "sante", "vaccination", "hôpital", "hopital", "pharmacie", "urgence", "samu", "maladie"),
     "transport": (
         "transport", "bus", "taxi", "car", "aeroport", "aéroport",

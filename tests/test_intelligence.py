@@ -427,3 +427,12 @@ def test_creating_a_business_is_a_project_even_for_restaurants():
     assert detect_intent("Comment ouvrir un compte bancaire ?") != "project"
     assert detect_intent("Où manger à Dakar ?") == "restaurant"
     assert build_ux_hints({"intent": "project"}, {})["intent"] == "project"
+
+
+def test_weather_intent_is_precise():
+    from services.intelligence import detect_intent
+
+    for question in ("Il pleut à Ziguinchor demain ?", "Fait-il chaud à Kédougou ?", "Will it rain in Dakar tomorrow?", "Quel temps fait-il ?"):
+        assert detect_intent(question) == "weather", question
+    for question in ("Combien de temps de Dakar à Cap Skirring en bateau ?", "J'ai peu de temps à Dakar, que voir ?"):
+        assert detect_intent(question) != "weather", question
