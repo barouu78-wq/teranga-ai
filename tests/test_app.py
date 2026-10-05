@@ -746,7 +746,7 @@ def test_home_trip_edit_proposal_is_persisted_and_reviewable():
     html = served_home(app.test_client())
 
     assert "if(itineraryEdit&&itineraryEdit.requires_confirmation)" in html
-    assert "sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))" in html
+    assert "SS.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))" in html
     assert 'window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)' in html
 
 def test_chat_payload_personalizes_all_audience_profiles():
@@ -894,7 +894,7 @@ def test_home_bounds_persisted_chat_history():
 
     assert "slice(0,1200)" in html
     assert "version:2" in html
-    assert "localStorage.setItem('teranga-history'" in html
+    assert "LS.setItem('teranga-history'" in html
     assert "safeHistory" in html
 
 

@@ -35,3 +35,13 @@ def test_mic_never_stays_in_a_dead_listening_state():
     body = JS[start:JS.index("\n}", start)]
     assert "try{ok=await startRealtimeVoice();}catch(_){ok=false;}" in body
     assert "endVoiceMode();" in body and "voiceStatus(" in body
+
+
+def test_blocked_storage_never_breaks_buttons():
+    # Tous les accès passent par LS/SS (repli mémoire) : plus d'exception
+    # quand le navigateur bloque le stockage.
+    after_helpers = JS.split("const LS=safeStore('localStorage'),SS=safeStore('sessionStorage');", 1)[1]
+    assert "localStorage." not in after_helpers and "sessionStorage." not in after_helpers
+    start = JS.index("async function ask(")
+    body_at = JS.index("const body=JSON.stringify({message:text", start)
+    assert JS.index("try{", start) < body_at  # préparé dans le bloc protégé

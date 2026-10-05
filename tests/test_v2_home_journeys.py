@@ -26,7 +26,7 @@ def test_home_reduces_landing_to_four_primary_journeys():
 
 def test_home_persists_selected_journey_for_session():
     html = home_source()
-    assert "sessionStorage.setItem('teranga-journey',journey)" in html
+    assert "SS.setItem('teranga-journey',journey)" in html
 
 
 def test_home_renders_journey_labels_after_language_change():
@@ -53,7 +53,7 @@ def test_home_exposes_teranga_project_builder():
 def test_home_exposes_project_progression():
     html = home_source()
     assert "function renderProjectProgress(container,project)" in html
-    assert "localStorage.setItem('teranga-project-last'" in html
+    assert "LS.setItem('teranga-project-last'" in html
     assert "Idée" in html
     assert "Premiers clients" in html
 

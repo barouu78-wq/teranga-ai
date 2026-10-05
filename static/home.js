@@ -4,6 +4,19 @@ const reduceMotion=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 const storageGet=(key,fallback='')=>{try{return localStorage.getItem(key)??fallback}catch(_){return fallback}};
 const storageSet=(key,value)=>{try{localStorage.setItem(key,value)}catch(_) {}};
 const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
+// Stockage sûr : si le navigateur bloque localStorage/sessionStorage (mode
+// privé, cookies bloqués), on garde les valeurs en mémoire au lieu de planter
+// — un accès qui lève une erreur arrêtait le bouton en plein milieu.
+const safeStore=kind=>{
+  let store=null;const mem=new Map();
+  try{store=window[kind];const k='__teranga_test';store.setItem(k,'1');store.removeItem(k);}catch(_){store=null;}
+  return{
+    getItem:k=>{try{if(store)return store.getItem(k);}catch(_){}return mem.has(k)?mem.get(k):null;},
+    setItem:(k,v)=>{mem.set(k,String(v));try{if(store)store.setItem(k,String(v));}catch(_){}},
+    removeItem:k=>{mem.delete(k);try{if(store)store.removeItem(k);}catch(_){}},
+  };
+};
+const LS=safeStore('localStorage'),SS=safeStore('sessionStorage');
 const T={
 fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
@@ -378,12 +391,12 @@ function addActs(col,text,itineraryEdit,shareToken){
     }catch(e){}
   };
   if(itineraryEdit&&itineraryEdit.requires_confirmation){
-    try{sessionStorage.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))}catch(_){}
+    try{SS.setItem('teranga-trip-edit-proposal',JSON.stringify(itineraryEdit))}catch(_){}
     const edit=document.createElement('button');edit.type='button';edit.textContent=lang==="en"?"Review trip change":"Revoir la modification";
     edit.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
     acts.appendChild(edit);
   }
-  if((sessionStorage.getItem("teranga-trip-context")||"").trim()){
+  if((SS.getItem("teranga-trip-context")||"").trim()){
     const planner=document.createElement("button");planner.type="button";planner.textContent=lang==="en"?"Adjust in Planner":"Ajuster dans le Planner";
     planner.onclick=()=>{window.location.href="/trip-planner?lang="+encodeURIComponent(lang)+"&audience="+encodeURIComponent(audience)};
     acts.appendChild(planner);
@@ -555,9 +568,9 @@ function renderJourneyLabels(){
   $('journeyDiscover').textContent=t.journeyDiscover;$('journeyDiscoverHint').textContent=t.journeyDiscoverHint;
   $('journeyChat').textContent=t.journeyChat;$('journeyChatHint').textContent=t.journeyChatHint;
 }
-function setJourney(journey){try{sessionStorage.setItem('teranga-journey',journey)}catch(_){}}
+function setJourney(journey){try{SS.setItem('teranga-journey',journey)}catch(_){}}
 function setLang(next){
-  lang=next;localStorage.setItem('teranga-lang',next);
+  lang=next;LS.setItem('teranga-lang',next);
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
@@ -587,7 +600,7 @@ document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('cl
   const nextAudience=String(btn.dataset.audience||'').trim();
   if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
   audience=nextAudience;
-  try{localStorage.setItem('teranga-audience',audience)}catch(_){}
+  try{LS.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
   if(realtimeActive){
     const wasActive=voiceConversation&&autoVoice;
@@ -625,7 +638,7 @@ async function advanceProjectStage(container,project,stage){
     const data=await res.json().catch(()=>({}));
     if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
     Object.assign(project,data.project);
-    try{localStorage.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    try{LS.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
     renderProjectProgress(container,project);
     renderProjectTracking(container,project);
   }catch(_){
@@ -668,7 +681,7 @@ function closeProjectModal(){
 }
 $('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('click',()=>{
   setJourney('travel');
-  const place=sessionStorage.getItem('teranga-place-name')||'';
+  const place=SS.getItem('teranga-place-name')||'';
   window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');
 });
 $('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
@@ -740,7 +753,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     result.hidden=false;
     $('projectForm').hidden=true;
     $('projectResultActions').hidden=false;
-    try{localStorage.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
+    try{LS.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
   }catch(err){error.textContent=err.message||T[lang].err;}
   finally{button.disabled=false;button.textContent='🚀 Générer mon projet';}
 });
@@ -770,8 +783,8 @@ function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
-  sessionStorage.removeItem('teranga-history');
-  localStorage.removeItem('teranga-history');
+  SS.removeItem('teranga-history');
+  LS.removeItem('teranga-history');
 }
 let resumeVoiceTimer=0;
 function persist(){
@@ -785,22 +798,22 @@ function persist(){
         ...(item&&item.role==='assistant'&&typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
-      sessionStorage.setItem('teranga-history',payload);
-      localStorage.setItem('teranga-history',payload);
+      SS.setItem('teranga-history',payload);
+      LS.setItem('teranga-history',payload);
     }catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=sessionStorage.getItem('teranga-history')||localStorage.getItem('teranga-history');
+    const raw=SS.getItem('teranga-history')||LS.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
     if(data.lang&&T[data.lang])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
       const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/[ \t]+/g,' ').trim().slice(0,1200),...(typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})})).filter(item=>item.content);
       if(!restored.length){
-        sessionStorage.removeItem('teranga-history');
-        localStorage.removeItem('teranga-history');
+        SS.removeItem('teranga-history');
+        LS.removeItem('teranga-history');
         return;
       }
       history=restored;
@@ -857,9 +870,10 @@ async function ask(preset,fromVoice=false,isRetry=false){
   let kill=0,timedOut=false;
   const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
   arm();
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:sessionStorage.getItem('teranga-place-name')||'',trip_context:sessionStorage.getItem('teranga-trip-context')||'',trip_edit_request:((sessionStorage.getItem('teranga-trip-context')||'').trim()?text:'')});
   let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[];
   try{
+  // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
     const res=await postJSON('/chat',body,null,ctrl.signal);
     if(!res.ok){
       const data=await res.json().catch(()=>({}));
@@ -1054,12 +1068,12 @@ $('copyLink').onclick=async()=>{
 };
 $('themeBtn').onclick=()=>{
   const next=document.body.dataset.theme==='dark'?'light':'dark';
-  document.body.dataset.theme=next;localStorage.setItem('teranga-theme',next);
+  document.body.dataset.theme=next;LS.setItem('teranga-theme',next);
   applyThemeColor();
 };
 $('voiceToggle').onclick=async()=>{
   autoVoice=!autoVoice;
-  localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  LS.setItem('teranga-voice',autoVoice?'1':'0');
   $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
   if(autoVoice){
     beginVoiceMode();
@@ -1636,7 +1650,7 @@ async function startVoiceCapture(){
 }
 function beginVoiceMode(){
   voiceConversation=true;autoVoice=true;
-  localStorage.setItem('teranga-voice','1');
+  LS.setItem('teranga-voice','1');
   document.body.classList.add('voice-active');
   $('voiceToggle').textContent=T[lang].vOn;
   voiceStatus(lang==='fr'?'Mode vocal · parle naturellement.':lang==='en'?'Voice mode · speak naturally.':lang==='wo'?'Mode baat · wax ak yomb.':'Mode baat · haal no feewi.');
@@ -1711,7 +1725,7 @@ function setupMic(){
     };
     rec.onerror=e=>{
       voiceSetMicState(false);
-      if(e?.error==='not-allowed'){autoVoice=false;localStorage.setItem('teranga-voice','0');endVoiceMode();}
+      if(e?.error==='not-allowed'){autoVoice=false;LS.setItem('teranga-voice','0');endVoiceMode();}
       else if(voiceConversation&&!voiceSpeaking&&!inflight)scheduleVoiceCapture(450);
     };
   }
@@ -1732,7 +1746,7 @@ mic.onclick=()=>{
 };
 $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;
-  localStorage.setItem('teranga-voice',autoVoice?'1':'0');
+  LS.setItem('teranga-voice',autoVoice?'1':'0');
   if(autoVoice){
     beginVoiceMode();
     stopSpeakingForListening();
@@ -1743,7 +1757,7 @@ $('voiceToggle').onclick=()=>{
   }
 };
 loadFx();
-themeInit();restore();setLang(lang);try{const prefill=sessionStorage.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();sessionStorage.removeItem('teranga-chat-prefill');}}catch(_){}
+themeInit();restore();setLang(lang);try{const prefill=SS.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();SS.removeItem('teranga-chat-prefill');}}catch(_){}
 // ?q=… (fiches lieux, réponses partagées, widget) : question pré-remplie, jamais envoyée sans l'utilisateur.
 const urlQuestion=(urlParams.get('q')||'').trim().slice(0,500);
 if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Event('input'));input.focus();}setupMic();
