@@ -170,7 +170,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         sections.append(extra_html)
     sections.append(
         '<section><h2>Photos</h2><div class="gallery" id="gallery" '
-        f'data-query="{escape(str((place.get("image_queries") or [name])[0]))}"></div>'
+        f'data-query="{escape(str((place.get("image_queries") or [name])[0]))}" data-title="{escape(name)}"></div>'
         '<div class="credit" id="gallery-credit"></div></section>'
     )
     if coords:
@@ -217,7 +217,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
     nonce_attr = f' nonce="{escape(nonce)}"' if nonce else ""
     script = (
         f"<script{nonce_attr}>(async()=>{{const box=document.getElementById('gallery');if(!box)return;"
-        "try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query),(window.AbortSignal&&AbortSignal.timeout)?{signal:AbortSignal.timeout(15000)}:{}).then(r=>r.json());"
+        "try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)+'&title='+encodeURIComponent(box.dataset.title||''),(window.AbortSignal&&AbortSignal.timeout)?{signal:AbortSignal.timeout(15000)}:{}).then(r=>r.json());"
         "const list=(d.images||[]).slice(0,4);if(!list.length){box.closest('section').remove();return}"
         "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt=x.alt||'';"
         "img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url));box.appendChild(img)});"
