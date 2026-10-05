@@ -190,7 +190,14 @@ def register_localized_routes(app, site_url):
     def localized_travel_page(lang, topic):
         response = render_international_page(lang, topic, site_url)
         if response is None:
-            from flask import abort
+            from flask import abort, redirect
+
+            from services.seo import SEO_PAGES
+
+            # Les pages françaises n'ont pas de préfixe : /fr/visiter-goree
+            # (lien déjà partagé ou soumis aux moteurs) mène à /visiter-goree.
+            if lang == "fr" and topic in SEO_PAGES:
+                return redirect(f"/{topic}", code=301)
             abort(404)
         return response
 
