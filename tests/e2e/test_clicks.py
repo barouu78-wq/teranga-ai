@@ -121,6 +121,23 @@ def test_festive_touch_on_independence_day(page, base_url):
     assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
+@pytest.mark.parametrize("fete,symbol,hour", [("korite", "☪", 11), ("tabaski", "🐑", 21), ("magal", "🕌", 11)])
+def test_religious_festivals_have_their_own_decor_day_and_night(page, base_url, fete, symbol, hour):
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2026, 10, 5, hour, 0))
+    page.goto(base_url + f"/?fete={fete}")
+    decor = page.evaluate("""() => {
+      const el = document.querySelector('.hero-signature');
+      return {bg: getComputedStyle(el).backgroundImage, height: el.getBoundingClientRect().height,
+              symbol: getComputedStyle(el, '::after').content};
+    }""")
+    assert "gradient" in decor["bg"] and decor["height"] >= 40
+    assert symbol in decor["symbol"]
+    assert page.is_visible("#feteBanner")
+    assert page.errors == []
+
+
 def test_project_plan_is_built_inside_the_chat(page, base_url):
     page.route(f"{base_url}/chat", lambda r: r.fulfill(
         body=stream({"d": "Bonne idée : commence petit."}, {"ux": {"intent": "project", "mode": "action"}}),
