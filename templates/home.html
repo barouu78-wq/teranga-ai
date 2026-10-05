@@ -371,11 +371,11 @@ body:not(.has-chat) #resetBtn{display:none}
 .audience-btn:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
 
 /* Les 4 parcours principaux */
-.journey-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .journey-strip button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:18px 16px 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
 .journey-strip [data-journey="travel"]>span{background:rgba(15,106,67,.14)}
-.journey-strip [data-journey="project"]>span{background:rgba(217,164,65,.22)}
+.project-offer{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.project-offer-btn{padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer}.project-offer-btn:disabled{opacity:.6}.project-offer-more{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-weight:700;cursor:pointer}.project-offer-result{flex-basis:100%}.project-offer-result h3{margin:6px 0}.project-meta{color:var(--muted);margin:0 0 6px}
 .journey-strip [data-journey="discover"]>span{background:rgba(201,54,54,.12)}
 .journey-strip [data-journey="chat"]>span{background:var(--accent);color:var(--accent-ink)}
 .journey-strip b{max-width:100%;font-size:16px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -559,6 +559,7 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .audience-btn{flex:0 0 auto}
   .audience-btn small{display:none}
   .journey-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .journey-strip button:last-child{grid-column:1/-1}
   .journey-strip button{padding:14px}
   .journey-strip button>span{width:40px;height:40px;font-size:20px;margin-bottom:6px}
   .journey-strip b{font-size:15px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -642,7 +643,7 @@ body.has-chat .dock{background:var(--bg)}
   </div>
   <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
   <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
-</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours principaux"><button type="button" data-journey="travel"><span>🌍</span><b id="journeyTravel">Voyager au Sénégal</b><small id="journeyTravelHint">Explorer et planifier</small></button><button type="button" data-journey="project"><span>🚀</span><b id="journeyProject">Mon projet</b><small id="journeyProjectHint">Jeunesse · idée → revenus</small></button><button type="button" data-journey="discover"><span>🇸🇳</span><b id="journeyDiscover">Découvrir le Sénégal</b><small id="journeyDiscoverHint">Culture, histoire, gastronomie</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Assistant Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
+</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours principaux"><button type="button" data-journey="travel"><span>🌍</span><b id="journeyTravel">Voyager au Sénégal</b><small id="journeyTravelHint">Explorer et planifier</small></button><button type="button" data-journey="discover"><span>🇸🇳</span><b id="journeyDiscover">Découvrir le Sénégal</b><small id="journeyDiscoverHint">Culture, histoire, gastronomie</small></button><button type="button" data-journey="chat"><span>✦</span><b id="journeyChat">Assistant Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
