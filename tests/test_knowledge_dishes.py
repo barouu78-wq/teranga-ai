@@ -26,3 +26,13 @@ def test_dishes_are_not_injected_by_unrelated_words():
 def test_wolof_phrases_only_when_wolof_is_asked():
     assert "Jërëjëf = Merci" in format_senegal_knowledge(DATA, query="Comment dire merci en wolof ?")
     assert "PHRASES WOLOF" not in format_senegal_knowledge(DATA, query="Comment aller à Gorée ?")
+
+
+def test_people_named_in_the_question_come_first_and_alone():
+    from services.senegal_knowledge import load_senegal_people
+
+    people = load_senegal_people()
+    context = format_senegal_knowledge(DATA, query="Qui était Seydina Limamou Laye ?", people=people)
+    section = context.split("PERSONNALITÉS PERTINENTES :")[1]
+    assert "Seydina Limamou Laye" in section and "Abdoulaye Wade" not in section
+    assert "Youssou Ndour" in format_senegal_knowledge(DATA, query="Parle-moi de Youssou Ndour", people=people)
