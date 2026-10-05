@@ -138,3 +138,28 @@ def test_trip_planner_copy_link_button(page, base_url):
     page.locator("#result", has_text="Marché central").wait_for(timeout=5000)
     page.click("#copy")
     assert "#trip=" in page.evaluate("navigator.clipboard.readText()")
+
+
+def test_trip_planner_reads_streamed_plan(page, base_url):
+    body = stream({"progress": {"day": 0, "total": 2}}, {"progress": {"day": 1, "total": 2}}, {"result": PLAN})
+    seen = {}
+
+    def handler(route):
+        seen["stream"] = route.request.headers.get("x-teranga-stream")
+        route.fulfill(body=body, content_type="application/x-ndjson")
+
+    page.route(f"{base_url}/api/trip-planner", handler)
+    page.goto(base_url + "/trip-planner")
+    _fill_planner(page)
+    page.locator("#result", has_text="Pirogue").wait_for(timeout=5000)
+    assert seen["stream"] == "1"
+    assert page.errors == []
+
+
+def test_trip_planner_stream_error_is_shown(page, base_url):
+    body = stream({"progress": {"day": 0, "total": 2}}, {"error": "La génération a pris trop de temps.", "status": 504})
+    page.route(f"{base_url}/api/trip-planner", lambda r: r.fulfill(body=body, content_type="application/x-ndjson"))
+    page.goto(base_url + "/trip-planner")
+    _fill_planner(page)
+    page.locator("#status", has_text="trop de temps").wait_for(timeout=5000)
+    assert page.locator("section.step.active button[type='submit']").is_enabled()

@@ -1,7 +1,8 @@
 import json
 import os
+import re
 from html import escape
-from flask import Response, jsonify, request
+from flask import Response, jsonify, request, stream_with_context
 from datetime import date
 
 from services.http_security import origin_allowed
@@ -208,14 +209,16 @@ document.getElementById('cancel-trip-edit').onclick=()=>{{box.hidden=true;try{{S
 }}catch(_){{}}
 }}
 restoreTripEditProposal();
+async function readPlanStream(r,onChunk){{const reader=r.body.getReader();const dec=new TextDecoder();let buf='',result=null;const handle=line=>{{if(!line.trim())return;let ev;try{{ev=JSON.parse(line)}}catch(_){{return}}if(ev.error)throw new Error(ev.error);if(ev.progress&&ev.progress.day>0){{const p=document.createElement('p');p.className='loading';p.textContent='{loading} · {day} '+ev.progress.day+' / '+ev.progress.total;status.replaceChildren(p);}}if(ev.result)result=ev.result;}};while(true){{const {{value,done}}=await reader.read();if(done)break;onChunk();buf+=dec.decode(value,{{stream:true}});const lines=buf.split('\\n');buf=lines.pop();lines.forEach(handle);}}handle(buf);if(!result)throw new Error('');return result;}}
 form.onsubmit=async e=>{{e.preventDefault(); if(!form.reportValidity())return;
 const payload={{lang:'{lang}',arrival:form.arrival.value,departure:form.departure.value,adults:+form.adults.value,children:+form.children.value,
 interests:[...document.querySelectorAll('input[name="interests"]:checked')].map(x=>x.value),budget:document.querySelector('input[name="budget"]:checked')?.value||'Confort',
 pace:document.querySelector('input[name="pace"]:checked')?.value||'Équilibré',
 regions:[...document.querySelectorAll('input[name="regions"]:checked')].map(x=>x.value),context_place:safePlaceName(),audience:audience,surprise:document.getElementById('surprise').checked}};
+if(form.dataset.busy==='1')return;form.dataset.busy='1';
 status.innerHTML='<p class="loading">{loading}</p>'; result.textContent='';
-if(form.dataset.busy==='1')return;form.dataset.busy='1';const submitBtn=form.querySelector('[type=submit]');if(submitBtn)submitBtn.disabled=true;const ctl=new AbortController();const killer=setTimeout(()=>ctl.abort(),100000);
-try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload),signal:ctl.signal}});const data=await r.json().catch(()=>({{}}));if(!r.ok)throw new Error(data.error||'');const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};window.__tripBudgetLines=data.budget?.lines||[];renderEditablePlan(p);document.getElementById("voice-result-actions").style.display="flex";status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';syncEditor();payload.edited_plan=currentPlan;const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=copyTripLink;}}
+const submitBtn=form.querySelector('[type=submit]');if(submitBtn)submitBtn.disabled=true;const ctl=new AbortController();let killer=0;const arm=()=>{{clearTimeout(killer);killer=setTimeout(()=>ctl.abort(),60000);}};arm();
+try{{const r=await fetch('/api/trip-planner',{{method:'POST',headers:{{'Content-Type':'application/json','X-Teranga-Stream':'1'}},body:JSON.stringify(payload),signal:ctl.signal}});let data;if(r.ok&&r.body&&(r.headers.get('Content-Type')||'').includes('ndjson')){{data=await readPlanStream(r,arm);}}else{{data=await r.json().catch(()=>({{}}));if(!r.ok)throw new Error(data.error||'');}}const p=data.plan||{{summary:data.itinerary,days:[],practical_notes:[]}};window.__tripBudgetLines=data.budget?.lines||[];renderEditablePlan(p);document.getElementById("voice-result-actions").style.display="flex";status.textContent='';document.getElementById('map').innerHTML=data.map_html||'';document.getElementById('share').style.display='block';syncEditor();payload.edited_plan=currentPlan;const encoded=encodeTrip(payload);const shareLang=payload.lang==='en'?'en':'fr';history.replaceState(null,'','/trip-planner?lang='+shareLang+'#trip='+encoded);document.getElementById('copy').onclick=copyTripLink;}}
 catch(err){{const p=document.createElement('p');p.className='error';p.textContent=(err&&err.name!=='AbortError'&&err.message)||'{error}';status.replaceChildren(p);}}
 finally{{clearTimeout(killer);form.dataset.busy='';if(submitBtn)submitBtn.disabled=false;}}
 }};
@@ -412,6 +415,107 @@ def _create(client, **kwargs):
     raise last if last else RuntimeError("Aucun modèle disponible")
 
 
+def _plan_result(data, text, expected_days, places_by_id):
+    """Réponse finale du planificateur (identique en JSON et en flux)."""
+    lang = data["lang"]
+    budget_info = _budget(data)
+    regions = data["regions"] or ["Dakar"]
+    try:
+        parsed_plan = json.loads(text)
+    except json.JSONDecodeError:
+        parsed_plan = None
+    plan = _normalize_plan(parsed_plan, text, expected_days, places_by_id)
+    if lang == "en":
+        budget_lines = [
+            f"Indicative total budget: {budget_info['total'][0]}–{budget_info['total'][1]} USD",
+            f"Accommodation: {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
+            f"Meals: {budget_info['food'][0]}–{budget_info['food'][1]} USD",
+            f"Local transport: {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
+            f"Activities: {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
+            f"Buffer: {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
+            "Estimate excluding international flights; adjust for season and actual choices.",
+        ]
+    else:
+        budget_lines = [
+            f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
+            f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
+            f"Repas : {budget_info['food'][0]}–{budget_info['food'][1]} USD",
+            f"Transport local : {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
+            f"Activités : {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
+            f"Marge : {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
+            "Estimation hors vols internationaux, à ajuster selon saison et choix réels.",
+        ]
+    return {
+        "itinerary": json.dumps(plan, ensure_ascii=False),
+        "plan": plan,
+        "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]},
+        "language": lang,
+        "map_html": _map_html(regions, "Trip map" if lang == "en" else "Carte du voyage"),
+    }
+
+
+def _plan_error(exc, lang):
+    """(corps, statut, en-têtes) d'une erreur du planificateur, sans détail interne."""
+    if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
+        message = ("The trip took too long to generate. Try again with fewer days or regions."
+                   if lang == "en" else
+                   "La génération a pris trop de temps. Réessaie avec moins de jours ou de régions.")
+        return {"error": message}, 504, {}
+    message = ("The trip planner is temporarily unavailable. Please try again in a moment."
+               if lang == "en" else "Impossible de générer le voyage pour le moment. Réessaie dans un instant.")
+    return {"error": message}, 503, {"Retry-After": "10"}
+
+
+_DAY_MARKER = re.compile(r'"day"\s*:\s*\d')
+
+
+def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id):
+    """Plan en NDJSON : progression « jour N / M » puis résultat final.
+
+    Les octets envoyés pendant la génération évitent aussi qu'un proxy coupe
+    une connexion restée muette trop longtemps.
+    """
+    lang = data["lang"]
+
+    def line(obj):
+        return json.dumps(obj, ensure_ascii=False) + "\n"
+
+    def generate():
+        yield line({"progress": {"day": 0, "total": expected_days}})
+        text = ""
+        try:
+            events = _create(client, stream=True, **request_kwargs)
+            final_text = ""
+            seen = 0
+            for event in events:
+                kind = getattr(event, "type", "")
+                if kind == "response.output_text.delta":
+                    text += getattr(event, "delta", "") or ""
+                    count = min(expected_days, len(_DAY_MARKER.findall(text)))
+                    if count > seen:
+                        seen = count
+                        yield line({"progress": {"day": count, "total": expected_days}})
+                elif kind == "response.completed":
+                    final_text = getattr(getattr(event, "response", None), "output_text", "") or ""
+                elif kind in ("response.failed", "error"):
+                    raise RuntimeError("trip-planner stream failed")
+            text = final_text or text
+            if not text:
+                yield line({"error": "Réponse vide de l'assistant.", "status": 502})
+                return
+            yield line({"result": _plan_result(data, text, expected_days, places_by_id)})
+        except Exception as exc:  # noqa: BLE001 - message public uniquement
+            app.logger.exception("trip-planner")
+            payload, status, _headers = _plan_error(exc, lang)
+            yield line({**payload, "status": status})
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="application/x-ndjson",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
+
+
 def _practical_info(client, lang, region, category, day=""):
     response = _create(
         client,
@@ -545,61 +649,25 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             blocked = rate_guard("trip_planner")
             if blocked is not None:
                 return blocked
+        expected_days = max(1, (departure_date - arrival_date).days)
+        places_by_id = {str(p.get("id")): p for p in places or [] if p.get("id")}
+        request_kwargs = dict(
+            input=_prompt(data, _knowledge_places(data, places)),
+            # Raisonnement court et sortie bornée : un plan de N jours tient
+            # en ~450 jetons par jour ; évite les générations interminables.
+            reasoning={"effort": "low"},
+            max_output_tokens=min(16000, 1500 + 450 * expected_days),
+            truncation="auto",
+        )
+        if request.headers.get("X-Teranga-Stream") == "1":
+            return _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         try:
-            expected_days = max(1, (departure_date - arrival_date).days)
-            response = _create(
-                client,
-                input=_prompt(data, _knowledge_places(data, places)),
-                # Raisonnement court et sortie bornée : un plan de N jours tient
-                # en ~450 jetons par jour ; évite les générations interminables.
-                reasoning={"effort": "low"},
-                max_output_tokens=min(16000, 1500 + 450 * expected_days),
-                truncation="auto",
-            )
+            response = _create(client, **request_kwargs)
             text = getattr(response, "output_text", "") or ""
             if not text:
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
-            budget_info = _budget(data)
-            regions = data["regions"] or ["Dakar"]
-            try:
-                parsed_plan = json.loads(text)
-            except json.JSONDecodeError:
-                parsed_plan = None
-            plan = _normalize_plan(parsed_plan, text, expected_days, {str(p.get("id")): p for p in places or [] if p.get("id")})
-            if lang == "en":
-                budget_lines = [
-                    f"Indicative total budget: {budget_info['total'][0]}–{budget_info['total'][1]} USD",
-                    f"Accommodation: {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
-                    f"Meals: {budget_info['food'][0]}–{budget_info['food'][1]} USD",
-                    f"Local transport: {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
-                    f"Activities: {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
-                    f"Buffer: {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
-                    "Estimate excluding international flights; adjust for season and actual choices.",
-                ]
-            else:
-                budget_lines = [
-                    f"Budget total indicatif : {budget_info['total'][0]}–{budget_info['total'][1]} USD",
-                    f"Hébergement : {budget_info['accommodation'][0]}–{budget_info['accommodation'][1]} USD",
-                    f"Repas : {budget_info['food'][0]}–{budget_info['food'][1]} USD",
-                    f"Transport local : {budget_info['transport'][0]}–{budget_info['transport'][1]} USD",
-                    f"Activités : {budget_info['activities'][0]}–{budget_info['activities'][1]} USD",
-                    f"Marge : {budget_info['buffer'][0]}–{budget_info['buffer'][1]} USD",
-                    "Estimation hors vols internationaux, à ajuster selon saison et choix réels.",
-                ]
-            return jsonify({
-                "itinerary": json.dumps(plan, ensure_ascii=False),
-                "plan": plan,
-                "budget": {"currency": "USD", "lines": budget_lines, "total": budget_info["total"]},
-                "language": lang,
-                "map_html": _map_html(regions, "Trip map" if lang == "en" else "Carte du voyage"),
-            })
+            return jsonify(_plan_result(data, text, expected_days, places_by_id))
         except Exception as exc:
             app.logger.exception("trip-planner")
-            if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
-                message = ("The trip took too long to generate. Try again with fewer days or regions."
-                           if lang == "en" else
-                           "La génération a pris trop de temps. Réessaie avec moins de jours ou de régions.")
-                return jsonify({"error": message}), 504
-            message = ("The trip planner is temporarily unavailable. Please try again in a moment."
-                       if lang == "en" else "Impossible de générer le voyage pour le moment. Réessaie dans un instant.")
-            return jsonify({"error": message}), 503, {"Retry-After": "10"}
+            payload, status, headers = _plan_error(exc, lang)
+            return jsonify(payload), status, headers
