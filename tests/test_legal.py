@@ -68,3 +68,20 @@ def test_manifest_has_store_ready_screenshots_and_shortcuts():
         width, height = Image.open(__import__("io").BytesIO(response.data)).size
         assert shot["sizes"] == f"{width}x{height}"
         assert height / width <= 2  # rapport maximal accepté par Google Play
+
+
+def test_manifest_lists_wide_screenshots_and_play_app_when_configured(monkeypatch):
+    from app import app
+
+    client = app.test_client()
+    monkeypatch.delenv("ANDROID_APP_PACKAGE", raising=False)
+    manifest = client.get("/manifest.webmanifest").get_json()
+    assert {shot["form_factor"] for shot in manifest["screenshots"]} == {"narrow", "wide"}
+    assert "related_applications" not in manifest
+    monkeypatch.setenv("ANDROID_APP_PACKAGE", "fr.terangaai.app")
+    manifest = client.get("/manifest.webmanifest").get_json()
+    assert manifest["related_applications"][0] == {
+        "platform": "play", "id": "fr.terangaai.app",
+        "url": "https://play.google.com/store/apps/details?id=fr.terangaai.app",
+    }
+    assert manifest["prefer_related_applications"] is False
