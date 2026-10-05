@@ -24,6 +24,7 @@ def add_security_headers(
     is_secure: bool = False,
     forwarded_proto: str = "",
     extra_script_origins: tuple[str, ...] = (),
+    versioned: bool = False,
 ):
     script_src = f"'self' 'nonce-{nonce}'" if nonce else "'self' 'unsafe-inline'"
     # Origines optionnelles (mesure d'audience) : autorisées pour le script et ses envois.
@@ -41,14 +42,14 @@ def add_security_headers(
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        f"default-src 'self'; script-src {script_src} 'unsafe-eval' "
-        "https://cse.google.com https://www.google.com https://www.gstatic.com" + extra + "; "
+        # Plus de widget Google Custom Search : ni scripts Google ni eval.
+        f"default-src 'self'; script-src {script_src}" + extra + "; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https://upload.wikimedia.org "
         "https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self' https://cse.google.com https://www.google.com" + extra + "; "
+        "connect-src 'self'" + extra + "; "
         "media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; "
-        "frame-src https://www.google.com https://cse.google.com https://maps.google.com https://www.openstreetmap.org; "
+        "frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; "
         "child-src https://www.google.com https://maps.google.com; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
@@ -64,6 +65,10 @@ def add_security_headers(
     declared = str(response.headers.get("Cache-Control", ""))
     if path in CACHED_ASSETS:
         response.headers["Cache-Control"] = "public, max-age=86400"
+    elif path.startswith("/static/") and versioned:
+        # L'URL change à chaque modification du fichier (?v=<empreinte>) :
+        # le navigateur peut le garder un an sans jamais redemander.
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.startswith("/static/"):
         response.headers["Cache-Control"] = "public, max-age=3600"
     elif declared.startswith("public") and not nonce and "Set-Cookie" not in response.headers:

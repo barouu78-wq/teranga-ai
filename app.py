@@ -19,7 +19,7 @@ from routes.seo import register_seo_routes
 from routes.places import register_place_routes
 from routes.share import register_share_routes
 from services.error_pages import render_not_found, render_server_error
-from services.site_layout import register_layout_globals
+from services.site_layout import asset_version, register_layout_globals
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
 from routes.tts import register_tts_route
@@ -479,7 +479,11 @@ def add_client_identity(response):
 def compress_response(response):
     # Enregistré avant add_security_headers : Flask exécute les after_request
     # en ordre inverse, la compression intervient donc en tout dernier.
-    return gzip_response(response, request.headers.get("Accept-Encoding", ""))
+    return gzip_response(
+        response,
+        request.headers.get("Accept-Encoding", ""),
+        static_path=request.path if request.path.startswith("/static/") else "",
+    )
 
 
 @app.after_request
@@ -492,7 +496,14 @@ def add_security_headers(response):
         is_secure=request.is_secure,
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
         extra_script_origins=(ANALYTICS["origin"],) if ANALYTICS else (),
+        versioned=_is_current_asset(request.path, request.args.get("v", "")),
     )
+
+
+def _is_current_asset(path, version):
+    # Cache d'un an seulement si ?v= correspond à la version servie : une
+    # ancienne URL ne doit pas figer le nouveau contenu chez le visiteur.
+    return bool(version) and path.startswith("/static/") and version == asset_version(path[len("/static/"):])
 
 
 register_image_proxy_route(app, {

@@ -416,55 +416,6 @@ function addActs(col,text,itineraryEdit,shareToken){
   }
   acts.append(listen,copy,share);col.appendChild(acts);
 }
-let googleImageSearchSeq=0;
-function showGoogleImages(col,query){
-  query=String(query||'').trim();
-  if(!query)return;
-  const section=document.createElement('section');
-  section.className='google-images';
-  section.style.cssText='margin:10px 0;padding:12px;border:1px solid rgba(226,179,74,.18);border-radius:18px;background:rgba(255,255,255,.035);';
-  const title=document.createElement('div');
-  title.textContent='Images Google';
-  title.style.cssText='font-weight:700;margin-bottom:8px;';
-  const host=document.createElement('div');
-  const id='google-images-'+(++googleImageSearchSeq);
-  host.id=id;
-  section.append(title,host);
-  col.appendChild(section);
-  const render=()=>{
-    if(!(window.google&&google.search&&google.search.cse&&google.search.cse.element))return false;
-    try{
-      google.search.cse.element.render({
-        div:id,
-        tag:'searchresults-only',
-        gname:id,
-        attributes:{
-          enableImageSearch:true,
-          defaultToImageSearch:true,
-          disableWebSearch:true,
-          imageSearchLayout:'classic',
-          imageSearchResultSetSize:'8',
-          safeSearch:'active',
-          image_type:'photo'
-        }
-      });
-      const run=()=>{
-        const el=google.search.cse.element.getElement(id);
-        if(el&&typeof el.execute==='function'){el.execute(query);return true;}
-        return false;
-      };
-      if(!run()){
-        let tries=0;
-        const timer=setInterval(()=>{if(run()||++tries>30)clearInterval(timer);},200);
-      }
-      return true;
-    }catch(e){return false;}
-  };
-  if(!render()){
-    let tries=0;
-    const timer=setInterval(()=>{if(render()||++tries>50)clearInterval(timer);},200);
-  }
-}
 function addCityImage(col,image){
   const list=Array.isArray(image)?image:(image&&image.url?[image]:[]);
   const gallery=document.createElement('div');gallery.className='city-gallery';
@@ -482,8 +433,6 @@ function addCityImage(col,image){
     box.append(img);gallery.appendChild(box);
   });
   if(gallery.children.length)col.appendChild(gallery);
-  const googleQuery=(list.find(item=>item&&item.search_query)||list[0]||{}).search_query;
-  // Keep the photo grid clean: no Google image result block or captions/details below photos.
 }
 // Lien vers la fiche /lieux des lieux cités dans la question.
 function addPlaceLinks(col,places){

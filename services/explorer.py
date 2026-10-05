@@ -15,7 +15,7 @@ def render_explorer_page(places, regions, selected_region=""):
             '<a href="https://www.openstreetmap.org/?mlat={lat}&mlon={lon}" target="_blank" rel="noopener">Carte</a></div></article>'.format(
                 type=escape(str(place.get("type", "lieu"))), region=escape(str(place.get("region", ""))),
                 name=escape(str(place.get("name", ""))),
-                photo=escape(quote(str((place.get("image_queries") or [place.get("name", "")])[0]))),
+                photo=escape(str((place.get("image_queries") or [place.get("name", "")])[0])),
                 summary=escape(str(place.get("summary", ""))),
                 query=escape(quote("Parle-moi de " + str(place.get("name", "")))),
                 lat=escape(str(place.get("latitude", ""))), lon=escape(str(place.get("longitude", ""))),

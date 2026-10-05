@@ -302,7 +302,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
         if len(out) >= limit:
             break
     if len(_COMMONS_CACHE) >= _COMMONS_CACHE_MAX_ENTRIES and cache_key not in _COMMONS_CACHE:
-        oldest = min(_COMMONS_CACHE, key=lambda key: _COMMONS_CACHE[key][0])
+        oldest = min(list(_COMMONS_CACHE.items()), key=lambda entry: entry[1][0])[0]
         _COMMONS_CACHE.pop(oldest, None)
     _COMMONS_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
     return [dict(item) for item in out]
@@ -399,7 +399,7 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
         if out:
             break
     if len(_ARTICLE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES and cache_key not in _ARTICLE_CACHE:
-        _ARTICLE_CACHE.pop(min(_ARTICLE_CACHE, key=lambda key: _ARTICLE_CACHE[key][0]), None)
+        _ARTICLE_CACHE.pop(min(list(_ARTICLE_CACHE.items()), key=lambda entry: entry[1][0])[0], None)
     _ARTICLE_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
     return [dict(item) for item in out]
 
@@ -442,7 +442,7 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
         except Exception:
             logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
     if len(_IMAGE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES:
-        oldest = min(_IMAGE_CACHE, key=lambda key: _IMAGE_CACHE[key][0])
+        oldest = min(list(_IMAGE_CACHE.items()), key=lambda entry: entry[1][0])[0]
         _IMAGE_CACHE.pop(oldest, None)
     _IMAGE_CACHE[title] = (time.monotonic(), found)
     return found
