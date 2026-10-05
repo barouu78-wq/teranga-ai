@@ -656,7 +656,13 @@ register_youth_project_route(app, {
     "max_message_length": MAX_MESSAGE_LENGTH,
 })
 
+from services.answer_cache import AnswerCache
+
+ANSWER_CACHE = AnswerCache.from_env(redis_client, logger=app.logger)
+
 register_chat_route(app, {
+    "answer_cache": ANSWER_CACHE,
+    "cache_model": MODEL,
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,

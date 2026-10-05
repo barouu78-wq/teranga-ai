@@ -6,6 +6,7 @@ import time
 
 from flask import Response, jsonify, request, stream_with_context
 
+from services.answer_cache import cache_key, replay_chunks
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
 
@@ -40,6 +41,8 @@ def register_chat_route(app, deps):
     knowledge_places = deps.get("knowledge_places") or []
     field = deps["field"]
     logger = deps.get("logger", app.logger)
+    answer_cache = deps.get("answer_cache")
+    cache_model = deps.get("cache_model", "")
 
     @app.post("/chat")
     @require_json_post
@@ -109,9 +112,43 @@ def register_chat_route(app, deps):
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
+        key = cache_key(payload, request.get_json(silent=True), model=cache_model) if answer_cache is not None else None
+        cached = answer_cache.get(key) if key else None
+        if cached:
+            logger.info("chat_cache_hit")
+
+        def finishing_events(reply, sources, image, maps):
+            """Événements communs après le texte : sources, médias, suggestions, partage."""
+            events = []
+            if sources:
+                events.append({"s": sources})
+            if image:
+                events.append({"img": image})
+            if maps:
+                events.append({"map": maps})
+            if payload.get("trip_edit_proposal"):
+                events.append({"itinerary_edit": payload["trip_edit_proposal"]})
+            if payload.get("ux_hints"):
+                events.append({"ux": payload["ux_hints"]})
+            if payload.get("action_request"):
+                events.append({"action": payload["action_request"]})
+            # Lieux de la base cités dans la question : lien vers leur fiche /lieux.
+            places = mentioned_places(payload.get("message", ""), knowledge_places)
+            if places:
+                events.append({"places": places})
+            share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
+            if share:
+                events.append({"share": share})
+            return events
+
         if request.headers.get("X-Teranga-Mode", "").lower() == "json":
             try:
-                reply, sources, image, maps = complete_reply(payload)
+                if cached:
+                    reply, sources, image, maps = cached["reply"], cached.get("sources") or [], cached.get("image"), cached.get("map")
+                else:
+                    reply, sources, image, maps = complete_reply(payload)
+                    if reply and answer_cache is not None:
+                        answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
                 share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
@@ -119,6 +156,17 @@ def register_chat_route(app, deps):
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
+
+        if cached:
+            def generate_cached():
+                reply = cached["reply"]
+                for chunk in replay_chunks(reply):
+                    yield json.dumps({"d": chunk}, ensure_ascii=False) + "\n"
+                for event in finishing_events(reply, cached.get("sources") or [], cached.get("image"), cached.get("map")):
+                    yield json.dumps(event, ensure_ascii=False) + "\n"
+                yield json.dumps({"done": True}) + "\n"
+
+            return Response(stream_with_context(generate_cached()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
         def generate():
             started_at = time.perf_counter()
@@ -181,25 +229,11 @@ def register_chat_route(app, deps):
                     else:
                         image = None
                         maps = None
-                if sources:
-                    yield json.dumps({"s": sources}, ensure_ascii=False) + "\n"
-                if image:
-                    yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
-                if maps:
-                    yield json.dumps({"map": maps}, ensure_ascii=False) + "\n"
-                if payload.get("trip_edit_proposal"):
-                    yield json.dumps({"itinerary_edit": payload["trip_edit_proposal"]}, ensure_ascii=False) + "\n"
-                if payload.get("ux_hints"):
-                    yield json.dumps({"ux": payload["ux_hints"]}, ensure_ascii=False) + "\n"
-                if payload.get("action_request"):
-                    yield json.dumps({"action": payload["action_request"]}, ensure_ascii=False) + "\n"
-                # Lieux de la base cités dans la question : lien vers leur fiche /lieux.
-                places = mentioned_places(payload.get("message", ""), knowledge_places)
-                if places:
-                    yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
-                share = sign_answer(share_secret, payload.get("message", ""), clean_answer("".join(answer_parts)), sources, payload.get("language", "fr"))
-                if share:
-                    yield json.dumps({"share": share}) + "\n"
+                final_reply = clean_answer("".join(answer_parts))
+                for extra_event in finishing_events(final_reply, sources, image, maps):
+                    yield json.dumps(extra_event, ensure_ascii=False) + "\n"
+                if answer_cache is not None and key:
+                    answer_cache.set(key, reply=final_reply, sources=sources, image=image, maps=maps)
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
