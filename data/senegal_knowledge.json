@@ -3758,5 +3758,296 @@
       ],
       "next": "Importer progressivement les indicateurs des rapports régionaux et du répertoire des localités, avec année et source pour chaque chiffre."
     }
-  }
+  },
+  "dishes": [
+    {
+      "name": "Ceebu jën (thiéboudienne)",
+      "aliases": [
+        "thieboudienne",
+        "thiéboudienne",
+        "ceebu jen",
+        "ceebu jën",
+        "thiebou dieune",
+        "thieb",
+        "tieb",
+        "tiep",
+        "riz au poisson"
+      ],
+      "kind": "plat",
+      "text": "Riz cuit dans un bouillon de poisson et de tomate, servi avec le poisson farci au « roof » (persil, ail, piment) et des légumes : manioc, chou, carotte, aubergine, navet, gombo. Le riz croustillant du fond de la marmite s'appelle le xoon. Plat national, inscrit au patrimoine culturel immatériel de l'UNESCO en 2021. Traditionnellement associé à Saint-Louis ; on le mange souvent à midi, dans un grand plat partagé.",
+      "where": "Tout le pays ; Saint-Louis"
+    },
+    {
+      "name": "Ceebu yapp",
+      "aliases": [
+        "thiebou yapp",
+        "ceebu yapp"
+      ],
+      "kind": "plat",
+      "text": "Riz cuit dans le jus d'une viande (souvent mouton ou bœuf) mijotée aux oignons ; cousin du ceebu jën, sans poisson.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Yassa",
+      "aliases": [
+        "yassa"
+      ],
+      "kind": "plat",
+      "text": "Poulet ou poisson mariné au citron et à beaucoup d'oignons, souvent relevé de moutarde, grillé puis mijoté dans la sauce aux oignons. Servi avec du riz blanc. Originaire de Casamance.",
+      "where": "Casamance ; tout le pays"
+    },
+    {
+      "name": "Mafé",
+      "aliases": [
+        "mafe",
+        "mafé",
+        "maafe"
+      ],
+      "kind": "plat",
+      "text": "Ragoût à la pâte d'arachide, avec viande (bœuf, agneau ou poulet) et légumes, servi avec du riz. Plat répandu dans toute l'Afrique de l'Ouest.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Soupou kandja",
+      "aliases": [
+        "soupou kandja",
+        "soupe kandia",
+        "soupou kanja",
+        "sauce gombo"
+      ],
+      "kind": "plat",
+      "text": "Sauce au gombo et à l'huile de palme, avec poisson, fruits de mer ou viande, servie sur du riz blanc.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Caldou",
+      "aliases": [
+        "caldou",
+        "kaldou"
+      ],
+      "kind": "plat",
+      "text": "Poisson cuit dans un bouillon léger au citron et aux oignons, servi avec du riz. Plat de Casamance.",
+      "where": "Casamance"
+    },
+    {
+      "name": "Mbaxal",
+      "aliases": [
+        "mbakhal",
+        "mbaxal",
+        "mbaxal saloum"
+      ],
+      "kind": "plat",
+      "text": "Riz cuit avec de l'arachide pilée, du niébé et du poisson séché ou de la viande ; plat associé au Saloum.",
+      "where": "Saloum (Kaolack, Fatick)"
+    },
+    {
+      "name": "Thiéré (cere)",
+      "aliases": [
+        "thiere",
+        "thiéré",
+        "cere"
+      ],
+      "kind": "plat",
+      "text": "Couscous de mil cuit à la vapeur, servi avec une sauce à la viande et aux légumes. Plat traditionnel de la nuit de Tamxarit (Achoura).",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Dibi",
+      "aliases": [
+        "dibi",
+        "dibiterie"
+      ],
+      "kind": "plat",
+      "text": "Viande (souvent de mouton) grillée au feu de bois, servie avec oignons, moutarde et pain. On l'achète dans les dibiteries, surtout le soir.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Fataya et pastels",
+      "aliases": [
+        "fataya",
+        "fatayas",
+        "pastel",
+        "pastels"
+      ],
+      "kind": "en-cas",
+      "text": "Chaussons frits farcis à la viande ou au poisson, souvent servis avec une sauce tomate pimentée. En-cas vendu dans la rue et aux fêtes.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Accara",
+      "aliases": [
+        "accara",
+        "akara",
+        "beignets de niebe"
+      ],
+      "kind": "en-cas",
+      "text": "Beignets frits de pâte de niébé (haricots), servis avec une sauce tomate et oignons pimentée, souvent dans un pain.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Thiakry (dégué)",
+      "aliases": [
+        "thiakry",
+        "thiacry",
+        "degue",
+        "dégué",
+        "cakri"
+      ],
+      "kind": "dessert",
+      "text": "Granules de mil mélangés à du lait caillé sucré, parfois parfumés à la vanille ou à la noix de muscade. Servi frais.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Lakh",
+      "aliases": [
+        "lakh",
+        "lax",
+        "laax"
+      ],
+      "kind": "dessert",
+      "text": "Bouillie épaisse de mil servie avec du lait caillé sucré, parfois avec une sauce au pain de singe.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Ngalakh",
+      "aliases": [
+        "ngalakh",
+        "ngalax"
+      ],
+      "kind": "dessert",
+      "text": "Dessert de mil, pâte d'arachide et pain de singe (fruit du baobab). Les familles chrétiennes le préparent pour le Vendredi saint et en offrent aux voisins, notamment musulmans : un symbole de la cohabitation religieuse au Sénégal.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Attaya",
+      "aliases": [
+        "attaya",
+        "ataya",
+        "the a la menthe",
+        "thé à la menthe"
+      ],
+      "kind": "boisson",
+      "text": "Thé vert à la menthe, très sucré et mousseux, préparé longuement et servi en trois tournées, du plus fort au plus doux. Moment de partage et de discussion.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Café Touba",
+      "aliases": [
+        "cafe touba",
+        "café touba"
+      ],
+      "kind": "boisson",
+      "text": "Café parfumé au poivre de Guinée (djar) et parfois au clou de girofle. Lié à la confrérie mouride et à la ville de Touba ; vendu partout dans la rue.",
+      "where": "Tout le pays ; Touba"
+    },
+    {
+      "name": "Bissap",
+      "aliases": [
+        "bissap",
+        "jus de bissap",
+        "hibiscus"
+      ],
+      "kind": "boisson",
+      "text": "Boisson à base de fleurs d'hibiscus infusées, sucrée et souvent parfumée à la menthe ou à la fleur d'oranger. Se boit très fraîche.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Bouye",
+      "aliases": [
+        "bouye",
+        "jus de bouye"
+      ],
+      "kind": "boisson",
+      "text": "Boisson onctueuse au pain de singe, le fruit du baobab, mélangé à de l'eau ou du lait et sucré.",
+      "where": "Tout le pays"
+    },
+    {
+      "name": "Jus de gingembre",
+      "aliases": [
+        "gingembre",
+        "jinjeer",
+        "jus de gingembre"
+      ],
+      "kind": "boisson",
+      "text": "Jus de gingembre frais, très relevé, sucré et souvent parfumé au citron ou à l'ananas.",
+      "where": "Tout le pays"
+    }
+  ],
+  "wolof_phrases": [
+    {
+      "wo": "Salaam aleekum / Maalekum salaam",
+      "fr": "Bonjour (salutation) / réponse à la salutation",
+      "en": "Hello (greeting) / reply"
+    },
+    {
+      "wo": "Na nga def ? – Maa ngi fi rekk",
+      "fr": "Comment vas-tu ? – Je vais bien",
+      "en": "How are you? – I'm fine"
+    },
+    {
+      "wo": "Jërëjëf",
+      "fr": "Merci",
+      "en": "Thank you"
+    },
+    {
+      "wo": "Waaw / Déedéet",
+      "fr": "Oui / Non",
+      "en": "Yes / No"
+    },
+    {
+      "wo": "Dalal ak jàmm",
+      "fr": "Bienvenue",
+      "en": "Welcome"
+    },
+    {
+      "wo": "Baal ma",
+      "fr": "Pardon, excuse-moi",
+      "en": "Sorry, excuse me"
+    },
+    {
+      "wo": "Ñaata la ?",
+      "fr": "C'est combien ?",
+      "en": "How much is it?"
+    },
+    {
+      "wo": "Dafa seer",
+      "fr": "C'est cher",
+      "en": "It's expensive"
+    },
+    {
+      "wo": "Wàññi ko tuuti",
+      "fr": "Baisse un peu (le prix)",
+      "en": "Lower it a little (the price)"
+    },
+    {
+      "wo": "Fan la … nekk ?",
+      "fr": "Où se trouve … ?",
+      "en": "Where is …?"
+    },
+    {
+      "wo": "Lan mooy sa tur ? – Maa ngi tudd …",
+      "fr": "Comment t'appelles-tu ? – Je m'appelle …",
+      "en": "What's your name? – My name is …"
+    },
+    {
+      "wo": "Dégg nga français ?",
+      "fr": "Tu comprends le français ?",
+      "en": "Do you understand French?"
+    },
+    {
+      "wo": "Neex na",
+      "fr": "C'est bon (délicieux)",
+      "en": "It's tasty"
+    },
+    {
+      "wo": "Kaay lekk",
+      "fr": "Viens manger (invitation)",
+      "en": "Come and eat (invitation)"
+    },
+    {
+      "wo": "Ba beneen yoon / Ba suba",
+      "fr": "À la prochaine / À demain",
+      "en": "See you next time / See you tomorrow"
+    }
+  ]
 }
