@@ -57,6 +57,10 @@
 <title>Teranga AI — assistant Sénégal en français, anglais et wolof</title>
 <link rel="icon" href="/icon.svg">
 <script nonce="__CSP_NONCE__">
+// Service worker enregistré dès le <head> : détecté par PWABuilder et indépendant de home.js.
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(()=>{});}
+</script>
+<script nonce="__CSP_NONCE__">
 // Teranga Voice v14 — clearer, louder browser playback with gentle dynamics control.
 let voiceOutputContext=null;
 function createVoiceAudio(url){
