@@ -44,3 +44,9 @@ def test_offline_page_is_available_and_not_indexed():
     assert "Vous êtes hors ligne" in html
     assert '<meta name="robots" content="noindex">' in html
     assert '<link rel="stylesheet" href="/static/site.css?v=' in html
+
+
+def test_service_worker_is_registered_inline_in_head():
+    html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
+    head = html.split("</head>", 1)[0]
+    assert "navigator.serviceWorker.register('/sw.js'" in head

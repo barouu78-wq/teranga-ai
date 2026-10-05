@@ -1166,9 +1166,6 @@ if(window.visualViewport){
   };
   visualViewport.addEventListener('resize',place);place();
 }
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
-}
 let deferredInstall=null;
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredInstall=e;
