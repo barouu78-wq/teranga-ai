@@ -3,7 +3,7 @@ import json
 from html import escape
 from urllib.parse import quote
 
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 import os
 
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
@@ -425,7 +425,7 @@ def render_seo_page(slug, site_url):
 %(head)s
 </head>
 <body>%(header)s<main>
-<div class=\"related\">%(related)s<button id=\"share-page\" class=\"share-page\" type=\"button\">Partager</button></div><script>document.getElementById("share-page").onclick=async()=>{try{if(navigator.share){await navigator.share({title:document.title,url:location.href})}else{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}}catch(_){try{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent="Lien copié"}catch(_){}}};</script>
+<div class=\"related\">%(related)s<button id=\"share-page\" class=\"share-page\" type=\"button\">Partager</button></div><script src=\"%(share_js)s\" defer></script>
 <article>
 <div class=\"kicker\">Sénégal · Teranga AI</div>
 <h1>%(h1)s</h1>
@@ -442,6 +442,7 @@ def render_seo_page(slug, site_url):
         "site": site_url,
         "ld": ld_json,
         "related": related_html,
+        "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],
         "sections": sections,

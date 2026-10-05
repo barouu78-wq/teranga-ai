@@ -1,7 +1,7 @@
 from flask import Response
 from html import escape
 
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 import json
 
 LANGS = ("en", "es", "de", "it", "fr")
@@ -178,7 +178,7 @@ def render_international_page(lang, topic, site_url):
 <title>{escape(title)}</title><script type="application/ld+json">{ld_json}</script>
 {HEAD_ASSETS}
 </head><body>{site_header(lang=lang)}<main>
-<div class="related">{related}<button id="share-page" class="share-page" type="button">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script>document.getElementById("share-page").onclick=async()=>{{const data={{title:document.title,url:location.href}};try{{if(navigator.share){{await navigator.share(data)}}else{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent={{"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}}[lang]}}}}catch(_error){{try{{await navigator.clipboard.writeText(location.href);document.getElementById("share-page").textContent={{"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}}[lang]}}catch(_fallback){{}}}}}};</script></div><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
+<div class="related">{related}<button id="share-page" class="share-page" type="button" data-copied="{escape({"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}[lang])}" data-failed="{escape({"en":"Copy the page address","es":"Copie la dirección de la página","de":"Seitenadresse kopieren","it":"Copia l’indirizzo della pagina","fr":"Copiez l’adresse de la page"}[lang])}">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script src="{asset_url("share-page.js")}" defer></script></div><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
 <h1>{escape(title)}</h1><p class="intro">{escape(description)}</p>{sections}
 <section><h2>{"Frequently asked questions" if lang=="en" else "Preguntas frecuentes" if lang=="es" else "Häufige Fragen" if lang=="de" else "Domande frequenti" if lang=="it" else "Questions fréquentes"}</h2>{faq}</section>
 <div class="ctaBox"><strong>{escape(cta)}</strong><p><a class="cta primary" href="/">{escape({"en":"Open Teranga AI","es":"Abrir Teranga AI","de":"Teranga AI öffnen","it":"Apri Teranga AI","fr":"Ouvrir Teranga AI"}[lang])}</a></p></div>

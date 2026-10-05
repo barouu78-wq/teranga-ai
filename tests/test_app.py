@@ -664,8 +664,20 @@ def test_public_seo_pages_expose_native_share_control():
     from services.seo import render_seo_page
     body = render_seo_page("dakar", "https://example.com").get_data(as_text=True)
     assert 'id="share-page"' in body
-    assert "navigator.share" in body
-    assert "navigator.clipboard.writeText(location.href)" in body
+    assert "/static/share-page.js?v=" in body
+    script = open("static/share-page.js", encoding="utf-8").read()
+    assert "navigator.share" in script
+    assert "navigator.clipboard.writeText(url)" in script
+
+
+def test_localized_pages_share_button_has_translated_feedback():
+    from services.international_seo import TOPICS, render_international_page
+    topic = next(iter(TOPICS))
+    body = render_international_page("en", topic, "https://example.com").get_data(as_text=True)
+    assert 'data-copied="Link copied"' in body
+    assert "/static/share-page.js?v=" in body
+    # L'ancien script en ligne référençait une variable JS « lang » inexistante.
+    assert "[lang]" not in body
 
 
 def test_regional_seo_page_and_sitemap():
