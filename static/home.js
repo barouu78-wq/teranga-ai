@@ -532,6 +532,14 @@ function addPlaceLinks(col,places){
     const a=document.createElement('a');a.href='/lieux/'+p.id;
     a.textContent=(lang==='en'?'📍 Place guide: ':'📍 Fiche : ')+String(p.name||'');
     box.appendChild(a);
+    // Liens « Réserver » (partenaires affiliés) : uniquement nos redirections /go/.
+    (Array.isArray(p.book)?p.book:[]).slice(0,2).forEach(b=>{
+      if(!b||typeof b.href!=='string'||!/^\/go\/[a-z]+\?/.test(b.href))return;
+      const link=document.createElement('a');link.href=b.href;link.rel='sponsored nofollow';link.target='_blank';
+      link.textContent=String(b.label||'');
+      link.title=lang==='en'?'Partner link: Teranga AI may earn a commission':'Lien partenaire : Teranga AI peut recevoir une commission';
+      box.appendChild(link);
+    });
   });
   col.appendChild(box);
 }

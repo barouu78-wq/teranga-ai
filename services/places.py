@@ -109,7 +109,7 @@ def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
     return faq
 
 
-def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> str:
+def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra_html: str = "") -> str:
     site_url = site_url.rstrip("/")
     name = str(place.get("name", ""))
     region = str(place.get("region", ""))
@@ -165,6 +165,9 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
         sections.append(f"<section><h2>Que voir</h2><ul>{items}</ul></section>")
     if place.get("access"):
         sections.append(f"<section><h2>Comment y aller</h2><p>{escape(str(place['access']))}</p></section>")
+    # Réservation (liens affiliés) et adresses partenaires, déjà échappées.
+    if extra_html:
+        sections.append(extra_html)
     sections.append(
         '<section><h2>Photos</h2><div class="gallery" id="gallery" '
         f'data-query="{escape(str((place.get("image_queries") or [name])[0]))}"></div>'

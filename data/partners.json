@@ -1,0 +1,4 @@
+{
+  "_comment": "Adresses partenaires (payantes ou non), toujours affichées avec la mention « Partenaire ». Champs : id, name, category, description, places (ids de lieux, localités ou régions), url (https), phone, until (AAAA-MM-JJ, fin du contrat). Voir docs/MONETISATION.md.",
+  "partners": []
+}
