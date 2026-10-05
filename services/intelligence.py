@@ -122,8 +122,18 @@ def detect_language(text: str) -> str:
     return "fr"
 
 
+# « ouvrir un restaurant », « monter une boutique », « lancer mon activité » :
+# créer une activité prime sur le sujet de l'activité (restaurant, commerce…).
+_BUSINESS_CREATION = re.compile(
+    r"(?<!\w)(ouvrir|creer|lancer|monter|demarrer|fonder|open|start|launch)\s+"
+    r"(un|une|mon|ma|mes|son|sa|a|an|my)\s+"
+)
+
+
 def detect_intent(text: str) -> str:
     normalized = _normalize(text)
+    if _BUSINESS_CREATION.search(normalized) and not re.search(r"(?<!\w)(compte|account|porte|fenetre|carte|session)(?!\w)", normalized):
+        return "project"
     for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
         if any(re.search(r"(?<!\w)" + re.escape(pattern) + r"(?!\w)", normalized) for pattern in patterns):
             return intent
@@ -418,6 +428,8 @@ def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> d
         mode = "fresh"
     return {
         "mode": mode,
+        # Le client s'en sert pour proposer une action intégrée (plan de projet).
+        "intent": intent,
         "followups": followups[:3],
         "show_followups": True,
         "compact": True,

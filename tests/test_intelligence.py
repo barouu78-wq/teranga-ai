@@ -417,3 +417,13 @@ def test_build_conversation_drops_oldest_turns_and_keeps_structure():
     assert result.endswith("<demande_utilisateur>\nEt demain ?\n</demande_utilisateur>")
     assert "tour 11" in result
     assert "tour 0 " not in result
+
+
+def test_creating_a_business_is_a_project_even_for_restaurants():
+    from services.intelligence import build_ux_hints, detect_intent
+
+    assert detect_intent("Je veux ouvrir un restaurant à Thiès") == "project"
+    assert detect_intent("I want to start a business in Dakar") == "project"
+    assert detect_intent("Comment ouvrir un compte bancaire ?") != "project"
+    assert detect_intent("Où manger à Dakar ?") == "restaurant"
+    assert build_ux_hints({"intent": "project"}, {})["intent"] == "project"

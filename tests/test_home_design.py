@@ -16,7 +16,7 @@ def test_home_has_senegal_signature_visual():
 
 def test_home_keeps_primary_journeys_and_chat_surface():
     html = HOME.read_text(encoding="utf-8")
-    for marker in ("data-journey=\"travel\"", "data-journey=\"project\"", "data-journey=\"discover\"", "data-journey=\"chat\""):
+    for marker in ("data-journey=\"travel\"", "data-journey=\"discover\"", "data-journey=\"chat\""):
         assert marker in html
     assert 'id="input"' in html
     assert 'id="send"' in html

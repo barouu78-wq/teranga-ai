@@ -25,11 +25,10 @@ def test_mobile_safe_area_is_preserved():
 
 def test_journey_buttons_have_single_deterministic_handlers():
     html = home_source()
-    for journey in ("travel", "project", "discover", "chat"):
+    for journey in ("travel", "discover", "chat"):
         assert f'data-journey="{journey}"' in html
-    assert html.count("?.addEventListener('click'") >= 4
+    assert html.count("?.addEventListener('click'") >= 3
     assert 'querySelector(\'[data-journey="travel"]\')' in html
-    assert 'querySelector(\'[data-journey="project"]\')' in html
     assert 'querySelector(\'[data-journey="discover"]\')' in html
     assert 'querySelector(\'[data-journey="chat"]\')' in html
     assert "Journey buttons are wired individually above" in html

@@ -76,14 +76,34 @@ def test_theme_and_language_buttons_respond(page, base_url):
     assert page.get_attribute("html", "lang") == "en"
 
 
-def test_project_form_recovers_from_network_failure(page, base_url):
-    page.route(f"{base_url}/api/projects/plan", lambda r: r.abort())
+def test_project_plan_is_built_inside_the_chat(page, base_url):
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(
+        body=stream({"d": "Bonne idée : commence petit."}, {"ux": {"intent": "project", "mode": "action"}}),
+        content_type="application/x-ndjson"))
+    calls = []
+
+    def plan(route):
+        calls.append(1)
+        if len(calls) == 1:
+            route.abort()
+        else:
+            route.fulfill(json={"project": {"name": "Jus de bissap", "city": "Thiès", "category": "food",
+                                            "next_action": "Faire goûter 20 personnes",
+                                            "steps": [{"title": "Tester", "action": "Vendre 10 bouteilles"}]}})
+
+    page.route(f"{base_url}/api/projects/plan", plan)
     page.goto(base_url + "/")
-    page.click("#journeyStrip button[data-journey='project']")
-    page.fill("#projectIdea", "Vendre du jus de bissap à Thiès")
-    page.click("#projectSubmit")
-    page.locator("#projectError", has_text="Service indisponible").wait_for(timeout=5000)
-    assert page.is_enabled("#projectSubmit")
+    assert page.locator("#journeyStrip button[data-journey='project']").count() == 0
+    ask(page, "Je veux vendre du jus de bissap à Thiès")
+    offer = page.locator(".project-offer-btn")
+    offer.wait_for(timeout=5000)
+    offer.click()
+    page.locator(".project-offer .project-error", has_text="Service indisponible").wait_for(timeout=5000)
+    assert offer.is_enabled()
+    offer.click()
+    page.locator(".project-offer-result", has_text="Faire goûter 20 personnes").wait_for(timeout=5000)
+    assert page.locator(".project-offer-result a[href^='/opportunities']").count() == 1
+    assert page.errors == []
 
 
 def _fill_planner(page):

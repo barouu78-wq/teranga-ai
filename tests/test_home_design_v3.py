@@ -17,9 +17,9 @@ def test_mobile_navigation_remains_visible_and_compact():
     assert "env(safe-area-inset-bottom)" in html
 
 
-def test_journey_cards_keep_four_entry_points():
+def test_journey_cards_keep_three_entry_points():
     html = HOME.read_text(encoding="utf-8")
-    for marker in ('data-journey="travel"', 'data-journey="project"', 'data-journey="discover"', 'data-journey="chat"'):
+    for marker in ('data-journey="travel"', 'data-journey="discover"', 'data-journey="chat"'):
         assert marker in html
     assert ".journey-strip button" in html
     assert "text-overflow:ellipsis" in html

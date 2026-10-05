@@ -9,16 +9,16 @@ def test_home_exposes_v2_product_journeys():
     html = home_source()
     assert 'id="journeyStrip"' in html
     assert 'data-journey="travel"' in html
-    assert 'data-journey="project"' in html
+    assert 'data-journey="project"' not in html  # intégré au chat
     assert 'data-journey="discover"' in html
     assert 'data-journey="chat"' in html
     assert "window.location.href='/trip-planner?lang='" in html
 
 
-def test_home_reduces_landing_to_four_primary_journeys():
+def test_home_reduces_landing_to_three_primary_journeys():
     html = home_source()
     assert 'data-journey="travel"' in html
-    assert 'data-journey="project"' in html
+    assert 'data-journey="project"' not in html
     assert 'data-journey="discover"' in html
     assert 'data-journey="chat"' in html
     assert '#audienceMode{display:none!important}' in html
@@ -35,9 +35,11 @@ def test_home_renders_journey_labels_after_language_change():
     assert "renderJourneyLabels();" in html
 
 
-def test_home_exposes_teranga_project_builder():
+def test_home_exposes_teranga_project_builder_inside_chat():
     html = home_source()
-    assert 'data-journey="project"' in html
+    # Plus de bouton d'accueil : le chat propose le plan après une réponse « projet ».
+    assert "if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);" in html
+    assert "postJSON('/api/projects/plan',JSON.stringify({idea}))" in html
     assert 'id="projectModal"' in html
     assert 'id="projectForm"' in html
     assert "postJSON('/api/projects/plan'" in html

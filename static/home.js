@@ -434,6 +434,54 @@ function addCityImage(col,image){
   });
   if(gallery.children.length)col.appendChild(gallery);
 }
+// « Mon projet » intégré au chat : après une réponse sur un projet, un bouton
+// construit le plan (étapes, progression, pistes) directement dans la conversation.
+function addProjectOffer(col,idea){
+  idea=String(idea||'').trim().slice(0,2000);
+  if(!idea)return;
+  const box=document.createElement('div');box.className='project-offer';
+  const btn=document.createElement('button');btn.type='button';btn.className='project-offer-btn';
+  const idle=lang==='en'?'🚀 Build my project plan':'🚀 Construire mon plan';
+  btn.textContent=idle;
+  const more=document.createElement('button');more.type='button';more.className='project-offer-more';
+  more.textContent=lang==='en'?'Add budget, city…':'Préciser budget, ville…';
+  more.onclick=()=>{const f=$('projectIdea');if(f)f.value=idea;openProjectModal();};
+  const out=document.createElement('div');out.className='project-offer-result';
+  btn.onclick=async()=>{
+    if(btn.disabled)return;
+    btn.disabled=true;btn.textContent=lang==='en'?'Building…':'Construction…';out.textContent='';
+    try{
+      if(!cookie('teranga_csrf'))await refreshCsrf();
+      const res=await postJSON('/api/projects/plan',JSON.stringify({idea}));
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
+      renderInlineProject(out,data.project);
+      btn.remove();more.remove();
+      try{LS.setItem('teranga-project-last',JSON.stringify(data.project));}catch(_){}
+    }catch(err){
+      const p=document.createElement('p');p.className='project-error';p.textContent=friendlyError(err);out.replaceChildren(p);
+      btn.disabled=false;btn.textContent=idle;
+    }
+  };
+  box.append(btn,more,out);col.appendChild(box);
+}
+function renderInlineProject(container,p){
+  const h=document.createElement('h3');h.textContent='🚀 '+(p.name||(lang==='en'?'Your project':'Ton projet'));
+  const meta=document.createElement('p');meta.className='project-meta';
+  meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');
+  const next=document.createElement('p');const strong=document.createElement('strong');
+  strong.textContent=lang==='en'?'Next action: ':'Prochaine action : ';
+  next.append(strong,document.createTextNode(p.next_action||(lang==='en'?'Validate your idea in the field.':'Valider ton idée sur le terrain.')));
+  const list=document.createElement('ol');list.className='project-steps';
+  (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
+  container.replaceChildren(h,meta,next,list);
+  renderProjectProgress(container,p);
+  const links=document.createElement('div');links.className='place-links';
+  const q='?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');
+  const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'🔎 Opportunities':'🔎 Opportunités';
+  const partner=document.createElement('a');partner.href='/partners'+q;partner.textContent=lang==='en'?'🤝 Partners':'🤝 Partenaires';
+  links.append(opp,partner);container.appendChild(links);
+}
 // Lien vers la fiche /lieux des lieux cités dans la question.
 function addPlaceLinks(col,places){
   const list=(Array.isArray(places)?places:[]).filter(p=>p&&typeof p.id==='string'&&/^[a-z0-9-]+$/.test(p.id)).slice(0,2);
@@ -526,7 +574,7 @@ function renderCards(){
 function renderJourneyLabels(){
   const t=T[lang];
   $('journeyTravel').textContent=t.journeyTravel;$('journeyTravelHint').textContent=t.journeyTravelHint;
-  $('journeyProject').textContent=t.journeyProject;$('journeyProjectHint').textContent=t.journeyProjectHint;
+
   $('journeyDiscover').textContent=t.journeyDiscover;$('journeyDiscoverHint').textContent=t.journeyDiscoverHint;
   $('journeyChat').textContent=t.journeyChat;$('journeyChatHint').textContent=t.journeyChatHint;
 }
@@ -645,10 +693,6 @@ $('journeyStrip').querySelector('[data-journey="travel"]')?.addEventListener('cl
   setJourney('travel');
   const place=SS.getItem('teranga-place-name')||'';
   window.location.href='/trip-planner?lang='+encodeURIComponent(lang)+'&audience='+encodeURIComponent(audience)+(place?'&context_place='+encodeURIComponent(place):'');
-});
-$('journeyStrip').querySelector('[data-journey="project"]')?.addEventListener('click',()=>{
-  setJourney('project');
-  openProjectModal();
 });
 $('journeyStrip').querySelector('[data-journey="discover"]')?.addEventListener('click',()=>{
   setJourney('discover');
@@ -834,7 +878,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   let kill=0,timedOut=false;
   const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
   arm();
-  let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[];
+  let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[], ux=null;
   try{
   // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
@@ -887,6 +931,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
         if(ev.share)shareToken=ev.share;
         if(Array.isArray(ev.places))places=ev.places;
+        if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
       }
     }
     if(buf.trim()){
@@ -899,6 +944,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.map)map=ev.map;
         if(ev.share)shareToken=ev.share;
         if(Array.isArray(ev.places))places=ev.places;
+        if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
     }
     if(paint){cancelAnimationFrame(paint);flush();}
@@ -919,6 +965,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       if(data.itinerary_edit)itineraryEdit=data.itinerary_edit;
       if(data.share)shareToken=data.share;
       if(Array.isArray(data.places))places=data.places;
+      if(data.ux&&typeof data.ux==='object')ux=data.ux;
       pending=reply;flush();
     }
     reply=cleanReply(reply);
@@ -929,6 +976,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addCityImage(wait.col,image);
     addMap(wait.col,map);
     addPlaceLinks(wait.col,places);
+    if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
