@@ -37,3 +37,15 @@ def _guarded_connect(sock, address, *args, **kwargs):
 def _no_network(monkeypatch):
     """Un test qui atteint Internet réussit ou échoue selon la machine : on l'interdit."""
     monkeypatch.setattr(socket.socket, "connect", _guarded_connect)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_answer_cache():
+    """Le cache de réponses ne doit jamais faire dépendre un test d'un autre."""
+    module = sys.modules.get("app")
+    cache = getattr(module, "ANSWER_CACHE", None) if module else None
+    if cache is not None:
+        cache._memory.clear()
+    yield
+    if cache is not None:
+        cache._memory.clear()
