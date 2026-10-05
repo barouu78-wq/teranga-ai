@@ -48,6 +48,7 @@ def register_seo_routes(app, site_url, places=None):
             f"Disallow: /realtime-call\n"
             f"Disallow: /csrf\n"
             f"Disallow: /api/\n"
+            f"Disallow: /go/\n"
             f"Disallow: /image-proxy\n"
             f"Disallow: /explorer-image\n"
             f"Disallow: /exchange-rates\n"
@@ -66,6 +67,7 @@ def register_seo_routes(app, site_url, places=None):
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
             f"<url><loc>{site_url}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>"
             f"<url><loc>{site_url}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
+            f"<url><loc>{site_url}/offres-partenaires</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>"
             + "".join(
                 f"<url><loc>{site_url}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
                 for slug in SEO_PAGES
