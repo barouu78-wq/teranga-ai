@@ -7,7 +7,7 @@ from html import escape
 from urllib.parse import quote
 
 from services.seo import REGION_SEO_NAMES, region_slug
-from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, body_tag, site_footer, site_header
 
 TYPE_LABELS = {
     "heritage": "Patrimoine",
@@ -158,7 +158,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "") -> st
     )
     return (
         _head(title, description, url, site_url, ld)
-        + "<body>" + site_header("/lieux")
+        + body_tag(region) + site_header("/lieux")
         + '<main><p class="related"><a href="/lieux">← Tous les lieux du Sénégal</a></p><article>'
         + f'<div class="kicker">{escape(type_label)} · {escape(region)}</div>'
         + f"<h1>{escape(name)}</h1><p class=\"muted\">{escape(summary)}</p>"
