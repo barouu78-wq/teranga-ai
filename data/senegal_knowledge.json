@@ -2079,7 +2079,8 @@
       "image_queries": [
         "Popenguine Sénégal",
         "sanctuaire Popenguine Sénégal"
-      ]
+      ],
+      "access": "À environ 70 km au sud de Dakar, par la route de Mbour puis une bifurcation vers la côte."
     },
     {
       "id": "somone",
@@ -2095,7 +2096,8 @@
       "image_queries": [
         "Somone Sénégal",
         "lagune Somone Sénégal"
-      ]
+      ],
+      "access": "À environ 80 km au sud de Dakar, sur la Petite-Côte, entre Ngaparou et Popenguine ; la lagune se visite en pirogue."
     },
     {
       "id": "mbour",
@@ -2111,7 +2113,8 @@
       "image_queries": [
         "Mbour Sénégal",
         "port de Mbour Sénégal"
-      ]
+      ],
+      "access": "À environ 80 km au sud de Dakar par l'autoroute ; bus, minibus et « 7 places » depuis Dakar."
     },
     {
       "id": "toubacouta",
@@ -2323,7 +2326,8 @@
       "image_queries": [
         "Carabane Sénégal",
         "île de Carabane Sénégal"
-      ]
+      ],
+      "access": "En pirogue depuis Elinkine ; le ferry Dakar–Ziguinchor y fait aussi escale."
     },
     {
       "id": "diembering",
@@ -2420,7 +2424,8 @@
       "image_queries": [
         "Saly Sénégal",
         "plage Saly Sénégal"
-      ]
+      ],
+      "access": "À environ 80 km au sud de Dakar par l'autoroute, près de Mbour ; environ 1 h 30 depuis Dakar hors embouteillages."
     },
     {
       "id": "niokolo-gambie",
@@ -2479,7 +2484,8 @@
       "sources": [
         "https://rsisd10.unepgrid.ch/RISapp/files/RISrep/SN2467RIS_2202_fr.pdf",
         "https://www.ndarinfo.com/Connais-tu-le-Parc-national-de-la-Langue-de-Barbarie_a5904.html"
-      ]
+      ],
+      "access": "En pirogue depuis Gandiol ou Mouit, au sud de Saint-Louis."
     },
     {
       "id": "lac-de-guiers",
@@ -2499,7 +2505,8 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Lac_de_Guiers",
         "https://www.ndarinfo.com/Protection-de-l-environnement-Le-lac-de-Guiers-un-ecosysteme-fragile-au-coeur-de-toutes-les-convoitises-foncieres_a6956.html"
-      ]
+      ],
+      "access": "Près de Richard-Toll, à environ 100 km à l'est de Saint-Louis."
     },
     {
       "id": "reserve-de-bandia",
@@ -2543,7 +2550,8 @@
       "sources": [
         "https://en.wikipedia.org/wiki/Ngor_(island)",
         "https://au-senegal.com/evadez-vous-sur-l-ile-de-ngor,10887.html"
-      ]
+      ],
+      "access": "Courte traversée en pirogue depuis la plage de Ngor, au nord-ouest de Dakar ; départs fréquents en journée."
     },
     {
       "id": "grande-mosquee-de-diourbel",
@@ -2702,7 +2710,8 @@
       ],
       "aliases": [
         "Fathala"
-      ]
+      ],
+      "access": "Près de Toubacouta, au sud du delta du Saloum, non loin de la frontière gambienne."
     },
     {
       "id": "kafountine",
@@ -3077,7 +3086,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Parc_forestier_et_zoologique_de_Hann"
-      ]
+      ],
+      "access": "Dans Dakar, quartier de Hann, près de la route de Rufisque ; accessible en taxi depuis le centre."
     },
     {
       "id": "toubab-dialaw",
@@ -3096,7 +3106,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Toubab_Dialaw"
-      ]
+      ],
+      "access": "À environ 50 km au sud de Dakar, sur la côte, par la route de Bargny et Yène."
     },
     {
       "id": "keur-moussa",
@@ -3115,7 +3126,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Abbaye_de_Keur_Moussa"
-      ]
+      ],
+      "access": "À environ 50 km de Dakar, sur la route de Kayar ; la messe du dimanche matin est accompagnée à la kora."
     },
     {
       "id": "kayar",
@@ -3134,7 +3146,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Kayar"
-      ]
+      ],
+      "access": "À environ 58 km au nord de Dakar ; le retour des pirogues en fin d'après-midi est le meilleur moment."
     },
     {
       "id": "mar-lodj",
@@ -3153,7 +3166,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Mar_Lodj"
-      ]
+      ],
+      "access": "En pirogue depuis Ndangane, dans le delta du Saloum, en quelques minutes de traversée."
     },
     {
       "id": "pointe-de-sangomar",
@@ -3172,7 +3186,8 @@
       ],
       "sources": [
         "https://fr.wikipedia.org/wiki/Pointe_de_Sangomar"
-      ]
+      ],
+      "access": "En pirogue depuis Djiffer ou Palmarin, au bout de la presqu'île de Sangomar."
     },
     {
       "id": "gandiol",
