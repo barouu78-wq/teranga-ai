@@ -268,6 +268,22 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             f"langue officielle {profile.get('official_language')}; fuseau {profile.get('time_zone')}."
         )
 
+        folded_value = _fold(value)
+        if re.search(r"urgence|police|pompier|samu|ambulance|secours|accident|hopital|malade|vol[eé]", folded_value):
+            numbers = "; ".join(f"{n.get('service')} {n.get('number')} ({n.get('scope')})" for n in profile.get("emergency_numbers", []))
+            if numbers:
+                lines.append(f"- Numéros d'urgence au Sénégal : {numbers}.")
+        if re.search(r"superficie|frontiere|voisin|independance|combien de region|departement|langue|population|fleuve|geographie|indicatif|(?<![a-z])prises?(?![a-z])|electri|voltage|conduite|conduit", folded_value):
+            geo = profile.get("geography", {})
+            practical = profile.get("practical", {})
+            lines.append(
+                f"- Profil : superficie {profile.get('area_km2')} km² ; {profile.get('administrative_regions')} régions, "
+                f"{profile.get('departments')} départements ; indépendance le {profile.get('independence_date')} ; "
+                f"langues courantes {', '.join(profile.get('common_languages', []))} ; pays voisins {', '.join(geo.get('neighboring_countries', []))} ; "
+                f"fleuves {', '.join(geo.get('major_rivers', []))} ; indicatif téléphonique {practical.get('phone_code')} ; "
+                f"électricité {practical.get('electricity')} ; conduite {practical.get('driving_side')}. Population : chiffre à vérifier auprès de l'ANSD."
+            )
+
     regions = data.get("regions", [])
     # Sans accents ni apostrophes (« Gorée » = « goree », « l'histoire » =
     # « histoire ») ; les mots de la question qui ne désignent pas un lieu
@@ -358,6 +374,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     if phrases and re.search(r"(?<![a-z])wolof(?![a-z])", folded_query):
         lines.append("PHRASES WOLOF SÛRES (orthographe officielle ; à réutiliser telles quelles, sans en inventer d'autres) :")
         lines.append("; ".join(f"{item.get('wo')} = {item.get('fr')}" for item in phrases) + ".")
+
+    pulaar = data.get("pulaar_phrases") or []
+    if pulaar and re.search(r"(?<![a-z])(pulaar|pular|peule?s?|peulh|haalpulaar|halpulaar|fouta|fuuta|futa|fulfulde)(?![a-z])", folded_query):
+        lines.append("PHRASES PULAAR SÛRES (à réutiliser telles quelles, sans en inventer d'autres) :")
+        lines.append("; ".join(f"{item.get('pu')} = {item.get('fr')}" for item in pulaar) + ".")
 
     modules = data.get("knowledge_modules", {})
     module_key = {

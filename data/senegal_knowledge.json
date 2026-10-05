@@ -3786,7 +3786,12 @@
       "Pour formalités, visas, douanes et règles d'entrée, vérifier les services publics et autorités compétentes.",
       "Pour transport, vols, horaires, tarifs et événements, vérifier en temps réel.",
       "Ne pas réduire le Sénégal au tourisme ou à l'UNESCO."
-    ]
+    ],
+    "practical": {
+      "phone_code": "+221",
+      "electricity": "230 V, 50 Hz ; prises de type C, D, E et K",
+      "driving_side": "à droite"
+    }
   },
   "knowledge_modules": {
     "geography": {
@@ -4782,6 +4787,89 @@
       "sources": [
         "https://fr.wikipedia.org/wiki/Royaume_du_Saloum"
       ]
+    },
+    {
+      "title": "Le Fouta aujourd'hui : langue, société, cuisine et culture",
+      "triggers": [
+        "fouta",
+        "fuuta",
+        "futa",
+        "pulaar",
+        "haalpulaar",
+        "halpulaar",
+        "toucouleur",
+        "matam",
+        "podor",
+        "kanel",
+        "ourossogui",
+        "thilogne",
+        "ndioum",
+        "agnam",
+        "waounde",
+        "galoya",
+        "semme",
+        "ranerou",
+        "foutanke",
+        "lacciri",
+        "yela",
+        "pekaan",
+        "baaba maal",
+        "mansour seck",
+        "blues du fleuve"
+      ],
+      "sections": [
+        "Langue : le pulaar (forme du fulfulde parlée au Fouta) est l'une des langues nationales les plus parlées du Sénégal ; il s'écrit en caractères latins (alphabet officiel) et, de longue date, en caractères arabes (ajami). Les Haalpulaar'en (« ceux qui parlent pulaar ») sont aussi appelés Toucouleurs.",
+        "Géographie aujourd'hui : le Fouta sénégalais s'étire le long du fleuve Sénégal, dans les départements de Podor (région de Saint-Louis), Matam et Kanel (région de Matam). La route nationale 2 relie Saint-Louis, Richard-Toll, Ndioum, Podor (par une bretelle), Thilogne, Ourossogui, Matam puis Bakel ; l'île à Morphil se trouve entre le fleuve et son bras du Doué.",
+        "Économie : riz irrigué sur les périmètres aménagés de la vallée, cultures de décrue sur les terres du walo après la crue, mil et sorgho sur le jeeri, élevage (bovins, moutons, chèvres) jusqu'au Ferlo, pêche fluviale et commerce.",
+        "Émigration : le Fouta a une forte tradition d'émigration, vers la France, d'autres pays d'Afrique et la Mauritanie voisine. Les associations villageoises de migrants financent maisons, mosquées, forages, écoles et postes de santé ; beaucoup d'émigrés reviennent pour la Tabaski et les mariages.",
+        "Cuisine : lacciri (couscous de mil) servi avec du kosam (lait caillé) ou une sauce, thiéré, poisson du fleuve, mouton grillé lors des fêtes, et le thé (ataaya) partagé longuement. L'hospitalité est un devoir : on offre à manger et à boire à l'hôte.",
+        "Musique et traditions : chants des pêcheurs (pekaan), chants et danses des femmes (yela), chants guerriers des seɓɓe (gumbala), épopée de Samba Guéladio Diégui. Baaba Maal, né à Podor, et le griot Mansour Seck ont fait connaître la musique pulaar dans le monde ; Baaba Maal a créé à Podor le festival Les Blues du Fleuve (dates à vérifier).",
+        "Littérature : Cheikh Hamidou Kane, né à Matam, a écrit « L'Aventure ambiguë » (1961), grand roman sur la rencontre entre l'école coranique du Fouta et l'école occidentale.",
+        "Savoir-vivre : saluer longuement (Jam waali, No mbaɗɗaa ?), demander des nouvelles de la famille, s'habiller sobrement, accepter le thé ou le repas offert. Le Fouta est très majoritairement musulman et attaché à la tradition coranique.",
+        "Prudence : horaires de transport, état des routes, crues du fleuve et dates des festivals changent ; les vérifier avant de partir."
+      ]
+    }
+  ],
+  "pulaar_phrases": [
+    {
+      "pu": "Jam waali",
+      "fr": "Bonjour (le matin)",
+      "en": "Good morning"
+    },
+    {
+      "pu": "Jam ñalli",
+      "fr": "Bonjour (l'après-midi)",
+      "en": "Good afternoon"
+    },
+    {
+      "pu": "Jam hiiri",
+      "fr": "Bonsoir",
+      "en": "Good evening"
+    },
+    {
+      "pu": "No mbaɗɗaa ? – Jam tan",
+      "fr": "Comment vas-tu ? – Bien (la paix seulement)",
+      "en": "How are you? – Fine (only peace)"
+    },
+    {
+      "pu": "A jaraama",
+      "fr": "Merci",
+      "en": "Thank you"
+    },
+    {
+      "pu": "Eey / Alaa",
+      "fr": "Oui / Non",
+      "en": "Yes / No"
+    },
+    {
+      "pu": "Ko honno inneteɗaa ? – Mi inniraa …",
+      "fr": "Comment t'appelles-tu ? – Je m'appelle …",
+      "en": "What is your name? – My name is …"
+    },
+    {
+      "pu": "Haa jango",
+      "fr": "À demain",
+      "en": "See you tomorrow"
     }
   ]
 }
