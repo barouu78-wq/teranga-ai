@@ -529,6 +529,7 @@ from services.chat_payload_service import build_chat_payload as _build_chat_payl
 
 from services.trip_planner import REGION_COORDS as _REGION_COORDS
 from services.weather import build_locations, live_weather_context
+from services.guide_modes import detect_modes, mode_instructions
 
 WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("places", []))
 
@@ -555,6 +556,11 @@ def parse_chat_payload():
         system_prompt=SYSTEM_PROMPT,
     )
     if payload and not payload.get("photo_only"):
+        raw = request.get_json(silent=True) or {}
+        modes = detect_modes(payload.get("message", ""), raw.get("history") if isinstance(raw.get("history"), list) else None)
+        if modes:
+            payload["instructions"] += "\n\n" + mode_instructions(modes, SENEGAL_KNOWLEDGE, payload.get("language", "fr"))
+            payload["modes"] = sorted(modes)
         weather = live_weather_context(
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
             payload.get("language", "fr"), logger=app.logger,
