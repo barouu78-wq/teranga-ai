@@ -68,12 +68,42 @@ def test_chat_works_when_browser_storage_is_blocked(page, base_url):
 
 def test_theme_and_language_buttons_respond(page, base_url):
     page.goto(base_url + "/")
-    before = page.evaluate("document.body.dataset.theme || ''")
+    assert page.get_attribute("#themeBtn", "data-mode") == "auto"
     page.click("#themeBtn")
-    assert page.evaluate("document.body.dataset.theme || ''") != before
+    assert page.get_attribute("#themeBtn", "data-mode") == "light"
+    assert page.evaluate("document.body.dataset.theme") == "light"
+    page.click("#themeBtn")
+    assert page.evaluate("document.body.dataset.theme") == "dark"
+    page.reload()
+    assert page.evaluate("document.body.dataset.theme") == "dark"  # choix mémorisé
+    page.click("#themeBtn")
+    assert page.get_attribute("#themeBtn", "data-mode") == "auto"
     page.click("#langs button[data-lang='en']")
     assert page.get_attribute("#langs button[data-lang='en']", "aria-pressed") == "true"
     assert page.get_attribute("html", "lang") == "en"
+    assert page.errors == []
+
+
+@pytest.mark.parametrize("when,theme", [("2026-10-05T10:00:00", "light"), ("2026-10-05T20:30:00", "dark"), ("2026-10-06T04:00:00", "dark")])
+def test_auto_theme_follows_time_of_day(page, base_url, when, theme):
+    import datetime
+
+    page.clock.install(time=datetime.datetime.fromisoformat(when))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.theme") == theme
+    page.goto(base_url + "/visiter-goree")
+    assert page.evaluate("document.documentElement.dataset.theme") == theme
+
+
+def test_festive_touch_on_independence_day(page, base_url):
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2027, 4, 4, 11, 0))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete") == "independance"
+    assert "Indépendance" in page.text_content("#feteBanner")
+    page.goto(base_url + "/?fete=tabaski")
+    assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
 def test_project_plan_is_built_inside_the_chat(page, base_url):

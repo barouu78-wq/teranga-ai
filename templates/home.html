@@ -275,22 +275,26 @@ async function speak(text,btn){
 /* Teranga AI — design v6 : une seule feuille, tokens clair/sombre.
    Remplace les couches v1→v5 empilées (et le CSS orphelin après </html>). */
 :root{
-  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#b9861f;
-  --bg:#f6f0e5;--surface:#fffbf4;--surface-2:#efe6d6;--ink:#1b140d;--muted:#6a5d4e;
-  --line:rgba(27,20,13,.10);--line-strong:rgba(27,20,13,.20);
-  --accent:#0f6a43;--accent-ink:#ffffff;--accent-soft:rgba(15,106,67,.10);--link:#0f6a43;
-  --gold:#85590c;--gold-soft:rgba(217,164,65,.20);
-  --shadow-sm:0 1px 2px rgba(27,20,13,.05),0 2px 10px rgba(27,20,13,.05);
-  --shadow:0 14px 40px rgba(27,20,13,.10);
+  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
+  /* Jour : « Terre de Teranga » — ocre, terracotta, sable. */
+  --bg:#fbf3e6;--surface:#fffaf2;--surface-2:#f6e6cf;--ink:#2b1a10;--muted:#7a5a44;
+  --line:rgba(122,44,16,.13);--line-strong:rgba(122,44,16,.24);
+  --accent:#b5451b;--accent-ink:#ffffff;--accent-soft:rgba(181,69,27,.12);--link:#a33d17;
+  --gold:#9a5a0c;--gold-soft:rgba(201,125,18,.18);--title:#7a2c10;
+  --card-travel:#fde9cf;--card-discover:#f9dccf;
+  --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);
+  --shadow:0 14px 40px rgba(122,44,16,.12);
   --radius:18px;--radius-lg:26px;
   --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
 }
 body[data-theme="dark"]{
-  --bg:#100d0a;--surface:#1a1612;--surface-2:#241e17;--ink:#f4ecdd;--muted:#b3a38d;
-  --line:rgba(244,236,221,.09);--line-strong:rgba(244,236,221,.18);
-  --accent:#1f7a4d;--link:#4cc38a;--accent-ink:#ffffff;--accent-soft:rgba(45,159,102,.16);
-  --gold:#e6b856;--gold-soft:rgba(230,184,86,.14);--nav-gold:#e6b856;--sen-gold:#e6b856;
+  /* Nuit : « Nuit de Dakar » — bleu nuit et or. */
+  --bg:#0b0f17;--surface:#141a26;--surface-2:#1b2333;--ink:#f4efe4;--muted:#a9a397;
+  --line:rgba(231,187,99,.14);--line-strong:rgba(231,187,99,.26);
+  --accent:#d9a441;--accent-ink:#151007;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
+  --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
+  --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -592,10 +596,38 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .tabbar button.on:after{background:Highlight}
 }
 body.has-chat .dock{background:var(--bg)}
+/* Design automatique : jour « Terre de Teranga », nuit « Nuit de Dakar ». */
+body[data-theme="dark"]{background:radial-gradient(120% 60% at 80% -10%,#24324d 0,#0b0f17 60%) fixed}
+#heroTitle{color:var(--title)}
+body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e7bb63);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .mark{background:var(--accent)}
+body[data-theme="dark"] .brand .mark{background:linear-gradient(135deg,#e7bb63,#a8741c)}
+.hero-signature{position:relative;min-height:14px}
+body:not([data-theme="dark"]) .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
+  radial-gradient(circle at 12px 12px,#f2b632 5px,transparent 6px) 0 0/24px 24px,
+  radial-gradient(circle at 12px 12px,#1d7a4a 2.5px,transparent 3.5px) 12px 12px/24px 24px,
+  linear-gradient(90deg,#b5451b,#d9772b)}
+body:not([data-theme="dark"]) .hero-flag{display:none}
+.journey-strip button{border-radius:22px}
+.journey-strip [data-journey="travel"]{background:var(--card-travel)}
+.journey-strip [data-journey="discover"]{background:var(--card-discover)}
+.journey-strip button:last-child{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.journey-strip button:last-child small{color:inherit;opacity:.82}
+.journey-strip button:last-child>span{background:rgba(255,255,255,.2)!important;color:inherit}
+body[data-theme="dark"] .journey-strip button:last-child{background:linear-gradient(135deg,#e7bb63,#b9842a)}
+body[data-theme="dark"] .journey-strip button:last-child>span{background:rgba(0,0,0,.15)!important}
+#themeBtn{position:relative}
+#themeBtn[data-mode="auto"]::after{content:"A";position:absolute;right:3px;bottom:2px;font:800 9px/1 var(--font);color:var(--accent)}
+.fete-banner{display:none;align-self:flex-start;padding:6px 12px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:700;font-size:14px;box-shadow:var(--shadow-sm)}
+body[data-fete] .fete-banner{display:inline-block}
+body[data-fete="independance"]:not([data-theme="dark"]) .hero-signature{background:linear-gradient(90deg,#0f6a43 0 33.3%,#f0c63d 33.3% 66.6%,#c93636 66.6%)}
+body[data-fete="nouvel-an"] .hero-signature{background:
+  radial-gradient(circle at 10px 10px,#f6dfa8 2px,transparent 3px) 0 0/20px 20px,linear-gradient(90deg,#7a2c10,#c97d12)}
+
 </style>
 
 </head>
-<body data-theme="light">
+<body data-theme="light" data-theme-mode="auto">
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
 <header>
@@ -627,7 +659,7 @@ body.has-chat .dock{background:var(--bg)}
 </header>
 <div id="stage">
   <div id="hero" class="hero">
-    <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div>
+    <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
     <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
@@ -732,6 +764,7 @@ body.has-chat .dock{background:var(--bg)}
     <div class="project-actions project-links" style="gap:8px;flex-wrap:wrap"><a href="/opportunities" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🔎 Radar jeunesse</a><a href="/partners" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🤝 Trouver un partenaire</a></div>
   </section>
 </div>
+<script src="__THEME_JS__"></script>
 <script src="__HOME_JS__"></script>
 </body>
 </html>

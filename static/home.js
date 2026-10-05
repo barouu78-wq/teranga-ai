@@ -334,8 +334,34 @@ function setChatMode(on){
 function hideHero(){setChatMode(true);}
 function showHero(){setChatMode(false);}
 function applyThemeColor(){
-  const dark=document.body.dataset.theme==='dark'||(!document.body.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);
-  $('themeColor').content=dark?'#100d0a':'#f6f0e5';
+  $('themeColor').content=document.body.dataset.theme==='dark'?'#0b0f17':'#fbf3e6';
+}
+const THEME_LABELS={
+  fr:{auto:'Thème : automatique (jour/nuit)',light:'Thème : clair',dark:'Thème : sombre'},
+  en:{auto:'Theme: automatic (day/night)',light:'Theme: light',dark:'Theme: dark'}
+};
+const FETE_TEXT={
+  fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !'},
+  en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!'}
+};
+function applyTheme(){
+  const api=window.terangaTheme;
+  const mode=api?api.readMode():(storageGet('teranga-theme','')||'auto');
+  const theme=api?api.resolve(mode):(mode==='dark'?'dark':'light');
+  document.body.dataset.theme=theme;
+  document.body.dataset.themeMode=mode;
+  const btn=$('themeBtn');
+  if(btn){
+    const labels=THEME_LABELS[lang]||THEME_LABELS.fr;
+    btn.dataset.mode=mode;btn.title=labels[mode];btn.setAttribute('aria-label',labels[mode]);
+  }
+  applyThemeColor();
+}
+function applyFete(){
+  const name=window.terangaTheme?window.terangaTheme.fete():'';
+  const text=name&&((FETE_TEXT[lang]||FETE_TEXT.fr)[name]);
+  if(text){document.body.dataset.fete=name;$('feteBanner').textContent=text;}
+  else{delete document.body.dataset.fete;$('feteBanner').textContent='';}
 }
 function sharePayload(){
   const url=location.origin+'/';
@@ -581,6 +607,7 @@ function renderJourneyLabels(){
 function setJourney(journey){try{SS.setItem('teranga-journey',journey)}catch(_){}}
 function setLang(next){
   lang=next;LS.setItem('teranga-lang',next);
+  if(document.body.dataset.themeMode){applyTheme();applyFete();}
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
@@ -619,9 +646,10 @@ document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('cl
   }
 }));
 function themeInit(){
-  const saved=storageGet('teranga-theme','');
-  document.body.dataset.theme=saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
-  applyThemeColor();
+  applyTheme();
+  applyFete();
+  // Bascule jour/nuit automatique pendant que la page reste ouverte.
+  setInterval(()=>{if((document.body.dataset.themeMode||'auto')==='auto')applyTheme();},5*60*1000);
 }
 
 function renderProjectTracking(container,project){
@@ -1079,9 +1107,13 @@ $('copyLink').onclick=async()=>{
   }catch(e){shareApp();}
 };
 $('themeBtn').onclick=()=>{
-  const next=document.body.dataset.theme==='dark'?'light':'dark';
-  document.body.dataset.theme=next;LS.setItem('teranga-theme',next);
-  applyThemeColor();
+  // Auto → clair → sombre → auto.
+  const order=['auto','light','dark'];
+  const current=document.body.dataset.themeMode||'auto';
+  const next=order[(order.indexOf(current)+1)%order.length];
+  LS.setItem('teranga-theme',next);
+  if(window.terangaTheme)window.terangaTheme.saveMode(next);
+  applyTheme();
 };
 $('voiceToggle').onclick=async()=>{
   autoVoice=!autoVoice;

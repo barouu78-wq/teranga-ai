@@ -82,3 +82,18 @@ def test_static_files_are_gzipped_and_versioned_ones_cached_for_a_year():
     # Les requêtes partielles restent non compressées et correctes.
     partial = client.get(url, headers={"Accept-Encoding": "gzip", "Range": "bytes=0-9"})
     assert partial.status_code == 206 and "Content-Encoding" not in partial.headers
+
+
+def test_home_page_scripts_use_cacheable_asset_versions():
+    import os
+    import re
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key")
+    from app import app
+    from services.site_layout import asset_url
+
+    html = app.test_client().get("/").get_data(as_text=True)
+    assert asset_url("home.js") in html and asset_url("theme.js") in html
+    for src in re.findall(r'src="(/static/[^"]+)"', html):
+        cached = app.test_client().get(src)
+        assert cached.headers["Cache-Control"] == "public, max-age=31536000, immutable", src
