@@ -438,7 +438,7 @@ def rate_guard(bucket):
 
 
 register_trip_planner(app, client, SITE_URL, ALLOWED_ORIGINS, rate_guard=rate_guard, places=SENEGAL_KNOWLEDGE.get("places", []))
-register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=rate_guard)
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=rate_guard, fetch_article_images=fetch_article_images)
 
 
 def origin_allowed():
