@@ -3,7 +3,7 @@ import json
 from html import escape
 from urllib.parse import quote
 
-from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, body_tag, site_footer, site_header
 import os
 
 SITE_URL = os.getenv("SITE_URL", "https://teranga-ai.fr").rstrip("/")
@@ -607,7 +607,7 @@ def render_region_page(region_name, site_url, knowledge_places=None, knowledge_r
 <meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{description}"><meta name="twitter:image" content="{site_url}/og.png">
 <title>{title}</title><script type="application/ld+json">{ld_json}</script>
 {HEAD_ASSETS}
-</head><body>{site_header('/regions-senegal')}<main><p class="related"><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
+</head>{body_tag(region_name)}{site_header('/regions-senegal')}<main><p class="related"><a href="/regions-senegal">← Les 14 régions du Sénégal</a></p><article><small>TERANGA AI · GUIDE RÉGIONAL</small>
 <h1>Région {region_name}</h1><p class="muted">{region_name} est une {descriptor}. Repères de lieux : {places}.</p>
 <section><h2>Que découvrir ?</h2><p>Cette page sert de point de départ pour {topics}. Demandez à Teranga AI un itinéraire adapté à vos dates, votre budget et votre moyen de transport.</p></section>
 {dossier_section}{places_section}<section><h2>Informations pratiques</h2><p>Transport, météo, horaires, prix et conditions peuvent changer. Pour ces données, indiquez une date et vérifiez les sources récentes avant de prendre une décision.</p></section>
