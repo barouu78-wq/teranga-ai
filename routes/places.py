@@ -4,10 +4,11 @@ import secrets
 
 from flask import Response, abort, request
 
+from services.monetization import affiliate_config, booking_html, booking_links, partners_for_place, partners_html
 from services.places import place_index, render_place_page, render_places_index
 
 
-def register_place_routes(app, knowledge, site_url):
+def register_place_routes(app, knowledge, site_url, partners=None):
     places = list(knowledge.get("places", []) or [])
     by_id = place_index(places)
 
@@ -28,6 +29,9 @@ def register_place_routes(app, knowledge, site_url):
         # Lu par add_security_headers : le script de galerie est autorisé par nonce.
         request._csp_nonce = nonce
         return Response(
-            render_place_page(place, places, site_url, nonce=nonce),
+            render_place_page(
+                place, places, site_url, nonce=nonce,
+                extra_html=booking_html(booking_links(place, affiliate_config())) + partners_html(partners_for_place(partners or [], place)),
+            ),
             mimetype="text/html",
         )

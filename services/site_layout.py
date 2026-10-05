@@ -49,13 +49,33 @@ _NAV = {
 }
 _CTA = {"fr": "Poser une question", "en": "Ask Teranga AI"}
 _FOOTER = {
-    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/partenaires", "Partenaires"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
-    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/partenaires", "Partners"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
+    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
+    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
 }
 
 
 def _ui_lang(lang: str) -> str:
     return "en" if str(lang or "").lower().startswith(("en", "es", "de", "it")) else "fr"
+
+
+# Ambiances régionales des pages lieux et régions (couleurs et bande décorée).
+_AMBIANCES = {
+    "saint-louis": "saint-louis",
+    "ziguinchor": "casamance", "kolda": "casamance", "sedhiou": "casamance",
+}
+
+
+def region_ambiance(region: str) -> str:
+    """« saint-louis », « casamance » ou « » selon la région."""
+    import unicodedata
+
+    key = "".join(ch for ch in unicodedata.normalize("NFD", str(region or "").lower()) if unicodedata.category(ch) != "Mn")
+    return _AMBIANCES.get(key.strip(), "")
+
+
+def body_tag(region: str = "") -> str:
+    ambiance = region_ambiance(region)
+    return f'<body data-ambiance="{ambiance}">' if ambiance else "<body>"
 
 
 def site_header(current: str = "", lang: str = "fr") -> str:

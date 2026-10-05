@@ -115,3 +115,22 @@ a,button,select,summary,[role=button]{touch-action:manipulation}
 
 /* Nuit de Dakar : fond bleu nuit dégradé sur les pages secondaires. */
 :root[data-theme="dark"] body{background:radial-gradient(120% 60% at 80% -10%,#24324d 0,#0b0f17 60%) fixed}
+
+/* Ambiances régionales (pages lieux et régions). Le jour seulement change les
+   couleurs de fond ; la bande décorée et l'accent valent jour et nuit. */
+body[data-ambiance]::after{content:"";display:block;position:absolute;left:0;right:0;top:0;height:6px;z-index:1}
+/* Saint-Louis : façades ocre, rose et jaune de l'île, bleu du fleuve. */
+body[data-ambiance="saint-louis"]{--accent:#2c6a96;--link:#235a82;--accent-soft:rgba(44,106,150,.12);--nav-gold:#2c6a96;--gold-soft:rgba(214,140,92,.22)}
+:root[data-theme="light"] body[data-ambiance="saint-louis"]{--bg:#f9f0e8;--surface-2:#f3e2d4}
+@media(prefers-color-scheme:light){:root:not([data-theme]) body[data-ambiance="saint-louis"]{--bg:#f9f0e8;--surface-2:#f3e2d4}}
+body[data-ambiance="saint-louis"]::after{background:linear-gradient(90deg,#d98c5f 0 20%,#e7b4a6 20% 40%,#f0cf7a 40% 60%,#e7b4a6 60% 80%,#d98c5f 80%),#2c6a96;box-shadow:0 3px 0 #2c6a96}
+/* Casamance : vert des rizières et de la forêt, terre rouge latéritique. */
+body[data-ambiance="casamance"]{--accent:#2f7d3a;--link:#286b31;--accent-soft:rgba(47,125,58,.12);--nav-gold:#2f7d3a;--gold-soft:rgba(76,140,60,.2)}
+:root[data-theme="light"] body[data-ambiance="casamance"]{--bg:#f3f5e8;--surface-2:#e5ecd4}
+@media(prefers-color-scheme:light){:root:not([data-theme]) body[data-ambiance="casamance"]{--bg:#f3f5e8;--surface-2:#e5ecd4}}
+body[data-ambiance="casamance"]::after{background:repeating-linear-gradient(90deg,#2f7d3a 0 18px,#4f9a45 18px 36px,#a8442a 36px 42px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) body[data-ambiance="saint-louis"]{--accent:#7fb3d9;--link:#9cc6e6;--nav-gold:#7fb3d9;--accent-ink:#0b1520}
+:root:not([data-theme="light"]) body[data-ambiance="casamance"]{--accent:#7fc27a;--link:#9fd59a;--nav-gold:#7fc27a;--accent-ink:#0c1a0d}}
+:root[data-theme="dark"] body[data-ambiance="saint-louis"]{--accent:#7fb3d9;--link:#9cc6e6;--nav-gold:#7fb3d9;--accent-ink:#0b1520}
+:root[data-theme="dark"] body[data-ambiance="casamance"]{--accent:#7fc27a;--link:#9fd59a;--nav-gold:#7fc27a;--accent-ink:#0c1a0d}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;letter-spacing:.02em;vertical-align:middle}

@@ -29,6 +29,8 @@ from routes.chat import register_chat_route
 from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.legal import register_legal_routes
+from routes.monetization import register_monetization_routes
+from services.monetization import load_partners, partners_context, partners_for_text
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -152,9 +154,11 @@ BASE_DIR = Path(__file__).resolve().parent
 KNOWLEDGE_PATH = BASE_DIR / "data" / "senegal_knowledge.json"
 
 SENEGAL_KNOWLEDGE = load_senegal_knowledge(KNOWLEDGE_PATH)
+# Adresses partenaires (toujours présentées comme telles) : data/partners.json.
+PARTNERS = load_partners(BASE_DIR / "data" / "partners.json")
 register_layout_globals(app)
-register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []))
-register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL)
+register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []), regions=SENEGAL_KNOWLEDGE.get("regions", []), dishes=SENEGAL_KNOWLEDGE.get("dishes", []))
+register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL, partners=PARTNERS)
 register_share_routes(app, SITE_URL)
 
 
@@ -567,6 +571,9 @@ def parse_chat_payload():
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
             payload.get("language", "fr"), logger=app.logger,
         )
+        partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
+        if partner_block:
+            payload["instructions"] += "\n\n" + partner_block
         if weather:
             # Prévisions réelles dans le contexte : pas besoin de recherche web.
             payload["instructions"] += "\n\n" + weather
@@ -644,6 +651,7 @@ register_exchange_rates_route(app, {
 })
 
 register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
+register_monetization_routes(app)
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,

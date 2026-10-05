@@ -64,3 +64,16 @@ def test_pages_have_meta_description(path):
     from app import app
 
     assert '<meta name="description" content="' in app.test_client().get(path).get_data(as_text=True)
+
+
+def test_regional_ambiance_on_place_and_region_pages():
+    from app import app
+    from services.site_layout import region_ambiance
+
+    assert region_ambiance("Saint-Louis") == "saint-louis"
+    assert region_ambiance("Sédhiou") == "casamance" and region_ambiance("Ziguinchor") == "casamance"
+    assert region_ambiance("Dakar") == ""
+    client = app.test_client()
+    assert '<body data-ambiance="saint-louis">' in client.get("/lieux/saint-louis").get_data(as_text=True)
+    assert '<body data-ambiance="casamance">' in client.get("/regions/kolda").get_data(as_text=True)
+    assert "data-ambiance" not in client.get("/lieux/goree").get_data(as_text=True)

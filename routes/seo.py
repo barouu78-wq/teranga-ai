@@ -12,21 +12,33 @@ from services.seo import SEO_PAGES, REGION_SEO_NAMES, render_region_page, region
 
 
 
-def register_seo_routes(app, site_url, places=None):
+def _content_date() -> str:
+    """Date de la dernière modification du contenu (données et pages), pour <lastmod>."""
+    import datetime
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    files = [*root.joinpath("data").glob("*.json"), *root.joinpath("services").glob("*seo*.py"), root / "services" / "places.py"]
+    stamp = max((f.stat().st_mtime for f in files if f.exists()), default=0)
+    return datetime.datetime.fromtimestamp(stamp, datetime.timezone.utc).date().isoformat() if stamp else ""
+
+
+def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
     place_ids = [str(place["id"]) for place in places or [] if place.get("id")]
+    lastmod = _content_date()
 
     @app.get("/regions/<slug>")
     def seo_region(slug):
         region = next((name for name in REGION_SEO_NAMES if region_slug(name) == slug), None)
         if not region:
             abort(404)
-        return render_region_page(region, site_url, places)
+        return render_region_page(region, site_url, places, regions)
 
     # Une route par page de SEO_PAGES : le sitemap et les routes ne peuvent plus
     # diverger (deux pages du sitemap renvoyaient 404).
     def _make_seo_view(slug):
         def view():
-            return render_seo_page(slug, site_url)
+            return render_seo_page(slug, site_url, places, dishes)
         return view
 
     for slug in SEO_PAGES:
@@ -48,6 +60,7 @@ def register_seo_routes(app, site_url, places=None):
             f"Disallow: /realtime-call\n"
             f"Disallow: /csrf\n"
             f"Disallow: /api/\n"
+            f"Disallow: /go/\n"
             f"Disallow: /image-proxy\n"
             f"Disallow: /explorer-image\n"
             f"Disallow: /exchange-rates\n"
@@ -66,6 +79,7 @@ def register_seo_routes(app, site_url, places=None):
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
             f"<url><loc>{site_url}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>"
             f"<url><loc>{site_url}/trip-planner</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>"
+            f"<url><loc>{site_url}/offres-partenaires</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>"
             + "".join(
                 f"<url><loc>{site_url}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
                 for slug in SEO_PAGES
@@ -88,6 +102,8 @@ def register_seo_routes(app, site_url, places=None):
             )
             + "</urlset>"
         )
+        if lastmod:
+            body = body.replace("</loc>", f"</loc><lastmod>{lastmod}</lastmod>")
         return Response(
             body,
             mimetype="application/xml",
