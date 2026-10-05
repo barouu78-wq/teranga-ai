@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 from functools import lru_cache
 from pathlib import Path
@@ -7,6 +8,17 @@ from flask import Response, jsonify, request
 
 from services.assets import ICON_SVG, OG_SVG, build_og_png
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
+
+
+def _related_android_app():
+    package = os.getenv("ANDROID_APP_PACKAGE", "").strip()
+    if not package:
+        return {}
+    return {"related_applications": [{
+        "platform": "play",
+        "id": package,
+        "url": f"https://play.google.com/store/apps/details?id={package}",
+    }]}
 
 
 def register_system_routes(app, deps):
@@ -163,7 +175,11 @@ def register_system_routes(app, deps):
                         {"src": "/static/screenshots/guide-goree.png", "sizes": "780x1560", "type": "image/png", "form_factor": "narrow", "label": "Guide local : l'histoire de Gorée"},
                         {"src": "/static/screenshots/planificateur.png", "sizes": "780x1560", "type": "image/png", "form_factor": "narrow", "label": "Planificateur de voyage"},
                         {"src": "/static/screenshots/fiche-lieu.png", "sizes": "780x1560", "type": "image/png", "form_factor": "narrow", "label": "Fiche d'un lieu"},
+                        {"src": "/static/screenshots/bureau-accueil.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Teranga AI sur ordinateur"},
+                        {"src": "/static/screenshots/bureau-planificateur.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "Planificateur de voyage sur ordinateur"},
                     ],
+                    # Lien vers l'application Google Play (TWA), seulement si son identifiant est configuré.
+                    **_related_android_app(),
                 }
             ),
             mimetype="application/manifest+json",
