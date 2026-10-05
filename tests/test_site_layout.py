@@ -24,8 +24,8 @@ def test_secondary_pages_use_shared_layout(path):
     from app import app
 
     html = app.test_client().get(path).get_data(as_text=True)
-    assert '<link rel="stylesheet" href="/static/site.css">' in html
-    assert '<script src="/static/theme.js"></script>' in html
+    assert '<link rel="stylesheet" href="/static/site.css?v=' in html
+    assert '<script src="/static/theme.js?v=' in html
     assert 'class="site-header"' in html and 'class="site-footer"' in html
     # Plus de fond sombre codé en dur propre à chaque page.
     assert "background:#0b0907" not in html

@@ -7,7 +7,7 @@ from html import escape
 from urllib.parse import quote
 
 from services.seo import REGION_SEO_NAMES, region_slug
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 
 TYPE_LABELS = {
     "heritage": "Patrimoine",
@@ -198,7 +198,7 @@ def render_places_index(places, site_url: str) -> str:
         '<p class="muted" id="place-count" aria-live="polite"></p></form>'
     )
     # Script statique (et non inline) : la page reste en cache public sans nonce CSP.
-    script = '<script src="/static/places-search.js" defer></script>'
+    script = f'<script src="{asset_url("places-search.js")}" defer></script>'
     ld = {
         "@context": "https://schema.org",
         "@type": "ItemList",

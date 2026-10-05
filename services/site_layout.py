@@ -4,7 +4,21 @@ from __future__ import annotations
 
 from html import escape
 
-HEAD_ASSETS = '<link rel="stylesheet" href="/static/site.css"><script src="/static/theme.js"></script>'
+def asset_url(name: str) -> str:
+    """/static/<name>?v=<empreinte> : chaque déploiement change l'URL des fichiers
+    modifiés, le navigateur et le service worker chargent donc la bonne version."""
+    import hashlib
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "static" / name
+    try:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:10]
+    except OSError:
+        return f"/static/{name}"
+    return f"/static/{name}?v={digest}"
+
+
+HEAD_ASSETS = f'<link rel="stylesheet" href="{asset_url("site.css")}"><script src="{asset_url("theme.js")}"></script>'
 
 _MARK = (
     '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" '
