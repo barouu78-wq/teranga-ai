@@ -225,35 +225,45 @@ function speakFallback(text,btn){
     return true;
   }catch(_){voiceSpeaking=false;document.body.classList.remove('assistant-speaking');return false;}
 }
+// Bouton « Écouter » : marche/arrêt, jamais bloqué. Un seul bouton actif à la fois.
+let speakingBtn=null;
+function resetListenButton(b){
+  if(!b)return;
+  b.dataset.speaking='';b.disabled=false;b.textContent=T[lang].listen;
+  if(speakingBtn===b)speakingBtn=null;
+}
 async function speak(text,btn){
   if(!text)return;
+  if(speakingBtn&&speakingBtn!==btn)resetListenButton(speakingBtn);
   stopSpeakingForListening();
   const speechTurn=voiceTtsTurn;
-  if(btn){btn.disabled=true;btn.textContent='…';}
+  // Tour dépassé (autre lecture, nouvelle question) : le bouton redevient « Écouter ».
+  const stale=()=>{if(voiceTtsTurn!==speechTurn){if(speakingBtn!==btn)resetListenButton(btn);return true;}return false;};
+  if(btn){speakingBtn=btn;btn.dataset.speaking='1';btn.disabled=false;btn.textContent=T[lang].stop;}
   const cacheKey=lang+'|'+text;
   try{
     let blob=ttsCache.get(cacheKey);
     if(!blob){
       if(!cookie('teranga_csrf'))await refreshCsrf();
       const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
-      if(voiceTtsTurn!==speechTurn)return;
+      if(stale())return;
       if(!res.ok)throw new Error('tts');
       blob=await res.blob();
-      if(voiceTtsTurn!==speechTurn)return;
+      if(stale())return;
       if(!blob.size)throw new Error('tts-empty');
       if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
-    if(voiceTtsTurn!==speechTurn)return;
+    if(stale())return;
     const url=URL.createObjectURL(blob);
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
     audio.onended=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);finishSpeech(btn);};
     audio.onerror=()=>{if(voiceTtsTurn!==speechTurn){URL.revokeObjectURL(url);return;}audio=null;URL.revokeObjectURL(url);voiceSpeaking=false;document.body.classList.remove('assistant-speaking');if(!speakFallback(text,btn))finishSpeech(btn);};
-    try{await audio.play();if(voiceTtsTurn!==speechTurn)return;if(voiceConversation)startVoiceMonitor();}catch(_){audio.onerror();}
+    try{await audio.play();if(stale())return;if(voiceConversation)startVoiceMonitor();}catch(_){if(audio)audio.onerror();else resetListenButton(btn);}
   }catch(_){
-    if(voiceTtsTurn!==speechTurn)return;
+    if(stale())return;
     if(!speakFallback(text,btn))finishSpeech(btn);
   }
 }
@@ -313,6 +323,16 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .seg{display:flex;padding:3px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
 .seg button{min-width:38px;padding:8px 10px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:700 12px/1 var(--font);letter-spacing:.04em;cursor:pointer}
 .seg button.on{background:var(--accent);color:var(--accent-ink)}
+/* Zone tactile élargie (≥ 40 px) sans changer l'apparence des pastilles. */
+.seg button{position:relative}
+.seg button::after{content:"";position:absolute;inset:-8px -3px}
+/* Clic refusé pendant une réponse : le bouton Arrêter le signale. */
+#send.nudge{animation:nudge .35s ease}
+@keyframes nudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){#send.nudge{animation:none;outline:2px solid var(--gold)}}
+/* Retour immédiat au toucher sur tous les boutons. */
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:active:not(:disabled){transform:scale(.97)}
 .icon{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .icon svg{width:18px;height:18px}
 .icon:hover{border-color:var(--line-strong)}
