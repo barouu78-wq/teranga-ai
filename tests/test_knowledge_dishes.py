@@ -43,3 +43,17 @@ def test_fouta_history_dossier_is_injected_only_for_fouta_questions():
         assert "DOSSIER HISTORIQUE — Fouta-Toro" in format_senegal_knowledge(DATA, query=query)
     for query in ("Comment aller à Toronto ?", "Que voir à Dakar ?"):
         assert "DOSSIER HISTORIQUE" not in format_senegal_knowledge(DATA, query=query)
+
+
+def test_each_kingdom_dossier_answers_its_own_questions():
+    expected = {
+        "Parle-moi de l'empire du Djolof": "Empire du Djolof",
+        "Qui était Lat Dior ?": "Royaume du Cayor",
+        "Que s'est-il passé à Nder en 1820 ?": "Royaume du Waalo",
+        "La bataille de Fandane-Thiouthioune": "Royaume du Sine",
+        "Le roi de Kahone": "Royaume du Saloum",
+    }
+    for query, title in expected.items():
+        assert f"DOSSIER HISTORIQUE — {title}" in format_senegal_knowledge(DATA, query=query), query
+    # Une question touristique sur le delta n'embarque pas un cours d'histoire.
+    assert "DOSSIER HISTORIQUE" not in format_senegal_knowledge(DATA, query="Que faire dans le delta du Saloum ?")
