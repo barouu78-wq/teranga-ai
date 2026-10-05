@@ -527,6 +527,12 @@ register_image_proxy_route(app, {
 from services.chat_payload_service import build_chat_payload as _build_chat_payload
 
 
+from services.trip_planner import REGION_COORDS as _REGION_COORDS
+from services.weather import build_locations, live_weather_context
+
+WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("places", []))
+
+
 def parse_chat_payload():
     payload, error = _build_chat_payload(
         request.get_json(silent=True),
@@ -548,6 +554,16 @@ def parse_chat_payload():
         max_history_chars=MAX_HISTORY_CHARS,
         system_prompt=SYSTEM_PROMPT,
     )
+    if payload and not payload.get("photo_only"):
+        weather = live_weather_context(
+            WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
+            payload.get("language", "fr"), logger=app.logger,
+        )
+        if weather:
+            # Prévisions réelles dans le contexte : pas besoin de recherche web.
+            payload["instructions"] += "\n\n" + weather
+            payload["use_web"] = False
+            payload["live_weather"] = True
     if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
     if error == "empty":
