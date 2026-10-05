@@ -213,3 +213,21 @@ def test_trip_planner_stream_error_is_shown(page, base_url):
     _fill_planner(page)
     page.locator("#status", has_text="trop de temps").wait_for(timeout=5000)
     assert page.locator("section.step.active button[type='submit']").is_enabled()
+
+
+def test_report_button_sends_question_and_answer(page, base_url):
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": "Réponse à signaler."}), content_type="application/x-ndjson"))
+    sent = {}
+
+    def report(route):
+        sent.update(json.loads(route.request.post_data))
+        route.fulfill(json={"ok": True})
+
+    page.route(f"{base_url}/api/report", report)
+    page.on("dialog", lambda dialog: dialog.accept())
+    page.goto(base_url + "/")
+    ask(page, "Question test")
+    page.get_by_text("Réponse à signaler.").wait_for(timeout=5000)
+    page.locator(".acts button.report").first.click()
+    page.locator(".acts button.report", has_text="Signalé").wait_for(timeout=5000)
+    assert sent == {"question": "Question test", "reply": "Réponse à signaler.", "reason": "inappropriate"}

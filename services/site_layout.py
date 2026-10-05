@@ -49,8 +49,8 @@ _NAV = {
 }
 _CTA = {"fr": "Poser une question", "en": "Ask Teranga AI"}
 _FOOTER = {
-    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/partenaires", "Partenaires"), ("/presse", "Presse"), ("/media-kit", "Kit média")),
-    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/partenaires", "Partners"), ("/presse", "Press"), ("/media-kit", "Media kit")),
+    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/partenaires", "Partenaires"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
+    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/partenaires", "Partners"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
 }
 
 
