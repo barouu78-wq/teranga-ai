@@ -835,3 +835,47 @@ def test_planner_links_only_real_places_and_ignores_invented_ids():
     assert "ile-de-goree | Île de Gorée" in captured["prompt"]
     assert "djoudj" not in captured["prompt"]
     assert response.get_json()["plan"]["days"][0]["places"] == [{"id": "ile-de-goree", "name": "Île de Gorée"}]
+
+
+def test_planner_falls_back_when_a_model_is_unavailable(monkeypatch):
+    import services.trip_planner as trip_planner
+
+    monkeypatch.delenv("OPENAI_TRIP_MODEL", raising=False)
+    monkeypatch.setenv("OPENAI_MODEL", "modele-absent")
+    tried = []
+
+    class Responses:
+        def create(self, **kwargs):
+            tried.append(kwargs["model"])
+            if kwargs["model"] == "modele-absent":
+                raise RuntimeError("The model modele-absent does not exist")
+            return "ok"
+
+    class Client:
+        responses = Responses()
+
+    assert trip_planner._create(Client(), input="x") == "ok"
+    assert tried == ["modele-absent", "gpt-5.6-luna"]
+
+
+def test_planner_timeout_returns_a_clear_504():
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    class APITimeoutError(Exception):
+        pass
+
+    class Responses:
+        def create(self, **kwargs):
+            assert kwargs["reasoning"] == {"effort": "low"} and kwargs["max_output_tokens"] <= 16000
+            raise APITimeoutError("Request timed out.")
+
+    class Client:
+        responses = Responses()
+
+    app = Flask(__name__)
+    trip_planner.register_trip_planner(app, Client(), "https://example.com")
+    response = app.test_client().post("/api/trip-planner", headers={"Origin": "https://example.com"},
+                                      json={"arrival": "2026-11-01", "departure": "2026-11-03"})
+    assert response.status_code == 504
+    assert "trop de temps" in response.get_json()["error"]
