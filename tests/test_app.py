@@ -1063,3 +1063,13 @@ def test_public_error_speaks_english_and_hides_technical_advice():
     assert public_error(Exception("timed out"), "en").startswith("The answer took too long")
     assert "Vérifie le modèle" not in public_error(Exception("BadRequestError invalid parameter"))
     assert public_error(Exception("connection reset"), "wo").startswith("Le service IA")
+
+
+def test_french_guides_are_written_with_accents():
+    from services.seo import SEO_PAGES
+
+    page = SEO_PAGES["visiter-goree"]
+    assert page["h1"] == "Visiter l'île de Gorée"
+    assert SEO_PAGES["senegal"]["h1"] == "Guide du Sénégal"
+    # Les adresses des pages ne changent pas (liens et référencement).
+    assert "visiter-goree" in SEO_PAGES and "meteo-dakar" in SEO_PAGES
