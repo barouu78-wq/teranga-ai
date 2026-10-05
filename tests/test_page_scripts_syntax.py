@@ -27,7 +27,7 @@ PAGES = [
     "/opportunities",
     "/partners",
 ]
-SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)(?![^>]*application/ld\+json)[^>]*>(.*?)</script>", re.S)
+SCRIPT = re.compile(r"<script(?![^>]*\bsrc=)(?![^>]*application/(?:ld\+)?json)[^>]*>(.*?)</script>", re.S)
 
 
 @pytest.mark.skipif(NODE is None, reason="node non disponible")
@@ -47,3 +47,12 @@ def test_inline_scripts_are_valid_javascript(path):
         finally:
             os.unlink(name)
         assert result.returncode == 0, f"{path} script #{index}: {result.stderr[:500]}"
+
+
+@pytest.mark.skipif(NODE is None, reason="node non disponible")
+def test_static_page_scripts_are_valid_javascript():
+    from pathlib import Path
+
+    for path in sorted((Path(__file__).resolve().parents[1] / "static").glob("*.js")):
+        result = subprocess.run([NODE, "--check", str(path)], capture_output=True, text=True)
+        assert result.returncode == 0, f"{path.name}: {result.stderr}"

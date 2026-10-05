@@ -1,3 +1,4 @@
+from planner_source import with_planner_script
 from home_source import served_home
 import os
 import sys
@@ -719,7 +720,7 @@ def test_trip_planner_page_reads_and_shares_audience_profile():
     client = app.test_client()
     response = client.get("/trip-planner?lang=fr&audience=diaspora")
     assert response.status_code == 200
-    body = response.get_data(as_text=True)
+    body = with_planner_script(response.get_data(as_text=True))
     assert "teranga-audience" in body
     assert "audienceQuery" in body
     assert "audience:audience" in body
@@ -885,7 +886,7 @@ def test_home_has_narrow_mobile_layout_rules():
 def test_trip_planner_has_mobile_action_layout():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert "@media(max-width:560px)" in html
     assert ".actions{flex-direction:column}" in html
@@ -941,7 +942,7 @@ def test_home_inline_javascript_parses_with_node(tmp_path):
 def test_trip_planner_validates_shared_plan_before_restore():
     from app import app
 
-    html = app.test_client().get("/trip-planner").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner").get_data(as_text=True))
 
     assert "function validateSharedPlan(plan)" in html
     assert "plan.days.length>14" in html
@@ -951,7 +952,7 @@ def test_trip_planner_validates_shared_plan_before_restore():
 def test_trip_planner_share_link_contains_edited_plan_and_copy_action():
     from app import app
 
-    html = app.test_client().get("/trip-planner").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner").get_data(as_text=True))
 
     assert "edited_plan:currentPlan" in html
     assert "const encoded=encodeTrip(payload)" in html

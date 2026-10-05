@@ -1,3 +1,4 @@
+from planner_source import with_planner_script
 from home_source import served_home
 import os
 
@@ -8,7 +9,7 @@ from app import app
 def test_trip_planner_page():
     response = app.test_client().get("/trip-planner")
     assert response.status_code == 200
-    body = response.get_data(as_text=True)
+    body = with_planner_script(response.get_data(as_text=True))
     assert "Planificateur de voyage au Sénégal" in body
     assert "/api/trip-planner" in body
     assert 'name="arrival"' in body
@@ -356,7 +357,7 @@ def test_trip_planner_filters_unknown_options_but_keeps_supported_localized_valu
 def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_report_validity():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert "function validDateStep()" in body
     assert "const arrivalInput=form.querySelector('input[name=\"arrival\"]')" in body
     assert "departureInput=form.querySelector('input[name=\"departure\"]')" in body
@@ -371,7 +372,7 @@ def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_
 def test_trip_planner_form_uses_distinct_option_groups():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'type="radio" name="budget"' in body
     assert 'type="radio" name="pace"' in body
     assert 'type="checkbox" name="interests"' in body
@@ -442,7 +443,7 @@ def test_trip_planner_result_labels_follow_ui_language():
     app = Flask(__name__)
     trip_planner.register_trip_planner(app, FakeClient(), "https://example.com")
     response = app.test_client().get("/trip-planner?lang=en")
-    body = response.get_data(as_text=True)
+    body = with_planner_script(response.get_data(as_text=True))
     assert response.status_code == 200
     assert "<h3>Day " in body
     assert "<b>Morning :</b>" in body
@@ -458,7 +459,7 @@ def test_trip_planner_result_labels_follow_ui_language():
     assert "<b>Matin :</b>" not in body
 
     response = app.test_client().get("/trip-planner?lang=fr")
-    body = response.get_data(as_text=True)
+    body = with_planner_script(response.get_data(as_text=True))
     assert "<h3>Jour " in body
     assert "<b>Matin :</b>" in body
     assert "<h3>Budget indicatif</h3>" in body
@@ -466,10 +467,10 @@ def test_trip_planner_result_labels_follow_ui_language():
 def test_trip_planner_share_link_is_restorable_and_url_safe():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert "function encodeTrip(payload)" in body
     assert "Partager ces préférences" in body
-    assert "Share these preferences" in _html("https://example.com", "en")
+    assert "Share these preferences" in with_planner_script(_html("https://example.com", "en"))
     assert "function decodeTrip(value)" in body
     assert "new TextEncoder().encode(JSON.stringify(payload))" in body
     assert "new TextDecoder().decode(bytes)" in body
@@ -500,7 +501,7 @@ def test_trip_planner_ui_falls_back_to_french_for_untranslated_language():
 def test_trip_planner_exposes_editable_itinerary_controls():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="editor-actions"' in body
     assert 'id="add-day"' in body
     assert 'id="save-trip"' in body
@@ -515,7 +516,7 @@ def test_trip_planner_exposes_editable_itinerary_controls():
 def test_trip_planner_editor_controls_follow_ui_language():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "en")
+    body = with_planner_script(_html("https://example.com", "en"))
     assert "+ Add a day" in body
     assert "Save changes" in body
     assert "Remove" in body
@@ -524,7 +525,7 @@ def test_trip_planner_editor_controls_follow_ui_language():
 def test_trip_planner_editor_exposes_region_and_map_sync():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'class="day-region"' in body
     assert "const REGION_OPTIONS=[" in body
     assert "const REGION_COORDS={" in body
@@ -537,7 +538,7 @@ def test_trip_planner_editor_exposes_region_and_map_sync():
 def test_trip_planner_editor_map_sync_uses_all_supported_regions():
     from services.trip_planner import _html, REGION_COORDS
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     for region in REGION_COORDS:
         assert f'"{region}"' in body
 
@@ -545,7 +546,7 @@ def test_trip_planner_editor_map_sync_uses_all_supported_regions():
 def test_trip_planner_exposes_numbered_route_visual():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="route-visual"' in body
     assert "function updateRouteVisual()" in body
     assert "route-line" in body
@@ -555,7 +556,7 @@ def test_trip_planner_exposes_numbered_route_visual():
 
 def test_trip_planner_exposes_practical_info_controls_and_endpoint():
     from services.trip_planner import _html
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="practical"' in body
     assert 'data-practical="transport"' in body
     assert 'data-practical="hours"' in body
@@ -610,7 +611,7 @@ def test_practical_info_rejects_unknown_region_and_category():
 
 def test_trip_planner_exposes_day_level_practical_actions():
     from services.trip_planner import _html
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'data-day-practical="transport"' in body
     assert 'data-day-practical="hours"' in body
     assert 'data-day-practical="prices"' in body
@@ -644,7 +645,7 @@ def test_practical_info_passes_day_context_to_web_prompt():
 def test_trip_planner_exposes_voice_playback_controls():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="voice-itinerary"' in body
     assert 'id="voice-stop"' in body
     assert 'data-day-voice' in body
@@ -666,7 +667,7 @@ def test_trip_planner_exposes_voice_playback_controls():
 def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert "const sharedPlan=validateSharedPlan(payload.edited_plan);if(sharedPlan)" in body
     assert "renderEditablePlan(currentPlan)" in body
     assert "function refreshShareLink()" in body
@@ -676,14 +677,14 @@ def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save()
 
 def test_trip_planner_render_syncs_practical_regions():
     from services.trip_planner import _html
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
     assert "bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
 
 
 def test_trip_planner_carries_context_place_from_query_to_session():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr&context_place=%C3%8Ele%20de%20Gor%C3%A9e").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr&context_place=%C3%8Ele%20de%20Gor%C3%A9e").get_data(as_text=True))
 
     assert "contextPlaceQuery" in html
     assert "SS.setItem('teranga-place-name',contextPlaceQuery.slice(0,120))" in html
@@ -701,7 +702,7 @@ def test_home_planner_link_carries_selected_place_context():
 def test_trip_planner_persists_compact_context_for_chat():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert "teranga-trip-context" in html
     assert "persistTripContext" in html
@@ -711,7 +712,7 @@ def test_trip_planner_persists_compact_context_for_chat():
 def test_trip_planner_shows_selected_place_context():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert 'id="place-context"' in html
     assert "Point de départ" in html
@@ -721,7 +722,7 @@ def test_trip_planner_shows_selected_place_context():
 def test_trip_planner_can_restore_session_trip():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert "restoreSessionTrip" in html
     assert "teranga-trip-plan" in html
@@ -731,7 +732,7 @@ def test_trip_planner_can_restore_session_trip():
 def test_trip_planner_sync_editor_updates_practical_region():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     sync_start = html.index("function syncEditor")
     sync_end = html.index("function daySpeechText", sync_start)
@@ -743,7 +744,7 @@ def test_trip_planner_sync_editor_updates_practical_region():
 def test_trip_planner_persists_richer_itinerary_context_for_chat():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     start = html.index("function persistTripContext")
     end = html.index("function renderEditablePlan", start)
@@ -759,7 +760,7 @@ def test_trip_planner_persists_richer_itinerary_context_for_chat():
 def test_trip_planner_exposes_chat_review_action():
     from services.trip_planner import _html
 
-    body = _html("https://example.com", "fr")
+    body = with_planner_script(_html("https://example.com", "fr"))
 
     assert 'id="review-chat"' in body
     assert "Demander à Teranga de revoir mon séjour" in body
@@ -772,7 +773,7 @@ def test_trip_planner_exposes_chat_review_action():
 def test_trip_planner_supports_confirmed_itinerary_edit():
     from app import app
 
-    body = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    body = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert 'id="trip-edit-proposal"' in body
     assert "replace_day_region" in body
@@ -783,7 +784,7 @@ def test_trip_planner_supports_confirmed_itinerary_edit():
 def test_trip_planner_revalidates_session_stored_edit_region():
     from app import app
 
-    html = app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True)
+    html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     assert "regionIsAllowed" in html
     assert "confirmedRegionIsAllowed" in html
@@ -884,7 +885,7 @@ def test_planner_timeout_returns_a_clear_504():
 def test_practical_info_ignores_stale_responses():
     import services.trip_planner as trip_planner
 
-    html = trip_planner._html("https://example.com", "fr")
+    html = with_planner_script(trip_planner._html("https://example.com", "fr"))
     assert "const seq=++practicalSeq;" in html
     assert html.count("if(seq!==practicalSeq)return;") == 2
 
@@ -892,7 +893,7 @@ def test_practical_info_ignores_stale_responses():
 def test_generate_never_reads_storage_unguarded():
     import services.trip_planner as trip_planner
 
-    html = trip_planner._html("https://example.com", "fr")
+    html = with_planner_script(trip_planner._html("https://example.com", "fr"))
     assert "context_place:sessionStorage.getItem" not in html
     assert html.count("context_place:safePlaceName()") == 2
     script = html.split("const LS=safeStore", 1)[1]
