@@ -101,7 +101,7 @@ def test_places_index_has_accent_free_search_without_inline_script():
     html = app.test_client().get("/lieux", base_url="https://teranga-ai.fr").get_data(as_text=True)
     assert 'id="place-q"' in html and 'id="place-type"' in html
     assert 'data-text="ile de goree' in html.lower() or "goree" in html
-    assert '<script src="/static/places-search.js" defer></script>' in html
+    assert '<script src="/static/places-search.js?v=' in html
     assert "nonce=" not in html  # page en cache public : pas de nonce CSP
 
 

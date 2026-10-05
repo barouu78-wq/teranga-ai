@@ -40,7 +40,9 @@ async function staleWhileRevalidate(request) {
   const network = fetch(request).then(response => {
     if (response && response.ok) cache.put(request, response.clone());
     return response;
-  }).catch(() => cached);
+  }).catch(() => cached || cache.match(request, { ignoreSearch: true }));
+  // Fichier versionné (?v=…) pas encore en cache : réseau, et hors ligne la
+  // dernière copie connue du même fichier.
   return cached || network;
 }
 

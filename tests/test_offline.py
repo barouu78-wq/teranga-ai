@@ -43,4 +43,4 @@ def test_offline_page_is_available_and_not_indexed():
     assert response.status_code == 200
     assert "Vous êtes hors ligne" in html
     assert '<meta name="robots" content="noindex">' in html
-    assert '<link rel="stylesheet" href="/static/site.css">' in html
+    assert '<link rel="stylesheet" href="/static/site.css?v=' in html
