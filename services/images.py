@@ -198,13 +198,19 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         alt = str(item.get("title") or query)[:160]
         if not _google_photo_matches_query(query, alt, context):
             continue
+        score = _google_photo_relevance_score(query, alt, context)
+        # Score négatif : lieu précis demandé (Dakar…) mais absent du titre et
+        # de la page source, ou autre ville citée. Mieux vaut moins de photos
+        # (Wikipédia complète) qu'une photo d'ailleurs.
+        if score < 0:
+            continue
         candidates.append({
             "url": original,
             "display_url": thumbnail,
             "alt": alt,
             "credit": "Google Images",
             "page_url": context,
-            "_score": _google_photo_relevance_score(query, alt, context),
+            "_score": score,
             "_position": position,
         })
 

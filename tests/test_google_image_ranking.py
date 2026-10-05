@@ -55,3 +55,23 @@ def test_precise_place_without_exact_evidence_is_lower_ranked_not_crashed():
         "Dakar beach",
         "https://example.com/dakar",
     )
+
+
+def test_google_results_without_place_evidence_are_dropped():
+    import io
+    import json
+
+    from services.images import fetch_google_images
+
+    def item(title, page):
+        return {"title": title, "link": "https://img.example/" + title,
+                "image": {"thumbnailLink": "https://encrypted-tbn0.gstatic.com/" + title, "contextLink": page}}
+
+    body = {"items": [
+        item("Corniche de Dakar", "https://commons.wikimedia.org/wiki/Corniche"),
+        item("Tas d'ordures", "https://www.flickr.com/photos/x/1"),
+        item("Plage de Saly", "https://www.flickr.com/photos/x/2"),
+    ]}
+    photos = fetch_google_images("Dakar", "k", "cx", limit=4,
+                                 urlopen_fn=lambda req, timeout=8: io.BytesIO(json.dumps(body).encode()))
+    assert [p["alt"] for p in photos] == ["Corniche de Dakar"]
