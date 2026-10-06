@@ -77,6 +77,7 @@ ANDROID_CERT_SHA256 = (
 )
 
 
+REPORT_REASONS = {"inappropriate", "wrong", "offensive", "dangerous", "other"}
 _SHA256_RE = re.compile(r"^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$")
 
 
@@ -128,7 +129,9 @@ def register_legal_routes(app, deps):
             if blocked is not None:
                 return blocked
         body = request.get_json(silent=True) or {}
-        reason = str(body.get("reason") or "inappropriate")[:40]
+        reason = str(body.get("reason") or "inappropriate")
+        if reason not in REPORT_REASONS:
+            reason = "other"  # pas de texte libre dans les journaux
         question = sanitize(body.get("question", ""), max_len=500)
         reply = sanitize(body.get("reply", ""), max_len=1500)
         if not reply:

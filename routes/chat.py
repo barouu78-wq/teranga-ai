@@ -87,9 +87,8 @@ def register_chat_route(app, deps):
         if error:
             return error
         if payload["use_web"]:
-            web_identity = abuse_key(client_ip())
-            if abuse_blocked(web_identity):
-                return jsonify({"error": "Trop de recherches rapprochées. Réessaie dans quelques minutes."}), 429, {"Retry-After": "120"}
+            # Même identité que plus haut (déjà vérifiée contre les abus).
+            web_identity = identity
             if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
                 record_abuse(web_identity, "web_rate", 2)
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
@@ -243,10 +242,18 @@ def register_chat_route(app, deps):
                             answer_parts.append(clean_answer(text))
                             yield json.dumps({"d": answer_parts[-1]}, ensure_ascii=False) + "\n"
                 if not yielded:
-                    reply, sources, image, maps = complete_reply(payload)
-                    if reply:
-                        answer_parts.append(reply)
-                        yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                    if enrichments is not None:
+                        # Les enrichissements déjà lancés servent encore : un seul appel texte en plus.
+                        response = create_response(payload, stream=False)
+                        reply = clean_answer(getattr(response, "output_text", "") or "")
+                        sources = extract_sources(response) or sources
+                        image, maps = chat_enrichment_result(enrichments)
+                    else:
+                        reply, sources, image, maps = complete_reply(payload)
+                    # Jamais de bulle vide : la base de connaissances, sinon un message clair.
+                    reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
+                    answer_parts.append(reply)
+                    yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
                     if enrichments is not None:
                         image, maps = chat_enrichment_result(enrichments)

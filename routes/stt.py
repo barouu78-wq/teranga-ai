@@ -78,7 +78,9 @@ def register_stt_route(app, deps):
                 "file": audio_file,
                 "chunking_strategy": "auto",
             }
-            if language in {"fr", "en", "wo", "ff"}:
+            # Le modèle de transcription ne connaît pas le wolof ni le pulaar : on le laisse
+            # détecter la langue (comme realtime.py), le prompt garde le vocabulaire local.
+            if language in {"fr", "en"}:
                 kwargs["language"] = language
             voice_context = sanitize_text(request.form.get("context", ""), 1800).strip()
             base_prompt = transcription_prompt(language) + " Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO."

@@ -23,8 +23,9 @@ def register_tts_route(app, deps):
     client = deps["client"]
 
     def speech_ready_text(text: str) -> str:
-        text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
+        # Liens Markdown d'abord (on garde le texte), puis les adresses nues.
         text = re.sub(r'\[([^\]\n]+)\]\((?:https?://|www\.)[^)]+\)', r'\1', text)
+        text = re.sub(r'https?://\S+|www\.\S+', '', text, flags=re.I)
         text = re.sub(r'(^|\n)\s{0,3}#{1,6}\s*', r'\1', text)
         text = re.sub(r'(^|\n)\s*[-*•]+\s+', r'\1', text)
         text = re.sub(r'(^|\n)\s*\d+[.)]\s+', r'\1', text)

@@ -60,3 +60,25 @@ def test_json_mode_answers_from_the_knowledge_base(monkeypatch):
 def test_unknown_topic_still_reports_the_outage(monkeypatch):
     response = _post(monkeypatch, "Quelle heure est-il à Tokyo, panne ?", json_mode=True)
     assert response.status_code == 503 and "error" in response.get_json()
+
+
+def test_stream_never_ends_with_an_empty_bubble(monkeypatch):
+    """Flux sans texte puis réponse complète vide : un message s'affiche quand même."""
+
+    class Empty:
+        output_text = ""
+
+    def create_response(payload, stream=False):
+        return iter([]) if stream else Empty()
+
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", create_response)
+    client = app_module.app.test_client()
+    token = client.get("/csrf", base_url=B).get_json()["token"]
+    client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
+    response = client.post(
+        "/chat", json={"message": "Question sans réponse du modèle 42", "language": "fr"},
+        headers={"X-CSRF-Token": token, "Origin": B}, base_url=B,
+    )
+    events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line.strip()]
+    text = "".join(e.get("d", "") for e in events)
+    assert "pas réussi à répondre" in text and events[-1].get("done")
