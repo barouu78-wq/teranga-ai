@@ -45,3 +45,24 @@ def test_production_refuses_to_start_without_a_strong_secret():
     env = {**os.environ, "TERANGA_ENV": "production", "SECRET_KEY": "court", "OPENAI_API_KEY": "test-key"}
     result = subprocess.run([sys.executable, "-c", "import app"], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
     assert result.returncode != 0 and "SECRET_KEY" in result.stderr
+
+
+def test_health_survives_a_custom_trusted_hosts_list():
+    """TRUSTED_HOSTS remplacé (nouveau domaine) : le contrôle de santé interne répond toujours."""
+    env = {
+        **os.environ,
+        "TERANGA_ENV": "production",
+        "SECRET_KEY": "x" * 40,
+        "OPENAI_API_KEY": "test-key",
+        "TRUSTED_HOSTS": "teranga-ai.fr,nouveau-domaine.sn",
+    }
+    script = (
+        "import logging; logging.disable(50)\n"
+        "import app as A\n"
+        "c = A.app.test_client()\n"
+        "print(c.get('/health', headers={'Host': '10.0.0.9:10000'}).status_code)\n"
+        "print('https://www.teranga-ai.fr' in A.ALLOWED_ORIGINS)\n"
+    )
+    result = subprocess.run([sys.executable, "-c", script], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr[-2000:]
+    assert result.stdout.split() == ["200", "True"]

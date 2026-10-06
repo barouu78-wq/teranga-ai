@@ -133,7 +133,7 @@ def register_chat_route(app, deps):
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
-        key = cache_key(payload, request.get_json(silent=True), model=cache_model) if answer_cache is not None else None
+        key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
         cached = answer_cache.get(key) if key else None
         if cached:
             logger.info("chat_cache_hit")

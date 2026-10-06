@@ -73,6 +73,9 @@ function createVoiceAudio(url){
     if(AC){
       if(!voiceOutputContext)voiceOutputContext=new AC();
       if(voiceOutputContext.state==='suspended')voiceOutputContext.resume().catch(()=>{});
+      // Contexte audio encore suspendu (iPhone sans geste récent) : le son passerait
+      // dans un circuit muet. On joue alors l'élément audio directement.
+      if(voiceOutputContext.state!=='running')return el;
       const source=voiceOutputContext.createMediaElementSource(el);
       const gain=voiceOutputContext.createGain();
       gain.gain.value=1.08;
@@ -96,6 +99,10 @@ function createVoiceAudio(url){
 let voiceDraft='';
 let voiceSilenceTimer=0;
 const ttsCache=new Map();
+const TTS_CACHE_MAX=12;
+// Chaque lecture a son numéro : une lecture interrompue ne remet pas à zéro l'état
+// de la suivante (sinon deux phrases pouvaient se lire en même temps).
+let voiceTtsRun=0;
 let voiceTtsQueue=[];
 let voiceTtsPlaying=false;
 let voiceTtsTurn=0;
@@ -104,6 +111,7 @@ let voiceStreamTtsCount=0;
 
 function clearVoiceTtsQueue(){
   voiceTtsTurn++;
+  voiceTtsRun++;
   voiceTtsQueue=[];
   voiceStreamTtsBuffer='';
   voiceStreamTtsCount=0;
@@ -119,6 +127,7 @@ async function playVoiceTtsQueue(){
   const item=voiceTtsQueue.shift();
   if(!item||item.turn!==voiceTtsTurn)return playVoiceTtsQueue();
   voiceTtsPlaying=true;
+  const run=++voiceTtsRun;
   const cacheKey=lang+'|'+item.text;
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
@@ -134,7 +143,7 @@ async function playVoiceTtsQueue(){
       blob=await res.blob();
       if(item.turn!==voiceTtsTurn||!autoVoice)return;
       if(!blob.size)throw new Error('tts-empty');
-      if(ttsCache.size>=12)ttsCache.delete(ttsCache.keys().next().value);
+      while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
     if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
@@ -156,18 +165,22 @@ async function playVoiceTtsQueue(){
   }catch(_){
     if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text);
   }finally{
-    voiceSpeaking=false;
-    document.body.classList.remove('assistant-speaking');
-    voiceTtsPlaying=false;
-    if(voiceTtsQueue.length&&autoVoice)playVoiceTtsQueue();
-    else if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+    if(run===voiceTtsRun){
+      voiceSpeaking=false;
+      document.body.classList.remove('assistant-speaking');
+      voiceTtsPlaying=false;
+      if(voiceTtsQueue.length&&autoVoice)playVoiceTtsQueue();
+      else if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+    }
   }
 }
 function feedVoiceStreamTts(delta){
   if(!autoVoice||!voiceConversation||!delta)return;
   voiceStreamTtsBuffer+=delta;
   if(voiceStreamTtsCount>=3)return;
-  const re=/([.!?…]+)(?=\s|$)/g;
+  // Une fin de phrase doit être suivie d'un espace : « 27. » en fin de morceau
+  // peut encore devenir « 27.5 » avec le morceau suivant.
+  const re=/([.!?…]+)(?=\s)/g;
   let match,last=0;
   while(voiceStreamTtsCount<3&&(match=re.exec(voiceStreamTtsBuffer))){
     const end=match.index+match[0].length;
@@ -184,7 +197,14 @@ function flushVoiceStreamTts(reply){
   if(!autoVoice||!voiceConversation)return;
   const rest=voiceStreamTtsBuffer.trim();
   voiceStreamTtsBuffer='';
-  if(rest)queueVoiceSpeech(rest);
+  // La synthèse vocale est limitée (~1800 caractères) : la fin d'une longue
+  // réponse est découpée en morceaux de phrases au lieu d'être coupée.
+  let chunk='';
+  for(const sentence of rest.match(/[^.!?…]+(?:[.!?…]+|$)/g)||[]){
+    if(chunk&&(chunk+sentence).length>1400){queueVoiceSpeech(chunk);chunk='';}
+    chunk+=sentence;
+  }
+  if(chunk.trim())queueVoiceSpeech(chunk);
 }
 
 function clearVoiceSilence(){
@@ -255,7 +275,7 @@ async function speak(text,btn){
       blob=await res.blob();
       if(stale())return;
       if(!blob.size)throw new Error('tts-empty');
-      if(ttsCache.size>=8)ttsCache.delete(ttsCache.keys().next().value);
+      while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(cacheKey,blob);
     }
     if(stale())return;
@@ -654,6 +674,11 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 
 </head>
 <body data-theme="light" data-theme-mode="auto">
+<script nonce="__CSP_NONCE__">
+// Thème appliqué avant le premier affichage (sinon éclair clair → sombre le soir).
+// Même règle que static/theme.js : auto = sombre de 18 h à 6 h.
+(function(){try{var m='auto';if(localStorage.getItem('teranga-theme-v')==='2'){var v=localStorage.getItem('teranga-theme');if(v==='light'||v==='dark')m=v;}var h=new Date().getHours();document.body.setAttribute('data-theme',m==='dark'||(m==='auto'&&(h>=18||h<6))?'dark':'light');}catch(e){}})();
+</script>
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
 <header>
