@@ -3,6 +3,7 @@ import datetime
 import hmac
 import json
 import os
+import re
 import secrets
 import threading
 import time
@@ -33,7 +34,9 @@ from routes.youth_projects import register_youth_project_route
 from routes.legal import register_legal_routes
 from routes.monetization import register_monetization_routes
 from routes.emergency import register_emergency_routes
+from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
+from services.events import events_context
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -622,6 +625,13 @@ from services.guide_modes import detect_modes, mode_instructions
 WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("places", []))
 
 
+_EVENT_WORDS = re.compile(
+    r"\b(magal|tabaski|korit[ée]|gamou|maouloud|mawlid|tamkharit|achoura|ramadan|a[iï]d|f[êe]tes?|f[ée]ri[ée]s?|"
+    r"festival|jazz|ind[ée]pendance|4 avril|no[ëe]l|p[âa]ques|holidays?|feast)\b",
+    re.I,
+)
+
+
 def parse_chat_payload():
     payload, error = _build_chat_payload(
         request.get_json(silent=True),
@@ -653,6 +663,9 @@ def parse_chat_payload():
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
             payload.get("language", "fr"), logger=app.logger,
         )
+        # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte.
+        if _EVENT_WORDS.search(payload.get("message", "")):
+            payload["instructions"] += "\n\n" + events_context()
         partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
         if partner_block:
             payload["instructions"] += "\n\n" + partner_block
@@ -738,6 +751,7 @@ register_monetization_routes(
     known_sources=[p.get("id") for p in SENEGAL_KNOWLEDGE.get("places", []) if isinstance(p, dict)],
 )
 register_emergency_routes(app, SITE_URL)
+register_events_routes(app, SITE_URL)
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,
