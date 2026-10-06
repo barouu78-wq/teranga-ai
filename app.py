@@ -7,6 +7,7 @@ import threading
 import time
 from functools import wraps
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
@@ -324,10 +325,48 @@ def fetch_article_images(title, limit=6):
     return _fetch_article_images(title, limit, usable_wiki_image, image_proxy_url, urlopen)
 
 
+GOOGLE_PAUSE_SECONDS = 6 * 60 * 60
+_GOOGLE_PAUSE_KEY = "teranga:google-images-paused"
+_google_paused_until = 0.0
+
+
+def google_images_paused() -> bool:
+    """Google a refusé l'accès (403) récemment : inutile de l'interroger."""
+    if time.time() < _google_paused_until:
+        return True
+    if redis_client is not None:
+        try:
+            return bool(redis_client.get(_GOOGLE_PAUSE_KEY))
+        except Exception:
+            return False
+    return False
+
+
+def _pause_google_images(code) -> None:
+    """Coupe-circuit : après un refus, Google est mis en pause 6 h (puis réessayé)."""
+    global _google_paused_until
+    _google_paused_until = time.time() + GOOGLE_PAUSE_SECONDS
+    app.logger.warning("Google Images en pause %d h après HTTP %s", GOOGLE_PAUSE_SECONDS // 3600, code)
+    if redis_client is not None:
+        try:
+            redis_client.setex(_GOOGLE_PAUSE_KEY, GOOGLE_PAUSE_SECONDS, str(code))
+        except Exception:
+            pass
+
+
 def fetch_google_images(title, limit=4):
-    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
+    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID or google_images_paused():
         return []
-    return _fetch_google_images(title, GOOGLE_API_KEY, GOOGLE_CSE_ID, limit, urlopen)
+    try:
+        return _fetch_google_images(title, GOOGLE_API_KEY, GOOGLE_CSE_ID, limit, urlopen)
+    except HTTPError as exc:
+        # 403 (accès refusé, service fermé au compte) ou 429 (quota du jour
+        # épuisé) : chaque appel échouerait de la même façon. On passe
+        # directement à Wikipédia/Commons au lieu d'attendre un refus à chaque photo.
+        if exc.code in (401, 403, 429):
+            _pause_google_images(exc.code)
+            return []
+        raise
 
 
 def fetch_commons_image(title):
