@@ -39,13 +39,16 @@ async function trimPages() {
   for (let i = 0; i < keys.length - MAX_PAGES; i++) await cache.delete(keys[i]);
 }
 
-async function staleWhileRevalidate(request) {
+async function staleWhileRevalidate(event) {
+  const request = event.request;
   const cache = await caches.open(STATIC_CACHE);
   const cached = await cache.match(request);
-  const network = fetch(request).then(response => {
-    if (response && response.ok) cache.put(request, response.clone());
+  const network = fetch(request).then(async response => {
+    if (response && response.ok) await cache.put(request, response.clone());
     return response;
   }).catch(() => cached || cache.match(request, { ignoreSearch: true }));
+  // La mise à jour en arrière-plan doit finir même si la copie en cache est déjà servie.
+  event.waitUntil(network.then(() => undefined, () => undefined));
   // Fichier versionné (?v=…) pas encore en cache : réseau, et hors ligne la
   // dernière copie connue du même fichier.
   return cached || network;
@@ -79,6 +82,6 @@ self.addEventListener('fetch', event => {
     return;
   }
   if (STATIC_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(staleWhileRevalidate(event));
   }
 });

@@ -392,3 +392,22 @@ def test_explorer_gallery_retries_after_a_rate_limit(page, base_url):
     assert "empty" not in (first.get_attribute("class") or "")
     assert max(seen.values()) == 2
     assert page.errors == []
+
+
+def test_answer_photos_and_url_language_survive_a_reload(page, base_url):
+    image = {"url": "https://upload.wikimedia.org/g.jpg", "display_url": "/static/icon.svg", "title": "Gorée"}
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(
+        body=stream({"d": "Gorée est une île."}, {"img": [image]}), content_type="application/x-ndjson"))
+    page.goto(base_url + "/")
+    ask(page, "Parle-moi de Gorée")
+    page.get_by_text("Gorée est une île.").wait_for(timeout=5000)
+    page.wait_for_timeout(400)  # enregistrement différé de l'historique
+    page.reload()
+    page.get_by_text("Gorée est une île.").wait_for(timeout=5000)
+    # La galerie de la réponse est encore là après le rechargement.
+    assert page.locator(".city-gallery").count() >= 1
+    # Un lien ?lang=en l'emporte sur la langue de la conversation enregistrée.
+    page.goto(base_url + "/?lang=en")
+    page.wait_for_timeout(300)
+    assert page.evaluate("document.documentElement.lang") == "en"
+    assert page.errors == []
