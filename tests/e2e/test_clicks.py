@@ -370,3 +370,25 @@ def test_chat_retries_once_after_a_network_cut(page, base_url):
     page.get_by_text("Réponse après coupure.").wait_for(timeout=8000)
     assert len(calls) == 2
     assert page.errors == []
+
+
+def test_explorer_gallery_retries_after_a_rate_limit(page, base_url):
+    import urllib.parse
+
+    seen = {}
+
+    def handler(route):
+        query = urllib.parse.parse_qs(urllib.parse.urlparse(route.request.url).query).get("query", [""])[0]
+        seen[query] = seen.get(query, 0) + 1
+        if seen[query] == 1:
+            route.fulfill(status=429, headers={"Retry-After": "1"}, body='{"error":"Trop de demandes"}', content_type="application/json")
+        else:
+            route.fulfill(body='{"images":[{"url":"https://upload.wikimedia.org/x.jpg","display_url":"/icon-192.png","alt":"Gorée"}]}', content_type="application/json")
+
+    page.route(f"{base_url}/explorer-image**", handler)
+    page.goto(base_url + "/explorer")
+    first = page.locator(".gallery").first
+    first.locator("img").first.wait_for(timeout=8000)
+    assert "empty" not in (first.get_attribute("class") or "")
+    assert max(seen.values()) == 2
+    assert page.errors == []
