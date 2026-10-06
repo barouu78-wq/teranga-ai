@@ -75,3 +75,18 @@ def test_health_survives_a_custom_trusted_hosts_list():
     result = subprocess.run([sys.executable, "-c", script], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
     assert result.returncode == 0, result.stderr[-2000:]
     assert result.stdout.split() == ["200", "True"]
+
+
+def test_extra_google_verification_codes_from_env():
+    env = {**os.environ, "OPENAI_API_KEY": "test-key", "GOOGLE_SITE_VERIFICATION": "AbC_123-xyz987654, <script>bad, short"}
+    script = (
+        "import logging; logging.disable(50)\n"
+        "import app as A\n"
+        "print(A.app.test_client().get('/', base_url='https://teranga-ai.fr').get_data(as_text=True))\n"
+    )
+    result = subprocess.run([sys.executable, "-c", script], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+    assert result.returncode == 0, result.stderr[-2000:]
+    html = result.stdout
+    assert '<meta name="google-site-verification" content="AbC_123-xyz987654">' in html
+    assert "i5o7Z7YvDhM4u9Y8q2itxgV2kdrGRHKinIc5ga0sh78" in html
+    assert "<script>bad" not in html and "__EXTRA_VERIFICATION__" not in html
