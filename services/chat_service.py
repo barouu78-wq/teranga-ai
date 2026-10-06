@@ -4,6 +4,7 @@ import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
+from .backup_ai import claude_events, claude_is_primary, claude_response
 from .orchestrator import build_agent_plan, run_enrichments
 
 # Images et carte dépendent d'appels réseau lents (Google, Wikimedia) : elles
@@ -70,7 +71,43 @@ def build_chat_service(
             reasoning_override=reasoning_override,
         )
 
+    def claude_kwargs(payload):
+        return {
+            "system": payload.get("instructions", ""),
+            "max_tokens": 4000,
+            "timeout": 60.0,
+            "web": bool(payload.get("use_web")),
+        }
+
+    def claude_stream(payload):
+        """Flux Claude ; si Claude échoue avant d'écrire, OpenAI prend le relais."""
+        wrote = False
+        try:
+            for event in claude_events(payload.get("input_text") or payload.get("message", ""), **claude_kwargs(payload)):
+                if event.type == "response.output_text.delta":
+                    wrote = True
+                yield event
+        except Exception:
+            if wrote:
+                raise
+            if hasattr(logger, "exception"):
+                logger.exception("chat_claude_primary_failed")
+            yield from openai_response(payload, True)
+
     def create_response(payload, stream):
+        if claude_is_primary():
+            if hasattr(logger, "info"):
+                logger.info("chat_ai_provider claude")
+            if stream:
+                return claude_stream(payload)
+            try:
+                return claude_response(payload.get("input_text") or payload.get("message", ""), **claude_kwargs(payload))
+            except Exception:
+                if hasattr(logger, "exception"):
+                    logger.exception("chat_claude_primary_failed")
+        return openai_response(payload, stream)
+
+    def openai_response(payload, stream):
         plan = agent_plan(payload)
         # Secours = l'autre modèle configuré (et non des noms en dur).
         fallback_model = model if plan.model == complex_model else complex_model

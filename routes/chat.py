@@ -8,7 +8,7 @@ from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
 from services.fallback_answer import knowledge_fallback
-from services.backup_ai import backup_complete, backup_enabled
+from services.backup_ai import backup_complete, backup_enabled, claude_is_primary
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
@@ -46,9 +46,9 @@ def register_chat_route(app, deps):
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
 
     def fallback_for(payload):
-        """Réponse de secours quand OpenAI est en panne : IA de secours (Claude) si elle
-        est configurée, sinon la base de connaissances (lieu ou plat cité), sinon None."""
-        if backup_enabled():
+        """Réponse de secours quand l'IA est en panne : Claude s'il est configuré (et
+        qu'il n'est pas déjà l'IA principale), sinon la base de connaissances, sinon None."""
+        if backup_enabled() and not claude_is_primary():
             try:
                 reply = backup_complete(
                     payload.get("input_text") or payload.get("message", ""),

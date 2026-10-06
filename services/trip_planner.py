@@ -6,7 +6,7 @@ from html import escape
 from flask import Response, jsonify, request, stream_with_context
 from datetime import date
 
-from services.backup_ai import backup_complete, backup_enabled
+from services.backup_ai import backup_complete, backup_enabled, claude_events, claude_is_primary, claude_response
 from services.http_security import origin_allowed
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 from services.language_quality import language_instruction
@@ -411,9 +411,13 @@ def _plan_error(exc, lang):
 _DAY_MARKER = re.compile(r'"day"\s*:\s*\d')
 
 
+def _claude_kwargs(request_kwargs):
+    return {"max_tokens": int(request_kwargs.get("max_output_tokens") or 8000), "timeout": OPENAI_TIMEOUT}
+
+
 def _backup_plan_text(request_kwargs, app=None):
     """Plan rédigé par l'IA de secours (Claude) si OpenAI a échoué ; "" sinon."""
-    if not backup_enabled():
+    if not backup_enabled() or claude_is_primary():
         return ""
     try:
         text = backup_complete(
@@ -494,9 +498,20 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         started = time.monotonic()
         try:
             def open_stream():
-                # OpenAI d'abord ; s'il échoue avant d'avoir écrit, l'IA de secours prend
+                # IA principale d'abord ; si elle échoue avant d'avoir écrit, l'autre prend
                 # le relais (dans le même fil : les signes de vie continuent pendant ce temps).
                 wrote = False
+                if claude_is_primary():
+                    try:
+                        for event in claude_events(str(request_kwargs.get("input") or ""), **_claude_kwargs(request_kwargs)):
+                            if event.type == "response.output_text.delta":
+                                wrote = True
+                            yield event
+                        return
+                    except Exception:
+                        if wrote:
+                            raise
+                        app.logger.exception("trip-planner claude_primary_failed")
                 try:
                     for event in _create(client, stream=True, **request_kwargs):
                         if getattr(event, "type", "") == "response.output_text.delta":
@@ -702,9 +717,16 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
         if request.headers.get("X-Teranga-Stream") == "1":
             return _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         try:
+            text = ""
+            if claude_is_primary():
+                try:
+                    text = claude_response(str(request_kwargs.get("input") or ""), **_claude_kwargs(request_kwargs)).output_text
+                except Exception:  # noqa: BLE001 - OpenAI prend le relais
+                    app.logger.exception("trip-planner claude_primary_failed")
             try:
-                response = _create(client, **request_kwargs)
-                text = getattr(response, "output_text", "") or ""
+                if not text:
+                    response = _create(client, **request_kwargs)
+                    text = getattr(response, "output_text", "") or ""
             except Exception:
                 text = _backup_plan_text(request_kwargs, app)
                 if not text:
