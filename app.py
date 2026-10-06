@@ -702,6 +702,7 @@ register_chat_route(app, {
     "public_error": public_error,
     "share_secret": app.config["SECRET_KEY"],
     "knowledge_places": SENEGAL_KNOWLEDGE.get("places", []),
+    "knowledge_dishes": SENEGAL_KNOWLEDGE.get("dishes", []),
     "field": _field,
 })
 

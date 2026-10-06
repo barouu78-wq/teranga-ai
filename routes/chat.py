@@ -7,6 +7,7 @@ import time
 from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
+from services.fallback_answer import knowledge_fallback
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
@@ -40,7 +41,16 @@ def register_chat_route(app, deps):
     public_error = deps["public_error"]
     share_secret = deps.get("share_secret", "")
     knowledge_places = deps.get("knowledge_places") or []
+    knowledge_dishes = deps.get("knowledge_dishes") or []
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+
+    def fallback_for(payload):
+        """Réponse tirée de la base quand l'IA est en panne (lieu ou plat cité), sinon None."""
+        try:
+            return knowledge_fallback(payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"))
+        except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
+            logger.exception("chat_fallback")
+            return None
 
     def places_with_booking(message, language):
         """Fiches citées ; la première porte ses liens « Réserver » (affiliés) s'ils sont configurés."""
@@ -167,6 +177,10 @@ def register_chat_route(app, deps):
                 return jsonify({"reply": reply, "share": share, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr")), "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
+                fallback = fallback_for(payload)
+                if fallback:
+                    logger.warning("chat_fallback_used mode=json")
+                    return jsonify({"reply": fallback, "degraded": True, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr"))})
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
 
         if cached:
@@ -249,6 +263,16 @@ def register_chat_route(app, deps):
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
+                # Rien n'a encore été affiché : répondre avec la base plutôt qu'une erreur.
+                fallback = None if yielded else fallback_for(payload)
+                if fallback:
+                    logger.warning("chat_fallback_used mode=stream")
+                    yield json.dumps({"d": fallback}, ensure_ascii=False) + "\n"
+                    places = places_with_booking(payload.get("message", ""), payload.get("language", "fr"))
+                    if places:
+                        yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
+                    yield json.dumps({"degraded": True, "done": True}) + "\n"
+                    return
                 yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
         return Response(stream_with_context(generate()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
