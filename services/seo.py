@@ -443,6 +443,75 @@ SEO_PAGES = {
 }
 
 
+# Repères concrets et durables ajoutés aux pages les plus recherchées. Pas de
+# prix ni d'horaires précis (ils changent) : seulement ce qui reste vrai d'une
+# saison à l'autre, avec un renvoi vers la vérification le jour J.
+SEO_PAGE_GUIDES = {
+    "voyage-senegal": [
+        ("Quand partir", "La saison sèche, de novembre à mai, est la plus confortable : peu de pluie et des soirées "
+         "fraîches sur la côte. La saison des pluies (environ de juillet à octobre, plus tôt et plus longue en Casamance) "
+         "rend certaines pistes difficiles mais la nature est verte. Les grandes fêtes religieuses changent l'affluence : "
+         'voir le <a href="/calendrier-fetes-senegal">calendrier des fêtes</a>.'),
+        ("Formalités et santé", "Les ressortissants de l'Union européenne n'ont en général pas besoin de visa pour un "
+         "court séjour : vérifiez les conditions à jour auprès de l'ambassade avant de partir. Le vaccin contre la fièvre "
+         "jaune est recommandé (exigé si vous arrivez d'un pays où elle circule). Demandez conseil à un médecin pour le "
+         'paludisme. Gardez les <a href="/urgences">numéros d\'urgence</a> : police 17, pompiers 18, SAMU 1515.'),
+        ("Argent et téléphone", "La monnaie est le franc CFA (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA. "
+         "Les paiements mobiles (Wave, Orange Money) sont partout ; gardez aussi des petites coupures pour les taxis et "
+         "les marchés. Une carte SIM locale s'achète facilement avec un passeport. Heure : UTC+0 toute l'année."),
+        ("Itinéraire d'une semaine", "Dakar et Gorée (2 jours), le Lac Rose puis le désert de Lompoul (1 à 2 jours), "
+         "Saint-Louis et le parc du Djoudj selon la saison (2 jours), retour par la côte. Sur 10 à 14 jours, ajoutez le "
+         "delta du Saloum et la Petite Côte. La Casamance demande un vol ou le bateau de nuit depuis Dakar. "
+         'Le <a href="/trip-planner">planificateur de voyage</a> construit un programme jour par jour.'),
+        ("Savoir-vivre", "On salue toujours avant de demander quelque chose (« Salaam aleekum »). Tenue couverte dans "
+         "les lieux religieux, notamment à Touba. Demandez avant de photographier quelqu'un. Au marché, le prix se "
+         "négocie avec le sourire."),
+    ],
+    "transport-senegal": [
+        ("Depuis l'aéroport AIBD", "L'aéroport international Blaise Diagne est à Diass, à environ 45 km du centre de "
+         "Dakar, relié par l'autoroute à péage. Options : taxi (prix fixé avant de monter), navettes, voiture avec "
+         "chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; son prolongement vers l'aéroport est prévu : "
+         'vérifiez s\'il est en service. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
+        ("Se déplacer à Dakar", "Les taxis n'ont pas de compteur : on fixe le prix avant de partir. Les applications "
+         "comme Yango ou Heetch affichent un prix à l'avance. Le BRT (bus rapide sur voie réservée) relie le centre à "
+         "Guédiawaye, le TER dessert la banlieue jusqu'à Diamniadio, et les bus Dakar Dem Dikk couvrent la ville. "
+         "Évitez les heures de pointe sur la corniche et l'autoroute."),
+        ("Entre les villes", "Les « sept-places » (taxis-brousse) partent quand ils sont pleins, depuis la gare routière "
+         "des Baux Maraîchers à Pikine pour Dakar ; ils sont rapides mais serrés. Les bus et cars sont moins chers et plus "
+         "lents. La location de voiture avec chauffeur est la solution la plus simple pour un circuit."),
+        ("Vers la Casamance", "Trois options : l'avion vers Ziguinchor ou Cap Skirring, le bateau de nuit "
+         "Dakar–Ziguinchor (environ 15 heures, cabines à réserver), ou la route par la Gambie via le pont de Farafenni, "
+         "avec passage de frontière."),
+        ("Gorée et les îles", "La chaloupe pour Gorée part de la gare maritime de Dakar (environ 20 minutes de "
+         "traversée). Les pirogues desservent Ngor depuis la plage, et les îles du Saloum depuis Ndangane, Djiffer ou "
+         "Toubacouta : gilet de sauvetage obligatoire, demandez-le."),
+    ],
+    "meteo-dakar": [
+        ("Le climat de Dakar", "Grâce à l'océan et à l'alizé, Dakar est la ville la plus fraîche du pays. De décembre "
+         "à avril, les matinées et soirées sont fraîches, avec parfois de la brume de poussière (harmattan). De juillet "
+         "à octobre, il fait chaud et humide, avec des averses orageuses souvent courtes mais fortes."),
+        ("Mer et plages", "La houle est plus forte sur la côte nord et ouest (Yoff, Ngor, Almadies) que vers la Petite "
+         "Côte. Baignez-vous seulement sur les plages surveillées et écoutez les consignes locales : les courants peuvent "
+         "être dangereux."),
+        ("Prévisions officielles", 'Pour les alertes et prévisions, la référence est l\'ANACIM, l\'agence nationale de '
+         'la météorologie (<a href="https://www.anacim.sn" target="_blank" rel="noopener noreferrer">anacim.sn</a>). '
+         "Demandez à Teranga AI la météo d'un lieu précis : la réponse s'appuie sur des prévisions du jour."),
+    ],
+    "vie-pratique-senegal": [
+        ("Payer au quotidien", "Le franc CFA (XOF) a une parité fixe avec l'euro (1 € = 655,957 FCFA). Wave et Orange "
+         "Money servent à payer, envoyer et retirer de l'argent ; les distributeurs sont nombreux en ville, plus rares en "
+         "brousse."),
+        ("Téléphone et internet", "Les principaux opérateurs sont Orange, Free et Expresso. Une carte SIM s'achète avec "
+         "une pièce d'identité ; les forfaits internet se rechargent par code ou par mobile money."),
+        ("Santé et urgences", 'Les numéros 17 (police), 18 (pompiers) et 1515 (SAMU) sont gratuits. La page '
+         '<a href="/urgences">Urgences</a> reste lisible hors connexion. Pour une pharmacie de garde, demandez localement : '
+         "la liste est affichée sur la porte des pharmacies."),
+        ("Démarches", "Les règles et tarifs administratifs changent : vérifiez toujours sur le site du service public ou "
+         "auprès de l'administration concernée. Teranga AI peut vous aider à préparer la liste des pièces et vos questions."),
+    ],
+}
+
+
 # Fiches de la base de connaissances ajoutées aux pages thématiques : contenu
 # réel et maillage interne vers /lieux (ou plats pour les pages cuisine).
 _TOP_SITES = ["goree", "saint-louis", "djoudj", "niokolo-koba", "saloum", "bassari", "lac-rose", "touba"]
@@ -489,13 +558,13 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         return None
     sections = "".join(
         "<section><h2>%s</h2><p>%s</p></section>" % (heading, text)
-        for heading, text in page["sections"]
+        for heading, text in list(page["sections"]) + SEO_PAGE_GUIDES.get(slug, [])
     )
     faq_html = ""
     faq_ld = []
     if page.get("faq"):
         items = "".join("<div class='faq'><h3>%s</h3><p>%s</p></div>" % (q, a) for q, a in page["faq"])
-        faq_html = "<section><h2>Questions frequentes</h2>%s</section>" % items
+        faq_html = "<section><h2>Questions fréquentes</h2>%s</section>" % items
         faq_ld = [
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}}
             for q, a in page["faq"]
@@ -511,7 +580,7 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         )
     else:
         source_link = (
-            '<p class="source">Reperes : <a href="https://www.au-senegal.com/" '
+            '<p class="source">Repères : <a href="https://www.au-senegal.com/" '
             'target="_blank" rel="noopener noreferrer">Au Sénégal</a>.</p>'
         )
     url = "%s/%s" % (site_url, slug)
