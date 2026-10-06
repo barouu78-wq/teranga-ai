@@ -16,6 +16,10 @@ c = A.app.test_client()
 out = {}
 for host in ["teranga-ai.fr", "localhost:10000", "10.214.5.7:10000", "mon-site.onrender.com", "evil.example"]:
     out[host] = [c.get("/health", headers={"Host": host}).status_code, c.get("/", headers={"Host": host}).status_code]
+for host in ["mon-site.onrender.com", "www.teranga-ai.fr"]:
+    r = c.get("/lieux?q=goree", headers={"Host": host})
+    out["redirect " + host] = [r.status_code, r.headers.get("Location")]
+out["post onrender"] = c.post("/chat", headers={"Host": "mon-site.onrender.com"}).status_code
 print(json.dumps(out))
 """
 
@@ -36,7 +40,12 @@ def test_production_rejects_unknown_hosts_but_keeps_health_reachable():
     assert codes["10.214.5.7:10000"][0] == 200
     # Pages : seulement les hôtes de confiance (et l'adresse Render fournie automatiquement).
     assert codes["teranga-ai.fr"] == [200, 200]
-    assert codes["mon-site.onrender.com"][1] == 200
+    # L'adresse Render et www. redirigent définitivement vers le domaine principal
+    # (une seule copie du site pour Google) ; /health et les POST ne sont pas redirigés.
+    assert codes["mon-site.onrender.com"] == [200, 301]
+    assert codes["redirect mon-site.onrender.com"] == [301, "https://teranga-ai.fr/lieux?q=goree"]
+    assert codes["redirect www.teranga-ai.fr"] == [301, "https://teranga-ai.fr/lieux?q=goree"]
+    assert codes["post onrender"] != 301
     assert codes["10.214.5.7:10000"][1] == 400
     assert codes["evil.example"][1] == 400
 

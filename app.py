@@ -13,7 +13,7 @@ from urllib.error import HTTPError
 from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
-from flask import Flask, g, jsonify, request
+from flask import Flask, g, jsonify, redirect, request
 import httpx
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -164,6 +164,27 @@ for _origin in list(ALLOWED_ORIGINS):
         ALLOWED_ORIGINS.add("https://www." + _origin[len("https://"):])
 if os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip():
     ALLOWED_ORIGINS.add("https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip().lower())
+
+# Une seule adresse pour Google : www. et l'adresse Render (xxx.onrender.com)
+# redirigent définitivement vers le domaine principal, sinon le site existe en
+# double dans les résultats et sa visibilité est partagée entre les copies.
+_CANONICAL_HOST = SITE_URL.split("://", 1)[-1].split("/", 1)[0].lower()
+_ALIAS_HOSTS = {
+    host for host in (
+        "www." + _CANONICAL_HOST,
+        os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip().lower(),
+    )
+    if host and host != _CANONICAL_HOST and not _CANONICAL_HOST.startswith("www.")
+}
+
+
+@app.before_request
+def redirect_alias_hosts():
+    if RUNTIME_ENV != "production" or request.method not in ("GET", "HEAD") or request.path == "/health":
+        return None
+    if request.host.split(":", 1)[0].lower() in _ALIAS_HOSTS:
+        return redirect(SITE_URL + request.full_path.rstrip("?"), code=301)
+    return None
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
