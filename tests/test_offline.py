@@ -50,3 +50,10 @@ def test_service_worker_is_registered_inline_in_head():
     html = (Path(__file__).resolve().parents[1] / "templates" / "home.html").read_text(encoding="utf-8")
     head = html.split("</head>", 1)[0]
     assert "navigator.serviceWorker.register('/sw.js'" in head
+
+
+def test_precached_pages_are_never_trimmed():
+    sw = (Path(__file__).resolve().parents[1] / "static" / "sw.js").read_text(encoding="utf-8")
+    trim = sw[sw.index("async function trimPages()"):]
+    trim = trim[: trim.index("\n}") ]
+    assert "PRECACHE_PAGES" in trim and "'/urgences'" in sw

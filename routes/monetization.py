@@ -107,8 +107,11 @@ def render_stats_page(summary: list[dict] | None, error: str = "") -> str:
 <body>{site_header()}<main><article>{body}</article></main>{site_footer()}</body></html>"""
 
 
-def register_monetization_routes(app, redis_client=None, rate_guard=None):
+def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=()):
     stats = ClickStats(redis_client, app.logger)
+    # Seules les pages d'origine connues (fiches de lieux) sont comptées à part :
+    # une valeur inventée ne crée pas de nouvelle ligne dans les statistiques.
+    sources = {str(item) for item in known_sources if item}
 
     @app.route("/stats-partenaires", methods=["GET", "POST"])
     def partner_stats():
@@ -118,10 +121,9 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None):
         headers = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"}
         if request.method == "GET":
             return Response(render_stats_page(None), mimetype="text/html", headers=headers)
-        if rate_guard is not None:
-            blocked = rate_guard("stats_login")
-            if blocked is not None:
-                return blocked
+        if rate_guard is not None and rate_guard("stats_login") is not None:
+            return Response(render_stats_page(None, "Trop d'essais. Réessaie dans quelques minutes."),
+                            status=429, mimetype="text/html", headers=headers)
         given = str(request.form.get("cle", ""))
         if not hmac.compare_digest(given.encode("utf-8"), token.encode("utf-8")):
             app.logger.warning("stats-partenaires: mot de passe refusé")
@@ -137,7 +139,10 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None):
         source = re.sub(r"[^a-z0-9-]", "", str(request.args.get("from", "")).lower())[:60]
         # Comptage des clics, sans donnée personnelle (ni IP ni identifiant).
         app.logger.info("affiliate-click kind=%s from=%s q=%r", kind, source or "-", query)
-        stats.record(kind, source)
+        # Compté au plus quelques fois par visiteur et par minute : les chiffres
+        # montrés aux partenaires ne peuvent pas être gonflés par un script.
+        if rate_guard is None or rate_guard("affiliate_count") is None:
+            stats.record(kind, source if source in sources else "-")
         response = redirect(target, code=302)
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
         response.headers["Referrer-Policy"] = "no-referrer"

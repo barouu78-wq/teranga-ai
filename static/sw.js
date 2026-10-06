@@ -2,7 +2,7 @@
 // Ressources statiques : cache d'abord (mise à jour en arrière-plan).
 // Pages : réseau d'abord, copie gardée ; hors ligne → copie ou page /offline.
 // Jamais en cache : chat, voix, API, jeton CSRF, proxy d'images.
-const VERSION = 'teranga-v3';
+const VERSION = 'teranga-v4';
 const STATIC_CACHE = VERSION + '-static';
 const PAGES_CACHE = VERSION + '-pages';
 const MAX_PAGES = 40;
@@ -35,7 +35,10 @@ self.addEventListener('activate', event => {
 
 async function trimPages() {
   const cache = await caches.open(PAGES_CACHE);
-  const keys = await cache.keys();
+  // Les pages préchargées (accueil, lieux, urgences) restent toujours disponibles
+  // hors connexion : seules les pages visitées sont retirées, des plus anciennes.
+  const keep = new Set(PRECACHE_PAGES.map(path => new URL(path, self.location.origin).href));
+  const keys = (await cache.keys()).filter(request => !keep.has(request.url));
   for (let i = 0; i < keys.length - MAX_PAGES; i++) await cache.delete(keys[i]);
 }
 

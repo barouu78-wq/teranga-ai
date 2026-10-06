@@ -874,7 +874,13 @@ function answerExtras(item){
   if(image)extras.image=image;
   if(item.map&&item.map.url)extras.map=item.map;
   if(Array.isArray(item.sources)&&item.sources.length)extras.sources=item.sources.slice(0,6);
-  try{return JSON.stringify(extras).length<6000?extras:{}}catch(_){return {}}
+  // Trop volumineux : on retire d'abord les sources, puis on réduit les photos,
+  // pour garder au moins la carte et une photo.
+  try{
+    if(JSON.stringify(extras).length>=6000)delete extras.sources;
+    while(Array.isArray(extras.image)&&extras.image.length>1&&JSON.stringify(extras).length>=6000)extras.image=extras.image.slice(0,-1);
+    return JSON.stringify(extras).length<6000?extras:(extras.map?{map:extras.map}:{});
+  }catch(_){return {}}
 }
 function persist(){
   clearTimeout(persistTimer);
@@ -900,7 +906,7 @@ function restore(){
     if(!raw)return;
     const data=JSON.parse(raw);
     // ?lang=… (widget partenaire, pages anglaises) prime sur la langue de la conversation enregistrée.
-    if(data.lang&&T[data.lang]&&!urlParams.get('lang'))lang=data.lang;
+    if(data.lang&&T[data.lang]&&!T[urlParams.get('lang')])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
       const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/[ \t]+/g,' ').trim().slice(0,1200),...(typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{}),...(item.role==='assistant'?answerExtras(item):{})})).filter(item=>item.content);
       if(!restored.length){
@@ -1002,6 +1008,18 @@ async function ask(preset,fromVoice=false,isRetry=false){
       feedVoiceStreamTts(chunk);
       if(!paint)paint=requestAnimationFrame(flush);
     };
+    // Un seul traitement des événements, pour les lignes complètes comme pour la dernière.
+    const applyEvent=ev=>{
+      if(ev.error)throw new Error(ev.error);
+      if(ev.d)queue(ev.d);
+      if(ev.s)sources=ev.s;
+      if(ev.img)image=ev.img;
+      if(ev.map)map=ev.map;
+      if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
+      if(ev.share)shareToken=ev.share;
+      if(Array.isArray(ev.places))places=ev.places;
+      if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
+    };
     const reader=res.body.getReader();
     const dec=new TextDecoder();
     let buf='';
@@ -1015,30 +1033,12 @@ async function ask(preset,fromVoice=false,isRetry=false){
         const line=parts[i];
         if(!line)continue;
         let ev;try{ev=JSON.parse(line);}catch{continue;}
-        if(ev.error)throw new Error(ev.error);
-        if(ev.d)queue(ev.d);
-        if(ev.s)sources=ev.s;
-        if(ev.img)image=ev.img;
-        if(ev.map)map=ev.map;
-        if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
-        if(ev.share)shareToken=ev.share;
-        if(Array.isArray(ev.places))places=ev.places;
-        if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
+        applyEvent(ev);
       }
     }
     if(buf.trim()){
-      try{
-        const ev=JSON.parse(buf);
-        if(ev.error)throw new Error(ev.error);
-        if(ev.d)queue(ev.d);
-        if(ev.s)sources=ev.s;
-        if(ev.img)image=ev.img;
-        if(ev.map)map=ev.map;
-        if(ev.share)shareToken=ev.share;
-        if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
-        if(Array.isArray(ev.places))places=ev.places;
-        if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
-      }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
+      let ev=null;try{ev=JSON.parse(buf);}catch(_){}
+      if(ev)applyEvent(ev);
     }
     if(paint){cancelAnimationFrame(paint);flush();}
     reply=live.trim();
