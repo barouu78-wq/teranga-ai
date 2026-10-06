@@ -49,8 +49,8 @@ _NAV = {
 }
 _CTA = {"fr": "Poser une question", "en": "Ask Teranga AI"}
 _FOOTER = {
-    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/urgences", "Urgences"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
-    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/urgences", "Emergency"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
+    "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/calendrier-fetes-senegal", "Fêtes"), ("/urgences", "Urgences"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
+    "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/calendrier-fetes-senegal", "Festivals"), ("/urgences", "Emergency"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
 }
 
 
