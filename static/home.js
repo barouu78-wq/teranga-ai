@@ -133,19 +133,19 @@ ff:{
 const MONEY_SIM={
 fr:{
 tourist:[['Argent & change',"Convertis mon argent en FCFA et explique-moi les frais à prévoir."],['SIM & Internet',"Quelle SIM ou eSIM choisir au Sénégal pour un séjour touristique ?"]],
-merchant:[['Encaisser',"Quels moyens de paiement puis-je proposer à mes clients au Sénégal ?"],['Change & paiements',"Comment gérer les paiements en FCFA, le change et les frais pour mon activité ?"]]
+merchant:[['Change & frais',"Comment gérer les paiements en FCFA, le change et les frais pour mon activité ?"]]
 },
 en:{
 tourist:[['Money & exchange','Convert my money to CFA francs and explain the fees I should expect.'],['SIM & internet','Which SIM or eSIM should I choose for a tourist stay in Senegal?']],
-merchant:[['Accept payments','Which payment methods can I offer customers in Senegal?'],['Exchange & payments','How should I manage CFA payments, exchange and fees for my business?']]
+merchant:[['Exchange & fees','How should I manage CFA payments, exchange and fees for my business?']]
 },
 wo:{
 tourist:[['Xaalis & change',"Naka laa mëna soppi sama xaalis ci CFA, te lan mooy frais yi?"],['SIM & Internet',"Ban SIM walla eSIM laa wara jënd ci Senegaal ngir tukki?"]],
-merchant:[['Jël fey',"Yan yoon yu fey laa mëna jox sama clients ci Senegaal?"],['Change & fey',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
+merchant:[['Change & frais',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
 },
 ff:{
 tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftina?'],['SIM e Internet','Hol SIM walla eSIM mi waawi moƴƴude ngam yahdugol e Senegaal?']],
-merchant:[['Jaɓɓude feyde','Hol laawol feyde mi waawi hokkude clients am e Senegaal?'],['Change e feyde','No mi doxirta feyde e CFA, change e frais e golle am?']]
+merchant:[['Change e frais','No mi doxirta feyde e CFA, change e frais e golle am?']]
 }
 };
 const FX_CACHE={EUR:655.957,USD:577.070,GBP:762.860};
@@ -589,16 +589,33 @@ const CARD_ICONS={
   safety:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5.5c0 4.3 3 8 7 9.5 4-1.5 7-5.2 7-9.5V6l-7-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2.2 2.2L15.5 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   food:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 12h18a9 9 0 0 1-18 0Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 8c0-1.5 1-1.5 1-3M12 8c0-1.5 1-1.5 1-3M16 8c0-1.5 1-1.5 1-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   culture:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 9 12 4l9 5H3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M5 9v9M9.5 9v9M14.5 9v9M19 9v9M3 20h18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 19.5 5.3 16A8 8 0 1 1 8 18.7L4 19.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 10.5h6M9 13.5h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  shop:'<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 20h8M12 16v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m9 9 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  pay:'<svg viewBox="0 0 24 24" fill="none"><rect x="7" y="2.5" width="10" height="19" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M10.5 18.5h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 7v6M10 8.6c0-.9.9-1.4 2-1.4s2 .5 2 1.3c0 1.8-4 1-4 2.8 0 .8.9 1.3 2 1.3s2-.5 2-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  stock:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 3 20 7v10l-8 4-8-4V7l8-4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m4 7 8 4 8-4M12 11v10" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  people:'<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 20c.6-3.4 3-5.5 6-5.5s5.4 2.1 6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18 14.8c1.6.8 2.7 2.6 3 5.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1v-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  wifi:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5a13 13 0 0 1 18 0M6 13a8.5 8.5 0 0 1 12 0M9 16.5a4 4 0 0 1 6 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="19.5" r="1.2" fill="currentColor"/></svg>',
   place:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11" r="2.2" stroke="currentColor" stroke-width="1.7"/></svg>',
 };
 const CARD_ICON_RULES=[
+  ['chat',/whatsapp/i],
+  ['pay',/paiement|payment|encaisser|^fey|^feyde|jaɓɓude feyde|jël fey/i],
+  ['shop',/en ligne|online/i],
+  ['stock',/stock/i],
+  ['people',/client|customer|kliyan/i],
+  ['wifi',/\bsim\b|internet|esim/i],
+  ['doc',/d[ée]marche|paperwork|formalit/i],
+  ['home',/maison|home|famille|family|quotidien|daily life|dund|kër|suudu/i],
+  ['chat',/phrases|wolof|langue/i],
   ['guide',/visite guid|guided tour|^guide$/i],
-  ['market',/n[ée]gocier|march[ée]|bargain|waxaale/i],
+  ['market',/n[ée]gocier|(?:^|\s)march[ée]|bargain|waxaale/i],
   ['weather',/m[ée]t[ée]o|weather|climat|pluie|tenue|t[àa]kk/i],
-  ['money',/budget|prix|price|co[ûu]t|cost|fcfa|argent|money|xaalis|transfert|transfer|marge|taux|change|ceede|feyde/i],
+  ['money',/budget|prix|price|co[ûu]t|cost|fcfa|argent|money|xaalis|transfert|transfer|marge|pricing|taux|change|ceede|feyde|invest/i],
   ['safety',/s[ée]curit|safety|safe|aar|kisal|sant[ée]|health/i],
   ['food',/manger|eat|lekk|sp[ée]cialit|ñam|plat|cuisine|food|restaurant|resto|ñaamdu/i],
-  ['route',/itin[ée]raire|trajet|route|transport|taxi|bus|ferry|a[ée]roport|aibd|yoon|laawol|kaanawol|voyage|trip/i],
+  ['route',/itin[ée]raire|trajet|route|transport|taxi|\bbus\b|ferry|a[ée]roport|aibd|yoon|laawol|kaanawol|voyage|trip|getting around|retour|return|dellu|ruttorde/i],
   ['culture',/histoire|history|t[àa]riix|culture|aada|patrimoine|heritage|mus[ée]e/i],
 ];
 function cardIcon(title){
