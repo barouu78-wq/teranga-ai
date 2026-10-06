@@ -52,7 +52,8 @@ def test_chat_uses_backup_when_openai_is_down(monkeypatch):
     token = client.get("/csrf", base_url=B).get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
     response = client.post("/chat", json={"message": "Question secours 7", "language": "fr"},
-                           headers={"X-CSRF-Token": token, "Origin": B}, base_url=B)
+                           headers={"X-CSRF-Token": token, "Origin": B}, base_url=B,
+                           environ_base={"REMOTE_ADDR": "203.0.113.71"})
     text = "".join(json.loads(line).get("d", "") for line in response.get_data(as_text=True).splitlines() if line.strip())
     assert "Réponse de secours" in text
 
@@ -66,6 +67,7 @@ def test_planner_uses_backup_when_openai_is_down(monkeypatch):
     body = {"lang": "fr", "arrival": "2026-11-10", "departure": "2026-11-12", "adults": 2, "children": 0,
             "interests": [], "budget": "Confort", "pace": "Équilibré", "regions": ["Dakar"]}
     for stream in ("1", ""):
-        response = client.post("/api/trip-planner", json=body, headers={"Origin": B, "X-Teranga-Stream": stream}, base_url=B)
+        response = client.post("/api/trip-planner", json=body, headers={"Origin": B, "X-Teranga-Stream": stream}, base_url=B,
+                               environ_base={"REMOTE_ADDR": "203.0.113.72"})
         raw = response.get_data(as_text=True)
         assert "Secours" in raw and '"error"' not in raw
