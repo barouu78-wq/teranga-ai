@@ -8,12 +8,13 @@ import re
 from html import escape
 from urllib.parse import quote
 
-from flask import Response, abort, redirect, request
+from flask import Response, abort, jsonify, redirect, request
 
 from services.click_stats import ClickStats
+from services.partner_requests import KINDS, PartnerRequests
 
 from services.monetization import affiliate_config, affiliate_target, clean_query
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 
 OFFERS = (
     (
@@ -49,6 +50,21 @@ def _contact_links(subject: str) -> str:
     return '<div class="actions">' + "".join(links) + "</div>"
 
 
+def _request_form() -> str:
+    options = "".join(f'<option value="{escape(key)}">{escape(label)}</option>' for key, label in KINDS.items())
+    return f"""<form id="partner-form" class="partner-form">
+<p><label>Nom de l'établissement ou de l'activité<br><input name="name" required maxlength="80" autocomplete="organization"></label></p>
+<p><label>Type d'activité<br><select name="kind" required>{options}</select></label></p>
+<p><label>Ville ou lieu<br><input name="city" required maxlength="60" placeholder="Saint-Louis, Saly, Cap Skirring…"></label></p>
+<p><label>Téléphone, WhatsApp ou e-mail<br><input name="contact" required maxlength="80" autocomplete="tel"></label></p>
+<p><label>Votre message (facultatif)<br><textarea name="message" rows="3" maxlength="600"></textarea></label></p>
+<p hidden><label>Site web<input name="website" tabindex="-1" autocomplete="off"></label></p>
+<p class="muted">Ces informations servent uniquement à vous recontacter au sujet d'un partenariat.</p>
+<p><button class="cta primary" type="submit">Envoyer la demande</button></p>
+<p id="partner-form-status" role="status" aria-live="polite"></p>
+</form><script src="{asset_url('partner-form.js')}" defer></script>"""
+
+
 def render_offers_page() -> str:
     cards = "".join(
         f'<div class="card"><h3>{escape(title)}</h3><p>{escape(text)}</p></div>' for title, text in OFFERS
@@ -63,7 +79,8 @@ def render_offers_page() -> str:
 <p class="intro">Chaque jour, des voyageurs et des membres de la diaspora demandent à Teranga AI où dormir, quoi visiter et qui contacter au Sénégal. Soyez la réponse.</p>
 <section><h2>Nos offres</h2><div class="grid">{cards}</div></section>
 <section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Tarifs de lancement sur demande, adaptés à la taille de votre activité.</p></section>
-<section><h2>Nous contacter</h2><p>Présentez votre activité, votre ville et ce que vous proposez aux visiteurs.</p>{_contact_links("Partenariat Teranga AI")}</section>
+<section><h2>Demander un partenariat</h2><p>Présentez votre activité en une minute : nous vous recontactons par téléphone, WhatsApp ou e-mail.</p>{_request_form()}</section>
+<section><h2>Nous contacter</h2>{_contact_links("Partenariat Teranga AI")}</section>
 </article></main>{site_footer()}</body></html>"""
 
 
@@ -76,7 +93,18 @@ def _stats_token() -> str:
     return token if len(token) >= 16 else ""
 
 
-def render_stats_page(summary: list[dict] | None, error: str = "") -> str:
+def _requests_section(requests: list[dict]) -> str:
+    if not requests:
+        return '<section><h2>Demandes de partenariat</h2><p class="muted">Aucune demande pour le moment.</p></section>'
+    rows = "".join(
+        "<tr>" + "".join(f"<td>{escape(str(item.get(key, '')))}</td>" for key in ("at", "name", "kind_label", "city", "contact", "message")) + "</tr>"
+        for item in requests
+    )
+    return ("<section><h2>Demandes de partenariat</h2><table><thead><tr><th>Date</th><th>Nom</th><th>Activité</th>"
+            f"<th>Ville</th><th>Contact</th><th>Message</th></tr></thead><tbody>{rows}</tbody></table></section>")
+
+
+def render_stats_page(summary: list[dict] | None, error: str = "", requests: list[dict] | None = None) -> str:
     if summary is None:
         body = f"""<h1>Statistiques partenaires</h1>
 <p class="intro">Clics des visiteurs vers les partenaires, par mois. Page privée.</p>
@@ -99,6 +127,7 @@ def render_stats_page(summary: list[dict] | None, error: str = "") -> str:
         body = (
             "<h1>Statistiques partenaires</h1>"
             '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'
+            + _requests_section(requests or [])
             + "".join(blocks)
         )
     return f"""<!doctype html>
@@ -107,8 +136,14 @@ def render_stats_page(summary: list[dict] | None, error: str = "") -> str:
 <body>{site_header()}<main><article>{body}</article></main>{site_footer()}</body></html>"""
 
 
-def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=()):
+def _clean(value, limit: int) -> str:
+    text = re.sub(r"[\x00-\x1f\x7f]+", " ", str(value or "")).strip()
+    return re.sub(r"\s{2,}", " ", text)[:limit]
+
+
+def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=(), require_json_post=None):
     stats = ClickStats(redis_client, app.logger)
+    partner_requests = PartnerRequests(redis_client, app.logger)
     # Seules les pages d'origine connues (fiches de lieux) sont comptées à part :
     # une valeur inventée ne crée pas de nouvelle ligne dans les statistiques.
     sources = {str(item) for item in known_sources if item}
@@ -128,7 +163,7 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         if not hmac.compare_digest(given.encode("utf-8"), token.encode("utf-8")):
             app.logger.warning("stats-partenaires: mot de passe refusé")
             return Response(render_stats_page(None, "Mot de passe incorrect."), status=403, mimetype="text/html", headers=headers)
-        return Response(render_stats_page(stats.summary()), mimetype="text/html", headers=headers)
+        return Response(render_stats_page(stats.summary(), requests=partner_requests.recent()), mimetype="text/html", headers=headers)
 
     @app.get("/go/<kind>")
     def affiliate_redirect(kind):
@@ -151,3 +186,33 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
     @app.get("/offres-partenaires")
     def partner_offers():
         return Response(render_offers_page(), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+    def partner_request():
+        if rate_guard is not None:
+            blocked = rate_guard("partner_request")
+            if blocked is not None:
+                return blocked
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return jsonify({"error": "Requête invalide."}), 400
+        if body.get("website"):  # champ piège invisible : les robots le remplissent
+            return jsonify({"ok": True})
+        entry = {
+            "name": _clean(body.get("name"), 80),
+            "kind": _clean(body.get("kind"), 20),
+            "city": _clean(body.get("city"), 60),
+            "contact": _clean(body.get("contact"), 80),
+            "message": _clean(body.get("message"), 600),
+        }
+        if entry["kind"] not in KINDS:
+            return jsonify({"error": "Choisissez un type d'activité."}), 400
+        if not entry["name"] or not entry["city"] or len(re.sub(r"\D", "", entry["contact"])) < 8 and "@" not in entry["contact"]:
+            return jsonify({"error": "Indiquez le nom, la ville et un téléphone ou un e-mail valide."}), 400
+        entry["kind_label"] = KINDS[entry["kind"]]
+        partner_requests.add(entry)
+        # Pas de coordonnées dans les journaux : seulement de quoi savoir qu'une demande est arrivée.
+        app.logger.warning("partner-request kind=%s city=%r", entry["kind"], entry["city"])
+        return jsonify({"ok": True})
+
+    if require_json_post is not None:
+        app.post("/api/partner-request")(require_json_post(partner_request))
