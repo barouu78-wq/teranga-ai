@@ -134,3 +134,6 @@ body[data-ambiance="casamance"]::after{background:repeating-linear-gradient(90de
 :root[data-theme="dark"] body[data-ambiance="saint-louis"]{--accent:#7fb3d9;--link:#9cc6e6;--nav-gold:#7fb3d9;--accent-ink:#0b1520}
 :root[data-theme="dark"] body[data-ambiance="casamance"]{--accent:#7fc27a;--link:#9fd59a;--nav-gold:#7fc27a;--accent-ink:#0c1a0d}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:800;letter-spacing:.02em;vertical-align:middle}
+.partner-form{max-width:560px}
+.partner-form input,.partner-form select,.partner-form textarea{font:inherit;width:100%;box-sizing:border-box;margin-top:4px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.partner-form button[disabled]{opacity:.6}

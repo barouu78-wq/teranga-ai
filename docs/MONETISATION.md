@@ -70,6 +70,13 @@ Sur Render, ajoute :
 - `CONTACT_EMAIL` : ton e-mail professionnel. Il apparaît sur /offres-partenaires et sur la page de confidentialité.
 - `PARTNER_WHATSAPP` : ton numéro WhatsApp **avec l'indicatif, chiffres seulement** (exemple : `221771234567`). Optionnel.
 
+### Recevoir les demandes
+Les professionnels peuvent remplir le formulaire **« Demander un partenariat »** sur
+teranga-ai.fr/offres-partenaires. Les demandes s'affichent en haut de la page privée
+**teranga-ai.fr/stats-partenaires** (même mot de passe `STATS_TOKEN`, voir plus bas), avec le nom,
+l'activité, la ville, le contact et le message. Render → **Logs** → recherche `partner-request`
+montre aussi qu'une demande est arrivée (sans les coordonnées).
+
 ### Ajouter un partenaire
 Envoie-moi dans le chat : nom, type (hôtel, guide…), une phrase de description, les lieux ou villes concernés, le site web (https), le téléphone et la date de fin du contrat. J'ajoute la fiche dans `data/partners.json` :
 
@@ -94,6 +101,10 @@ Le partenaire disparaît automatiquement après la date `until`.
 3. **Campements de Lompoul et de Casamance** (Cap Skirring, Kafountine).
 4. **Restaurants de la Corniche et des Almadies** à Dakar.
 5. **Agences de location de voiture** à Dakar et à l'aéroport AIBD.
+
+Une première liste de 13 établissements avec leurs coordonnées publiques est prête dans
+`docs/prospects-octobre-2026.csv` (Saint-Louis, Lompoul, Saloum, Casamance, transferts AIBD, applis VTC).
+Vérifie chaque numéro au premier appel : ils viennent d'annuaires en ligne.
 
 Note chaque contact dans `docs/prospection_modele.csv` (date, statut, prochaine action). Les messages WhatsApp prêts à envoyer, les relances et les réponses aux objections sont dans `docs/VENTES-MESSAGES.md`.
 

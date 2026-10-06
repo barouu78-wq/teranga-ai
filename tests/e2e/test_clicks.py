@@ -411,3 +411,25 @@ def test_answer_photos_and_url_language_survive_a_reload(page, base_url):
     page.wait_for_timeout(300)
     assert page.evaluate("document.documentElement.lang") == "en"
     assert page.errors == []
+
+
+def test_partner_request_form_sends_and_confirms(page, base_url):
+    # Le serveur de test n'accepte pas l'origine 127.0.0.1 : la réponse est simulée,
+    # la validation côté serveur est couverte par tests/test_partner_requests.py.
+    sent = []
+
+    def fulfill(route):
+        sent.append(route.request.post_data_json)
+        assert route.request.headers.get("x-csrf-token")
+        route.fulfill(json={"ok": True})
+
+    page.route(f"{base_url}/api/partner-request", fulfill)
+    page.goto(f"{base_url}/offres-partenaires")
+    page.fill("input[name=name]", "Campement Essai")
+    page.select_option("select[name=kind]", "guide")
+    page.fill("input[name=city]", "Ndangane")
+    page.fill("input[name=contact]", "+221 77 123 45 67")
+    page.click("#partner-form button[type=submit]")
+    page.wait_for_selector("#partner-form-status:has-text('Merci')", timeout=5000)
+    assert page.input_value("input[name=name]") == ""
+    assert sent and sent[0]["kind"] == "guide" and sent[0]["city"] == "Ndangane" and sent[0]["website"] == ""

@@ -504,6 +504,7 @@ GUARDED_LIMITS = {
     # Page privée des statistiques : quelques essais de mot de passe seulement.
     "stats_login": (5, 20),
     "affiliate_count": (6, 60),
+    "partner_request": (3, 10),
 }
 
 
@@ -750,6 +751,7 @@ register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard"
 register_monetization_routes(
     app, redis_client=redis_client, rate_guard=rate_guard,
     known_sources=[p.get("id") for p in SENEGAL_KNOWLEDGE.get("places", []) if isinstance(p, dict)],
+    require_json_post=require_json_post,
 )
 register_emergency_routes(app, SITE_URL)
 register_events_routes(app, SITE_URL)
