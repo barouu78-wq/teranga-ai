@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import secrets
 from functools import lru_cache
 from pathlib import Path
@@ -202,6 +203,16 @@ def register_system_routes(app, deps):
     # navigateur) ; l'empreinte du contenu force le rechargement après un déploiement.
     # Même empreinte que asset_url : sinon le cache d'un an ne s'applique pas.
     home_js_url = asset_url("home.js")
+    # Codes Google Search Console supplémentaires (GOOGLE_SITE_VERIFICATION sur
+    # l'hébergeur, séparés par des virgules) : un autre compte Google peut ainsi
+    # valider le site sans modifier le code.
+    extra_codes = [
+        code.strip() for code in os.getenv("GOOGLE_SITE_VERIFICATION", "").split(",")
+        if re.fullmatch(r"[A-Za-z0-9_-]{10,100}", code.strip())
+    ]
+    home_html = home_html.replace("__EXTRA_VERIFICATION__", "".join(
+        f'<meta name="google-site-verification" content="{code}">' for code in extra_codes
+    ))
     theme_js_url = asset_url("theme.js")
 
     @app.get("/")
