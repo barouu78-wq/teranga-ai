@@ -125,3 +125,29 @@ def test_offers_page_robots_and_sitemap(monkeypatch):
     assert "Devenir partenaire" in html and "mailto:contact@teranga-ai.fr" in html and "Partenaire" in html
     assert "Disallow: /go/" in client.get("/robots.txt", base_url=B).get_data(as_text=True)
     assert "/offres-partenaires</loc>" in client.get("/sitemap.xml", base_url=B).get_data(as_text=True)
+
+
+def test_taxi_partner_link_is_a_fixed_https_url(monkeypatch):
+    assert "taxi" not in affiliate_config({"TAXI_PARTNER_URL": "http://taxi.example/"})
+    assert "taxi" not in affiliate_config({"TAXI_PARTNER_URL": "javascript:alert(1)"})
+    config = affiliate_config({"TAXI_PARTNER_URL": "https://taxi.example/invite?code=TERANGA"})
+    assert config == {"taxi": "https://taxi.example/invite?code=TERANGA"}
+    # La recherche du visiteur ne change jamais la destination.
+    assert affiliate_target("taxi", "https://evil.example/", config) == "https://taxi.example/invite?code=TERANGA"
+    labels = [link["label"] for link in booking_links(GOREE, config)]
+    assert labels == ["🚕 Commander un taxi pour Île de Gorée"]
+
+    monkeypatch.setenv("TAXI_PARTNER_URL", "https://taxi.example/invite?code=TERANGA")
+    response = _client().get("/go/taxi?q=Gor%C3%A9e&from=goree", base_url=B)
+    assert response.status_code == 302 and response.headers["Location"] == "https://taxi.example/invite?code=TERANGA"
+    page = _client().get("/lieux/goree", base_url=B).get_data(as_text=True)
+    assert "/go/taxi?q=" in page and 'rel="sponsored nofollow"' in page
+
+
+def test_place_page_offers_directions_and_taxi_advice(monkeypatch):
+    monkeypatch.delenv("TAXI_PARTNER_URL", raising=False)
+    page = _client().get("/lieux/lac-rose", base_url=B).get_data(as_text=True)
+    section = page.split("<h2>Comment y aller</h2>", 1)[1].split("</section>", 1)[0]
+    assert "https://www.google.com/maps/dir/?api=1&amp;destination=" in section
+    assert "fixez le prix avant de monter" in section
+    assert "/go/taxi" not in page

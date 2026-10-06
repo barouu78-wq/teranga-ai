@@ -163,8 +163,19 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
     if what_to_see:
         items = "".join(f"<li>{escape(item)}</li>" for item in what_to_see)
         sections.append(f"<section><h2>Que voir</h2><ul>{items}</ul></section>")
-    if place.get("access"):
-        sections.append(f"<section><h2>Comment y aller</h2><p>{escape(str(place['access']))}</p></section>")
+    if place.get("access") or coords:
+        access = f"<p>{escape(str(place['access']))}</p>" if place.get("access") else ""
+        directions = ""
+        if coords:
+            directions = (
+                '<div class="actions"><a class="cta" href="https://www.google.com/maps/dir/?api=1&amp;destination='
+                f'{coords[0]:.5f},{coords[1]:.5f}" target="_blank" rel="noopener noreferrer">🧭 Itinéraire</a></div>'
+            )
+        sections.append(
+            f"<section><h2>Comment y aller</h2>{access}{directions}"
+            '<p class="muted">Taxi sans compteur : fixez le prix avant de monter, en demandant le tarif habituel '
+            "à votre hôtel ou à votre hôte.</p></section>"
+        )
     # Réservation (liens affiliés) et adresses partenaires, déjà échappées.
     if extra_html:
         sections.append(extra_html)

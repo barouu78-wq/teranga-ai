@@ -2,7 +2,9 @@
 
 Rien ne s'affiche tant que les identifiants ne sont pas configurés :
 - GETYOURGUIDE_PARTNER_ID : activités et excursions (commission GetYourGuide) ;
-- BOOKING_AID : hébergements (commission Booking.com).
+- BOOKING_AID : hébergements (commission Booking.com) ;
+- TAXI_PARTNER_URL : appli de taxi / VTC partenaire (lien de parrainage ou
+  d'affiliation en https, par exemple celui fourni par Sengo).
 
 Les liens passent par /go/<type> : l'URL de destination est construite côté
 serveur (jamais une adresse fournie par le visiteur, donc pas de redirection
@@ -39,6 +41,9 @@ def affiliate_config(env=None) -> dict[str, str]:
         value = str(env.get(name, "") or "").strip()
         if _ID_RE.match(value):
             config[kind] = value
+    taxi = _safe_url(env.get("TAXI_PARTNER_URL", ""))
+    if taxi:
+        config["taxi"] = taxi
     return config
 
 
@@ -53,6 +58,9 @@ def affiliate_target(kind: str, query: str, config: dict[str, str]) -> str | Non
     query = clean_query(query)
     if not partner or not query:
         return None
+    if kind == "taxi":
+        # Adresse fixe choisie par l'exploitant : la recherche ne sert qu'au comptage.
+        return partner
     if kind == "activites":
         return "https://www.getyourguide.com/s/?" + urlencode({"q": query, "partner_id": partner})
     if kind == "hotels":
@@ -86,6 +94,12 @@ def booking_links(place: dict, config: dict[str, str], lang: str = "fr") -> list
             "kind": "activites",
             "label": (f"🎟️ Tours: {name}" if en else f"🎟️ Visites et activités : {name}"),
             "href": "/go/activites?" + urlencode({"q": f"{name} Sénégal", "from": place.get("id", "")}),
+        })
+    if "taxi" in config and name:
+        links.append({
+            "kind": "taxi",
+            "label": (f"🚕 Book a taxi to {name}" if en else f"🚕 Commander un taxi pour {name}"),
+            "href": "/go/taxi?" + urlencode({"q": name, "from": place.get("id", "")}),
         })
     return links
 
