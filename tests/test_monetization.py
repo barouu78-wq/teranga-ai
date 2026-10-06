@@ -151,3 +151,36 @@ def test_place_page_offers_directions_and_taxi_advice(monkeypatch):
     assert "https://www.google.com/maps/dir/?api=1&amp;destination=" in section
     assert "fixez le prix avant de monter" in section
     assert "/go/taxi" not in page
+
+
+def test_clicks_are_counted_by_month_kind_and_page():
+    import datetime as _dt
+
+    from services.click_stats import ClickStats
+
+    stats = ClickStats()
+    day = _dt.date(2026, 10, 6)
+    stats.record("taxi", "goree", day)
+    stats.record("taxi", "goree", day)
+    stats.record("hotels", "lac-rose", day)
+    month = stats.summary(months=2, today=day)
+    assert month[0]["month"] == "2026-10" and month[0]["total"] == 3
+    assert month[0]["by_kind"] == {"taxi": 2, "hotels": 1}
+    assert month[0]["rows"][0] == ("taxi", "goree", 2)
+    assert month[1] == {"month": "2026-09", "total": 0, "by_kind": {}, "rows": []}
+
+
+def test_stats_page_is_hidden_without_token_and_needs_the_password(monkeypatch):
+    monkeypatch.delenv("STATS_TOKEN", raising=False)
+    assert _client().get("/stats-partenaires", base_url=B).status_code == 404
+    monkeypatch.setenv("STATS_TOKEN", "un-mot-de-passe-solide-123")
+    monkeypatch.setenv("TAXI_PARTNER_URL", "https://taxi.example/invite")
+    client = _client()
+    page = client.get("/stats-partenaires", base_url=B)
+    assert page.status_code == 200 and 'type="password"' in page.get_data(as_text=True)
+    assert "public" not in page.headers["Cache-Control"]
+    client.get("/go/taxi?q=Gor%C3%A9e&from=goree", base_url=B)
+    wrong = client.post("/stats-partenaires", data={"cle": "faux"}, base_url=B)
+    assert wrong.status_code == 403 and "goree" not in wrong.get_data(as_text=True)
+    ok = client.post("/stats-partenaires", data={"cle": "un-mot-de-passe-solide-123"}, base_url=B)
+    assert ok.status_code == 200 and "goree" in ok.get_data(as_text=True)

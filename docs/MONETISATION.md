@@ -107,3 +107,17 @@ Note chaque contact dans `docs/prospection_modele.csv` (date, statut, prochaine 
 - Toujours signaler les partenaires : c'est déjà fait automatiquement par le site.
 - Pas de faux avis ni de faux chiffres d'audience.
 - **Impôts** : déclare ces revenus. En France, le statut de micro-entrepreneur est le plus simple pour commencer.
+
+## Voir les clics vers les partenaires
+
+Chaque clic sur un bouton partenaire (hôtels, activités, taxi) est compté par mois et par page
+d'origine, sans aucune donnée personnelle. Ces chiffres servent à négocier avec les partenaires.
+
+1. Sur **Render** → ton service → **Environment** → **Add Environment Variable** :
+   - Key : `STATS_TOKEN`
+   - Value : clique sur **Generate** (Render crée un mot de passe long). Copie-le dans ton
+     gestionnaire de mots de passe ; ne l'envoie à personne.
+2. **Save Changes**, puis ouvre **https://teranga-ai.fr/stats-partenaires** et colle le mot de passe.
+
+Sans `STATS_TOKEN`, la page n'existe pas (erreur 404). Avec Redis, les chiffres sont gardés
+environ un an ; sans Redis, ils repartent à zéro à chaque redéploiement.
