@@ -1,14 +1,14 @@
 from home_source import home_source
 
 
-def test_voice_mode_stop_closes_realtime_session():
+def test_voice_mode_stop_releases_the_microphone():
     html = home_source()
     marker = "function endVoiceMode(){"
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2
     function = html[start:end]
     assert "stopVoiceCapture();stopVoiceMonitor();" in function
-    assert "closeRealtimeVoice();" in function
+    assert "voiceConversation=false" in function
 
 
 def test_voice_capture_start_cancels_after_stream_wait():

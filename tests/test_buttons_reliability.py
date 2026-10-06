@@ -30,11 +30,14 @@ def test_taps_have_no_300ms_delay():
 
 
 def test_mic_never_stays_in_a_dead_listening_state():
-    assert "async function startVoiceOrExplain()" in JS
-    start = JS.index("async function startVoiceOrExplain()")
-    body = JS[start:JS.index("\n}", start)]
-    assert "try{ok=await startRealtimeVoice();}catch(_){ok=false;}" in body
-    assert "endVoiceMode();" in body and "voiceStatus(" in body
+    # Un seul gestionnaire de micro : un second clic arrête toujours l'écoute,
+    # et un clic pendant la lecture coupe la voix puis écoute.
+    assert JS.count("mic.onclick=") == 1
+    start = JS.index("mic.onclick=")
+    body = JS[start:JS.index("\n};", start)]
+    assert "if(listening||voiceCaptureBusy){endVoiceMode();return;}" in body
+    assert "stopSpeakingForListening();" in body
+    assert JS.count("$('voiceToggle').onclick=") == 1
 
 
 def test_blocked_storage_never_breaks_buttons():
