@@ -64,3 +64,12 @@ def test_long_place_names_get_a_shorter_title():
     assert place_title("Gorée", "Dakar") == "Gorée (Dakar) : histoire, que voir, carte | Teranga AI"
     long = place_title("Manufactures sénégalaises des arts décoratifs", "Thiès")
     assert len(long) <= 65 and long.startswith("Manufactures")
+
+
+def test_emergency_page_lists_verified_numbers_and_works_offline():
+    client = _client()
+    page = client.get("/urgences", base_url=B).get_data(as_text=True)
+    for number in ('href="tel:17"', 'href="tel:18"', 'href="tel:1515"', 'href="tel:+221800002020"'):
+        assert number in page
+    assert "/urgences" in client.get("/sitemap.xml", base_url=B).get_data(as_text=True)
+    assert "'/urgences'" in client.get("/sw.js", base_url=B).get_data(as_text=True)
