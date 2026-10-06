@@ -32,6 +32,7 @@ from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.legal import register_legal_routes
 from routes.monetization import register_monetization_routes
+from routes.emergency import register_emergency_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
@@ -732,6 +733,7 @@ register_exchange_rates_route(app, {
 
 register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
 register_monetization_routes(app, redis_client=redis_client, rate_guard=rate_guard)
+register_emergency_routes(app, SITE_URL)
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,
