@@ -209,3 +209,26 @@ def test_slow_photo_source_is_abandoned_after_budget(monkeypatch):
     )
     assert time.perf_counter() - started < 1.5
     assert photos and photos[0]["url"].endswith("c.jpg")
+
+
+def test_wikimedia_requests_identify_the_site_with_a_contact(monkeypatch):
+    # Wikimédia refuse (403) les agents génériques venant d'hébergeurs cloud.
+    from services import images
+
+    monkeypatch.setenv("CONTACT_EMAIL", "contact@teranga-ai.fr")
+    agent = images.wikimedia_user_agent()
+    assert agent.startswith("TerangaAI/1.0 (https://teranga-ai.fr/; contact@teranga-ai.fr)")
+    monkeypatch.setenv("CONTACT_EMAIL", "pas un mail (injection)")
+    assert "injection" not in images.wikimedia_user_agent()
+
+    seen = []
+
+    def opener(req, timeout=5):
+        seen.append(req.get_header("User-agent"))
+        raise OSError("réseau coupé")
+
+    try:
+        images.fetch_article_images("Lieu_sans_cache_ua", urlopen_fn=opener)
+    except OSError:
+        pass
+    assert seen and all(agent.startswith("TerangaAI/1.0 (https://teranga-ai.fr/") for agent in seen)
