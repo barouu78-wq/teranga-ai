@@ -1,5 +1,4 @@
 from home_source import home_source
-from pathlib import Path
 
 
 def test_realtime_start_aborts_if_voice_mode_was_stopped():

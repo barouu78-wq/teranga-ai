@@ -352,3 +352,21 @@ def test_chat_shows_partner_booking_links_and_drops_foreign_ones(page, base_url)
     assert "commission" in link.get_attribute("title")
     assert page.get_by_text("piège").count() == 0
     assert page.errors == []
+
+
+def test_chat_retries_once_after_a_network_cut(page, base_url):
+    calls = []
+
+    def handler(route):
+        calls.append(1)
+        if len(calls) == 1:
+            route.abort("connectionreset")
+        else:
+            route.fulfill(body=stream({"d": "Réponse après coupure."}), content_type="application/x-ndjson")
+
+    page.route(f"{base_url}/chat", handler)
+    page.goto(base_url + "/")
+    ask(page, "Bonjour")
+    page.get_by_text("Réponse après coupure.").wait_for(timeout=8000)
+    assert len(calls) == 2
+    assert page.errors == []

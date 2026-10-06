@@ -164,7 +164,7 @@ def test_chat_requires_csrf_and_json():
 
     csrf = client.get("/csrf")
     assert csrf.status_code == 200
-    token = csrf.get_json()["token"]
+    assert csrf.get_json()["token"]  # un vrai jeton existe, mais on envoie un faux
     response = client.post(
         "/chat",
         json={"message": "Bonjour", "history": [], "language": "fr"},
