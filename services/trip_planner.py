@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from html import escape
 from flask import Response, jsonify, request, stream_with_context
 from datetime import date
@@ -329,6 +330,7 @@ def _practical_prompt(lang, region, category, day=""):
 # Délai sous le timeout de Gunicorn (120 s) : une réponse trop lente renvoie
 # une erreur JSON propre au lieu d'une page coupée par le serveur.
 OPENAI_TIMEOUT = float(os.getenv("TRIP_OPENAI_TIMEOUT", "90"))
+STREAM_DEADLINE_SECONDS = float(os.getenv("TRIP_STREAM_DEADLINE", "100"))
 _MODEL_ERROR_MARKERS = ("not found", "does not exist", "not available", "unsupported", "not permitted")
 
 
@@ -408,6 +410,44 @@ def _plan_error(exc, lang):
 _DAY_MARKER = re.compile(r'"day"\s*:\s*\d')
 
 
+_HEARTBEAT = object()
+HEARTBEAT_SECONDS = 10.0
+
+
+def _events_with_heartbeat(open_stream):
+    """Événements du flux OpenAI, entrecoupés de _HEARTBEAT pendant les silences.
+
+    Le flux est lu dans un fil séparé ; une exception y est relancée ici.
+    """
+    import queue
+    import threading
+
+    box: "queue.Queue" = queue.Queue()
+    done = object()
+
+    def pump():
+        try:
+            for event in open_stream():
+                box.put(event)
+        except BaseException as exc:  # noqa: BLE001 - relancée côté générateur
+            box.put(exc)
+        finally:
+            box.put(done)
+
+    threading.Thread(target=pump, daemon=True, name="trip-stream").start()
+    while True:
+        try:
+            item = box.get(timeout=HEARTBEAT_SECONDS)
+        except queue.Empty:
+            yield _HEARTBEAT
+            continue
+        if item is done:
+            return
+        if isinstance(item, BaseException):
+            raise item
+        yield item
+
+
 def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id):
     """Plan en NDJSON : progression « jour N / M » puis résultat final.
 
@@ -422,11 +462,23 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
     def generate():
         yield line({"progress": {"day": 0, "total": expected_days}})
         text = ""
+        started = time.monotonic()
         try:
-            events = _create(client, stream=True, **request_kwargs)
+            events = _events_with_heartbeat(lambda: _create(client, stream=True, **request_kwargs))
             final_text = ""
             seen = 0
             for event in events:
+                if event is _HEARTBEAT:
+                    # Le modèle réfléchit sans rien écrire : un octet régulier évite que le
+                    # navigateur ou un proxy prenne la connexion silencieuse pour morte.
+                    yield line({"progress": {"day": seen, "total": expected_days}})
+                    if time.monotonic() - started > STREAM_DEADLINE_SECONDS:
+                        raise TimeoutError("trip-planner stream timed out")
+                    continue
+                # Durée totale bornée (le délai OpenAI ne compte que les silences) :
+                # on répond par une erreur claire avant qu'un proxy coupe la connexion.
+                if time.monotonic() - started > STREAM_DEADLINE_SECONDS:
+                    raise TimeoutError("trip-planner stream timed out")
                 kind = getattr(event, "type", "")
                 if kind == "response.output_text.delta":
                     text += getattr(event, "delta", "") or ""
@@ -434,8 +486,11 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
                     if count > seen:
                         seen = count
                         yield line({"progress": {"day": count, "total": expected_days}})
-                elif kind == "response.completed":
+                elif kind in ("response.completed", "response.incomplete"):
+                    # « incomplete » (limite de jetons atteinte) : on garde le texte reçu.
                     final_text = getattr(getattr(event, "response", None), "output_text", "") or ""
+                    if kind == "response.incomplete":
+                        app.logger.warning("trip-planner réponse incomplète (%d caractères)", len(text))
                 elif kind in ("response.failed", "error"):
                     raise RuntimeError("trip-planner stream failed")
             text = final_text or text
