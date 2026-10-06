@@ -30,7 +30,8 @@ def test_asset_links_declare_the_android_app(monkeypatch):
     monkeypatch.delenv("ANDROID_CERT_SHA256", raising=False)
     target = client.get("/.well-known/assetlinks.json").get_json()[0]["target"]
     assert target["package_name"] == "fr.teranga_ai"
-    assert target["sha256_cert_fingerprints"][0].startswith("BB:B4:D2:27")
+    assert target["sha256_cert_fingerprints"][0].startswith("01:D3:EB:74")
+    assert len(target["sha256_cert_fingerprints"]) == 2
     assert all(len(fp.split(":")) == 32 for fp in target["sha256_cert_fingerprints"])
     # Les variables d'environnement remplacent les valeurs par défaut.
     monkeypatch.setenv("ANDROID_APP_PACKAGE", "fr.autre.app")

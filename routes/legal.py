@@ -70,8 +70,10 @@ def render_privacy(lang: str, contact_email: str = "") -> str:
 # (Intégrité de l'application) dès qu'elle est connue.
 ANDROID_APP_PACKAGE = "fr.teranga_ai"
 ANDROID_CERT_SHA256 = (
-    # Clé de signature créée par PWABuilder (signing.keystore).
-    "BB:B4:D2:27:9E:38:42:F3:71:29:3C:B8:EA:B6:01:00:D7:97:F2:01:D1:FE:17:A4:5D:8E:AA:A5:79:C0:F7:A8",
+    # Clé de signature Google Play (Play App Signing) : celle des installations depuis le Play Store.
+    "01:D3:EB:74:F8:1B:EC:B2:AB:1A:BD:89:BC:34:E9:1F:0A:4B:72:5C:E7:31:E7:6F:98:2E:BF:EA:0B:4D:7F:59",
+    # Clé d'importation (signing.keystore PWABuilder) : APK installé à la main pour les tests.
+    "C9:09:F5:A8:01:5A:EE:64:BC:71:51:95:78:79:95:67:D8:83:2B:9E:69:9A:3F:70:26:01:BC:CD:99:F1:5B:BB",
 )
 
 
