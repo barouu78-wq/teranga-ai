@@ -49,6 +49,35 @@ def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
             methods=["GET"],
         )
 
+    @app.get("/llms.txt")
+    def llms():
+        # Point d'entrée compact pour les crawlers et assistants qui lisent
+        # des descriptions de sites en texte brut.
+        body = (
+            "# Teranga AI\\n\\n"
+            "Teranga AI est un assistant numérique consacré au Sénégal, accessible depuis le Sénégal, la France et la diaspora.\\n\\n"
+            "## Site officiel\\n"
+            f"- {site_url}/\\n\\n"
+            "## Pages prioritaires\\n"
+            f"- {site_url}/assistant-senegal — assistant IA du Sénégal\\n"
+            f"- {site_url}/ia-senegal — intelligence artificielle au Sénégal\\n"
+            f"- {site_url}/dakar — guide pratique de Dakar\\n"
+            f"- {site_url}/voyage-senegal — voyage au Sénégal\\n"
+            f"- {site_url}/transport-senegal — transport au Sénégal\\n"
+            f"- {site_url}/meteo-dakar — météo Dakar\\n"
+            f"- {site_url}/visiter-goree — visiter Gorée\\n"
+            f"- {site_url}/diaspora-senegalaise — diaspora sénégalaise\\n"
+            f"- {site_url}/emploi-senegal — emploi au Sénégal\\n"
+            f"- {site_url}/formation-senegal — formation au Sénégal\\n"
+            f"- {site_url}/entreprendre-senegal — entreprendre au Sénégal\\n"
+            f"- {site_url}/regions-senegal — 14 régions du Sénégal\\n\\n"
+            "## Langues\\n"
+            "Français, anglais et wolof.\\n\\n"
+            "## Informations changeantes\\n"
+            "Les horaires, prix, formalités, météo et disponibilités doivent être vérifiés auprès de sources récentes ou officielles.\\n"
+        )
+        return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
     @app.get("/robots.txt")
     def robots():
         body = (
