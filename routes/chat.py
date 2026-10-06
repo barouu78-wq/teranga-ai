@@ -8,6 +8,7 @@ from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
 from services.fallback_answer import knowledge_fallback
+from services.backup_ai import backup_complete, backup_enabled
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
@@ -45,7 +46,21 @@ def register_chat_route(app, deps):
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
 
     def fallback_for(payload):
-        """Réponse tirée de la base quand l'IA est en panne (lieu ou plat cité), sinon None."""
+        """Réponse de secours quand OpenAI est en panne : IA de secours (Claude) si elle
+        est configurée, sinon la base de connaissances (lieu ou plat cité), sinon None."""
+        if backup_enabled():
+            try:
+                reply = backup_complete(
+                    payload.get("input_text") or payload.get("message", ""),
+                    system=payload.get("instructions", ""),
+                    max_tokens=1500,
+                    timeout=45,
+                )
+                if reply:
+                    logger.warning("chat_backup_ai_used")
+                    return clean_answer(reply)
+            except Exception:  # noqa: BLE001 - on passe au secours suivant
+                logger.exception("chat_backup_ai")
         try:
             return knowledge_fallback(payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"))
         except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne

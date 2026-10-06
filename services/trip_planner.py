@@ -6,6 +6,7 @@ from html import escape
 from flask import Response, jsonify, request, stream_with_context
 from datetime import date
 
+from services.backup_ai import backup_complete, backup_enabled
 from services.http_security import origin_allowed
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 from services.language_quality import language_instruction
@@ -410,6 +411,34 @@ def _plan_error(exc, lang):
 _DAY_MARKER = re.compile(r'"day"\s*:\s*\d')
 
 
+def _backup_plan_text(request_kwargs, app=None):
+    """Plan rédigé par l'IA de secours (Claude) si OpenAI a échoué ; "" sinon."""
+    if not backup_enabled():
+        return ""
+    try:
+        text = backup_complete(
+            str(request_kwargs.get("input") or ""),
+            max_tokens=int(request_kwargs.get("max_output_tokens") or 8000),
+            timeout=OPENAI_TIMEOUT,
+        )
+    except Exception:  # noqa: BLE001 - l'erreur d'origine sera affichée
+        if app is not None:
+            app.logger.exception("trip-planner backup")
+        return ""
+    if text and app is not None:
+        app.logger.warning("trip-planner backup_ai_used")
+    return text
+
+
+class _BackupEvent:
+    """Fin de flux synthétique quand le plan vient de l'IA de secours."""
+
+    type = "response.completed"
+
+    def __init__(self, text):
+        self.response = type("R", (), {"output_text": text})()
+
+
 _HEARTBEAT = object()
 HEARTBEAT_SECONDS = 10.0
 
@@ -464,7 +493,22 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         text = ""
         started = time.monotonic()
         try:
-            events = _events_with_heartbeat(lambda: _create(client, stream=True, **request_kwargs))
+            def open_stream():
+                # OpenAI d'abord ; s'il échoue avant d'avoir écrit, l'IA de secours prend
+                # le relais (dans le même fil : les signes de vie continuent pendant ce temps).
+                wrote = False
+                try:
+                    for event in _create(client, stream=True, **request_kwargs):
+                        if getattr(event, "type", "") == "response.output_text.delta":
+                            wrote = True
+                        yield event
+                except Exception:
+                    backup = "" if wrote else _backup_plan_text(request_kwargs, app)
+                    if not backup:
+                        raise
+                    yield _BackupEvent(backup)
+
+            events = _events_with_heartbeat(open_stream)
             final_text = ""
             seen = 0
             for event in events:
@@ -658,8 +702,13 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
         if request.headers.get("X-Teranga-Stream") == "1":
             return _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         try:
-            response = _create(client, **request_kwargs)
-            text = getattr(response, "output_text", "") or ""
+            try:
+                response = _create(client, **request_kwargs)
+                text = getattr(response, "output_text", "") or ""
+            except Exception:
+                text = _backup_plan_text(request_kwargs, app)
+                if not text:
+                    raise
             if not text:
                 return jsonify({"error": "Réponse vide de l'assistant."}), 502
             return jsonify(_plan_result(data, text, expected_days, places_by_id))
