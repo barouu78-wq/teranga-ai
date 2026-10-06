@@ -75,6 +75,9 @@ def add_security_headers(
         # Page publique et identique pour tous (pages SEO, régions, guides) :
         # on garde la mise en cache déclarée par la route.
         response.headers["Cache-Control"] = declared
+    elif declared == "no-store":
+        # Page sensible (statistiques privées) : jamais gardée, même pour « précédent ».
+        response.headers["Cache-Control"] = "no-store"
     elif response.mimetype == "text/html":
         # Page privée revalidée à chaque visite, mais éligible au cache
         # « précédent/suivant » du navigateur (retour arrière instantané),

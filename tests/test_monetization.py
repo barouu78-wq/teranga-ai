@@ -178,9 +178,18 @@ def test_stats_page_is_hidden_without_token_and_needs_the_password(monkeypatch):
     client = _client()
     page = client.get("/stats-partenaires", base_url=B)
     assert page.status_code == 200 and 'type="password"' in page.get_data(as_text=True)
-    assert "public" not in page.headers["Cache-Control"]
+    assert page.headers["Cache-Control"] == "no-store"
     client.get("/go/taxi?q=Gor%C3%A9e&from=goree", base_url=B)
     wrong = client.post("/stats-partenaires", data={"cle": "faux"}, base_url=B)
     assert wrong.status_code == 403 and "goree" not in wrong.get_data(as_text=True)
     ok = client.post("/stats-partenaires", data={"cle": "un-mot-de-passe-solide-123"}, base_url=B)
     assert ok.status_code == 200 and "goree" in ok.get_data(as_text=True)
+
+
+def test_invented_click_sources_do_not_create_rows(monkeypatch):
+    monkeypatch.setenv("STATS_TOKEN", "un-mot-de-passe-solide-123")
+    monkeypatch.setenv("TAXI_PARTNER_URL", "https://taxi.example/invite")
+    client = _client()
+    client.get("/go/taxi?q=x&from=inventee-par-un-script", base_url=B)
+    page = client.post("/stats-partenaires", data={"cle": "un-mot-de-passe-solide-123"}, base_url=B).get_data(as_text=True)
+    assert "inventee-par-un-script" not in page

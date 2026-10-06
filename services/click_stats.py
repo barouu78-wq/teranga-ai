@@ -41,25 +41,37 @@ class ClickStats:
         if self.redis is not None:
             try:
                 key = _PREFIX + month
-                self.redis.hincrby(key, field, 1)
-                self.redis.expire(key, _KEEP_SECONDS)
+                # Un seul aller-retour Redis (le clic attend avant la redirection).
+                pipe = self.redis.pipeline(transaction=False) if hasattr(self.redis, "pipeline") else None
+                if pipe is not None:
+                    pipe.hincrby(key, field, 1)
+                    pipe.expire(key, _KEEP_SECONDS)
+                    pipe.execute()
+                else:
+                    self.redis.hincrby(key, field, 1)
+                    self.redis.expire(key, _KEEP_SECONDS)
                 return
             except Exception:
                 if self.logger is not None:
                     self.logger.warning("click-stats redis indisponible, comptage en mémoire")
         with self._lock:
             self._memory.setdefault(month, Counter())[field] += 1
+            for old_month in sorted(self._memory)[:-13]:  # environ un an en mémoire
+                self._memory.pop(old_month, None)
 
     def month_counts(self, month: str) -> Counter:
+        # Clics comptés en mémoire pendant une panne Redis : ajoutés aux chiffres
+        # Redis au lieu d'être ignorés.
+        with self._lock:
+            counts = Counter(self._memory.get(month, Counter()))
         if self.redis is not None:
             try:
                 raw = self.redis.hgetall(_PREFIX + month) or {}
-                return Counter({str(k): int(v) for k, v in raw.items()})
+                counts.update({str(k): int(v) for k, v in raw.items()})
             except Exception:
                 if self.logger is not None:
                     self.logger.warning("click-stats redis illisible")
-        with self._lock:
-            return Counter(self._memory.get(month, Counter()))
+        return counts
 
     def summary(self, months: int = 6, today: _dt.date | None = None) -> list[dict]:
         """[{month, total, by_kind: {kind: n}, rows: [(kind, source, n)]}] du plus récent au plus ancien."""

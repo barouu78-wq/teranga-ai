@@ -499,6 +499,7 @@ GUARDED_LIMITS = {
     "report": (5, 30),
     # Page privée des statistiques : quelques essais de mot de passe seulement.
     "stats_login": (5, 20),
+    "affiliate_count": (6, 60),
 }
 
 
@@ -732,7 +733,10 @@ register_exchange_rates_route(app, {
 })
 
 register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
-register_monetization_routes(app, redis_client=redis_client, rate_guard=rate_guard)
+register_monetization_routes(
+    app, redis_client=redis_client, rate_guard=rate_guard,
+    known_sources=[p.get("id") for p in SENEGAL_KNOWLEDGE.get("places", []) if isinstance(p, dict)],
+)
 register_emergency_routes(app, SITE_URL)
 
 register_youth_project_route(app, {
@@ -795,7 +799,10 @@ register_chat_route(app, {
     "field": _field,
 })
 
-register_realtime_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "realtime_request_log": realtime_request_log, "realtime_hourly_log": realtime_hourly_log, "SAFE_LANG": SAFE_LANG, "sanitize_text": sanitize_text, "API_KEY": API_KEY, "REALTIME_RATE_LIMIT": int(os.getenv("REALTIME_RATE_LIMIT", "8")), "REALTIME_HOURLY_LIMIT": int(os.getenv("REALTIME_HOURLY_LIMIT", "24"))})
+# Voix « temps réel » (WebRTC) : plus utilisée par le site ; route coupée sauf
+# activation explicite, pour ne pas laisser ouverte une session OpenAI payante.
+if os.getenv("REALTIME_VOICE_ENABLED", "").strip() == "1":
+    register_realtime_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "realtime_request_log": realtime_request_log, "realtime_hourly_log": realtime_hourly_log, "SAFE_LANG": SAFE_LANG, "sanitize_text": sanitize_text, "API_KEY": API_KEY, "REALTIME_RATE_LIMIT": int(os.getenv("REALTIME_RATE_LIMIT", "8")), "REALTIME_HOURLY_LIMIT": int(os.getenv("REALTIME_HOURLY_LIMIT", "24"))})
 
 register_stt_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "stt_request_log": stt_request_log, "stt_hourly_log": stt_hourly_log, "STT_RATE_LIMIT": STT_RATE_LIMIT, "STT_HOURLY_LIMIT": STT_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_MESSAGE_LENGTH": MAX_MESSAGE_LENGTH, "sanitize_text": sanitize_text, "public_error": public_error, "_field": _field, "client": client})
 
