@@ -279,7 +279,6 @@ const urlParams=(()=>{try{return new URLSearchParams(location.search)}catch(_){r
 let lang=['fr','en','wo','ff'].includes(urlParams.get('lang'))?urlParams.get('lang'):storageGet('teranga-lang','fr');
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
-let realtimePc=null, realtimeDc=null, realtimeMic=null, realtimeAudio=null, realtimeActive=false, realtimeStarting=false, realtimeReconnectTimer=0, realtimeReconnectAttempts=0, realtimeSessionId=0, realtimeAssistantRows=new Map(), realtimeAssistantText=new Map();
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 function cleanReply(text){
   return String(text||'')
@@ -683,11 +682,6 @@ function setLang(next){
   $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
   if(rec)rec.lang=voiceMap[lang];
-  if(realtimeActive){
-    const wasActive=voiceConversation&&autoVoice;
-    closeRealtimeVoice();
-    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
-  }
 }
 document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
   const nextAudience=String(btn.dataset.audience||'').trim();
@@ -695,11 +689,6 @@ document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('cl
   audience=nextAudience;
   try{LS.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
-  if(realtimeActive){
-    const wasActive=voiceConversation&&autoVoice;
-    closeRealtimeVoice();
-    if(wasActive)setTimeout(()=>startRealtimeVoice(),120);
-  }
 }));
 function themeInit(){
   applyTheme();
@@ -1161,27 +1150,6 @@ send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();
 };
-// Démarre la voix : temps réel, sinon reconnaissance du navigateur ; si rien
-// ne peut écouter, on sort proprement du mode vocal au lieu de rester bloqué.
-async function startVoiceOrExplain(){
-  let ok=false;
-  try{ok=await startRealtimeVoice();}catch(_){ok=false;}
-  if(ok||!voiceConversation)return;
-  if(rec&&!listening){try{rec.start();return;}catch(_){}}
-  else if(listening)return;
-  endVoiceMode();
-  mic.classList.remove('listen');
-  // La lecture automatique des réponses reste possible sans micro.
-  $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
-  voiceStatus(lang==='en'?'Voice is unavailable on this browser right now. You can type your question.'
-    :lang==='wo'?'Baat bi amul fii léegi. Mën nga bind sa laaj.'
-    :'La voix est indisponible sur ce navigateur pour le moment. Tu peux écrire ta question.');
-}
-mic.onclick=async()=>{
-  if(listening||realtimeActive||realtimeStarting){endVoiceMode();return;}
-  beginVoiceMode();
-  await startVoiceOrExplain();
-};
 $('resetBtn').onclick=reset;
 $('shareAppBtn').onclick=shareApp;
 $('copyLink').onclick=async()=>{
@@ -1199,20 +1167,6 @@ $('themeBtn').onclick=()=>{
   LS.setItem('teranga-theme',next);
   if(window.terangaTheme)window.terangaTheme.saveMode(next);
   applyTheme();
-};
-$('voiceToggle').onclick=async()=>{
-  autoVoice=!autoVoice;
-  LS.setItem('teranga-voice',autoVoice?'1':'0');
-  $('voiceToggle').textContent=autoVoice?T[lang].vOn:T[lang].vOff;
-  if(autoVoice){
-    beginVoiceMode();
-    stopSpeakingForListening();
-    await startVoiceOrExplain();
-  }else{
-    endVoiceMode();
-    stopSpeakingForListening();
-    mic.classList.remove('listen');
-  }
 };
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}});
 let countRaf=0;
@@ -1243,266 +1197,6 @@ $('installBtn').onclick=async()=>{
   await deferredInstall.userChoice.catch(()=>{});
   deferredInstall=null;$('installBtn').hidden=true;
 };
-/* Teranga Voice Realtime — direct speech-to-speech WebRTC with semantic turn detection. */
-function realtimeEvent(payload){
-  if(!realtimeDc||realtimeDc.readyState!=='open')return;
-  try{realtimeDc.send(JSON.stringify(payload));}catch(_){}
-}
-function realtimeContext(){
-  return history.slice(-8)
-    .map(item=>String(item.role||'')+': '+String(item.content||'').trim())
-    .filter(Boolean).join('\n').slice(-3200);
-}
-function waitForIceGathering(pc,timeout=2200){
-  if(pc.iceGatheringState==='complete')return Promise.resolve();
-  return new Promise(resolve=>{
-    let done=false;
-    const finish=()=>{if(done)return;done=true;clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve();};
-    const check=()=>{if(pc.iceGatheringState==='complete')finish();};
-    const timer=setTimeout(finish,timeout);
-    pc.addEventListener('icegatheringstatechange',check);
-  });
-}
-function scheduleRealtimeReconnect(){
-  clearTimeout(realtimeReconnectTimer);
-  if(!voiceConversation||!autoVoice||realtimeStarting||realtimeActive)return;
-  const attempt=Math.min(6,realtimeReconnectAttempts++);
-  const delay=Math.min(5000,350*Math.pow(1.7,attempt));
-  realtimeReconnectTimer=setTimeout(async()=>{
-    realtimeReconnectTimer=0;
-    if(!voiceConversation||!autoVoice||realtimeActive)return;
-    const ok=await startRealtimeVoice();
-    if(ok)realtimeReconnectAttempts=0;
-    else scheduleRealtimeReconnect();
-  },delay);
-}
-function closeRealtimeVoice(){
-  realtimeSessionId++;
-  clearTimeout(realtimeReconnectTimer);
-  realtimeReconnectTimer=0;
-  realtimeActive=false;
-  realtimeStarting=false;
-  if(realtimeDc){try{realtimeDc.close();}catch(_){}realtimeDc=null;}
-  if(realtimePc){try{realtimePc.close();}catch(_){}realtimePc=null;}
-  if(realtimeMic){realtimeMic.getTracks().forEach(t=>{try{t.stop();}catch(_){} });realtimeMic=null;}
-  if(realtimeAudio){try{realtimeAudio.pause();}catch(_){}realtimeAudio.srcObject=null;realtimeAudio.remove();realtimeAudio=null;}
-  realtimeAssistantRows.clear();
-  realtimeAssistantText.clear();
-  document.body.classList.remove('realtime-voice','assistant-speaking');
-  voiceSpeaking=false;
-  voiceSetMicState(false);
-}
-function realtimeVoiceStatus(text){voiceStatus(text);}
-function addRealtimeUserTranscript(text){
-  text=String(text||'').replace(/\s+/g,' ').trim();
-  if(!text)return;
-  addMsg('user',text,{animate:true});
-  history.push({role:'user',content:text});
-  history=history.slice(-12);
-  persist();
-}
-function realtimeAssistantRow(itemId){
-  let row=realtimeAssistantRows.get(itemId);
-  if(row)return row;
-  row=addMsg('assistant','',{animate:true});
-  realtimeAssistantRows.set(itemId,row);
-  realtimeAssistantText.set(itemId,'');
-  return row;
-}
-function addRealtimeAssistantTranscript(itemId,text){
-  text=cleanReply(text||'');
-  if(!text)return;
-  const row=realtimeAssistantRow(itemId);
-  realtimeAssistantText.set(itemId,text);
-  row.b.textContent=text;
-  row.row.classList.remove('thinking');
-  if(!row.col.querySelector('.acts'))addActs(row.col,text);
-  scrollStage();
-}
-function finishRealtimeAssistant(itemId,text){
-  text=cleanReply(text||realtimeAssistantText.get(itemId)||'');
-  if(!text)return;
-  const row=realtimeAssistantRow(itemId);
-  row.b.textContent=text;
-  row.row.classList.remove('thinking');
-  if(!row.col.querySelector('.acts'))addActs(row.col,text);
-  history.push({role:'assistant',content:text});
-  history=history.slice(-12);
-  persist();
-}
-function handleRealtimeEvent(ev){
-  if(!ev||!ev.type)return;
-  if(ev.type==='input_audio_buffer.speech_started'){
-    voiceSpeaking=false;
-    document.body.classList.remove('assistant-speaking');
-    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
-    return;
-  }
-  if(ev.type==='input_audio_buffer.speech_stopped'){
-    realtimeVoiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m understanding…':lang==='wo'?'Maa ngi dégg…':'Mi heɓii…');
-    return;
-  }
-  if(ev.type==='response.created'){
-    voiceSpeaking=true;
-    document.body.classList.add('assistant-speaking');
-    realtimeVoiceStatus(lang==='fr'?'Teranga répond…':lang==='en'?'Teranga is answering…':lang==='wo'?'Teranga ngi tontu…':'Teranga jaaba…');
-    return;
-  }
-  if(ev.type==='conversation.item.input_audio_transcription.completed'){
-    addRealtimeUserTranscript(ev.transcript||'');
-    return;
-  }
-  if(ev.type==='response.output_audio_transcript.delta'){
-    const current=(realtimeAssistantText.get(ev.item_id)||'')+(ev.delta||'');
-    addRealtimeAssistantTranscript(ev.item_id,current);
-    return;
-  }
-  if(ev.type==='response.output_audio_transcript.done'){
-    finishRealtimeAssistant(ev.item_id,ev.transcript||'');
-    return;
-  }
-  if(ev.type==='response.output_audio.done'){
-    voiceSpeaking=false;
-    document.body.classList.remove('assistant-speaking');
-    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
-    return;
-  }
-  if(ev.type==='response.done'){
-    if(ev.response?.status==='failed'){
-      realtimeVoiceStatus(lang==='fr'?'La réponse vocale a rencontré un problème.':lang==='en'?'The voice response had a problem.':T[lang].err);
-    }
-    return;
-  }
-  if(ev.type==='response.cancelled'){
-    voiceSpeaking=false;
-    document.body.classList.remove('assistant-speaking');
-    realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
-    return;
-  }
-  if(ev.type==='conversation.item.input_audio_transcription.failed'){
-    realtimeVoiceStatus(lang==='fr'?'Je n’ai pas bien compris. Répète-moi ça.':lang==='en'?'I didn’t catch that. Please say it again.':T[lang].hintTouch);
-    return;
-  }
-  if(ev.type==='error'){
-    realtimeVoiceStatus(lang==='fr'?'La voix rencontre un problème.':lang==='en'?'Voice encountered a problem.':T[lang].err);
-    return;
-  }
-}
-async function startRealtimeVoice(){
-  if(!voiceConversation||!autoVoice)return false;
-  if(realtimeActive||realtimeStarting)return true;
-  if(!window.RTCPeerConnection||!navigator.mediaDevices?.getUserMedia)return false;
-  realtimeStarting=true;
-  const sessionId=++realtimeSessionId;
-  try{
-    await stopLegacyVoiceForRealtime();
-    const stream=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}
-    });
-    if(!voiceConversation||!autoVoice){
-      stream.getTracks().forEach(t=>{try{t.stop();}catch(_){}});
-      realtimeStarting=false;
-      return false;
-    }
-    realtimeMic=stream;
-    realtimePc=new RTCPeerConnection();
-    realtimeAudio=document.createElement('audio');
-    realtimeAudio.autoplay=true;
-    realtimeAudio.playsInline=true;
-    realtimeAudio.setAttribute('aria-hidden','true');
-    realtimeAudio.style.display='none';
-    document.body.appendChild(realtimeAudio);
-    realtimePc.ontrack=e=>{
-      if(sessionId!==realtimeSessionId||!realtimeAudio)return;
-      const [trackStream]=e.streams;
-      if(trackStream)realtimeAudio.srcObject=trackStream;
-      realtimeAudio.play().catch(()=>{});
-    };
-    realtimePc.onconnectionstatechange=()=>{
-      if(sessionId!==realtimeSessionId)return;
-      const state=realtimePc?.connectionState;
-      if(state==='connected'){
-        realtimeActive=true;
-        realtimeStarting=false;
-        realtimeReconnectAttempts=0;
-        document.body.classList.add('realtime-voice');
-        realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
-        voiceSetMicState(true);
-      }else if(['failed','closed','disconnected'].includes(state)&&realtimeActive){
-        closeRealtimeVoice();
-        if(voiceConversation&&autoVoice){
-          realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
-          scheduleRealtimeReconnect();
-        }
-      }
-    };
-    realtimeDc=realtimePc.createDataChannel('oai-events');
-    realtimeDc.onopen=()=>{
-      if(sessionId!==realtimeSessionId)return;
-      // The recent context is already injected into the server-side Realtime
-      // instructions. Do not create a synthetic system message in the conversation:
-      // that adds latency and can create a visible/invalid extra turn.
-      realtimeVoiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
-    };
-    realtimeDc.onmessage=e=>{
-      if(sessionId!==realtimeSessionId)return;
-      try{handleRealtimeEvent(JSON.parse(e.data));}catch(_){}
-    };
-    realtimeDc.onerror=()=>{
-      if(sessionId!==realtimeSessionId)return;
-      if(voiceConversation&&autoVoice){
-        realtimeVoiceStatus(lang==='fr'?'Je rétablis la connexion vocale…':lang==='en'?'Reconnecting voice…':lang==='wo'?'Damaa jëfandikoo baat bi…':'Mi yahrata jokkondiral baat');
-      }
-    };
-    realtimePc.addTrack(stream.getAudioTracks()[0],stream);
-    const offer=await realtimePc.createOffer({offerToReceiveAudio:true});
-    await realtimePc.setLocalDescription(offer);
-    await waitForIceGathering(realtimePc);
-    const form=new FormData();
-    form.append('sdp',realtimePc.localDescription?.sdp||'','teranga-offer.sdp');
-    form.append('language',lang);
-    form.append('audience',audience);
-    form.append('context',realtimeContext());
-    if(sessionId!==realtimeSessionId)return false;
-    let res=await fetch('/realtime-call',{
-      method:'POST',
-      headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-      body:form,credentials:'same-origin'
-    });
-    if(res.status===403){
-      if(sessionId!==realtimeSessionId)return false;
-      await refreshCsrf();
-      if(sessionId!==realtimeSessionId)return false;
-      res=await fetch('/realtime-call',{
-        method:'POST',
-        headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-        body:form,credentials:'same-origin'
-      });
-    }
-    if(!res.ok)throw new Error((await res.json().catch(()=>({}))).error||'realtime');
-    if(sessionId!==realtimeSessionId)return false;
-    const answer=await res.text();
-    if(sessionId!==realtimeSessionId||!realtimePc)return false;
-    await realtimePc.setRemoteDescription({type:'answer',sdp:answer});
-    if(sessionId!==realtimeSessionId)return false;
-    realtimeStarting=false;
-    realtimeActive=true;
-    document.body.classList.add('realtime-voice');
-    voiceSetMicState(true);
-    return true;
-  }catch(err){
-    if(sessionId===realtimeSessionId)closeRealtimeVoice();
-    return false;
-  }
-}
-async function stopLegacyVoiceForRealtime(){
-  try{clearVoiceRestart?.();}catch(_){}
-  try{if(rec&&listening)rec.stop();}catch(_){}
-  try{stopVoiceCapture?.();}catch(_){}
-  voiceWaitingForAnswer=false;
-  voiceSpeaking=false;
-}
-
 /* Teranga Voice v13 — hands-free conversation, persistent mic, adaptive VAD and barge-in.
    Goal: speak naturally, pause, get an answer, and continue without touching the screen. */
 let voiceStream=null, voiceRecorder=null, voiceAudioContext=null, voiceAnalyser=null, voiceVADTimer=0;
@@ -1787,7 +1481,6 @@ function endVoiceMode(){
   voiceDraft='';
   voiceTurnId++;
   stopVoiceCapture();stopVoiceMonitor();
-  closeRealtimeVoice();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
   $('voiceToggle').textContent=T[lang].vOff;
