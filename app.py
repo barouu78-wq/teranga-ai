@@ -45,6 +45,7 @@ from services.youth_opportunities import find_youth_opportunities
 from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, infer_senegal_context, should_use_planner
+from services.backup_ai import claude_is_primary, claude_model
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
 from services.rate_limit import BoundedStore, allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
@@ -779,7 +780,7 @@ register_chat_route(app, {
     # de la base de connaissances invalide les anciennes réponses en cache.
     # Le prompt système, les partenaires et le modèle complexe en font partie aussi,
     # ainsi que la date (un partenariat expiré ne doit plus apparaître le lendemain).
-    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat(),
+    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,
