@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from html import escape
 
 from flask import Response, jsonify, request
@@ -65,9 +66,8 @@ def render_privacy(lang: str, contact_email: str = "") -> str:
 
 
 # Application Android (paquet PWABuilder). Ces valeurs sont publiques : le
-# fichier assetlinks.json est fait pour être lu par tous. Ajouter ici
-# l'empreinte « Clé de signature d'application » de la Play Console
-# (Intégrité de l'application) dès qu'elle est connue.
+# fichier assetlinks.json est fait pour être lu par tous. ANDROID_CERT_SHA256
+# (variable d'environnement) peut AJOUTER des empreintes, jamais en retirer.
 ANDROID_APP_PACKAGE = "fr.teranga_ai"
 ANDROID_CERT_SHA256 = (
     # Clé de signature Google Play (Play App Signing) : celle des installations depuis le Play Store.
@@ -77,8 +77,16 @@ ANDROID_CERT_SHA256 = (
 )
 
 
+_SHA256_RE = re.compile(r"^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$")
+
+
 def asset_links(package: str, fingerprints: str) -> list:
-    prints = [item.strip().upper() for item in str(fingerprints or "").split(",") if item.strip()]
+    prints = []
+    for item in str(fingerprints or "").split(","):
+        value = item.strip().upper().removeprefix("SHA256:").strip()
+        # Une empreinte mal copiée ferait échouer la vérification Android sans erreur visible.
+        if _SHA256_RE.match(value) and value not in prints:
+            prints.append(value)
     if not package or not prints:
         return []
     return [{
@@ -106,7 +114,7 @@ def register_legal_routes(app, deps):
         # (application « TWA » qui affiche teranga-ai.fr en plein écran).
         links = asset_links(
             os.getenv("ANDROID_APP_PACKAGE", "").strip() or ANDROID_APP_PACKAGE,
-            os.getenv("ANDROID_CERT_SHA256", "") or ",".join(ANDROID_CERT_SHA256),
+            ",".join(ANDROID_CERT_SHA256) + "," + os.getenv("ANDROID_CERT_SHA256", ""),
         )
         if not links:
             return Response("[]", status=404, mimetype="application/json")

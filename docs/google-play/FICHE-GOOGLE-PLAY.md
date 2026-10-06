@@ -154,11 +154,12 @@ Si la mesure d'audience est activée (`ANALYTICS_SCRIPT_URL`), ajouter
 
 ## 4. Lien de vérification Android
 
-Une fois l'empreinte SHA-256 connue (fichier `assetlinks.json` du paquet PWABuilder, puis aussi
-l'empreinte « Clé de signature d'application » de la Play Console → Intégrité de l'application),
-ajouter sur Render :
+Les empreintes SHA-256 sont déjà inscrites dans `routes/legal.py` (`ANDROID_CERT_SHA256`) :
 
-- `ANDROID_APP_PACKAGE` = le Package ID : `fr.teranga_ai` (déjà inscrit dans routes/legal.py)
-- `ANDROID_CERT_SHA256` = les empreintes séparées par une virgule
+- clé de signature Google Play (Play Console → Protégé avec Play → Signature d'application) ;
+- clé d'importation (signing.keystore du paquet PWABuilder).
 
-Vérifier ensuite : https://teranga-ai.fr/.well-known/assetlinks.json
+Rien à configurer sur Render. La variable `ANDROID_CERT_SHA256` sert seulement à **ajouter** une
+empreinte (séparées par une virgule) sans redéployer ; elle ne remplace pas celles du code.
+
+Vérifier : https://teranga-ai.fr/.well-known/assetlinks.json
