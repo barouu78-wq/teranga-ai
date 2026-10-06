@@ -32,6 +32,17 @@ Résultat : un bouton « 🎟️ Visites et activités » apparaît sur les fich
 
 Résultat : un bouton « 🏨 Hôtels à … » apparaît à côté du précédent.
 
+## 2 bis. Taxi / VTC : Sengo ou une autre appli
+
+1. Contacte l'appli de taxi (par exemple Sengo, sengoservices.com) et demande un **lien de parrainage ou d'affiliation** : une adresse en `https://…` qui ouvre l'appli ou sa page de téléchargement, et qui leur permet de compter les clients venus de Teranga AI.
+2. Sur Render, ajoute :
+   - Key : `TAXI_PARTNER_URL`
+   - Value : ce lien complet (il doit commencer par `https://`)
+
+Résultat : un bouton « 🚕 Commander un taxi pour … » apparaît sur les fiches des lieux et sous les réponses du chat qui parlent d'un lieu. Chaque clic est compté dans les journaux Render (`affiliate-click kind=taxi`), ce qui te donne un chiffre concret à montrer au partenaire pour négocier une commission.
+
+Sans cette variable, les fiches affichent quand même un bouton « 🧭 Itinéraire » (Google Maps) et le conseil de fixer le prix du taxi avant de monter.
+
 > Les commissions et conditions dépendent de chaque programme : lis-les au moment de l'inscription. Les visiteurs voient toujours la mention « Lien partenaire : Teranga AI peut recevoir une commission ».
 
 ## 3. Adresses partenaires (hôtels, guides, restaurants, agences)
