@@ -360,7 +360,7 @@ SEO_PAGES = {
         "related": [("senegal", "Guide du Sénégal"), ("dakar", "Dakar"), ("visiter-goree", "Gorée"), ("regions-senegal", "14 régions")]
     },
     "transport-senegal": {
-        "title": "Transport au Sénégal : Dakar, AIBD, régions et trajets | Teranga AI",
+        "title": "Transport Sénégal : Dakar, AIBD et trajets | Teranga AI",
         "description": "Guide du transport au Sénégal : Dakar, AIBD, taxis, bus et trajets entre les villes.",
         "h1": "Transport au Sénégal",
         "intro": "Préparez vos déplacements en indiquant votre départ, votre destination, votre horaire et vos contraintes.",
@@ -376,7 +376,7 @@ SEO_PAGES = {
         "related": [("transport-dakar", "Transport Dakar"), ("aibd-dakar", "AIBD → Dakar"), ("dakar", "Dakar"), ("regions-senegal", "Régions")]
     },
     "vie-pratique-senegal": {
-        "title": "Vie pratique au Sénégal : démarches, budget, transport et services | Teranga AI",
+        "title": "Vie pratique Sénégal : démarches et services | Teranga AI",
         "description": "Assistant pour la vie pratique au Sénégal : démarches, budget, logement, transport, services et quotidien.",
         "h1": "Vie pratique au Sénégal",
         "intro": "Posez une question sur le quotidien au Sénégal : budget, déplacements, démarches, services, logement ou organisation.",
@@ -408,7 +408,7 @@ SEO_PAGES = {
         "related": [("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("formation-senegal", "Formation")]
     },
     "formation-senegal": {
-        "title": "Formation au Sénégal : études, compétences et apprentissage | Teranga AI",
+        "title": "Formation Sénégal : études et compétences | Teranga AI",
         "description": "Formation au Sénégal : compétences numériques, études, métiers, reconversion et apprentissage.",
         "h1": "Formation au Sénégal",
         "intro": "Identifiez les compétences à développer et préparez votre parcours d'apprentissage selon votre objectif.",
@@ -424,7 +424,7 @@ SEO_PAGES = {
         "related": [("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("emploi-senegal", "Emploi")]
     },
     "entreprendre-senegal": {
-        "title": "Entreprendre au Sénégal : projet, business et développement | Teranga AI",
+        "title": "Entreprendre au Sénégal : projet et business | Teranga AI",
         "description": "Créer et développer un projet au Sénégal : idée business, budget, offre, clients, partenaires et plan d'action.",
         "h1": "Entreprendre au Sénégal",
         "intro": "Transformez une idée en projet structuré avec un plan simple, des hypothèses claires et des prochaines étapes.",
