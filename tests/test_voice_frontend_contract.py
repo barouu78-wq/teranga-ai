@@ -1,5 +1,4 @@
 from home_source import home_source
-from pathlib import Path
 
 
 def test_voice_mode_stop_closes_realtime_session():

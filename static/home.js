@@ -937,7 +937,15 @@ async function ask(preset,fromVoice=false,isRetry=false){
   try{
   // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
   const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
-    const res=await postJSON('/chat',body,null,ctrl.signal);
+    // Coupure réseau avant toute réponse (redémarrage du serveur, réseau mobile) :
+    // un seul nouvel essai automatique, 2 s plus tard.
+    let res;
+    try{res=await postJSON('/chat',body,null,ctrl.signal);}
+    catch(first){
+      if(first.name!=='TypeError'||navigator.onLine===false)throw first;
+      await new Promise(ok=>setTimeout(ok,2000));arm();
+      res=await postJSON('/chat',body,null,ctrl.signal);
+    }
     if(!res.ok){
       const data=await res.json().catch(()=>({}));
       const error=new Error(data.error||T[lang].err);
