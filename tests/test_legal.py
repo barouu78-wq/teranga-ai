@@ -95,3 +95,18 @@ def test_manifest_lists_wide_screenshots_and_play_app_when_configured(monkeypatc
         "url": "https://play.google.com/store/apps/details?id=fr.terangaai.app",
     }
     assert manifest["prefer_related_applications"] is False
+
+
+def test_report_reason_is_restricted_to_known_values(caplog):
+    from app import app
+
+    client = app.test_client()
+    token = client.get("/csrf").get_json()["token"]
+    with caplog.at_level("WARNING"):
+        client.post(
+            "/api/report",
+            json={"reason": "x\nai-report reason=abuse question='forged'", "reply": "r"},
+            headers={"X-CSRF-Token": token, "Origin": "https://teranga-ai.fr"},
+        )
+    lines = [r.getMessage() for r in caplog.records if "ai-report" in r.getMessage()]
+    assert lines and all(line.startswith("ai-report reason=other ") and "forged" not in line for line in lines)

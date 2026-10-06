@@ -29,7 +29,6 @@ def register_system_routes(app, deps):
     home_html = deps["home_html"]
     site_url = deps["site_url"]
     build_icon_png = deps["build_icon_png"]
-    icon_svg = deps["icon_svg"]
     redis_client = deps.get("redis_client")
     redis_configured = deps.get("redis_configured", redis_client is not None)
     # Seulement « configuré ou non » : jamais la clé elle-même.
@@ -85,41 +84,36 @@ def register_system_routes(app, deps):
     @app.get("/icon-192.png")
     def icon_192():
         try:
-            return Response(
-                build_icon_png(192),
-                mimetype="image/png",
-                headers={"Cache-Control": "public, max-age=86400"},
-            )
+            return Response(cached_png("192"), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
         except Exception:
-            return icon_svg()
+            return icon_svg_route()
 
     @app.get("/icon-512.png")
     def icon_512():
         try:
-            return Response(
-                build_icon_png(512),
-                mimetype="image/png",
-                headers={"Cache-Control": "public, max-age=86400"},
-            )
+            return Response(cached_png("512"), mimetype="image/png", headers={"Cache-Control": "public, max-age=86400"})
         except Exception:
-            return icon_svg()
+            return icon_svg_route()
 
-    sw_path = Path(__file__).resolve().parents[1] / "static" / "sw.js"
+    static_dir = Path(__file__).resolve().parents[1] / "static"
+
+    # Ces fichiers ne changent qu'au déploiement : lus une seule fois par worker.
+    @lru_cache(maxsize=4)
+    def static_text(name):
+        return (static_dir / name).read_text(encoding="utf-8")
 
     @app.get("/sw.js")
     def service_worker():
         # Servi depuis la racine pour que sa portée couvre tout le site.
-        resp = Response(sw_path.read_text(encoding="utf-8"), mimetype="application/javascript")
+        resp = Response(static_text("sw.js"), mimetype="application/javascript")
         resp.headers["Cache-Control"] = "no-store"
         resp.headers["Service-Worker-Allowed"] = "/"
         return resp
 
-    widget_path = Path(__file__).resolve().parents[1] / "static" / "widget.js"
-
     @app.get("/widget.js")
     def partner_widget():
         # Chargé par les sites partenaires : URL stable, cache court.
-        resp = Response(widget_path.read_text(encoding="utf-8"), mimetype="application/javascript")
+        resp = Response(static_text("widget.js"), mimetype="application/javascript")
         resp.headers["Cache-Control"] = "public, max-age=3600"
         return resp
 

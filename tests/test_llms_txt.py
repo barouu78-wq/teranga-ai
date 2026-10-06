@@ -26,3 +26,11 @@ def test_llms_txt_exposes_official_site_and_priority_topics():
     ):
         assert f"https://teranga-ai.fr{path}" in body
     assert "Français, anglais et wolof" in body
+
+
+def test_llms_txt_uses_real_line_breaks():
+    from app import app
+
+    body = app.test_client().get("/llms.txt").get_data(as_text=True)
+    assert "\\n" not in body
+    assert body.splitlines()[0] == "# Teranga AI" and "## Pages prioritaires" in body.splitlines()

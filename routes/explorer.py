@@ -64,7 +64,20 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
                 if raw:
                     images = json.loads(raw)
                     if isinstance(images, list):
-                        return [dict(item) for item in images if isinstance(item, dict)]
+                        images = [dict(item) for item in images if isinstance(item, dict)]
+                        # Copie locale : les visites suivantes évitent un aller-retour Redis.
+                        ttl = IMAGE_CACHE_TTL if images else EMPTY_CACHE_TTL
+                        try:
+                            remaining = int(redis_client.ttl(_redis_key(key)))
+                            ttl = remaining if remaining > 0 else ttl
+                        except Exception:
+                            pass
+                        with cache_lock:
+                            cache[key] = (now + ttl, [dict(item) for item in images])
+                            cache.move_to_end(key)
+                            while len(cache) > IMAGE_CACHE_MAX:
+                                cache.popitem(last=False)
+                        return images
             except Exception:
                 app.logger.warning("explorer-image redis get failed")
         return None
