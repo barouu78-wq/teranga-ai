@@ -104,6 +104,10 @@ if RUNTIME_ENV == "production":
         "TRUSTED_HOSTS",
         "teranga-ai.fr,www.teranga-ai.fr,127.0.0.1,localhost",
     )
+    # Adresse publique fournie automatiquement par Render (xxx.onrender.com).
+    _render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip().lower()
+    if _render_host and _render_host not in app.config["TRUSTED_HOSTS"]:
+        app.config["TRUSTED_HOSTS"].append(_render_host)
 
 
 @app.before_request
@@ -189,6 +193,26 @@ if REDIS_URL:
         # on le signale sans jamais journaliser l'URL, qui contient le secret.
         app.logger.error("REDIS_URL invalide (%s) : limites en mémoire", type(exc).__name__)
         redis_client = None
+class _HealthCheckHost:
+    """/health reste joignable par le contrôle de santé de l'hébergeur.
+
+    Render (comme Coolify) l'appelle par une adresse interne (IP:port) que
+    TRUSTED_HOSTS refuserait (400) : le déploiement serait alors jugé en
+    échec. /health ne renvoie aucune donnée liée à l'hôte ; les autres pages
+    exigent toujours un hôte de confiance. Placé sous ProxyFix pour passer
+    après la réécriture de l'hôte par le proxy.
+    """
+
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        if environ.get("PATH_INFO") == "/health":
+            environ = {**environ, "HTTP_HOST": "localhost"}
+        return self.wsgi_app(environ, start_response)
+
+
+app.wsgi_app = _HealthCheckHost(app.wsgi_app)
 if TRUST_PROXY:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
