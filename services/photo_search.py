@@ -31,23 +31,55 @@ def _normalize(value: str) -> str:
     text = unicodedata.normalize("NFD", str(value or "").lower())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
+# Mots qui n'apportent aucune précision sur le lieu cherché.
+_GENERIC_WORDS = {
+    "photo", "photos", "image", "images", "picture", "pictures", "de", "du", "des", "d", "la", "le",
+    "les", "l", "a", "au", "aux", "en", "et", "of", "the", "in", "senegal", "voir", "montre", "moi",
+}
+
+
+def _has_term(text: str, term: str) -> bool:
+    """Terme entier : « touba » ne doit pas trouver « toubab » ni « toubacouta »."""
+    return re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", text) is not None
+
+
+def _match_place(low: str):
+    """Lieu le plus précis cité (clé ou alias le plus long), avec le texte trouvé."""
+    best = None
+    for key, aliases in PLACE_ALIASES.items():
+        for term in (key, *aliases):
+            norm = _normalize(term)
+            if norm in {"senegal"} or not _has_term(low, norm):
+                continue
+            if best is None or len(norm) > len(best[2]):
+                best = (key, aliases, norm)
+    return best
+
+
+def _extra_words(low: str, match) -> list[str]:
+    """Mots de la recherche qui ne viennent ni du lieu (ou de ses alias) ni du vocabulaire courant."""
+    known = set(_GENERIC_WORDS)
+    for term in (match[0], *match[1]):
+        known.update(re.findall(r"[a-z0-9]+", _normalize(term)))
+    return [w for w in re.findall(r"[a-z0-9]+", low) if w not in known and len(w) > 1]
+
+
 def normalize_place_query(query: str) -> str:
     value = re.sub(r"\s+", " ", str(query or "").strip())
     low = _normalize(value)
-    for key, aliases in PLACE_ALIASES.items():
-        if _normalize(key) in low:
-            return " ".join(aliases[:3])
-    for aliases in PLACE_ALIASES.values():
-        specific_aliases = tuple(alias for alias in aliases if _normalize(alias) not in {"senegal", "sénégal"})
-        if any(_normalize(alias) in low for alias in specific_aliases):
-            return " ".join(aliases[:3])
+    match = _match_place(low)
+    # « Île de Ngor Dakar » ou « mangrove Toubacouta » sont déjà précis : on ne les
+    # remplace pas par la ville entière.
+    if match and not _extra_words(low, match):
+        return " ".join(match[1][:3])
     return value + " Sénégal" if "senegal" not in low else value
+
 
 def relevant_image_evidence(query: str, title: str, description: str = "") -> bool:
     low = _normalize(query)
+    match = _match_place(low)
+    if not match or _extra_words(low, match):
+        return True
     evidence = _normalize(f"{title} {description}")
-    for key, aliases in PLACE_ALIASES.items():
-        if _normalize(key) in low:
-            specific_aliases = tuple(alias for alias in aliases if _normalize(alias) not in {"senegal", "sénégal"})
-            return any(_normalize(alias) in evidence for alias in specific_aliases)
-    return True
+    specific_aliases = tuple(alias for alias in match[1] if _normalize(alias) != "senegal")
+    return any(_has_term(evidence, _normalize(alias)) for alias in specific_aliases)

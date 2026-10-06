@@ -595,7 +595,9 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             # Raisonnement court et sortie bornée : un plan de N jours tient
             # en ~450 jetons par jour ; évite les générations interminables.
             reasoning={"effort": "low"},
-            max_output_tokens=min(16000, 1500 + 450 * expected_days),
+            # Plafond assez haut pour MAX_TRIP_DAYS jours : un plafond plus bas couperait
+            # le JSON des longs séjours et le plan échouerait.
+            max_output_tokens=min(1500 + 450 * MAX_TRIP_DAYS, 1500 + 450 * expected_days),
             truncation="auto",
         )
         if request.headers.get("X-Teranga-Stream") == "1":
