@@ -245,6 +245,14 @@ const audienceContext={
  }
 };
 
+// Une icône fixe par bouton (même ordre dans toutes les langues) : deviner l'icône
+// d'après le titre traduit donnait des doublons et des erreurs selon la langue.
+const AUDIENCE_ICONS={
+ tourist:['guide','market','weather','route','money','safety','food','chat','exchange','wifi'],
+ resident:['home','doc','money','place'],
+ diaspora:['route','home','exchange','invest'],
+ merchant:['tag','shop','chat','pay','stock','people','exchange']
+};
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
   const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
@@ -254,11 +262,12 @@ function renderAudience(){
   $('audienceMerchant').textContent=labels[6];$('audienceMerchantHint').textContent=labels[7];
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
   const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
-  const cards=rows.map(([t,q])=>({t,q,d:''}));
+  const icons=AUDIENCE_ICONS[audience]||[];
+  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:icons[i]}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
     const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
-    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=cardIcon(c.t);
+    const ico=document.createElement('div');ico.className='ico';ico.innerHTML=(c.icon&&CARD_ICONS[c.icon])||cardIcon(c.t);
     const b=document.createElement('b');b.textContent=c.t;card.append(ico,b);frag.appendChild(card);
     const chip=document.createElement('button');chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;chip.setAttribute('aria-label',c.t);chips.appendChild(chip);
   });
@@ -597,11 +606,14 @@ const CARD_ICONS={
   home:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1v-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
   doc:'<svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   wifi:'<svg viewBox="0 0 24 24" fill="none"><path d="M3 9.5a13 13 0 0 1 18 0M6 13a8.5 8.5 0 0 1 12 0M9 16.5a4 4 0 0 1 6 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="19.5" r="1.2" fill="currentColor"/></svg>',
+  exchange:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13l-3.5-3.5M20 16H7l3.5 3.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  invest:'<svg viewBox="0 0 24 24" fill="none"><path d="M4 19h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m5 15 4.5-4.5 3.5 3.5L19 8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 8h4v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  tag:'<svg viewBox="0 0 24 24" fill="none"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9-8-8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/></svg>',
   place:'<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="11" r="2.2" stroke="currentColor" stroke-width="1.7"/></svg>',
 };
 const CARD_ICON_RULES=[
   ['chat',/whatsapp/i],
-  ['pay',/paiement|payment|encaisser|^fey|^feyde|jaɓɓude feyde|jël fey/i],
+  ['pay',/paiement|payment|^fey/i],
   ['shop',/en ligne|online/i],
   ['stock',/stock/i],
   ['people',/client|customer|kliyan/i],
@@ -611,11 +623,11 @@ const CARD_ICON_RULES=[
   ['chat',/phrases|wolof|langue/i],
   ['guide',/visite guid|guided tour|^guide$/i],
   ['market',/n[ée]gocier|(?:^|\s)march[ée]|bargain|waxaale/i],
-  ['weather',/m[ée]t[ée]o|weather|climat|pluie|tenue|t[àa]kk/i],
+  ['weather',/m[ée]t[ée]o|weather|climat|pluie|tenue|t[àa]kk|kaanawol/i],
   ['money',/budget|prix|price|co[ûu]t|cost|fcfa|argent|money|xaalis|transfert|transfer|marge|pricing|taux|change|ceede|feyde|invest/i],
-  ['safety',/s[ée]curit|safety|safe|aar|kisal|sant[ée]|health/i],
-  ['food',/manger|eat|lekk|sp[ée]cialit|ñam|plat|cuisine|food|restaurant|resto|ñaamdu/i],
-  ['route',/itin[ée]raire|trajet|route|transport|taxi|\bbus\b|ferry|a[ée]roport|aibd|yoon|laawol|kaanawol|voyage|trip|getting around|retour|return|dellu|ruttorde/i],
+  ['safety',/s[ée]curit|safety|safe|\baar\b|kisal|sant[ée]|health|j[ëe]fandikoo|jokkondiral/i],
+  ['food',/manger|\beat\b|lekk|sp[ée]cialt|sp[ée]cialit|ñam|plat|cuisine|food|restaurant|resto|ñaamdu/i],
+  ['route',/itin[ée]raire|trajet|route|transport|taxi|\bbus\b|ferry|a[ée]roport|aibd|yoon|laawol|voyage|trip|getting around|retour|return|dellu|ruttorde/i],
   ['culture',/histoire|history|t[àa]riix|culture|aada|patrimoine|heritage|mus[ée]e/i],
 ];
 function cardIcon(title){
@@ -867,6 +879,14 @@ function reset(){
   LS.removeItem('teranga-history');
 }
 let resumeVoiceTimer=0;
+function answerExtras(item){
+  const extras={};
+  const image=Array.isArray(item.image)?item.image.slice(0,4):(item.image&&item.image.url?item.image:null);
+  if(image)extras.image=image;
+  if(item.map&&item.map.url)extras.map=item.map;
+  if(Array.isArray(item.sources)&&item.sources.length)extras.sources=item.sources.slice(0,6);
+  try{return JSON.stringify(extras).length<6000?extras:{}}catch(_){return {}}
+}
 function persist(){
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
@@ -875,7 +895,9 @@ function persist(){
         role:item&&item.role==='assistant'?'assistant':'user',
         content:String(item&&item.content||'').replace(/[ \t]+/g,' ').trim().slice(0,1200),
         // Lien de partage signé : conservé pour repartager après un rechargement.
-        ...(item&&item.role==='assistant'&&typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})
+        ...(item&&item.role==='assistant'&&typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{}),
+        // Photos, carte et sources : retrouvées après un rechargement (taille bornée).
+        ...(item&&item.role==='assistant'?answerExtras(item):{})
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
       SS.setItem('teranga-history',payload);
@@ -888,9 +910,10 @@ function restore(){
     const raw=SS.getItem('teranga-history')||LS.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
-    if(data.lang&&T[data.lang])lang=data.lang;
+    // ?lang=… (widget partenaire, pages anglaises) prime sur la langue de la conversation enregistrée.
+    if(data.lang&&T[data.lang]&&!urlParams.get('lang'))lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
-      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/[ \t]+/g,' ').trim().slice(0,1200),...(typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{})})).filter(item=>item.content);
+      const restored=data.history.slice(-12).filter(item=>item && (item.role==='user'||item.role==='assistant') && typeof item.content==='string' && item.content.trim()).map(item=>({role:item.role,content:item.content.replace(/[ \t]+/g,' ').trim().slice(0,1200),...(typeof item.share==='string'&&item.share.length<12000?{share:item.share}:{}),...(item.role==='assistant'?answerExtras(item):{})})).filter(item=>item.content);
       if(!restored.length){
         SS.removeItem('teranga-history');
         LS.removeItem('teranga-history');
@@ -1023,6 +1046,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
         if(ev.img)image=ev.img;
         if(ev.map)map=ev.map;
         if(ev.share)shareToken=ev.share;
+        if(ev.itinerary_edit)itineraryEdit=ev.itinerary_edit;
         if(Array.isArray(ev.places))places=ev.places;
         if(ev.ux&&typeof ev.ux==='object')ux=ev.ux;
       }catch(e){if(e.message&&!String(e).includes('JSON'))throw e;}
