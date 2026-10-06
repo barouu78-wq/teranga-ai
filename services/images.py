@@ -343,6 +343,7 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
     opener = urlopen_fn or urlopen
     validate = image_validator or (lambda src: str(src or ""))
     out = []
+    failures = 0
     for article in candidates:
         params = {
             "action": "query",
@@ -359,8 +360,13 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
             f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(params),
             headers={"User-Agent": "TerangaAI/1.0 (article images)"},
         )
-        with opener(req, timeout=5) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
+        # Un échec sur « X (Sénégal) » ne doit pas empêcher d'essayer « X ».
+        try:
+            with opener(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            failures += 1
+            continue
         pages = ((data.get("query") or {}).get("pages") or {}).values()
         seen = set()
         for page in sorted(pages, key=lambda item: str(item.get("title", ""))):
@@ -398,6 +404,11 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
                 break
         if out:
             break
+    if not out and failures:
+        # Panne réseau : ne pas mémoriser un faux « aucune photo ».
+        if failures == len(candidates):
+            raise OSError("Wikipédia injoignable")
+        return []
     if len(_ARTICLE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES and cache_key not in _ARTICLE_CACHE:
         _ARTICLE_CACHE.pop(min(list(_ARTICLE_CACHE.items()), key=lambda entry: entry[1][0])[0], None)
     _ARTICLE_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])

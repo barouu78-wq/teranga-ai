@@ -19,10 +19,24 @@ def test_visible_language_selector_excludes_pulaar():
 
 
 def test_explorer_uses_google_images_before_wikimedia_fallback():
-    route = (Path(__file__).resolve().parents[1] / "routes" / "explorer.py").read_text(encoding="utf-8")
-    assert "fetch_google_images(query, limit=4)" in route
-    assert "if not images:" in route
-    assert "fetch_commons_images(query, limit=4)" in route
+    from flask import Flask
+
+    from routes.explorer import register_explorer_routes
+
+    calls = []
+
+    def google(query, limit=4):
+        calls.append(("google", query, limit))
+        return []
+
+    def commons(query, limit=4):
+        calls.append(("commons", query, limit))
+        return [{"url": "https://upload.wikimedia.org/x.jpg"}]
+
+    app = Flask(__name__)
+    register_explorer_routes(app, {"places": [], "regions": []}, google, commons, lambda url: "/p")
+    assert app.test_client().get("/explorer-image?query=Goree").get_json()["images"]
+    assert calls == [("google", "Goree", 4), ("commons", "Goree", 4)]
 
 
 def test_explorer_gallery_query_is_not_double_encoded():

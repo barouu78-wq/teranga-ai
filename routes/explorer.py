@@ -1,5 +1,7 @@
 """Explorer routes and image lookup endpoints."""
 
+import hashlib
+import json
 import threading
 import time
 from collections import OrderedDict
@@ -9,7 +11,11 @@ from flask import Response, jsonify, request
 from services.explorer import render_explorer_page
 
 IMAGE_CACHE_TTL = 6 * 60 * 60
+# Aucune photo trouvée : on ne réinterroge pas Google/Wikipédia pendant 15 min
+# (quota Google préservé), sans figer une panne passagère trop longtemps.
+EMPTY_CACHE_TTL = 15 * 60
 IMAGE_CACHE_MAX = 512
+_REDIS_PREFIX = "teranga:explorer-img:"
 
 
 def article_titles(title, region_names=()):
@@ -30,29 +36,85 @@ def article_titles(title, region_names=()):
     return titles
 
 
-def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=None, fetch_article_images=None):
+def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=None, fetch_article_images=None, redis_client=None):
     region_names = [str(r.get("name", "")) for r in knowledge.get("regions", []) if isinstance(r, dict)]
-    # Each Explorer page load requests one gallery per place: caching keeps the
-    # paid Google Custom Search quota from being spent on identical queries.
+    places_by_name = {
+        str(p.get("name", "")).casefold(): p for p in knowledge.get("places", []) if isinstance(p, dict) and p.get("name")
+    }
+    # Chaque visite de l'Explorer demande une galerie par lieu : le cache évite
+    # de dépenser le quota Google sur les mêmes recherches. Avec Redis, il est
+    # partagé entre les workers et survit aux redéploiements.
     cache = OrderedDict()
     cache_lock = threading.Lock()
+
+    def _redis_key(key):
+        return _REDIS_PREFIX + hashlib.sha256(key.encode("utf-8")).hexdigest()[:32]
 
     def cached_images(query):
         key = query.casefold()
         now = time.time()
         with cache_lock:
             hit = cache.get(key)
-            if hit and now - hit[0] < IMAGE_CACHE_TTL:
+            if hit and now < hit[0]:
                 cache.move_to_end(key)
                 return [dict(item) for item in hit[1]]
+        if redis_client is not None:
+            try:
+                raw = redis_client.get(_redis_key(key))
+                if raw:
+                    images = json.loads(raw)
+                    if isinstance(images, list):
+                        return [dict(item) for item in images if isinstance(item, dict)]
+            except Exception:
+                app.logger.warning("explorer-image redis get failed")
         return None
 
     def store_images(query, images):
+        key = query.casefold()
+        ttl = IMAGE_CACHE_TTL if images else EMPTY_CACHE_TTL
         with cache_lock:
-            cache[query.casefold()] = (time.time(), [dict(item) for item in images])
-            cache.move_to_end(query.casefold())
+            cache[key] = (time.time() + ttl, [dict(item) for item in images])
+            cache.move_to_end(key)
             while len(cache) > IMAGE_CACHE_MAX:
                 cache.popitem(last=False)
+        if redis_client is not None:
+            try:
+                redis_client.setex(_redis_key(key), ttl, json.dumps(images, ensure_ascii=False))
+            except Exception:
+                app.logger.warning("explorer-image redis set failed")
+
+    def _try(source, fn, *args):
+        try:
+            return fn(*args, limit=4) or []
+        except Exception as exc:
+            app.logger.warning("explorer-image %s: %s", source, type(exc).__name__)
+            return []
+
+    def find_images(query, title):
+        # 1. Google Images (meilleures photos).
+        images = _try("google", fetch_google_images, query)
+        if images:
+            return images, "google"
+        # 2. Photos de l'article Wikipédia du lieu (nom complet, puis nom court).
+        if title and fetch_article_images:
+            for article in article_titles(title, region_names):
+                images = _try("article", fetch_article_images, article)
+                if images:
+                    return images, "article"
+        # 3. Recherche Commons : la requête demandée, puis les autres requêtes
+        #    prévues pour ce lieu dans la base, puis « <nom> Sénégal ».
+        place = places_by_name.get(str(title or "").casefold())
+        queries = [query]
+        if place:
+            queries += [str(q) for q in place.get("image_queries") or [] if q]
+            queries.append(str(place.get("name", "")).split("/")[0].strip() + " Sénégal")
+        for commons_query in list(dict.fromkeys(q for q in queries if q.strip()))[:4]:
+            images = _try("commons", fetch_commons_images, commons_query)
+            if images:
+                for item in images:
+                    item["display_url"] = image_proxy_url(item.get("url", ""))
+                return images, "commons"
+        return [], "none"
 
     @app.get("/explorer-image")
     def explorer_image():
@@ -68,33 +130,11 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
             blocked = rate_guard("explorer_image")
             if blocked is not None:
                 return blocked
-        # 1. Google Images (meilleures photos) ; une panne ne prive pas des suivants.
-        try:
-            images = fetch_google_images(query, limit=4)
-        except Exception as exc:
-            app.logger.warning("explorer-image google: %s", type(exc).__name__)
-            images = []
-        # 2. Sinon, photos de l'article Wikipédia du lieu (nom complet, puis nom court).
-        if not images and title and fetch_article_images:
-            for article in article_titles(title, region_names):
-                try:
-                    images = fetch_article_images(article, limit=4)
-                except Exception as exc:
-                    app.logger.warning("explorer-image article: %s", type(exc).__name__)
-                    images = []
-                if images:
-                    break
-        # 3. En dernier recours, recherche Wikimédia Commons.
-        if not images:
-            try:
-                images = fetch_commons_images(query, limit=4)
-            except Exception as exc:
-                app.logger.warning("explorer-image commons: %s", type(exc).__name__)
-                images = []
-            for item in images:
-                item["display_url"] = image_proxy_url(item.get("url", ""))
-        if images:
-            store_images(cache_name, images)
+        images, source = find_images(query, title)
+        if source == "none":
+            # Visible dans les journaux : quels lieux n'ont aucune photo.
+            app.logger.info("explorer-image none query=%r title=%r", query, title)
+        store_images(cache_name, images)
         return jsonify({"images": images})
 
     @app.get("/explorer")

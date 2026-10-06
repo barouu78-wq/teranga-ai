@@ -416,7 +416,9 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 GUARDED_LIMITS = {
     "trip_planner": (int(os.getenv("TRIP_RATE_LIMIT", "4")), int(os.getenv("TRIP_HOURLY_LIMIT", "20"))),
     "practical_info": (int(os.getenv("PRACTICAL_RATE_LIMIT", "8")), int(os.getenv("PRACTICAL_HOURLY_LIMIT", "40"))),
-    "explorer_image": (int(os.getenv("EXPLORER_IMAGE_RATE_LIMIT", "60")), int(os.getenv("EXPLORER_IMAGE_HOURLY_LIMIT", "400"))),
+    # L'Explorer compte 93 lieux : un défilement rapide en demande des dizaines
+    # par minute (les photos déjà trouvées, servies depuis le cache, ne comptent pas).
+    "explorer_image": (int(os.getenv("EXPLORER_IMAGE_RATE_LIMIT", "120")), int(os.getenv("EXPLORER_IMAGE_HOURLY_LIMIT", "600"))),
     "report": (5, 30),
 }
 
@@ -438,7 +440,7 @@ def rate_guard(bucket):
 
 
 register_trip_planner(app, client, SITE_URL, ALLOWED_ORIGINS, rate_guard=rate_guard, places=SENEGAL_KNOWLEDGE.get("places", []))
-register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=rate_guard, fetch_article_images=fetch_article_images)
+register_explorer_routes(app, SENEGAL_KNOWLEDGE, fetch_google_images, fetch_commons_images, image_proxy_url, rate_guard=rate_guard, fetch_article_images=fetch_article_images, redis_client=redis_client)
 
 
 def origin_allowed():
