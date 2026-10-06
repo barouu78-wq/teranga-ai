@@ -87,7 +87,8 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
         try:
             return fn(*args, limit=4) or []
         except Exception as exc:
-            app.logger.warning("explorer-image %s: %s", source, type(exc).__name__)
+            # Code HTTP inclus (403 = accès refusé, 429 = quota) pour le diagnostic.
+            app.logger.warning("explorer-image %s: %s %s", source, type(exc).__name__, getattr(exc, "code", ""))
             return []
 
     def find_images(query, title):

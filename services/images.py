@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 import re
 import unicodedata
 import time
@@ -13,6 +14,20 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 
 logger = logging.getLogger(__name__)
+
+
+def wikimedia_user_agent() -> str:
+    """User-Agent conforme à la politique Wikimédia (nom, version, contact).
+
+    Wikimédia refuse (HTTP 403) les agents génériques venant d'hébergeurs
+    cloud comme Render : sans cette identité, Wikipédia et Commons ne
+    renvoient plus aucune photo.
+    """
+    contact = os.getenv("CONTACT_EMAIL", "").strip()
+    contact = f"; {contact}" if re.fullmatch(r"[^@\s;()]+@[^@\s;()]+\.[A-Za-z]{2,}", contact) else ""
+    return f"TerangaAI/1.0 (https://teranga-ai.fr/{contact}) Python-urllib"
+
+
 _IMAGE_CACHE = {}
 _IMAGE_CACHE_TTL_SECONDS = 900
 _IMAGE_CACHE_MAX_ENTRIES = 128
@@ -257,7 +272,7 @@ def fetch_commons_images(title, limit=4, image_validator=None, display_url_build
     }
     req = Request(
         "https://commons.wikimedia.org/w/api.php?" + urlencode(params),
-        headers={"User-Agent": "TerangaAI/1.0 (image lookup)"},
+        headers={"User-Agent": wikimedia_user_agent()},
     )
     opener = urlopen_fn or urlopen
     with opener(req, timeout=5) as resp:
@@ -358,14 +373,15 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
         }
         req = Request(
             f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(params),
-            headers={"User-Agent": "TerangaAI/1.0 (article images)"},
+            headers={"User-Agent": wikimedia_user_agent()},
         )
         # Un échec sur « X (Sénégal) » ne doit pas empêcher d'essayer « X ».
         try:
             with opener(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-        except Exception:
+        except Exception as exc:
             failures += 1
+            logger.warning("Wikipédia images %r : %s %s", article, type(exc).__name__, getattr(exc, "code", ""))
             continue
         pages = ((data.get("query") or {}).get("pages") or {}).values()
         seen = set()
@@ -511,7 +527,7 @@ def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
 
 def wiki_summary(lang: str, title: str) -> dict:
     url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
-    req = Request(url, headers={"User-Agent": "TerangaAI/1.0 (https://teranga-ai.fr)"})
+    req = Request(url, headers={"User-Agent": wikimedia_user_agent()})
     with urlopen(req, timeout=2) as resp:
         return json.loads(resp.read().decode("utf-8"))
 
@@ -550,7 +566,7 @@ class SafeImageRedirectHandler(HTTPRedirectHandler):
 def safe_image_fetch(src: object, max_bytes: int, timeout: float = 5.0, opener=None):
     if not allowed_image_url(src):
         raise ValueError("Source image non autorisée")
-    req = Request(str(src), headers={"User-Agent": "TerangaAI/1.0"})
+    req = Request(str(src), headers={"User-Agent": wikimedia_user_agent()})
     image_opener = opener or build_opener(SafeImageRedirectHandler)
     with image_opener.open(req, timeout=timeout) as upstream:
         headers = getattr(upstream, "headers", {})
