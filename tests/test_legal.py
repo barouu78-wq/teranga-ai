@@ -23,23 +23,24 @@ def test_privacy_contact_email_is_configurable(monkeypatch):
 
 def test_asset_links_declare_the_android_app(monkeypatch):
     from app import app
-    from routes.legal import asset_links
+    from routes.legal import ANDROID_CERT_SHA256, asset_links
 
     client = app.test_client()
     monkeypatch.delenv("ANDROID_APP_PACKAGE", raising=False)
     monkeypatch.delenv("ANDROID_CERT_SHA256", raising=False)
     target = client.get("/.well-known/assetlinks.json").get_json()[0]["target"]
     assert target["package_name"] == "fr.teranga_ai"
-    assert target["sha256_cert_fingerprints"][0].startswith("01:D3:EB:74")
-    assert len(target["sha256_cert_fingerprints"]) == 2
+    assert target["sha256_cert_fingerprints"] == list(ANDROID_CERT_SHA256)
     assert all(len(fp.split(":")) == 32 for fp in target["sha256_cert_fingerprints"])
-    # Les variables d'environnement remplacent les valeurs par défaut.
+    # La variable d'environnement ajoute une empreinte valide, sans retirer celles du code ;
+    # une valeur mal formée est ignorée plutôt que publiée.
+    extra = ":".join(["AB"] * 32)
     monkeypatch.setenv("ANDROID_APP_PACKAGE", "fr.autre.app")
-    monkeypatch.setenv("ANDROID_CERT_SHA256", "aa:bb, cc:dd")
+    monkeypatch.setenv("ANDROID_CERT_SHA256", f"SHA256: {extra.lower()}, pas-une-empreinte, {ANDROID_CERT_SHA256[0]}")
     data = client.get("/.well-known/assetlinks.json").get_json()
     assert data[0]["target"]["package_name"] == "fr.autre.app"
-    assert data[0]["target"]["sha256_cert_fingerprints"] == ["AA:BB", "CC:DD"]
-    assert asset_links("", "AA") == [] and asset_links("pkg", "") == []
+    assert data[0]["target"]["sha256_cert_fingerprints"] == [*ANDROID_CERT_SHA256, extra]
+    assert asset_links("", extra) == [] and asset_links("pkg", "") == [] and asset_links("pkg", "AA:BB") == []
 
 
 def test_report_endpoint_logs_the_answer_and_needs_csrf(caplog):
