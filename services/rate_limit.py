@@ -40,8 +40,11 @@ def allowed_request(
             count = redis_client.incr(key)
             # Re-arm the TTL if a previous request crashed between INCR and
             # EXPIRE: a key without expiry would otherwise block forever.
+            # Le délai n'est vérifié qu'au moment de refuser : une clé restée sans
+            # délai ne bloque jamais pour toujours, et les requêtes acceptées
+            # économisent un aller-retour Redis.
             ttl = getattr(redis_client, "ttl", None)
-            if count == 1 or (callable(ttl) and ttl(key) == -1):
+            if count == 1 or (count > limit and callable(ttl) and ttl(key) == -1):
                 redis_client.expire(key, int(window))
             return count <= limit
         except Exception:

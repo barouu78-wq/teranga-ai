@@ -47,7 +47,7 @@ def test_app_rate_limit_logs_are_bounded():
 def test_redis_rate_limit_rearms_missing_ttl():
     class Redis:
         def __init__(self):
-            self.count = 5  # key survived a crash between INCR and EXPIRE
+            self.count = 10  # key survived a crash between INCR and EXPIRE, now over the limit
             self.expired = []
 
         def incr(self, key):

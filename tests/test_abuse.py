@@ -108,3 +108,26 @@ def test_redis_abuse_score_sets_temporary_block():
         blocks_by_key=blocks,
         lock=lock,
     )
+
+
+def test_redis_score_window_is_not_extended_by_each_event():
+    """Le délai du score est posé à sa création, pas prolongé à chaque requête."""
+
+    class CountingRedis(FakeRedis):
+        def __init__(self):
+            super().__init__()
+            self.expire_calls = 0
+
+        def ttl(self, key):
+            return 30
+
+        def expire(self, key, seconds):
+            self.expire_calls += 1
+            super().expire(key, seconds)
+
+    redis = CountingRedis()
+    kwargs = dict(redis_client=redis, logger=Logger(), events_by_key=defaultdict(deque), blocks_by_key={},
+                  lock=Lock(), score_window=60, block_seconds=60, score_threshold=100)
+    for _ in range(5):
+        record_abuse("identity", "x", 1, **kwargs)
+    assert redis.expire_calls == 1

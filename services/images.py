@@ -447,10 +447,12 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
         _IMAGE_CACHE.pop(title, None)
     english = title.replace(" (Sénégal)", "").replace(" (Senegal)", "")
     found = None
+    network_failed = False
     for lang, page in (("fr", title), ("en", english)):
         try:
             data = wiki_summary_fn(lang, page)
         except Exception:
+            network_failed = True
             continue
         src = image_validator((data.get("thumbnail") or {}).get("source") or "")
         if not src:
@@ -467,7 +469,12 @@ def fetch_city_image(title, wiki_summary_fn, image_validator, sanitize_text_fn):
         try:
             found = fetch_commons_image(title, image_validator=image_validator)
         except Exception:
+            network_failed = True
             logger.exception("Erreur recherche Wikimedia Commons pour %s", title)
+    # Une panne passagère (délai, 429) ne doit pas faire croire « pas de photo »
+    # pendant 15 min : on ne garde en cache que les vraies réponses.
+    if found is None and network_failed:
+        return None
     if len(_IMAGE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES:
         oldest = min(list(_IMAGE_CACHE.items()), key=lambda entry: entry[1][0])[0]
         _IMAGE_CACHE.pop(oldest, None)

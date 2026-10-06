@@ -40,7 +40,13 @@ def record_abuse(
         try:
             key_name = redis_key("score", key)
             score = redis_client.incrbyfloat(key_name, safe_weight)
-            redis_client.expire(key_name, int(score_window))
+            # Délai fixé à la création seulement : le score s'efface score_window
+            # après le premier écart (comme la fenêtre en mémoire), au lieu d'être
+            # prolongé à chaque requête. Clé sans délai (coupure entre les deux
+            # appels) : on le remet.
+            ttl = getattr(redis_client, "ttl", None)
+            if float(score) <= safe_weight or (callable(ttl) and ttl(key_name) == -1):
+                redis_client.expire(key_name, int(score_window))
             if score >= score_threshold:
                 redis_client.setex(redis_key("block", key), int(block_seconds), "1")
                 return True
