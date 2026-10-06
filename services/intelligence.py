@@ -192,18 +192,28 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     """Resolve Senegal places, intents and planning constraints from recent turns."""
     context_query = contextual_query(history, message)
     text_value = _normalize(context_query)
-    normalized_place_text = text_value
-    for alias, canonical in _CONTEXT_ALIASES.items():
-        if _normalize(alias) in normalized_place_text:
-            normalized_place_text += " " + canonical
-    found_cities = [x for x in _CONTEXT_CITIES if x in normalized_place_text]
-    found_regions = [x for x in _CONTEXT_REGIONS if x in normalized_place_text]
+    # Lieux cités, en mots entiers (« touba » ≠ « toubab »), avec leur position :
+    # le lieu retenu est le plus récemment mentionné, pas le dernier d'une liste fixe.
+    mentions: list[tuple[int, str]] = []
+    for term in (*_CONTEXT_CITIES, *_CONTEXT_REGIONS, *_CONTEXT_ALIASES):
+        norm = _normalize(term)
+        canonical = _CONTEXT_ALIASES.get(term, norm)
+        for match in re.finditer(r"(?<![a-z0-9])" + re.escape(norm) + r"(?![a-z0-9])", text_value):
+            mentions.append((match.end(), canonical))
+    mentioned = {name for _, name in mentions}
+    found_cities = [x for x in _CONTEXT_CITIES if x in mentioned]
+    found_regions = [x for x in _CONTEXT_REGIONS if x in mentioned]
     intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(text_value, term) for term in terms)]
     currency_amounts = re.findall(
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,
     )
-    amounts = re.findall(r"(?<![\w])(?:\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$))?(?!\s*(?:jour|jours|semaine|semaines|nuit|nuits)\b)", text_value)
+    # Un nombre sans devise n'est un budget que si l'utilisateur parle de budget :
+    # « 2 adultes » ou « j'ai 25 ans » ne sont pas des montants.
+    amounts = re.findall(
+        r"(?<![\w])\d[\d\s.,]*(?!\s*(?:jour|jours|semaine|semaines|nuit|nuits|ans?|adultes?|personnes?|enfants?|h|heures?|km|min)\b)",
+        text_value,
+    ) if re.search(r"\bbudget\b", text_value) else []
     budget = (currency_amounts[-1] if currency_amounts else amounts[-1].strip() if amounts else "")
     duration_match = re.search(r"\b(\d+)\s*(jour|jours|semaine|semaines|nuit|nuits)\b", text_value)
     duration = duration_match.group(0) if duration_match else ""
@@ -231,7 +241,7 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         constraints.append("ce soir")
     if "demain" in text_value:
         constraints.append("demain")
-    place = found_cities[-1] if found_cities else (found_regions[-1] if found_regions else "")
+    place = max(mentions, key=lambda item: item[0])[1] if mentions else ""
     return {
         "place": place,
         "has_place": bool(found_cities or found_regions),
@@ -448,10 +458,12 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
     resolved_location = current_location
     context_source = "current_message"
     if recent_users:
-        follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "combien", "quel prix", "qu'en est-il")
-        is_short_follow_up = len(message.split()) <= 8 and (
-            _normalize(message).startswith(tuple(_normalize(marker) for marker in follow_up_markers))
-            or "?" in message
+        # On reprend le sujet précédent pour une vraie relance (« Et pour le budget ? »),
+        # mais pas pour toute question courte : « Où manger à Dakar ? » après la météo
+        # reste une question de restaurant.
+        follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "qu'en est-il")
+        is_short_follow_up = len(message.split()) <= 8 and _normalize(message).startswith(
+            tuple(_normalize(marker) for marker in follow_up_markers)
         )
         if resolved_intent == "general_information" or is_short_follow_up:
             for previous in recent_users:

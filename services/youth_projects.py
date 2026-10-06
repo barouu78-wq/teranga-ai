@@ -144,7 +144,8 @@ def detect_project_category(idea: str, category: str | None = None) -> str:
         return requested
     text = _normalize(idea)
     for name, keywords in _CATEGORY_KEYWORDS.items():
-        if any(keyword in text for keyword in keywords):
+        # Mot entier (pluriel simple accepté) : « art » ne doit pas trouver « artisan ».
+        if any(re.search(r"(?<!\w)" + re.escape(_normalize(k)) + r"(?:s|x)?(?!\w)", text) for k in keywords):
             return name
     return "business"
 

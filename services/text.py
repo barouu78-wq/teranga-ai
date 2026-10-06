@@ -9,6 +9,14 @@ from services.validation import sanitize_text
 def clean_answer(text: object) -> str:
     """Normalize assistant output for the plain-text web client."""
     text = sanitize_text(text, 8000)
+    # Les adresses web sont mises de côté : « Île_de_Gorée » ne doit pas perdre ses « _ ».
+    urls: list[str] = []
+
+    def _keep_url(match: re.Match) -> str:
+        urls.append(match.group(0))
+        return f"\x00{len(urls) - 1}\x00"
+
+    text = re.sub(r"https?://[^\s<>()\[\]]+", _keep_url, text)
     text = re.sub(r"(?m)^\s{0,3}#{1,6}\s*", "", text)
     text = re.sub(r"(?m)^\s*[-*_]{3,}\s*$", "", text)
     text = re.sub(r"```[\s\S]*?```", lambda m: m.group(0).replace("```", ""), text)
@@ -20,4 +28,5 @@ def clean_answer(text: object) -> str:
     text = text.replace("**", "").replace("__", "")
     text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"\x00(\d+)\x00", lambda m: urls[int(m.group(1))], text)
     return text.strip()

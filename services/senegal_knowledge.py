@@ -95,12 +95,22 @@ DYNAMIC_DOMAINS = {
     "prices", "events", "news", "flights", "health",
 }
 
+def _fold(value: str) -> str:
+    text = unicodedata.normalize("NFD", str(value or "").casefold())
+    return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+
+
 def _contains_domain_term(value: str, term: str) -> bool:
-    normalized = str(term or "").casefold().strip()
+    """Mot entier, sans tenir compte des accents ni du pluriel simple.
+
+    « hopital » trouve « hôpital », « plages » trouve « plage », mais « teranga »
+    ne trouve pas « ter » et « plateau » ne trouve pas « plat ».
+    """
+    normalized = _fold(term).strip()
     if not normalized:
         return False
-    pattern = r"(?<!\w)" + re.escape(normalized) + r"(?!\w)"
-    return bool(re.search(pattern, value))
+    pattern = r"(?<!\w)" + re.escape(normalized) + r"(?:s|x)?(?!\w)"
+    return bool(re.search(pattern, _fold(value)))
 
 
 def classify_domain(text: str) -> str:
@@ -227,7 +237,7 @@ def _knowledge_domain(query: str) -> str:
         "economy": ("prix", "économie", "salaire", "revenus", "investir", "financement"),
     }
     for domain, terms in domain_terms.items():
-        if any(term in value for term in terms):
+        if any(_contains_domain_term(value, term) for term in terms):
             return domain
     return "general"
 
