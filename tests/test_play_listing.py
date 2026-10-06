@@ -26,4 +26,5 @@ def test_store_graphics_have_required_sizes():
     assert Image.open(DIR / "image-de-presentation-1024x500.png").size == (1024, 500)
     for shot in sorted(DIR.glob("capture-*.png")):
         width, height = Image.open(shot).size
-        assert 320 <= min(width, height) and max(width, height) <= 3840 and height / width <= 2, shot.name
+        # La Play Console demande un rapport 9:16 exact pour les captures de téléphone.
+        assert (width, height) == (1080, 1920), shot.name

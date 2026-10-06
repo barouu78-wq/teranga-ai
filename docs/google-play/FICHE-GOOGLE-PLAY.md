@@ -97,7 +97,7 @@ Teranga AI uses artificial intelligence: always check important information (pri
 |---|---|---|
 | Icône | `static/icon-512.png` (aussi servi sur teranga-ai.fr/icon-512.png) | 512 × 512 PNG |
 | Image de présentation | `image-de-presentation-1024x500.png` | 1024 × 500 |
-| Captures téléphone (2 à 8) | `capture-1-accueil.png` … `capture-4-fiche-lieu.png` | 780 × 1560, rapport 2:1 max |
+| Captures téléphone (2 à 8) | `capture-1-accueil.png` … `capture-4-fiche-lieu.png` | 1080 × 1920 (9:16, exigé par la Play Console) |
 
 ### Coordonnées
 
