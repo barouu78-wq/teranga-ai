@@ -497,6 +497,8 @@ GUARDED_LIMITS = {
     # par minute (les photos déjà trouvées, servies depuis le cache, ne comptent pas).
     "explorer_image": (int(os.getenv("EXPLORER_IMAGE_RATE_LIMIT", "120")), int(os.getenv("EXPLORER_IMAGE_HOURLY_LIMIT", "600"))),
     "report": (5, 30),
+    # Page privée des statistiques : quelques essais de mot de passe seulement.
+    "stats_login": (5, 20),
 }
 
 
@@ -730,7 +732,7 @@ register_exchange_rates_route(app, {
 })
 
 register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
-register_monetization_routes(app)
+register_monetization_routes(app, redis_client=redis_client, rate_guard=rate_guard)
 register_emergency_routes(app, SITE_URL)
 
 register_youth_project_route(app, {

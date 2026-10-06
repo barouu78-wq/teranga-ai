@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import hmac
 import os
 import re
 from html import escape
 from urllib.parse import quote
 
 from flask import Response, abort, redirect, request
+
+from services.click_stats import ClickStats
 
 from services.monetization import affiliate_config, affiliate_target, clean_query
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
@@ -64,7 +67,67 @@ def render_offers_page() -> str:
 </article></main>{site_footer()}</body></html>"""
 
 
-def register_monetization_routes(app):
+KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi"}
+
+
+def _stats_token() -> str:
+    """Mot de passe de la page des statistiques (STATS_TOKEN sur Render, 16 caractères minimum)."""
+    token = os.getenv("STATS_TOKEN", "").strip()
+    return token if len(token) >= 16 else ""
+
+
+def render_stats_page(summary: list[dict] | None, error: str = "") -> str:
+    if summary is None:
+        body = f"""<h1>Statistiques partenaires</h1>
+<p class="intro">Clics des visiteurs vers les partenaires, par mois. Page privée.</p>
+{f'<p class="muted">{escape(error)}</p>' if error else ''}
+<form method="post"><label>Mot de passe <input type="password" name="cle" autocomplete="current-password" required></label>
+<button class="cta primary" type="submit">Voir les chiffres</button></form>"""
+    else:
+        blocks = []
+        for month in summary:
+            kinds = " · ".join(f"{escape(KIND_LABELS.get(k, k))} : <strong>{n}</strong>" for k, n in sorted(month["by_kind"].items()))
+            rows = "".join(
+                f"<tr><td>{escape(KIND_LABELS.get(kind, kind))}</td><td>{escape(source)}</td><td>{n}</td></tr>"
+                for kind, source, n in month["rows"][:50]
+            )
+            table = (
+                f"<table><thead><tr><th>Lien</th><th>Page d'origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
+                if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
+            )
+            blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s)</h2><p>{kinds}</p>{table}</section>")
+        body = (
+            "<h1>Statistiques partenaires</h1>"
+            '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'
+            + "".join(blocks)
+        )
+    return f"""<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Statistiques partenaires | Teranga AI</title><meta name="robots" content="noindex,nofollow">{HEAD_ASSETS}</head>
+<body>{site_header()}<main><article>{body}</article></main>{site_footer()}</body></html>"""
+
+
+def register_monetization_routes(app, redis_client=None, rate_guard=None):
+    stats = ClickStats(redis_client, app.logger)
+
+    @app.route("/stats-partenaires", methods=["GET", "POST"])
+    def partner_stats():
+        token = _stats_token()
+        if not token:
+            abort(404)  # page désactivée tant que STATS_TOKEN n'est pas défini
+        headers = {"Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow"}
+        if request.method == "GET":
+            return Response(render_stats_page(None), mimetype="text/html", headers=headers)
+        if rate_guard is not None:
+            blocked = rate_guard("stats_login")
+            if blocked is not None:
+                return blocked
+        given = str(request.form.get("cle", ""))
+        if not hmac.compare_digest(given.encode("utf-8"), token.encode("utf-8")):
+            app.logger.warning("stats-partenaires: mot de passe refusé")
+            return Response(render_stats_page(None, "Mot de passe incorrect."), status=403, mimetype="text/html", headers=headers)
+        return Response(render_stats_page(stats.summary()), mimetype="text/html", headers=headers)
+
     @app.get("/go/<kind>")
     def affiliate_redirect(kind):
         query = clean_query(request.args.get("q", ""))
@@ -74,6 +137,7 @@ def register_monetization_routes(app):
         source = re.sub(r"[^a-z0-9-]", "", str(request.args.get("from", "")).lower())[:60]
         # Comptage des clics, sans donnée personnelle (ni IP ni identifiant).
         app.logger.info("affiliate-click kind=%s from=%s q=%r", kind, source or "-", query)
+        stats.record(kind, source)
         response = redirect(target, code=302)
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
         response.headers["Referrer-Policy"] = "no-referrer"
