@@ -34,7 +34,7 @@
 <option value="{{ value }}" {% if value == selected_category %}selected{% endif %}>{{ label }}</option>
 {% endfor %}
 </select>
-<input type="hidden" name="city" value="{{ selected_city }}">
+<input name="city" value="{{ selected_city }}" placeholder="Ville (ex. Thiès, Dakar)" aria-label="Ville">
 <button type="submit">Filtrer</button>
 </form>
 </div>

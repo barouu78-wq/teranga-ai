@@ -1,4 +1,5 @@
 import hashlib
+import datetime
 import hmac
 import json
 import os
@@ -11,7 +12,7 @@ from urllib.error import HTTPError
 from urllib.request import build_opener, urlopen
 
 from dotenv import load_dotenv
-from flask import Flask, Response, g, jsonify, request
+from flask import Flask, g, jsonify, request
 import httpx
 from openai import OpenAI
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -48,10 +49,8 @@ from services.text import clean_answer
 from services.security import issue_csrf, valid_token
 from services.errors import public_error
 from services.abuse import abuse_blocked as _abuse_blocked, record_abuse as _record_abuse
-from services.assets import ICON_SVG, build_icon_png
+from services.assets import build_icon_png
 
-def icon_svg():
-    return Response(ICON_SVG, mimetype="image/svg+xml")
 from services.identity import client_identity as _client_identity, abuse_key as _abuse_key, rate_limit_identity as _rate_limit_identity
 from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
@@ -153,6 +152,13 @@ ALLOWED_ORIGINS = {
     for origin in os.getenv("ALLOWED_ORIGINS", SITE_URL).split(",")
     if origin.strip()
 }
+# Mêmes hôtes que TRUSTED_HOSTS : une page servie par www. ou par l'adresse Render
+# doit pouvoir envoyer ses requêtes (chat, voix…) sans erreur « Origine non autorisée ».
+for _origin in list(ALLOWED_ORIGINS):
+    if _origin.startswith("https://") and not _origin.startswith("https://www."):
+        ALLOWED_ORIGINS.add("https://www." + _origin[len("https://"):])
+if os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip():
+    ALLOWED_ORIGINS.add("https://" + os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip().lower())
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "").strip()
 GOOGLE_CSE_ID = os.getenv("GOOGLE_CSE_ID", "").strip()
 BASE_DIR = Path(__file__).resolve().parent
@@ -177,12 +183,11 @@ def not_found(_error):
 
 @app.errorhandler(500)
 def server_error(_error):
-    if request.path.startswith("/api/") or request.path in {"/chat", "/stt", "/tts", "/realtime-call"}:
+    if request.path.startswith("/api/") or request.path in {"/chat", "/stt", "/tts", "/realtime-call", "/exchange-rates", "/explorer-image", "/csrf"}:
         return jsonify({"error": "Erreur temporaire. Réessaie dans quelques instants."}), 500
     return render_server_error(), 500, {"Content-Type": "text/html; charset=utf-8"}
 SENEGAL_PEOPLE = load_senegal_people()
 REDIS_URL = os.getenv("REDIS_URL", "").strip()
-_OG_PNG = None
 redis_client = None
 if REDIS_URL:
     try:
@@ -209,7 +214,10 @@ class _HealthCheckHost:
 
     def __call__(self, environ, start_response):
         if environ.get("PATH_INFO") == "/health":
-            environ = {**environ, "HTTP_HOST": "localhost"}
+            # Premier hôte de confiance (et non « localhost » en dur) : reste valable
+            # si TRUSTED_HOSTS est remplacé par une variable d'environnement.
+            hosts = app.config.get("TRUSTED_HOSTS") or ["localhost"]
+            environ = {**environ, "HTTP_HOST": hosts[0]}
         return self.wsgi_app(environ, start_response)
 
 
@@ -328,18 +336,23 @@ def fetch_article_images(title, limit=6):
 GOOGLE_PAUSE_SECONDS = 6 * 60 * 60
 _GOOGLE_PAUSE_KEY = "teranga:google-images-paused"
 _google_paused_until = 0.0
+_google_checked_until = 0.0
 
 
 def google_images_paused() -> bool:
     """Google a refusé l'accès (403) récemment : inutile de l'interroger."""
-    if time.time() < _google_paused_until:
+    global _google_checked_until
+    now = time.time()
+    if now < _google_paused_until:
         return True
-    if redis_client is not None:
-        try:
-            return bool(redis_client.get(_GOOGLE_PAUSE_KEY))
-        except Exception:
-            return False
-    return False
+    if redis_client is None or now < _google_checked_until:
+        return False
+    # Une seule lecture Redis par minute : l'état ne change qu'après un refus (pause de 6 h).
+    _google_checked_until = now + 60
+    try:
+        return bool(redis_client.get(_GOOGLE_PAUSE_KEY))
+    except Exception:
+        return False
 
 
 def _pause_google_images(code) -> None:
@@ -732,12 +745,19 @@ register_youth_project_route(app, {
 from services.answer_cache import AnswerCache
 
 ANSWER_CACHE = AnswerCache.from_env(redis_client, logger=app.logger)
+_CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
+    b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json", "partners.json") if (BASE_DIR / "data" / name).exists())
+    + SYSTEM_PROMPT.encode("utf-8")
+    + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
+).hexdigest()[:12]
 
 register_chat_route(app, {
     "answer_cache": ANSWER_CACHE,
     # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
     # de la base de connaissances invalide les anciennes réponses en cache.
-    "cache_model": MODEL + ":" + hashlib.sha256(b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json"))).hexdigest()[:12],
+    # Le prompt système, les partenaires et le modèle complexe en font partie aussi,
+    # ainsi que la date (un partenariat expiré ne doit plus apparaître le lendemain).
+    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat(),
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,
@@ -790,7 +810,6 @@ register_system_routes(app, {
     "home_html": HOME_HTML,
     "site_url": SITE_URL,
     "build_icon_png": build_icon_png,
-    "icon_svg": icon_svg,
 })
 
 
