@@ -158,6 +158,7 @@ def _build_primary_query(
 # Recherches d'images en parallèle : la plus lente fixe la durée, pas la somme.
 _PHOTO_POOL = None
 PHOTO_SEARCH_BUDGET_SECONDS = 9.0
+PHOTO_TOTAL_BUDGET_SECONDS = 10.5
 
 
 def _run_parallel(jobs, logger, budget=None):
@@ -286,6 +287,9 @@ def fetch_topic_images(
     # Étape 1, en parallèle : Google et les photos des articles Wikipédia des
     # lieux reconnus (choisies par des rédacteurs ; jamais pour une requête
     # libre comme « plage », dont l'article montrerait le monde entier).
+    # Budget total (étapes 1 et 2) sous le délai d'attente du chat (12 s) : des
+    # photos trouvées trop tard seraient perdues pour la réponse.
+    deadline = time.monotonic() + PHOTO_TOTAL_BUDGET_SECONDS
     article_titles = [str(t or "").strip() for t in list(specific_titles or discovered_titles)[:2]]
     article_titles = [t for t in dict.fromkeys(article_titles) if t] if fetch_article_images else []
     jobs = []
@@ -303,12 +307,15 @@ def fetch_topic_images(
     # Étape 2 (seulement s'il manque des photos) : recherche Commons, en
     # parallèle sur les premiers titres.
     commons_titles = [t for t in dict.fromkeys(str(t or "").strip() for t in titles) if t][:4]
+    remaining = deadline - time.monotonic()
+    if remaining < 1:
+        return finish()
     jobs = [("commons", t, lambda t=t: fetch_commons_images(t, limit=4)) for t in commons_titles]
-    results = _run_parallel(jobs, logger)
+    results = _run_parallel(jobs, logger, budget=min(PHOTO_SEARCH_BUDGET_SECONDS, remaining))
     for title in commons_titles:
         add(results.get(("commons", title)), title, proxied=True)
     for title in commons_titles:
-        if photos:
+        if photos or time.monotonic() >= deadline:
             break
         try:
             fallback = fetch_city_image(title)

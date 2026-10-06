@@ -102,3 +102,16 @@ def test_fetch_commons_images_cache_is_bounded(monkeypatch):
     for title in ("Dakar", "Thiès", "Saint-Louis"):
         images.fetch_commons_images(title, limit=1, urlopen_fn=opener)
     assert len(images._COMMONS_CACHE) == 2
+
+
+def test_network_failure_is_not_cached_as_no_photo(monkeypatch):
+    from services import images
+
+    images._IMAGE_CACHE.clear()
+
+    def broken(*_args, **_kwargs):
+        raise OSError("timeout")
+
+    monkeypatch.setattr(images, "fetch_commons_image", broken)
+    assert images.fetch_city_image("Kédougou", broken, lambda url: url, lambda text, n: text) is None
+    assert "Kédougou" not in images._IMAGE_CACHE

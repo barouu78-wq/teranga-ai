@@ -1,6 +1,7 @@
 """Chat response orchestration extracted from the Flask application."""
 
 import time
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
 from .orchestrator import build_agent_plan, run_enrichments
@@ -38,12 +39,24 @@ def build_chat_service(
     should_fetch_map,
     reasoning_override=None,
 ):
+    # Le plan est déterministe pour une requête : calculé une fois, puis réutilisé
+    # par create_response, model_kwargs et les enrichissements.
+    plans = OrderedDict()
+
     def agent_plan(payload):
-        return build_agent_plan(
+        key = id(payload)
+        hit = plans.get(key)
+        if hit is not None and hit[0] is payload:
+            return hit[1]
+        plan = build_agent_plan(
             payload,
             model=model,
             complex_model=complex_model,
         )
+        plans[key] = (payload, plan)
+        while len(plans) > 32:
+            plans.popitem(last=False)
+        return plan
 
     def model_kwargs(payload, stream):
         plan = agent_plan(payload)
@@ -59,13 +72,8 @@ def build_chat_service(
 
     def create_response(payload, stream):
         plan = agent_plan(payload)
-        fallback_model = (
-            "gpt-5.6-luna"
-            if plan.model == complex_model
-            else "gpt-5.6-sol"
-            if plan.model == "gpt-5.6-luna"
-            else "gpt-5.6-luna"
-        )
+        # Secours = l'autre modèle configuré (et non des noms en dur).
+        fallback_model = model if plan.model == complex_model else complex_model
         if hasattr(logger, "info"):
             logger.info(
                 "chat_agent_plan model=%s steps=%s planner=%s deep_reasoning=%s web=%s images=%s map=%s",
@@ -84,7 +92,7 @@ def build_chat_service(
             model=plan.model,
             logger=logger,
             stream=stream,
-            fallback_models=(fallback_model,),
+            fallback_models=tuple(m for m in (fallback_model,) if m and m != plan.model),
         )
 
     def complete_enrichments(payload):
