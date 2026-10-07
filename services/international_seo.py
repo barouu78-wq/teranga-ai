@@ -316,3 +316,98 @@ def render_international_page(lang, topic, site_url):
     faq_marker = f"<section><h2>{faq_heading}</h2>"
     text = response.get_data(as_text=True)
     return Response(text.replace(faq_marker, section + faq_marker), mimetype="text/html", headers={"Cache-Control":"public, max-age=3600"})
+
+
+# Concrete, durable details for the most searched topics (no exact prices or
+# timetables, which change). English first: most international visitors read it.
+TOPIC_DETAILS = {
+    "senegal-travel-guide": {
+        "en": [
+            ("When to go", "The dry season, roughly November to May, is the most comfortable: little rain and cool evenings on the coast. The rainy season (about July to October, earlier and longer in Casamance) makes some tracks difficult but turns the country green."),
+            ("Money and phone", "The currency is the West African CFA franc (XOF), pegged to the euro: 1 € = 655.957 FCFA. Mobile payments (Wave, Orange Money) are everywhere; keep small notes for taxis and markets. Senegal is on UTC+0 all year."),
+            ("A one-week route", "Dakar and Gorée (2 days), Lac Rose and the Lompoul desert (1–2 days), Saint-Louis and, in season, Djoudj bird park (2 days). With 10–14 days, add the Saloum delta and the Petite Côte; Casamance needs a flight or the overnight boat from Dakar."),
+        ],
+        "fr": [
+            ("Quand partir", "La saison sèche, de novembre à mai, est la plus confortable. La saison des pluies (environ juillet à octobre, plus longue en Casamance) rend certaines pistes difficiles mais le pays devient vert."),
+            ("Argent et téléphone", "Le franc CFA (XOF) a une parité fixe avec l'euro : 1 € = 655,957 FCFA. Wave et Orange Money sont partout ; gardez des petites coupures pour les taxis et les marchés. Heure : UTC+0 toute l'année."),
+        ],
+    },
+    "dakar-airport-to-city": {
+        "en": [
+            ("Where the airport is", "Blaise Diagne International Airport (AIBD) is in Diass, about 45 km from central Dakar, linked by a toll motorway. Allow roughly 45 minutes to over an hour depending on traffic."),
+            ("Your options", "Airport taxis (agree the fare before getting in), shuttle buses, ride-hailing apps such as Yango or Heetch where available, or a pre-booked car with driver, often the simplest after a night flight. The TER train links Dakar to Diamniadio; check whether its airport extension is running."),
+            ("Arriving late", "Book your first night's transfer in advance, keep some CFA francs or a working mobile money account, and share your accommodation address with the driver before leaving."),
+        ],
+        "fr": [
+            ("Où est l'aéroport", "L'aéroport Blaise Diagne (AIBD) est à Diass, à environ 45 km du centre de Dakar par l'autoroute à péage. Comptez de 45 minutes à plus d'une heure selon la circulation."),
+            ("Les options", "Taxi (prix fixé avant de monter), navettes, applications comme Yango ou Heetch, ou voiture avec chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; vérifiez si le prolongement vers l'aéroport est en service."),
+        ],
+    },
+    "senegal-visa": {
+        "en": [
+            ("Who needs a visa", "Citizens of the European Union, the United Kingdom, the United States, Canada and many other countries generally do not need a visa for a short stay (under 90 days). Rules change: always check with the Senegalese embassy or your government's travel advice before booking."),
+            ("Documents", "A passport valid for at least six months is recommended, plus proof of onward travel and accommodation if asked. A yellow fever vaccination certificate is required if you arrive from a country where the disease is present, and the vaccine is recommended for everyone."),
+        ],
+        "fr": [
+            ("Qui a besoin d'un visa", "Les ressortissants de l'Union européenne et de nombreux autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours). Vérifiez toujours auprès de l'ambassade avant de réserver."),
+            ("Documents", "Passeport valide au moins six mois conseillé. Le certificat de vaccination contre la fièvre jaune est exigé si vous arrivez d'un pays où elle circule, et le vaccin est recommandé pour tous."),
+        ],
+    },
+    "senegal-sim-card": {
+        "en": [
+            ("Operators", "The main mobile operators are Orange, Free and Expresso. SIM cards are sold in operator shops, kiosks and at the airport; bring your passport, as registration is required."),
+            ("Data and payments", "Data bundles are bought with top-up codes or mobile money. Orange Money and Wave are widely used to pay, send and withdraw money; many shops and taxis accept them."),
+        ],
+        "fr": [
+            ("Opérateurs", "Les principaux opérateurs sont Orange, Free et Expresso. La carte SIM s'achète en boutique, en kiosque ou à l'aéroport, avec une pièce d'identité."),
+            ("Internet et paiements", "Les forfaits s'achètent par code de recharge ou par mobile money. Orange Money et Wave servent à payer, envoyer et retirer de l'argent."),
+        ],
+    },
+    "senegal-transport": {
+        "en": [
+            ("In Dakar", "Taxis have no meters: agree on the fare before you go, or use an app such as Yango or Heetch that shows the price upfront. The BRT rapid bus links the centre to Guédiawaye, and the TER train serves the suburbs as far as Diamniadio."),
+            ("Between cities", "Shared 'sept-place' taxis leave when full from the Baux Maraîchers bus station in Pikine: fast but cramped. Buses are cheaper and slower. A car with driver is the easiest option for a multi-stop trip."),
+            ("To Casamance", "Fly to Ziguinchor or Cap Skirring, take the overnight boat from Dakar to Ziguinchor (about 15 hours, book a cabin), or drive through The Gambia via the Farafenni bridge, with a border crossing."),
+        ],
+        "fr": [
+            ("À Dakar", "Les taxis n'ont pas de compteur : fixez le prix avant de partir, ou utilisez Yango ou Heetch. Le BRT relie le centre à Guédiawaye ; le TER dessert la banlieue jusqu'à Diamniadio."),
+            ("Entre les villes", "Les sept-places partent quand ils sont pleins depuis la gare des Baux Maraîchers à Pikine. Les bus sont moins chers et plus lents ; la voiture avec chauffeur est la plus simple pour un circuit."),
+        ],
+    },
+    "senegal-weather": {
+        "en": [
+            ("Seasons", "Dry season from about November to May, rainy season from about July to October. Dakar, cooled by the ocean and trade winds, is the mildest city; the interior (Tambacounda, Kédougou, Matam) gets much hotter, especially from March to June."),
+            ("Official forecasts", "For alerts and forecasts, the reference is ANACIM, Senegal's national weather agency (anacim.sn). Ask Teranga AI about a specific place to get today's forecast."),
+        ],
+        "fr": [
+            ("Saisons", "Saison sèche d'environ novembre à mai, pluies d'environ juillet à octobre. Dakar, rafraîchie par l'océan et l'alizé, est la ville la plus douce ; l'intérieur (Tambacounda, Kédougou, Matam) est bien plus chaud, surtout de mars à juin."),
+            ("Prévisions officielles", "La référence pour les alertes et prévisions est l'ANACIM (anacim.sn)."),
+        ],
+    },
+    "goree-island": {
+        "en": [
+            ("Getting there", "The ferry leaves from the Dakar ferry terminal (gare maritime) near the port; the crossing takes about 20 minutes. Check the day's timetable at the terminal, and keep your return ticket."),
+            ("What to see", "The House of Slaves and its 'Door of No Return', the historic streets, the IFAN history museum and the Castel hill with its views of Dakar. Gorée has been a UNESCO World Heritage Site since 1978. Allow half a day."),
+        ],
+        "fr": [
+            ("S'y rendre", "La chaloupe part de la gare maritime de Dakar ; la traversée dure environ 20 minutes. Vérifiez les horaires du jour sur place et gardez votre billet retour."),
+            ("Que voir", "La Maison des Esclaves et sa « porte du voyage sans retour », les ruelles historiques, le musée historique de l'IFAN et le Castel. Gorée est inscrite au patrimoine mondial de l'UNESCO depuis 1978. Comptez une demi-journée."),
+        ],
+    },
+}
+
+_value_render_international_page = render_international_page
+
+
+def render_international_page(lang, topic, site_url):
+    response = _value_render_international_page(lang, topic, site_url)
+    details = TOPIC_DETAILS.get(topic, {}).get(lang)
+    if not response or not details:
+        return response
+    blocks = "".join(f"<section><h2>{escape(h)}</h2><p>{escape(p)}</p></section>" for h, p in details)
+    faq_heading = {"en": "Frequently asked questions", "es": "Preguntas frecuentes", "de": "Häufige Fragen",
+                   "it": "Domande frequenti", "fr": "Questions fréquentes"}[lang]
+    marker = f"<section><h2>{faq_heading}</h2>"
+    text = response.get_data(as_text=True)
+    return Response(text.replace(marker, blocks + marker, 1), mimetype="text/html",
+                    headers={"Cache-Control": "public, max-age=3600"})
