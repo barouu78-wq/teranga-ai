@@ -37,6 +37,7 @@ from routes.emergency import register_emergency_routes
 from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
+from services.practical_facts import practical_context
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -650,7 +651,7 @@ WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("place
 
 _EVENT_WORDS = re.compile(
     r"\b(magal|tabaski|korit[ée]|gamou|maouloud|mawlid|tamkharit|achoura|ramadan|a[iï]d|f[êe]tes?|f[ée]ri[ée]s?|"
-    r"festival|jazz|ind[ée]pendance|4 avril|no[ëe]l|p[âa]ques|holidays?|feast)\b",
+    r"festival|jazz|ind[ée]pendance|4 avril|no[ëe]l|p[âa]ques|holidays?|feast|eid|christmas|easter|toussaint|ascension|assomption)\b",
     re.I,
 )
 
@@ -688,7 +689,11 @@ def parse_chat_payload():
         )
         # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte.
         if _EVENT_WORDS.search(payload.get("message", "")):
-            payload["instructions"] += "\n\n" + events_context()
+            payload["instructions"] += "\n\n" + events_context(query=payload.get("message", ""))
+        # Repères pratiques vérifiés (urgences, argent, visa, SIM…) quand la question en parle.
+        practical = practical_context(payload.get("message", ""))
+        if practical:
+            payload["instructions"] += "\n\n" + practical
         partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
         if partner_block:
             payload["instructions"] += "\n\n" + partner_block
@@ -794,6 +799,8 @@ ANSWER_CACHE = AnswerCache.from_env(redis_client, logger=app.logger)
 _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json", "partners.json") if (BASE_DIR / "data" / name).exists())
     + SYSTEM_PROMPT.encode("utf-8")
+    # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py"))
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
 ).hexdigest()[:12]
 

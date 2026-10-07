@@ -70,10 +70,49 @@ def upcoming_events(today: _dt.date | None = None, limit: int | None = None) -> 
     return items[:limit] if limit else items
 
 
-def events_context(today: _dt.date | None = None) -> str:
-    """Bloc court pour l'assistant : les prochaines fêtes, avec le statut de la date."""
+# Autres noms par lesquels on désigne une fête (« Aïd », « jazz », « fête du mouton »…).
+_ALIASES = {
+    "Tabaski": ("tabaski", "aid el kebir", "aid al adha", "mouton", "eid al adha"),
+    "Korité": ("korite", "aid el fitr", "eid al fitr", "fin du ramadan", "end of ramadan"),
+    "Grand Magal": ("magal",),
+    "Gamou": ("gamou", "maouloud", "mawlid", "mouloud"),
+    "Tamkharit": ("tamkharit", "achoura", "ashura"),
+    "jazz": ("jazz",),
+    "Indépendance": ("independance", "independence", "4 avril"),
+    "Noël": ("noel", "christmas"),
+    "Pâques": ("paques", "easter"),
+    "Toussaint": ("toussaint",),
+    "Ascension": ("ascension",),
+    "Assomption": ("assomption", "assumption"),
+}
+
+
+def _fold(text: str) -> str:
+    import unicodedata
+    raw = unicodedata.normalize("NFD", str(text or "").casefold())
+    return " ".join("".join(c for c in raw if not unicodedata.combining(c)).replace("-", " ").replace("'", " ").split())
+
+
+def _asked(event: dict, query: str) -> bool:
+    """La question nomme-t-elle cet événement ?"""
+    if not query:
+        return False
+    for key, words in _ALIASES.items():
+        if key.casefold() in event["name"].casefold() and any(w in query for w in words):
+            return True
+    return False
+
+
+def events_context(today: _dt.date | None = None, query: str = "") -> str:
+    """Bloc court pour l'assistant : les prochaines fêtes, avec le statut de la date.
+
+    Les 6 plus proches, plus toute fête nommée dans la question même si elle est plus
+    lointaine (« C'est quand la Tabaski ? » en octobre)."""
+    folded = _fold(query)
+    upcoming = upcoming_events(today)
+    chosen = upcoming[:6] + [e for e in upcoming[6:] if _asked(e, folded)]
     lines = ["PROCHAINES FÊTES ET ÉVÉNEMENTS AU SÉNÉGAL (dates lunaires estimées tant que non confirmées) :"]
-    for event in upcoming_events(today, limit=6):
+    for event in chosen:
         when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
         status = "confirmée" if event["confirmed"] else "estimée, à confirmer"
         lines.append(f"- {event['name']} ({event['place']}) : {when} [{status}]. {event['tips']}")
