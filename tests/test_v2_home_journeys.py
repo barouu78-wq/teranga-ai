@@ -21,7 +21,16 @@ def test_home_reduces_landing_to_three_primary_journeys():
     assert 'data-journey="project"' not in html
     assert 'data-journey="discover"' in html
     assert 'data-journey="chat"' in html
-    assert '#audienceMode{display:none!important}' in html
+    # Design v2 : les profils (touriste, résident…) restent visibles sur téléphone.
+    assert '#audienceMode{display:none!important}' not in html
+
+
+def test_home_mobile_tabbar_links_to_places_trip_and_emergency():
+    html = home_source()
+    assert 'href="/lieux" data-tab="places"' in html
+    assert 'href="/trip-planner" data-tab="trip"' in html
+    assert 'href="/urgences" data-tab="sos"' in html
+    assert "navPlaces:'Lieux'" in html and "navSos:'Emergency'" in html
 
 
 def test_home_persists_selected_journey_for_session():
@@ -64,3 +73,12 @@ def test_home_links_project_builder_to_partner_directory():
     html = home_source()
     assert 'href="/partners"' in html
     assert "Trouver un partenaire" in html
+
+
+def test_home_v2_hero_matches_mockup():
+    html = home_source()
+    assert 'id="heroAsk"' in html and 'id="heroInput"' in html and 'id="heroMic"' in html
+    assert 'href="/lieux/goree"' in html and 'href="/lieux/lac-rose"' in html
+    assert 'href="/trip-planner"' in html and "planTitle:'Planifier mon voyage'" in html
+    # Micro : icône au trait, plus d'émoji.
+    assert ">🎤<" not in html

@@ -29,6 +29,8 @@ __EXTRA_VERIFICATION__
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-title" content="Teranga">
+<link rel="preload" href="/static/fonts/atkinson-hyperlegible-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <script type="application/ld+json">
@@ -299,6 +301,9 @@ async function speak(text,btn){
 <style>
 /* Teranga AI — design v6 : une seule feuille, tokens clair/sombre.
    Remplace les couches v1→v5 empilées (et le CSS orphelin après </html>). */
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-400.woff2") format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-700.woff2") format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
   --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
   /* Jour : « Terre de Teranga » — ocre, terracotta, sable. */
@@ -310,14 +315,14 @@ async function speak(text,btn){
   --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);
   --shadow:0 14px 40px rgba(122,44,16,.12);
   --radius:18px;--radius-lg:26px;
-  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body[data-theme="dark"]{
   /* Nuit : « Nuit de Dakar » — bleu nuit et or. */
-  --bg:#0b0f17;--surface:#141a26;--surface-2:#1b2333;--ink:#f4efe4;--muted:#a9a397;
-  --line:rgba(231,187,99,.14);--line-strong:rgba(231,187,99,.26);
-  --accent:#d9a441;--accent-ink:#151007;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
+  --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
+  --line:#2b2e35;--line-strong:#3a3e46;
+  --accent:#e3a33b;--accent-ink:#111215;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
   --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
   --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
@@ -520,11 +525,11 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
 
 /* Onglets (mobile uniquement) */
 .tabbar{display:none}
-.tabbar button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:600 11px/1.1 var(--font);cursor:pointer}
+.tabbar button,.tabbar a{text-decoration:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:600 11px/1.1 var(--font);cursor:pointer}
 .tabbar svg{width:22px;height:22px}
 .tabbar button.on{color:var(--link)}
 .tabbar button.on:after{content:"";position:absolute;top:-6px;left:50%;width:20px;height:3px;border-radius:0 0 3px 3px;background:var(--accent);transform:translateX(-50%)}
-.tabbar button:focus-visible{outline:2px solid var(--nav-gold);outline-offset:-2px}
+.tabbar a:focus-visible,.tabbar button:focus-visible{outline:2px solid var(--nav-gold);outline-offset:-2px}
 
 /* Module « Mon projet » */
 .project-modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(16,10,4,.45);backdrop-filter:blur(4px)}
@@ -596,8 +601,6 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .fx-widget{max-width:none}
   .dock{padding:6px 12px 8px}
   #send{padding:0 14px;font-size:14px}
-  #audienceMode{display:none!important}
-  body.show-profile #audienceMode{display:flex!important}
   .tabbar{display:grid!important}
   .tabbar{grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px)}
   .project-modal{align-items:flex-end;padding:0}
@@ -622,7 +625,7 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
 }
 body.has-chat .dock{background:var(--bg)}
 /* Design automatique : jour « Terre de Teranga », nuit « Nuit de Dakar ». */
-body[data-theme="dark"]{background:radial-gradient(120% 60% at 80% -10%,#24324d 0,#0b0f17 60%) fixed}
+body[data-theme="dark"]{background:#111215}
 #heroTitle{color:var(--title)}
 body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e7bb63);-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand .mark{background:var(--accent)}
@@ -671,6 +674,55 @@ body[data-fete="magal"] .hero-signature{background:
 body[data-fete="magal"] .hero-signature::after{content:"🕌"}
 body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 
+
+/* Design v2 — accueil comme la maquette : salutation, question en haut, suggestions, lieux, planifier. */
+.hero-greet{order:1;margin:0 0 -12px;color:var(--muted);font-size:15px}
+#heroTitle{order:2}
+#heroText{order:3}
+#audienceMode{order:4}
+.hero-ask{order:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface)}
+.hero-ask input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;color:var(--ink);font-size:16px;outline:none}
+.hero-ask:focus-within{border-color:var(--accent)}
+#heroMic,#heroSend{flex:0 0 44px;height:44px;display:grid;place-items:center;border-radius:12px;border:0;cursor:pointer}
+#heroMic{background:var(--surface-2);color:var(--ink)}
+#heroSend{background:var(--accent);color:var(--accent-ink)}
+#heroMic svg,#heroSend svg,#mic svg{width:20px;height:20px}
+#heroMic:focus-visible,#heroSend:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+body.voice-active #heroMic{background:var(--sen-red);color:#fff}
+.hero-chips{order:6;display:flex;flex-wrap:wrap;gap:8px}
+.hero-chips button{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+.hero-chips button:hover{border-color:var(--accent)}
+.hero-discover{order:7;display:flex;flex-direction:column;gap:10px}
+.hero-discover-head{display:flex;justify-content:space-between;align-items:baseline}
+.hero-discover-head h2{margin:0;font:700 19px/1.2 var(--font-display)}
+.hero-discover-head a{font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+.hero-discover-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.place-tile{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.place-tile-img{display:block;height:96px;background-size:cover!important;background-position:center!important}
+.place-tile strong{padding:10px 12px 0;font-size:15px}
+.place-tile small{padding:2px 12px 10px;color:var(--muted);font-size:13px}
+.plan-cta{order:8;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg);text-decoration:none}
+.plan-cta span{display:flex;flex-direction:column;gap:2px}
+.plan-cta strong{font-size:16px}
+.plan-cta small{font-size:13px;opacity:.75}
+.plan-cta svg{flex:0 0 22px;width:22px;height:22px}
+#fxWidget{order:9}
+#journeyStrip{order:10}
+#cards{order:11}
+.hero .spread{order:12}
+.audience-btn>span,.audience-btn small{display:none}
+.audience-btn{min-height:44px;font-weight:700}
+.audience-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+body:not([data-fete]) .hero-signature{display:none}
+/* Ordinateur : la barre de question reste en bas, le champ du haut est masqué. */
+@media(min-width:721px){.hero-ask{display:none}}
+/* Téléphone : avant la conversation, une seule zone de question (celle du haut). */
+@media(max-width:720px){
+  body:not(.has-chat) .dock{display:none}
+  #heroText{display:none}
+  #heroTitle{font-size:30px;line-height:1.12}
+  #journeyStrip,#cards{display:none}
+}
 </style>
 
 </head>
@@ -712,14 +764,31 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 <div id="stage">
   <div id="hero" class="hero">
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
-    <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
+    <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
+    <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
   <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
   <button type="button" class="audience-btn" data-audience="resident" aria-pressed="false"><span>⌂</span><b id="audienceResident">Résident</b><small id="audienceResidentHint">Vivre au Sénégal</small></button>
   <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span>↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
-</div><section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
+</div>
+<form class="hero-ask" id="heroAsk" autocomplete="off">
+  <label class="sr-only" for="heroInput">Votre question</label>
+  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment aller à Gorée ?" enterkeyhint="send">
+  <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</form>
+<div class="hero-chips" id="heroChips"></div>
+<section class="hero-discover" aria-labelledby="discoverTitle">
+  <div class="hero-discover-head"><h2 id="discoverTitle">À découvrir</h2><a href="/lieux" id="allPlaces">Tous les lieux</a></div>
+  <div class="hero-discover-grid">
+    <a class="place-tile" href="/lieux/goree" data-photo="Île de Gorée Sénégal"><span class="place-tile-img" style="background:#2e5d63"></span><strong>Île de Gorée</strong><small>Dakar · UNESCO</small></a>
+    <a class="place-tile" href="/lieux/lac-rose" data-photo="Lac Rose Retba Sénégal"><span class="place-tile-img" style="background:#8a4b5c"></span><strong>Lac Rose</strong><small>Région de Dakar</small></a>
+  </div>
+</section>
+<a class="plan-cta" id="planCta" href="/trip-planner"><span><strong id="planCtaTitle">Planifier mon voyage</strong><small id="planCtaHint">Un programme jour par jour en 1 minute</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+<section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
   <div class="fx-head"><div><b id="fxTitle">Convertisseur</b><small id="fxUpdated">Taux indicatif</small></div><span>🇸🇳</span></div>
   <div class="fx-row">
     <div class="fx-field"><label for="fxAmount">Montant</label><input id="fxAmount" inputmode="decimal" value="100" aria-label="Montant à convertir"></div>
@@ -768,7 +837,7 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
   <div class="composer">
     <div class="row">
       <label class="sr-only" for="input">Question</label><textarea id="input" maxlength="2000" placeholder="Pose ta question…" rows="1" autocomplete="off" spellcheck="true"></textarea>
-      <button id="mic" type="button" title="Parler" aria-label="Parler">🎤</button>
+      <button id="mic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
       <button id="send" type="button">Envoyer</button>
     </div>
   </div>
@@ -779,10 +848,10 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
   </div>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
-  <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
-  <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Découvrir</button>
-  <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
-  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
+  <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
+  <a href="/lieux" data-tab="places"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>Lieux</a>
+  <a href="/trip-planner" data-tab="trip"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Voyage</a>
+  <a href="/urgences" data-tab="sos"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 21 19H3L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Urgences</a>
 </nav>
 </div>
 

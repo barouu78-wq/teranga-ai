@@ -433,3 +433,30 @@ def test_partner_request_form_sends_and_confirms(page, base_url):
     page.wait_for_selector("#partner-form-status:has-text('Merci')", timeout=5000)
     assert page.input_value("input[name=name]") == ""
     assert sent and sent[0]["kind"] == "guide" and sent[0]["city"] == "Ndangane" and sent[0]["website"] == ""
+
+
+def test_mobile_home_question_box_and_chips_start_the_chat(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    answers = iter(["Prenez la chaloupe à la gare maritime.", "Il fait beau à Dakar."])
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": next(answers)}), content_type="application/x-ndjson"))
+    page.goto(base_url + "/")
+    # Avant la conversation : un seul champ de question, en haut ; la barre du bas est cachée.
+    assert page.is_visible("#heroInput") and not page.is_visible("#input")
+    page.fill("#heroInput", "Comment aller à Gorée ?")
+    page.click("#heroSend")
+    page.get_by_text("Prenez la chaloupe à la gare maritime.").wait_for(timeout=5000)
+    # La conversation continue avec la barre du bas.
+    assert page.is_visible("#input")
+    page.fill("#input", "Et la météo ?")
+    page.click("#send")
+    page.get_by_text("Il fait beau à Dakar.").wait_for(timeout=5000)
+    assert page.errors == []
+
+
+def test_mobile_home_suggestion_chip_asks_the_question(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": "Réponse à la suggestion."}), content_type="application/x-ndjson"))
+    page.goto(base_url + "/")
+    page.locator("#heroChips button").first.click()
+    page.get_by_text("Réponse à la suggestion.").wait_for(timeout=5000)
+    assert page.errors == []

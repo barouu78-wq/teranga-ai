@@ -218,18 +218,35 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
 
     ask = quote(f"Parle-moi de {name}")
     plan = quote(name)
+    # Design v2 : l'action principale (itinéraire si on connaît le point GPS) en premier,
+    # puis l'assistant et le planificateur, en grands boutons faciles à toucher.
+    primary = (
+        '<a class="cta primary" href="https://www.google.com/maps/dir/?api=1&amp;destination='
+        f'{coords[0]:.5f},{coords[1]:.5f}" target="_blank" rel="noopener noreferrer">Itinéraire</a>'
+        if coords else f'<a class="cta primary" href="/?q={ask}">Demander à Teranga AI</a>'
+    )
     actions = (
-        '<div class="actions">'
-        f'<a class="cta" href="/?q={ask}">Demander à Teranga AI</a>'
-        f'<a class="cta" href="/trip-planner?context_place={plan}">Planifier un voyage depuis ce lieu</a>'
-        '<a class="cta" href="/explorer">Explorer d’autres lieux</a>'
+        '<div class="actions place-actions">'
+        + primary
+        + (f'<a class="cta" href="/?q={ask}">Demander à Teranga AI</a>' if coords else "")
+        + f'<a class="cta" href="/trip-planner?context_place={plan}">Planifier un voyage</a>'
         "</div>"
     )
+    facts = [("Type", type_label), ("Région", region)]
+    if locality and locality != region:
+        facts.append(("Localité", locality))
+    elif what_to_see:
+        facts.append(("À voir", f"{len(what_to_see)} site" + ("s" if len(what_to_see) > 1 else "")))
+    facts_html = '<div class="place-facts">' + "".join(
+        f'<div><span>{escape(label)}</span><strong>{escape(value)}</strong></div>' for label, value in facts if value
+    ) + "</div>"
     nonce_attr = f' nonce="{escape(nonce)}"' if nonce else ""
     script = (
         f"<script{nonce_attr}>(async()=>{{const box=document.getElementById('gallery');if(!box)return;"
         "try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)+'&title='+encodeURIComponent(box.dataset.title||''),(window.AbortSignal&&AbortSignal.timeout)?{signal:AbortSignal.timeout(15000)}:{}).then(r=>r.json());"
         "const list=(d.images||[]).slice(0,4);if(!list.length){box.closest('section').remove();return}"
+        "const hero=document.getElementById('placeHero');if(hero){const h=document.createElement('img');h.decoding='async';h.alt=list[0].alt||box.dataset.title||'';"
+        "h.src=list[0].display_url||('/image-proxy?url='+encodeURIComponent(list[0].url));hero.appendChild(h);hero.hidden=false}"
         "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt=x.alt||'';"
         "img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url));box.appendChild(img)});"
         "document.getElementById('gallery-credit').textContent='Photos : '+(list[0].credit||'Wikimedia Commons')}"
@@ -239,8 +256,10 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         _head(title, description, url, site_url, ld)
         + body_tag(region) + site_header("/lieux")
         + '<main><p class="related"><a href="/lieux">← Tous les lieux du Sénégal</a></p><article>'
+        + '<figure class="place-hero" id="placeHero" hidden></figure>'
         + f'<div class="kicker">{escape(type_label)} · {escape(region)}</div>'
         + f"<h1>{escape(name)}</h1><p class=\"muted\">{escape(summary)}</p>"
+        + facts_html
         + actions
         + "".join(sections)
         + "</article></main>"
