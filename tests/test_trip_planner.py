@@ -115,37 +115,51 @@ def test_trip_plan_contract_normalizes_supported_fields():
     assert plan["practical_notes"] == ["Vérifier les horaires."]
 
 
-def test_trip_plan_contract_rejects_invalid_day_structure():
+def _day(n, **extra):
+    return dict({"day": n, "title": f"Jour {n}", "region": "Dakar", "morning": "Marché",
+                 "afternoon": "Gorée", "evening": "Dîner", "transport": "Taxi"}, **extra)
+
+
+def test_trip_plan_contract_tolerates_small_day_mismatches():
     from services.trip_planner import _normalize_plan
 
-    base = {
-        "summary": "Séjour",
-        "days": [{
-            "day": 1,
-            "title": "Dakar",
-            "region": "Dakar",
-            "morning": "Marché",
-            "afternoon": "Gorée",
-            "evening": "Dîner",
-            "transport": "Taxi",
-        }],
-        "practical_notes": [],
-    }
-    assert _normalize_plan(base, "fallback", expected_days=2)["days"] == []
-    invalid = dict(base)
-    invalid["days"] = [dict(base["days"][0], day="1")]
-    assert _normalize_plan(invalid, "fallback", expected_days=1) == {
-        "summary": "fallback",
-        "days": [],
-        "practical_notes": [],
-    }
-    invalid = dict(base)
-    invalid["days"] = [dict(base["days"][0], morning="")]
-    assert _normalize_plan(invalid, "fallback", expected_days=1) == {
-        "summary": "fallback",
-        "days": [],
-        "practical_notes": [],
-    }
+    # 12 → 18 octobre : 6 jours attendus, le modèle en renvoie 7 (jour de départ compris).
+    plan = _normalize_plan({"summary": "Séjour", "days": [_day(n) for n in range(1, 8)],
+                            "practical_notes": []}, "{}", expected_days=6)
+    assert [d["day"] for d in plan["days"]] == [1, 2, 3, 4, 5, 6, 7]
+    # Jamais plus d'un jour en trop.
+    plan = _normalize_plan({"summary": "S", "days": [_day(n) for n in range(1, 12)]}, "{}", expected_days=6)
+    assert len(plan["days"]) == 7
+    # Numéros en texte, champ vide, titre absent, jour vide : on renumérote et on garde l'essentiel.
+    plan = _normalize_plan({"summary": "S", "days": [_day("1", morning=""), {"day": 2}, "x", _day(3, title=None)]},
+                           "{}", expected_days=2)
+    assert [d["day"] for d in plan["days"]] == [1, 2]
+    assert plan["days"][0]["morning"] == ""
+    assert plan["days"][1]["title"] == "Jour 2"
+    assert _normalize_plan({"summary": "S", "days": [_day(1, title="")]}, "{}", lang="en")["days"][0]["title"] == "Day 1"
+
+
+def test_trip_plan_never_shows_raw_json():
+    from services.trip_planner import _normalize_plan, _parse_plan_json
+
+    raw = '{"summary": "Séjour", "days": [' + ", ".join(__import__("json").dumps(_day(n)) for n in (1, 2))
+    plan = _normalize_plan(_parse_plan_json(raw + ', {"day": 3, "title": "Coup'), raw, expected_days=3)
+    assert [d["day"] for d in plan["days"]] == [1, 2]
+    fenced = "```json\n" + raw + "]}\n```"
+    assert len(_normalize_plan(_parse_plan_json(fenced), fenced)["days"]) == 2
+    broken = '{"summary": "Séjour économique du 12 au 18 octobre", "days": [{"day": 1, "tit'
+    fallback = _normalize_plan(_parse_plan_json(broken), broken, lang="fr")
+    assert fallback["days"] == [] and not fallback["summary"].startswith("{")
+    assert "Réessaie" in fallback["summary"]
+    assert _normalize_plan(None, "Texte simple")["summary"] == "Texte simple"
+
+
+def test_trip_prompt_states_exact_day_count():
+    from services.trip_planner import _prompt
+
+    data = {"lang": "fr", "arrival": "2026-10-12", "departure": "2026-10-18", "adults": 2, "children": 0,
+            "interests": [], "budget": "eco", "pace": "calm", "regions": [], "surprise": False}
+    assert "Create exactly 6 day objects, numbered 1 to 6" in _prompt(data)
 
 
 def test_trip_plan_contract_trims_valid_fields():
