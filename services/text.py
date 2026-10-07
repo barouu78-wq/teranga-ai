@@ -26,7 +26,8 @@ def clean_answer(text: object) -> str:
     text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
     text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
     text = text.replace("**", "").replace("__", "")
-    text = re.sub(r"(?m)^\s*[-*•]\s+", "", text)
+    # Listes : « - » ou « * » deviennent « • » (plus lisible que des lignes nues ; la voix les ignore).
+    text = re.sub(r"(?m)^\s*[-*•]\s+", "• ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"\x00(\d+)\x00", lambda m: urls[int(m.group(1))], text)
     return text.strip()

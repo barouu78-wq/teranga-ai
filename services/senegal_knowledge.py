@@ -48,7 +48,37 @@ _QUERY_STOPWORDS = frozenset({
     "raconte", "racontes", "histoire", "visiter", "visite", "quartier", "quartiers", "comment", "quelle", "quelles",
     "quels", "quel", "pourquoi", "parle", "parler", "dans", "pour", "avec", "faire", "voir", "montre", "photos",
     "photo", "guide", "senegal", "tell", "about", "what", "where", "history", "visit", "show", "connais",
+    # Mots courants des questions pratiques : ils ne désignent jamais un lieu
+    # (« combien vaut 100 euros » faisait remonter le Niokolo-Koba, « vaut le détour »).
+    "combien", "vaut", "valent", "quand", "faut", "sont", "etre", "bien", "quoi", "cette", "entre", "avoir",
+    "acheter", "payer", "prix", "cout", "coute", "coutent", "euros", "euro", "dollars", "dollar", "fcfa",
+    "francs", "franc", "when", "which", "much", "many", "does", "from", "with", "have", "there", "best",
+    "good", "need", "should", "your", "enfant", "jour", "jours", "date", "dates", "numero", "numeros",
+    "appeler", "besoin", "doit", "dois", "peut", "peux", "possible", "meilleur", "meilleure", "sénégal",
 })
+
+
+_SHORT_STOPWORDS = frozenset({
+    "les", "des", "une", "est", "que", "qui", "the", "and", "for", "how", "sur", "aux", "pas", "mon", "ton", "son",
+    "par", "via", "oui", "non", "bon", "ses", "mes", "tes", "nos", "vos", "leur", "car", "donc", "mais", "elle", "ils",
+    "nous", "vous", "moi", "toi", "lui", "can", "you", "are", "was", "what", "who", "why", "any", "get", "see", "eat",
+    "ici", "peu", "tre", "plus", "tout", "tous", "faut", "fait", "dit", "vas", "vais", "veux", "cest", "quoi", "lequel",
+    "naka", "nga", "laa", "dem", "ngi", "bou", "rek", "ana",
+})
+
+
+def _words(text: str) -> frozenset:
+    return frozenset(re.findall(r"[a-z0-9]+", text))
+
+
+def _hit(token: str, words: frozenset) -> bool:
+    """Le mot de la question désigne-t-il ce lieu ? Mot entier, ou pluriel/forme longue
+    (« plages » ↔ « plage ») à partir de 5 lettres, jamais un bout de mot (« vaut » ≠ « vautour »)."""
+    if token in words:
+        return True
+    if len(token) < 5:
+        return False
+    return any(w.startswith(token) or (len(w) >= 5 and token.startswith(w)) for w in words)
 
 
 def _fold(value) -> str:
@@ -185,6 +215,7 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                     *map(str, region.get("themes", [])),
                     *map(str, region.get("foods", [])),
                 ]))
+                region["_search_words"] = _words(region["_search_haystack"])
         for place in data.get("places", []):
             if isinstance(place, dict):
                 place["_search_haystack"] = _fold(" ".join([
@@ -196,6 +227,8 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                 # Nom et autres noms (« Pink Lake », « Goree Island ») : un mot
                 # trouvé ici compte davantage dans le classement.
                 place["_search_names"] = _fold(" ".join([str(place.get("name", "")), *map(str, place.get("aliases", []) or [])]))
+                place["_search_words"] = _words(place["_search_haystack"])
+                place["_search_name_words"] = _words(place["_search_names"])
         for dossier in data.get("history_dossiers", []):
             if isinstance(dossier, dict):
                 triggers = sorted({_fold(t).strip() for t in dossier.get("triggers", []) if _fold(t).strip()}, key=len, reverse=True)
@@ -298,11 +331,15 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # Sans accents ni apostrophes (« Gorée » = « goree », « l'histoire » =
     # « histoire ») ; les mots de la question qui ne désignent pas un lieu
     # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
-    tokens = [token for token in re.findall(r"[a-z0-9]+", _fold(value)) if len(token) >= 4 and token not in _QUERY_STOPWORDS]
+    # Mots de 3 lettres gardés (« HLM », « lac », « TER ») sauf les mots outils.
+    tokens = [
+        token for token in re.findall(r"[a-z0-9]+", _fold(value))
+        if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
+    ]
     matched_regions = []
     for region in regions:
-        haystack = region.get("_search_haystack", "")
-        if tokens and any(token in haystack for token in tokens):
+        words = region.get("_search_words") or _words(region.get("_search_haystack", ""))
+        if tokens and any(_hit(token, words) for token in tokens):
             matched_regions.append(region)
     if matched_regions:
         lines.append("CONTEXTE RÉGIONAL PERTINENT :")
@@ -325,11 +362,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         # fichier faisait passer Gorée ou Mbour avant le lieu demandé.
         scored = []
         for index, place in enumerate(places):
-            haystack = place.get("_search_haystack", "")
-            name = place.get("_search_names") or _fold(place.get("name", ""))
-            hits = sum(1 for token in tokens if token in haystack)
+            words = place.get("_search_words") or _words(place.get("_search_haystack", ""))
+            name_words = place.get("_search_name_words") or _words(_fold(place.get("name", "")))
+            hits = sum(1 for token in tokens if _hit(token, words))
             if hits:
-                score = hits + 2 * sum(1 for token in tokens if token in name)
+                score = hits + 2 * sum(1 for token in tokens if _hit(token, name_words))
                 scored.append((-score, index, place))
         matched_places = [place for _, _, place in sorted(scored, key=lambda item: item[:2])]
         if matched_places:

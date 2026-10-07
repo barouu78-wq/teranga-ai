@@ -41,3 +41,13 @@ def test_page_is_served_and_in_the_sitemap():
     client = app.test_client()
     assert client.get("/calendrier-fetes-senegal", base_url=B).status_code == 200
     assert "/calendrier-fetes-senegal" in client.get("/sitemap.xml", base_url=B).get_data(as_text=True)
+
+
+def test_events_context_adds_a_named_far_event():
+    import datetime as dt
+    from services.events import events_context
+    today = dt.date(2026, 10, 7)
+    assert "Tabaski" not in events_context(today)
+    assert "Tabaski (Aïd el-Kébir)" in events_context(today, query="C'est quand la Tabaski ?")
+    assert "Tabaski (Aïd el-Kébir)" in events_context(today, query="La fête du mouton c'est quand ?")
+    assert "jazz" in events_context(today, query="When is the Saint-Louis jazz festival?")
