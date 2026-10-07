@@ -1,0 +1,4 @@
+Polices auto-hébergées (fichiers latins seulement), sous licence SIL Open Font License 1.1 :
+- Atkinson Hyperlegible — Braille Institute of America (https://www.brailleinstitute.org/freefont/)
+- Bricolage Grotesque — Mathieu Triay et contributeurs (https://github.com/ateliertriay/bricolage)
+Texte de la licence : https://openfontlicense.org/open-font-license-official-text/

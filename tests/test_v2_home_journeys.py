@@ -21,7 +21,16 @@ def test_home_reduces_landing_to_three_primary_journeys():
     assert 'data-journey="project"' not in html
     assert 'data-journey="discover"' in html
     assert 'data-journey="chat"' in html
-    assert '#audienceMode{display:none!important}' in html
+    # Design v2 : les profils (touriste, résident…) restent visibles sur téléphone.
+    assert '#audienceMode{display:none!important}' not in html
+
+
+def test_home_mobile_tabbar_links_to_places_trip_and_emergency():
+    html = home_source()
+    assert 'href="/lieux" data-tab="places"' in html
+    assert 'href="/trip-planner" data-tab="trip"' in html
+    assert 'href="/urgences" data-tab="sos"' in html
+    assert "navPlaces:'Lieux'" in html and "navSos:'Emergency'" in html
 
 
 def test_home_persists_selected_journey_for_session():

@@ -29,6 +29,8 @@ __EXTRA_VERIFICATION__
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-title" content="Teranga">
+<link rel="preload" href="/static/fonts/atkinson-hyperlegible-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <script type="application/ld+json">
@@ -299,6 +301,9 @@ async function speak(text,btn){
 <style>
 /* Teranga AI — design v6 : une seule feuille, tokens clair/sombre.
    Remplace les couches v1→v5 empilées (et le CSS orphelin après </html>). */
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-400.woff2") format("woff2")}
+@font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-700.woff2") format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
   --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
   /* Jour : « Terre de Teranga » — ocre, terracotta, sable. */
@@ -310,14 +315,14 @@ async function speak(text,btn){
   --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);
   --shadow:0 14px 40px rgba(122,44,16,.12);
   --radius:18px;--radius-lg:26px;
-  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body[data-theme="dark"]{
   /* Nuit : « Nuit de Dakar » — bleu nuit et or. */
-  --bg:#0b0f17;--surface:#141a26;--surface-2:#1b2333;--ink:#f4efe4;--muted:#a9a397;
-  --line:rgba(231,187,99,.14);--line-strong:rgba(231,187,99,.26);
-  --accent:#d9a441;--accent-ink:#151007;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
+  --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
+  --line:#2b2e35;--line-strong:#3a3e46;
+  --accent:#e3a33b;--accent-ink:#111215;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
   --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
   --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
@@ -520,11 +525,11 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
 
 /* Onglets (mobile uniquement) */
 .tabbar{display:none}
-.tabbar button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:600 11px/1.1 var(--font);cursor:pointer}
+.tabbar button,.tabbar a{text-decoration:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;border:0;border-radius:12px;background:transparent;color:var(--muted);font:600 11px/1.1 var(--font);cursor:pointer}
 .tabbar svg{width:22px;height:22px}
 .tabbar button.on{color:var(--link)}
 .tabbar button.on:after{content:"";position:absolute;top:-6px;left:50%;width:20px;height:3px;border-radius:0 0 3px 3px;background:var(--accent);transform:translateX(-50%)}
-.tabbar button:focus-visible{outline:2px solid var(--nav-gold);outline-offset:-2px}
+.tabbar a:focus-visible,.tabbar button:focus-visible{outline:2px solid var(--nav-gold);outline-offset:-2px}
 
 /* Module « Mon projet » */
 .project-modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(16,10,4,.45);backdrop-filter:blur(4px)}
@@ -596,8 +601,6 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .fx-widget{max-width:none}
   .dock{padding:6px 12px 8px}
   #send{padding:0 14px;font-size:14px}
-  #audienceMode{display:none!important}
-  body.show-profile #audienceMode{display:flex!important}
   .tabbar{display:grid!important}
   .tabbar{grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px)}
   .project-modal{align-items:flex-end;padding:0}
@@ -779,10 +782,10 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
   </div>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
-  <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
-  <button type="button" data-tab="discover"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m14.5 9.5-2 6-2-2-2-2 6-2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Découvrir</button>
-  <button type="button" data-tab="chat"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Converser</button>
-  <button type="button" data-tab="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 19c1.3-3 3.6-4.5 6.5-4.5s5.2 1.5 6.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Profil</button>
+  <button type="button" data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5 6.2 15A8 8 0 1 1 9 19.6L5 18.5Z" stroke="currentColor" stroke-width="1.7"/></svg>Accueil</button>
+  <a href="/lieux" data-tab="places"><svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.7"/></svg>Lieux</a>
+  <a href="/trip-planner" data-tab="trip"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Voyage</a>
+  <a href="/urgences" data-tab="sos"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 21 19H3L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4M12 17h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Urgences</a>
 </nav>
 </div>
 

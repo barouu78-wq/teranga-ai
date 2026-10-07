@@ -26,7 +26,7 @@ fr:{
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
-  install:'Installer l’app',navHome:'Accueil',navDiscover:'Découvrir',navChat:'Converser',navProfile:'Profil',
+  install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
   heroTitle:'Votre assistant pour le Sénégal.',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
@@ -49,7 +49,7 @@ en:{
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
-  install:'Install app',navHome:'Home',navDiscover:'Discover',navChat:'Chat',navProfile:'Profile',
+  install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
   heroTitle:'Your assistant for Senegal.',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
@@ -72,7 +72,7 @@ wo:{
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
   sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
   shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
-  install:'Yebal app bi',navHome:'Accueil',navDiscover:'Xam',navChat:'Waxtaan',navProfile:'Profil',
+  install:'Yebal app bi',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Tukki',navSos:'Urgences',
   journeyTravel:'Tukki ci Senegaal',journeyTravelHint:'Seet ak waajal',journeyProject:'Sama projet',journeyProjectHint:'Xale yi · xalaat → xaalis',journeyDiscover:'Xam Senegaal',journeyDiscoverHint:'Aada, taarix, ñam',journeyChat:'Assistant Teranga',journeyChatHint:'Laaj benn mbir',
   heroTitle:'Sa ndimbal ci Senegaal.',
   heroText:'Taw, taksi, ñam, aada ak dund — jaabaw yu leer, te du sos lu dul dëgg.',
@@ -95,7 +95,7 @@ ff:{
   share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
   sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
   shareText:'Teranga AI — ballal Senegaal (farayse, english, wolof).',
-  install:'Aaf app',navHome:'Jaɓɓorgo',navDiscover:'Yiytu',navChat:'Yeewtere',navProfile:'Profil',
+  install:'Aaf app',navHome:'Jaɓɓorgo',navPlaces:'Lieux',navTrip:'Yahdu',navSos:'Urgences',
   journeyTravel:'Yahrude e Senegaal',journeyTravelHint:'Yiytu e waajta',journeyProject:'Projet am',journeyProjectHint:'Sukaaɓe · miijo → ceede',journeyDiscover:'Anndu Senegaal',journeyDiscoverHint:'Aada, taarik, ñaamdu',journeyChat:'Ballal Teranga',journeyChatHint:'Naamnu ɗum',
   heroTitle:'Ballal maa e Senegaal.',
   heroText:'Kaanawol, taksi, ñaamdu, aada e dund — jaabawol ɗoɗɗo, wonaa ɗum fefindaa.',
@@ -336,7 +336,6 @@ async function postJSON(url,body,extra,signal){
 function isTouch(){return window.matchMedia('(pointer:coarse)').matches;}
 function setChatMode(on){
   document.body.classList.toggle('has-chat',on);
-  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.tab===(on?'chat':'home')));
   hero.classList.toggle('is-hidden',on);
 }
 function hideHero(){setChatMode(true);}
@@ -670,11 +669,11 @@ function setLang(next){
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
-  const tabs=document.querySelectorAll('#tabbar button');
+  const tabs=document.querySelectorAll('#tabbar [data-tab]');
   if(tabs[0])tabs[0].lastChild.nodeValue=t.navHome;
-  if(tabs[1])tabs[1].lastChild.nodeValue=t.navDiscover;
-  if(tabs[2])tabs[2].lastChild.nodeValue=t.navChat;
-  if(tabs[3])tabs[3].lastChild.nodeValue=t.navProfile;
+  if(tabs[1])tabs[1].lastChild.nodeValue=t.navPlaces;
+  if(tabs[2])tabs[2].lastChild.nodeValue=t.navTrip;
+  if(tabs[3])tabs[3].lastChild.nodeValue=t.navSos;
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   renderAudience();
@@ -849,16 +848,10 @@ $('projectNew')?.addEventListener('click',()=>{
 });
 // Journey buttons are wired individually above so each action has one deterministic handler.
 $('tabbar').addEventListener('click',e=>{
-  const btn=e.target.closest('button[data-tab]');
+  // Accueil : retour au début ; les autres onglets sont de vrais liens (/lieux, /trip-planner, /urgences).
+  const btn=e.target.closest('button[data-tab="home"]');
   if(!btn)return;
-  const tab=btn.dataset.tab;
-  document.querySelectorAll('#tabbar button').forEach(b=>b.classList.toggle('on',b===btn));
-  if(tab!=='profile')document.body.classList.remove('show-profile');
-  if(tab==='home'){showHero();stage.scrollTop=0;}
-  if(tab==='discover'){window.location.href='/explorer';}
-  if(tab==='chat'){input.focus();}
-  // Profil : choisir son profil (touriste, résident…) ; le thème reste sur le bouton de l'en-tête.
-  if(tab==='profile'){showHero();document.body.classList.add('show-profile');stage.scrollTop=0;$('audienceMode')?.querySelector('.audience-btn.on')?.focus();}
+  showHero();stage.scrollTop=0;
 });
 function reset(){
   if(history.length&&!confirm(T[lang].resetAsk))return;
