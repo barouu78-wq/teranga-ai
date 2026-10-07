@@ -945,7 +945,7 @@ def test_trip_planner_validates_shared_plan_before_restore():
     html = with_planner_script(app.test_client().get("/trip-planner").get_data(as_text=True))
 
     assert "function validateSharedPlan(plan)" in html
-    assert "plan.days.length>14" in html
+    assert "plan.days.length>SHARE_MAX_DAYS" in html and "const SHARE_MAX_DAYS=91" in html
     assert "REGION_OPTIONS.includes(region)" in html
     assert "const sharedPlan=validateSharedPlan(payload.edited_plan);if(sharedPlan)" in html
 
@@ -954,7 +954,7 @@ def test_trip_planner_share_link_contains_edited_plan_and_copy_action():
 
     html = with_planner_script(app.test_client().get("/trip-planner").get_data(as_text=True))
 
-    assert "edited_plan:currentPlan" in html
+    assert "edited_plan:sharePlan(currentPlan)" in html
     assert "const encoded=encodeTrip(payload)" in html
     assert "history.replaceState(null,'','/trip-planner?lang=" in html
     assert "navigator.clipboard.writeText(location.href)" in html

@@ -479,3 +479,19 @@ def test_trip_planner_date_fields_fit_on_a_phone(page, base_url):
     page.fill("input[name=arrival]", "2026-11-10")
     assert page.evaluate("document.querySelector('input[name=departure]').min") == "2026-11-10"
     assert not page.is_visible(".date-wrap.has-value .date-hint")
+
+
+def test_shared_link_restores_long_trip_with_unknown_region(page, base_url):
+    """Un voyage de 20 jours partagé s'affiche en entier, même avec une région hors liste."""
+    import base64
+
+    days = [{"day": n, "title": f"Étape {n}", "region": "Dakar" if n % 2 else "Langue de Barbarie",
+             "morning": "Marché", "afternoon": "Plage", "evening": "Dîner", "transport": "Taxi"} for n in range(1, 21)]
+    payload = {"arrival": "2026-11-01", "departure": "2026-11-21", "adults": 2, "children": 0,
+               "edited_plan": {"summary": "Long séjour", "days": days, "practical_notes": []}}
+    encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    page.goto(f"{base_url}/trip-planner#trip={encoded}")
+    page.wait_for_selector(".day-card")
+    assert page.locator(".day-card").count() == 20
+    assert "Étape 20" in page.locator("#result").inner_text()
+    assert page.errors == []
