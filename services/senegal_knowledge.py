@@ -58,6 +58,15 @@ _QUERY_STOPWORDS = frozenset({
 })
 
 
+_SHORT_STOPWORDS = frozenset({
+    "les", "des", "une", "est", "que", "qui", "the", "and", "for", "how", "sur", "aux", "pas", "mon", "ton", "son",
+    "par", "via", "oui", "non", "bon", "ses", "mes", "tes", "nos", "vos", "leur", "car", "donc", "mais", "elle", "ils",
+    "nous", "vous", "moi", "toi", "lui", "can", "you", "are", "was", "what", "who", "why", "any", "get", "see", "eat",
+    "ici", "peu", "tre", "plus", "tout", "tous", "faut", "fait", "dit", "vas", "vais", "veux", "cest", "quoi", "lequel",
+    "naka", "nga", "laa", "dem", "ngi", "bou", "rek", "ana",
+})
+
+
 def _words(text: str) -> frozenset:
     return frozenset(re.findall(r"[a-z0-9]+", text))
 
@@ -322,7 +331,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # Sans accents ni apostrophes (« Gorée » = « goree », « l'histoire » =
     # « histoire ») ; les mots de la question qui ne désignent pas un lieu
     # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
-    tokens = [token for token in re.findall(r"[a-z0-9]+", _fold(value)) if len(token) >= 4 and token not in _QUERY_STOPWORDS]
+    # Mots de 3 lettres gardés (« HLM », « lac », « TER ») sauf les mots outils.
+    tokens = [
+        token for token in re.findall(r"[a-z0-9]+", _fold(value))
+        if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
+    ]
     matched_regions = []
     for region in regions:
         words = region.get("_search_words") or _words(region.get("_search_haystack", ""))
