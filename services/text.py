@@ -31,3 +31,12 @@ def clean_answer(text: object) -> str:
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"\x00(\d+)\x00", lambda m: urls[int(m.group(1))], text)
     return text.strip()
+
+
+def fold_text(text: object) -> str:
+    """Minuscules sans accents, tirets et apostrophes changés en espaces (« Aïd-el-Kébir » → « aid el kebir »)."""
+    import unicodedata
+
+    raw = unicodedata.normalize("NFD", str(text or "").casefold())
+    plain = "".join(c for c in raw if not unicodedata.combining(c))
+    return " ".join(plain.replace("-", " ").replace("'", " ").replace("’", " ").split())

@@ -651,7 +651,7 @@ WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("place
 
 _EVENT_WORDS = re.compile(
     r"\b(magal|tabaski|korit[ée]|gamou|maouloud|mawlid|tamkharit|achoura|ramadan|a[iï]d|f[êe]tes?|f[ée]ri[ée]s?|"
-    r"festival|jazz|ind[ée]pendance|4 avril|no[ëe]l|p[âa]ques|holidays?|feast|eid|christmas|easter|toussaint|ascension|assomption)\b",
+    r"festival|jazz|ind[ée]pendance|4 avril|no[ëe]l|p[âa]ques|holidays?|feast|eid|christmas|easter|toussaint|ascension|assomption|assumption|independence|mouloud|ashura)\b",
     re.I,
 )
 

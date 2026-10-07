@@ -51,3 +51,10 @@ def test_events_context_adds_a_named_far_event():
     assert "Tabaski (Aïd el-Kébir)" in events_context(today, query="C'est quand la Tabaski ?")
     assert "Tabaski (Aïd el-Kébir)" in events_context(today, query="La fête du mouton c'est quand ?")
     assert "jazz" in events_context(today, query="When is the Saint-Louis jazz festival?")
+
+
+
+def test_event_words_cover_english_and_other_names():
+    from app import _EVENT_WORDS
+    for question in ("When is Senegal's Independence Day?", "Date du Mouloud", "When is Ashura?", "Assumption day"):
+        assert _EVENT_WORDS.search(question), question

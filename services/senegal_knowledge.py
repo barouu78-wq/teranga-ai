@@ -63,7 +63,7 @@ _SHORT_STOPWORDS = frozenset({
     "par", "via", "oui", "non", "bon", "ses", "mes", "tes", "nos", "vos", "leur", "car", "donc", "mais", "elle", "ils",
     "nous", "vous", "moi", "toi", "lui", "can", "you", "are", "was", "what", "who", "why", "any", "get", "see", "eat",
     "ici", "peu", "tre", "plus", "tout", "tous", "faut", "fait", "dit", "vas", "vais", "veux", "cest", "quoi", "lequel",
-    "naka", "nga", "laa", "dem", "ngi", "bou", "rek", "ana",
+    "naka", "nga", "laa", "dem", "ngi", "bou", "rek", "ana", "ans", "eau", "ete", "jai", "ont", "fin", "mois",
 })
 
 
@@ -78,7 +78,13 @@ def _hit(token: str, words: frozenset) -> bool:
         return True
     if len(token) < 5:
         return False
-    return any(w.startswith(token) or (len(w) >= 5 and token.startswith(w)) for w in words)
+    # Seulement les variations de fin de mot (pluriel, féminin : 2 lettres au plus) :
+    # « sénégalaise » ne doit pas désigner tous les lieux qui citent « Sénégal ».
+    return any(
+        (w.startswith(token) and len(w) - len(token) <= 2)
+        or (len(w) >= 5 and token.startswith(w) and len(token) - len(w) <= 2)
+        for w in words
+    )
 
 
 def _fold(value) -> str:
