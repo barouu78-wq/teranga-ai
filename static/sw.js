@@ -2,14 +2,17 @@
 // Ressources statiques : cache d'abord (mise à jour en arrière-plan).
 // Pages : réseau d'abord, copie gardée ; hors ligne → copie ou page /offline.
 // Jamais en cache : chat, voix, API, jeton CSRF, proxy d'images.
-const VERSION = 'teranga-v4';
+const VERSION = 'teranga-v5';
 const STATIC_CACHE = VERSION + '-static';
 const PAGES_CACHE = VERSION + '-pages';
 const MAX_PAGES = 40;
 // Scripts sans empreinte : hors ligne, la page versionnée (?v=…) retombe sur
 // cette copie grâce à ignoreSearch, dès la première visite.
 const PRECACHE = ['/offline', '/static/site.css', '/static/theme.js', '/static/home.js', '/static/trip-planner.js',
-  '/static/share-page.js', '/static/offline.js', '/icon.svg', '/icon-192.png', '/manifest.webmanifest'];
+  '/static/share-page.js', '/static/offline.js', '/icon.svg', '/icon-192.png', '/manifest.webmanifest',
+  // Polices du design v2 : même hors connexion, le texte garde son apparence.
+  '/static/fonts/atkinson-hyperlegible-400.woff2', '/static/fonts/atkinson-hyperlegible-700.woff2',
+  '/static/fonts/bricolage-grotesque.woff2'];
 // Pages gardées dès l'installation : l'accueil et l'annuaire des lieux.
 const PRECACHE_PAGES = ['/', '/lieux', '/urgences'];
 const NEVER_CACHE = ['/chat', '/tts', '/stt', '/realtime-call', '/csrf', '/api/', '/image-proxy', '/explorer-image', '/exchange-rates', '/sw.js'];
