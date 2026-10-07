@@ -71,6 +71,21 @@ TOPICS = (
       "chauffeur. Casamance : avion vers Ziguinchor ou Cap Skirring, bateau de nuit Dakar–Ziguinchor (environ 15 h), "
       "ou route par la Gambie (pont de Farafenni).",
       "Gorée : chaloupe depuis la gare maritime de Dakar, environ 20 minutes.")),
+    ("foncier", r"terrain|parcelle|titre foncier|acheter (une |un )?(maison|appartement|terrain)|construire (une |ma |sa |notre )?maison|"
+     r"immobilier|notaire|cadastre|bail|deliberation|land\b|plot of land|real estate",
+     ("Acheter un terrain : le titre foncier (TF) est la forme la plus sûre ; un bail ou une délibération (affectation "
+      "d'une terre du domaine national) ne donnent pas la même sécurité. Vérifier le titre et l'absence d'hypothèque "
+      "auprès de la Conservation de la propriété foncière (DGID), passer par un notaire, visiter le terrain et le "
+      "faire borner par un géomètre.",
+      "Diaspora : ne jamais payer un intermédiaire sans documents vérifiés ; méfiance face aux ventes doubles et aux "
+      "procurations douteuses ; garder chaque paiement traçable (virement, reçu signé).")),
+    ("vente", r"vendre|vente|(trouver|avoir|attirer) (des |plus de )?clients|whatsapp|boutique en ligne|e commerce|commerce en ligne|marge|fixer (mon |le )?prix|"
+     r"livraison|sell|customers|online shop",
+     ("Vendre sur WhatsApp : compte WhatsApp Business (catalogue, message d'accueil, réponses rapides), photos nettes "
+      "avec le prix, statuts quotidiens, liste de diffusion des clients ; paiement par Wave ou Orange Money marchand ; "
+      "livraison par un livreur de confiance avec prix annoncé à l'avance.",
+      "Fixer un prix : coût d'achat ou de fabrication + emballage + transport + temps passé, puis une marge ; comparer "
+      "avec les prix du marché et garder une petite réserve pour les remises.")),
     ("langue", r"quelles? langues?|langue officielle|languages?\b|speak|parle t on|on parle|parle t il",
      ("Langues : le français est la langue officielle ; le wolof est la langue la plus parlée ; on parle aussi pulaar, "
       "sérère, diola, mandingue, soninké… L'anglais est peu répandu hors des lieux touristiques.",)),
