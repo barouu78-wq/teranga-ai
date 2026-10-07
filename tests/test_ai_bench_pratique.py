@@ -130,6 +130,36 @@ def test_context_has_the_exact_fact(lang, question, expected):
     assert not missing, f"Faits absents du contexte : {missing}"
 
 
+FOLLOW_UPS = [
+    ("fr", "Et pour y aller ?", "Parle-moi du Lac Rose", "Lac Rose"),
+    ("fr", "Combien de temps faut-il pour la visite ?", "Je veux visiter Gorée", "Gorée"),
+    ("en", "And how do I get there?", "Tell me about Saint-Louis", "Saint-Louis"),
+]
+
+ROUND_2 = [
+    ("wo", "Fan la police bi nekk ? Numéro urgence", ["Police 17"]),
+    ("wo", "Ñaata la euro ci CFA ?", ["655,957"]),
+    ("fr", "Je vis en France, comment acheter un terrain au Sénégal sans arnaque ?", ["titre foncier"]),
+    ("fr", "Comment vendre sur WhatsApp ?", ["WhatsApp Business"]),
+    ("fr", "Je rentre au pays pour la Tabaski, conseils ?", ["Tabaski (Aïd el-Kébir)"]),
+]
+
+
+@pytest.mark.parametrize("lang,question,expected", ROUND_2, ids=[q for _, q, _ in ROUND_2])
+def test_context_round_two(lang, question, expected):
+    context = _context(question, lang).casefold()
+    assert not [fact for fact in expected if fact.casefold() not in context]
+
+
+@pytest.mark.parametrize("lang,question,previous,place", FOLLOW_UPS, ids=[q for _, q, _, _ in FOLLOW_UPS])
+def test_follow_up_keeps_the_place_of_the_previous_question(lang, question, previous, place):
+    body = {"message": question, "language": lang, "history": [
+        {"role": "user", "content": previous}, {"role": "assistant", "content": f"{place} : réponse précédente."}]}
+    with app.test_request_context("/chat", method="POST", json=body):
+        payload, error = parse_chat_payload()
+    assert error is None and place.casefold() in payload["instructions"].replace(question, " ").casefold()
+
+
 @pytest.mark.parametrize("lang,question,forbidden", NOISE, ids=[q for _, q, _ in NOISE])
 def test_context_has_no_off_topic_block(lang, question, forbidden):
     context = _context(question, lang)
