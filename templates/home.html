@@ -674,6 +674,55 @@ body[data-fete="magal"] .hero-signature{background:
 body[data-fete="magal"] .hero-signature::after{content:"🕌"}
 body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 
+
+/* Design v2 — accueil comme la maquette : salutation, question en haut, suggestions, lieux, planifier. */
+.hero-greet{order:1;margin:0 0 -12px;color:var(--muted);font-size:15px}
+#heroTitle{order:2}
+#heroText{order:3}
+#audienceMode{order:4}
+.hero-ask{order:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface)}
+.hero-ask input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;color:var(--ink);font-size:16px;outline:none}
+.hero-ask:focus-within{border-color:var(--accent)}
+#heroMic,#heroSend{flex:0 0 44px;height:44px;display:grid;place-items:center;border-radius:12px;border:0;cursor:pointer}
+#heroMic{background:var(--surface-2);color:var(--ink)}
+#heroSend{background:var(--accent);color:var(--accent-ink)}
+#heroMic svg,#heroSend svg,#mic svg{width:20px;height:20px}
+#heroMic:focus-visible,#heroSend:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+body.voice-active #heroMic{background:var(--sen-red);color:#fff}
+.hero-chips{order:6;display:flex;flex-wrap:wrap;gap:8px}
+.hero-chips button{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+.hero-chips button:hover{border-color:var(--accent)}
+.hero-discover{order:7;display:flex;flex-direction:column;gap:10px}
+.hero-discover-head{display:flex;justify-content:space-between;align-items:baseline}
+.hero-discover-head h2{margin:0;font:700 19px/1.2 var(--font-display)}
+.hero-discover-head a{font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+.hero-discover-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.place-tile{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
+.place-tile-img{display:block;height:96px;background-size:cover!important;background-position:center!important}
+.place-tile strong{padding:10px 12px 0;font-size:15px}
+.place-tile small{padding:2px 12px 10px;color:var(--muted);font-size:13px}
+.plan-cta{order:8;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg);text-decoration:none}
+.plan-cta span{display:flex;flex-direction:column;gap:2px}
+.plan-cta strong{font-size:16px}
+.plan-cta small{font-size:13px;opacity:.75}
+.plan-cta svg{flex:0 0 22px;width:22px;height:22px}
+#fxWidget{order:9}
+#journeyStrip{order:10}
+#cards{order:11}
+.hero .spread{order:12}
+.audience-btn>span,.audience-btn small{display:none}
+.audience-btn{min-height:44px;font-weight:700}
+.audience-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+body:not([data-fete]) .hero-signature{display:none}
+/* Ordinateur : la barre de question reste en bas, le champ du haut est masqué. */
+@media(min-width:721px){.hero-ask{display:none}}
+/* Téléphone : avant la conversation, une seule zone de question (celle du haut). */
+@media(max-width:720px){
+  body:not(.has-chat) .dock{display:none}
+  #heroText{display:none}
+  #heroTitle{font-size:30px;line-height:1.12}
+  #journeyStrip,#cards{display:none}
+}
 </style>
 
 </head>
@@ -715,14 +764,31 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 <div id="stage">
   <div id="hero" class="hero">
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
-    <h1 id="heroTitle">L’hospitalité, en quelques questions.</h1>
+    <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
+    <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
     <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
   <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
   <button type="button" class="audience-btn" data-audience="resident" aria-pressed="false"><span>⌂</span><b id="audienceResident">Résident</b><small id="audienceResidentHint">Vivre au Sénégal</small></button>
   <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span>↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
-</div><section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
+</div>
+<form class="hero-ask" id="heroAsk" autocomplete="off">
+  <label class="sr-only" for="heroInput">Votre question</label>
+  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment aller à Gorée ?" enterkeyhint="send">
+  <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</form>
+<div class="hero-chips" id="heroChips"></div>
+<section class="hero-discover" aria-labelledby="discoverTitle">
+  <div class="hero-discover-head"><h2 id="discoverTitle">À découvrir</h2><a href="/lieux" id="allPlaces">Tous les lieux</a></div>
+  <div class="hero-discover-grid">
+    <a class="place-tile" href="/lieux/goree" data-photo="Île de Gorée Sénégal"><span class="place-tile-img" style="background:#2e5d63"></span><strong>Île de Gorée</strong><small>Dakar · UNESCO</small></a>
+    <a class="place-tile" href="/lieux/lac-rose" data-photo="Lac Rose Retba Sénégal"><span class="place-tile-img" style="background:#8a4b5c"></span><strong>Lac Rose</strong><small>Région de Dakar</small></a>
+  </div>
+</section>
+<a class="plan-cta" id="planCta" href="/trip-planner"><span><strong id="planCtaTitle">Planifier mon voyage</strong><small id="planCtaHint">Un programme jour par jour en 1 minute</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+<section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
   <div class="fx-head"><div><b id="fxTitle">Convertisseur</b><small id="fxUpdated">Taux indicatif</small></div><span>🇸🇳</span></div>
   <div class="fx-row">
     <div class="fx-field"><label for="fxAmount">Montant</label><input id="fxAmount" inputmode="decimal" value="100" aria-label="Montant à convertir"></div>
@@ -771,7 +837,7 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
   <div class="composer">
     <div class="row">
       <label class="sr-only" for="input">Question</label><textarea id="input" maxlength="2000" placeholder="Pose ta question…" rows="1" autocomplete="off" spellcheck="true"></textarea>
-      <button id="mic" type="button" title="Parler" aria-label="Parler">🎤</button>
+      <button id="mic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
       <button id="send" type="button">Envoyer</button>
     </div>
   </div>

@@ -27,7 +27,7 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Votre assistant pour le Sénégal.',
+  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -50,7 +50,7 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'Your assistant for Senegal.',
+  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
   hint:'Live answers · Enter to send',
@@ -272,6 +272,8 @@ function renderAudience(){
     const chip=document.createElement('button');chip.type='button';chip.dataset.q=c.q;chip.textContent=c.t;chip.setAttribute('aria-label',c.t);chips.appendChild(chip);
   });
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
+  const heroChips=$('heroChips');
+  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;return b;}));
 }
 
 // ?lang=… (widget partenaire, pages en anglais) prime sur la langue mémorisée.
@@ -667,6 +669,10 @@ function setLang(next){
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
+  if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
+  if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
+  if($('planCtaTitle')){$('planCtaTitle').textContent=t.planTitle||t.journeyTravel;$('planCtaHint').textContent=t.planHint||t.journeyTravelHint;}
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   const tabs=document.querySelectorAll('#tabbar [data-tab]');
@@ -1139,6 +1145,26 @@ async function ask(preset,fromVoice=false,isRetry=false){
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
 $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
+// Design v2 : champ de question en haut de l'accueil (téléphone). Il passe la question
+// au même circuit que la barre du bas (ask), puis la conversation prend le relais.
+$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
+$('heroAsk')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  const q=$('heroInput').value.trim();
+  if(!q){$('heroInput').focus();return;}
+  $('heroInput').value='';
+  ask(q);
+});
+$('heroMic')?.addEventListener('click',()=>mic.click());
+// Photos des deux lieux à découvrir (mêmes images que les fiches), sans bloquer l'affichage.
+document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
+  try{
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const d=await r.json();const img=(d.images||[])[0];if(!img)return;
+    const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
+    const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';
+  }catch(_){}
+});
 send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();

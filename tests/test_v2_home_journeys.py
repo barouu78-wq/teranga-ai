@@ -73,3 +73,12 @@ def test_home_links_project_builder_to_partner_directory():
     html = home_source()
     assert 'href="/partners"' in html
     assert "Trouver un partenaire" in html
+
+
+def test_home_v2_hero_matches_mockup():
+    html = home_source()
+    assert 'id="heroAsk"' in html and 'id="heroInput"' in html and 'id="heroMic"' in html
+    assert 'href="/lieux/goree"' in html and 'href="/lieux/lac-rose"' in html
+    assert 'href="/trip-planner"' in html and "planTitle:'Planifier mon voyage'" in html
+    # Micro : icône au trait, plus d'émoji.
+    assert ">🎤<" not in html
