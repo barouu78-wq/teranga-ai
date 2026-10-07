@@ -497,6 +497,44 @@ SEO_PAGE_GUIDES = {
          'la météorologie (<a href="https://www.anacim.sn" target="_blank" rel="noopener noreferrer">anacim.sn</a>). '
          "Demandez à Teranga AI la météo d'un lieu précis : la réponse s'appuie sur des prévisions du jour."),
     ],
+    "emploi-senegal": [
+        ("Où chercher", "Les sites d'offres d'emploi sénégalais, les pages carrières des entreprises, LinkedIn et les "
+         "groupes professionnels sont les canaux les plus utilisés. Le réseau compte beaucoup : anciens camarades, "
+         "associations professionnelles, forums emploi des universités et des écoles."),
+        ("Organismes à connaître", "L'Agence nationale pour la promotion de l'emploi des jeunes (ANPEJ), l'Office national de formation "
+         "professionnelle (ONFP) et la Délégation générale à l'entrepreneuriat rapide des femmes et des jeunes (DER/FJ) accompagnent les jeunes et les "
+         "porteurs de projets. Leurs programmes changent : vérifiez les services actuels sur leur site officiel."),
+        ("Un CV qui fonctionne", "Une page, un titre clair (le poste visé), vos compétences concrètes, des résultats "
+         "chiffrés, vos langues (français, anglais, wolof…) et un numéro WhatsApp joignable. Adaptez-le à chaque offre : "
+         "Teranga AI peut le reformuler à partir de l'annonce."),
+        ("Se méfier des arnaques", "Une vraie offre ne demande jamais de payer pour obtenir un entretien, un contrat "
+         "ou un visa de travail. Vérifiez l'entreprise (site, adresse, numéro) avant d'envoyer vos pièces d'identité."),
+    ],
+    "formation-senegal": [
+        ("Les grandes voies", "Universités publiques (dont l'Université virtuelle du Sénégal, à distance), écoles et "
+         "instituts privés, formation professionnelle et technique, et les instituts supérieurs d'enseignement "
+         "professionnel (ISEP) tournés vers les métiers. Le bon choix dépend du métier visé, du budget et de la ville."),
+        ("Avant de s'inscrire", "Vérifiez que le diplôme est reconnu par l'État, demandez le taux d'insertion des "
+         "anciens élèves, le programme détaillé et les stages proposés. Méfiez-vous des promesses d'emploi garanti."),
+        ("Se former en ligne", "Beaucoup de compétences numériques s'apprennent gratuitement : bureautique, "
+         "programmation, analyse de données, marketing digital, IA. Un projet concret (site, application, étude) "
+         "montré à un employeur vaut souvent plus qu'un certificat seul."),
+        ("Financer sa formation", "Bourses de l'État, bourses d'écoles et de fondations, formation en alternance ou "
+         "financée par l'employeur. Les appels à candidatures ont des dates limites : notez-les dès leur publication."),
+    ],
+    "entreprendre-senegal": [
+        ("Choisir une forme juridique", "Entreprise individuelle pour démarrer seul, GIE pour un groupe qui veut "
+         "produire ou vendre ensemble, SARL ou SUARL pour une société. L'immatriculation donne un NINEA (identifiant "
+         "fiscal) et un RCCM ; le guichet unique de l'APIX centralise les formalités à Dakar."),
+        ("Tester avant d'investir", "Vendez d'abord à une dizaine de clients réels, même à petite échelle (WhatsApp, "
+         "marché, bouche-à-oreille), avant d'acheter du matériel ou de louer un local. Notez chaque vente et chaque "
+         "dépense dès le premier jour."),
+        ("Se faire payer", "Wave et Orange Money sont les moyens de paiement les plus courants ; un numéro marchand "
+         "rassure les clients et sépare l'argent de l'activité de l'argent personnel."),
+        ("Se faire accompagner", "Incubateurs, chambres de commerce, programmes de la DER/FJ et du FONGIP (garantie "
+         "de crédit) : vérifiez les conditions actuelles sur leurs sites officiels. Teranga AI peut vous aider à "
+         "préparer le dossier, le budget et le pitch."),
+    ],
     "vie-pratique-senegal": [
         ("Payer au quotidien", "Le franc CFA (XOF) a une parité fixe avec l'euro (1 € = 655,957 FCFA). Wave et Orange "
          "Money servent à payer, envoyer et retirer de l'argent ; les distributeurs sont nombreux en ville, plus rares en "
