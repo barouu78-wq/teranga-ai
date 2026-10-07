@@ -525,7 +525,7 @@ def test_trip_planner_exposes_editable_itinerary_controls():
     assert "data-up" in body
     assert "data-down" in body
     assert "data-remove" in body
-    assert "payload.edited_plan=currentPlan" in body
+    assert "payload.edited_plan=sharePlan(currentPlan)" in body
 
 
 def test_trip_planner_editor_controls_follow_ui_language():
