@@ -445,7 +445,9 @@ def test_trip_planner_result_labels_follow_ui_language():
     response = app.test_client().get("/trip-planner?lang=en")
     body = with_planner_script(response.get_data(as_text=True))
     assert response.status_code == 200
-    assert "<h3>Day " in body
+    # Design v2 : chaque jour s'ouvre sur « Day N · région » puis une frise matin / après-midi / soir.
+    assert '<span class="day-kicker">Day ' in body
+    assert '"Edit this day"' in body
     assert "<b>Morning :</b>" in body
     assert "<h3>Indicative budget</h3>" in body
     assert "Teranga AI is preparing your trip…" in body
@@ -455,13 +457,12 @@ def test_trip_planner_result_labels_follow_ui_language():
     assert 'title="Trip map"' in _map_html(["Dakar"], "Trip map")
     assert "Les estimations et informations susceptibles de changer" not in body
     assert 'title="Carte du voyage"' not in body
-    assert "<h3>Jour " not in body
-    assert "<b>Matin :</b>" not in body
+    assert '<span class="day-kicker">Jour ' not in body
 
     response = app.test_client().get("/trip-planner?lang=fr")
     body = with_planner_script(response.get_data(as_text=True))
-    assert "<h3>Jour " in body
-    assert "<b>Matin :</b>" in body
+    assert '<span class="day-kicker">Jour ' in body
+    assert '"Modifier ce jour"' in body
     assert "<h3>Budget indicatif</h3>" in body
 
 def test_trip_planner_share_link_is_restorable_and_url_safe():
@@ -678,7 +679,7 @@ def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save()
 def test_trip_planner_render_syncs_practical_regions():
     from services.trip_planner import _html
     body = with_planner_script(_html("https://example.com", "fr"))
-    assert "bindDayPractical();bindDayVoice();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
+    assert "bindDayPractical();bindDayVoice();bindDayLive();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
 
 
 def test_trip_planner_carries_context_place_from_query_to_session():
