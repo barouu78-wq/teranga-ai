@@ -52,8 +52,8 @@ img{max-width:100%}
 
 /* Pied de page commun */
 .site-footer{width:min(1120px,calc(100% - 32px));margin:40px auto 0;padding:20px 0 calc(28px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;color:var(--muted);font-size:13px}
-.site-footer nav{display:flex;flex-wrap:wrap;gap:6px 14px}
-.site-footer a{color:var(--muted);text-decoration:none}
+.site-footer nav{display:flex;flex-wrap:wrap;gap:0 14px}
+.site-footer a{color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
 .site-footer a:hover{color:var(--ink)}
 
 /* Mise en page des contenus */
@@ -82,7 +82,7 @@ section:first-of-type{margin-top:8px}
 .ctaBox p{color:var(--muted)}
 .ctaBox .cta{margin-top:4px}
 .source{margin-top:16px;font-size:13px;color:var(--muted)}
-.share-page{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px/1 var(--font);cursor:pointer}
+.share-page{min-height:40px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px/1 var(--font);cursor:pointer}
 
 /* Grilles de cartes (Explorer, lieux, opportunités) */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
@@ -109,7 +109,7 @@ ul,ol{padding-left:20px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 .place-search{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:8px 0 20px}
 .place-search label{display:grid;gap:6px;font-size:14px;color:var(--muted)}
-.place-search input,.place-search select{font:inherit;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);min-width:220px}
+.place-search input,.place-search select{font:inherit;font-size:16px;min-height:44px;padding:10px 12px;border-radius:var(--radius);border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);min-width:220px}
 .place-search p{margin:0 0 10px}
 [hidden]{display:none!important}
 
@@ -151,3 +151,6 @@ body[data-ambiance="casamance"]::after{background:repeating-linear-gradient(90de
 .place-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
 .place-actions .cta{justify-content:center;text-align:center;min-height:48px}
 @media(max-width:520px){.place-facts{gap:6px}.place-facts div{padding:8px 10px}.place-facts strong{font-size:14px}.place-actions{grid-template-columns:1fr}}
+
+/* iPhone : un champ de moins de 16 px fait zoomer la page quand on le touche. */
+input,select,textarea{font-size:max(16px,1em)}

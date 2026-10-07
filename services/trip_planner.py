@@ -125,7 +125,7 @@ h1{{font:600 clamp(34px,6vw,54px)/1.04 var(--font-display);letter-spacing:-.02em
 section{{border-top:0;padding:0}}.step{{display:none}}.step.active{{display:block}}h2{{font-size:24px;margin:0 0 16px}}
 .grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}@media(max-width:650px){{.grid{{grid-template-columns:1fr}}}}
 label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:14px}}
-input[type=date],input[type=number]{{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:50px;-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:13px;padding:13px;font:inherit}}input[type=date]::-webkit-date-and-time-value{{text-align:left;min-height:1.4em}}.date-wrap{{position:relative;display:block}}.date-hint{{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}}.date-wrap.has-value .date-hint,.date-wrap:focus-within .date-hint{{display:none}}.date-wrap:not(.has-value):not(:focus-within) input[type=date]::-webkit-datetime-edit{{color:transparent}}
+input[type=date],input[type=number]{{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:50px;-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:13px;padding:13px;font:inherit;font-size:16px}}input[type=date]::-webkit-date-and-time-value{{text-align:left;min-height:1.4em}}.date-wrap{{position:relative;display:block}}.date-hint{{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}}.date-wrap.has-value .date-hint,.date-wrap:focus-within .date-hint{{display:none}}.date-wrap:not(.has-value):not(:focus-within) input[type=date]::-webkit-datetime-edit{{color:transparent}}
 .chips{{display:flex;flex-wrap:wrap;gap:10px}}.chip input{{position:absolute;opacity:0}}.chip span{{display:block;padding:11px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted)}}.chip input:checked+span{{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}}
 .actions{{display:flex;justify-content:space-between;gap:12px;margin-top:24px}}button{{border:0;border-radius:14px;padding:13px 18px;font:800 15px system-ui;cursor:pointer}}.primary{{background:var(--accent);color:var(--accent-ink)}}.secondary{{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}}
 .result{{white-space:pre-wrap;font-family:inherit;line-height:1.7}}.day-editor{{display:grid;gap:10px;margin-top:14px}}.day-card{{background:var(--surface-2);border:1px solid var(--line);border-radius:18px;padding:16px}}.day-card h3{{margin:0 0 10px}}.day-head{{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}}.day-kicker{{color:var(--gold);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}}.day-name{{font:700 20px/1.2 var(--font-display,inherit)}}.day-timeline{{list-style:none;margin:0;padding:0}}.day-timeline li{{position:relative;padding:0 0 14px 22px;border-left:2px solid var(--line-strong,var(--line));margin-left:6px}}.day-timeline li:last-child{{border-left-color:transparent;padding-bottom:4px}}.day-timeline li::before{{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--accent)}}.day-timeline li+li::before{{background:var(--ink,var(--text))}}.day-timeline span{{display:block;font-size:12px;color:var(--muted)}}.day-timeline p{{margin:2px 0 0;white-space:normal}}.day-edit{{margin-top:8px;border-top:1px solid var(--line);padding-top:8px}}.day-edit summary{{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}}.day-title{{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}}.day-region{{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font:inherit}}.journey-steps{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:14px}}.journey-step{{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px}}.route-visual{{margin-top:14px;background:var(--surface-2);border:1px solid var(--line);border-radius:18px;padding:10px;overflow:hidden}}.route-visual svg{{display:block;width:100%;height:210px}}.route-line{{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:6 6}}.route-point{{fill:var(--surface);stroke:var(--accent);stroke-width:3}}.route-label{{fill:var(--text);font:700 11px system-ui,sans-serif}}.journey-step strong{{display:block;color:var(--gold);font-size:12px}}.journey-step span{{display:block;margin-top:3px}}.day-card textarea{{width:100%;min-height:62px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font:inherit}}.day-card label{{display:block;margin-top:9px;color:var(--muted);font-size:13px}}.day-actions{{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}}.day-practical{{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}}.day-practical button{{padding:7px 9px;font-size:12px}}.day-actions button{{padding:8px 11px;font-size:13px}}.map{{margin-top:16px;border-radius:18px;overflow:hidden;border:1px solid var(--line)}}.map:empty,.route-visual:empty,.journey-steps:empty{{display:none}}.loading{{color:var(--gold)}}.error{{color:var(--sen-red);margin-top:12px}}
@@ -212,27 +212,65 @@ def _map_html(regions, title="Carte du voyage"):
     north = max(latitudes) + margin
     bbox = f"{west:.4f}%2C{south:.4f}%2C{east:.4f}%2C{north:.4f}"
     return f'<iframe title="{escape(title)}" width="100%" height="320" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox={bbox}&layer=mapnik"></iframe>'
-def _normalize_plan(plan, fallback_text, expected_days=None, places_by_id=None):
-    fallback = {"summary": fallback_text[:3000], "days": [], "practical_notes": []}
-    if not isinstance(plan, dict):
+_UNREADABLE = {
+    "fr": "Le plan n'a pas pu être mis en forme. Réessaie : la deuxième tentative fonctionne en général.",
+    "en": "The plan could not be formatted. Please try again: the second attempt usually works.",
+}
+_FENCE = re.compile(r"^\s*```(?:json)?\s*|\s*```\s*$", re.I)
+
+
+def _parse_plan_json(text):
+    """JSON du modèle, même entouré de ``` ou coupé en cours de route (on garde les jours complets)."""
+    raw = _FENCE.sub("", str(text or "").strip())
+    start, end = raw.find("{"), raw.rfind("}")
+    if start < 0:
+        return None
+    try:
+        return json.loads(raw[start:end + 1] if end > start else raw[start:])
+    except json.JSONDecodeError:
+        pass
+    tail = raw[start:]
+    cuts = [i for i, ch in enumerate(tail) if ch == "}"][::-1][:200]
+    for cut in cuts:
+        for closing in ("]}", "]}}"):
+            try:
+                return json.loads(tail[:cut + 1] + closing)
+            except json.JSONDecodeError:
+                continue
+    return None
+
+
+def _looks_like_json(text):
+    return _FENCE.sub("", str(text or "").strip()).startswith(("{", "["))
+
+
+def _text(value):
+    return value.strip()[:500] if isinstance(value, str) else ""
+
+
+def _normalize_plan(plan, fallback_text, expected_days=None, places_by_id=None, lang="fr"):
+    """Plan affichable. Tolérant : un jour en trop, un champ vide ou un numéro décalé ne font plus tout perdre."""
+    fallback_summary = _UNREADABLE.get(lang, _UNREADABLE["fr"]) if _looks_like_json(fallback_text) else str(fallback_text or "")[:3000]
+    fallback = {"summary": fallback_summary, "days": [], "practical_notes": []}
+    if not isinstance(plan, dict) or not isinstance(plan.get("days"), list):
         return fallback
-    summary = plan.get("summary")
-    days = plan.get("days")
-    notes = plan.get("practical_notes")
-    if not isinstance(summary, str) or not summary.strip() or not isinstance(days, list) or not isinstance(notes, list):
-        return fallback
-    if expected_days is not None and len(days) != expected_days:
-        return fallback
+    summary = plan["summary"].strip()[:3000] if isinstance(plan.get("summary"), str) else ""
+    notes = plan.get("practical_notes") if isinstance(plan.get("practical_notes"), list) else []
+    limit = (expected_days or MAX_TRIP_DAYS) + 1
 
     normalized_days = []
-    for index, item in enumerate(days, start=1):
-        if not isinstance(item, dict) or item.get("day") != index:
-            return fallback
-        fields = ("title", "region", "morning", "afternoon", "evening", "transport")
-        values = {field: item.get(field) for field in fields}
-        if any(not isinstance(value, str) or not value.strip() for value in values.values()):
-            return fallback
-        day = {"day": index, **{field: value.strip()[:500] for field, value in values.items()}}
+    fields = ("title", "region", "morning", "afternoon", "evening", "transport")
+    for item in plan["days"]:
+        if len(normalized_days) >= limit:
+            break
+        if not isinstance(item, dict):
+            continue
+        values = {field: _text(item.get(field)) for field in fields}
+        if not any(values[field] for field in ("title", "morning", "afternoon", "evening")):
+            continue
+        index = len(normalized_days) + 1
+        values["title"] = values["title"] or f"{'Day' if lang == 'en' else 'Jour'} {index}"
+        day = {"day": index, **values}
         # Liens vers les fiches : uniquement des identifiants réellement présents dans la base.
         ids = item.get("places") if isinstance(item.get("places"), list) else []
         linked = []
@@ -244,9 +282,11 @@ def _normalize_plan(plan, fallback_text, expected_days=None, places_by_id=None):
             day["places"] = linked[:4]
         normalized_days.append(day)
 
+    if not normalized_days:
+        return fallback
     normalized_notes = [note.strip()[:500] for note in notes if isinstance(note, str) and note.strip()][:20]
     return {
-        "summary": summary.strip()[:3000],
+        "summary": summary,
         "days": normalized_days,
         "practical_notes": normalized_notes,
     }
@@ -296,6 +336,13 @@ def _places_block(known):
     )
 
 
+def _day_count(data):
+    try:
+        return max(1, (date.fromisoformat(data["departure"]) - date.fromisoformat(data["arrival"])).days)
+    except (KeyError, TypeError, ValueError):
+        return 1
+
+
 def _prompt(data, known_places=()):
     language = data.get("lang", "fr")
     return f"""{language_instruction(language)}
@@ -312,7 +359,7 @@ Selected place context: {data.get('context_place') or 'none'}
 User profile: {data.get('audience') or 'tourist'} (explicit preference; adapt priorities without inferring personal facts)
 Surprise me: {data['surprise']}
 {_places_block(known_places)}
-Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string, "places": [string]}}], "practical_notes": [string]}}. Create one object per travel day.
+Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string, "places": [string]}}], "practical_notes": [string]}}. Create exactly {_day_count(data)} day objects, numbered 1 to {_day_count(data)}: day 1 is the arrival date and the last day is the day before departure.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
 Do not invent hotels, restaurants, transport operators or reservations. If a recommendation needs current verification, say so.
@@ -362,11 +409,7 @@ def _plan_result(data, text, expected_days, places_by_id):
     lang = data["lang"]
     budget_info = _budget(data)
     regions = data["regions"] or ["Dakar"]
-    try:
-        parsed_plan = json.loads(text)
-    except json.JSONDecodeError:
-        parsed_plan = None
-    plan = _normalize_plan(parsed_plan, text, expected_days, places_by_id)
+    plan = _normalize_plan(_parse_plan_json(text), text, expected_days, places_by_id, lang)
     if lang == "en":
         budget_lines = [
             f"Indicative total budget: {budget_info['total'][0]}–{budget_info['total'][1]} USD",
