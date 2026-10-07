@@ -9,7 +9,8 @@ jour restent à vérifier par la recherche web.
 from __future__ import annotations
 
 import re
-import unicodedata
+
+from services.text import fold_text
 
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
@@ -30,24 +31,24 @@ TOPICS = (
       "Eau : préférer l'eau en bouteille ou filtrée pour un voyageur.",
       "Pharmacie de garde : liste affichée sur la porte des pharmacies ; demander aussi à l'hôtel. Urgence médicale : "
       "SAMU 1515.")),
-    ("argent", r"euro|fcfa|cfa|franc|xof|change|convert|dollar|payer|paiement|pay\b|payment|wave|orange money|"
-     r"mobile money|distributeur|atm|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit",
+    ("argent", r"\beuros?\b|fcfa|\bcfa\b|\bfrancs? cfa\b|\bxof\b|taux de change|\bchange\b|convert|dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
+     r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit",
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
       "Pour le dollar ou la livre, le taux varie : utiliser le taux du jour.",
       "Paiements : Wave et Orange Money (paiement mobile) sont partout, y compris chez les petits commerçants et "
       "certains taxis ; distributeurs nombreux en ville, rares en brousse ; garder des petites coupures.",
       "Envoyer de l'argent vers le Sénégal : services de transfert (Wave, Orange Money, Western Union, Remitly, "
       "Wise…) avec réception sur un compte mobile money ou en espèces ; comparer les frais et le taux appliqué.")),
-    ("sim", r"\bsim\b|esim|carte sim|operateur|internet|data|forfait|wifi|telephone portable|phone plan",
+    ("sim", r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
      ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
-    ("electricite", r"\bprises?\b|electri|voltage|adaptateur|adapter|plug|courant",
+    ("electricite", r"\bprises?\b|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
      ("Électricité : 230 V, 50 Hz ; prises de type C, D, E et K (les prises européennes fonctionnent en général). "
       "Coupures possibles : une batterie externe est utile.",)),
-    ("heure", r"heure|decalage|fuseau|time zone|timezone|time difference",
+    ("heure", r"\bheures?\b|decalage|fuseau|time zone|timezone|time difference",
      ("Heure : UTC+0 toute l'année, sans changement d'heure. Par rapport à Paris : 1 h de moins en hiver, 2 h de "
       "moins en été.",)),
-    ("visa", r"visa|passeport|passport|formalit|entrer au senegal|entry|douane|customs",
+    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|douane|customs",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
       "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
@@ -61,7 +62,7 @@ TOPICS = (
      ("Créer une activité : entreprise individuelle, GIE (groupement), SARL ou SUARL. L'immatriculation donne un "
       "NINEA (identifiant fiscal) et un RCCM ; le guichet unique de l'APIX centralise les formalités à Dakar. "
       "Accompagnement possible : DER/FJ, FONGIP (garantie), chambres de commerce. Vérifier les conditions actuelles.",)),
-    ("transport", r"taxi|sept places|7 places|ter\b|brt|bus|dem dikk|aibd|aeroport|airport|ferry|chaloupe|bateau|"
+    ("transport", r"\btaxis?\b|sept places|7 places|\bter\b|\bbrt\b|\bbus\b|dem dikk|aibd|aeroport|airport|ferry|chaloupe|bateau|"
      r"voiture|location|car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
      ("AIBD (aéroport Blaise Diagne) : à Diass, environ 45 km du centre de Dakar par l'autoroute à péage.",
       "Taxis sans compteur : fixer le prix avant de monter ; applications Yango ou Heetch avec prix affiché.",
@@ -94,9 +95,7 @@ TOPICS = (
 _COMPILED = tuple((name, re.compile(pattern), facts) for name, pattern, facts in TOPICS)
 
 
-def _fold(text: str) -> str:
-    raw = unicodedata.normalize("NFD", str(text or "").casefold())
-    return " ".join("".join(c for c in raw if not unicodedata.combining(c)).replace("-", " ").replace("'", " ").split())
+_fold = fold_text
 
 
 def matching_topics(question: str, limit: int = 3) -> list[str]:

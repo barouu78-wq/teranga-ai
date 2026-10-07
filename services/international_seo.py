@@ -308,10 +308,12 @@ def render_international_page(lang, topic, site_url):
     if not response:
         return response
     value = TOPIC_VALUE.get(topic, {}).get(lang)
-    if not value:
+    details = TOPIC_DETAILS.get(topic, {}).get(lang) or []
+    if not value and not details:
         return response
     heading = {"en":"Practical focus","es":"Enfoque práctico","de":"Praktischer Fokus","it":"Focus pratico","fr":"Focus pratique"}[lang]
-    section = f"<section><h2>{escape(heading)}</h2><p>{escape(value)}</p></section>"
+    section = f"<section><h2>{escape(heading)}</h2><p>{escape(value)}</p></section>" if value else ""
+    section += "".join(f"<section><h2>{escape(h)}</h2><p>{escape(p)}</p></section>" for h, p in details)
     faq_heading = {"en":"Frequently asked questions","es":"Preguntas frecuentes","de":"Häufige Fragen","it":"Domande frequenti","fr":"Questions fréquentes"}[lang]
     faq_marker = f"<section><h2>{faq_heading}</h2>"
     text = response.get_data(as_text=True)
@@ -395,19 +397,3 @@ TOPIC_DETAILS = {
         ],
     },
 }
-
-_value_render_international_page = render_international_page
-
-
-def render_international_page(lang, topic, site_url):
-    response = _value_render_international_page(lang, topic, site_url)
-    details = TOPIC_DETAILS.get(topic, {}).get(lang)
-    if not response or not details:
-        return response
-    blocks = "".join(f"<section><h2>{escape(h)}</h2><p>{escape(p)}</p></section>" for h, p in details)
-    faq_heading = {"en": "Frequently asked questions", "es": "Preguntas frecuentes", "de": "Häufige Fragen",
-                   "it": "Domande frequenti", "fr": "Questions fréquentes"}[lang]
-    marker = f"<section><h2>{faq_heading}</h2>"
-    text = response.get_data(as_text=True)
-    return Response(text.replace(marker, blocks + marker, 1), mimetype="text/html",
-                    headers={"Cache-Control": "public, max-age=3600"})

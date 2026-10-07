@@ -22,3 +22,12 @@ def test_land_and_selling_topics():
     assert "WhatsApp Business" in practical_context("Comment vendre sur WhatsApp ?")
     for question in ("Construire un itinéraire", "Les clients de mon hôtel"):
         assert "titre foncier" not in practical_context(question) and "WhatsApp Business" not in practical_context(question)
+
+
+
+def test_no_false_triggers_inside_words():
+    # « visiTER », « goûTER », « FRANCais », « ATMosphère », « HEUREux », « enVISAge », « BUSiness ».
+    for question in ("Je veux visiter la Casamance", "Que goûter à Dakar ?", "Je parle français",
+                     "Quelle est l'atmosphère à Saint-Louis ?", "Je suis heureux de venir", "J'envisage de venir"):
+        assert practical_context(question) == "", question
+    assert matching_topics("Comment créer mon business ?") == ["entreprise"]

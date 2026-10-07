@@ -1154,6 +1154,8 @@ $('heroAsk')?.addEventListener('submit',e=>{
   e.preventDefault();
   const q=$('heroInput').value.trim();
   if(!q){$('heroInput').focus();return;}
+  // Une réponse est en cours : on garde la question dans le champ plutôt que de la perdre.
+  if(inflight||send.disabled)return;
   $('heroInput').value='';
   ask(q);
 });
@@ -1601,3 +1603,6 @@ themeInit();restore();setLang(lang);try{const prefill=SS.getItem('teranga-chat-p
 // ?q=… (fiches lieux, réponses partagées, widget) : question pré-remplie, jamais envoyée sans l'utilisateur.
 const urlQuestion=(urlParams.get('q')||'').trim().slice(0,500);
 if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Event('input'));input.focus();}setupMic();
+// Téléphone avant la conversation : la barre du bas est cachée, la question pré-remplie
+// (?q=, « revoir mon séjour ») va dans le champ du haut, visible.
+(function(){const hi=$('heroInput');if(hi&&input.value&&!input.offsetParent&&hi.offsetParent){hi.value=input.value;input.value='';hi.focus();}})();

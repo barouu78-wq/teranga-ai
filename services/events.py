@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import datetime as _dt
 
+from services.text import fold_text
+
 # (date de début, date de fin ou None, nom, lieu, type, date confirmée ?, conseils)
 EVENTS = (
     (_dt.date(2026, 8, 2), None, "Grand Magal de Touba", "Touba", "religious", True,
@@ -87,10 +89,7 @@ _ALIASES = {
 }
 
 
-def _fold(text: str) -> str:
-    import unicodedata
-    raw = unicodedata.normalize("NFD", str(text or "").casefold())
-    return " ".join("".join(c for c in raw if not unicodedata.combining(c)).replace("-", " ").replace("'", " ").split())
+_fold = fold_text
 
 
 def _asked(event: dict, query: str) -> bool:

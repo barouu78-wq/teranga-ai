@@ -460,3 +460,22 @@ def test_mobile_home_suggestion_chip_asks_the_question(page, base_url):
     page.locator("#heroChips button").first.click()
     page.get_by_text("Réponse à la suggestion.").wait_for(timeout=5000)
     assert page.errors == []
+
+
+
+def test_mobile_prefilled_question_lands_in_the_visible_box(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/?q=Parle-moi%20de%20Gor%C3%A9e")
+    assert page.input_value("#heroInput") == "Parle-moi de Gorée"
+    assert page.errors == []
+
+
+def test_trip_planner_date_fields_fit_on_a_phone(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/trip-planner")
+    assert page.is_visible("text=Choisir une date")
+    box = page.evaluate("(() => { const i = document.querySelector('input[name=arrival]'); const c = i.closest('form'); return [i.getBoundingClientRect().right, c.getBoundingClientRect().right]; })()")
+    assert box[0] <= box[1] + 1
+    page.fill("input[name=arrival]", "2026-11-10")
+    assert page.evaluate("document.querySelector('input[name=departure]').min") == "2026-11-10"
+    assert not page.is_visible(".date-wrap.has-value .date-hint")
