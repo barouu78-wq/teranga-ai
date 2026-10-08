@@ -79,6 +79,20 @@ PROBES = [
  ("fr","Comment envoyer de l'argent au Sénégal ?",["Envoyer de l'argent vers le Sénégal"]),
  ("fr","Comment créer une entreprise au Sénégal ?",["guichet unique de l'APIX"]),
  ("fr","Où trouver une pharmacie de garde à Dakar ?",["Pharmacie de garde"]),
+ # papiers, factures, protection sociale, études
+ ("fr","Comment renouveler ma carte d'identité sénégalaise ?",["25 septembre 2026","copie littérale"]),
+ ("fr","Je vis en France, comment renouveler mon passeport sénégalais ?",["à l'ambassade ou au consulat du Sénégal"]),
+ ("fr","Comment obtenir un extrait de naissance ?",["centre d'état civil"]),
+ ("fr","Comment faire un jugement supplétif ?",["jugement d'autorisation d'inscription"]),
+ ("fr","Comment demander mon casier judiciaire ?",["greffe du tribunal"]),
+ ("fr","C'est quoi e-Senegal ?",["e-Senegal (lancée en mars 2026)"]),
+ ("fr","Comment recharger mon compteur Woyofal ?",["code de 20 chiffres"]),
+ ("fr","Mon compteur Senelec demande trois codes",["trois codes de 20 chiffres"]),
+ ("fr","C'est quoi la CMU au Sénégal ?",["Agence de la CMU"]),
+ ("fr","Comment toucher la bourse de sécurité familiale ?",["Bourse de sécurité familiale (BSF)"]),
+ ("fr","À quoi sert l'IPRES ?",["l'IPRES gère les retraites"]),
+ ("fr","Comment s'inscrire à Campusen après le bac ?",["orientation.campusen.sn"]),
+ ("en","How do I get my Senegalese ID card renewed?",["Carte d'identité biométrique CEDEAO"]),
 ]
 
 HARD=[
@@ -113,6 +127,9 @@ NOISE=[  # (question, textes qui NE doivent PAS apparaître)
  ("fr","Créer un itinéraire de 5 jours",["NINEA"]),
  ("en","Tell me about Pink Lake",["REPÈRES PRATIQUES"]),
  ("fr","Quel temps fait-il à Dakar ?",["LIEUX PERTINENTS :\n- Parc national du Niokolo"]),
+ ("fr","Le Sénégal est-il un pays agréable ?",["CEDEAO","Woyofal","Campusen"]),
+ ("fr","Parle-moi de la Maison des Esclaves",["Woyofal","Campusen","CEDEAO"]),
+ ("fr","Comment aller à l'université Cheikh Anta Diop ?",["Campusen"]),
 ]
 
 

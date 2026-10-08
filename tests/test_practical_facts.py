@@ -31,3 +31,31 @@ def test_no_false_triggers_inside_words():
                      "Quelle est l'atmosphère à Saint-Louis ?", "Je suis heureux de venir", "J'envisage de venir"):
         assert practical_context(question) == "", question
     assert matching_topics("Comment créer mon business ?") == ["entreprise"]
+
+
+def test_civil_papers_electricity_social_protection_and_studies_topics():
+    assert matching_topics("Comment renouveler ma carte d'identité ?") == ["papiers"]
+    assert matching_topics("Je vis en France, comment renouveler mon passeport sénégalais ?") == ["papiers"]
+    assert matching_topics("Comment avoir un extrait de naissance ?") == ["papiers"]
+    assert matching_topics("Où acheter du crédit Woyofal ?") == ["factures"]
+    assert matching_topics("C'est quoi la CMU ?") == ["protection"]
+    assert matching_topics("Quelle est la bourse de sécurité familiale ?") == ["protection"]
+    assert matching_topics("Comment s'inscrire à Campusen après le bac ?") == ["etudes"]
+    assert "orientation.campusen.sn" in practical_context("Campusen, comment ça marche ?")
+    assert "trois codes de 20 chiffres" in practical_context("Mon compteur Woyofal demande plusieurs codes")
+
+
+def test_new_topics_do_not_fire_on_everyday_phrases():
+    # « le Sénégal » contient « e Sénégal » (e-Senegal) ; « sécurité familiale » n'est pas une urgence.
+    for question in ("Le Sénégal est-il un pays pittoresque ?", "Une question sur le Sénégal", "Parle-moi de Gorée",
+                     "Comment aller à l'université Cheikh Anta Diop ?", "Raconte l'histoire de Saint-Louis"):
+        context = practical_context(question)
+        for marker in ("CEDEAO", "Woyofal", "CMU", "Campusen"):
+            assert marker not in context, (question, marker)
+    assert "Police 17" not in practical_context("Quelle est la bourse de sécurité familiale ?")
+
+
+def test_passport_of_a_senegalese_is_not_an_entry_visa_question():
+    assert "visa" not in matching_topics("Comment renouveler mon passeport sénégalais ?")
+    assert "visa" in matching_topics("Faut-il un visa et un passeport pour le Sénégal ?")
+    assert "visa" in matching_topics("Faut-il un passeport pour aller au Sénégal ?")
