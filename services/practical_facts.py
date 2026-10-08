@@ -15,7 +15,7 @@ from services.text import fold_text
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
     ("urgences", r"urgen|police|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
-     r"(pays|endroit|quartier|ville|dakar|senegal) (est il |est elle )?sur\b|est (il|elle|ce) sur\b|securi|\bsafe\b|"
+     r"(pays|endroit|quartier|ville|dakar|senegal) (est il |est elle )?sur\b|est (il|elle|ce) sur\b|securi(?!te (sociale|familiale|alimentaire))|\bsafe\b|"
      r"safety|emergenc|fievre|malade|blesse|hopital|hospital|medecin|doctor",
      ("Numéros d'urgence gratuits depuis tous les téléphones, même sans crédit : Police 17, Sapeurs-pompiers 18, "
       "SAMU (urgence médicale) 1515. Gendarmerie : numéro vert 800 00 20 20. SOS Médecins Dakar : 33 889 15 15.",
@@ -87,6 +87,67 @@ TOPICS = (
       "livraison par un livreur de confiance avec prix annoncé à l'avance.",
       "Fixer un prix : coût d'achat ou de fabrication + emballage + transport + temps passé, puis une marge ; comparer "
       "avec les prix du marché et garder une petite réserve pour les remises.")),
+    ("papiers", r"carte (nationale )?d identite|\bcni\b|carte biometrique|passeport (senegalais|biometrique)|"
+     r"(renouvel\w*|refaire|obtenir|perdu|perdre|duplicata|demande de) (\w+ ){0,2}passeport|senegalese (passport|id)|"
+     r"acte de naissance|extrait de naissance|copie litterale|jugement suppletif|etat civil|casier judiciaire|"
+     r"certificat de nationalite|\be senegal\b|\bnin\b|livret de famille|\bdaf\b",
+     ("Carte d'identité biométrique CEDEAO : valable 10 ans (loi n° 2016-09). Le renouvellement des cartes délivrées en "
+      "2016 a été annoncé à partir du 25 septembre 2026, dans les centres d'enrôlement au Sénégal et à l'étranger. "
+      "Pièces annoncées : l'ancienne carte (avec copie) et un extrait de naissance avec sa copie littérale ; retrait "
+      "avec le récépissé de dépôt et l'ancienne carte. Pour une première demande ou un cas particulier, demander la "
+      "liste à jour au centre d'enrôlement ou à la Direction de l'automatisation des fichiers (DAF).",
+      "Passeport : demande en personne (empreintes). Au Sénégal, dépôt auprès des services de police habilités ; à "
+      "l'étranger, à l'ambassade ou au consulat du Sénégal, où le délai est souvent plus long car le dossier est traité "
+      "à Dakar. Une carte d'identité biométrique valide est en général demandée ; en cas de perte ou de vol, déclarer "
+      "d'abord à la police. Frais et délais changent : à vérifier auprès du commissariat ou du consulat.",
+      "État civil : l'extrait de naissance se demande au centre d'état civil (en général la mairie) du lieu où la "
+      "naissance a été déclarée. La copie littérale reproduit l'acte tel qu'inscrit au registre (utile pour vérifier "
+      "l'orthographe des noms et les dates) ; la copie intégrale ou l'extrait avec filiation demande les noms des "
+      "parents. Naissance jamais déclarée ou déclarée trop tard : il faut un jugement d'autorisation d'inscription "
+      "(jugement supplétif) du tribunal.",
+      "En ligne : la plateforme e-Senegal (lancée en mars 2026) regroupe des démarches, avec le NIN de la carte "
+      "biométrique pour s'identifier ; le casier judiciaire en ligne n'est disponible que dans certaines juridictions "
+      "pilotes. « Sama État civil » (ANEC), lancée le 16 février 2026 en phase pilote dans cinq communes (Ouakam, "
+      "Cambérène, Golf Sud, Diakhao, Mbacké), permet de demander des actes à distance : vérifier si votre commune est "
+      "couverte.",
+      "Casier judiciaire (bulletin n° 3) : demande au greffe du tribunal ; pièces et frais varient, à demander au "
+      "greffe. Un seul guichet officiel par démarche : ne pas payer d'intermédiaire pour « accélérer » un dossier, la "
+      "fraude à l'état civil existe.")),
+    ("factures", r"woyofal|senelec|compteur (electrique|prepaye|d electricite)|facture (d )?(electricite|courant)|"
+     r"recharg\w* (mon |le |un |ma )?(compteur|electricite)|acheter (de )?l electricite|delestage",
+     ("Woyofal (Senelec) : électricité prépayée. Chaque achat donne un code de 20 chiffres à saisir sur le compteur. "
+      "Depuis le 15 octobre 2024, un achat peut donner trois codes de 20 chiffres à saisir l'un après l'autre ; les kWh "
+      "s'affichent après le troisième.",
+      "Où acheter : boutiques Woyofal, Wave, Orange Money et d'autres services de paiement mobile (liste annoncée en "
+      "2022 : chercher l'option Senelec ou Woyofal dans le menu de son application). Senelec suspend parfois la vente "
+      "de crédit la nuit pour maintenance : acheter avant. Une nouvelle grille tarifaire approuvée par la CRSE s'applique "
+      "depuis le 1er janvier 2026 : le nombre de kWh par franc peut avoir changé.",
+      "Numéro du service client : le vérifier sur senelec.sn ou en agence (ne pas se fier à un annuaire non officiel).")),
+    ("protection", r"\bcmu\b|couverture maladie|assurance maladie|mutuelle de sante|bourse de securite familiale|\bbsf\b|"
+     r"plan sesame|gratuite des soins|\bipres\b|\bcss\b|securite sociale|pension de retraite|cotisation retraite|"
+     r"allocations familiales|health insurance",
+     ("Santé : la couverture maladie universelle (CMU), lancée en 2013 et coordonnée par l'Agence de la CMU (créée en "
+      "2015), s'appuie sur des mutuelles de santé communautaires pour les travailleurs informels et ruraux (cotisation "
+      "subventionnée par l'État, environ 50 % selon les documents officiels : à vérifier) et sur des gratuités : soins "
+      "des enfants de 0 à 5 ans (depuis 2014) et plan Sésame pour les personnes de plus de 60 ans. L'application est "
+      "inégale selon les structures : demander à l'établissement ce qui est pris en charge.",
+      "Bourse de sécurité familiale (BSF) : transfert d'argent pour les ménages les plus pauvres ; se renseigner auprès "
+      "de la mairie ou des services sociaux de l'État.",
+      "Salariés : la Caisse de sécurité sociale (CSS) gère les prestations familiales et les accidents du travail ; "
+      "l'IPRES gère les retraites. L'employeur doit déclarer et cotiser. Les deux institutions partagent un système "
+      "d'information (fin 2025) et une fusion est à l'étude : vérifier la situation actuelle sur leurs sites officiels.")),
+    ("etudes", r"campusen|apres le bac|nouveaux bacheliers|orientation post bac|\bcoud\b|\bbfem\b|"
+     r"bourse (d etudes|etudiante|sociale|d excellence)|inscri\w* (a |en |dans )?(l )?universite",
+     ("Après le bac : l'orientation vers les universités publiques et les ISEP passe par la plateforme officielle "
+      "Campusen (orientation.campusen.sn) : créer un compte personnel, classer ses vœux (l'ordre compte pour "
+      "l'affectation), puis valider le dossier avant la date limite. Les dates changent chaque année (en 2026 : du 17 "
+      "août au 13 septembre). Les démarches se font directement en ligne, sans intermédiaire : ne jamais payer pour "
+      "« accélérer » un dossier.",
+      "Bourses : les bourses d'État (bourse entière, demi-bourse, aide aux non-boursiers) sont gérées par la Direction "
+      "des bourses ; les montants cités dans la presse varient, à confirmer auprès de la Direction des bourses ou du "
+      "COUD. Études à l'étranger : portail boursesetrangeres.campusen.sn, pour les Sénégalais déjà inscrits dans un "
+      "établissement à l'étranger. Attention aux faux programmes de bourses (alerte de la Direction des bourses en "
+      "février 2026).")),
     ("langue", r"quelles? langues?|langue officielle|languages?\b|speak|parle t on|on parle|parle t il",
      ("Langues : le français est la langue officielle ; le wolof est la langue la plus parlée ; on parle aussi pulaar, "
       "sérère, diola, mandingue, soninké… L'anglais est peu répandu hors des lieux touristiques.",)),
@@ -98,9 +159,16 @@ _COMPILED = tuple((name, re.compile(pattern), facts) for name, pattern, facts in
 _fold = fold_text
 
 
+_ENTRY_WORDS = re.compile(r"\bvisas?\b|entrer|entry|touriste|tourist|voyager|voyage")
+
+
 def matching_topics(question: str, limit: int = 3) -> list[str]:
     folded = _fold(question)
-    return [name for name, pattern, _ in _COMPILED if pattern.search(folded)][:limit]
+    names = [name for name, pattern, _ in _COMPILED if pattern.search(folded)]
+    # « Renouveler mon passeport sénégalais » parle de papiers, pas du visa d'entrée d'un touriste.
+    if "papiers" in names and "visa" in names and not _ENTRY_WORDS.search(folded):
+        names.remove("visa")
+    return names[:limit]
 
 
 def practical_context(question: str, limit: int = 3) -> str:
