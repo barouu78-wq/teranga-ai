@@ -21,7 +21,7 @@ from config import env_bool, env_list
 from routes.seo import register_seo_routes
 from routes.places import register_place_routes
 from routes.share import register_share_routes
-from services.error_pages import render_not_found, render_server_error
+from services.error_pages import redirect_target, render_not_found, render_server_error
 from services.site_layout import asset_version, register_layout_globals
 from routes.explorer import register_explorer_routes
 from routes.stt import register_stt_route
@@ -200,11 +200,24 @@ register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL, partners=PARTNERS)
 register_share_routes(app, SITE_URL)
 
 
+def _route_exists(path: str) -> bool:
+    try:
+        app.url_map.bind("localhost").match(path, method="GET")
+        return True
+    except Exception:  # noqa: BLE001 - NotFound, MethodNotAllowed, RequestRedirect
+        return False
+
+
 @app.errorhandler(404)
 def not_found(_error):
     # API : réponse JSON ; navigateur : page 404 aux couleurs du site.
     if request.path.startswith("/api/") or request.accept_mimetypes.best == "application/json":
         return jsonify({"error": "Introuvable."}), 404
+    if request.method in ("GET", "HEAD"):
+        target = redirect_target(request.path, _route_exists)
+        if target:
+            query = request.query_string.decode("utf-8", "ignore")
+            return redirect(target + ("?" + query if query else ""), code=301)
     return render_not_found(request.path, SENEGAL_KNOWLEDGE.get("places", [])), 404, {"Content-Type": "text/html; charset=utf-8"}
 
 

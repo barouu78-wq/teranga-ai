@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import difflib
+import re
 from html import escape
 from urllib.parse import quote
 
@@ -30,6 +31,40 @@ def place_suggestions(path: str, places, limit: int = 3) -> list[dict]:
         if names[name] not in ids:
             ids.append(names[name])
     return [by_id[pid] for pid in ids[:limit]]
+
+
+# Adresses que l'on tape naturellement (ou héritées d'autres sites) → la vraie page.
+ALIASES = {
+    "/index.html": "/", "/index.php": "/", "/accueil": "/", "/home": "/", "/fr": "/",
+    "/en": "/en/senegal-travel-guide", "/es": "/es/senegal-travel-guide",
+    "/de": "/de/senegal-travel-guide", "/it": "/it/senegal-travel-guide",
+    "/planificateur": "/trip-planner", "/planner": "/trip-planner", "/itineraire": "/trip-planner",
+    "/devenir-partenaire": "/offres-partenaires", "/partenariat": "/offres-partenaires",
+    "/contact": "/offres-partenaires", "/offres": "/offres-partenaires",
+    "/urgence": "/urgences", "/sos": "/urgences",
+    "/fetes": "/calendrier-fetes-senegal", "/calendrier": "/calendrier-fetes-senegal",
+    "/kit-media": "/media-kit", "/kitmedia": "/media-kit",
+    "/regions": "/regions-senegal", "/places": "/lieux", "/explore": "/explorer",
+    "/sitemap": "/sitemap.xml",
+    "/apple-touch-icon.png": "/icon-192.png", "/apple-touch-icon-precomposed.png": "/icon-192.png",
+}
+
+
+def redirect_target(path: str, exists) -> str:
+    """Page existante la plus proche d'une adresse introuvable, ou "".
+
+    Barres « / » en trop, majuscules et alias connus. `exists(chemin)` dit si une
+    route y répond. Le résultat commence toujours par un seul « / » : jamais de
+    redirection vers un autre site (« //exemple.com »).
+    """
+    if "\\" in (path or ""):  # « /\exemple.com » : les navigateurs le lisent comme « //exemple.com »
+        return ""
+    clean = "/" + re.sub(r"/{2,}", "/", path or "").strip("/")
+    for candidate in (clean, clean.lower()):
+        candidate = ALIASES.get(candidate, candidate)
+        if candidate != path and candidate.startswith("/") and not candidate.startswith("//") and exists(candidate):
+            return candidate
+    return ""
 
 
 def render_not_found(path: str = "", places=None) -> str:
