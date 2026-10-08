@@ -104,8 +104,9 @@ def register_layout_globals(app) -> None:
     """Expose the shared header/footer to Jinja templates."""
     from markupsafe import Markup
 
+    # Le HTML vient de constantes du code ; les libellés et liens passent par escape() ci-dessus.
     app.jinja_env.globals.update(
-        site_head=Markup(HEAD_ASSETS),
-        site_header=lambda current="", lang="fr": Markup(site_header(current, lang)),
-        site_footer=lambda lang="fr": Markup(site_footer(lang)),
+        site_head=Markup(HEAD_ASSETS),  # nosec B704
+        site_header=lambda current="", lang="fr": Markup(site_header(current, lang)),  # nosec B704
+        site_footer=lambda lang="fr": Markup(site_footer(lang)),  # nosec B704
     )

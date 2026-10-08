@@ -138,7 +138,8 @@ def register_realtime_route(app, deps):
             method="POST",
         )
         try:
-            with urlopen(req, timeout=25) as upstream:
+            # Adresse https fixe (api.openai.com).
+            with urlopen(req, timeout=25) as upstream:  # nosec B310
                 answer = upstream.read(200_000)
             return Response(answer, mimetype="application/sdp", headers={"Cache-Control": "no-store"})
         except Exception:

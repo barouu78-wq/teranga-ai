@@ -403,7 +403,8 @@ def _pause_google_images(code) -> None:
     if redis_client is not None:
         try:
             redis_client.setex(_GOOGLE_PAUSE_KEY, GOOGLE_PAUSE_SECONDS, str(code))
-        except Exception:
+        # La pause reste active en mémoire même si Redis est injoignable.
+        except Exception:  # nosec B110
             pass
 
 
@@ -883,4 +884,5 @@ register_system_routes(app, {
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5002")), debug=False)
+    # Lancement local seulement : en production, Gunicorn sert l'application (Render).
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5002")), debug=False)  # nosec B104

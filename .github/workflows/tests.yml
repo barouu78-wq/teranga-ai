@@ -20,7 +20,12 @@ jobs:
         run: |
           pip install "ruff>=0.6"
           ruff check --select E9,F63,F7,F82,F401,F811,F841 .
-      - run: pytest -q
+      - name: Analyse de sécurité du code (failles courantes, niveau moyen et plus)
+        run: |
+          pip install bandit
+          bandit -q -r app.py routes services -ll
+      - name: Tests et couverture (le seuil empêche la couverture de baisser sans qu'on le voie)
+        run: pytest -q --cov=app --cov=routes --cov=services --cov-report=term-missing:skip-covered --cov-fail-under=85
       - name: Audit des dépendances (vulnérabilités connues)
         run: |
           pip install pip-audit

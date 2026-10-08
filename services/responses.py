@@ -65,7 +65,8 @@ def extract_sources(*objs):
             if callable(dump):
                 try:
                     walk(dump(), depth + 1)
-                except Exception:
+                # Lecture facultative des sources d'un objet inattendu.
+                except Exception:  # nosec B110
                     pass
 
     for obj in objs:

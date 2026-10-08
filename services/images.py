@@ -533,9 +533,13 @@ def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
 
 
 def wiki_summary(lang: str, title: str) -> dict:
+    # La langue entre dans le nom d'hôte : seules « fr » et « en » sont permises.
+    if lang not in ("fr", "en"):
+        raise ValueError("Langue Wikipédia non prise en charge.")
     url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/" + quote(title)
     req = Request(url, headers={"User-Agent": wikimedia_user_agent()})
-    with urlopen(req, timeout=2) as resp:
+    # Adresse https construite ici, langue vérifiée ci-dessus.
+    with urlopen(req, timeout=2) as resp:  # nosec B310
         return json.loads(resp.read().decode("utf-8"))
 
 ALLOWED_IMAGE_HOSTS = {"upload.wikimedia.org", "thumb.wikimedia.org"}
