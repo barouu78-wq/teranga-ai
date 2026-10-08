@@ -67,7 +67,7 @@ THEMES: tuple[Theme, ...] = (
            "urgence*, police, policier*, gendarmerie, pompier*, samu, secours, accident*, agression*, agresse*, arnaque*, "
            "danger*, dangereux, re:securite(?! sociale| familiale| alimentaire), perdu*, vole, voleur*, re:victime d un vol, "
            "emergenc*, safety",
-           "repere:urgences"),
+           "repere:urgences repere:arnaques"),
     _theme("papiers", "Papiers et démarches",
            "papiers, demarche*, administration*, carte d identite, cni, carte biometrique, acte de naissance, "
            "extrait de naissance, etat civil, casier judiciaire, legalisation, certificat*, mairie*, prefecture*, "
@@ -82,7 +82,7 @@ THEMES: tuple[Theme, ...] = (
            "argent, euro*, fcfa, cfa, xof, change, changer de l argent, dollar*, payer, paiement*, wave, orange money, "
            "mobile money, carte bancaire, retrait*, distributeur*, atm, banque*, bancaire*, virement*, western union, "
            "transfert d argent, envoyer de l argent, monnaie, espece*, pourboire*, money, cash, payment",
-           "repere:argent"),
+           "repere:argent repere:mobile_money"),
     _theme("transport", "Transport et déplacements",
            "taxi*, sept places, 7 places, ter, brt, bus, car rapide, dem dikk, aibd, aeroport*, airport, ferry, chaloupe, "
            "bateau*, train, voiture*, location de voiture, louer une voiture, conduire, conduite, se deplacer, "
@@ -242,7 +242,7 @@ _COMPILED = tuple((theme, _compile(theme.keywords)) for theme in THEMES)
 
 # Sujet de repères pratiques → thème : une question que seul practical_facts reconnaît (« prises ? ») garde son thème.
 _PRACTICAL_THEME = {
-    "urgences": "urgences", "sante": "sante", "argent": "argent", "sim": "internet", "electricite": "electricite",
+    "urgences": "urgences", "arnaques": "urgences", "sante": "sante", "argent": "argent", "mobile_money": "argent", "sim": "internet", "electricite": "electricite",
     "heure": "voyage", "visa": "visa", "saison": "meteo", "entreprise": "entreprise", "transport": "transport",
     "foncier": "logement", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
     "protection": "protection_sociale", "etudes": "etudes", "langue": "langue",

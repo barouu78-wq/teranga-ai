@@ -150,6 +150,13 @@ def test_question_without_known_theme_goes_to_other():
     assert themes_of("zxqv blorp") == ["autre"]
 
 
+def test_new_practical_topics_are_attached_to_existing_themes():
+    assert set(cl._PRACTICAL_THEME.values()) <= {theme.id for theme in THEMES}
+    for question, theme in (("Comment éviter les faux taxis ?", "urgences"), ("Un faux SMS de Wave m'est arrivé", "argent")):
+        signals = chat_signals({"message": question, "instructions": ""})
+        assert theme in themes_of(question, signals) and classify(question, signals)[theme] is True
+
+
 def test_practical_topic_keeps_its_theme_even_without_keyword():
     # « prises » est reconnu par practical_facts : la question garde son thème.
     from services.practical_facts import matching_topics
