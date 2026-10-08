@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 
+from services.facts import load_topics
 from services.text import fold_text
 
 # Sources des repères « arnaques » et « mobile_money » (relevées en octobre 2026 par recherche web ; les pages
@@ -383,6 +384,10 @@ TOPICS = (
       "sérère, diola, mandingue, soninké… L'anglais est peu répandu hors des lieux touristiques.",)),
 )
 
+# Sujets ajoutés un par fichier dans services/facts/ (voir services/facts/__init__.py).
+_EXTRA_TOPICS, _EXTRA_SPECIFIC_FIRST = load_topics()
+TOPICS = TOPICS + _EXTRA_TOPICS
+
 _COMPILED = tuple((name, re.compile(pattern), facts) for name, pattern, facts in TOPICS)
 
 
@@ -416,7 +421,7 @@ _MOBILE_MONEY_WORDS = re.compile(
     r"\benvoi\b|retrait|depot|solde|fcfa|appli\w*"
 )
 # Sujets précis : ils passent avant les sujets généraux (« perdu », « payer », « aéroport »…) quand la limite coupe.
-_SPECIFIC_FIRST = ("premiers_secours", "arnaques", "mobile_money", "papiers", "factures", "protection", "etudes")
+_SPECIFIC_FIRST = ("premiers_secours", "arnaques", "mobile_money", "papiers", "factures", "protection", "etudes") + _EXTRA_SPECIFIC_FIRST
 
 
 def matching_topics(question: str, limit: int = 3) -> list[str]:
