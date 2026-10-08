@@ -1,5 +1,15 @@
 # Fiche de sécurité — Teranga AI
 
+## Signaler une faille
+
+Merci de **ne pas** décrire une faille dans une « issue » publique : ouvrez l'onglet **Security** du dépôt, puis **Report a vulnerability** (signalement privé). Indiquez la page ou la route concernée et les étapes pour reproduire le problème. N'envoyez jamais de clé d'API, de mot de passe ni de fichier de signature.
+
+## Contrôles automatiques (à chaque modification)
+
+- Tests (≈ 1 000 + clics réels dans un navigateur), avec un seuil de couverture à 85 %.
+- Analyse du code : ruff (erreurs), bandit (failles courantes) et CodeQL (Python et JavaScript, résultats dans l'onglet Security).
+- Audit des bibliothèques (pip-audit) et mises à jour automatiques groupées chaque semaine (Dependabot).
+
 ## Objectif
 
 Checklist de sécurité pour Teranga AI avant chaque mise en production. Elle s'appuie notamment sur l'OWASP API Security Top 10 2023 et l'OWASP Application Security Verification Standard (ASVS) 5.0.0.
