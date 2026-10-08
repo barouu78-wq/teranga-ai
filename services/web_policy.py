@@ -114,6 +114,11 @@ def should_use_web(message, context=""):
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre", "sante", "santé", "hopital", "hôpital", "pharmacie", "urgence", "vaccination",
+        # Santé et premiers secours : alertes sanitaires, campagnes de moustiquaires, conseils qui évoluent.
+        "paludisme", "palu", "malaria", "fievre", "fièvre", "moustique", "moustiques", "moustiquaire", "moustiquaires",
+        "repulsif", "répulsif", "premiers secours", "deshydratation", "déshydratation", "diarrhee", "diarrhée",
+        "morsure", "morsures", "piqure", "piqûre", "piqures", "piqûres", "brulure", "brûlure", "brulures", "brûlures",
+        "serpent", "serpents", "scorpion", "intoxication alimentaire", "coup de chaleur", "insolation",
         # Ajouts du banc d'essai : réponses qui changent d'une année à l'autre.
         "hotels", "auberge", "auberges", "logement", "hebergement",
         "vaccin", "vaccins", "fievre jaune",
