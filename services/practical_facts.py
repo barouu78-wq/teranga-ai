@@ -12,6 +12,24 @@ import re
 
 from services.text import fold_text
 
+# Sources des repères « arnaques » et « mobile_money » (relevées en octobre 2026 par recherche web ; les pages
+# officielles elles-mêmes n'ont pas pu être ouvertes : ce sont des articles de presse et des synthèses qui relaient
+# les communiqués, d'où les formulations « signalé » et « à vérifier »). Fraudes au mobile money : rapport de
+# surveillance des services de paiement adossés à la monnaie électronique de la BCEAO, 1er semestre 2019 (arnaques
+# « par hypnose », par code OTP, par erreur de dépôt, paiement marchand, e-commerce), relayé par droitmediasfinance.com ;
+# affaires signalées 2023-2026 (osiris.sn, seneweb.com, senego.com, allafrica.com). Faux SMS d'amende : alertes du
+# Trésor public (DGCPT, juillet 2026) et de la Police nationale (8 août 2026), relayées par allafrica.com, osiris.sn,
+# senego.com, lesoleil.sn. Faux visas : communiqué du ministère de l'Intégration africaine et des Affaires étrangères
+# du 16 avril 2026 (lesoleil.sn, seneplus.com, apanews.net, allafrica.com) ; escroqueries au visa : Police nationale,
+# avril 2026 (allafrica.com, senego.com). Faux billets : communiqué de la BCEAO d'août 2026 (bceao.int,
+# burkina24.com, lanouvelletribune.info) ; affaire de Rosso, mars 2026 (allafrica.com). Faux vendeurs en ligne :
+# Police nationale, mars 2026 (allafrica.com). Faux policiers : presse sénégalaise (dakaractu.com, seneweb.com).
+# Voyageurs : conseils aux voyageurs du Canada (travel.gc.ca) et des États-Unis (travel.state.gov). Plaintes : rappel
+# de la BCEAO en 2018 (APS) sur le service de réclamations des émetteurs de monnaie électronique ; Division spéciale
+# de cybersécurité de la Police nationale (osiris.sn) ; ARTP, régulateur des télécoms (osiris.sn). Free Sénégal devenu
+# Yas : annonce de novembre 2024 (osiris.sn, apanews.net, afrik.com, lesoleil.sn). Aucun montant, plafond, frais ni
+# numéro de téléphone n'est cité : ils changent et se vérifient auprès de l'opérateur ou de l'organisme.
+
 # Sources des repères « papiers », « factures », « protection » et « études » (relevées en octobre 2026 ; ce sont
 # des articles de presse et des documents officiels relayés, pas les sites des administrations : d'où les
 # formulations « annoncé » et « à vérifier »). Carte d'identité : communiqué de la DAF relayé par APA
@@ -155,7 +173,103 @@ TOPICS = (
       "certains taxis ; distributeurs nombreux en ville, rares en brousse ; garder des petites coupures.",
       "Envoyer de l'argent vers le Sénégal : services de transfert (Wave, Orange Money, Western Union, Remitly, "
       "Wise…) avec réception sur un compte mobile money ou en espèces ; comparer les frais et le taux appliqué.")),
-    ("sim", r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
+    ("arnaques", r"\barnaq\w*|\bescroc\w*|\bscams?\b|\bscammers?\b|\bswindl\w*|\bfraudsters?\b|"
+     r"\bfaux (taxis?|guides?|billets?|visas?|policiers?|gendarmes?|agents?|commissaires?|douaniers?|recruteurs?|"
+     r"recrutements?|sms|messages?|appels?|numeros?|proprietaires?|bailleurs?|vendeurs?|sites?|gains?)\b|"
+     r"\bfausses? (monnaie|annonces?|offres?|amendes?|factures?|promesses?)\b|"
+     r"\bfake (taxis?|guides?|police|visas?|money|notes?|bills?|banknotes?|recruit\w*|job offers?)\b|\bcounterfeit\w*|"
+     r"\busurpation (d identite|de numero|de compte|de profil)|\busurp\w* (mon |ma |mes |son |sa |un |une |le |la |l )?"
+     r"(identite|numero|compte|profil)\b|\bphishing\b|\bhameconn\w*|\bsim swap\b|\bspoof\w*|"
+     r"\b(compte|whatsapp|telephone)\b.{0,25}\b(pirat\w*|hack\w*)|\bpirat\w* (de |du )?(mon |ton |son |un |ce )?(compte|whatsapp)\b|"
+     r"\bse faire (avoir|rouler|plumer)\b|\bpieges? (a|pour) touristes?\b|\btourist traps?\b|\bsurfactur\w*|"
+     r"\bpayer pour (avoir |obtenir )?(un |le |son |mon )?(visa|emploi|travail|poste|recrutement)\b|"
+     r"\b(facilitateurs?|intermediaires?|demarcheurs?|rabatteurs?)\b.{0,40}\b(visa|emploi|travail|voyage|contrat)\b|"
+     r"\bpromet\w* (un |le |du |de l )?(visa|emploi|travail|contrat)\b|"
+     r"\b(louer|location|logement|appartement|studio|annonce)\b.{0,50}\b(a distance|sans (la |le )?visit\w*)|"
+     r"\b(acomptes?|avances?|cautions?|reservation)\b.{0,40}\bavant (de |la |d )?(la )?(visit\w*|voir)\b|"
+     r"\b(nouveau|autre) numero\b.{0,80}\b(argent|urgence|urgent|depanner|virement|envoyer|transfer\w*)|"
+     r"\bsms\b.{0,30}\bamendes?\b|\bamendes?\b.{0,30}\bsms\b|"
+     r"\b(retraits?|debits?|prelevements?|transferts?|transactions?|liens?|sites?|messages?|appels?) (frauduleu\w*|suspects?|louches?)|"
+     r"\bfraud\w* (a |au |aux |par |sur |via |en )?(la |le |l )?(mobile|wave|orange|sms|carte|virement|paiement|transfert|visa|billets?|bancaires?)\b|"
+     r"\bcode (secret|otp|pin|de verification)\b.{0,40}\b(demand\w*|donn\w*|communiq\w*|partag\w*|transmett\w*|envoy\w*|recu)\b|"
+     r"\b(demand\w*|donn\w*|communiq\w*|partag\w*|transmett\w*)\b.{0,40}\bcode (secret|otp|pin|de verification)\b",
+     ("Téléphone et mobile money (cas fréquemment signalés par la police et la presse) : un faux « agent » de l'opérateur "
+      "appelle pour un « problème de compte », une « mise à jour » ou un « gain », ou affirme avoir envoyé de l'argent "
+      "« par erreur », puis demande un code secret, un code reçu par SMS ou de taper un code dicté. Règle : ne jamais "
+      "donner son code secret ni un code reçu par SMS, ne taper aucun code dicté par un inconnu, raccrocher et rappeler "
+      "l'opérateur par un numéro officiel déjà connu.",
+      "Faux SMS et faux liens : en juillet et août 2026, le Trésor public et la Police nationale ont alerté sur de faux "
+      "SMS d'« amende » avec un lien de paiement ; le Trésor indique que les services de l'État n'envoient pas de SMS "
+      "avec un lien cliquable pour payer une amende. Ne pas cliquer, ne pas répondre, ne donner aucune donnée bancaire ; "
+      "vérifier sur un site officiel tapé soi-même.",
+      "Faux visas et faux recrutements : en avril 2026, le ministère des Affaires étrangères a signalé un faux site "
+      "vendant des « visas » du Sénégal et rappelé que les visas relèvent des missions diplomatiques et consulaires "
+      "(le ministère indique qu'aucune procédure officielle payante en ligne n'est en vigueur : à vérifier auprès de "
+      "l'ambassade) ; la Police nationale met en garde "
+      "contre les « facilitateurs » qui promettent un visa ou un voyage contre de fortes sommes (affaires à Saint-Louis "
+      "et à Kaolack en 2026). Ne rien verser à un intermédiaire pour un visa, un emploi ou un voyage organisé : vérifier "
+      "l'employeur et passer par l'ambassade ou le consulat du pays concerné.",
+      "Faux policiers et faux gendarmes : de faux gendarmes (faux contrôles dans des quartiers de Dakar), un faux "
+      "policier venu à domicile et un faux enquêteur au téléphone ont été signalés par la presse sénégalaise. Demander "
+      "la carte professionnelle et le nom, ne remettre ni téléphone, ni code, ni argent, proposer de se rendre au "
+      "commissariat ; en cas de menace, appeler le 17.",
+      "Faux billets : la BCEAO (communiqué d'août 2026) demande d'authentifier tout billet reçu avec les gestes décrits "
+      "sur bceao.int, rubrique « Billets et pièces », et met en garde contre les méthodes de vérification qui circulent "
+      "sur les réseaux sociaux (elles peuvent faire accepter des faux ou refuser de vrais billets). Un billet douteux ne "
+      "se remet pas en circulation : le signaler à la police ou à la gendarmerie (à Rosso, en mars 2026, une commerçante "
+      "a alerté la police et la BCEAO a confirmé le faux).",
+      "Achats et locations à distance : des faux vendeurs copient les visuels de grandes enseignes, publient des "
+      "annonces à prix très bas sur Facebook, Instagram ou TikTok, font payer par Wave ou Orange Money puis bloquent "
+      "l'acheteur (réseau démantelé par la police en mars 2026). Prix anormalement bas = alerte ; payer à la livraison "
+      "ou à un vendeur identifiable ; garder captures d'écran et références de paiement. Logement : ne rien payer, même "
+      "un « acompte de réservation », avant une visite (par vous ou une personne de confiance), exiger un reçu écrit et "
+      "vérifier l'identité du bailleur ou du mandataire. Terrain : voir aussi les repères sur le titre foncier.",
+      "Faux proche, numéro usurpé, carte SIM : « mon téléphone est cassé, voici mon nouveau numéro » suivi d'une "
+      "demande d'argent urgente est un schéma connu : rappeler le proche sur son ancien numéro ou lui poser une question "
+      "que lui seul connaît avant tout envoi. Une ligne qui cesse soudain de fonctionner peut signaler un échange "
+      "frauduleux de carte SIM (un cas a été signalé à Guédiawaye en 2025) : prévenir aussitôt l'opérateur.",
+      "Voyageurs : les conseils aux voyageurs (Canada, États-Unis) signalent surtout les vols à la tire et à l'arraché "
+      "dans les lieux fréquentés (marchés, gares routières, embarcadère de Gorée, Corniche) et les escroqueries par "
+      "internet (offres d'argent, d'emploi ou de travail, histoires sentimentales) : ne jamais envoyer d'argent à "
+      "quelqu'un rencontré en ligne. Sur place, convenir du prix avant de monter en taxi ou d'accepter un service (guide, "
+      "porteur), garder passeport et objets de valeur hors de vue.",
+      "Si l'on est victime : prévenir tout de suite l'opérateur (Wave, Orange Money, Yas…) pour demander le blocage, "
+      "garder les preuves (captures d'écran, numéros, références de transaction), puis porter plainte au commissariat, à "
+      "la brigade de gendarmerie ou à la Division spéciale de cybersécurité de la Police nationale (plainte contre X "
+      "possible). Le remboursement n'est pas garanti : se renseigner auprès de l'opérateur.")),
+    ("mobile_money", r"\borange money\b|\bmobile money\b|\bfree money\b|\byas money\b|\bmixx by yas\b|\bexpresso money\b|"
+     r"\bmobile wallet\b|\be wallet\b|\bmonnaie electronique\b|\bporte monnaie (electronique|mobile)\b|\bwave\b|"
+     r"\b(argent|virement|fcfa)\b.{0,40}\b(mauvais numero|par erreur|mauvais destinataire|mauvaise personne)\b|"
+     r"\b(mauvais numero|par erreur|mauvais destinataire|mauvaise personne)\b.{0,40}\b(argent|virement|fcfa)\b|"
+     r"\berreur (de |d )?(transfert|envoi|numero|destinataire)\b.{0,40}\b(argent|wave|orange|mobile)\b|"
+     r"\bannuler (un |mon |le |ce )?(transfert d argent|virement|envoi d argent|paiement mobile)\b",
+     ("À quoi ça sert : Wave, Orange Money et Free Money sont des services de monnaie électronique (un portefeuille sur "
+      "le téléphone) pour envoyer et recevoir de l'argent, payer des commerçants et des factures (dont l'électricité "
+      "Woyofal), recharger du crédit ou un forfait, déposer ou retirer des espèces chez un agent. Free Sénégal est "
+      "devenu Yas (annonce de novembre 2024) : vérifier le nom actuel du service dans l'application. Frais, plafonds et "
+      "conditions varient selon l'opérateur et changent : ils se vérifient dans l'application ou auprès de l'opérateur.",
+      "Code secret : il est personnel. Ne jamais le dire (ni à un « agent de l'opérateur », ni à un vendeur, ni à un "
+      "proche), ne jamais le saisir devant quelqu'un ni laisser un tiers « faire les manipulations » sur son téléphone ; "
+      "même règle pour le code reçu par SMS. La BCEAO a recensé des arnaques par code OTP, par « erreur de dépôt » et "
+      "« par hypnose » (un inconnu engage la conversation pour obtenir le code secret). Code connu d'un tiers ou doute : "
+      "prévenir l'opérateur et changer le code.",
+      "Envoi par erreur : vérifier le numéro (et le nom si l'application l'affiche) avant de valider. Si l'erreur est "
+      "faite, agir tout de suite : contacter le service client de l'opérateur (application ou agence) avec la référence "
+      "de la transaction, le numéro saisi, le montant et l'heure, et demander une réclamation écrite ; si le destinataire "
+      "est joignable et de bonne foi, il peut renvoyer la somme. Possibilité d'annulation et délais : à vérifier auprès "
+      "de l'opérateur, rien n'est garanti. Inversement, à quelqu'un qui dit avoir envoyé de l'argent « par erreur » et le "
+      "réclame, ne rien renvoyer ni donner de code (arnaque décrite par la BCEAO) : demander à l'opérateur de gérer le "
+      "retour.",
+      "Fraude ou compte vidé : prévenir immédiatement l'opérateur (service client, agence) pour demander le blocage du "
+      "compte ; conserver captures, numéros appelants et références ; porter plainte à la police, à la gendarmerie ou à "
+      "la Division spéciale de cybersécurité (plainte contre X possible). Téléphone perdu ou volé : demander aussi le "
+      "blocage de la ligne et du compte.",
+      "Où se plaindre : d'abord le service client ou le service de réclamations de l'opérateur (la BCEAO rappelait en "
+      "2018 que les émetteurs de monnaie électronique doivent offrir un service de plaintes et réclamations), puis, sans "
+      "réponse satisfaisante, un courrier à la BCEAO, régulateur de la monnaie électronique. L'ARTP, régulateur des "
+      "télécoms, reçoit les réclamations sur le service téléphonique et internet. Coordonnées et délais changent : à "
+      "vérifier sur les sites des opérateurs, de la BCEAO et de l'ARTP.")),
+    ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
      ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
     ("electricite", r"\bprises?\b|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
@@ -284,13 +398,34 @@ _FOREIGN_TRAVELLER = re.compile(
     r"\b(francais\w*|americain\w*|belge|canadien\w*|britannique|suisse|allemand\w*|italien\w*|espagnol\w*|"
     r"french|american|british|german|canadian|touriste\w*|tourist\w*|foreigner)\b"
 )
+# « Arnaque » peut aussi être le titre d'un film ou d'une série : sans mot d'argent, de téléphone ou de visa, la
+# question ne parle pas de fraude.
+_FICTION_WORDS = re.compile(
+    r"\b(films?|series?|romans?|episodes?|acteurs?|actrices?|chansons?|clips?|documentaires?|netflix|bande dessinee)\b"
+)
+_SCAM_CONTEXT = re.compile(
+    r"\bwave\b|orange money|mobile money|\bsms\b|code secret|\botp\b|virement|\bvisa\b|faux (billets?|policiers?)|"
+    r"whatsapp|\bsim\b|operateur"
+)
+# « Wave » seul peut être une vague de surf (« la wave est bonne au spot ») : on garde le sujet dès qu'un mot
+# d'argent ou de mobile money apparaît aussi.
+_SURF_WORDS = re.compile(r"\b(surf\w*|vagues?|houle|kite\w*|windsurf\w*|ocean|swell)\b")
+_MOBILE_MONEY_WORDS = re.compile(
+    r"orange money|mobile money|free money|yas money|expresso money|monnaie electronique|e wallet|mobile wallet|"
+    r"porte monnaie|\bargent\b|transferts?|virement|\bcompte\b|\bcode\b|\bpin\b|payer|paiement|\bpay\b|envoy\w*|"
+    r"\benvoi\b|retrait|depot|solde|fcfa|appli\w*"
+)
 # Sujets précis : ils passent avant les sujets généraux (« perdu », « payer », « aéroport »…) quand la limite coupe.
-_SPECIFIC_FIRST = ("premiers_secours", "papiers", "factures", "protection", "etudes")
+_SPECIFIC_FIRST = ("premiers_secours", "arnaques", "mobile_money", "papiers", "factures", "protection", "etudes")
 
 
 def matching_topics(question: str, limit: int = 3) -> list[str]:
     folded = _fold(question)
     names = [name for name, pattern, _ in _COMPILED if pattern.search(folded)]
+    if "arnaques" in names and _FICTION_WORDS.search(folded) and not _SCAM_CONTEXT.search(folded):
+        names.remove("arnaques")
+    if "mobile_money" in names and _SURF_WORDS.search(folded) and not _MOBILE_MONEY_WORDS.search(folded):
+        names.remove("mobile_money")
     # « Renouveler mon passeport sénégalais » parle de papiers, pas du visa d'entrée d'un touriste.
     if "papiers" in names and "visa" in names and not _ENTRY_WORDS.search(folded):
         names.remove("visa")

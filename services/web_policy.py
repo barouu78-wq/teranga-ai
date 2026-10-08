@@ -131,6 +131,12 @@ def should_use_web(message, context=""):
         "carte d'identité", "carte d'identite", "carte d identite", "carte nationale", "extrait de naissance", "acte de naissance",
         "casier judiciaire", "jugement supplétif", "jugement suppletif", "woyofal", "senelec", "campusen",
         "couverture maladie", "ipres", "securite sociale", "sécurité sociale",
+        # Arnaques et mobile money : les alertes, les opérateurs et les procédures de plainte changent souvent.
+        "arnaque", "arnaques", "arnaquer", "arnaqueur", "arnaqueurs", "escroc", "escrocs", "escroquerie", "escroqueries",
+        "fraude", "fraudes", "frauduleux", "frauduleuse", "scam", "scams", "phishing", "hameçonnage", "hameconnage",
+        "faux billet", "faux billets", "fausse monnaie", "contrefaçon", "contrefacon", "faux sms", "faux visa",
+        "faux visas", "usurpation", "sim swap", "code secret", "code otp", "reclamation", "réclamation",
+        "yas money", "monnaie electronique", "monnaie électronique",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
