@@ -305,12 +305,12 @@ async function speak(text,btn){
 @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-700.woff2") format("woff2")}
 @font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
-  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
+  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#17756b;
   /* Jour : « Terre de Teranga » — ocre, terracotta, sable. */
   --bg:#fbf3e6;--surface:#fffaf2;--surface-2:#f6e6cf;--ink:#2b1a10;--muted:#7a5a44;
   --line:rgba(122,44,16,.13);--line-strong:rgba(122,44,16,.24);
-  --accent:#b5451b;--accent-ink:#ffffff;--accent-soft:rgba(181,69,27,.12);--link:#a33d17;
-  --gold:#9a5a0c;--gold-soft:rgba(201,125,18,.18);--title:#7a2c10;
+  --accent:#17756b;--accent-ink:#ffffff;--accent-soft:rgba(23,117,107,.12);--link:#136259;
+  --gold:#136259;--gold-soft:rgba(23,117,107,.14);--title:#7a2c10;
   --card-travel:#fde9cf;--card-discover:#f9dccf;
   --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);
   --shadow:0 14px 40px rgba(122,44,16,.12);
@@ -322,8 +322,8 @@ body[data-theme="dark"]{
   /* Nuit : « Nuit de Dakar » — bleu nuit et or. */
   --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
   --line:#2b2e35;--line-strong:#3a3e46;
-  --accent:#e3a33b;--accent-ink:#111215;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
-  --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
+  --accent:#4fb3a8;--accent-ink:#0b1a18;--accent-soft:rgba(79,179,168,.16);--link:#7fd0c6;
+  --gold:#7fd0c6;--gold-soft:rgba(79,179,168,.14);--nav-gold:#7fd0c6;--sen-gold:#e7bb63;--title:#f6dfa8;
   --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
 }
@@ -629,7 +629,7 @@ body[data-theme="dark"]{background:#111215}
 #heroTitle{color:var(--title)}
 body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e7bb63);-webkit-background-clip:text;background-clip:text;color:transparent}
 .brand .mark{background:var(--accent)}
-body[data-theme="dark"] .brand .mark{background:linear-gradient(135deg,#e7bb63,#a8741c)}
+body[data-theme="dark"] .brand .mark{background:linear-gradient(135deg,#7fd0c6,#2f8a7f)}
 .hero-signature{position:relative;min-height:14px}
 body:not([data-theme="dark"]) .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
   radial-gradient(circle at 12px 12px,#f2b632 5px,transparent 6px) 0 0/24px 24px,
@@ -642,7 +642,7 @@ body:not([data-theme="dark"]) .hero-flag{display:none}
 .journey-strip button:last-child{background:var(--accent);color:var(--accent-ink);border-color:transparent}
 .journey-strip button:last-child small{color:inherit;opacity:.82}
 .journey-strip button:last-child>span{background:rgba(255,255,255,.2)!important;color:inherit}
-body[data-theme="dark"] .journey-strip button:last-child{background:linear-gradient(135deg,#e7bb63,#b9842a)}
+body[data-theme="dark"] .journey-strip button:last-child{background:linear-gradient(135deg,#7fd0c6,#3c9a8f)}
 body[data-theme="dark"] .journey-strip button:last-child>span{background:rgba(0,0,0,.15)!important}
 #themeBtn{position:relative}
 #themeBtn[data-mode="auto"]::after{content:"A";position:absolute;right:3px;bottom:2px;font:800 9px/1 var(--font);color:var(--accent)}

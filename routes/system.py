@@ -172,7 +172,7 @@ def register_system_routes(app, deps):
                     "lang": "fr",
                     "dir": "ltr",
                     "background_color": "#fbf3e6",
-                    "theme_color": "#b5451b",
+                    "theme_color": "#17756b",
                     "categories": ["travel", "education", "lifestyle"],
                     "prefer_related_applications": False,
                     "launch_handler": {"client_mode": ["navigate-existing", "auto"]},
