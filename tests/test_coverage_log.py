@@ -589,3 +589,32 @@ def test_privacy_policy_describes_the_anonymous_counters():
     en = client.get("/privacy", base_url=B).get_data(as_text=True)
     assert "Statistiques anonymes des sujets" in fr and "ni le texte de votre question, ni votre adresse IP" in fr and "90 jours" in fr
     assert "Anonymous topic statistics" in en and "nor your IP address" in en and "90 days" in en
+
+
+# --- Fournisseurs d'IA affichés sur la page protégée (présence des clés, jamais leur valeur) ---------------------------
+
+def test_stats_page_shows_which_ai_keys_are_present_but_never_their_value(monkeypatch):
+    secret_openai, secret_claude = "sk-test-openai-SECRET-0001", "sk-ant-test-SECRET-0002"
+    monkeypatch.setenv("OPENAI_API_KEY", secret_openai)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", secret_claude)
+    monkeypatch.delenv("AI_PRINCIPALE", raising=False)
+    client = _stats(monkeypatch)
+    ok = client.post("/stats-ia", data={"cle": TOKEN}, base_url=B, environ_base={"REMOTE_ADDR": "203.0.113.170"})
+    page = ok.get_data(as_text=True)
+    assert "Fournisseurs d'IA" in page and "OpenAI : clé présente" in page
+    assert "Claude : clé présente, il prend le relais" in page and "IA principale : OpenAI" in page
+    assert secret_openai not in page and secret_claude not in page and "SECRET" not in page
+
+
+def test_ai_providers_status_covers_every_configuration(monkeypatch):
+    from routes.coverage import ai_providers_status
+
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("AI_PRINCIPALE", raising=False)
+    assert ai_providers_status() == ["OpenAI : clé présente", "Claude : clé absente, pas de secours Claude", "IA principale : OpenAI"]
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "y")
+    monkeypatch.setenv("AI_PRINCIPALE", "claude")
+    assert ai_providers_status()[2] == "IA principale : Claude (OpenAI en secours)"
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    assert ai_providers_status()[:1] == ["OpenAI : clé absente"] and ai_providers_status()[2] == "IA principale : Claude"
