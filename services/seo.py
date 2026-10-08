@@ -147,13 +147,13 @@ SEO_PAGES = {
             ("Pour les partenaires", "Les médias, entreprises et organisations peuvent demander une présentation du projet, proposer un pilote ou contribuer à sa visibilité. Le kit média présente les usages et ressources disponibles."),
             ("Présentation courte", "Teranga AI est un assistant numérique consacré au Sénégal. Il répond aux questions pratiques sur les villes, régions, voyage, transport, culture, gastronomie, météo et langues."),
             ("Présentation longue", "Pensé pour les personnes au Sénégal et pour la diaspora, Teranga AI permet de poser une question en français, anglais ou wolof. Pour les informations changeantes, l'assistant peut rechercher des sources récentes."),
-            ("Contact presse", "Pour une demande média, utilisez les coordonnées de contact publiées par Teranga AI sur son site. Ne reprenez pas une information sensible sans la vérifier."),
+            ("Contact presse", "Pour une demande média, une interview ou une démonstration, écrivez-nous depuis le <a href=\"/offres-partenaires#demande\">formulaire de contact</a> : nous répondons par téléphone, WhatsApp ou e-mail. Ne reprenez pas une information sensible sans la vérifier."),
         ],
         "faq": [
             ("Teranga AI est-il un média ?", "Non. Teranga AI est un service d'assistance numérique ; les informations journalistiques doivent être attribuées à leurs sources."),
             ("Peut-on utiliser Teranga AI pour préparer un reportage ?", "Oui, comme outil de recherche et de préparation, avec vérification des informations auprès des sources originales."),
         ],
-        "related": [("a-propos", "À propos"), ("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal")],
+        "related": [("offres-partenaires", "Devenir partenaire"), ("a-propos", "À propos"), ("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal")],
     },
     "media-kit": {
         "title": "Kit média Teranga AI : logo, présentation et ressources",
@@ -165,13 +165,14 @@ SEO_PAGES = {
             ("Nom", "Teranga AI"),
             ("Description courte", "Assistant numérique du Sénégal, accessible depuis le Sénégal et la diaspora, en français, anglais et wolof."),
             ("Usages", "Voyage, Dakar, AIBD, transport, météo, régions, culture, gastronomie, langues et informations pratiques."),
-            ("Lien officiel", SITE_URL + "/"),
+            ("Lien officiel", '<a href="%s/">%s/</a>' % (SITE_URL, SITE_URL)),
+            ("Logo et visuels", "<a href=\"/icon.svg\" download>Logo (SVG)</a> · <a href=\"/icon-512.png\" download>Logo (PNG 512 px)</a> · <a href=\"/og.png\" download>Visuel de partage (PNG 1200 × 630)</a>. Ne pas déformer ni recolorer le logo."),
         ],
         "faq": [
             ("Peut-on reprendre la description courte ?", "Oui, en conservant le nom Teranga AI et en renvoyant vers le site officiel."),
             ("Les réponses de Teranga AI remplacent-elles les sources officielles ?", "Non. Les informations administratives, juridiques, tarifaires ou très récentes doivent être vérifiées auprès des sources compétentes."),
         ],
-        "related": [("a-propos", "À propos"), ("presse", "Presse"), ("senegal", "Guide du Sénégal")],
+        "related": [("offres-partenaires", "Devenir partenaire"), ("a-propos", "À propos"), ("presse", "Presse"), ("senegal", "Guide du Sénégal")],
     },
     "regions-senegal": {
         "title": "14 régions du Sénégal : villes et carte | Teranga AI",
@@ -217,7 +218,7 @@ SEO_PAGES = {
             ("Hôtels, restaurants et tourisme", "Aidez vos clients à trouver des repères sur Dakar, les transports, la météo, les quartiers, les spécialités et les lieux à visiter."),
             ("Commerçants et services", "Utilisez Teranga AI comme point de découverte pour les questions fréquentes : horaires à vérifier, itinéraires, langues, produits, services et informations pratiques."),
             ("Entreprises et partenaires", "Nous pouvons étudier un pilote, une intégration, une campagne de visibilité ou un partenariat éditorial avec des acteurs au Sénégal et en France."),
-            ("Un bouton Teranga AI sur votre site", "Ajoutez une ligne à votre site : <code>&lt;script src=\"https://teranga-ai.fr/widget.js\" data-partner=\"votre-nom\" data-lang=\"fr\" defer&gt;&lt;/script&gt;</code>. Un bouton « Une question sur le Sénégal ? » ouvre Teranga AI pour vos visiteurs, sans lire ni transmettre aucune donnée de votre site. Options : data-lang (fr, en, wo), data-position (right, left), data-question (question pré-remplie)."),
+            ("Un bouton Teranga AI sur votre site", "Ajoutez une ligne à votre site : <code class=\"snippet\">&lt;script src=\"https://teranga-ai.fr/widget.js\" data-partner=\"votre-nom\" data-lang=\"fr\" defer&gt;&lt;/script&gt;</code>Un bouton « Une question sur le Sénégal ? » ouvre Teranga AI pour vos visiteurs, sans lire ni transmettre aucune donnée de votre site. Options : data-lang (fr, en, wo), data-position (right, left), data-question (question pré-remplie)."),
             ("Une présence qui se partage", "Le site, les pages thématiques, les réseaux sociaux, les médias et les annuaires peuvent relayer Teranga AI. L’objectif est de construire une présence cohérente, sans spam ni fausses affiliations.")
         ],
         "faq": [
@@ -225,7 +226,7 @@ SEO_PAGES = {
             ("Le service vise-t-il uniquement Dakar ?", "Non. Le contenu et les pages couvrent le Sénégal, avec un axe particulier sur Dakar et les besoins de la diaspora."),
             ("Peut-on proposer Teranga AI à des clients ?", "Oui, comme outil d’information et d’orientation, en gardant une vérification des informations sensibles ou changeantes.")
         ],
-        "related": [("partenaires", "Partenaires"), ("presse", "Presse"), ("media-kit", "Kit média"), ("france-senegal", "France ↔ Sénégal")]
+        "related": [("offres-partenaires", "Devenir partenaire"), ("partenaires", "Partenaires"), ("presse", "Presse"), ("media-kit", "Kit média"), ("france-senegal", "France ↔ Sénégal")]
     },
     "partenaires": {
         "title": "Partenaires Teranga AI : Sénégal, France et diaspora",
@@ -239,11 +240,11 @@ SEO_PAGES = {
             ("Sénégal ↔ France", "Les acteurs de la diaspora et les réseaux franco-sénégalais peuvent contribuer à faire connaître un assistant accessible depuis les deux pays.")
         ],
         "faq": [
-            ("Comment proposer un partenariat ?", "Présentez votre organisation, votre audience, votre idée et le type de collaboration envisagé."),
+            ("Comment proposer un partenariat ?", "Remplissez le <a href=\"/offres-partenaires#demande\">formulaire de demande</a> en une minute : votre organisation, votre ville, votre idée et un moyen de vous recontacter."),
             ("Teranga AI accepte-t-il les mises en avant payantes ?", "Les modalités commerciales doivent être définies au cas par cas et présentées clairement aux utilisateurs."),
             ("Peut-on utiliser le logo et le kit média ?", "Oui pour présenter Teranga AI, en conservant une description exacte et un lien vers le site officiel.")
         ],
-        "related": [("pour-les-entreprises", "Pour les entreprises"), ("presse", "Presse"), ("media-kit", "Kit média"), ("a-propos", "À propos")]
+        "related": [("offres-partenaires", "Devenir partenaire"), ("pour-les-entreprises", "Pour les entreprises"), ("presse", "Presse"), ("media-kit", "Kit média"), ("a-propos", "À propos")]
     },
     "assistant-senegal": {
         "title": "Assistant Sénégal : voyage, Dakar, infos pratiques | Teranga AI",
@@ -566,6 +567,15 @@ SEO_PAGE_PLACES = {
 SEO_PAGE_DISHES = {"specialites-senegal", "restaurants-dakar"}
 
 
+# Pages lues par les partenaires : l'appel à l'action mène au formulaire de demande.
+PARTNER_SLUGS = {"partenaires", "pour-les-entreprises", "media-kit", "presse"}
+DEFAULT_CTA = ('<div class="ctaBox"><strong>Une question précise ?</strong><p>Réponse courte, photo et carte quand le lieu '
+               'est connu.</p><a class="cta primary" href="/">Ouvrir Teranga AI</a></div>')
+PARTNER_CTA = ('<div class="ctaBox"><strong>Devenir partenaire</strong><p>Présentez votre activité en une minute : nous '
+               'vous recontactons par téléphone, WhatsApp ou e-mail.</p><div class="actions">'
+               '<a class="cta primary" href="/offres-partenaires#demande">Demander un partenariat</a>'
+               '<a class="cta" href="/offres-partenaires">Voir les offres</a></div></div>')
+
 def _seo_extra_html(slug, places=None, dishes=None):
     by_id = {str(p.get("id")): p for p in places or [] if isinstance(p, dict)}
     chosen = [by_id[i] for i in SEO_PAGE_PLACES.get(slug, []) if i in by_id]
@@ -610,8 +620,10 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
     related = "".join('<a href="/%s">%s</a>' % (s, label) for s, label in page.get("related", []))
     related_html = ""
     if related:
-        related_html = 'Voir aussi : %s<a href="/explorer">Explorer</a><a href="/lieux">Lieux</a>' % related
-    if slug in {"senegal", "regions-senegal"}:
+        related_html = '<span class="related-label">Voir aussi :</span>%s<a href="/explorer">Explorer</a><a href="/lieux">Lieux</a>' % related
+    if slug in PARTNER_SLUGS:
+        source_link = ""
+    elif slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
             'target="_blank" rel="noopener noreferrer">Ministère du Tourisme du Sénégal</a>.</p>'
@@ -676,7 +688,7 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
 <p class=\"intro\">%(intro)s</p>
 %(sections)s
 %(faq)s
-<div class=\"ctaBox\"><strong>Une question précise ?</strong><p>Réponse courte, photo et carte quand le lieu est connu.</p><a class=\"cta primary\" href=\"/\">Ouvrir Teranga AI</a></div>
+%(cta)s
 %(source)s
 </article>
 </main>%(footer)s</body></html>""" % {
@@ -686,6 +698,7 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         "site": site_url,
         "ld": ld_json,
         "related": related_html,
+        "cta": PARTNER_CTA if slug in PARTNER_SLUGS else DEFAULT_CTA,
         "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],

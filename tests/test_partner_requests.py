@@ -91,3 +91,33 @@ def test_store_uses_redis_and_falls_back_to_memory():
     fallback = PartnerRequests(Broken())
     fallback.add({"name": "C"})
     assert [item["name"] for item in fallback.recent()] == ["C"]
+
+
+def test_partner_pages_lead_to_request_form():
+    """Partenaires, entreprises, presse, kit média : l'appel à l'action mène au formulaire."""
+    from app import app
+
+    client = app.test_client()
+    for path in ("/partenaires", "/pour-les-entreprises", "/presse", "/media-kit"):
+        html = client.get(path).get_data(as_text=True)
+        assert 'href="/offres-partenaires#demande"' in html, path
+        assert "Ouvrir Teranga AI" not in html, path
+        assert '<span class="related-label">Voir aussi :</span>' in html, path
+    offers = client.get("/offres-partenaires").get_data(as_text=True)
+    assert '<section id="demande">' in offers
+    assert not any(emoji in offers for emoji in ("📍", "💬", "🧭", "✉️"))
+    kit = client.get("/media-kit").get_data(as_text=True)
+    assert 'href="/icon.svg" download' in kit and 'href="/og.png" download' in kit
+    # Les guides de voyage gardent leur appel vers l'assistant.
+    assert "Ouvrir Teranga AI" in client.get("/dakar").get_data(as_text=True)
+
+
+def test_offers_contact_section_title_depends_on_configured_contact(monkeypatch):
+    from routes.monetization import render_offers_page
+
+    monkeypatch.delenv("CONTACT_EMAIL", raising=False)
+    monkeypatch.delenv("PARTNER_WHATSAPP", raising=False)
+    assert "<h2>Pour aller plus loin</h2>" in render_offers_page()
+    monkeypatch.setenv("PARTNER_WHATSAPP", "+221 77 000 00 00")
+    page = render_offers_page()
+    assert "<h2>Nous contacter</h2>" in page and "https://wa.me/221770000000" in page
