@@ -8,6 +8,7 @@ import time
 logger = logging.getLogger(__name__)
 
 from .language_quality import language_instruction
+from .model_params import openai_model
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
 from .action_executor import prepare_action
 
@@ -237,7 +238,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
-    agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model="gpt-5.6-luna")
+    agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model=openai_model())
     memory_line = (
         "MÉMOIRE STRUCTURÉE COURTE : "
         + _format_memory(structured_memory)
