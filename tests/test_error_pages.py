@@ -50,3 +50,32 @@ def test_ai_failure_in_json_mode_is_503_with_retry_after(monkeypatch):
     assert response.status_code == 503
     assert response.headers["Retry-After"] == "10"
     assert "inaccessible" in response.get_json()["error"]
+
+
+def test_common_url_variants_redirect_to_existing_pages():
+    """« / » final, majuscules et alias usuels : redirection 301 au lieu d'une 404."""
+    from app import app
+
+    client = app.test_client()
+    cases = {
+        "/partenaires/": "/partenaires", "/lieux/goree/": "/lieux/goree", "/Dakar": "/dakar",
+        "/index.html": "/", "/contact": "/offres-partenaires", "/planificateur": "/trip-planner",
+        "/urgence": "/urgences", "/kit-media": "/media-kit", "/en": "/en/senegal-travel-guide",
+        "/offres-partenaires/?source=whatsapp": "/offres-partenaires?source=whatsapp",
+    }
+    for path, target in cases.items():
+        response = client.get(path)
+        assert response.status_code == 301, path
+        assert response.headers["Location"] == target, path
+    assert client.get("/mentions-inexistantes").status_code == 404
+    assert client.post("/partenaires/").status_code in (404, 405)
+
+
+def test_redirect_target_never_leaves_the_site():
+    from services.error_pages import redirect_target
+
+    always = lambda _path: True  # noqa: E731
+    for path in ("//evil.com", "//evil.com/", "///evil.com/x", "/\\evil.com"):
+        target = redirect_target(path, always)
+        assert target == "" or (target.startswith("/") and not target.startswith("//") and "\\" not in target), (path, target)
+    assert redirect_target("/existe-pas/", lambda _path: False) == ""
