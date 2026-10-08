@@ -206,10 +206,11 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
             continue
         if not str(context).startswith(("https://", "http://")):
             continue
-        key = thumbnail.split("?", 1)[0].lower()
-        if key in seen:
+        # Adresse complète : les vignettes Google (« …/images?q=tbn:<id> ») ne se
+        # distinguent que par leur requête, couper au « ? » écartait presque toutes les photos.
+        if thumbnail in seen:
             continue
-        seen.add(key)
+        seen.add(thumbnail)
         alt = str(item.get("title") or query)[:160]
         if not _google_photo_matches_query(query, alt, context):
             continue
