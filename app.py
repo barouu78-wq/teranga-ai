@@ -33,6 +33,8 @@ from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.legal import register_legal_routes
 from routes.monetization import register_monetization_routes
+from routes.coverage import register_coverage_routes
+from services.coverage_log import CoverageLog
 from routes.emergency import register_emergency_routes
 from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
@@ -796,6 +798,9 @@ register_monetization_routes(
     known_sources=[p.get("id") for p in SENEGAL_KNOWLEDGE.get("places", []) if isinstance(p, dict)],
     require_json_post=require_json_post, site_url=SITE_URL,
 )
+# Journal des lacunes : compteurs anonymes par jour et par thème, jamais le texte des questions.
+COVERAGE_LOG = CoverageLog(redis_client, logger=app.logger, places=SENEGAL_KNOWLEDGE.get("places", []))
+register_coverage_routes(app, COVERAGE_LOG, rate_guard=rate_guard)
 register_emergency_routes(app, SITE_URL)
 register_events_routes(app, SITE_URL)
 
@@ -859,6 +864,7 @@ register_chat_route(app, {
     "knowledge_places": SENEGAL_KNOWLEDGE.get("places", []),
     "knowledge_dishes": SENEGAL_KNOWLEDGE.get("dishes", []),
     "field": _field,
+    "coverage_log": COVERAGE_LOG,
 })
 
 # Voix « temps réel » (WebRTC) : plus utilisée par le site ; route coupée sauf

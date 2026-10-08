@@ -13,7 +13,7 @@ from flask import Response, jsonify, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
-_UPDATED = "5 octobre 2026"
+_UPDATED = "8 octobre 2026"
 
 _PRIVACY = {
     "fr": {
@@ -28,6 +28,7 @@ _PRIVACY = {
             ("Mesure d'audience", "Si elle est activée, la mesure d'audience est respectueuse de la vie privée : sans cookie publicitaire ni profilage."),
             ("Liens de réservation et partenaires", "Certains liens « Réserver » mènent vers des sites partenaires (activités, hébergements) qui peuvent nous verser une commission, sans surcoût pour vous. Nous comptons les clics sur ces liens sans enregistrer d'information vous concernant. Les adresses partenaires sont toujours signalées comme telles."),
             ("Demandes de partenariat", "Si un professionnel remplit le formulaire de la page des offres partenaires, son nom, son activité, sa ville, son contact et son message sont conservés au plus 200 demandes et environ un an, uniquement pour le recontacter."),
+            ("Statistiques anonymes des sujets", "Pour savoir quels sujets enrichir en priorité, le site tient des compteurs anonymes. Pour chaque question posée à l'assistant, il ajoute 1 au compteur du jour d'un ou plusieurs sujets prédéfinis (santé, transport, pêche…) et note si l'assistant disposait, sur ce sujet, d'informations de notre base ou d'une recherche web. Ces compteurs ne contiennent ni le texte de votre question, ni votre adresse IP, ni votre identifiant, ni une empreinte de l'un d'eux : ils ne permettent pas de savoir qui a posé quelle question. Ils sont supprimés automatiquement après environ 90 jours."),
             ("Signalements", "Si vous signalez une réponse, la question et la réponse concernées sont enregistrées dans nos journaux pour améliorer l'assistant."),
             ("Vos droits", "Il n'y a pas de compte : nous ne conservons pas de profil vous concernant. Pour toute question ou demande liée à vos données, contactez-nous{contact}."),
         ],
@@ -45,6 +46,7 @@ _PRIVACY = {
             ("Analytics", "When enabled, analytics are privacy-friendly: no advertising cookies and no profiling."),
             ("Booking links and partners", "Some “Book” links lead to partner sites (activities, accommodation) that may pay us a commission at no extra cost to you. We count clicks on these links without recording any information about you. Partner listings are always labelled as such."),
             ("Partnership requests", "If a business fills in the form on the partner offers page, its name, activity, town, contact and message are kept (at most 200 requests, about one year) only to get back to it."),
+            ("Anonymous topic statistics", "To know which topics to improve first, the site keeps anonymous counters. For each question asked to the assistant, it adds 1 to the day's counter of one or more predefined topics (health, transport, fishing…) and notes whether the assistant had information from our database or a web search on that topic. These counters contain neither the text of your question, nor your IP address, nor your identifier, nor a fingerprint of any of them: they cannot tell who asked what. They are deleted automatically after about 90 days."),
             ("Reports", "If you report an answer, the question and answer are recorded in our logs to improve the assistant."),
             ("Your rights", "There are no accounts: we keep no profile about you. For any question or request about your data, contact us{contact}."),
         ],
