@@ -41,6 +41,17 @@ comportement testé, mettre le test à jour **et** l'expliquer dans la PR.
 | `data/partners.json` | Adresses partenaires (toujours affichées « Partenaire ») |
 | `docs/` | Guides pour le propriétaire (monétisation, partenaires, Google Play, IA de secours) |
 
+## Skills du projet (`.claude/skills/`)
+
+| Skill | Quand l'utiliser |
+|---|---|
+| `preparer-une-pr` | avant chaque commit, PR ou fusion ; mises à jour Dependabot |
+| `ajouter-des-reperes` | nouveau sujet de repères pratiques vérifiés |
+| `ajouter-un-lieu` | nouveau lieu sourcé dans la base |
+| `banc-ia` | après toute modification du contexte de l'IA |
+| `audit-seo` | après toute modification de page (`python scripts/audit_seo.py`) |
+| `publier-android` | Google Play : test interne, test fermé, lien `assetlinks.json` |
+
 ## Règles à respecter
 
 - **Exactitude avant tout.** Aucun fait inventé dans le code, la base ou les pages : pas de prix,
