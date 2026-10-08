@@ -10,6 +10,13 @@ from services.backup_ai import backup_complete, backup_enabled, claude_events, c
 from services.http_security import origin_allowed
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 from services.language_quality import language_instruction
+from services.model_params import (
+    DEFAULT_OPENAI_COMPLEX_MODEL,
+    DEFAULT_OPENAI_MODEL,
+    openai_complex_model,
+    openai_model,
+    openai_trip_model,
+)
 from services.senegal_knowledge import SENEGAL_REGIONS
 from services.responses import extract_sources
 
@@ -386,8 +393,19 @@ _MODEL_ERROR_MARKERS = ("not found", "does not exist", "not available", "unsuppo
 
 
 def _trip_models():
-    """Modèle du planificateur puis secours, comme pour le chat."""
-    chain = [os.getenv("OPENAI_TRIP_MODEL"), os.getenv("OPENAI_MODEL"), "gpt-5.6-luna", "gpt-5.6-sol"]
+    """Modèle du planificateur puis secours, comme pour le chat.
+
+    Ordre historique conservé : modèle dédié (OPENAI_TRIP_MODEL), modèle du chat
+    (OPENAI_MODEL), son nom par défaut, modèle complexe (OPENAI_COMPLEX_MODEL), son
+    nom par défaut. Les doublons sont retirés : sans variable, il reste les deux défauts.
+    """
+    chain = [
+        openai_trip_model(),
+        openai_model(),
+        DEFAULT_OPENAI_MODEL,
+        openai_complex_model(),
+        DEFAULT_OPENAI_COMPLEX_MODEL,
+    ]
     return [m for i, m in enumerate(chain) if m and m not in chain[:i]]
 
 

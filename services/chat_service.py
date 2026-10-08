@@ -5,6 +5,7 @@ from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
 from .backup_ai import claude_events, claude_is_primary, claude_response
+from .model_params import clean_model_name, openai_complex_model, openai_model
 from .orchestrator import build_agent_plan, run_enrichments
 
 # Images et carte dépendent d'appels réseau lents (Google, Wikimedia) : elles
@@ -13,7 +14,7 @@ _ENRICHMENT_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ter
 ENRICHMENT_TIMEOUT = 12.0
 
 
-def select_chat_model(payload, model, complex_model="gpt-5.6-sol"):
+def select_chat_model(payload, model, complex_model=None):
     """Return the model selected by the bounded agent plan."""
     return build_agent_plan(
         payload,
@@ -26,7 +27,7 @@ def build_chat_service(
     *,
     client,
     model,
-    complex_model="gpt-5.6-sol",
+    complex_model=None,
     logger,
     build_model_kwargs,
     reasoning_effort,
@@ -40,6 +41,11 @@ def build_chat_service(
     should_fetch_map,
     reasoning_override=None,
 ):
+    # L'application transmet les variables d'environnement telles quelles : un nom vide ou
+    # invalide retombe sur la valeur configurée, puis sur le défaut (voir model_params.py).
+    model = clean_model_name(model, openai_model())
+    complex_model = clean_model_name(complex_model, openai_complex_model())
+
     # Le plan est déterministe pour une requête : calculé une fois, puis réutilisé
     # par create_response, model_kwargs et les enrichissements.
     plans = OrderedDict()
