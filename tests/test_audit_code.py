@@ -61,3 +61,26 @@ def test_clean_answer_keeps_underscores_inside_identifiers():
     assert clean_answer("Fichier ma_liste_courses.pdf") == "Fichier ma_liste_courses.pdf"
     # Le vrai italique en « _ » est toujours retiré.
     assert clean_answer("Un mot _souligné_ ici (_aussi_).") == "Un mot souligné ici (aussi)."
+
+
+def test_unknown_address_with_a_line_break_is_a_404_not_a_server_error():
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key")
+    import app as app_module
+
+    client = app_module.app.test_client()
+    # Sondes d'injection d'en-tête (« %0d%0a ») : la majuscule pousse le site à chercher la
+    # version en minuscules, qui existe, puis à rediriger vers une adresse contenant le saut de ligne.
+    for path in ("/LIEUX/goree%0d%0aX-Test:1", "/Static/a%0Ab", "/Lieux/a%0Db"):
+        response = client.get(path, base_url="https://teranga-ai.fr")
+        assert response.status_code in (301, 404), (path, response.status_code)
+        assert "\n" not in response.headers.get("Location", "") and "\r" not in response.headers.get("Location", "")
+
+
+def test_redirect_target_never_returns_control_characters():
+    from services.error_pages import redirect_target
+
+    assert redirect_target("/LIEUX/goree\r\nX", lambda p: True) == ""
+    assert redirect_target("/Lieux/a\x00b", lambda p: True) == ""
+    assert redirect_target("/LIEUX/goree", lambda p: True) == "/lieux/goree"

@@ -59,6 +59,10 @@ def redirect_target(path: str, exists) -> str:
     """
     if "\\" in (path or ""):  # « /\exemple.com » : les navigateurs le lisent comme « //exemple.com »
         return ""
+    # Saut de ligne ou autre caractère de contrôle (sondes « %0d%0a ») : il finirait dans l'en-tête
+    # Location, que Werkzeug refuse (erreur 500 au lieu d'une 404).
+    if re.search(r"[\x00-\x1f\x7f]", path or ""):
+        return ""
     clean = "/" + re.sub(r"/{2,}", "/", path or "").strip("/")
     for candidate in (clean, clean.lower()):
         candidate = ALIASES.get(candidate, candidate)
