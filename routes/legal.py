@@ -130,7 +130,9 @@ def register_legal_routes(app, deps):
             blocked = rate_guard("report")
             if blocked is not None:
                 return blocked
-        body = request.get_json(silent=True) or {}
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict):
+            return jsonify({"error": "Requête invalide."}), 400
         reason = str(body.get("reason") or "inappropriate")
         if reason not in REPORT_REASONS:
             reason = "other"  # pas de texte libre dans les journaux

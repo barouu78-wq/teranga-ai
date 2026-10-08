@@ -8,6 +8,7 @@ recherche web. En cas d'échec, l'appelant garde la recherche web.
 from __future__ import annotations
 
 import json
+import re
 import threading
 import time
 import unicodedata
@@ -132,11 +133,25 @@ def format_forecast(place: str, data: dict, language: str = "fr") -> str:
     return "\n".join(lines)
 
 
+# « à Paris », « in London », « pour Abidjan » : un lieu est nommé (mais inconnu de la base du Sénégal).
+_PLACE_AFTER_PREPOSITION = re.compile(
+    r"\b(?:a|au|aux|en|in|at|pour|for|near|vers)\s+"
+    r"(?!(?:le|la|les|l|ce|cet|cette|ces|aujourd|demain|maintenant|this|the|today|tomorrow|tonight|now|next|midi|minuit)\b|\d)"
+    r"([a-z][a-z'-]{2,})"
+)
+
+
+def _names_unknown_place(message: str) -> bool:
+    return bool(_PLACE_AFTER_PREPOSITION.search(_normalize(message)))
+
+
 def live_weather_context(locations: dict, intent_context: dict, message: str, language: str = "fr", *, opener=None, logger=None):
     """Texte météo prêt pour le prompt, ou None (lieu inconnu, service indisponible)."""
     if (intent_context or {}).get("intent") != "weather":
         return None
     found = resolve_location(locations, (intent_context or {}).get("location"), message)
+    if found is None and _names_unknown_place(message):
+        return None  # « Météo à Paris » : la recherche web répond, pas les prévisions de Dakar
     if found is None:
         found = locations.get("dakar")  # « Quel temps fait-il ? » : Dakar par défaut
     if found is None:

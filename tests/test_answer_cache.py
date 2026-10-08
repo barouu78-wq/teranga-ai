@@ -60,6 +60,43 @@ def test_replay_chunks_rebuild_the_exact_text():
     assert "".join(chunks) == REPLY and len(chunks) > 2
 
 
+def _ask_factory(app_module, ip="203.0.113.150"):
+    client = app_module.app.test_client()
+
+    def ask(message):
+        token = client.get("/csrf", base_url="https://teranga-ai.fr").get_json()["token"]
+        client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
+        response = client.post(
+            "/chat",
+            json={"message": message, "language": "fr"},
+            headers={"X-CSRF-Token": token, "Origin": "https://teranga-ai.fr"},
+            base_url="https://teranga-ai.fr",
+            environ_base={"REMOTE_ADDR": ip},
+        )
+        events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line]
+        return "".join(e.get("d", "") for e in events), events
+
+    return ask
+
+
+def test_truncated_or_fallback_answers_are_not_cached(monkeypatch):
+    """Une réponse coupée (response.incomplete) ou de secours ne doit pas être resservie à tout le monde."""
+    import app as app_module
+
+    calls = []
+
+    def cut_stream(payload, stream=True):
+        calls.append(payload["message"])
+        yield SimpleNamespace(type="response.output_text.delta", delta=REPLY[:50])
+        yield SimpleNamespace(type="response.incomplete", response=SimpleNamespace(output_text=REPLY[:50]))
+
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", cut_stream)
+    ask = _ask_factory(app_module)
+    ask("Que faire à Thiès le week-end ?")
+    ask("que faire à thiès le week-end")
+    assert len(calls) == 2  # rien n'a été mis en cache : le modèle est rappelé
+
+
 def test_second_identical_question_is_served_from_cache(monkeypatch):
     import app as app_module
 
@@ -68,6 +105,7 @@ def test_second_identical_question_is_served_from_cache(monkeypatch):
     def fake_stream(payload, stream=True):
         calls.append(payload["message"])
         yield SimpleNamespace(type="response.output_text.delta", delta=REPLY)
+        yield SimpleNamespace(type="response.completed", response=SimpleNamespace(output_text=REPLY))
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", fake_stream)
     client = app_module.app.test_client()

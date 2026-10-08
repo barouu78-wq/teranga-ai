@@ -8,7 +8,6 @@ def register_image_proxy_route(app, deps):
     abuse_key = deps["abuse_key"]
     abuse_blocked = deps["abuse_blocked"]
     allowed_request = deps["allowed_request"]
-    record_abuse = deps["record_abuse"]
     image_request_log = deps["image_request_log"]
     IMAGE_RATE_LIMIT = deps["IMAGE_RATE_LIMIT"]
     IMAGE_RATE_WINDOW = deps["IMAGE_RATE_WINDOW"]
@@ -46,8 +45,7 @@ def register_image_proxy_route(app, deps):
                 "image_identity",
             )
         ):
-            record_abuse(ip, "image_rate", 1)
-            record_abuse(identity, "image_identity_rate", 1)
+            # Limité, mais sans score d'abus : une page tierce peut charger des images à la place du visiteur.
             return Response(
                 "Trop de demandes d'images. Réessaie dans un instant.",
                 status=429,

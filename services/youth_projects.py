@@ -6,6 +6,7 @@ actionable brief without calling external services or changing the chat flow.
 
 from __future__ import annotations
 
+import math
 import re
 import unicodedata
 from typing import Any
@@ -125,12 +126,20 @@ def _money_amount(value: Any) -> int | None:
     if isinstance(value, int):
         return value if value >= 0 else None
     if isinstance(value, float):
-        return int(value) if value >= 0 else None
+        return int(value) if math.isfinite(value) and value >= 0 else None
     text = _normalize(value)
+    # « 2,5 millions » : la virgule est décimale, pas un séparateur de milliers.
+    millions = re.search(r"(?<!\d)(\d+(?:[.,]\d{1,2})?)\s*(?:millions?|m\b)", text)
+    if millions:
+        return int(round(float(millions.group(1).replace(",", ".")) * 1_000_000))
     match = re.search(r"(?<!\d)(\d[\d\s.,]*)(?:\s*(?:fcfa|f cfa|cfa))?", text)
     if not match:
         return None
-    raw = re.sub(r"[\s.,]", "", match.group(1))
+    digits = match.group(1).strip()
+    # « 1,5 » ou « 1.50 » (1 à 2 chiffres après le séparateur, sans groupe de milliers) : montant décimal.
+    if re.fullmatch(r"\d+[.,]\d{1,2}", digits):
+        return int(round(float(digits.replace(",", "."))))
+    raw = re.sub(r"[\s.,]", "", digits)
     try:
         amount = int(raw)
     except ValueError:

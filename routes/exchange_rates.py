@@ -9,7 +9,6 @@ def register_exchange_rates_route(app, deps):
     client_ip = deps["client_ip"]
     abuse_key = deps["abuse_key"]
     allowed_request = deps["allowed_request"]
-    record_abuse = deps["record_abuse"]
     fx_request_log = deps["fx_request_log"]
     FX_RATE_LIMIT = deps["FX_RATE_LIMIT"]
     FX_RATE_WINDOW = deps["FX_RATE_WINDOW"]
@@ -31,8 +30,6 @@ def register_exchange_rates_route(app, deps):
                 "fx_identity",
             )
         ):
-            record_abuse(ip, "fx_rate", 1)
-            record_abuse(identity, "fx_identity_rate", 1)
             return (
                 jsonify({"error": "Trop de demandes de taux. Réessaie dans un instant."}),
                 429,
@@ -41,7 +38,9 @@ def register_exchange_rates_route(app, deps):
         data = fetch_bceao_rates()
         return jsonify(
             {
-                "source": "BCEAO",
+                # Sans date, la BCEAO n'a pas pu être lue : les taux sont ceux du code, et c'est dit.
+                "source": "BCEAO" if data["date"] else "indicatif",
+                "live": bool(data["date"]),
                 "date": data["date"],
                 "rates": data["rates"],
                 "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

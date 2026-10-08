@@ -213,6 +213,7 @@ def register_chat_route(app, deps):
             model_started_at = time.perf_counter()
             first_output_logged = False
             yielded = False
+            completed = False  # réponse terminée par le modèle (pas coupée, pas de secours)
             sources = []
             answer_parts = []
             # Les enrichissements (images, carte) tournent pendant que le modèle écrit.
@@ -244,6 +245,7 @@ def register_chat_route(app, deps):
                         answer_parts.append(delta)
                         yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
                     elif etype == "response.completed":
+                        completed = True
                         if not first_output_logged:
                             first_output_logged = True
                             logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
@@ -265,6 +267,7 @@ def register_chat_route(app, deps):
                         image, maps = chat_enrichment_result(enrichments)
                     else:
                         reply, sources, image, maps = complete_reply(payload)
+                    completed = bool(reply)
                     # Jamais de bulle vide : la base de connaissances, sinon un message clair.
                     reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
                     answer_parts.append(reply)
@@ -280,7 +283,8 @@ def register_chat_route(app, deps):
                 final_reply = clean_answer("".join(answer_parts))
                 for extra_event in finishing_events(final_reply, sources, image, maps):
                     yield json.dumps(extra_event, ensure_ascii=False) + "\n"
-                if answer_cache is not None and key:
+                # Une réponse coupée (limite de longueur) ou de secours ne doit pas être resservie 12 h à tout le monde.
+                if answer_cache is not None and key and completed:
                     answer_cache.set(key, reply=final_reply, sources=sources, image=image, maps=maps)
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
