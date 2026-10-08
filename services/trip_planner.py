@@ -1,6 +1,9 @@
+import contextlib
 import json
 import os
+import queue
 import re
+import threading
 import time
 from html import escape
 from flask import Response, jsonify, request, stream_with_context
@@ -511,38 +514,70 @@ _HEARTBEAT = object()
 HEARTBEAT_SECONDS = 10.0
 
 
-def _events_with_heartbeat(open_stream):
+def _close_quietly(stream):
+    """Ferme un flux amont s'il sait le faire ; une erreur de fermeture est sans importance."""
+    close = getattr(stream, "close", None)
+    if callable(close):
+        with contextlib.suppress(Exception):
+            close()
+
+
+@contextlib.contextmanager
+def _closing(stream):
+    """Garantit la fermeture du flux amont, même si la lecture s'arrête avant la fin."""
+    try:
+        yield stream
+    finally:
+        _close_quietly(stream)
+
+
+def _events_with_heartbeat(open_stream, cancelled=None):
     """Événements du flux OpenAI, entrecoupés de _HEARTBEAT pendant les silences.
 
     Le flux est lu dans un fil séparé ; une exception y est relancée ici.
-    """
-    import queue
-    import threading
 
+    Quand ce générateur est fermé (délai dépassé, navigateur déconnecté), le drapeau
+    ``cancelled`` (un threading.Event, créé ici s'il n'est pas fourni) est levé : le fil
+    s'arrête avant la lecture suivante et ferme le flux amont, au lieu de consommer le
+    modèle pour rien. ``open_stream`` peut aussi le consulter pour ne pas relancer un
+    autre modèle. Une lecture déjà bloquée sur le réseau ne peut pas être interrompue :
+    le fil s'arrête dès qu'elle rend la main (événement, erreur ou délai d'attente OpenAI).
+    """
     box: "queue.Queue" = queue.Queue()
     done = object()
+    if cancelled is None:
+        cancelled = threading.Event()
 
     def pump():
+        stream = None
         try:
-            for event in open_stream():
+            stream = open_stream()
+            for event in stream:
+                if cancelled.is_set():
+                    break
                 box.put(event)
         except BaseException as exc:  # noqa: BLE001 - relancée côté générateur
-            box.put(exc)
+            if not cancelled.is_set():
+                box.put(exc)
         finally:
+            _close_quietly(stream)
             box.put(done)
 
     threading.Thread(target=pump, daemon=True, name="trip-stream").start()
-    while True:
-        try:
-            item = box.get(timeout=HEARTBEAT_SECONDS)
-        except queue.Empty:
-            yield _HEARTBEAT
-            continue
-        if item is done:
-            return
-        if isinstance(item, BaseException):
-            raise item
-        yield item
+    try:
+        while True:
+            try:
+                item = box.get(timeout=HEARTBEAT_SECONDS)
+            except queue.Empty:
+                yield _HEARTBEAT
+                continue
+            if item is done:
+                return
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+    finally:
+        cancelled.set()
 
 
 def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id):
@@ -560,6 +595,10 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
         yield line({"progress": {"day": 0, "total": expected_days}})
         text = ""
         started = time.monotonic()
+        # Levé quand plus personne ne lit (délai dépassé, navigateur parti) : la lecture du
+        # modèle s'arrête, et aucun autre modèle n'est sollicité pour rien.
+        cancelled = threading.Event()
+        events = None
         try:
             def open_stream():
                 # IA principale d'abord ; si elle échoue avant d'avoir écrit, l'autre prend
@@ -567,27 +606,31 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
                 wrote = False
                 if claude_is_primary():
                     try:
-                        for event in claude_events(str(request_kwargs.get("input") or ""), **_claude_kwargs(request_kwargs)):
-                            if event.type == "response.output_text.delta":
-                                wrote = True
-                            yield event
+                        with _closing(claude_events(str(request_kwargs.get("input") or ""), **_claude_kwargs(request_kwargs))) as upstream:
+                            for event in upstream:
+                                if event.type == "response.output_text.delta":
+                                    wrote = True
+                                yield event
                         return
                     except Exception:
                         if wrote:
                             raise
                         app.logger.exception("trip-planner claude_primary_failed")
+                if cancelled.is_set():
+                    return
                 try:
-                    for event in _create(client, stream=True, **request_kwargs):
-                        if getattr(event, "type", "") == "response.output_text.delta":
-                            wrote = True
-                        yield event
+                    with _closing(_create(client, stream=True, **request_kwargs)) as upstream:
+                        for event in upstream:
+                            if getattr(event, "type", "") == "response.output_text.delta":
+                                wrote = True
+                            yield event
                 except Exception:
-                    backup = "" if wrote else _backup_plan_text(request_kwargs, app)
+                    backup = "" if wrote or cancelled.is_set() else _backup_plan_text(request_kwargs, app)
                     if not backup:
                         raise
                     yield _BackupEvent(backup)
 
-            events = _events_with_heartbeat(open_stream)
+            events = _events_with_heartbeat(open_stream, cancelled)
             final_text = ""
             seen = 0
             for event in events:
@@ -622,9 +665,17 @@ def _stream_plan(app, client, request_kwargs, data, expected_days, places_by_id)
                 return
             yield line({"result": _plan_result(data, text, expected_days, places_by_id)})
         except Exception as exc:  # noqa: BLE001 - message public uniquement
+            # La lecture du modèle s'arrête avant l'envoi de l'erreur, pas après.
+            if events is not None:
+                events.close()
             app.logger.exception("trip-planner")
             payload, status, _headers = _plan_error(exc, lang)
             yield line({**payload, "status": status})
+        finally:
+            # Navigateur déconnecté (la réponse est fermée en plein vol) ou fin normale :
+            # même arrêt de la lecture ; sans effet si elle est déjà arrêtée.
+            if events is not None:
+                events.close()
 
     return Response(
         stream_with_context(generate()),
