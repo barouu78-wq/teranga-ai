@@ -39,6 +39,23 @@ from services.text import fold_text
 # (vie-publique.sn), Agence de la CMU (décret 2015-21). CSS et IPRES : CLEISS et presse 2025-2026 (étude d'une
 # fusion demandée en juin 2025, système d'information commun fin 2025). Campusen : calendrier 2026 (senego.com,
 # lesoleil.sn), orientation.campusen.sn. Alerte de la Direction des bourses : février 2026 (presse).
+# Sources du sujet « premiers_secours » (relevées en octobre 2026 par recherche web ; les sites officiels n'ont pas
+# pu être ouverts en direct depuis l'environnement de travail, les textes ont été relus dans les extraits renvoyés
+# par la recherche : ne sont gardés que des repères retrouvés dans plusieurs sources, sans dose ni nom de médicament).
+# Paludisme : fiche d'information de l'OMS (who.int/news-room/fact-sheets/detail/malaria : symptômes, signes de
+# gravité, moustiquaires imprégnées, répulsifs, avis médical avant le départ pour un traitement préventif) ; programme
+# national de lutte contre le paludisme du Sénégal (test rapide devant toute fièvre, moustiquaires, « toutes les
+# nuits »), relayé par les fiches d'Africa Check et de SenePlus et par l'enquête ANSD 2020-2021 sur les indicateurs du
+# paludisme ; Institut Pasteur (Paris, fiche Sénégal) ; recommandations sanitaires aux voyageurs du HCSP (consulter
+# sans délai en cas de fièvre, même après le retour), relayées par l'ARS de La Réunion et la presse médicale.
+# Enfant : signes généraux de danger de la PCIME de l'OMS (livret PCIME aussi publié sur
+# informationsanitaire.sec.gouv.sn), fiche OMS sur la méningite. Déshydratation et diarrhée : fiche OMS sur les
+# maladies diarrhéiques ; conseils aux voyageurs du ministère français de l'Europe et des Affaires étrangères (relayés
+# par le guide sécurité de France Volontaires) et de la diplomatie belge. Chaleur : NHS et CDC. Eau et aliments :
+# « cinq clés pour des aliments plus sûrs » de l'OMS, CDC (Yellow Book), travel.gc.ca. Morsures et piqûres : OMS
+# (rage, morsures de serpent), CDC (Yellow Book), Croix-Rouge américaine et MSD Manuals (scorpions, réactions
+# allergiques). Brûlures et coupures : Croix-Rouge de Belgique (via l'ULB), ameli.fr et Croix-Rouge française (cités par
+# Allodocteurs), CHUV. Numéros : ceux déjà vérifiés dans le sujet « urgences » (SAMU 1515), aucun autre.
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
     ("urgences", r"urgen|police|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
@@ -58,6 +75,96 @@ TOPICS = (
       "Eau : préférer l'eau en bouteille ou filtrée pour un voyageur.",
       "Pharmacie de garde : liste affichée sur la porte des pharmacies ; demander aussi à l'hôtel. Urgence médicale : "
       "SAMU 1515.")),
+    # Sujet sensible : repères généraux sans dose ni diagnostic, chaque repère renvoie vers un professionnel de santé
+    # ou vers le SAMU 1515 (voir tests/test_practical_facts.py). Il complète « sante » sans en reprendre le contenu.
+    ("premiers_secours",
+     r"premiers? secours|secourisme|first aid|"
+     r"paludisme|\bpalu\b|malaria|moustiquaires?|repulsif|anti moustiques?|mosquito|repellent|"
+     r"fievre(?! jaune)|\bfevers?\b|feverish|convulsion|"
+     r"deshydrat|dehydrat|coup de chaleur|insolation|heat ?stroke|sunstroke|heat exhaustion|"
+     r"diarrhee|diarrhoea|diarrhea|tourista|gastro enterite|\bgastro\b|vomissement|\bvomir\b|\bvomit|"
+     r"mal au ventre|maux de ventre|mal de ventre|"
+     r"morsure|mordu(e|s)? par|m a mordu|ete mordu|mordre|chien enrage|animal enrage|\brabies\b|"
+     r"(?<!en )(?<!fou de )\brage\b(?! de dents)|serpent|scorpion|"
+     r"piqure(?! de rappel)|piqu(e|ee)s? par|fait piquer|bitten|\b(dog|snake|monkey|animal) bit\b|snake ?bite|"
+     r"brulure|(?<!riz )\bbrule\b|ebouillant|"
+     r"coupure(?! (de |d )?(courant|electricite|eau|internet|reseau|wifi))|je me suis coupe|plaie|entaille|"
+     r"saignement|saigne|"
+     r"eau (est |c est |est ce )(elle )?(potable|buvable)|est elle potable|non potable|pas potable|eau buvable|"
+     r"(trouver|acheter|avoir|boire|besoin) (de )?l eau potable|eau potable (a boire|pour boire|en voyage)|"
+     r"eau saine|eau en bouteille|eau du robinet|boire l eau|eau filtree|purifier l eau|tap water|"
+     r"drinking water|bottled water|glacons|intoxication alimentaire|toxi infection|food poisoning|"
+     r"manger dans la rue|manger sans (risque|danger)|"
+     r"(risque|dangereu\w*|risqu\w+) (de |d |pour )?(manger|boire)|(manger|boire) (est il |est ce )?(dangereu\w*|risqu\w+)|"
+     r"(enfant|bebe|nourrisson|fils|fille)s? (est |est tres |semble )?malade|"
+     r"(child|baby|infant|son|daughter) (is |seems |looks )?(sick|ill)\b|"
+     r"malaise|evanou|perd\w* connaissance|inconscient",
+     ("Cadre : repères généraux d'autorités sanitaires (OMS, ministères de la Santé), qui ne remplacent pas un "
+      "professionnel de santé. Ne poser aucun diagnostic et ne donner aucune dose de médicament : au moindre doute, "
+      "voir un médecin ou un poste de santé. Signes graves (perte de connaissance, convulsions, difficulté à respirer, "
+      "saignement qui ne s'arrête pas) : SAMU 1515, gratuit même sans crédit ; donner le lieu exact (quartier, repère "
+      "connu, nom de l'hôtel), l'âge de la personne et ce qui s'est passé, suivre les consignes de l'opérateur et rester "
+      "auprès de la personne. Police 17 et pompiers 18 selon la situation.",
+      "Paludisme : transmis par des piqûres de moustiques, surtout la nuit. Signes : fièvre, frissons, maux de tête, "
+      "courbatures, nausées ou vomissements, dans les jours ou les semaines qui suivent la piqûre, y compris après le "
+      "retour de voyage. Toute fièvre doit faire consulter rapidement un professionnel de santé, qui fait un test : la "
+      "maladie peut s'aggraver en moins de 24 h et ne se soigne jamais sans avis médical (pas d'automédication). Les "
+      "enfants de moins de 5 ans, les femmes enceintes et les voyageurs sont les plus exposés aux formes graves.",
+      "Paludisme grave (SAMU 1515 ou urgences sans attendre) : fatigue extrême, confusion ou somnolence anormale, "
+      "convulsions, difficulté à respirer, urines foncées ou sanglantes, jaunisse (yeux ou peau jaunes), saignements "
+      "anormaux.",
+      "Prévention du paludisme : dormir chaque nuit sous une moustiquaire imprégnée d'insecticide (le programme "
+      "national de lutte contre le paludisme en distribue : se renseigner au poste de santé), mettre un répulsif contre "
+      "les moustiques (demander au pharmacien lequel convient à l'âge ou à la grossesse), porter des vêtements "
+      "couvrants le soir, protéger les fenêtres par des moustiquaires. Voyageur : demander à un médecin ou à un "
+      "centre de conseils aux voyageurs, avant le départ, si un traitement préventif est utile ; ne rien prendre sans "
+      "prescription. Le risque dépend de la région et de la saison (transmission surtout pendant et après la saison des "
+      "pluies).",
+      "Fièvre chez l'enfant : ne pas attendre, surtout pour un bébé ou un enfant de moins de 5 ans ; le faire examiner "
+      "rapidement dans un poste de santé, un centre de santé ou chez un médecin (test du paludisme, recherche d'autres "
+      "causes). Ne pas donner de médicament sans avis d'un médecin ou d'un pharmacien. Signes de danger (SAMU 1515 ou "
+      "urgences sans attendre) : l'enfant ne peut pas boire ni téter, vomit tout ce qu'il avale, a des convulsions, est "
+      "très somnolent, difficile à réveiller ou inconscient (signes généraux de danger de l'OMS) ; aussi difficulté à "
+      "respirer, nuque raide, taches violacées qui ne disparaissent pas quand on appuie dessus (infection grave "
+      "possible, comme une méningite).",
+      "Chaleur : boire régulièrement de l'eau sûre, rester à l'ombre aux heures chaudes, se reposer. Épuisement par la "
+      "chaleur (fatigue, vertiges, maux de tête, nausées, transpiration abondante, crampes) : se mettre au frais, "
+      "s'allonger, boire de l'eau, rafraîchir la peau ; sans amélioration en une trentaine de minutes, voir un "
+      "professionnel de santé. Coup de chaleur (peau très chaude qui ne transpire plus, confusion, convulsions, perte "
+      "de connaissance) : urgence médicale, SAMU 1515.",
+      "Déshydratation (surtout chez le bébé, l'enfant et la personne âgée) : soif intense, yeux enfoncés, agitation ou "
+      "au contraire grande somnolence, impossibilité de boire. Consulter un professionnel de santé sans attendre ; SAMU "
+      "1515 si la personne est très somnolente, confuse ou ne peut plus boire.",
+      "Diarrhée : remplacer l'eau perdue en buvant souvent ; l'OMS recommande une solution de "
+      "réhydratation orale (SRO), à utiliser exactement selon la notice du produit (demander au pharmacien). Voir un "
+      "médecin ou un poste de santé s'il y a du sang dans les selles, de la fièvre, des vomissements répétés, des "
+      "signes de déshydratation ou si la diarrhée dure plus de quelques jours, et sans attendre pour un bébé ou un "
+      "jeune enfant. Se laver les mains au savon.",
+      "Morsure ou griffure d'animal (chien, chat, singe…) : laver tout de suite la plaie à l'eau et au savon pendant au "
+      "moins 15 minutes, puis voir rapidement un professionnel de santé pour évaluer le risque de rage (vaccin "
+      "éventuel). Morsure de serpent : aller sans attendre à l'établissement de santé "
+      "le plus proche (SAMU 1515 si besoin), bouger le moins possible, retirer bagues, montre et vêtements serrés près "
+      "de la morsure ; ne pas inciser ni sucer la plaie, pas de remèdes traditionnels.",
+      "Piqûre de scorpion : toujours voir rapidement un professionnel de santé, surtout pour un enfant ; SAMU 1515 en "
+      "cas de difficulté à respirer, convulsions, raideur musculaire, vertiges ou confusion. Piqûre d'insecte : SAMU "
+      "1515 si le visage, les lèvres, la langue ou le cou gonflent, en cas de difficulté à respirer, d'urticaire "
+      "étendue ou de malaise (réaction allergique grave).",
+      "Brûlure : refroidir tout de suite sous l'eau courante tempérée (ni glacée, ni glaçons) pendant 10 à 20 minutes ; "
+      "ne pas percer les cloques et ne rien appliquer (ni beurre, ni dentifrice). Voir un professionnel de santé si la "
+      "brûlure a des cloques ; SAMU 1515 si elle est étendue, profonde, au visage, aux mains ou près "
+      "de la bouche et du nez, électrique ou chimique, ou si la victime est un jeune enfant ou une personne âgée.",
+      "Coupure : comprimer avec un linge propre pour arrêter le saignement, puis laver à l'eau propre et au savon et "
+      "protéger par un pansement propre. Voir un professionnel de santé si la plaie est profonde, sale, au visage ou "
+      "près d'une articulation, si le saignement ne s'arrête pas malgré la pression, si la vaccination contre le "
+      "tétanos n'est pas à jour ou si des signes d'infection apparaissent (douleur qui augmente, rougeur, pus, fièvre) ; "
+      "SAMU 1515 en cas de saignement abondant ou de perte de connaissance.",
+      "Eau et aliments : boire de l'eau en bouteille scellée ou de l'eau bouillie (au moins 1 minute à gros bouillons) ; "
+      "une eau d'apparence claire n'est pas forcément sûre. Éviter les glaçons dont l'origine est incertaine ; manger "
+      "des aliments bien cuits et servis chauds, éplucher ou bien laver à l'eau sûre les fruits et légumes, éviter "
+      "viandes, poissons et œufs peu cuits, se laver les mains avant de manger. Si des troubles apparaissent après un "
+      "repas, voir un professionnel de santé.",
+      "Voyageur : avant le départ, vérifier que l'assurance couvre les soins et le rapatriement sanitaire ; en cas "
+      "d'hospitalisation ou de problème grave, prévenir son ambassade ou son consulat (urgence médicale : SAMU 1515).")),
     ("argent", r"\beuros?\b|fcfa|\bcfa\b|\bfrancs? cfa\b|\bxof\b|taux de change|\bchange\b|convert|dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
      r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit",
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
@@ -309,7 +416,7 @@ _MOBILE_MONEY_WORDS = re.compile(
     r"\benvoi\b|retrait|depot|solde|fcfa|appli\w*"
 )
 # Sujets précis : ils passent avant les sujets généraux (« perdu », « payer », « aéroport »…) quand la limite coupe.
-_SPECIFIC_FIRST = ("arnaques", "mobile_money", "papiers", "factures", "protection", "etudes")
+_SPECIFIC_FIRST = ("premiers_secours", "arnaques", "mobile_money", "papiers", "factures", "protection", "etudes")
 
 
 def matching_topics(question: str, limit: int = 3) -> list[str]:
