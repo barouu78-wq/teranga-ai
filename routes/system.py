@@ -22,6 +22,25 @@ def _related_android_app():
     }]}
 
 
+def google_verification(raw: str) -> tuple[list[str], list[str]]:
+    """Codes de la balise HTML et noms de fichiers HTML de la Search Console.
+
+    Accepte ce que l'on colle d'habitude : le code seul, la balise entière
+    (<meta … content="code">), « google-site-verification=code » ou le nom du
+    fichier (google1234abcd.html). Plusieurs valeurs séparées par des virgules.
+    """
+    codes, files = [], []
+    for item in re.split(r",(?![^<]*>)", raw or ""):
+        item = item.strip().strip("'\"")
+        found = re.search(r'content\s*=\s*["\']([^"\']+)', item)
+        value = (found.group(1) if found else item.split("google-site-verification=", 1)[-1]).strip()
+        if re.fullmatch(r"google[0-9a-z]{6,40}\.html", value, re.I):
+            files.append(value)
+        elif re.fullmatch(r"[A-Za-z0-9_-]{10,100}", value):
+            codes.append(value)
+    return codes, files
+
+
 def register_system_routes(app, deps):
     indexnow_key = deps["indexnow_key"]
     issue_csrf = deps["issue_csrf"]
@@ -206,10 +225,15 @@ def register_system_routes(app, deps):
     # Codes Google Search Console supplémentaires (GOOGLE_SITE_VERIFICATION sur
     # l'hébergeur, séparés par des virgules) : un autre compte Google peut ainsi
     # valider le site sans modifier le code.
-    extra_codes = [
-        code.strip() for code in os.getenv("GOOGLE_SITE_VERIFICATION", "").split(",")
-        if re.fullmatch(r"[A-Za-z0-9_-]{10,100}", code.strip())
-    ]
+    extra_codes, verification_files = google_verification(os.getenv("GOOGLE_SITE_VERIFICATION", ""))
+    # Méthode « Fichier HTML » de la Search Console : seul le fichier configuré
+    # sur l'hébergeur existe (sinon n'importe qui pourrait revendiquer le site).
+    for file_name in verification_files:
+        app.add_url_rule(
+            f"/{file_name}", f"google_verification_{file_name}",
+            lambda name=file_name: Response(f"google-site-verification: {name}", mimetype="text/html"),
+        )
+
     home_html = home_html.replace("__EXTRA_VERIFICATION__", "".join(
         f'<meta name="google-site-verification" content="{code}">' for code in extra_codes
     ))
