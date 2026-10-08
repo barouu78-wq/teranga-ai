@@ -23,7 +23,9 @@ def clean_answer(text: object) -> str:
     text = re.sub(r"`([^`]+)`", r"\1", text)
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
     text = re.sub(r"__(.*?)__", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)", r"\1", text)
+    # Un « * » n'ouvre une emphase que s'il est collé au mot qui suit (et ne la ferme que s'il est
+    # collé au mot qui précède) : « 2 adultes * 3 nuits * 45 000 » garde ses signes de multiplication.
+    text = re.sub(r"(?<![\w*])\*(?![\s*])(.+?)(?<![\s*])\*(?![\w*])", r"\1", text)
     text = re.sub(r"(?<!_)_(?!_)(.+?)(?<!_)_(?!_)", r"\1", text)
     text = text.replace("**", "").replace("__", "")
     # Listes : « - » ou « * » deviennent « • » (plus lisible que des lignes nues ; la voix les ignore).

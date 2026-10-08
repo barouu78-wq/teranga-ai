@@ -40,3 +40,15 @@ def test_google_same_thumbnail_twice_is_still_deduplicated():
         _google_item("Corniche de Dakar (copie)", thumb, "https://b.example/dakar-1"),
     ])
     assert [p["alt"] for p in photos] == ["Corniche de Dakar"]
+
+
+from services.text import clean_answer  # noqa: E402
+
+
+def test_clean_answer_keeps_multiplication_signs():
+    calcul = "Calcul : 2 adultes * 3 nuits * 45 000 FCFA = 270 000 FCFA"
+    assert clean_answer(calcul) == calcul
+    # Le vrai italique est toujours retiré, y compris collé à la ponctuation.
+    assert clean_answer("Un *très* beau lieu, *vraiment*.") == "Un très beau lieu, vraiment."
+    # Les puces en « * » deviennent des « • ».
+    assert clean_answer("* Plage\n* Marché") == "• Plage\n• Marché"
