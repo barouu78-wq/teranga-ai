@@ -134,7 +134,10 @@ def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
             + "</urlset>"
         )
         if lastmod:
-            body = body.replace("</loc>", f"</loc><lastmod>{lastmod}</lastmod>")
+            body = body.replace(
+                "</url>",
+                f"<lastmod>{lastmod}</lastmod></url>",
+            )
         return Response(
             body,
             mimetype="application/xml",
