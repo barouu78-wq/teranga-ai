@@ -554,8 +554,11 @@ def rate_guard(bucket):
     for window, limit, suffix, retry in ((60, per_minute, "", "15"), (3600, per_hour, "_hour", "300")):
         for key, name in ((ip, bucket + suffix), (identity, bucket + suffix + "_identity")):
             if not allowed_request(key, guarded_request_log[name + ":" + key], limit, window, name):
-                record_abuse(ip, bucket + "_rate", 2)
-                record_abuse(identity, bucket + "_identity_rate", 1)
+                # Une page tierce peut déclencher des GET (<img>) : ils sont limités, mais ne comptent pas
+                # dans le score qui bloque le visiteur sur toutes les routes.
+                if request.method not in ("GET", "HEAD"):
+                    record_abuse(ip, bucket + "_rate", 2)
+                    record_abuse(identity, bucket + "_identity_rate", 1)
                 return jsonify({"error": "Trop de demandes. Réessaie dans un instant."}), 429, {"Retry-After": retry}
     return None
 

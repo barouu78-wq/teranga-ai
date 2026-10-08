@@ -71,7 +71,7 @@ def sign_answer(secret: str, question: str, answer: str, sources=None, language:
 
 def open_token(secret: str, token: object) -> dict | None:
     token = str(token or "").strip()
-    if not secret or not token or len(token) > MAX_TOKEN or token.count(".") != 1:
+    if not secret or not token or len(token) > MAX_TOKEN or token.count(".") != 1 or not token.isascii():
         return None
     data, mac = token.split(".")
     if not hmac.compare_digest(mac, _mac(secret, data)):

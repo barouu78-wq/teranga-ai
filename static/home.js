@@ -175,7 +175,7 @@ async function loadFx(){
     if(res.ok){
       const data=await res.json();
       if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};
-      const ref=data.date?('Taux de référence du '+data.date):'Taux de référence BCEAO';
+      const ref=data.date?('Taux de référence du '+data.date):(data.live===false?(lang==='en'?'Indicative rate (BCEAO unavailable)':'Taux indicatif (BCEAO indisponible)'):'Taux de référence BCEAO');
       const checked=formatFxDate(data.checked_at);
       $('fxUpdated').textContent=checked
         ? (lang==='en' ? ref.replace('Taux de référence du ','Reference rate ')+' · checked '+checked
