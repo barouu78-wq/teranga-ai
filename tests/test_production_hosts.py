@@ -117,3 +117,11 @@ def test_google_verification_html_file_served_only_when_configured():
     assert result.stdout.splitlines() == [
         "200 google-site-verification: google1a2b3c4d5e6f7a8b.html", "404", "True",
     ]
+
+
+def test_google_verification_ignores_duplicates():
+    from routes.system import google_verification
+
+    code = "AbC_123-xyz987654"
+    assert google_verification(f"{code}, {code}") == ([code], [])
+    assert google_verification("google1a2b3c4d5e6f7a8b.html,google1a2b3c4d5e6f7a8b.html") == ([], ["google1a2b3c4d5e6f7a8b.html"])

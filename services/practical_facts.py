@@ -12,6 +12,15 @@ import re
 
 from services.text import fold_text
 
+# Sources des repères « papiers », « factures », « protection » et « études » (relevées en octobre 2026 ; ce sont
+# des articles de presse et des documents officiels relayés, pas les sites des administrations : d'où les
+# formulations « annoncé » et « à vérifier »). Carte d'identité : communiqué de la DAF relayé par APA
+# (fr.apanews.net) et loi n° 2016-09 (vie-publique.sn). État civil : guides de démarches, plateforme Sama État
+# civil (allafrica.com, 17/02/2026). e-Senegal et casier judiciaire : senego.com, mars 2026. Woyofal : Senelec,
+# communiqué du 15/10/2024 relayé par senego.com, et grille tarifaire CRSE du 01/01/2026. CMU : Cour des comptes
+# (vie-publique.sn), Agence de la CMU (décret 2015-21). CSS et IPRES : CLEISS et presse 2025-2026 (étude d'une
+# fusion demandée en juin 2025, système d'information commun fin 2025). Campusen : calendrier 2026 (senego.com,
+# lesoleil.sn), orientation.campusen.sn. Alerte de la Direction des bourses : février 2026 (presse).
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
     ("urgences", r"urgen|police|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
@@ -63,7 +72,7 @@ TOPICS = (
       "NINEA (identifiant fiscal) et un RCCM ; le guichet unique de l'APIX centralise les formalités à Dakar. "
       "Accompagnement possible : DER/FJ, FONGIP (garantie), chambres de commerce. Vérifier les conditions actuelles.",)),
     ("transport", r"\btaxis?\b|sept places|7 places|\bter\b|\bbrt\b|\bbus\b|dem dikk|aibd|aeroport|airport|ferry|chaloupe|bateau|"
-     r"voiture|location|car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
+     r"voiture|\blocations?\b|car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
      ("AIBD (aéroport Blaise Diagne) : à Diass, environ 45 km du centre de Dakar par l'autoroute à péage.",
       "Taxis sans compteur : fixer le prix avant de monter ; applications Yango ou Heetch avec prix affiché.",
       "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio (vérifier si le prolongement vers "
@@ -90,7 +99,7 @@ TOPICS = (
     ("papiers", r"carte (nationale )?d identite|\bcni\b|carte biometrique|passeport (senegalais|biometrique)|"
      r"(renouvel\w*|refaire|obtenir|perdu|perdre|duplicata|demande de) (\w+ ){0,2}passeport|senegalese (passport|id)|"
      r"acte de naissance|extrait de naissance|copie litterale|jugement suppletif|etat civil|casier judiciaire|"
-     r"certificat de nationalite|\be senegal\b|\bnin\b|livret de famille|\bdaf\b",
+     r"certificat de nationalite|\be senegal\b|\bnin\b|livret de famille|automatisation des fichiers",
      ("Carte d'identité biométrique CEDEAO : valable 10 ans (loi n° 2016-09). Le renouvellement des cartes délivrées en "
       "2016 a été annoncé à partir du 25 septembre 2026, dans les centres d'enrôlement au Sénégal et à l'étranger. "
       "Pièces annoncées : l'ancienne carte (avec copie) et un extrait de naissance avec sa copie littérale ; retrait "
@@ -124,7 +133,7 @@ TOPICS = (
       "depuis le 1er janvier 2026 : le nombre de kWh par franc peut avoir changé.",
       "Numéro du service client : le vérifier sur senelec.sn ou en agence (ne pas se fier à un annuaire non officiel).")),
     ("protection", r"\bcmu\b|couverture maladie|assurance maladie|mutuelle de sante|bourse de securite familiale|\bbsf\b|"
-     r"plan sesame|gratuite des soins|\bipres\b|\bcss\b|securite sociale|pension de retraite|cotisation retraite|"
+     r"plan sesame|gratuite des soins|\bipres\b|securite sociale|pension de retraite|cotisation retraite|"
      r"allocations familiales|health insurance",
      ("Santé : la couverture maladie universelle (CMU), lancée en 2013 et coordonnée par l'Agence de la CMU (créée en "
       "2015), s'appuie sur des mutuelles de santé communautaires pour les travailleurs informels et ruraux (cotisation "
@@ -159,7 +168,17 @@ _COMPILED = tuple((name, re.compile(pattern), facts) for name, pattern, facts in
 _fold = fold_text
 
 
-_ENTRY_WORDS = re.compile(r"\bvisas?\b|entrer|entry|touriste|tourist|voyager|voyage")
+_ENTRY_WORDS = re.compile(
+    r"\bvisas?\b|entrer|entry|touriste|tourist|voyag\w*|venir|aller|partir|arriver|visiter|sejour\w*|"
+    r"avant de|pour le senegal|to senegal|travel\w*"
+)
+# Un voyageur étranger qui perd « son passeport français » n'a pas besoin de la procédure sénégalaise.
+_FOREIGN_TRAVELLER = re.compile(
+    r"\b(francais\w*|americain\w*|belge|canadien\w*|britannique|suisse|allemand\w*|italien\w*|espagnol\w*|"
+    r"french|american|british|german|canadian|touriste\w*|tourist\w*|foreigner)\b"
+)
+# Sujets précis : ils passent avant les sujets généraux (« perdu », « payer », « aéroport »…) quand la limite coupe.
+_SPECIFIC_FIRST = ("papiers", "factures", "protection", "etudes")
 
 
 def matching_topics(question: str, limit: int = 3) -> list[str]:
@@ -168,6 +187,9 @@ def matching_topics(question: str, limit: int = 3) -> list[str]:
     # « Renouveler mon passeport sénégalais » parle de papiers, pas du visa d'entrée d'un touriste.
     if "papiers" in names and "visa" in names and not _ENTRY_WORDS.search(folded):
         names.remove("visa")
+    if "papiers" in names and _FOREIGN_TRAVELLER.search(folded) and "senegalais" not in folded:
+        names.remove("papiers")
+    names.sort(key=lambda name: name not in _SPECIFIC_FIRST)  # tri stable : l'ordre du tableau est gardé ensuite
     return names[:limit]
 
 
