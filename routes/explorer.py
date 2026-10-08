@@ -70,7 +70,8 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
                         try:
                             remaining = int(redis_client.ttl(_redis_key(key)))
                             ttl = remaining if remaining > 0 else ttl
-                        except Exception:
+                        # La durée Redis est facultative : on garde la valeur par défaut.
+                        except Exception:  # nosec B110
                             pass
                         with cache_lock:
                             cache[key] = (now + ttl, [dict(item) for item in images])

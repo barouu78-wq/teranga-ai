@@ -13,7 +13,8 @@ commentaires de code en français.
 ```bash
 pip install -r requirements-dev.txt
 ruff check --select E9,F63,F7,F82,F401,F811,F841 .
-pytest -q                     # ~1000 tests, < 1 min, aucun appel réseau réel
+bandit -q -r app.py routes services -ll   # failles courantes ; une alerte volontaire se justifie par « # nosec Bxxx - raison »
+pytest -q --cov=app --cov=routes --cov=services --cov-fail-under=85   # ~1000 tests, < 1 min, aucun appel réseau réel
 pytest -q tests/e2e           # clics réels dans Chromium (Playwright)
 node --check static/home.js static/trip-planner.js
 ```
