@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 import os
 import re
 from html import escape
@@ -14,7 +15,7 @@ from services.click_stats import ClickStats
 from services.partner_requests import KINDS, PartnerRequests
 
 from services.monetization import affiliate_config, affiliate_target, clean_query
-from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header, social_meta
 
 OFFERS = (
     (
@@ -72,15 +73,27 @@ def _request_form() -> str:
 </form><script src="{asset_url('partner-form.js')}" defer></script>"""
 
 
-def render_offers_page() -> str:
+OFFERS_TITLE = "Devenir partenaire : hôtels, guides, restaurants | Teranga AI"
+OFFERS_DESCRIPTION = "Faites connaître votre hôtel, restaurant, agence ou service de guide auprès des voyageurs qui préparent leur séjour au Sénégal avec Teranga AI."
+
+
+def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
     cards = "".join(
         f'<div class="card"><h3>{escape(title)}</h3><p>{escape(text)}</p></div>' for title, text in OFFERS
     )
+    url = site_url.rstrip("/") + "/offres-partenaires"
+    ld = json.dumps(
+        {"@context": "https://schema.org", "@type": "WebPage", "name": OFFERS_TITLE, "url": url, "inLanguage": "fr",
+         "description": OFFERS_DESCRIPTION, "isPartOf": {"@type": "WebSite", "name": "Teranga AI", "url": site_url.rstrip("/") + "/"}},
+        ensure_ascii=False,
+    ).replace("<", "\\u003c")
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Devenir partenaire : hôtels, guides, restaurants | Teranga AI</title>
-<meta name="description" content="Faites connaître votre hôtel, restaurant, agence ou service de guide auprès des voyageurs qui préparent leur séjour au Sénégal avec Teranga AI.">
-<meta name="robots" content="index,follow">{HEAD_ASSETS}</head>
+<title>{escape(OFFERS_TITLE)}</title>
+<meta name="description" content="{escape(OFFERS_DESCRIPTION)}">
+<link rel="canonical" href="{escape(url)}">
+<meta name="robots" content="index,follow">{social_meta(OFFERS_TITLE, OFFERS_DESCRIPTION, url, site_url)}{HEAD_ASSETS}
+<script type="application/ld+json">{ld}</script></head>
 <body>{site_header()}<main><article><div class="kicker">Professionnels du tourisme</div>
 <h1>Devenir partenaire de Teranga AI</h1>
 <p class="intro">Chaque jour, des voyageurs et des membres de la diaspora demandent à Teranga AI où dormir, quoi visiter et qui contacter au Sénégal. Soyez la réponse.</p>
@@ -148,7 +161,7 @@ def _clean(value, limit: int) -> str:
     return re.sub(r"\s{2,}", " ", text)[:limit]
 
 
-def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=(), require_json_post=None):
+def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=(), require_json_post=None, site_url="https://teranga-ai.fr"):
     stats = ClickStats(redis_client, app.logger)
     partner_requests = PartnerRequests(redis_client, app.logger)
     # Seules les pages d'origine connues (fiches de lieux) sont comptées à part :
@@ -192,7 +205,7 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
 
     @app.get("/offres-partenaires")
     def partner_offers():
-        return Response(render_offers_page(), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+        return Response(render_offers_page(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
     def partner_request():
         if rate_guard is not None:
