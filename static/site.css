@@ -3,12 +3,12 @@
 @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("/static/fonts/atkinson-hyperlegible-700.woff2") format("woff2")}
 @font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
-  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#17756b;
+  --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
   /* Jour : « Terre de Teranga ». */
   --bg:#fbf3e6;--surface:#fffaf2;--surface-2:#f6e6cf;--ink:#2b1a10;--muted:#7a5a44;
   --line:rgba(122,44,16,.13);--line-strong:rgba(122,44,16,.24);
-  --accent:#17756b;--accent-ink:#ffffff;--accent-soft:rgba(23,117,107,.12);--link:#136259;
-  --gold:#136259;--gold-soft:rgba(23,117,107,.14);
+  --accent:#b5451b;--accent-ink:#ffffff;--accent-soft:rgba(181,69,27,.12);--link:#a33d17;
+  --gold:#9a5a0c;--gold-soft:rgba(201,125,18,.18);
   --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);--shadow:0 14px 40px rgba(122,44,16,.12);
   --radius:18px;--radius-lg:26px;
   --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -20,12 +20,12 @@
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
   --line:#2b2e35;--line-strong:#3a3e46;
-  --accent:#4fb3a8;--accent-ink:#0b1a18;--link:#7fd0c6;--accent-soft:rgba(79,179,168,.16);--gold:#7fd0c6;--gold-soft:rgba(79,179,168,.14);--nav-gold:#7fd0c6;--sen-gold:#e7bb63;
+  --accent:#e3a33b;--accent-ink:#111215;--link:#e7bb63;--accent-soft:rgba(217,164,65,.16);--gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
   --line:#2b2e35;--line-strong:#3a3e46;
-  --accent:#4fb3a8;--accent-ink:#0b1a18;--link:#7fd0c6;--accent-soft:rgba(79,179,168,.16);--gold:#7fd0c6;--gold-soft:rgba(79,179,168,.14);--nav-gold:#7fd0c6;--sen-gold:#e7bb63;
+  --accent:#e3a33b;--accent-ink:#111215;--link:#e7bb63;--accent-soft:rgba(217,164,65,.16);--gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);color-scheme:dark}
 
 *,*::before,*::after{box-sizing:border-box}
