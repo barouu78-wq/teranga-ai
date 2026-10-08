@@ -59,3 +59,37 @@ def test_passport_of_a_senegalese_is_not_an_entry_visa_question():
     assert "visa" not in matching_topics("Comment renouveler mon passeport sénégalais ?")
     assert "visa" in matching_topics("Faut-il un visa et un passeport pour le Sénégal ?")
     assert "visa" in matching_topics("Faut-il un passeport pour aller au Sénégal ?")
+
+
+def test_foreign_traveller_does_not_get_the_senegalese_papers_procedure():
+    assert "papiers" not in matching_topics("J'ai perdu mon passeport français à Dakar")
+    assert "papiers" not in matching_topics("My American passport was stolen in Dakar")
+    assert "papiers" in matching_topics("Je suis français d'origine sénégalaise, comment renouveler ma carte d'identité sénégalaise ?")
+
+
+def test_entry_questions_keep_the_visa_facts():
+    for question in ("Faut-il refaire mon passeport avant de venir au Sénégal ?",
+                     "Comment obtenir un passeport pour aller au Sénégal ?",
+                     "Passeport et visa pour un séjour de 10 jours"):
+        assert "visa" in matching_topics(question), question
+
+
+def test_short_acronyms_and_inner_words_do_not_trigger_social_or_paper_topics():
+    for question in ("Où apprendre le HTML et le CSS à Dakar ?", "Offre d'emploi directeur DAF"):
+        assert matching_topics(question) == [], question
+    # « allocations » contient « location » : pas de faits de transport.
+    assert matching_topics("Quelles allocations familiales pour mes enfants ?") == ["protection"]
+    assert "transport" in matching_topics("Je veux une location de voiture")
+
+
+def test_specific_topics_are_kept_when_general_words_fill_the_limit():
+    topics = matching_topics("Perdu ma carte d'identité à l'aéroport, comment la refaire, payer en euros ?")
+    assert topics[0] == "papiers" and len(topics) == 3
+
+
+def test_demarches_questions_trigger_a_live_web_check():
+    from services.web_policy import should_use_web
+
+    for question in ("Comment renouveler ma carte d'identité ?", "Comment avoir un extrait de naissance ?",
+                     "Comment recharger mon compteur Woyofal ?", "C'est quoi Campusen ?", "Où faire mon casier judiciaire ?"):
+        assert should_use_web(question), question

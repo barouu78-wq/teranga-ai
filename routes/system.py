@@ -38,7 +38,8 @@ def google_verification(raw: str) -> tuple[list[str], list[str]]:
             files.append(value)
         elif re.fullmatch(r"[A-Za-z0-9_-]{10,100}", value):
             codes.append(value)
-    return codes, files
+    # Un même code ou fichier collé deux fois ne doit ni se répéter dans la page ni faire échouer le démarrage.
+    return list(dict.fromkeys(codes)), list(dict.fromkeys(files))
 
 
 def register_system_routes(app, deps):

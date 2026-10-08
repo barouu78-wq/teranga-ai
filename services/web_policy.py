@@ -122,6 +122,10 @@ def should_use_web(message, context=""):
         "magal", "tabaski", "korite", "gamou", "ramadan", "careme",
         "aides", "subvention", "subventions", "financement", "financements",
         "bourse", "bourses", "appel a projets", "appels a projets",
+        # Démarches : les repères du site sont un point de départ, les règles et dates se vérifient en ligne.
+        "carte d'identité", "carte d'identite", "carte d identite", "carte nationale", "extrait de naissance", "acte de naissance",
+        "casier judiciaire", "jugement supplétif", "jugement suppletif", "woyofal", "senelec", "campusen",
+        "couverture maladie", "ipres", "securite sociale", "sécurité sociale",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
