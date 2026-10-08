@@ -52,3 +52,12 @@ def test_clean_answer_keeps_multiplication_signs():
     assert clean_answer("Un *très* beau lieu, *vraiment*.") == "Un très beau lieu, vraiment."
     # Les puces en « * » deviennent des « • ».
     assert clean_answer("* Plage\n* Marché") == "• Plage\n• Marché"
+
+
+def test_clean_answer_keeps_underscores_inside_identifiers():
+    # Identifiants, adresses e-mail et noms de fichier contiennent des « _ » qui ne sont pas de l'italique.
+    assert clean_answer("Instagram : @teranga_ai_sn") == "Instagram : @teranga_ai_sn"
+    assert clean_answer("Écris à jean_pierre_diop@exemple.sn") == "Écris à jean_pierre_diop@exemple.sn"
+    assert clean_answer("Fichier ma_liste_courses.pdf") == "Fichier ma_liste_courses.pdf"
+    # Le vrai italique en « _ » est toujours retiré.
+    assert clean_answer("Un mot _souligné_ ici (_aussi_).") == "Un mot souligné ici (aussi)."
