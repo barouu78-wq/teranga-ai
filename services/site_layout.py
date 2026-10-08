@@ -38,6 +38,17 @@ def asset_url(name: str) -> str:
 
 HEAD_ASSETS = f'<link rel="stylesheet" href="{asset_url("site.css")}"><script src="{asset_url("theme.js")}"></script>'
 
+def social_meta(title: str, description: str, url: str, site_url: str, og_type: str = "website") -> str:
+    """Balises Open Graph et Twitter : aperçu des liens partagés (WhatsApp, Facebook, X…)."""
+    t, d, u = escape(title), escape(description), escape(url)
+    return (
+        f'<meta property="og:site_name" content="Teranga AI"><meta property="og:type" content="{escape(og_type)}">'
+        f'<meta property="og:title" content="{t}"><meta property="og:description" content="{d}">'
+        f'<meta property="og:url" content="{u}"><meta property="og:image" content="{escape(site_url.rstrip("/"))}/og.png">'
+        '<meta name="twitter:card" content="summary_large_image">'
+    )
+
+
 _MARK = (
     '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" '
     'stroke="#f6e7c2" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="5" r="1.8" fill="#e2b34a"/></svg>'

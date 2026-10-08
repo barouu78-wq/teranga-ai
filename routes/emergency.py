@@ -12,7 +12,7 @@ from html import escape
 
 from flask import Response
 
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, site_footer, site_header, social_meta
 
 # (numéro affiché, numéro à composer, service, quand appeler)
 EMERGENCY_NUMBERS = (
@@ -67,7 +67,7 @@ def render_emergency_page(site_url: str) -> str:
 <title>{escape(TITLE)}</title>
 <meta name="description" content="{escape(DESCRIPTION)}">
 <link rel="canonical" href="{escape(site_url.rstrip('/'))}/urgences">
-<meta name="robots" content="index,follow">{HEAD_ASSETS}
+<meta name="robots" content="index,follow">{social_meta(TITLE, DESCRIPTION, site_url.rstrip('/') + '/urgences', site_url)}{HEAD_ASSETS}
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script></head>
 <body>{site_header()}<main><article><div class="kicker">Sécurité</div>
 <h1>Urgences et numéros utiles au Sénégal</h1>

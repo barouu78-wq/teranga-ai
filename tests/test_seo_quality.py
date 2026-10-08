@@ -39,6 +39,26 @@ def test_every_sitemap_page_has_a_google_friendly_title_and_description():
     assert problems == []
 
 
+def test_every_sitemap_page_has_canonical_and_share_tags():
+    """Chaque page indexable a une URL canonique et un aperçu de partage (WhatsApp, Facebook, X)."""
+    client = _client()
+    _, paths = _sitemap_paths(client)
+    problems = []
+    for path in paths:
+        page = client.get(path, base_url=B).get_data(as_text=True)
+        canonical = re.search(r'<link rel="canonical" href="([^"]*)"', page)
+        if not canonical or canonical.group(1).rstrip("/") != (B + path).rstrip("/"):
+            problems.append((path, "canonical"))
+        for tag in ("og:title", "og:description", "og:url", "og:image", "og:type"):
+            if f'property="{tag}"' not in page:
+                problems.append((path, tag))
+        if 'name="twitter:card"' not in page:
+            problems.append((path, "twitter:card"))
+        if 'application/ld+json' not in page:
+            problems.append((path, "json-ld"))
+    assert problems == []
+
+
 def test_place_page_has_faq_from_its_own_data():
     page = _client().get("/lieux/goree", base_url=B).get_data(as_text=True)
     assert "<h2>Questions fréquentes</h2>" in page and "Comment aller à Île de Gorée ?" in page

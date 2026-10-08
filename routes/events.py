@@ -10,7 +10,7 @@ from urllib.parse import quote
 from flask import Response
 
 from services.events import TYPE_LABELS, french_date, upcoming_events
-from services.site_layout import HEAD_ASSETS, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, site_footer, site_header, social_meta
 
 TITLE = "Fêtes au Sénégal : Magal, Tabaski, Korité, Gamou | Teranga AI"
 DESCRIPTION = (
@@ -65,7 +65,7 @@ def render_events_page(site_url: str, today: _dt.date | None = None) -> str:
 <title>{escape(TITLE)}</title>
 <meta name="description" content="{escape(DESCRIPTION)}">
 <link rel="canonical" href="{escape(site_url.rstrip('/'))}/calendrier-fetes-senegal">
-<meta name="robots" content="index,follow">{HEAD_ASSETS}
+<meta name="robots" content="index,follow">{social_meta(TITLE, DESCRIPTION, site_url.rstrip('/') + '/calendrier-fetes-senegal', site_url)}{HEAD_ASSETS}
 <script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script></head>
 <body>{site_header()}<main><article><div class="kicker">Calendrier</div>
 <h1>Fêtes et événements au Sénégal</h1>
