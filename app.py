@@ -817,7 +817,7 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json", "partners.json") if (BASE_DIR / "data" / name).exists())
     + SYSTEM_PROMPT.encode("utf-8")
     # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
-    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py"))
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py"))
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
 ).hexdigest()[:12]
 

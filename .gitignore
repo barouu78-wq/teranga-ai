@@ -7,3 +7,9 @@ venv/
 .env.*
 !.env.example
 .DS_Store
+
+# Mesure de couverture des tests (pytest-cov) : fichiers temporaires
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
