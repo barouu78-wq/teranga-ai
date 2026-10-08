@@ -87,6 +87,91 @@ def test_specific_topics_are_kept_when_general_words_fill_the_limit():
     assert topics[0] == "papiers" and len(topics) == 3
 
 
+def test_scam_topic_is_detected_in_real_questions():
+    for question in ("Quelles arnaques à éviter à Dakar pour un touriste ?",
+                     "On m'a demandé un code reçu par SMS, c'est une arnaque ?",
+                     "Comment reconnaître un faux billet de 10 000 FCFA ?",
+                     "Un faux policier m'a demandé de l'argent",
+                     "J'ai reçu un SMS d'amende avec un lien de paiement",
+                     "Un intermédiaire me promet un visa contre de l'argent",
+                     "Un faux recruteur me demande de payer pour un emploi en Europe",
+                     "Comment louer un appartement à Dakar à distance ?",
+                     "On me demande un acompte avant la visite de l'appartement",
+                     "Mon frère m'écrit d'un nouveau numéro et demande de l'argent en urgence",
+                     "Mon compte WhatsApp a été piraté",
+                     "Common scams for tourists in Senegal"):
+        assert "arnaques" in matching_topics(question), question
+    assert "carte professionnelle" in practical_context("Un faux policier m'a arrêté, que faire ?")
+
+
+def test_mobile_money_topic_is_detected_in_real_questions():
+    for question in ("Comment fonctionne Wave ?", "C'est quoi Orange Money ?", "C'est quoi Free Money ?",
+                     "Comment protéger mon code secret Orange Money ?",
+                     "J'ai envoyé de l'argent au mauvais numéro",
+                     "Quelqu'un dit m'avoir envoyé de l'argent par erreur et me demande de le renvoyer",
+                     "Comment payer avec Wave à Ngor ?", "Où se plaindre contre un opérateur de mobile money ?"):
+        assert "mobile_money" in matching_topics(question), question
+    assert "Free Sénégal est devenu Yas" in practical_context("Comment fonctionne Free Money ?")
+
+
+def test_scam_and_mobile_money_topics_do_not_fire_on_everyday_phrases():
+    # « vol » dans « volontaire », film ou série intitulés « Arnaque », billet d'avion, fraude électorale ou fiscale,
+    # code postal, tirage au sort, vague de surf, opérateur de réseau sans argent mobile.
+    for question in ("Qui joue dans le film L'Arnaque avec Paul Newman ?",
+                     "Que penser de la série Netflix sur une arnaque financière ?",
+                     "Je suis volontaire pour une ONG au Sénégal", "Je cherche un billet d'avion pour Dakar",
+                     "Y a-t-il de la fraude électorale au Sénégal ?", "Je m'intéresse à la fraude fiscale au Sénégal",
+                     "Quel est le code postal de Dakar ?", "Comment fonctionne le tirage au sort de la CAN ?",
+                     "Peut-on louer un appartement à Dakar pour un mois ?", "J'ai trouvé une annonce pour louer une maison à Saly",
+                     "Où trouver un logement avant la visite de Saint-Louis ?",
+                     "Quel est le meilleur moment pour surfer la vague de Ngor ?",
+                     "Mon opérateur Orange a-t-il du réseau à Kédougou ?", "Comment faire un virement vers la France ?"):
+        topics = matching_topics(question)
+        assert "arnaques" not in topics and "mobile_money" not in topics, (question, topics)
+    # Wave seul, au sens de la vague de surf : le sujet argent mobile n'est pas ajouté ; avec un mot d'argent, il l'est.
+    assert "mobile_money" not in matching_topics("Le surf à Ngor : la wave est-elle bonne en novembre ?")
+    assert "mobile_money" in matching_topics("Le surf à Ngor est sympa, mais puis-je payer avec Wave ?")
+    # Une question qui parle réellement de fraude garde le sujet même si elle cite un film.
+    assert "arnaques" in matching_topics("Après le film, j'ai reçu un SMS avec un code secret demandé par un faux agent")
+
+
+def test_scam_and_mobile_money_topics_come_before_general_ones_when_the_limit_cuts():
+    topics = matching_topics("Un faux policier m'a arrêté à l'aéroport en taxi, j'ai payé en euros via Wave")
+    assert topics[:2] == ["arnaques", "mobile_money"] and len(topics) == 3
+    assert matching_topics("Fraude au mobile money, que faire ?")[:2] == ["arnaques", "mobile_money"]
+
+
+def test_scam_and_mobile_money_facts_cite_no_amount_phone_number_or_named_culprit():
+    import re
+
+    from services.practical_facts import TOPICS
+
+    for name, _, facts in TOPICS:
+        if name not in ("arnaques", "mobile_money"):
+            continue
+        text = " ".join(facts)
+        assert "FCFA" not in text and "%" not in text, name
+        # Aucun numéro de téléphone ni montant : seuls le 17 de la police et des années sont autorisés.
+        assert not re.search(r"\d{3,}\s?\d{2,}|\b\d{1,3}(?:[ .]\d{3})+\b", text), name
+        assert not re.search(r"\b(?!20\d\d\b)\d{3,}\b", text), name
+        # Ni site, ni entreprise, ni personne désignés comme fraudeurs : seulement des mécanismes et des réflexes.
+        for forbidden in ("Senevisa", "Sonatel", "Wave Mobile Money", "amendes-sn", "http"):
+            assert forbidden not in text, (name, forbidden)
+        assert "à vérifier" in text or "se vérifient" in text or "vérifier" in text, name
+
+
+def test_scam_and_mobile_money_questions_trigger_a_live_web_check():
+    from services.web_policy import should_use_web
+
+    for question in ("Quelles arnaques à éviter à Dakar ?", "C'est une escroquerie ce message ?",
+                     "Comment reconnaître un faux billet ?", "Qu'est-ce que le hameçonnage ?",
+                     "Où faire une réclamation contre mon opérateur ?", "Fraude au mobile money, que faire ?",
+                     "Quelqu'un me demande mon code secret", "Un faux visa m'a été proposé", "C'est quoi Yas Money ?"):
+        assert should_use_web(question), question
+    for question in ("Quelle est la capitale du Sénégal ?", "Qui est Léopold Sédar Senghor ?"):
+        assert not should_use_web(question), question
+
+
 def test_demarches_questions_trigger_a_live_web_check():
     from services.web_policy import should_use_web
 
