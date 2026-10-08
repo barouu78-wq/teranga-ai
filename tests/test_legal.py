@@ -60,7 +60,7 @@ def test_manifest_uses_the_new_brand_colors():
     from app import app
 
     manifest = app.test_client().get("/manifest.webmanifest").get_json()
-    assert manifest["theme_color"] == "#b5451b" and manifest["background_color"] == "#fbf3e6"
+    assert manifest["theme_color"] == "#17756b" and manifest["background_color"] == "#fbf3e6"
 
 
 def test_manifest_has_store_ready_screenshots_and_shortcuts():
