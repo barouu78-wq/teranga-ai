@@ -495,3 +495,30 @@ def test_shared_link_restores_long_trip_with_unknown_region(page, base_url):
     assert page.locator(".day-card").count() == 20
     assert "Étape 20" in page.locator("#result").inner_text()
     assert page.errors == []
+
+@pytest.mark.parametrize(
+    "audience,expected_suggestion",
+    [
+        ("tourist", "Visite guidée"),
+        ("resident", "Vie quotidienne"),
+        ("diaspora", "Préparer mon retour"),
+        ("merchant", "Prix & marge"),
+    ],
+)
+def test_home_audience_profiles_respond_and_persist(page, base_url, audience, expected_suggestion):
+    page.goto(base_url + "/")
+    button = page.locator(f'.audience-btn[data-audience="{audience}"]')
+    button.click()
+
+    assert button.get_attribute("aria-pressed") == "true"
+    assert "on" in (button.get_attribute("class") or "").split()
+    page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
+    assert page.errors == []
+
+    page.reload()
+    selected = page.locator(f'.audience-btn[data-audience="{audience}"]')
+    assert selected.get_attribute("aria-pressed") == "true"
+    assert "on" in (selected.get_attribute("class") or "").split()
+    page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
+    assert page.errors == []
+
