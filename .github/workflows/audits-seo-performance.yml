@@ -1,0 +1,95 @@
+name: audits-seo-performance
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * 1"
+  pull_request:
+    paths:
+      - "scripts/audit_seo.py"
+      - "services/**"
+      - "routes/**"
+      - "templates/**"
+      - "static/**"
+      - ".github/workflows/audits-seo-performance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  seo-audit:
+    name: Audit SEO local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installer les dépendances de test
+        run: pip install -r requirements-dev.txt
+      - name: Auditer les pages du sitemap local
+        id: audit
+        continue-on-error: true
+        run: python scripts/audit_seo.py --json > seo-audit-report.json
+      - name: Publier le rapport SEO
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-seo
+          path: seo-audit-report.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Échouer si l'audit SEO trouve des problèmes
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "L'audit SEO a trouvé des problèmes. Télécharger l'artifact rapport-seo pour consulter les détails."
+          exit 1
+
+  performance-smoke:
+    name: Mesure disponibilité et latence publique
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tester les pages publiques et mesurer leur latence
+        env:
+          SITE_URL: https://teranga-ai.fr
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.request
+
+          base = os.environ["SITE_URL"].rstrip("/")
+          paths = ["/", "/robots.txt", "/sitemap.xml"]
+          results = []
+          failed = False
+
+          for path in paths:
+              request = urllib.request.Request(
+                  base + path,
+                  headers={"User-Agent": "TerangaAI-Monitor/1.0"},
+              )
+              started = time.monotonic()
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      status = response.status
+                      response.read(1024)
+              except (urllib.error.URLError, TimeoutError) as exc:
+                  status = getattr(exc, "code", None) or "ERROR"
+                  print(f"ECHEC {path}: {exc}")
+                  failed = True
+              elapsed_ms = round((time.monotonic() - started) * 1000)
+              results.append({"path": path, "status": status, "latency_ms": elapsed_ms})
+              print(f"{path}: status={status}, latency={elapsed_ms}ms")
+              if status != 200:
+                  failed = True
+              if elapsed_ms > 10000:
+                  print(f"ALERTE: {path} dépasse 10000ms")
+                  failed = True
+
+          print("Rapport JSON:", json.dumps(results, ensure_ascii=False))
+          if failed:
+              raise SystemExit("Le contrôle public de disponibilité/latence a échoué.")
+          PY
