@@ -8,6 +8,7 @@ services/coverage_log.py : des compteurs par jour et par thème, jamais le texte
 from __future__ import annotations
 
 import hmac
+import os
 from html import escape
 
 from flask import Response, abort, request
@@ -46,6 +47,22 @@ def _rows(themes: list[dict]) -> str:
     return "".join(out)
 
 
+def ai_providers_status() -> list[str]:
+    """Lignes lisibles sur les fournisseurs d'IA : présent ou absent, jamais la valeur d'une clé."""
+    from services.backup_ai import backup_enabled, claude_is_primary
+
+    openai_ready = bool(os.getenv("OPENAI_API_KEY", "").strip())
+    if claude_is_primary():
+        principal = "Claude (OpenAI en secours)" if openai_ready else "Claude"
+    else:
+        principal = "OpenAI" if openai_ready else "aucune clé OpenAI"
+    return [
+        f"OpenAI : {'clé présente' if openai_ready else 'clé absente'}",
+        f"Claude : {'clé présente, il prend le relais si OpenAI ne répond pas' if backup_enabled() else 'clé absente, pas de secours Claude'}",
+        f"IA principale : {principal}",
+    ]
+
+
 def render_coverage_page(summary: dict | None, error: str = "") -> str:
     if summary is None:
         body = f"""<h1>Statistiques de l'IA</h1>
@@ -76,6 +93,9 @@ arrivées à l'IA sans rien de fiable dans son contexte. Les sujets en haut de l
 et par sujet, supprimés après {KEEP_DAYS} jours.</p>
 {''.join(f'<p class="muted">{escape(note)}</p>' for note in notes)}
 {table}
+<h2>Fournisseurs d'IA</h2>
+<ul>{''.join(f'<li>{escape(line)}</li>' for line in ai_providers_status())}</ul>
+<p class="muted">Ces lignes disent seulement si les clés sont présentes sur le serveur ; elles ne les affichent jamais.</p>
 <h2>Comment lire ce tableau</h2>
 <p><strong>Non couverte</strong> : pour ce sujet, l'IA n'avait reçu ni repère pratique vérifié, ni lieu, plat, fête ou météo de la
 base de connaissances, et aucune recherche web n'était déclenchée. Elle répondait alors sans appui de la base de Teranga AI.
