@@ -101,6 +101,11 @@ def parse_sitemap(xml_body, base_url=BASE_URL):
     return pages, child_sitemaps
 
 
+def limit_page_urls(urls, max_pages=MAX_PAGES):
+    """Deduplicate page URLs and cap the number inspected by the monitor."""
+    return list(dict.fromkeys(urls))[:max_pages]
+
+
 def inspect_page(url):
     result = fetch(url)
     item = {key: result[key] for key in ("url", "status", "final_url", "seconds", "error")}
@@ -152,7 +157,7 @@ def main():
     if sitemap_result["status"] and sitemap_result["status"] < 400:
         try:
             page_urls, child_sitemaps = parse_sitemap(sitemap_result["body"])
-            urls.extend(page_urls[:MAX_PAGES])
+            urls = limit_page_urls(page_urls)
             for child_url in child_sitemaps[:MAX_SITEMAPS]:
                 child_result = fetch(child_url)
                 if child_result["status"] is None or child_result["status"] >= 400:
@@ -164,14 +169,13 @@ def main():
                 child_pages, nested_sitemaps = parse_sitemap(child_result["body"])
                 if nested_sitemaps:
                     report["summary"]["warnings"] += 1
-                urls.extend(child_pages)
-                urls = list(dict.fromkeys(urls))[:MAX_PAGES]
+                urls = limit_page_urls(urls + child_pages)
         except ET.ParseError as exc:
             report["checks"]["sitemap"]["parse_error"] = str(exc)
             report["summary"]["errors"] += 1
 
     # Always inspect the homepage, even if the sitemap is missing or malformed.
-    urls = list(dict.fromkeys([BASE_URL + "/"] + urls))[:MAX_PAGES]
+    urls = limit_page_urls([BASE_URL + "/"] + urls)
     for url in urls:
         page = inspect_page(url)
         report["pages"].append(page)
