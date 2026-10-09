@@ -152,7 +152,7 @@ def main():
     if sitemap_result["status"] and sitemap_result["status"] < 400:
         try:
             page_urls, child_sitemaps = parse_sitemap(sitemap_result["body"])
-            urls.extend(page_urls)
+            urls.extend(page_urls[:MAX_PAGES])
             for child_url in child_sitemaps[:MAX_SITEMAPS]:
                 child_result = fetch(child_url)
                 if child_result["status"] is None or child_result["status"] >= 400:
