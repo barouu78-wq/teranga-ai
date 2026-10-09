@@ -35,6 +35,7 @@ def test_search_console_uses_access_token_and_limits_rows(monkeypatch):
 
 def test_search_console_rejects_invalid_dimensions(monkeypatch):
     monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_TOKEN", "temporary-token")
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_SITE_URL", "sc-domain:teranga-ai.fr")
     with pytest.raises(ValueError):
         seo.search_console_query(dimensions=["password"])
 
