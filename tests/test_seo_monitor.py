@@ -84,3 +84,16 @@ def test_parse_sitemap_rejects_unexpected_xml_root():
         assert "Root XML inattendue" in str(exc)
     else:
         raise AssertionError("An unexpected root must be rejected")
+
+
+def test_parse_urlset_page_limit_is_enforced_by_monitor():
+    from scripts import seo_monitor
+
+    xml = "<urlset>" + "".join(
+        f"<url><loc>https://teranga-ai.fr/page-{i}</loc></url>" for i in range(seo_monitor.MAX_PAGES + 5)
+    ) + "</urlset>"
+    pages, children = seo_monitor.parse_sitemap(xml)
+
+    assert len(pages) == seo_monitor.MAX_PAGES + 5
+    assert children == []
+    assert len(pages[:seo_monitor.MAX_PAGES]) == seo_monitor.MAX_PAGES
