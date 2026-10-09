@@ -32,8 +32,8 @@ def configured_providers() -> dict[str, bool]:
         "firecrawl": bool(os.getenv("FIRECRAWL_API_KEY", "").strip()),
         "semrush": bool(os.getenv("SEMRUSH_API_KEY", "").strip()),
         "google_search_console": bool(
-            os.getenv("GOOGLE_SEARCH_CONSOLE_CREDENTIALS", "").strip()
-            or os.getenv("GOOGLE_SEARCH_CONSOLE_TOKEN", "").strip()
+            os.getenv("GOOGLE_SEARCH_CONSOLE_TOKEN", "").strip()
+            or os.getenv("GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN", "").strip()
         ),
     }
 
