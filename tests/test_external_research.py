@@ -112,3 +112,17 @@ def test_search_context_without_keys_is_disabled(monkeypatch):
     monkeypatch.delenv("TAVILY_API_KEY", raising=False)
     monkeypatch.delenv("EXA_API_KEY", raising=False)
     assert research.search_context("question") is None
+
+
+def test_search_context_uses_firecrawl_for_explicit_url(monkeypatch):
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "test-key")
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    monkeypatch.delenv("EXA_API_KEY", raising=False)
+    monkeypatch.setattr(
+        research, "scrape_firecrawl",
+        lambda url: {"data": {"markdown": "# Teranga AI\nContenu du site.", "metadata": {"title": "Teranga AI"}}},
+    )
+    result = research.search_context("Analyse ce site https://teranga-ai.fr/")
+    assert result["provider"] == "firecrawl"
+    assert "Contenu du site." in result["context"]
+    assert result["sources"] == [{"title": "Teranga AI", "url": "https://teranga-ai.fr/"}]
