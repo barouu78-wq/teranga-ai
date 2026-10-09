@@ -160,8 +160,45 @@ def register_chat_route(app, deps):
         if cached:
             logger.info("chat_cache_hit")
 
+        # La recherche externe n'est déclenchée qu'en cas de cache manquant.
+        # En cas d'indisponibilité, le chat conserve son comportement habituel.
+        if not cached and payload.get("use_web"):
+            external_research_context = deps.get("external_research_context")
+            if callable(external_research_context):
+                try:
+                    research = external_research_context(payload.get("message", ""))
+                    if isinstance(research, dict) and research.get("context"):
+                        payload["instructions"] = (
+                            str(payload.get("instructions", ""))
+                            + "\n\n" + str(research["context"])
+                        )
+                        payload["external_sources"] = research.get("sources", [])
+                        payload["use_web"] = False
+                        logger.info("external_research_used provider=%s", research.get("provider", "unknown"))
+                except Exception:  # noqa: BLE001 - la recherche externe est facultative
+                    logger.warning("external_research_failed")
+
+
+        def merged_sources(sources):
+            """Ajoute les sources externes sans dupliquer les URL."""
+            merged = list(sources or [])
+            seen = {
+                str(item.get("url", "")).strip()
+                for item in merged
+                if isinstance(item, dict) and item.get("url")
+            }
+            for item in payload.get("external_sources", []) or []:
+                if not isinstance(item, dict):
+                    continue
+                url = str(item.get("url", "")).strip()
+                if url.startswith(("https://", "http://")) and url not in seen:
+                    merged.append(item)
+                    seen.add(url)
+            return merged
+
         def finishing_events(reply, sources, image, maps):
             """Événements communs après le texte : sources, médias, suggestions, partage."""
+            sources = merged_sources(sources)
             events = []
             if sources:
                 events.append({"s": sources})
@@ -192,6 +229,7 @@ def register_chat_route(app, deps):
                     reply, sources, image, maps = complete_reply(payload)
                     if reply and answer_cache is not None:
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
+                sources = merged_sources(sources)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
                 share = sign_answer(share_secret, payload.get("message", ""), reply, sources, payload.get("language", "fr"))
@@ -287,6 +325,7 @@ def register_chat_route(app, deps):
                     else:
                         image = None
                         maps = None
+                sources = merged_sources(sources)
                 final_reply = clean_answer("".join(answer_parts))
                 for extra_event in finishing_events(final_reply, sources, image, maps):
                     yield json.dumps(extra_event, ensure_ascii=False) + "\n"
