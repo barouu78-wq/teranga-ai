@@ -93,7 +93,9 @@ def test_parse_urlset_page_limit_is_enforced_by_monitor():
         f"<url><loc>https://teranga-ai.fr/page-{i}</loc></url>" for i in range(seo_monitor.MAX_PAGES + 5)
     ) + "</urlset>"
     pages, children = seo_monitor.parse_sitemap(xml)
+    limited_pages = seo_monitor.limit_page_urls(pages)
 
     assert len(pages) == seo_monitor.MAX_PAGES + 5
+    assert len(limited_pages) == seo_monitor.MAX_PAGES
+    assert limited_pages[0] == "https://teranga-ai.fr/page-0"
     assert children == []
-    assert len(pages[:seo_monitor.MAX_PAGES]) == seo_monitor.MAX_PAGES
