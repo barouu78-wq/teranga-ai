@@ -120,7 +120,7 @@ def search_context(query: str) -> dict[str, Any] | None:
         return None
     configured = configured_providers()
     # Si la question contient explicitement une URL, Firecrawl extrait d'abord la page.
-    url_match = re.search(r"https?://[^\\s<>'\\"]+", query)
+    url_match = re.search(r"https?://[^\s<>'\"]+", query)
     if configured["firecrawl"] and url_match:
         target_url = url_match.group(0).rstrip(".,;:!?)]}")
         try:
