@@ -1,0 +1,81 @@
+name: Teranga AI — relais des agents
+
+on:
+  workflow_run:
+    workflows: ["audits-seo-performance"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  triage-audit-failure:
+    name: Créer un relais QA / développeur si un audit échoue
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ouvrir ou actualiser un ticket de diagnostic
+        uses: actions/github-script@v7
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        with:
+          script: |
+            const runId = process.env.RUN_ID;
+            const runUrl = process.env.RUN_URL;
+            const sha = process.env.HEAD_SHA;
+            const branch = process.env.BRANCH;
+            const title = `[Agent QA] Audit SEO/performance en échec — run ${runId}`;
+            const body = [
+              "## Relais automatique Teranga AI",
+              "",
+              "L’audit SEO/performance a échoué. Ce ticket organise le passage de relais ; il ne prétend pas qu’un agent IA a déjà corrigé le problème.",
+              "",
+              "### Preuves",
+              `- Exécution GitHub Actions : ${runUrl}`,
+              `- Commit : ${sha}`,
+              `- Branche : ${branch}`,
+              "",
+              "### Ordre de traitement",
+              "1. **Performance** : identifier si l’échec concerne TLS, DNS, HTTP, délai ou disponibilité.",
+              "2. **SEO** : si le sitemap ou les pages SEO sont concernés, vérifier statut, XML, canonicals et indexabilité.",
+              "3. **Développeur** : reproduire et proposer un correctif isolé dans une branche/PR, sans toucher directement à main.",
+              "4. **QA** : ajouter ou exécuter les tests de régression et publier les résultats.",
+              "5. Recontrôler le site public après correction. Ne jamais désactiver la vérification TLS pour obtenir un résultat vert.",
+              "",
+              "### Rapport",
+              "Ouvrir l’exécution ci-dessus et télécharger les artefacts rapport-seo et/ou rapport-public-https-performance lorsqu’ils sont disponibles.",
+              "",
+              "### Clôture",
+              "Ne fermer ce ticket qu’après identification de la cause, lien vers la PR corrective et preuve des contrôles réussis. Si l’échec est transitoire, documenter la nouvelle exécution."
+            ].join("\n");
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              per_page: 100
+            });
+            const match = existing.data.find(issue => !issue.pull_request && issue.title === title);
+            if (match) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: match.number,
+                body: `Nouvel échec détecté.\n\n${body}`
+              });
+              core.info(`Ticket existant actualisé : #${match.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ["bug"]
+              });
+              core.info(`Ticket de relais créé : #${created.data.number}`);
+            }
