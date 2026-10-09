@@ -37,5 +37,6 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           trigger_phrase: "/claude"
           claude_args: |
-            --max-turns 8
+            --max-turns 20
+            --allowedTools "Glob,Grep,LS,Read,Edit,Write,mcp__github_comment__update_claude_comment,mcp__github_ci__get_ci_status,mcp__github_ci__get_workflow_run_details,mcp__github_ci__download_job_log,Bash(git status:*),Bash(git diff:*),Bash(git branch:*),Bash(git checkout:*),Bash(git switch:*),Bash(git fetch:*),Bash(git add:*),Bash(git commit:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/v1/scripts/git-push.sh:*)"
             --append-system-prompt "Projet Teranga AI. Lis AGENTS.md et .github/agents/README.md. Réponds en français. Travaille uniquement sur une branche dédiée. N'écris jamais de secret. Ne désactive aucun test ni contrôle TLS. Ne fusionne pas et ne déploie pas. Ajoute des tests ciblés et rapporte les commandes et résultats exacts. Si la tâche est ambiguë ou risquée, demande une clarification au lieu d'agir."
