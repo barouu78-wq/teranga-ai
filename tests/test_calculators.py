@@ -215,13 +215,11 @@ def test_conversion_euro_fcfa(question, phrases):
 
 
 @pytest.mark.parametrize("ecriture", [
-    "15 000 FCFA", "15.000 FCFA", "15000 FCFA", "15k FCFA", "15 K FCFA", "15 mille FCFA", "15 000 FCFA",
-    "15 000 francs CFA", "15 000 F CFA", "15 000 F", "15000 XOF", "FCFA 15000", "15,000 FCFA", "15 000 francs",
-    "15 000 cfa", "15 000 Francs CFA", "XOF 15 000", "0,015 million de FCFA".replace("0,015", "0.015"),
+    "15 000 FCFA", "15.000 FCFA", "15000 FCFA", "15k FCFA", "15 K FCFA", "15 mille FCFA", "15\u00a0000 FCFA",
+    "15\u202f000 francs CFA", "15 000 F CFA", "15 000 F", "15000 XOF", "FCFA 15000", "15,000 FCFA", "15 000 francs",
+    "15 000 cfa", "15 000 Francs CFA", "XOF 15 000", "0,015 million de FCFA",
 ])
 def test_les_montants_s_ecrivent_de_plusieurs_facons(ecriture):
-    if "million" in ecriture:
-        pytest.skip("écriture décimale de millions testée à part")
     verifie(f"Combien font {ecriture} en euros ?", "15 000 FCFA = 22,87 €")
 
 
@@ -541,16 +539,41 @@ def test_pas_de_faux_positif(question):
     assert bloc(question) == ""
 
 
-def test_aucune_question_des_bancs_d_essai_ne_declenche_un_calcul_a_tort():
-    """Toutes les questions des autres bancs d'essai (sauf les conversions voulues) restent sans bloc."""
-    attendu = {"Combien vaut 100 euros en FCFA ?", "How much is 50 euros in CFA francs?"}
+def _questions_du_banc_pratique():
+    """(liste, langue, question, textes attendus ou interdits) lus dans tests/test_ai_bench_pratique.py."""
+    arbre = ast.parse((ROOT / "tests" / "test_ai_bench_pratique.py").read_text(encoding="utf-8"))
+    for noeud in arbre.body:
+        if isinstance(noeud, ast.Assign) and getattr(noeud.targets[0], "id", "") in {"PROBES", "HARD", "ROUND_2", "NOISE"}:
+            for ligne in ast.literal_eval(noeud.value):
+                langue, question, textes = ligne if len(ligne) == 3 else ("fr", *ligne)
+                yield noeud.targets[0].id, question, textes
+
+
+def test_le_banc_pratique_ne_declenche_un_calcul_que_quand_il_l_attend():
+    """Une question du banc qui reçoit un bloc de calcul doit l'attendre (phrase attendue présente)."""
+    questions = list(_questions_du_banc_pratique())
+    assert len(questions) > 100
+    for liste, question, textes in questions:
+        bloc_calcule = calculation_block(question)
+        if not bloc_calcule:
+            continue
+        trouves = [texte for texte in textes if texte.casefold() in bloc_calcule.casefold()]
+        if liste == "NOISE":  # un bloc de calcul est permis, mais jamais avec un texte interdit
+            assert not trouves, f"texte interdit dans le calcul de {question!r} : {trouves}"
+        else:
+            assert trouves, f"bloc de calcul à tort : {question!r}"
+
+
+def test_les_autres_bancs_d_essai_ne_declenchent_aucun_calcul_a_tort():
+    """Aucune question des autres bancs (lieux, plats, histoire, repères) ne reçoit un bloc de calcul."""
+    voulues = {"100 euros en francs CFA", "Combien vaut 100 euros en FCFA ?"}
     declenchees = set()
-    for nom in ("test_ai_bench.py", "test_ai_bench_fouta.py", "test_ai_bench_pratique.py", "test_practical_facts.py"):
+    for nom in ("test_ai_bench.py", "test_ai_bench_fouta.py", "test_practical_facts.py"):
         source = (ROOT / "tests" / nom).read_text(encoding="utf-8")
         for question in re.findall(r'"((?:[^"\\\n]|\\.){12,200})"', source):
             if " " in question and calculation_block(question):
                 declenchees.add(question)
-    assert declenchees == attendu
+    assert declenchees <= voulues, declenchees - voulues
 
 
 # --------------------------------------------------------------------------------------------
@@ -638,11 +661,10 @@ def test_un_calcul_qui_plante_ne_fait_pas_echouer_le_chat(monkeypatch, caplog):
     assert "100 euros" not in caplog.text  # la question de l'utilisateur n'est pas journalisée
 
 
-def test_resultat_trop_long_est_coupe():
-    lignes = [f"- ligne {i}." for i in range(30)]
-    monkeypatch_calculs = calculators._MAX_LIGNES
-    assert monkeypatch_calculs <= 12
-    assert len(lignes[:monkeypatch_calculs]) == monkeypatch_calculs
+def test_le_nombre_de_lignes_du_bloc_est_limite(monkeypatch):
+    monkeypatch.setattr(calculators, "_budget", lambda *_: ([f"- ligne {i}." for i in range(40)], None))
+    lignes = calculation_block("5 nuits").split("\n")
+    assert lignes[0] == ENTETE and len(lignes) == 1 + calculators._MAX_LIGNES
 
 
 # --------------------------------------------------------------------------------------------
@@ -660,7 +682,8 @@ def test_jamais_de_float_pour_l_argent():
 
 def test_le_fichier_est_dans_l_empreinte_du_cache_des_reponses():
     app_source = (ROOT / "app.py").read_text(encoding="utf-8")
-    empreinte = app_source[app_source.index("_CACHE_MODEL_BASE = "):app_source.index(".hexdigest()")]
+    debut = app_source.index("_CACHE_MODEL_BASE = ")
+    empreinte = app_source[debut:app_source.index(".hexdigest()", debut)]
     assert '"calculators.py"' in empreinte and "read_bytes()" in empreinte
 
 

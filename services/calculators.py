@@ -193,7 +193,10 @@ def parse_nombre(texte: str) -> Decimal | None:
     « 15 000 », « 15.000 », « 1 250 000 », « 15000 », « 2,5 », « 1.234,56 », « 1,234.56 » sont compris.
     « 1,250 » (virgule suivie de 3 chiffres non nuls) est ambigu (1,25 ou 1250 ?) : on ne calcule pas.
     """
-    brut = str(texte or "").strip().replace(" ", "").replace("'", "")
+    espaces = " ".join(str(texte or "").replace("'", " ").split())  # split() unifie aussi les espaces insécables
+    if " " in espaces and not re.fullmatch(r"[0-9]{1,3}(?: [0-9]{3})+(?:[.,][0-9]+)?", espaces):
+        return None  # « 1 00 » n'est pas un nombre bien écrit
+    brut = espaces.replace(" ", "")
     if not brut or len(brut) > 40 or not re.fullmatch(r"[0-9][0-9.,]*", brut):
         return None
     if brut.isdigit():
@@ -371,7 +374,7 @@ _CLASSES = tuple((nom, re.compile(motif)) for nom, motif in _UNITES)
 _UNITE_ANY = "|".join(f"(?:{motif})" for _, motif in _UNITES)
 _TEMPS = r"jours?|nuits?|nuitees?|semaines?|mois|days?|nights?|weeks?|months?"
 _MOTS_NOMBRES = {
-    "un": 1, "une": 1, "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "six": 6, "sept": 7, "huit": 8, "neuf": 9,
+    "deux": 2, "trois": 3, "quatre": 4, "cinq": 5, "six": 6, "sept": 7, "huit": 8, "neuf": 9,
     "dix": 10, "onze": 11, "douze": 12, "treize": 13, "quatorze": 14, "quinze": 15, "seize": 16, "vingt": 20,
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
 }
@@ -557,7 +560,7 @@ _ROLES = (
     ("marge", re.compile(r"marge|benefice|gain\b|profit|margin")),
 )
 _CUE_MARCHAND = re.compile(
-    r"marge|benefice|profit|\bgain\b|gagn\w*|perte|perd\w*|rentab\w*|revient|markup|margin|coefficient|taux de marque"
+    r"marge|benefice|profit|\bgain\b|gagn\w*|perte|perd\w*|rentab\w*|revient|markup|margin|coefficient|marque"
 )
 _MARQUE = re.compile(r"marque")
 _SUR_COUT = re.compile(r"taux de marge|sur (?:le |mon )?(?:prix d achat|cout|prix de revient)|au dessus")
@@ -603,6 +606,8 @@ def _marchand(texte: str, montants: list[Montant], pourcents: list[Pourcent], qu
             if m.valeur is None:
                 return []
             roles[role].append(m)
+        elif _est_prix(m):
+            return []  # un prix dont on ignore le rôle (« à 3000, à 3500 et je vends… ») : on ne devine pas
     if len(roles["cout"]) > 1 or len(roles["vente"]) > 1 or len(roles["marge"]) > 1:
         return []
     retenus = [m for liste in roles.values() for m in liste]
@@ -746,6 +751,8 @@ def _pourcents(texte: str, montants: list[Montant], pourcents: list[Pourcent],
     candidats = [m for m in montants if not m.quantite]
     if pourcents and (quantites or any(m.compte for m in montants)):
         return [], None  # « 20 % sur 5 nuits à 40 000 » : la base de la remise n'est pas claire
+    if any(_MARGE_PCT.search(texte[max(0, p.debut - 30):p.fin + 30]) for p in pourcents):
+        return [], None  # « 30 % de marge » : taux de marge ou de marque, pas un simple pourcentage
     if len(pourcents) == 1:
         return _pourcent_simple(texte, pourcents[0], candidats)
     if not pourcents and _QUESTION_POURCENT.search(texte):
