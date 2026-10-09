@@ -63,7 +63,8 @@ def find_youth_opportunities(category="", city=""):
     for item in OPPORTUNITIES:
         category_match = not wanted or wanted in item["categories"]
         location = item["location"].lower()
-        city_match = not city_text or city_text in location or location == "sénégal"
+        # « Sénégal » ou « 14 régions du Sénégal » : programme national, valable pour toute ville.
+        city_match = not city_text or city_text in location or location.endswith("sénégal")
         if category_match and city_match:
             results.append(dict(item))
     return results

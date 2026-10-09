@@ -98,6 +98,15 @@ def test_project_helpers_do_not_process_a_huge_text_field():
     assert len(youth_projects.build_project_matches(projet)["city"]) <= 80
 
 
+def test_nationwide_programs_are_listed_whatever_the_city():
+    from services.youth_opportunities import find_youth_opportunities
+
+    # BE YES est ouvert dans les 14 régions : un jeune de Dakar ou de Ziguinchor doit le voir.
+    for city in ("", "Dakar", "Ziguinchor", "Sénégal"):
+        titres = [item["title"] for item in find_youth_opportunities("business", city)]
+        assert "BE YES" in titres, city
+
+
 def test_redirect_target_never_returns_control_characters():
     from services.error_pages import redirect_target
 
