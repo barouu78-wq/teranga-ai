@@ -122,30 +122,40 @@ def _bullets(text):
     return [line[2:] for line in text.splitlines() if line.startswith("• ")]
 
 
-# (question, sujet, titre attendu) : un cas par grande famille de repères.
+def _fact(topic, start):
+    """Le repère du sujet qui commence par `start` (None : le premier)."""
+    if start is None:
+        return FACTS[topic][0]
+    return next(fact for fact in FACTS[topic] if fact.startswith(start))
+
+
+# (question, sujet, titre attendu, début du repère attendu) : un cas par grande famille de repères.
 FAMILLES = [
-    ("Quel est le numéro de la police ?", "urgences", "Urgences et sécurité"),
-    ("Y a-t-il du paludisme au Sénégal ?", "sante", "Santé"),
-    ("Combien valent 100 euros en FCFA ?", "argent", "Argent et paiements"),
-    ("Comment éviter les arnaques ?", "arnaques", "Arnaques à éviter"),
-    ("J'ai envoyé de l'argent Wave au mauvais numéro", "mobile_money", "Mobile money"),
-    ("Faut-il un visa pour le Sénégal ?", "visa", "Entrée au Sénégal (visa)"),
-    ("Comment renouveler ma carte d'identité ?", "papiers", "Papiers et état civil"),
-    ("Comment acheter du courant Woyofal ?", "factures", "Électricité prépayée (Woyofal)"),
-    ("Comment fonctionne la CMU ?", "protection", "Santé et protection sociale"),
-    ("Comment s'inscrire sur Campusen après le bac ?", "etudes", "Études et bourses"),
-    ("Comment acheter un terrain au Sénégal ?", "foncier", "Terrain et immobilier"),
+    ("Quel est le numéro de la police ?", "urgences", "Urgences et sécurité", None),
+    ("Faut-il un vaccin contre la fièvre jaune ?", "sante", "Santé", None),
+    ("Que faire en cas de brûlure ?", "premiers_secours", "Premiers secours", "Brûlure"),
+    ("Combien valent 100 euros en FCFA ?", "argent", "Argent et paiements", None),
+    ("Il y a des faux billets, comment les reconnaître ?", "arnaques", "Arnaques à éviter", "Faux billets"),
+    ("J'ai envoyé de l'argent Wave au mauvais numéro", "mobile_money", "Mobile money", "Envoi par erreur"),
+    ("Faut-il un visa pour le Sénégal ?", "visa", "Entrée au Sénégal (visa)", None),
+    ("Comment renouveler ma carte d'identité ?", "papiers", "Papiers et état civil", "Carte d'identité"),
+    ("Comment obtenir un acte de naissance ?", "papiers", "Papiers et état civil", "État civil"),
+    ("Comment acheter du courant Woyofal ?", "factures", "Électricité prépayée (Woyofal)", None),
+    ("Comment fonctionne la CMU ?", "protection", "Santé et protection sociale", None),
+    ("Comment s'inscrire sur Campusen après le bac ?", "etudes", "Études et bourses", None),
+    ("Comment acheter un terrain au Sénégal ?", "foncier", "Terrain et immobilier", None),
 ]
+QUESTIONS = [famille[0] for famille in FAMILLES]
 
 
-@pytest.mark.parametrize("question,topic,title", FAMILLES, ids=[q for q, _, _ in FAMILLES])
-def test_practical_facts_are_used_as_they_are(question, topic, title):
+@pytest.mark.parametrize("question,topic,title,start", FAMILLES, ids=QUESTIONS)
+def test_practical_facts_are_used_as_they_are(question, topic, title, start):
     text = _fallback(question)
     assert text.startswith("L'assistant IA est momentanément indisponible")
     assert text.endswith("Réessaie dans un moment pour une réponse complète et personnalisée.")
     assert title in text.splitlines()
-    # Le premier repère du sujet est repris mot pour mot : ni reformulé, ni complété.
-    assert FACTS[topic][0] in text
+    # Le repère attendu est repris mot pour mot : ni reformulé, ni complété.
+    assert _fact(topic, start) in text
 
 
 def test_emergency_numbers_come_from_the_verified_facts():
@@ -159,19 +169,46 @@ def test_money_answer_has_the_exact_rate():
 
 
 def test_every_bullet_is_a_verified_fact_never_cut():
-    for question, _topic, _title in FAMILLES:
+    for question in QUESTIONS:
         bullets = _bullets(_fallback(question))
         assert bullets and all(bullet in ALL_FACTS for bullet in bullets), question
 
 
-def test_every_practical_topic_has_a_title():
-    assert set(FACTS) <= set(fallback_answer._TITLES)
+def test_a_topic_without_title_gets_the_default_one(monkeypatch):
+    monkeypatch.setattr(fallback_answer, "_TITLES", {})
+    text = _fallback("Quel est le numéro de la police ?")
+    assert "Repères pratiques" in text.splitlines() and _fact("urgences", None) in text
+    assert "Practical facts" in _fallback("Quel est le numéro de la police ?", "en").splitlines()
 
 
 def test_place_then_practical_facts_when_both_are_asked():
     text = _fallback("Comment aller à Gorée en taxi ?")
     assert "Île de Gorée (Dakar)" in text and "Transports" in text
     assert text.index("Île de Gorée") < text.index("Transports")
+
+
+# Premiers secours : le bon repère, et jamais sans son cadre de précautions.
+
+
+@pytest.mark.parametrize("question,start", [
+    ("Que faire en cas de brûlure ?", "Brûlure"),
+    ("Un chien m'a mordu, que faire ?", "Morsure"),
+    ("Que faire après une morsure de serpent ?", "Morsure"),
+    ("Mon enfant a de la fièvre à Dakar, que faire ?", "Fièvre chez l'enfant"),
+    ("On peut boire l'eau du robinet ?", "Eau et aliments"),
+    ("I need first aid for a scorpion sting", "Piqûre de scorpion"),
+])
+def test_first_aid_answers_with_the_right_fact_and_the_safety_frame(question, start):
+    text = _fallback(question)
+    assert _fact("premiers_secours", "Cadre") in text  # précautions et SAMU 1515, toujours présents
+    assert _fact("premiers_secours", start) in text
+    # Pas de remplissage avec des repères sans rapport (le paludisme pour une brûlure).
+    assert _fact("premiers_secours", "Paludisme :") not in text
+
+
+def test_unconscious_person_gets_the_safety_frame_with_the_emergency_number():
+    text = _fallback("Mon voisin est inconscient")
+    assert _fact("premiers_secours", "Cadre") in text and "SAMU 1515" in text
 
 
 # Taille : 3 sujets au plus, un plafond de caractères, jamais un repère coupé.
@@ -184,9 +221,9 @@ def test_at_most_three_topics_even_when_the_question_matches_more():
     for block in _blocks(text):
         title, *lines = block.split("\n")
         assert not title.startswith("•") and lines and all(line.startswith("• ") for line in lines)
-    # Les trois sujets les plus précis gardent chacun leur premier repère.
-    for topic in ("arnaques", "mobile_money", "papiers"):
-        assert FACTS[topic][0] in text
+    # Les trois sujets les plus précis sont tous là.
+    titles = [block.split("\n")[0] for block in _blocks(text)]
+    assert sorted(titles) == sorted(["Arnaques à éviter", "Mobile money", "Papiers et état civil"])
 
 
 def test_long_topic_is_shortened_by_whole_facts():
@@ -194,12 +231,17 @@ def test_long_topic_is_shortened_by_whole_facts():
     bullets = _bullets(text)
     assert 0 < len(bullets) < len(FACTS["arnaques"])
     assert sum(len(b) for b in bullets) <= MAX_CHARS
-    assert bullets == list(FACTS["arnaques"][: len(bullets)])  # les premiers repères, dans l'ordre
+    assert all(bullet in FACTS["arnaques"] for bullet in bullets)
     assert len(text) < 4000
 
 
+def test_a_short_topic_is_always_given_whole():
+    # Urgences : 3 repères courts, tous repris même si la question ne vise que le numéro de la police.
+    assert _bullets(_fallback("Quel est le numéro de la police ?")) == list(FACTS["urgences"])
+
+
 def test_every_family_answer_stays_short():
-    for question, _topic, _title in FAMILLES:
+    for question in QUESTIONS:
         assert len(_fallback(question)) < 4000, question
 
 
@@ -255,7 +297,6 @@ NOTHING = [
     "Je suis volontaire pour une ONG au Sénégal",
     "Quel est le code postal de Dakar ?",
     "Organiser une fête d'anniversaire à Dakar",
-    "Where can I get first aid training?",
     "Quand commence le Ramadan ?",
     "Un steak saignant s'il vous plaît",
     "Il fait étouffant à Dakar",
@@ -286,10 +327,11 @@ def test_the_suggested_pages_exist_on_the_site():
         assert response.status_code == 200, path
 
 
+# Urgences que ni « urgences » ni « premiers_secours » ne déclenchent (« au secours » ou « inconscient » le font).
 URGENT = [
-    "Mon voisin est inconscient",
     "Il y a un incendie dans mon immeuble",
-    "Mon fils s'est noyé dans la piscine, au secours",
+    "Mon fils s'est noyé dans la piscine",
+    "My father had a heart attack",
 ]
 
 
@@ -308,7 +350,7 @@ def test_english_emergency_without_known_topic_gets_the_numbers():
 
 
 def test_urgence_words_that_are_not_emergencies_do_not_trigger_the_numbers():
-    for question in ("Un steak saignant s'il vous plaît", "Il fait étouffant à Dakar", "What is first aid for burns?"):
+    for question in ("Un steak saignant s'il vous plaît", "Il fait étouffant à Dakar", "Quelle est la capitale du Japon ?"):
         assert "1515" not in _fallback(question, always=True), question
 
 
@@ -349,7 +391,7 @@ def test_signature_only_gained_optional_keyword_parameters():
 
 
 def _texts_to_check():
-    questions = [q for q, _, _ in FAMILLES] + NOTHING + URGENT + ["C'est quand la Tabaski ?", "Quels sont les jours fériés ?"]
+    questions = QUESTIONS + NOTHING + URGENT + ["C'est quand la Tabaski ?", "Quels sont les jours fériés ?"]
     for question in questions:
         yield _fallback(question, always=True)
         yield _fallback(question, "en", always=True)
@@ -365,7 +407,7 @@ def test_text_has_no_html_tag():
 
 
 def test_text_is_stable_through_the_chat_cleaning():
-    for question in [q for q, _, _ in FAMILLES] + NOTHING + URGENT + ["C'est quand la Tabaski ?"]:
+    for question in QUESTIONS + NOTHING + URGENT + ["C'est quand la Tabaski ?"]:
         for lang in ("fr", "en"):
             text = _fallback(question, lang, always=True)
             assert clean_answer(text) == text, question
