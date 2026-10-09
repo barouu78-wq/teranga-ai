@@ -38,6 +38,7 @@ from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
 from services.practical_facts import practical_context
+from services.calculators import calculation_block
 from routes.system import register_system_routes
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -711,6 +712,10 @@ def parse_chat_payload():
         practical = practical_context(payload.get("message", ""))
         if practical:
             payload["instructions"] += "\n\n" + practical
+        # Calculs faits par le code (conversion en FCFA, marge, remise, total) : l'IA recopie, elle ne calcule pas.
+        calcul = calculation_block(payload.get("message", ""))
+        if calcul:
+            payload["instructions"] += "\n\n" + calcul
         partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
         if partner_block:
             payload["instructions"] += "\n\n" + partner_block
@@ -816,8 +821,8 @@ ANSWER_CACHE = AnswerCache.from_env(redis_client, logger=app.logger)
 _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     b"".join((BASE_DIR / "data" / name).read_bytes() for name in ("senegal_knowledge.json", "senegal_people.json", "partners.json") if (BASE_DIR / "data" / name).exists())
     + SYSTEM_PROMPT.encode("utf-8")
-    # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
-    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py"))
+    # Repères pratiques, calendrier et calculs : une mise à jour invalide les anciennes réponses.
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py", "calculators.py"))
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
 ).hexdigest()[:12]
 
