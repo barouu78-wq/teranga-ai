@@ -78,4 +78,5 @@ Obligatoires : `OPENAI_API_KEY`, `SECRET_KEY` (≥ 32 caractères en production)
 Utiles : `REDIS_URL`, `SITE_URL`, `CONTACT_EMAIL`, `PARTNER_WHATSAPP`, `STATS_TOKEN`,
 `GOOGLE_SITE_VERIFICATION`, `GETYOURGUIDE_PARTNER_ID`, `BOOKING_AID`, `TAXI_PARTNER_URL`,
 `ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`.
+Modèles OpenAI (vide ou invalide = défaut ; lus par `services/model_params.py`) : `OPENAI_MODEL` (défaut `gpt-5.6-luna`), `OPENAI_COMPLEX_MODEL` (défaut `gpt-5.6-sol`), `OPENAI_TRIP_MODEL` (planificateur, sans défaut).
 Les tests n'ont besoin d'aucune vraie clé (`OPENAI_API_KEY=test-key` suffit).
