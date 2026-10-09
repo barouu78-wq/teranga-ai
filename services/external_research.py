@@ -182,3 +182,107 @@ def search_context(query: str) -> dict[str, Any] | None:
             )
             return {"provider": name, "context": context, "sources": sources}
     return None
+
+def _google_search_console_access_token() -> str:
+    """Retourne un jeton Google valide, en le renouvelant si nécessaire."""
+    access_token = os.getenv("GOOGLE_SEARCH_CONSOLE_TOKEN", "").strip()
+    refresh_token = os.getenv("GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN", "").strip()
+    if access_token:
+        return access_token
+    if not refresh_token:
+        raise ProviderNotConfigured("Google Search Console n'est pas configuré.")
+    client_id = _key("GOOGLE_SEARCH_CONSOLE_CLIENT_ID")
+    client_secret = _key("GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET")
+    try:
+        response = httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            },
+            timeout=TIMEOUT,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise ProviderRequestError("Échec de l'authentification Google Search Console.") from exc
+    token = data.get("access_token") if isinstance(data, dict) else None
+    if not isinstance(token, str) or not token:
+        raise ProviderRequestError("Google n'a pas renvoyé de jeton d'accès valide.")
+    return token
+
+
+def google_search_console_query(
+    *, start_date: str, end_date: str, dimensions: list[str] | None = None,
+    row_limit: int = 100,
+) -> dict[str, Any]:
+    """Interroge les performances Search Console de la propriété configurée."""
+    site_url = os.getenv("GOOGLE_SEARCH_CONSOLE_SITE_URL", "").strip()
+    if not site_url:
+        raise ProviderNotConfigured("GOOGLE_SEARCH_CONSOLE_SITE_URL n'est pas configuré.")
+    payload: dict[str, Any] = {
+        "startDate": start_date,
+        "endDate": end_date,
+        "rowLimit": max(1, min(int(row_limit), 25000)),
+    }
+    if dimensions:
+        allowed = {"date", "query", "page", "country", "device", "searchAppearance"}
+        if any(dimension not in allowed for dimension in dimensions):
+            raise ValueError("Dimension Search Console non autorisée.")
+        payload["dimensions"] = dimensions
+    try:
+        response = httpx.post(
+            "https://www.googleapis.com/webmasters/v3/sites/"
+            + __import__("urllib.parse", fromlist=["quote"]).quote(site_url, safe="")
+            + "/searchAnalytics/query",
+            headers={"Authorization": f"Bearer {_google_search_console_access_token()}"},
+            json=payload,
+            timeout=TIMEOUT,
+        )
+        response.raise_for_status()
+        data = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise ProviderRequestError("Échec de la requête Google Search Console.") from exc
+    if not isinstance(data, dict):
+        raise ProviderRequestError("Réponse Search Console invalide.")
+    return data
+
+
+def semrush_domain_organic(
+    domain: str = "teranga-ai.fr", *, database: str | None = None,
+    display_limit: int = 20,
+) -> list[dict[str, str]]:
+    """Récupère les mots-clés organiques d'un domaine via l'API Semrush."""
+    import csv
+    import io
+
+    domain = domain.strip().lower()
+    if not domain or "/" in domain or ":" in domain or " " in domain:
+        raise ValueError("Un nom de domaine valide est obligatoire.")
+    params = {
+        "type": "domain_organic",
+        "key": _key("SEMRUSH_API_KEY"),
+        "domain": domain,
+        "database": (database or os.getenv("SEMRUSH_DATABASE", "fr")).strip() or "fr",
+        "display_limit": str(max(1, min(int(display_limit), 100))),
+        "export_columns": "Ph,Po,Nq,Cp,Ur",
+    }
+    try:
+        response = httpx.get(
+            "https://api.semrush.com/", params=params, timeout=TIMEOUT
+        )
+        response.raise_for_status()
+        body = response.text.strip()
+    except httpx.HTTPError as exc:
+        raise ProviderRequestError("Échec de la requête Semrush.") from exc
+    if not body:
+        return []
+    if body.lower().startswith(("error", "this report", "not enough units")):
+        raise ProviderRequestError("Semrush a refusé la requête ou le quota API est insuffisant.")
+    try:
+        return list(csv.DictReader(io.StringIO(body), delimiter=";"))
+    except (csv.Error, ValueError) as exc:
+        raise ProviderRequestError("Réponse Semrush invalide.") from exc
+

@@ -126,3 +126,60 @@ def test_search_context_uses_firecrawl_for_explicit_url(monkeypatch):
     assert result["provider"] == "firecrawl"
     assert "Contenu du site." in result["context"]
     assert result["sources"] == [{"title": "Teranga AI", "url": "https://teranga-ai.fr/"}]
+
+def test_search_console_refreshes_oauth_token_and_queries_property(monkeypatch):
+    monkeypatch.delenv("GOOGLE_SEARCH_CONSOLE_TOKEN", raising=False)
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN", "refresh-test")
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_CLIENT_ID", "client-test")
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET", "secret-test")
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_SITE_URL", "sc-domain:teranga-ai.fr")
+    calls = []
+
+    def fake_post(url, **kwargs):
+        calls.append((url, kwargs))
+        if "oauth2.googleapis.com" in url:
+            return FakeResponse({"access_token": "access-test"})
+        return FakeResponse({"rows": [{"keys": ["teranga-ai.fr"], "clicks": 4}]})
+
+    monkeypatch.setattr(research.httpx, "post", fake_post)
+    result = research.google_search_console_query(
+        start_date="2026-10-01", end_date="2026-10-07", dimensions=["query"]
+    )
+    assert result["rows"][0]["clicks"] == 4
+    assert calls[0][1]["data"]["grant_type"] == "refresh_token"
+    assert calls[1][1]["headers"]["Authorization"] == "Bearer access-test"
+    assert calls[1][1]["json"]["dimensions"] == ["query"]
+
+
+def test_search_console_rejects_unknown_dimensions(monkeypatch):
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_TOKEN", "access-test")
+    monkeypatch.setenv("GOOGLE_SEARCH_CONSOLE_SITE_URL", "sc-domain:teranga-ai.fr")
+    with pytest.raises(ValueError):
+        research.google_search_console_query(
+            start_date="2026-10-01", end_date="2026-10-07", dimensions=["secretDimension"]
+        )
+
+
+def test_semrush_parses_csv_without_exposing_api_key(monkeypatch):
+    monkeypatch.setenv("SEMRUSH_API_KEY", "semrush-test")
+    calls = []
+
+    class CsvResponse(FakeResponse):
+        text = "Ph;Po;Nq;Cp;Ur\nassistant Sénégal;3;100;0.2;https://teranga-ai.fr/"
+
+    def fake_get(url, **kwargs):
+        calls.append((url, kwargs))
+        return CsvResponse({})
+
+    monkeypatch.setattr(research.httpx, "get", fake_get)
+    rows = research.semrush_domain_organic("teranga-ai.fr", display_limit=500)
+    assert rows[0]["Ph"] == "assistant Sénégal"
+    assert calls[0][1]["params"]["display_limit"] == "100"
+    assert calls[0][1]["params"]["key"] == "semrush-test"
+
+
+def test_semrush_rejects_invalid_domain(monkeypatch):
+    monkeypatch.setenv("SEMRUSH_API_KEY", "semrush-test")
+    with pytest.raises(ValueError):
+        research.semrush_domain_organic("https://teranga-ai.fr/path")
+
