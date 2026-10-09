@@ -1,0 +1,35 @@
+name: Claude Code bridge
+
+on:
+  issue_comment:
+    types: [created]
+
+# Runs only for an explicit command from the repository owner.
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  id-token: write
+
+jobs:
+  claude:
+    if: >-
+      github.event.comment.user.login == github.repository_owner &&
+      contains(github.event.comment.body, '/claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          trigger_phrase: "/claude"
+          claude_args: |
+            --max-turns 8
+            --append-system-prompt "Projet Teranga AI. Lis AGENTS.md et .github/agents/README.md. Réponds en français. Travaille uniquement sur une branche dédiée. N'écris jamais de secret. Ne désactive aucun test ni contrôle TLS. Ne fusionne pas et ne déploie pas. Ajoute des tests ciblés et rapporte les commandes et résultats exacts. Si la tâche est ambiguë ou risquée, demande une clarification au lieu d'agir."
