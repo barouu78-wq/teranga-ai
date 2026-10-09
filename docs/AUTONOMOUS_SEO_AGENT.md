@@ -19,11 +19,12 @@ This iteration is read-only. It does not edit production pages, publish generate
 ## Next steps toward a genuine AI agent
 
 1. Review the first scheduled/manual report and tune false positives.
-2. Add Google Search Console data through an authorized service account or OAuth integration, with least-privilege access. Never commit credentials.
-3. Compare query/page impressions, clicks, CTR, average position, and country/device segments to prioritize real opportunities.
-4. Have an LLM propose specific, evidence-based fixes and content briefs; require tests and human approval before publishing.
-5. Create a PR for each code/content change and require CI to pass. Never automatically merge or deploy an unreviewed SEO change.
-6. Track outcomes over 28-day windows and keep a change log.
+2. Verify whether the existing Search Console setup is only site verification in Google, or whether Teranga AI already has authorized API access. A verified property does not automatically give this codebase API access.
+3. If API access is not already implemented, add it through an authorized service account or OAuth integration with least-privilege access. Never commit credentials.
+4. Compare query/page impressions, clicks, CTR, average position, and country/device segments to prioritize real opportunities.
+5. Have an LLM propose specific, evidence-based fixes and content briefs; require tests and human approval before publishing.
+6. Create a PR for each code/content change and require CI to pass. Never automatically merge or deploy an unreviewed SEO change.
+7. Track outcomes over 28-day windows and keep a change log.
 
 ## Initial keyword clusters
 
