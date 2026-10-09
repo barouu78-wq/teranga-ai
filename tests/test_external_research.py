@@ -71,3 +71,44 @@ def test_firecrawl_sends_bearer_auth(monkeypatch):
     assert research.scrape_firecrawl("https://example.com/page") == {"success": True}
     assert calls[0][1]["headers"]["Authorization"] == "Bearer test-key"
     assert calls[0][1]["json"]["formats"] == ["markdown"]
+
+
+def test_search_context_uses_tavily_and_returns_http_sources(monkeypatch):
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+    monkeypatch.delenv("EXA_API_KEY", raising=False)
+    monkeypatch.setattr(
+        research, "search_tavily",
+        lambda query, max_results=5: {"results": [
+            {"title": "Guide Dakar", "url": "https://example.org/dakar", "content": "Informations pratiques."},
+            {"title": "URL invalide", "url": "javascript:alert(1)", "content": "À ignorer."},
+        ]},
+    )
+    result = research.search_context("visiter Dakar")
+    assert result["provider"] == "tavily"
+    assert "Informations pratiques." in result["context"]
+    assert len(result["sources"]) == 1
+    assert result["sources"][0]["url"] == "https://example.org/dakar"
+
+
+def test_search_context_falls_back_to_exa_when_tavily_fails(monkeypatch):
+    monkeypatch.setenv("TAVILY_API_KEY", "test-key")
+    monkeypatch.setenv("EXA_API_KEY", "test-key")
+    monkeypatch.setattr(
+        research, "search_tavily",
+        lambda query, max_results=5: (_ for _ in ()).throw(research.ProviderRequestError("offline")),
+    )
+    monkeypatch.setattr(
+        research, "search_exa",
+        lambda query, num_results=5: {"results": [
+            {"title": "Source Exa", "url": "https://example.org", "text": "Texte extrait."},
+        ]},
+    )
+    result = research.search_context("emploi Sénégal")
+    assert result["provider"] == "exa"
+    assert "Texte extrait." in result["context"]
+
+
+def test_search_context_without_keys_is_disabled(monkeypatch):
+    monkeypatch.delenv("TAVILY_API_KEY", raising=False)
+    monkeypatch.delenv("EXA_API_KEY", raising=False)
+    assert research.search_context("question") is None
