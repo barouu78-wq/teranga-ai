@@ -29,6 +29,7 @@ _CATEGORY_KEYWORDS = {
     "ai": ("intelligence artificielle", "ia", "machine learning", "automatisation", "chatbot"),
 }
 
+_MAX_TEXT = 2000
 _STAGE_ORDER = ("idea", "validation", "prototype", "first_customers", "revenue")
 _STAGE_LABELS = {
     "idea": "Idée",
@@ -94,7 +95,7 @@ def find_project_partners(category: str = "", city: str = "") -> list[dict[str, 
 def build_project_matches(project: dict[str, Any]) -> dict[str, Any]:
     """Create deterministic next-step matches from a saved project brief."""
     category = _normalize(project.get("category", "business"))
-    city = str(project.get("city", "")).strip()
+    city = str(project.get("city", "")).strip()[:80]
     partners = find_project_partners(category, city)
     from services.youth_opportunities import find_youth_opportunities
 
@@ -116,7 +117,9 @@ def build_project_matches(project: dict[str, Any]) -> dict[str, Any]:
     }
 
 def _normalize(value: Any) -> str:
-    text = unicodedata.normalize("NFD", str(value or "").lower())
+    # Borné : l'idée fait 2 000 caractères au plus, mais budget, étape ou ville arrivent tels quels
+    # d'un corps JSON pouvant peser 4 Mo, sur des routes sans limite de débit.
+    text = unicodedata.normalize("NFD", str(value or "")[:_MAX_TEXT].lower())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
 

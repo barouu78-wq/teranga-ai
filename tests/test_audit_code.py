@@ -86,6 +86,18 @@ def test_project_goal_uses_french_thousands_separators():
     assert brief["tracking"]["objective"] == "Atteindre 2 000 000 FCFA."
 
 
+def test_project_helpers_do_not_process_a_huge_text_field():
+    # /api/projects/* n'ont pas de limite de débit et reçoivent jusqu'à 4 Mo : une chaîne géante
+    # (budget, étape, ville…) ne doit pas être normalisée caractère par caractère (≈ 1 s de CPU).
+    from services import youth_projects
+
+    assert len(youth_projects._normalize("é" * 100_000)) <= 2000
+    assert youth_projects._money_amount("12 500 FCFA " + "x" * 100_000) == 12500
+    projet = {"stage": "x" * 100_000, "category": "y" * 100_000, "city": "z" * 100_000}
+    assert youth_projects.advance_project_stage(projet)["stage"] == "validation"
+    assert len(youth_projects.build_project_matches(projet)["city"]) <= 80
+
+
 def test_redirect_target_never_returns_control_characters():
     from services.error_pages import redirect_target
 
