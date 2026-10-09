@@ -4,6 +4,12 @@ on:
   workflow_run:
     workflows: ["audits-seo-performance"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "ID d'une exécution échouée de audits-seo-performance à traiter manuellement"
+        required: true
+        type: string
 
 permissions:
   actions: read
@@ -14,22 +20,48 @@ permissions:
 jobs:
   triage-audit-failure:
     name: Créer un relais QA / développeur si un audit échoue
-    if: github.event.workflow_run.conclusion == 'failure'
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Ouvrir ou actualiser un ticket de diagnostic
         uses: actions/github-script@v7
         env:
-          RUN_ID: ${{ github.event.workflow_run.id }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_RUN_ID: ${{ github.event.workflow_run.id }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
         with:
           script: |
-            const runId = process.env.RUN_ID;
-            const runUrl = process.env.RUN_URL;
-            const sha = process.env.HEAD_SHA;
-            const branch = process.env.BRANCH;
+            let run;
+            if (process.env.EVENT_NAME === "workflow_run") {
+              run = context.payload.workflow_run;
+            } else {
+              const runId = Number(process.env.INPUT_RUN_ID);
+              if (!Number.isSafeInteger(runId) || runId <= 0) {
+                core.setFailed("Fournir un ID numérique valide d'exécution en échec.");
+                return;
+              }
+              const response = await github.rest.actions.getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId
+              });
+              run = response.data;
+              if (run.name !== "audits-seo-performance") {
+                core.setFailed(`L'exécution ${runId} n'est pas le workflow audits-seo-performance.`);
+                return;
+              }
+              if (run.conclusion !== "failure") {
+                core.setFailed(`L'exécution ${runId} a la conclusion "${run.conclusion}", pas "failure". Aucun ticket créé.`);
+                return;
+              }
+            }
+
+            const runId = String(run.id);
+            const runUrl = run.html_url;
+            const sha = run.head_sha;
+            const branch = run.head_branch;
             const title = `[Agent QA] Audit SEO/performance en échec — run ${runId}`;
             const body = [
               "## Relais automatique Teranga AI",
@@ -53,7 +85,8 @@ jobs:
               "",
               "### Clôture",
               "Ne fermer ce ticket qu’après identification de la cause, lien vers la PR corrective et preuve des contrôles réussis. Si l’échec est transitoire, documenter la nouvelle exécution."
-            ].join("\n");
+            ].join("\\n");
+
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -66,16 +99,16 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: match.number,
-                body: `Nouvel échec détecté.\n\n${body}`
+                body: `Nouvel échec détecté.\\n\\n${body}`
               });
               core.info(`Ticket existant actualisé : #${match.number}`);
             } else {
+              // No label dependency: issue creation still works if the repository lacks a "bug" label.
               const created = await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 title,
-                body,
-                labels: ["bug"]
+                body
               });
               core.info(`Ticket de relais créé : #${created.data.number}`);
             }
