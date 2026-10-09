@@ -591,6 +591,12 @@ def require_json_post(fn):
             validator=valid_token,
         ):
             return jsonify({"error": "csrf"}), 403
+        try:
+            # Lecture du JSON ici (Flask la garde en mémoire pour la route) : un JSON très imbriqué
+            # (« [[[[… ») lève RecursionError, qui donnait une erreur 500 et une trace dans les journaux.
+            request.get_json(silent=True)
+        except RecursionError:
+            return jsonify({"error": "Requête invalide."}), 400
         return fn(*args, **kwargs)
     return wrapper
 
