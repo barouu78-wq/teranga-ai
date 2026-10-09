@@ -78,6 +78,14 @@ def test_unknown_address_with_a_line_break_is_a_404_not_a_server_error():
         assert "\n" not in response.headers.get("Location", "") and "\r" not in response.headers.get("Location", "")
 
 
+def test_project_goal_uses_french_thousands_separators():
+    from services.youth_projects import build_project_brief
+
+    brief = build_project_brief(idea="Vendre du jus de bissap", budget_fcfa="500 000 FCFA", goal_fcfa="2 millions")
+    assert "500 000 FCFA" in brief["next_action"]
+    assert brief["tracking"]["objective"] == "Atteindre 2 000 000 FCFA."
+
+
 def test_redirect_target_never_returns_control_characters():
     from services.error_pages import redirect_target
 
