@@ -12,6 +12,7 @@ from typing import Any, Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from .action_executor import ALLOWED_ACTIONS
+from .model_params import openai_complex_model, openai_model
 
 
 @dataclass(frozen=True)
@@ -83,8 +84,14 @@ def build_action_request(payload: dict[str, Any], plan: AgentPlan) -> dict[str, 
     }
 
 
-def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str = "gpt-5.6-sol") -> AgentPlan:
-    """Build a bounded plan from the decisions already computed upstream."""
+def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str | None = None) -> AgentPlan:
+    """Build a bounded plan from the decisions already computed upstream.
+
+    ``complex_model`` absent : modèle configuré par OPENAI_COMPLEX_MODEL. Une chaîne vide
+    désactive le passage au modèle complexe. Seul le modèle rapide (OPENAI_MODEL) y passe.
+    """
+    if complex_model is None:
+        complex_model = openai_complex_model()
     planner = bool(payload.get("planner"))
     deep_reasoning = bool(payload.get("deep_reasoning"))
     use_web = bool(payload.get("use_web"))
@@ -111,7 +118,7 @@ def build_agent_plan(payload: dict[str, Any], *, model: str, complex_model: str 
         "finance": "prepare_finance_plan",
     }.get(requested_workflow, "answer") if action_strategy == "act" else "answer"
     workflow = _PLANNER_WORKFLOW_ALIASES.get(requested_workflow, "general") if planner else "general"
-    active_model = complex_model if model == "gpt-5.6-luna" and complex_model and (planner or deep_reasoning) else model
+    active_model = complex_model if model == openai_model() and complex_model and (planner or deep_reasoning) else model
     steps = ["prepare_context"]
     if use_web:
         steps.append("web_retrieval")

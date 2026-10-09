@@ -2,12 +2,50 @@
 
 from __future__ import annotations
 
+import os
+import re
 from collections.abc import Callable, Iterable
 from typing import Any
 
 CHAT_MAX_OUTPUT_TOKENS = 800
 WEB_OR_PLANNER_MAX_OUTPUT_TOKENS = 1200
 PROMPT_CACHE_KEY = "teranga-chat-v1"
+
+# Noms des modèles OpenAI par défaut. Chacun se règle par une variable d'environnement
+# (comme ANTHROPIC_MODEL pour Claude, voir backup_ai.py) ; une valeur vide ou invalide
+# retombe sur le défaut. Dans services/, ces deux constantes sont le seul endroit où les
+# noms sont écrits (un test le vérifie).
+DEFAULT_OPENAI_MODEL = "gpt-5.6-luna"  # OPENAI_MODEL : modèle rapide du chat
+DEFAULT_OPENAI_COMPLEX_MODEL = "gpt-5.6-sol"  # OPENAI_COMPLEX_MODEL : planification, raisonnement approfondi
+
+# Identifiant plausible : lettres, chiffres et « . _ : / - », sans espace ni caractère de contrôle.
+_MODEL_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}")
+
+
+def clean_model_name(value: Any, default: str = "") -> str:
+    """Nom de modèle sans espaces superflus ; vide ou invalide, ``default``."""
+    name = value.strip() if isinstance(value, str) else ""
+    return name if _MODEL_NAME.fullmatch(name) else default
+
+
+def env_model(name: str, default: str = "") -> str:
+    """Nom de modèle lu dans la variable d'environnement ``name`` (lecture à chaque appel)."""
+    return clean_model_name(os.getenv(name), default)
+
+
+def openai_model() -> str:
+    """Modèle rapide du chat (OPENAI_MODEL)."""
+    return env_model("OPENAI_MODEL", DEFAULT_OPENAI_MODEL)
+
+
+def openai_complex_model() -> str:
+    """Modèle des demandes de planification ou de raisonnement approfondi (OPENAI_COMPLEX_MODEL)."""
+    return env_model("OPENAI_COMPLEX_MODEL", DEFAULT_OPENAI_COMPLEX_MODEL)
+
+
+def openai_trip_model() -> str:
+    """Modèle dédié au planificateur de voyage (OPENAI_TRIP_MODEL) ; chaîne vide s'il n'y en a pas."""
+    return env_model("OPENAI_TRIP_MODEL")
 
 
 def build_model_kwargs(
@@ -26,7 +64,7 @@ def build_model_kwargs(
     domain = str((payload.get("intent_context") or {}).get("domain") or "general")
 
     effort = reasoning_override or reasoning_effort(use_web, planner)
-    if not reasoning_override and (planner or deep_reasoning) and model != "gpt-5.6-luna":
+    if not reasoning_override and (planner or deep_reasoning) and model != openai_model():
         effort = "medium"
 
     kwargs: dict[str, Any] = {

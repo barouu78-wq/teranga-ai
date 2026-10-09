@@ -660,8 +660,8 @@ def test_jamais_de_float_pour_l_argent():
 
 def test_le_fichier_est_dans_l_empreinte_du_cache_des_reponses():
     app_source = (ROOT / "app.py").read_text(encoding="utf-8")
-    fichiers = re.search(r'for name in \(("practical_facts\.py".*?)\)\)', app_source).group(1)
-    assert '"calculators.py"' in fichiers
+    empreinte = app_source[app_source.index("_CACHE_MODEL_BASE = "):app_source.index(".hexdigest()")]
+    assert '"calculators.py"' in empreinte and "read_bytes()" in empreinte
 
 
 def _instructions(question, langue="fr"):

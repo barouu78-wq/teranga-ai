@@ -114,6 +114,11 @@ def should_use_web(message, context=""):
         "greve", "grève", "travaux", "route", "circulation", "manifestation",
         "concert", "evenement", "événement", "match", "resultat", "résultat",
         "classement", "promotion", "offre", "sante", "santé", "hopital", "hôpital", "pharmacie", "urgence", "vaccination",
+        # Santé et premiers secours : alertes sanitaires, campagnes de moustiquaires, conseils qui évoluent.
+        "paludisme", "palu", "malaria", "fievre", "fièvre", "moustique", "moustiques", "moustiquaire", "moustiquaires",
+        "repulsif", "répulsif", "premiers secours", "deshydratation", "déshydratation", "diarrhee", "diarrhée",
+        "morsure", "morsures", "piqure", "piqûre", "piqures", "piqûres", "brulure", "brûlure", "brulures", "brûlures",
+        "serpent", "serpents", "scorpion", "intoxication alimentaire", "coup de chaleur", "insolation",
         # Ajouts du banc d'essai : réponses qui changent d'une année à l'autre.
         "hotels", "auberge", "auberges", "logement", "hebergement",
         "vaccin", "vaccins", "fievre jaune",
@@ -126,6 +131,12 @@ def should_use_web(message, context=""):
         "carte d'identité", "carte d'identite", "carte d identite", "carte nationale", "extrait de naissance", "acte de naissance",
         "casier judiciaire", "jugement supplétif", "jugement suppletif", "woyofal", "senelec", "campusen",
         "couverture maladie", "ipres", "securite sociale", "sécurité sociale",
+        # Arnaques et mobile money : les alertes, les opérateurs et les procédures de plainte changent souvent.
+        "arnaque", "arnaques", "arnaquer", "arnaqueur", "arnaqueurs", "escroc", "escrocs", "escroquerie", "escroqueries",
+        "fraude", "fraudes", "frauduleux", "frauduleuse", "scam", "scams", "phishing", "hameçonnage", "hameconnage",
+        "faux billet", "faux billets", "fausse monnaie", "contrefaçon", "contrefacon", "faux sms", "faux visa",
+        "faux visas", "usurpation", "sim swap", "code secret", "code otp", "reclamation", "réclamation",
+        "yas money", "monnaie electronique", "monnaie électronique",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
