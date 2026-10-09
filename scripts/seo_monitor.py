@@ -10,11 +10,13 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from urllib.parse import urlparse
 
 BASE_URL = "https://teranga-ai.fr"
 USER_AGENT = "TerangaAI-SEO-Monitor/1.0 (+https://teranga-ai.fr)"
 TIMEOUT = 15
 MAX_PAGES = 40
+MAX_SITEMAPS = 10
 
 
 class MetadataParser(HTMLParser):
@@ -62,6 +64,41 @@ def fetch(url):
         return {"url": url, "status": None, "final_url": None,
                 "seconds": round(time.monotonic() - started, 2), "body": "",
                 "error": str(exc)[:300]}
+
+
+def _local_name(tag):
+    return tag.rsplit("}", 1)[-1]
+
+
+def parse_sitemap(xml_body, base_url=BASE_URL):
+    """Return (page_urls, child_sitemap_urls) from a sitemap XML document."""
+    root = ET.fromstring(xml_body)
+    root_name = _local_name(root.tag)
+    pages = []
+    child_sitemaps = []
+    if root_name == "urlset":
+        target = pages
+        allowed_name = "url"
+    elif root_name == "sitemapindex":
+        target = child_sitemaps
+        allowed_name = "sitemap"
+    else:
+        raise ET.ParseError(f"Root XML inattendue : {root_name}")
+
+    base = urlparse(base_url)
+    for entry in root:
+        if _local_name(entry.tag) != allowed_name:
+            continue
+        loc = next((node.text.strip() for node in entry
+                    if _local_name(node.tag) == "loc" and node.text and node.text.strip()), None)
+        if not loc:
+            continue
+        parsed = urlparse(loc)
+        if parsed.scheme != "https" or parsed.netloc.lower() != base.netloc.lower():
+            continue
+        if loc not in target:
+            target.append(loc)
+    return pages, child_sitemaps
 
 
 def inspect_page(url):
@@ -114,15 +151,21 @@ def main():
     urls = []
     if sitemap_result["status"] and sitemap_result["status"] < 400:
         try:
-            root = ET.fromstring(sitemap_result["body"])
-            for node in root.iter():
-                if node.tag.rsplit("}", 1)[-1] == "loc" and node.text:
-                    candidate = node.text.strip()
-                    if candidate.startswith(BASE_URL + "/") or candidate == BASE_URL:
-                        if candidate not in urls:
-                            urls.append(candidate)
-                    if len(urls) >= MAX_PAGES:
-                        break
+            page_urls, child_sitemaps = parse_sitemap(sitemap_result["body"])
+            urls.extend(page_urls)
+            for child_url in child_sitemaps[:MAX_SITEMAPS]:
+                child_result = fetch(child_url)
+                if child_result["status"] is None or child_result["status"] >= 400:
+                    report["summary"]["errors"] += 1
+                    report["checks"].setdefault("child_sitemaps", []).append({
+                        "url": child_url, "status": child_result["status"], "error": child_result["error"]
+                    })
+                    continue
+                child_pages, nested_sitemaps = parse_sitemap(child_result["body"])
+                if nested_sitemaps:
+                    report["summary"]["warnings"] += 1
+                urls.extend(child_pages)
+                urls = list(dict.fromkeys(urls))[:MAX_PAGES]
         except ET.ParseError as exc:
             report["checks"]["sitemap"]["parse_error"] = str(exc)
             report["summary"]["errors"] += 1
