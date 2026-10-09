@@ -24,6 +24,13 @@ jobs:
       issues: write
       id-token: write
     steps:
+      # The Claude action expects a Git repository in the workspace root.
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+
       - name: Run Claude Code
         uses: anthropics/claude-code-action@v1
         with:
