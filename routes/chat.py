@@ -44,6 +44,7 @@ def register_chat_route(app, deps):
     knowledge_places = deps.get("knowledge_places") or []
     knowledge_dishes = deps.get("knowledge_dishes") or []
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+    coverage_log = deps.get("coverage_log")  # compteurs anonymes par thème (services/coverage_log.py)
 
     def fallback_for(payload):
         """Réponse de secours quand l'IA est en panne : Claude s'il est configuré (et
@@ -107,6 +108,12 @@ def register_chat_route(app, deps):
             if not allowed_request(web_identity, web_request_log[web_identity], WEB_RATE_LIMIT, WEB_RATE_WINDOW, "web"):
                 record_abuse(web_identity, "web_rate", 2)
                 return jsonify({"error": "Trop de recherches web rapprochées. Réessaie dans un instant."}), 429, {"Retry-After": "20"}
+
+        if coverage_log is not None:
+            try:  # comptage anonyme du sujet (jamais le texte) ; il ne doit jamais gêner la réponse
+                coverage_log.record_chat(payload, request.headers.get("User-Agent", ""))
+            except Exception:  # noqa: BLE001
+                logger.warning("coverage_log_failed")
 
         photo_only = bool(payload.get("photo_only"))
         photo_query = str(payload.get("photo_query") or payload.get("message", ""))
