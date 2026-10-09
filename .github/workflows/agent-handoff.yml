@@ -84,7 +84,7 @@ jobs:
               "",
               "### Clôture",
               "Ne fermer ce ticket qu’après identification de la cause, lien vers la PR corrective et preuve des contrôles réussis. Si l’échec est transitoire, documenter la nouvelle exécution."
-            ].join("\\n");
+            ].join("\n");
 
             const existing = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
@@ -98,7 +98,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: match.number,
-                body: `Nouvel échec détecté.\\n\\n${body}`
+                body: `Nouvel échec détecté.\n\n${body}`
               });
               core.info(`Ticket existant actualisé : #${match.number}`);
             } else {
