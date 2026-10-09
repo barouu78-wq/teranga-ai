@@ -2,8 +2,17 @@
 
 import io
 import json
+import os
 
-from services.images import fetch_google_images
+os.environ.setdefault("OPENAI_API_KEY", "test-key")
+
+import app as app_module  # noqa: E402
+from services import youth_projects  # noqa: E402
+from services.error_pages import redirect_target  # noqa: E402
+from services.images import fetch_google_images  # noqa: E402
+from services.text import clean_answer  # noqa: E402
+from services.youth_opportunities import find_youth_opportunities  # noqa: E402
+from services.youth_projects import build_project_brief  # noqa: E402
 
 
 def _google_item(title, thumbnail, page):
@@ -42,9 +51,6 @@ def test_google_same_thumbnail_twice_is_still_deduplicated():
     assert [p["alt"] for p in photos] == ["Corniche de Dakar"]
 
 
-from services.text import clean_answer  # noqa: E402
-
-
 def test_clean_answer_keeps_multiplication_signs():
     calcul = "Calcul : 2 adultes * 3 nuits * 45 000 FCFA = 270 000 FCFA"
     assert clean_answer(calcul) == calcul
@@ -64,11 +70,6 @@ def test_clean_answer_keeps_underscores_inside_identifiers():
 
 
 def test_unknown_address_with_a_line_break_is_a_404_not_a_server_error():
-    import os
-
-    os.environ.setdefault("OPENAI_API_KEY", "test-key")
-    import app as app_module
-
     client = app_module.app.test_client()
     # Sondes d'injection d'en-tête (« %0d%0a ») : la majuscule pousse le site à chercher la
     # version en minuscules, qui existe, puis à rediriger vers une adresse contenant le saut de ligne.
@@ -79,8 +80,6 @@ def test_unknown_address_with_a_line_break_is_a_404_not_a_server_error():
 
 
 def test_project_goal_uses_french_thousands_separators():
-    from services.youth_projects import build_project_brief
-
     brief = build_project_brief(idea="Vendre du jus de bissap", budget_fcfa="500 000 FCFA", goal_fcfa="2 millions")
     assert "500 000 FCFA" in brief["next_action"]
     assert brief["tracking"]["objective"] == "Atteindre 2 000 000 FCFA."
@@ -89,8 +88,6 @@ def test_project_goal_uses_french_thousands_separators():
 def test_project_helpers_do_not_process_a_huge_text_field():
     # /api/projects/* n'ont pas de limite de débit et reçoivent jusqu'à 4 Mo : une chaîne géante
     # (budget, étape, ville…) ne doit pas être normalisée caractère par caractère (≈ 1 s de CPU).
-    from services import youth_projects
-
     assert len(youth_projects._normalize("é" * 100_000)) <= 2000
     assert youth_projects._money_amount("12 500 FCFA " + "x" * 100_000) == 12500
     projet = {"stage": "x" * 100_000, "category": "y" * 100_000, "city": "z" * 100_000}
@@ -99,8 +96,6 @@ def test_project_helpers_do_not_process_a_huge_text_field():
 
 
 def test_nationwide_programs_are_listed_whatever_the_city():
-    from services.youth_opportunities import find_youth_opportunities
-
     # BE YES est ouvert dans les 14 régions : un jeune de Dakar ou de Ziguinchor doit le voir.
     for city in ("", "Dakar", "Ziguinchor", "Sénégal"):
         titres = [item["title"] for item in find_youth_opportunities("business", city)]
@@ -108,8 +103,6 @@ def test_nationwide_programs_are_listed_whatever_the_city():
 
 
 def test_redirect_target_never_returns_control_characters():
-    from services.error_pages import redirect_target
-
     assert redirect_target("/LIEUX/goree\r\nX", lambda p: True) == ""
     assert redirect_target("/Lieux/a\x00b", lambda p: True) == ""
     assert redirect_target("/LIEUX/goree", lambda p: True) == "/lieux/goree"
