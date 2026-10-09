@@ -50,6 +50,7 @@ from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, infer_senegal_context, should_use_planner
 from services.backup_ai import claude_is_primary, claude_model
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
+from services.external_research import search_context as external_search_context
 from services.rate_limit import BoundedStore, allowed_request as _allowed_request
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
@@ -850,6 +851,7 @@ register_chat_route(app, {
     "WEB_RATE_LIMIT": WEB_RATE_LIMIT,
     "WEB_RATE_WINDOW": WEB_RATE_WINDOW,
     "parse_chat_payload": parse_chat_payload,
+    "external_research_context": external_search_context,
     "complete_reply": complete_reply,
     "run_chat_enrichments": run_chat_enrichments,
     "start_chat_enrichments": start_chat_enrichments,
