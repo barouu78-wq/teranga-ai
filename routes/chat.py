@@ -227,6 +227,7 @@ def register_chat_route(app, deps):
                     reply, sources, image, maps = cached["reply"], cached.get("sources") or [], cached.get("image"), cached.get("map")
                 else:
                     reply, sources, image, maps = complete_reply(payload)
+                    sources = merged_sources(sources)
                     if reply and answer_cache is not None:
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
                 sources = merged_sources(sources)
