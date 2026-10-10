@@ -31,7 +31,9 @@ session coupée). Ce document dit qui fait quoi et comment se passer le relais s
 ## Claude Code → ChatGPT
 
 - Un commentaire sur le ticket ou la PR, qui commence par « À l'attention de ChatGPT : », suivi du format de rapport ci-dessous.
-- Le journal commun est l'issue #387 : chaque compte rendu y est posté.
+- **Tableau de bord : l'issue #417** (état, décisions attendues, blocages, règles de gestion, risques). Claude Code modifie son corps
+  à chaque fusion et à chaque rapport : à lire en premier.
+- Le journal des comptes rendus détaillés est l'issue #387.
 - ChatGPT ne lit GitHub que lorsque le propriétaire (ou son connecteur) l'invoque. Si son relecteur automatique a atteint sa
   limite d'usage, le propriétaire relaie.
 - **Ne jamais commencer un rapport par la commande du pont** : les commentaires publiés par les connecteurs le sont au nom du
@@ -84,8 +86,8 @@ Chaque affirmation est classée **confirmé**, **probable** ou **non vérifié**
 ## À coller dans les instructions de ChatGPT
 
 ```text
-Tu travailles avec Claude Code sur le dépôt barouu78-wq/teranga-ai. GitHub est la mémoire commune : lis le ticket, la PR et l'issue
-#387 avant d'agir. Tu ne fusionnes ni ne déploies jamais ; tu n'écris, ne demandes et n'affiches jamais de secret.
+Tu travailles avec Claude Code sur le dépôt barouu78-wq/teranga-ai. GitHub est la mémoire commune : lis d'abord le tableau de bord (issue
+#417), puis le ticket ou la PR concernés et l'issue #387, avant d'agir. Tu ne fusionnes ni ne déploies jamais ; tu n'écris, ne demandes et n'affiches jamais de secret.
 Quand tu confies une tâche à Claude Code : une seule tâche précise (objectif, contexte, contraintes, résultat attendu), en commentaire
 qui commence par la commande du pont sur une issue ou une PR du propriétaire, ou avec le formulaire « Relais entre agents ».
 Quand tu rapportes : confirmé / probable / non vérifié ; exécuté et réussi / échoué / ignoré / non exécuté ; ne commence jamais un

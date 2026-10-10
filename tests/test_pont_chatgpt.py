@@ -43,7 +43,7 @@ def test_protocol_has_roles_both_directions_formats_and_continuity():
     doc = DOC.read_text(encoding="utf-8")
     for needle in ("## Qui fait quoi", "## ChatGPT → Claude Code", "## Claude Code → ChatGPT", "## Format commun d'une tâche",
                    "## Format commun d'un rapport", "## Règles communes", "## Continuité", "## À coller dans les instructions de ChatGPT",
-                   "## Ce qui n'est pas vérifié", "#387", "confirmé", "probable", "non vérifié",
+                   "## Ce qui n'est pas vérifié", "#387", "#417", "confirmé", "probable", "non vérifié",
                    "exécuté et réussi", "branche ou une PR"):
         assert needle in doc, needle
     # Honnêteté : le protocole dit lui-même ce qu'il n'est pas.
