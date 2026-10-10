@@ -1,0 +1,52 @@
+name: Claude Code bridge
+
+on:
+  issue_comment:
+    types: [created]
+
+# Runs only for an explicit command from the repository owner.
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  id-token: write
+
+jobs:
+  claude:
+    if: >-
+      github.event.comment.user.login == github.repository_owner &&
+      contains(github.event.comment.body, '/claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      # The Claude action expects a Git repository in the workspace root.
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install development dependencies
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "/claude"
+          claude_args: |
+            --max-turns 20
+            --allowedTools "Glob,Grep,LS,Read,Edit,Write,mcp__github_comment__update_claude_comment,mcp__github_ci__get_ci_status,mcp__github_ci__get_workflow_run_details,mcp__github_ci__download_job_log,Bash(git status:*),Bash(git diff:*),Bash(git branch:*),Bash(git checkout:*),Bash(git switch:*),Bash(git fetch:*),Bash(git add:*),Bash(git commit:*),Bash(python -m pytest:*),Bash(pytest:*),Bash(python -m py_compile:*),Bash(ruff check:*),Bash(node --check:*),Bash(pip install:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/v1/scripts/git-push.sh:*)"
+            --append-system-prompt "Projet Teranga AI. Lis AGENTS.md et .github/agents/README.md. Réponds en français. Travaille uniquement sur une branche dédiée. N'écris jamais de secret. Ne désactive aucun test ni contrôle TLS. Ne fusionne pas et ne déploie pas. Ajoute des tests ciblés et rapporte les commandes et résultats exacts. Si la tâche est ambiguë ou risquée, demande une clarification au lieu d'agir."

@@ -1,0 +1,154 @@
+name: audits-seo-performance
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 7 * * 1"
+  pull_request:
+    paths:
+      - "scripts/audit_seo.py"
+      - "services/**"
+      - "routes/**"
+      - "templates/**"
+      - "static/**"
+      - ".github/workflows/audits-seo-performance.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  seo-audit:
+    name: Audit SEO local
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Installer les dépendances de test
+        run: pip install -r requirements-dev.txt
+      - name: Auditer les pages du sitemap local
+        id: audit
+        continue-on-error: true
+        run: python scripts/audit_seo.py --json > seo-audit-report.json
+      - name: Publier le rapport SEO
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-seo
+          path: seo-audit-report.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Échouer si l'audit SEO trouve des problèmes
+        if: steps.audit.outcome == 'failure'
+        run: |
+          echo "L'audit SEO a trouvé des problèmes. Télécharger l'artifact rapport-seo pour consulter les détails."
+          exit 1
+
+  performance-smoke:
+    name: Diagnostic HTTPS, disponibilité et latence publique
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tester les pages publiques et diagnostiquer TLS
+        id: public-check
+        continue-on-error: true
+        env:
+          SITE_URL: https://teranga-ai.fr
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import socket
+          import ssl
+          import time
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          base = os.environ["SITE_URL"].rstrip("/")
+          paths = ["/", "/robots.txt", "/sitemap.xml"]
+          results = []
+          failed = False
+
+          for path in paths:
+              url = base + path
+              request = urllib.request.Request(
+                  url,
+                  headers={"User-Agent": "TerangaAI-Monitor/1.0"},
+              )
+              started = time.monotonic()
+              status = "ERROR"
+              error_type = None
+              error_message = None
+              try:
+                  with urllib.request.urlopen(request, timeout=20) as response:
+                      status = response.status
+                      response.read(2048)
+              except urllib.error.HTTPError as exc:
+                  status = exc.code
+                  error_type = "http_error"
+                  error_message = str(exc)
+              except urllib.error.URLError as exc:
+                  reason = exc.reason
+                  if isinstance(reason, ssl.SSLCertVerificationError):
+                      error_type = "tls_certificate_verification"
+                      error_message = str(reason)
+                      print(
+                          "ALERTE TLS: le certificat présenté n'est pas validé "
+                          "par le magasin de confiance du runner. Ne pas désactiver "
+                          "la vérification TLS ; vérifier le domaine personnalisé, "
+                          "le proxy/CDN et le certificat côté hébergement."
+                      )
+                  elif isinstance(reason, (socket.timeout, TimeoutError)):
+                      error_type = "timeout"
+                      error_message = str(reason)
+                  else:
+                      error_type = "network_error"
+                      error_message = str(reason)
+              except (TimeoutError, ssl.SSLError) as exc:
+                  error_type = "tls_or_timeout_error"
+                  error_message = str(exc)
+
+              elapsed_ms = round((time.monotonic() - started) * 1000)
+              results.append({
+                  "url": url,
+                  "status": status,
+                  "latency_ms": elapsed_ms,
+                  "error_type": error_type,
+                  "error": error_message,
+              })
+              print(
+                  f"{url}: status={status}, latency={elapsed_ms}ms, "
+                  f"error_type={error_type}, error={error_message}"
+              )
+              if status != 200 or elapsed_ms > 10000:
+                  failed = True
+
+          report = {
+              "site": base,
+              "results": results,
+              "failed": failed,
+              "note": "La vérification TLS reste activée. Les erreurs de certificat ne sont jamais ignorées.",
+          }
+          Path("rapport-public.json").write_text(
+              json.dumps(report, ensure_ascii=False, indent=2),
+              encoding="utf-8",
+          )
+          print("Rapport JSON:", json.dumps(report, ensure_ascii=False))
+          if failed:
+              raise SystemExit("Le contrôle public a échoué ; consulter rapport-public.")
+          PY
+      - name: Publier le diagnostic public même en cas d'échec
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-public-https-performance
+          path: rapport-public.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Bloquer si le contrôle public a échoué
+        if: steps.public-check.outcome == 'failure'
+        run: |
+          echo "Le contrôle public a échoué. Télécharger rapport-public-https-performance pour voir le diagnostic TLS/HTTP."
+          exit 1
