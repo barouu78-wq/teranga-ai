@@ -124,6 +124,18 @@ _ACKNOWLEDGEMENT = re.compile(
 )
 
 
+# Mots (sans accents) qui renvoient au tour précédent : « Combien ça coûte ? », « Précise », « Une autre ? ».
+# Liste volontairement courte : un mot ambigu (« y », « ce », « plus », « comment ») laisserait une question
+# autonome reprendre le sujet du fil.
+_BACK_REFERENCES = frozenset({
+    "ca", "cela", "ceci", "celui", "celle", "ceux", "celles", "lui", "leur", "leurs", "ici",
+    "aussi", "encore", "autre", "autres", "meme", "pareil", "ensuite",
+    "precise", "precisez", "detaille", "detaillez", "developpe", "developpez", "continue", "continuez",
+    "poursuis", "reprends", "resume", "repete",
+    "that", "this", "it", "there", "also", "again", "same", "other", "another", "details",
+})
+
+
 def is_acknowledgement(message: str) -> bool:
     """Vrai pour un remerciement ou un adieu seul (« merci », « Merci beaucoup ! », « à bientôt »).
 
@@ -480,15 +492,28 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
     resolved_intent = current_intent
     resolved_location = current_location
     context_source = "current_message"
+    follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "qu'en est-il")
+    is_short_follow_up = len(message.split()) <= 8 and _normalize(message).startswith(
+        tuple(_normalize(marker) for marker in follow_up_markers)
+    )
+    words = re.findall(r"[a-z0-9]+", _normalize(message).replace("'", " "))
+    # Message elliptique (« Et demain ? », « Demain ? », « Encore ») : il ne se comprend qu'avec le tour
+    # précédent. Une question complète qui n'a simplement pas d'intention reconnue (« Quelle langue
+    # parle-t-on au Sénégal ? » après la météo) n'est pas un suivi.
+    elliptical = is_short_follow_up or len(words) <= 2
+    # Renvoi au tour précédent, plus large : « Combien ça coûte ? », « Précise le deuxième jour ».
+    refers_back = elliptical or (len(words) <= 8 and any(word in _BACK_REFERENCES for word in words))
     if recent_users:
-        # On reprend le sujet précédent pour une vraie relance (« Et pour le budget ? »),
-        # mais pas pour toute question courte : « Où manger à Dakar ? » après la météo
-        # reste une question de restaurant.
-        follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "qu'en est-il")
-        is_short_follow_up = len(message.split()) <= 8 and _normalize(message).startswith(
-            tuple(_normalize(marker) for marker in follow_up_markers)
-        )
-        if resolved_intent == "general_information" or is_short_follow_up:
+        # On reprend le sujet précédent pour une vraie relance (« Et pour le budget ? »), pas pour
+        # toute question : « Où manger à Dakar ? » après la météo reste une question de restaurant.
+        # Une question sans intention reconnue ne reprend celle du fil que si elle est elliptique
+        # (« Et demain ? », « Demain ? ») : sinon une question de prix ou d'horaires après la météo
+        # devenait une question météo (prévision injectée à la place de la recherche web).
+        if resolved_intent == "general_information":
+            inherits_intent = is_short_follow_up or (len(words) <= 2 and classify_domain(message) == "general")
+        else:
+            inherits_intent = is_short_follow_up
+        if inherits_intent:
             for previous in recent_users:
                 previous_intent = detect_intent(previous)
                 if previous_intent != "general_information":
@@ -514,8 +539,20 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
         domain = classify_domain(message)
     else:
         own_domain = classify_domain(message)
-        domain = own_domain if own_domain != "general" else classify_domain(context_query)
-    fresh = should_use_web(message, context_query)
+        # Sans sujet propre, seul un message qui renvoie au tour précédent garde le domaine du fil.
+        domain = own_domain if own_domain != "general" or not refers_back else classify_domain(context_query)
+    # La recherche web et le raisonnement approfondi ne reprennent le fil que pour un message qui s'y
+    # réfère : « Quelle langue parle-t-on au Sénégal ? » après une question de prix n'est pas un
+    # prix, et après « Pourquoi… ? » elle n'a pas besoin du modèle complexe.
+    standalone = bool(recent_users) and not refers_back
+    fresh = should_use_web(message, "" if standalone else context_query)
+    if standalone:
+        deep_query = message
+        # Ses propres contraintes (« 5 jours avec 300000 FCFA »), pas celles d'un tour ancien.
+        deep_constraints = infer_senegal_context([], message).get("constraints", []) if context_data.get("constraints") else []
+    else:
+        deep_query = context_query
+        deep_constraints = context_data.get("constraints", [])
     return {
         "intent": resolved_intent,
         "domain": domain,
@@ -524,9 +561,9 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
         "needs_web_search": fresh,
         "needs_images": resolved_intent == "photos",
         "needs_deep_reasoning": should_use_deep_reasoning({
-            "query": context_query,
+            "query": deep_query,
             "intents": [resolved_intent],
-            "constraints": context_data.get("constraints", []),
+            "constraints": deep_constraints,
         }),
         "preferred_sources": source_domains(domain),
         "has_context": bool(recent_users),
