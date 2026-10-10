@@ -16,14 +16,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
+      # Ruff et Bandit viennent de requirements-dev.txt : une seule source pour le CI et les développeurs.
       - name: Analyse du code (erreurs de syntaxe, noms inconnus, imports inutiles)
-        run: |
-          pip install "ruff>=0.6"
-          ruff check --select E9,F63,F7,F82,F401,F811,F841 .
+        run: ruff check --select E9,F63,F7,F82,F401,F811,F841 .
       - name: Analyse de sécurité du code (failles courantes, niveau moyen et plus)
-        run: |
-          pip install bandit
-          bandit -q -r app.py routes services -ll
+        run: bandit -q -r app.py routes services -ll
       - name: Tests et couverture (le seuil empêche la couverture de baisser sans qu'on le voie)
         run: pytest -q --cov=app --cov=routes --cov=services --cov-report=term-missing:skip-covered --cov-fail-under=85
       - name: Audit des dépendances (vulnérabilités connues)
@@ -39,7 +36,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install -r requirements-dev.txt "playwright>=1.47,<2"
+      - run: pip install -r requirements-e2e.txt
       - run: python -m playwright install --with-deps chromium
       - run: pytest -q tests/e2e -rs
         env:

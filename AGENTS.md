@@ -11,17 +11,26 @@ commentaires de code en français.
 ## Avant chaque PR (le CI fait la même chose)
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements-dev.txt        # pytest, couverture, Ruff, Bandit
+python scripts/check_dev_env.py            # dit quels contrôles peuvent réellement tourner ici
 ruff check --select E9,F63,F7,F82,F401,F811,F841 .
 bandit -q -r app.py routes services -ll   # failles courantes ; une alerte volontaire se justifie par « # nosec Bxxx - raison »
 pytest -q --cov=app --cov=routes --cov=services --cov-fail-under=85   # ~1000 tests, < 1 min, aucun appel réseau réel
-pytest -q tests/e2e           # clics réels dans Chromium (Playwright)
 node --check static/home.js static/trip-planner.js
+# Tests e2e (clics réels dans Chromium) : une fois, puis à chaque PR
+pip install -r requirements-e2e.txt && python -m playwright install --with-deps chromium
+E2E_REQUIRED=1 pytest -q tests/e2e -rs
 ```
 
 Une PR ne se fusionne que si **pytest et e2e sont verts**. Ne jamais désactiver, sauter ou
 assouplir un test pour passer : corriger la cause. Si un changement voulu modifie un
 comportement testé, mettre le test à jour **et** l'expliquer dans la PR.
+
+**Réussi ≠ ignoré ≠ non exécuté.** Sans Playwright, `pytest tests/e2e` marque les tests « skipped » :
+ils n'ont pas réussi. `E2E_REQUIRED=1` transforme un navigateur manquant en échec, et `-rs` affiche la
+raison de chaque test ignoré. Un rapport distingue toujours *exécuté et réussi*, *exécuté et échoué*,
+*ignoré* (avec la raison) et *non exécuté* (avec l'outil manquant) ; il n'annonce jamais « vert » pour
+un contrôle qui n'a pas tourné.
 
 ## Carte du code
 
