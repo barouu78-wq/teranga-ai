@@ -7,6 +7,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
+from .intelligence import detect_location
 from .language_quality import language_instruction
 from .model_params import openai_model
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
@@ -169,6 +170,17 @@ def photo_request(message: str, history) -> tuple[bool, str]:
     # Sujet : la dernière demande de photos, sinon la dernière question
     # (« Parle-moi de Saly » suivie d'une proposition de photos).
     subject = next((t for t in reversed(user_turns) if _PHOTO_WORDS.search(t)), "")
+    # Si la question à laquelle l'IA répond nomme un autre lieu que cette demande
+    # (photos de Saly, puis « Parle-moi de Dakar »), le « oui » vise le lieu en cours.
+    offer_index = max(i for i, t in enumerate(turns) if t is last_assistant)
+    current_question = next(
+        (str(t.get("content", "")).strip() for t in reversed(turns[:offer_index]) if t.get("role") == "user"),
+        "",
+    )
+    if subject and current_question and current_question != subject:
+        place = detect_location(current_question)
+        if place and place != detect_location(subject):
+            subject = f"photos : {current_question}"
     if not subject:
         question = next((t for t in reversed(user_turns) if t), "")
         subject = f"photos : {question}" if question else ""

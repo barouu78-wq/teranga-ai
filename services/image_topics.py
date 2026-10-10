@@ -4,15 +4,19 @@ from __future__ import annotations
 
 import re
 import time
+import unicodedata
 from collections.abc import Callable, Mapping, Sequence
 
+from .photo_search import term_position
 
-_TOPIC_IMAGE_CACHE: dict[tuple[str, int, int, int, int], tuple[float, list[dict]]] = {}
+
+# Clé : requête principale, titres cherchés, nombre de photos, fournisseurs.
+_TOPIC_IMAGE_CACHE: dict[tuple, tuple[float, list[dict]]] = {}
 _TOPIC_IMAGE_CACHE_TTL = 300.0
 _TOPIC_IMAGE_CACHE_MAX = 128
 
 
-def _cached_topic_images(key: tuple[str, int, int, int, int]) -> list[dict] | None:
+def _cached_topic_images(key: tuple) -> list[dict] | None:
     cached = _TOPIC_IMAGE_CACHE.get(key)
     if not cached:
         return None
@@ -23,20 +27,54 @@ def _cached_topic_images(key: tuple[str, int, int, int, int]) -> list[dict] | No
     return [dict(photo) for photo in photos]
 
 
-def _store_topic_images(key: tuple[str, int, int, int, int], photos: list[dict]) -> None:
+def _store_topic_images(key: tuple, photos: list[dict]) -> None:
     if len(_TOPIC_IMAGE_CACHE) >= _TOPIC_IMAGE_CACHE_MAX:
         oldest_key = min(list(_TOPIC_IMAGE_CACHE.items()), key=lambda entry: entry[1][0])[0]
         _TOPIC_IMAGE_CACHE.pop(oldest_key, None)
     _TOPIC_IMAGE_CACHE[key] = (time.monotonic(), [dict(photo) for photo in photos])
 
 
-def _contains_normalized_term(text: object, candidate: object, normalize: Callable[[object], str]) -> bool:
-    normalized_candidate = normalize(candidate).strip()
-    if not normalized_candidate:
-        return False
-    normalized_text = normalize(text)
-    pattern = r"(?<!\w)" + re.escape(normalized_candidate) + r"(?!\w)"
-    return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
+def _term_position(text: object, candidate: object, normalize: Callable[[object], str]) -> int | None:
+    """Où le lieu est cité dans le message (graphies équivalentes : Goree/Gorée, St/Saint-Louis)."""
+    return term_position(normalize(text), normalize(candidate).strip())
+
+
+# Lieux cités comme repère ou exclus : « près de Mbour », « pas de Dakar », « depuis Dakar »…
+# Ce ne sont pas les lieux dont on veut des photos.
+_SECONDARY_MARKER = re.compile(
+    r"(?<!\w)(?:pas|sans|non|hors|sauf|a part|autre que|plutot que|loin|pres|proche|a cote|autour|"
+    r"depuis|a partir|au depart|a proximite|not|without|except|excluding|instead of|rather than|"
+    r"near|around|next to|close to|far from)(?!\w)"
+)
+_CLAUSE_END = re.compile(r"[,;.!?]|(?<!\w)(?:mais|but|plutot|rather)(?!\w)")
+
+
+def _plain_letters(text: str) -> str:
+    """Minuscules sans accents, de même longueur que `text` (pour repérer des positions)."""
+    out = []
+    for char in text:
+        base = "".join(c for c in unicodedata.normalize("NFD", char) if not unicodedata.combining(c)).lower()
+        out.append(base if len(base) == 1 else char)
+    return "".join(out)
+
+
+def _focus_clause(message: object) -> str:
+    """Message sans les lieux de repère ou exclus.
+
+    « photos de Saly près de Mbour » → « photos de Saly » ;
+    « photos de Dakar et pas de Saly » → « photos de Dakar et ».
+    """
+    raw = str(message or "")
+    flat = _plain_letters(raw)
+    kept, cursor = [], 0
+    for marker in _SECONDARY_MARKER.finditer(flat):
+        if marker.start() < cursor:
+            continue
+        end = _CLAUSE_END.search(flat, marker.end())
+        kept.append(raw[cursor:marker.start()])
+        cursor = end.start() if end else len(raw)
+    kept.append(raw[cursor:])
+    return " ".join("".join(kept).split())
 
 
 _SHORT_NAME = re.compile(r"^.*?\b(?:de|du|des|d')\s+(?:la\s+|l')?(.+)$", re.IGNORECASE)
@@ -59,14 +97,14 @@ def knowledge_image_titles(
     text_value = normalize(message)
     titles: list[str] = []
 
-    def collect(candidates) -> bool:
-        if any(_contains_normalized_term(text_value, candidate, normalize) for candidate in candidates):
-            for candidate in candidates:
-                if candidate and str(candidate) not in titles:
-                    titles.append(str(candidate))
-                    if len(titles) >= limit:
-                        return True
-        return False
+    def add(title) -> bool:
+        """Ajoute un titre ; True quand la liste est pleine."""
+        if title and str(title) not in titles:
+            titles.append(str(title))
+        return len(titles) >= limit
+
+    def position(candidate):
+        return _term_position(text_value, candidate, normalize)
 
     region_names = {
         normalize(region.get("name", ""))
@@ -77,7 +115,8 @@ def knowledge_image_titles(
     # Le lieu précis passe avant sa région (« désert de Lompoul » avant « Louga »).
     # Le nom court (« Gorée » pour « Île de Gorée ») sert aussi à reconnaître le
     # lieu, mais seules ses requêtes d'images sont proposées.
-    for place in knowledge.get("places", []) or []:
+    place_hits = []
+    for order, place in enumerate(knowledge.get("places", []) or []):
         if not isinstance(place, Mapping):
             continue
         name = str(place.get("name", ""))
@@ -86,22 +125,42 @@ def knowledge_image_titles(
         if short and normalize(short) in region_names:
             # « Corniche de Dakar » ne doit pas capter toute demande sur Dakar.
             short = ""
-        if (
-            short
-            and not any(_contains_normalized_term(text_value, c, normalize) for c in candidates)
-            and _contains_normalized_term(text_value, short, normalize)
-        ):
+        found = [p for p in (position(c) for c in candidates) if p is not None]
+        if not found and short and position(short) is not None:
+            found = [position(short)]
             candidates = [short, *(c for c in candidates if c)]
-        if collect(candidates):
-            return titles
+        if found:
+            place_hits.append((min(found), order, candidates))
+    # Dans l'ordre de la phrase, pas dans celui du fichier de données.
+    for _position, _order, candidates in sorted(place_hits, key=lambda hit: hit[:2]):
+        for candidate in candidates:
+            if add(candidate):
+                return titles
 
-    for region in knowledge.get("regions", []) or []:
-        if isinstance(region, Mapping) and collect([
+    # Une région n'apporte que ce qui est cité : « Pikine » ne devient ni « Dakar » ni
+    # « Gorée » parce que la région Dakar les range ensemble. Un lieu de la région est
+    # précisé par « Sénégal », comme les requêtes d'images de la base. Un thème écrit
+    # tout en minuscules dans la base (« plages », « savane », « mangroves ») n'est pas
+    # un lieu : il reste une recherche libre, sans article Wikipédia du monde entier.
+    region_hits = []
+    for order, region in enumerate(knowledge.get("regions", []) or []):
+        if not isinstance(region, Mapping):
+            continue
+        for candidate in [
             region.get("name", ""),
             *(region.get("places", []) or []),
             *(region.get("highlights", []) or []),
             *(region.get("image_queries", []) or []),
-        ]):
+        ]:
+            if not candidate or str(candidate) == str(candidate).lower():
+                continue
+            where = position(candidate)
+            if where is None:
+                continue
+            bare = normalize(candidate) in region_names or "senegal" in normalize(candidate)
+            region_hits.append((where, order, str(candidate) if bare else f"{candidate} Sénégal"))
+    for _position, _order, title in sorted(region_hits, key=lambda hit: hit[:2]):
+        if add(title):
             return titles
     return titles
 
@@ -189,6 +248,48 @@ def _run_parallel(jobs, logger, budget=None):
     return results
 
 
+def _specific_place_titles(
+    text: object,
+    knowledge: Mapping[str, object],
+    normalize: Callable[[object], str],
+) -> list[str]:
+    """Requêtes d'images des lieux de la base cités dans `text`, dans l'ordre de la phrase."""
+    text_value = normalize(text)
+    hits = []
+    goree_in_base = False
+    places = [place for place in knowledge.get("places", []) or [] if isinstance(place, Mapping)]
+    for order, place in enumerate(places):
+        name = normalize(str(place.get("name", "")))
+        aliases = [name]
+        if name.startswith("ile de "):
+            aliases.append(name[7:])
+            if name == "ile de goree":
+                aliases.append("gore")
+        if name.startswith("île de "):
+            aliases.append(name[7:])
+        # Autres noms du lieu (« Pink Lake », « Goree Island »).
+        aliases.extend(normalize(str(alias)) for alias in (place.get("aliases") or []) if str(alias).strip())
+        found = [p for p in (_term_position(text_value, alias, normalize) for alias in aliases) if p is not None]
+        if found:
+            image_queries = [str(query) for query in (place.get("image_queries") or []) if query]
+            # A recognized place must remain specific even when its optional
+            # image_queries metadata is empty. This also handles short aliases
+            # such as "gore" for Île de Gorée without falling back to Dakar.
+            hits.append((min(found), order, image_queries or [str(place.get("name", "")).strip()]))
+            goree_in_base = goree_in_base or term_position(place.get("name", ""), "goree") is not None
+
+    # Keep a few high-value Senegal place aliases resilient even when
+    # structured knowledge is incomplete. These are search hints, not a
+    # replacement for the knowledge base: when the base already gave Gorée,
+    # nothing is added.
+    goree = [p for p in (_term_position(text_value, alias, normalize) for alias in ("gore", "goree")) if p is not None]
+    if goree and not goree_in_base:
+        hits.append((min(goree), len(places), ["Île de Gorée"]))
+
+    # Dans l'ordre de la phrase, pas dans celui du fichier de données.
+    return [title for _position, _order, queries in sorted(hits, key=lambda hit: hit[:2]) for title in queries]
+
+
 def fetch_topic_images(
     message: object,
     knowledge: Mapping[str, object],
@@ -205,47 +306,27 @@ def fetch_topic_images(
     logger,
     max_photos: int = 8,
 ) -> list[dict] | None:
-    text_value = normalize(message)
     if not should_fetch_images(message):
         return None
 
-    specific_titles: list[str] = []
-    for place in knowledge.get("places", []) or []:
-        if not isinstance(place, Mapping):
-            continue
-        name = normalize(str(place.get("name", "")))
-        aliases = [name]
-        if name.startswith("ile de "):
-            aliases.append(name[7:])
-            if name == "ile de goree":
-                aliases.append("gore")
-        if name.startswith("île de "):
-            aliases.append(name[7:])
-        # Autres noms du lieu (« Pink Lake », « Goree Island »).
-        aliases.extend(normalize(str(alias)) for alias in (place.get("aliases") or []) if str(alias).strip())
-        if any(_contains_normalized_term(text_value, alias, normalize) for alias in aliases):
-            image_queries = [str(query) for query in (place.get("image_queries") or []) if query]
-            # A recognized place must remain specific even when its optional
-            # image_queries metadata is empty. This also handles short aliases
-            # such as "gore" for Île de Gorée without falling back to Dakar.
-            specific_titles.extend(image_queries or [str(place.get("name", "")).strip()])
-
-    # Keep a few high-value Senegal place aliases resilient even when
-    # structured knowledge is incomplete. These are search hints, not a
-    # replacement for the knowledge base.
-    normalized_message = normalize(message)
-    if _contains_normalized_term(normalized_message, "gore", normalize) or _contains_normalized_term(normalized_message, "goree", normalize):
-        specific_titles.append("Île de Gorée")
-
-    if specific_titles:
-        discovered_titles = []
-    else:
-        discovered_titles = (
-            knowledge_image_titles(message, 4)
+    def resolve(text):
+        """(lieux précis de la base, sinon régions/sujets Wikipédia) cités dans `text`."""
+        specific = _specific_place_titles(text, knowledge, normalize)
+        if specific:
+            return specific, []
+        discovered = (
+            knowledge_image_titles(text, 4)
             if knowledge_image_titles
-            else globals()["knowledge_image_titles"](message, knowledge, normalize=normalize, limit=4)
+            else globals()["knowledge_image_titles"](text, knowledge, normalize=normalize, limit=4)
         )
-        discovered_titles = list(discovered_titles) + list(topic_wikipedia_titles(message, 4))
+        return [], list(discovered) + list(topic_wikipedia_titles(text, 4))
+
+    # Les lieux de repère ou exclus (« près de Mbour », « pas de Saly ») ne sont pas
+    # ceux dont on veut des photos. Sans autre lieu cité, on garde le message entier.
+    focus = _focus_clause(message)
+    specific_titles, discovered_titles = resolve(focus)
+    if not specific_titles and not discovered_titles and focus != " ".join(str(message or "").split()):
+        specific_titles, discovered_titles = resolve(message)
 
     primary_title = _build_primary_query(message, specific_titles, discovered_titles, normalize)
     titles = list(specific_titles or discovered_titles or [primary_title])
@@ -253,10 +334,11 @@ def fetch_topic_images(
     photos: list[dict] = []
     seen_urls: set[str] = set()
 
-    # Cache by the actual visual request so different requests do not reuse
-    # the same generic Dakar gallery.
+    # Cache by the actual visual request (query and places searched) so different
+    # requests never reuse another place's gallery.
     cache_key = (
         normalize(primary_title),
+        tuple(normalize(title) for title in titles[:4]),
         max_photos,
         id(fetch_google_images),
         id(fetch_article_images),

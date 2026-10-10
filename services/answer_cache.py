@@ -3,8 +3,8 @@
 Une même première question (« Que visiter à Dakar ? ») posée par plusieurs
 visiteurs reçoit la réponse déjà générée : réponse instantanée et aucun appel
 OpenAI. Seules les questions sans contexte personnel ni donnée changeante sont
-mises en cache : pas d'historique, pas de recherche web, pas de météo en direct,
-pas de planificateur, pas de lieu ou de voyage sélectionné.
+mises en cache : pas de tour précédent dans l'historique, pas de recherche web,
+pas de météo en direct, pas de planificateur, pas de lieu ou de voyage sélectionné.
 """
 
 from __future__ import annotations
@@ -34,10 +34,30 @@ def _normalize_message(message: str) -> str:
     return re.sub(r"[\s?!.…]+$", "", text)
 
 
+def _has_earlier_turns(history: Any, message: str) -> bool:
+    """Vrai s'il existe un tour AVANT la question courante.
+
+    Le site (static/home.js) ajoute la question à l'historique avant de l'envoyer : une
+    première question arrive donc avec ``history=[cette question]``. Ce seul tour ne compte
+    pas ; tout autre tour (même une réponse seule) rend la demande dépendante de la conversation.
+    Un historique mal formé ne se met jamais en cache.
+    """
+    if not history:
+        return False
+    if not isinstance(history, list) or not all(isinstance(item, dict) for item in history):
+        return True
+    turns = [item for item in history if str(item.get("content") or "").strip()]
+    if turns and str(turns[-1].get("role") or "").lower() == "user" and (
+        _normalize_message(turns[-1].get("content")) == _normalize_message(message)
+    ):
+        turns = turns[:-1]
+    return bool(turns)
+
+
 def cache_key(payload: dict[str, Any], raw: dict[str, Any] | None, *, model: str) -> str | None:
     """Clé de cache, ou None si la demande ne doit pas être mise en cache."""
     raw = raw if isinstance(raw, dict) else {}
-    if raw.get("history"):
+    if _has_earlier_turns(raw.get("history"), payload.get("message", "")):
         return None
     if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request")):
         return None

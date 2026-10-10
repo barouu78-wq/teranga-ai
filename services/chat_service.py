@@ -169,6 +169,9 @@ def build_chat_service(
     def complete_reply(payload):
         enrichments = start_enrichments(payload)
         response = create_response(payload, stream=False)
+        if getattr(response, "status", None) == "incomplete":
+            # Coupée par la limite de longueur : la route ne doit pas la mettre en cache.
+            payload["reply_incomplete"] = True
         text = clean_answer(getattr(response, "output_text", "") or "")
         image, map_result = enrichment_result(enrichments)
         return (
