@@ -89,7 +89,7 @@ def test_no_unsourced_figure_or_article_of_the_old_code():
     assert "FCFA" not in ALL_FACTS and "F CFA" not in ALL_FACTS
     assert not re.search(r"\bL\.? ?\d{2,3}\b", ALL_FACTS)
     assert not re.search(r"jours ouvrables|par mois de service|mois de préavis|semaines de congé", ALL_FACTS)
-    numbers = set(re.findall(r"\d[\d  ]*\d|\d", ALL_FACTS))
+    numbers = set(re.findall(r"\d+(?:\s\d{3})*", ALL_FACTS))
     allowed = {"2026", "18", "3", "17", "97", "1997", "14", "50", "1", "2018", "2023", "2"}
     unexpected = {n.strip() for n in numbers} - allowed
     assert not unexpected, f"chiffres non prévus (à sourcer ou retirer) : {unexpected}"
