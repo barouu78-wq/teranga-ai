@@ -1,38 +1,71 @@
 name: Claude Code bridge
 
+# Pont GitHub -> Claude Code : une commande explicite du propriétaire dans une issue ou une PR.
+# Procédure, coût et limites : docs/claude-github-bridge.md. Rien ici ne contourne une limite de Claude :
+# si l'accès est refusé (limite atteinte, secret absent), l'exécution échoue et l'indique dans la conversation.
 on:
   issue_comment:
     types: [created]
 
-# Runs only for an explicit command from the repository owner.
+# Droits par défaut : lecture seule. Le job ci-dessous demande lui-même ce dont il a besoin.
 permissions:
   contents: read
-  pull-requests: read
-  issues: read
-  id-token: write
+
+# Une seule commande exécutée à la fois par issue ou PR : deux commandes rapprochées ne créent pas deux branches
+# concurrentes sur le même sujet. La seconde attend la fin de la première (rien n'est annulé en cours de route).
+# Les commentaires qui ne sont pas une commande (bots, rapports) reçoivent un groupe unique : ils ne peuvent donc
+# jamais évincer une commande en attente. Si DEUX commandes attendent derrière une exécution en cours, GitHub ne
+# garde que la dernière : renvoyer alors la commande manquante.
+concurrency:
+  group: claude-bridge-${{ github.event.issue.number }}-${{ (github.event.comment.user.login == github.repository_owner && startsWith(github.event.comment.body, '/claude')) && 'commande' || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   claude:
+    # Les trois conditions sont nécessaires :
+    # 1. le commentaire vient du compte propriétaire (les bots sont aussi écartés par l'action elle-même) ;
+    # 2. il COMMENCE par la commande : une mention au milieu d'un texte, d'un rapport ou d'une citation ne lance rien ;
+    # 3. sur une PR, seule une PR ouverte par le propriétaire est acceptée : le code d'une PR tierce (fork,
+    #    dépendance) ne doit pas s'exécuter (tests) avec les secrets de ce dépôt dans l'environnement.
     if: >-
       github.event.comment.user.login == github.repository_owner &&
-      contains(github.event.comment.body, '/claude')
+      startsWith(github.event.comment.body, '/claude') &&
+      (github.event.issue.pull_request == null ||
+       github.event.issue.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: write
+      contents: write        # branches claude/... et commits (jamais main : voir docs/claude-github-bridge.md)
       pull-requests: write
       issues: write
-      id-token: write
+      id-token: write        # requis par l'action pour obtenir son jeton d'application GitHub
+      actions: read          # lecture seule des résultats de CI (outils mcp__github_ci__*)
     steps:
+      # Aucun secret n'est affiché : seule la méthode retenue l'est, pour que le coût soit visible dans le journal.
+      - name: Vérifier la méthode d'accès à Claude
+        env:
+          HAS_OAUTH: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+          HAS_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_OAUTH" = "true" ]; then
+            echo "Méthode d'accès : abonnement Claude (jeton OAuth, soumis aux limites de l'abonnement)."
+          elif [ "$HAS_API_KEY" = "true" ]; then
+            echo "Méthode d'accès : clé API Anthropic, facturée à l'usage séparément de l'abonnement."
+          else
+            echo "::error title=Pont Claude::Aucun secret configuré. Ajouter CLAUDE_CODE_OAUTH_TOKEN (abonnement) ou ANTHROPIC_API_KEY (API facturée) dans Settings > Secrets and variables > Actions. Voir docs/claude-github-bridge.md."
+            exit 1
+          fi
+
       # The Claude action expects a Git repository in the workspace root.
+      # Actions tierces épinglées par commit (v6, v6, v1 au 10 octobre 2026) : Dependabot propose les mises à jour.
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: true
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
@@ -42,11 +75,32 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
 
       - name: Run Claude Code
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@1d6de8cb0c237e7c15e9e1bdf973826ebae490cc # v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Un seul des deux secrets est transmis : l'abonnement (jeton OAuth) s'il existe, sinon la clé API.
+          # La documentation de l'action ne dit pas lequel l'emporte quand les deux sont fournis.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN == '' && secrets.ANTHROPIC_API_KEY || '' }}
           trigger_phrase: "/claude"
+          additional_permissions: |
+            actions: read
+          # Outils AJOUTÉS à ceux que l'action autorise d'office (commentaire de suivi, git add / commit / rm et
+          # le script de poussée de l'action, qui n'accepte que « origin <branche> » sans option).
+          # Volontairement absents : git checkout / switch / branch (aucun besoin, et elles permettraient de
+          # préparer une poussée sur main), pip install (code arbitraire avec les secrets en mémoire : les
+          # dépendances sont installées avant, par l'étape ci-dessus), WebFetch et WebSearch (refusés par l'action).
           claude_args: |
             --max-turns 20
-            --allowedTools "Glob,Grep,LS,Read,Edit,Write,mcp__github_comment__update_claude_comment,mcp__github_ci__get_ci_status,mcp__github_ci__get_workflow_run_details,mcp__github_ci__download_job_log,Bash(git status:*),Bash(git diff:*),Bash(git branch:*),Bash(git checkout:*),Bash(git switch:*),Bash(git fetch:*),Bash(git add:*),Bash(git commit:*),Bash(python -m pytest:*),Bash(pytest:*),Bash(python -m py_compile:*),Bash(ruff check:*),Bash(node --check:*),Bash(pip install:*),Bash(/home/runner/work/_actions/anthropics/claude-code-action/v1/scripts/git-push.sh:*)"
-            --append-system-prompt "Projet Teranga AI. Lis AGENTS.md et .github/agents/README.md. Réponds en français. Travaille uniquement sur une branche dédiée. N'écris jamais de secret. Ne désactive aucun test ni contrôle TLS. Ne fusionne pas et ne déploie pas. Ajoute des tests ciblés et rapporte les commandes et résultats exacts. Si la tâche est ambiguë ou risquée, demande une clarification au lieu d'agir."
+            --allowedTools "Glob,Grep,LS,Read,Edit,Write,mcp__github_comment__update_claude_comment,mcp__github_ci__get_ci_status,mcp__github_ci__get_workflow_run_details,mcp__github_ci__download_job_log,Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch -r:*),Bash(git branch --show-current:*),Bash(git fetch:*),Bash(git add:*),Bash(git commit:*),Bash(python scripts/check_dev_env.py:*),Bash(python -m pytest:*),Bash(pytest:*),Bash(python -m py_compile:*),Bash(ruff check:*),Bash(bandit:*),Bash(node --check:*)"
+            --append-system-prompt "Projet Teranga AI. Lis AGENTS.md et .github/agents/README.md. Réponds en français. Travaille uniquement sur la branche fournie par l'action et ne pousse jamais sur main ni master. Ne modifie pas .github/workflows. N'écris jamais de secret. Ne désactive aucun test ni contrôle TLS. Ne fusionne pas et ne déploie pas. Avant de créer du travail, vérifie avec git branch -r qu'aucune branche claude/ ne traite déjà le sujet ; si c'est le cas, signale-la au lieu d'en créer une autre. Ajoute des tests ciblés et rapporte les commandes et résultats exacts en distinguant exécuté et réussi, exécuté et échoué, ignoré (avec la raison) et non exécuté (avec l'outil manquant). N'écris jamais la commande du pont au début d'un commentaire. Si la tâche est ambiguë ou risquée, demande une clarification au lieu d'agir."
+
+      # Si l'exécution échoue (limite d'usage atteinte, secret refusé, délai dépassé…), la conversation garde une trace :
+      # GitHub conserve la tâche et on peut la relancer sans doublon (la concurrence est sérialisée par issue ou PR).
+      - name: Signaler l'échec dans la conversation
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMERO: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "$NUMERO" --repo "$GITHUB_REPOSITORY" --body "Le pont Claude Code n'a pas pu terminer cette tâche. Aucun travail n'est considéré comme fait tant qu'une branche ou une PR ne le montre pas. Détail de l'exécution : $RUN_URL. Causes fréquentes : limite d'usage de l'abonnement atteinte, secret absent ou expiré, délai de 20 minutes dépassé. Après correction, publier à nouveau la commande du pont dans un nouveau commentaire."
