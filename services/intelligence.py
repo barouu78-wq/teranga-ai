@@ -147,6 +147,61 @@ def is_acknowledgement(message: str) -> bool:
     return bool(text) and len(text) <= 60 and bool(_ACKNOWLEDGEMENT.match(text))
 
 
+# Début d'une relance courte qui ne se comprend qu'avec le tour précédent (texte sans accents) : « Et pour le
+# budget ? », « Ça coûte combien ? », « Qu'en est-il de Saly ? ».
+_SHORT_FOLLOW_UP = re.compile(r"^(?:et|ca|cela|ce sujet|pour le budget|qu'en est-il)\b")
+# Même idée, plus large, pour reconnaître la retouche d'un plan (apostrophes déjà remplacées par des espaces).
+_FOLLOW_UP_OPENER = re.compile(
+    r"^(?:et|and|plutot|sinon|mais|alors|puis|aussi|finalement|ca|cela|ceci|ce sujet|pour le budget|qu en est il|"
+    r"what about|how about)\b"
+)
+
+# Ce qui fait d'un message une retouche du plan en cours, même sans renvoi explicite au tour précédent
+# (texte sans accents) : durée ou moment chiffré, étape, budget, voyageurs, ajustement, ordre de modifier.
+_COUNT = r"(?:\d+|une?|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|quinze|vingt)"
+_ORDINAL = (r"(?:premier|premiere|deuxieme|second|seconde|troisieme|quatrieme|cinquieme|sixieme|septieme|huitieme|"
+            r"neuvieme|dixieme|dernier|derniere|\d+(?:e|eme|er|ere|nd|rd|th|st))")
+_PERIOD = r"(?:jours?|journees?|nuits?|soirs?|soirees?|matins?|matinees?|semaines?|week[- ]?ends?|mois|days?|nights?|weeks?|months?)"
+_TRAVELLERS = (r"(?:adultes?|personnes?|enfants?|bebes?|amis|ados?|people|persons|adults?|kids|children)")
+_EDIT_VERBS = (
+    r"(?:ajoute\w*|rajoute\w*|remplace\w*|retire\w*|enleve\w*|supprime\w*|decale\w*|deplace\w*|echange\w*|inverse\w*|"
+    r"reduis\w*|reduire|raccourci\w*|allonge\w*|rallonge\w*|prolonge\w*|garde\w*|conserve\w*|mets?|mettre|change\w*|"
+    r"modifie\w*|ajuste\w*|adapte\w*|refais|recommence|add|remove|replace|swap|shorten|extend|keep|drop|change|"
+    r"adjust|make|redo)"
+)
+_PLAN_EDIT = re.compile("|".join((
+    rf"\b{_COUNT}\s+{_PERIOD}\b",  # « 3 jours », « deux semaines »
+    rf"\b{_ORDINAL}\s+{_PERIOD}\b",  # « le deuxième jour », « la dernière nuit »
+    r"\b(?:jour|journee|nuit|day|night|etape|step)\s+" + _COUNT + r"\b",  # « jour 2 », « étape 3 »
+    r"\b(?:le|du|au|chaque)\s+(?:matin|soir|midi|apres midi|journee|matinee|soiree)\b",  # « le soir »
+    r"\b(?:budget|itineraire|programme|planning|plans?|etapes?|escales?)\b",
+    rf"\b{_COUNT}\s+{_TRAVELLERS}\b",  # « pour deux personnes »
+    r"\b(?:en|pour|avec|with|for)\s+(?:(?:mes|mon|ma|nos|les|des|la|le|my|our)\s+)?"
+    r"(?:famille|family|couple|groupe|group|amis|enfants?|bebes?|kids|children|parents|ados?)\b",
+    r"\b(?:avec|pour|with|for|budget|environ|about|max|maximum|moins de)\s+(?:de\s+)?\d[\d .,]*\s*"
+    r"(?:fcfa|cfa|f cfa|francs?|euros?|eur|dollars?|usd|k)\b",  # un nouveau budget
+    r"\b(?:plutot|au lieu de|a la place|instead|rather|trop|too|moins cher|plus cher|moins couteux|economique|"
+    r"pas cher|plus court|plus long|plus rapide|plus tranquille|plus detendu|cheaper|shorter|longer|version)\b",
+    r"^(?:(?:peux|peut|pouvez)[- ]?(?:tu|vous|on)\s+|(?:tu|vous)\s+(?:peux|pouvez)\s+|"
+    r"(?:s il (?:te|vous) plait|stp|please|can you|could you)\s+)?" + _EDIT_VERBS + r"\b",  # « Ajoute… », « Remplace… »
+)))
+
+
+def continues_plan(message: str) -> bool:
+    """Vrai si le message poursuit le tour précédent : relance, renvoi (« ça », « précise »), message très court,
+    ou retouche d'un plan (« Mets plutôt 3 jours », « Détaille le deuxième jour », « Et pour deux personnes ? »).
+
+    Faux pour une question qui a son propre sujet et ne renvoie à rien (« Que veut dire teranga ? ») : le plan
+    d'un séjour demandé plus haut ne la transforme pas en plan."""
+    text = _normalize(message).replace("'", " ")
+    words = re.findall(r"[a-z0-9]+", text)
+    if len(words) <= 2:
+        return True  # « Et demain ? », « Pourquoi ? » : elliptique
+    if len(words) <= 8 and (_FOLLOW_UP_OPENER.match(text) or any(word in _BACK_REFERENCES for word in words)):
+        return True
+    return bool(_PLAN_EDIT.search(text))
+
+
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
     english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
@@ -278,6 +333,9 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
         constraints.append("demain")
     place = max(mentions, key=lambda item: item[0])[1] if mentions else ""
     return {
+        # La demande courante seule : `should_use_planner` s'en sert quand elle n'a aucun lien avec le fil.
+        "message": str(message or ""),
+        "standalone_request": bool(history) and bool(str(message or "").strip()) and not continues_plan(message),
         "place": place,
         "has_place": bool(found_cities or found_regions),
         "query": text_value,
@@ -292,7 +350,13 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
 
 
 def should_use_planner(context: dict[str, Any]) -> bool:
-    """Detect a multi-step planning request without forcing web search."""
+    """Detect a multi-step planning request without forcing web search.
+
+    Un plan demandé plus haut dans le fil ne suit pas une question qui a son propre sujet et ne renvoie à rien
+    (« Que veut dire teranga ? ») : seule sa demande compte. Une retouche du plan (« Mets plutôt 3 jours »,
+    « Détaille le deuxième jour », « Et pour deux personnes ? ») le continue (voir `continues_plan`)."""
+    if context.get("standalone_request"):
+        context = infer_senegal_context([], str(context.get("message") or ""))
     intents = set(context.get("intents", []))
     query = context.get("query", "")
     planning_terms = (
@@ -492,10 +556,9 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
     resolved_intent = current_intent
     resolved_location = current_location
     context_source = "current_message"
-    follow_up_markers = ("et ", "et pour", "et le", "et la", "et les", "ça", "cela", "ce sujet", "pour le budget", "qu'en est-il")
-    is_short_follow_up = len(message.split()) <= 8 and _normalize(message).startswith(
-        tuple(_normalize(marker) for marker in follow_up_markers)
-    )
+    # Le début doit être un mot entier : « ça » (normalisé « ca ») ne doit pas faire d'une question qui commence
+    # par « Ca… » (« Casamance : quelle saison ? », « Capitale du Sénégal ? ») une relance du tour précédent.
+    is_short_follow_up = len(message.split()) <= 8 and bool(_SHORT_FOLLOW_UP.match(_normalize(message)))
     words = re.findall(r"[a-z0-9]+", _normalize(message).replace("'", " "))
     # Message elliptique (« Et demain ? », « Demain ? », « Encore ») : il ne se comprend qu'avec le tour
     # précédent. Une question complète qui n'a simplement pas d'intention reconnue (« Quelle langue
