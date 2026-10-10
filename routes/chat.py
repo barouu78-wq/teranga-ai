@@ -48,7 +48,9 @@ def register_chat_route(app, deps):
 
     def fallback_for(payload):
         """Réponse de secours quand l'IA est en panne : Claude s'il est configuré (et
-        qu'il n'est pas déjà l'IA principale), sinon la base de connaissances, sinon None."""
+        qu'il n'est pas déjà l'IA principale), sinon la base de connaissances. Quand la base ne connaît pas
+        la question, le message honnête « je préfère ne rien inventer » (avec les pages utiles du site) :
+        une panne ne finit donc jamais en erreur sèche. None seulement si le secours lui-même échoue."""
         if backup_enabled() and not claude_is_primary():
             try:
                 reply = backup_complete(
@@ -63,7 +65,9 @@ def register_chat_route(app, deps):
             except Exception:  # noqa: BLE001 - on passe au secours suivant
                 logger.exception("chat_backup_ai")
         try:
-            return knowledge_fallback(payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"))
+            return knowledge_fallback(
+                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True
+            )
         except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
             logger.exception("chat_fallback")
             return None
