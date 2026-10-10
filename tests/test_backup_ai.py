@@ -73,6 +73,9 @@ def test_claude_events_web_sources_pause_and_refusal(monkeypatch):
         list(claude_events("x", client=FakeClient(FakeStream([], stop_reason="refusal"))))
     truncated = list(claude_events("x", client=FakeClient(FakeStream(["a"], stop_reason="max_tokens"))))
     assert truncated[-1].type == "response.incomplete"
+    # Même signal que l'API Responses d'OpenAI : la route ne met pas une réponse coupée en cache.
+    assert truncated[-1].response.status == "incomplete"
+    assert events[-1].response.status == "completed"
 
 
 def test_primary_switch_needs_key_and_value(monkeypatch):

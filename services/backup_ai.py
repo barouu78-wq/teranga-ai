@@ -123,7 +123,8 @@ def claude_events(
         raise RuntimeError("Claude refusal")
     text = "".join(parts)
     kind = "response.incomplete" if stop_reason == "max_tokens" else "response.completed"
-    yield SimpleNamespace(type=kind, response=SimpleNamespace(output_text=text, sources=sources, usage=SimpleNamespace(**usage)))
+    status = "incomplete" if kind == "response.incomplete" else "completed"
+    yield SimpleNamespace(type=kind, response=SimpleNamespace(output_text=text, sources=sources, usage=SimpleNamespace(**usage), status=status))
 
 
 def claude_response(prompt: str, **kwargs) -> SimpleNamespace:
