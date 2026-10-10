@@ -12,6 +12,7 @@ from .language_quality import language_instruction
 from .model_params import openai_model
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
 from .action_executor import prepare_action
+from .intelligence import is_acknowledgement
 
 
 _AUDIENCE_INSTRUCTIONS = {
@@ -207,8 +208,12 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     language = normalized["language"]
     audience = normalized["audience"]
     language_instruction_text = language_instruction(language)
+    # Un remerciement ou un adieu seul est traité sans le fil (ni plan, ni recherche web, ni météo,
+    # ni modèle complexe repris d'un tour précédent). Le modèle reçoit quand même la conversation
+    # (build_conversation plus bas) pour répondre naturellement.
+    routing_history = [] if is_acknowledgement(message) else history
     started_at = time.perf_counter()
-    context = infer_senegal_context(history, message)
+    context = infer_senegal_context(routing_history, message)
     logger.info("chat_context_infer_ms %.2f", (time.perf_counter() - started_at) * 1000)
     selected_place = normalized.get("context_place", "")
     trip_context = normalized.get("trip_context", "")
@@ -220,9 +225,9 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         context["query"] = f"{selected_place} : {message}"
     started_at = time.perf_counter()
     if "resolved_context" in inspect.signature(build_intent_context).parameters:
-        intent_context = build_intent_context(message, history, resolved_context=context)
+        intent_context = build_intent_context(message, routing_history, resolved_context=context)
     else:
-        intent_context = build_intent_context(message, history)
+        intent_context = build_intent_context(message, routing_history)
     logger.info("chat_intent_context_ms %.2f", (time.perf_counter() - started_at) * 1000)
     trip_edit_line = ""
     if trip_edit_request:

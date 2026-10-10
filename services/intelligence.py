@@ -112,6 +112,29 @@ _CONTEXT_INTENT_GROUPS = {
 }
 
 
+# Remerciement ou adieu seul : le message ne demande rien. « oui merci » / « non merci » répondent
+# à une proposition (ils ne sont donc pas ici), et « merci, et le prix ? » contient une question.
+_ACKNOWLEDGEMENT = re.compile(
+    r"^(?:(?:super|parfait|genial|top|nickel|excellent|great|perfect)\s+)?"
+    r"(?:(?:un\s+)?(?:grand|gros)\s+merci|mille\s+mercis|merci|thanks?|thank\s+you|thx|jerejef|(?:a\s+)?jaa?raama)"
+    r"(?:\s+(?:beaucoup|bien|infiniment|encore|bcp|mille\s+fois|a\s+toi|a\s+vous|pour\s+tout|"
+    r"pour\s+(?:ton|votre)\s+aide|pour\s+la\s+reponse|so\s+much|a\s+lot|very\s+much))*$"
+    r"|^(?:au\s+revoir|a\s+bientot|a\s+plus(?:\s+tard)?|bonne\s+(?:journee|soiree|nuit|continuation)|"
+    r"bye|ciao|goodbye|good\s+night|see\s+you)$"
+)
+
+
+def is_acknowledgement(message: str) -> bool:
+    """Vrai pour un remerciement ou un adieu seul (« merci », « Merci beaucoup ! », « à bientôt »).
+
+    Un tel message ne reprend ni le sujet, ni les contraintes, ni la recherche web du fil : sans
+    cela, « merci » après une demande de séjour relançait le plan, et après une question de
+    prix, une recherche web."""
+    text = re.sub(r"[^a-z0-9' ]+", " ", _normalize(message))
+    text = re.sub(r"\s+", " ", text).strip()
+    return bool(text) and len(text) <= 60 and bool(_ACKNOWLEDGEMENT.match(text))
+
+
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
     english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
@@ -481,7 +504,17 @@ def build_intent_context(text: str, history: list[dict[str, Any]] | None = None,
                     break
     context_data = resolved_context if resolved_context is not None else infer_senegal_context(history, message)
     context_query = str(context_data.get("query") or "") or contextual_query(history, message)
-    domain = resolved_intent if resolved_intent in {"health"} else classify_domain(context_query)
+    if resolved_intent in {"health"}:
+        domain = resolved_intent
+    elif resolved_intent != current_intent:
+        domain = classify_domain(context_query)  # suivi : le sujet du fil (« Et demain ? » après la météo)
+    elif current_intent != "general_information":
+        # La question a son propre sujet : un sujet plus ancien du fil ne le remplace pas. Sinon
+        # « Où manger à Dakar ? » après la météo restreignait la recherche web à anacim.sn.
+        domain = classify_domain(message)
+    else:
+        own_domain = classify_domain(message)
+        domain = own_domain if own_domain != "general" else classify_domain(context_query)
     fresh = should_use_web(message, context_query)
     return {
         "intent": resolved_intent,
