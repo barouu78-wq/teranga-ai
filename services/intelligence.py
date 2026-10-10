@@ -321,23 +321,38 @@ def should_use_planner(context: dict[str, Any]) -> bool:
     )
 
 
+# Contraintes chiffrées d'une décision (budget, durée, voyageurs). « ce soir » et « demain » sont des moments :
+# « Où dîner ce soir et que faire demain ? » n'a rien d'une décision à plusieurs critères.
+_DECISION_CONSTRAINTS = ("budget=", "durée=", "adultes=", "enfants=", "famille")
+# Mots qui annoncent à eux seuls une demande complexe : comparer, choisir, peser le pour et le contre, optimiser, étapes.
+_DEEP_TERMS = re.compile(
+    r"\b(?:compar(?:e|er|ez|atif)|difference|choisir|choix|avantages|inconvenients|optimise|versus|vs|etapes?)\b"
+)
+# Mots ambigus : ils ouvrent aussi des questions simples (« Pourquoi le lac Rose est-il rose ? », « Où trouver un
+# plan de Dakar ? », « Qui organise le Magal ? »). Ils ne comptent qu'avec un second signe de complexité.
+_AMBIGUOUS_TERMS = re.compile(r"\b(?:quel est le meilleur|pourquoi|comment faire|plan|organis(?:e|er)|priorites?)\b")
+# Second signe : démarche à plusieurs temps, ou choix entre des options.
+_MULTI_STEP_MARKERS = re.compile(r"\b(?:ordre|demarches?|procedure|formalites|delais?|couts?)\b|\bentre\b.+\b(?:et|ou)\b")
+
+
 def should_use_deep_reasoning(context: dict[str, Any]) -> bool:
-    """Detect requests where extra reasoning is useful beyond trip planning."""
+    """Detect requests where extra reasoning is useful beyond trip planning.
+
+    Le modèle complexe est plus lent et plus cher : il est réservé aux demandes à plusieurs critères (plusieurs
+    contraintes chiffrées), aux comparaisons et choix, aux démarches à étapes. Un mot ambigu (« pourquoi »,
+    « comment faire », « plan »…) ne suffit pas seul."""
     query = _normalize(str(context.get("query") or ""))
     intents = set(context.get("intents") or [])
-    constraints = context.get("constraints") or []
-    multi_step_terms = (
-        "compare", "comparatif", "difference", "choisir", "quel est le meilleur",
-        "avantages", "inconvenients", "pourquoi", "comment faire", "etape",
-        "plan", "organise", "optimise", "priorite", "versus", "vs",
-    )
+    constraints = [c for c in (context.get("constraints") or []) if str(c).startswith(_DECISION_CONSTRAINTS)]
     complex_intents = {"travel", "transport", "price", "money", "admin", "food", "project", "career", "education", "finance"}
     decision_intents = {"project", "career", "education", "finance"}
+    decision = bool(intents.intersection(decision_intents))
     return (
         len(constraints) >= 2
         or (len(intents.intersection(complex_intents)) >= 2)
-        or (bool(intents.intersection(decision_intents)) and bool(constraints))
-        or any(re.search(r"\b" + re.escape(term) + r"\b", query) for term in multi_step_terms)
+        or (decision and bool(constraints))
+        or bool(_DEEP_TERMS.search(query))
+        or (bool(_AMBIGUOUS_TERMS.search(query)) and (bool(constraints) or decision or bool(_MULTI_STEP_MARKERS.search(query))))
     )
 
 

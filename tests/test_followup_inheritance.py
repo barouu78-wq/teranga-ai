@@ -48,6 +48,10 @@ PRICE = [
     turn("assistant", "Entre 15 000 et 20 000 FCFA, à vérifier."),
 ]
 WHY = [turn("user", "Pourquoi le lac Rose est-il rose ?"), turn("assistant", "À cause d'algues.")]
+DEEP = [
+    turn("user", "Compare Saly et Somone pour des vacances en famille"),
+    turn("assistant", "Saly est plus animée, Somone plus calme."),
+]
 PLAN = [
     turn("user", "Planifie un séjour de 5 jours à Saint-Louis avec 300000 FCFA en famille"),
     turn("assistant", "Jour 1 : arrivée à Saint-Louis."),
@@ -124,13 +128,20 @@ def test_follow_up_after_a_price_question_still_searches_the_web(follow_up):
 # --- Raisonnement approfondi ---------------------------------------------------------------------------------
 
 
-def test_unrelated_question_after_a_why_question_stays_on_the_fast_model():
+def test_unrelated_question_after_a_deep_question_stays_on_the_fast_model():
+    assert parse("Quelle langue parle-t-on au Sénégal ?", DEEP)["deep_reasoning"] is False
     assert parse("Quelle langue parle-t-on au Sénégal ?", WHY)["deep_reasoning"] is False
     assert parse("Que veut dire teranga ?", PLAN)["deep_reasoning"] is False
 
 
-def test_follow_up_after_a_why_question_keeps_the_deep_reasoning():
-    assert parse("et à Dakar ?", WHY)["deep_reasoning"] is True
+def test_follow_up_after_a_deep_question_keeps_the_deep_reasoning():
+    """Le suivi d'une vraie demande complexe (ici une comparaison) reprend le raisonnement approfondi.
+
+    Ce test s'appuyait sur « Pourquoi le lac Rose est-il rose ? » : depuis que « pourquoi » seul ne suffit plus
+    (voir tests/test_deep_reasoning.py), cette question simple n'est plus complexe, et son suivi non plus."""
+    assert parse("Compare Saly et Somone pour des vacances en famille", [])["deep_reasoning"] is True
+    assert parse("et à Dakar ?", DEEP)["deep_reasoning"] is True
+    assert parse("et à Dakar ?", WHY)["deep_reasoning"] is False
 
 
 def test_standalone_question_with_its_own_constraints_is_still_deep():
