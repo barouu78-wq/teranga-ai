@@ -1346,6 +1346,14 @@ function startVoiceMonitor(){
 function stopVoiceMonitor(){
   voiceBargeInStartedAt=0;
 }
+// Le nom du fichier doit correspondre au vrai format : iPhone et Safari enregistrent en audio/mp4.
+function voiceFileName(type){
+  const t=String(type||'').toLowerCase();
+  if(t.includes('mp4')||t.includes('aac')||t.includes('m4a'))return 'teranga-voice.m4a';
+  if(t.includes('ogg'))return 'teranga-voice.ogg';
+  if(t.includes('wav'))return 'teranga-voice.wav';
+  return 'teranga-voice.webm';
+}
 async function postVoiceAudio(blob,turnId){
   if(!blob||!blob.size||voiceSTTBusy||!voiceConversation||turnId!==voiceTurnId)return;
   voiceSTTBusy=true;voiceWaitingForAnswer=true;
@@ -1354,7 +1362,7 @@ async function postVoiceAudio(blob,turnId){
     if(!cookie('teranga_csrf'))await refreshCsrf();
     if(!voiceConversation||turnId!==voiceTurnId)return;
     const form=new FormData();
-    form.append('audio',blob,'teranga-voice.webm');
+    form.append('audio',blob,voiceFileName(blob.type));
     form.append('language',lang);
     const recentVoiceContext=history.slice(-8)
       .map(item=>String(item.content||'').trim()).filter(Boolean).join(' ').slice(-2400);
