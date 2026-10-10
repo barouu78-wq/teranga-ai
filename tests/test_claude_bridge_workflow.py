@@ -107,6 +107,6 @@ def test_system_prompt_forbids_main_workflows_and_untested_claims():
 
 def test_documentation_matches_the_workflow():
     for needle in ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY", "facturée", "protection", "main", "37998631452",
-                   "Non vérifié", "doublon", "error_max_turns", "claude/pr-394-20261010-0736", "38035381220"):
+                   "Non vérifié", "doublon", "error_max_turns", "claude/pr-394-20261010-0736", "38035381220", "38035825756"):
         assert needle in DOC, needle
     assert "Examiner et fusionner la PR qui ajoute" not in DOC  # étape périmée : le workflow est déjà sur main

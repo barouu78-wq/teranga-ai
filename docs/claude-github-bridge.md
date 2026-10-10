@@ -26,10 +26,13 @@ Constats tirés des journaux et de l'historique GitHub (10 octobre 2026), pas de
   propriétaire ; elles reprennent un correctif aussi porté par la PR #395.
 - **Méthode d'accès** : la clé API (`ANTHROPIC_API_KEY`) a été utilisée dans tous les runs observés, donc facturée à l'usage et pas
   incluse dans l'abonnement : 0,2346 $ pour le run en lecture seule.
-- **Échecs par épuisement des tours** : les runs [38035310663](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035310663)
-  et [38035381220](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035381220) (une « mission » en six volets) se sont
-  arrêtés sur `error_max_turns` (20 tours) sans rien produire ; le second a coûté **1,1166 $**. Une tâche large se découpe en
-  tâches courtes ; la limite de 20 tours est volontaire, elle borne le coût d'un run.
+- **Échecs par épuisement des tours** : les runs [38035310663](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035310663),
+  [38035381220](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035381220) (une « mission » en six volets) et
+  [38035825756](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035825756) (une « mission » en cinq volets, 7 refus de
+  permission) se sont arrêtés sur `error_max_turns` (20 tours) sans rien produire. Coûts relevés : **1,1166 $** et **0,7791 $**
+  (le coût du premier n'a pas été relevé). Trois missions larges sur trois ont échoué : il faut des tâches courtes, d'une seule
+  vérification. La limite de 20 tours est volontaire, elle borne le coût d'un run ; l'augmenter est une décision du propriétaire
+  (le coût monte avec les tours) et ne rend pas une mission large fiable.
 - Le run [38035439323](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035439323) a réussi sans pousser : la branche prévue
   n'existe pas et un outil a été refusé (1 refus de permission). Un « succès » du pont ne prouve donc pas qu'un travail a été livré :
   vérifier la branche.
