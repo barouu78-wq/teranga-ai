@@ -2,6 +2,7 @@
 from __future__ import annotations
 import re
 import unicodedata
+from functools import lru_cache
 
 PLACE_ALIASES = {
     "dakar": ("Dakar", "Sénégal"), "diourbel": ("Diourbel", "Sénégal"),
@@ -30,6 +31,37 @@ PLACE_ALIASES = {
 def _normalize(value: str) -> str:
     text = unicodedata.normalize("NFD", str(value or "").lower())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+
+
+@lru_cache(maxsize=1024)
+def _fold(value: str) -> str:
+    text = re.sub(r"[-‐‑‒–—]+", " ", _normalize(value))
+    text = re.sub(r"(?<!\w)ste(?!\w)\.?", "sainte", text)
+    text = re.sub(r"(?<!\w)st(?!\w)\.?", "saint", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def fold_place_text(value: object) -> str:
+    """Texte comparable pour reconnaître un lieu, quelle que soit sa graphie.
+
+    Sans accents ni majuscules ; tirets et espaces se valent (« Joal-Fadiouth » =
+    « Joal Fadiouth ») ; « St » et « Ste » valent « Saint » et « Sainte »
+    (« St Louis » = « Saint-Louis »).
+    """
+    return _fold(str(value or ""))
+
+
+def term_position(text: object, term: object) -> int | None:
+    """Position (dans le texte comparable) du terme entier cité, ou None s'il est absent.
+
+    Les deux côtés passent par `fold_place_text` : « Goree », « Gorée » et « GORÉE »
+    sont le même lieu, comme « St Louis » et « Saint-Louis ».
+    """
+    wanted = fold_place_text(term)
+    if not wanted:
+        return None
+    found = re.search(r"(?<!\w)" + re.escape(wanted) + r"(?!\w)", fold_place_text(text))
+    return found.start() if found else None
 
 # Mots qui n'apportent aucune précision sur le lieu cherché.
 _GENERIC_WORDS = {

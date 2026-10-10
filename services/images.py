@@ -7,7 +7,7 @@ import re
 import unicodedata
 import time
 
-from .photo_search import normalize_place_query, relevant_image_evidence
+from .photo_search import normalize_place_query, relevant_image_evidence, term_position
 from urllib.parse import quote, urlencode
 from urllib.error import HTTPError
 from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
@@ -64,6 +64,20 @@ def _photo_matches_query(query, page_title, description):
     return True
 
 
+# Mots qui disent le genre du lieu (« plage », « marché »), pas son nom : trouvés dans une
+# photo, ils ne prouvent pas qu'elle montre le bon endroit.
+_PLACE_KIND_WORDS = frozenset({
+    "plage", "port", "marche", "musee", "mosquee", "monument", "ile", "iles", "fleuve", "lac",
+    "parc", "pointe", "phare", "fort", "grande", "cathedrale", "mangrove", "lagune", "pirogue",
+    "pirogues", "baie", "vue", "ville", "village", "centre", "reserve", "foret", "desert",
+    "delta", "cascade", "cascades", "mausolee", "abbaye", "pays", "corniche",
+})
+_QUERY_STOPWORDS = frozenset({
+    "photo", "photos", "image", "images", "nataal", "montre", "moi", "de", "du", "des",
+    "la", "le", "les", "a", "au", "aux", "en", "pour", "voir", "senegal",
+})
+
+
 def _google_photo_relevance_score(query, alt, page_url):
     """Score Google Images evidence so precise place requests rank first."""
     q = _normalize(query)
@@ -99,10 +113,29 @@ def _google_photo_relevance_score(query, alt, page_url):
             matched_place = place
             break
 
+    # Reward meaningful query words appearing in the title/source. This helps
+    # rank "Monument de la Renaissance à Dakar" above generic Senegal results.
+    tokens = [
+        token for token in re.findall(r"[a-z0-9]+", q)
+        if len(token) >= 3 and token not in _QUERY_STOPWORDS
+    ]
+
     score = 0
     if matched_place:
         aliases = place_aliases[matched_place]
-        if any(_contains_text_term(evidence, alias) for alias in aliases):
+        # Mots du nom d'un lieu précis dans la ville (« sandaga » dans « Marché Sandaga
+        # Dakar ») : la photo de ce lieu ne cite pas toujours la ville.
+        place_words = {word for alias in aliases for word in re.findall(r"[a-z0-9]+", alias)}
+        spot_tokens = [t for t in tokens if t not in place_words and t not in _PLACE_KIND_WORDS]
+        spot_hits = sum(1 for token in spot_tokens if _contains_text_term(evidence, token))
+        city_in_evidence = any(_contains_text_term(evidence, alias) for alias in aliases)
+        if spot_tokens:
+            # La ville seule ne prouve pas que la photo montre le lieu demandé : elle
+            # passe après les photos qui portent le nom du lieu précis.
+            score += (20 if city_in_evidence else 0) + 50 * spot_hits
+            if not city_in_evidence and not spot_hits:
+                score -= 25
+        elif city_in_evidence:
             score += 100
         else:
             # A precise place was requested but the result provides no evidence
@@ -124,16 +157,6 @@ def _google_photo_relevance_score(query, alt, page_url):
             if _contains_text_term(evidence, other):
                 score -= 120
 
-    # Reward meaningful query words appearing in the title/source. This helps
-    # rank "Monument de la Renaissance à Dakar" above generic Senegal results.
-    stopwords = {
-        "photo", "photos", "image", "images", "nataal", "montre", "moi", "de", "du", "des",
-        "la", "le", "les", "a", "au", "aux", "en", "pour", "voir", "senegal",
-    }
-    tokens = [
-        token for token in re.findall(r"[a-z0-9]+", q)
-        if len(token) >= 3 and token not in stopwords
-    ]
     for token in tokens:
         if _contains_text_term(evidence, token):
             score += 8
@@ -514,23 +537,22 @@ PHOTO_TOPICS = (
 
 
 def _contains_text_term(text: object, term: object) -> bool:
-    normalized_text = _normalize(text)
-    normalized_term = _normalize(term).strip()
-    if not normalized_term:
-        return False
-    pattern = r"(?<!\w)" + re.escape(normalized_term) + r"(?!\w)"
-    return re.search(pattern, normalized_text, flags=re.UNICODE) is not None
+    return term_position(text, term) is not None
 
 
 def topic_wikipedia_titles(message: object, limit: int = 2) -> list[str]:
+    """Articles Wikipédia des lieux cités, dans l'ordre de la phrase (« Saly puis Mbour »)."""
+    hits = []
+    for order, (key, title) in enumerate(PHOTO_TOPICS):
+        position = term_position(message, key)
+        if position is not None:
+            hits.append((position, order, title))
     found, seen = [], set()
-    for key, title in PHOTO_TOPICS:
-        if _contains_text_term(message, key) and title not in seen:
+    for _position, _order, title in sorted(hits):
+        if title not in seen:
             seen.add(title)
             found.append(title)
-            if len(found) >= limit:
-                break
-    return found
+    return found[:limit]
 
 
 def wiki_summary(lang: str, title: str) -> dict:
