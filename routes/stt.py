@@ -7,6 +7,29 @@ import os
 from flask import jsonify, request
 
 
+def audio_filename(raw: bytes, declared: str = "") -> str:
+    """Nom de fichier cohérent avec le vrai format de l'enregistrement.
+
+    Le fournisseur de transcription déduit le format du nom du fichier : un enregistrement MP4/AAC
+    (iPhone, Safari) nommé « .webm » est rejeté. On lit donc les premiers octets plutôt que de croire le nom
+    envoyé par le navigateur (qui peut aussi venir d'une ancienne version du site gardée en mémoire).
+    """
+    head = bytes(raw[:12])
+    if head[4:8] == b"ftyp":
+        return "voice.m4a"
+    if head[:4] == b"\x1a\x45\xdf\xa3":
+        return "voice.webm"
+    if head[:4] == b"OggS":
+        return "voice.ogg"
+    if head[:4] == b"RIFF" and head[8:12] == b"WAVE":
+        return "voice.wav"
+    if head[:4] == b"fLaC":
+        return "voice.flac"
+    if head[:3] == b"ID3" or head[:2] in (b"\xff\xfb", b"\xff\xf3", b"\xff\xf2"):
+        return "voice.mp3"
+    return declared if declared in {"voice.webm", "voice.m4a", "voice.ogg", "voice.wav", "voice.mp3", "voice.flac"} else "voice.webm"
+
+
 def register_stt_route(app, deps):
     origin_allowed = deps["origin_allowed"]
     valid_request_token = deps["valid_request_token"]
@@ -72,7 +95,7 @@ def register_stt_route(app, deps):
             language = "fr"
         try:
             audio_file = io.BytesIO(raw)
-            audio_file.name = upload.filename or "voice.webm"
+            audio_file.name = audio_filename(raw)
             kwargs = {
                 "model": os.getenv("STT_MODEL", "gpt-4o-transcribe"),
                 "file": audio_file,
