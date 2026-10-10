@@ -9,27 +9,41 @@ l'accès est refusé, l'exécution échoue et l'indique dans la conversation.
 
 ## Ce qui a été vérifié, et ce qui ne l'est pas
 
-**Vérifié par une exécution réelle** (run [37998631452](https://github.com/barouu78-wq/teranga-ai/actions/runs/37998631452),
-9 octobre 2026, commentaire sur la PR #394) :
+Constats tirés des journaux et de l'historique GitHub (10 octobre 2026), pas de déclarations.
 
-- un commentaire du propriétaire commençant par la commande lance le workflow ;
-- les commentaires des bots (`claude[bot]`, `chatgpt-codex-connector[bot]`) sont ignorés : leurs runs sont « skipped » ;
-- Claude Code s'exécute (version 2.1.296, 17 tours, 67 secondes), lit le dépôt, lance les tests autorisés et répond dans un
-  commentaire de suivi : `pytest` 1257 réussis, 44 ignorés (les tests e2e, Playwright absent), `node --check` OK ;
-- la même exécution a montré que `ruff` n'était pas installé (`command not found`), d'où `requirements-dev.txt` complété ;
-- la méthode d'accès utilisée était la **clé API** (`ANTHROPIC_API_KEY`) : l'exécution a coûté **0,2346 $** (valeur
-  `total_cost_usd` du journal) pour cette tâche de lecture seule. Ce n'est pas l'abonnement.
+**Vérifié par des exécutions réelles**
 
-**Non vérifié** (aucune exécution réelle observée) :
+- Un commentaire du propriétaire lance le workflow ; les commentaires des bots (`claude[bot]`, `chatgpt-codex-connector[bot]`)
+  donnent des runs « skipped ».
+- Lecture seule : run [37998631452](https://github.com/barouu78-wq/teranga-ai/actions/runs/37998631452) (PR #394), 17 tours, 67 s,
+  `pytest` 1257 réussis et 44 ignorés (e2e : Playwright absent), `ruff` introuvable (`command not found`).
+- **Écriture** : les runs réussis [38035004919](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035004919) (07:36 UTC) et
+  [38035100592](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035100592) (07:38 UTC) ont chacun créé une branche
+  (`claude/pr-394-20261010-0736`, `claude/pr-394-20261010-0738`) avec un commit de `claude[bot]` qui ajoute Ruff à
+  `requirements-dev.txt`. Le pont écrit donc bien sur une branche `claude/...`.
+- **Doublon réel** : la même tâche, envoyée deux fois, a produit deux branches au contenu identique, sans PR ouverte (l'action
+  fournit un lien de création de PR, elle n'ouvre pas la PR). Ces deux branches restent à examiner puis à supprimer par le
+  propriétaire ; elles reprennent un correctif aussi porté par la PR #395.
+- **Méthode d'accès** : la clé API (`ANTHROPIC_API_KEY`) a été utilisée dans tous les runs observés, donc facturée à l'usage et pas
+  incluse dans l'abonnement : 0,2346 $ pour le run en lecture seule.
+- **Échecs par épuisement des tours** : les runs [38035310663](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035310663)
+  et [38035381220](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035381220) (une « mission » en six volets) se sont
+  arrêtés sur `error_max_turns` (20 tours) sans rien produire ; le second a coûté **1,1166 $**. Une tâche large se découpe en
+  tâches courtes ; la limite de 20 tours est volontaire, elle borne le coût d'un run.
+- Le run [38035439323](https://github.com/barouu78-wq/teranga-ai/actions/runs/38035439323) a réussi sans pousser : la branche prévue
+  n'existe pas et un outil a été refusé (1 refus de permission). Un « succès » du pont ne prouve donc pas qu'un travail a été livré :
+  vérifier la branche.
 
-- l'écriture : création d'une branche `claude/...`, commit, poussée, lien de création de PR. Aucune branche `claude/` n'existe
-  dans le dépôt à la date de cet audit ;
+**Non vérifié** (aucune exécution réelle observée)
+
 - la méthode abonnement (jeton `CLAUDE_CODE_OAUTH_TOKEN`) ;
+- l'ouverture d'une PR par le pont (seul le lien de création est fourni) ;
 - l'étape « Signaler l'échec dans la conversation » et le message d'erreur d'un secret absent ;
-- les restrictions ajoutées par la PR de durcissement (commande en début de commentaire, PR du propriétaire seulement,
+- les restrictions ajoutées par cette PR de durcissement (commande en début de commentaire, PR du propriétaire seulement,
   outils retirés, concurrence). Elles sont vérifiées par `tests/test_claude_bridge_workflow.py` et `actionlint`, pas par un run.
 
-Tant que ces points ne sont pas confirmés par un run réel, ne pas présenter l'écriture comme fonctionnelle.
+Un run avec le workflow durci reste nécessaire pour confirmer ces points ; tant qu'il n'a pas eu lieu, ne pas les présenter
+comme fonctionnels.
 
 ## Choisir la méthode d'accès (un des deux secrets suffit)
 
@@ -76,13 +90,15 @@ commence par la commande lance le pont, donc consomme des crédits ou l'abonneme
   `git branch` (elles permettraient de préparer une poussée sur `main`). `WebFetch` et `WebSearch` sont refusés par l'action.
 - Les trois actions tierces sont épinglées par commit (Dependabot propose les mises à jour). Le chemin du script de poussée n'est
   plus écrit en dur : l'action ajoute elle-même l'outil avec le bon chemin.
-- Un seul run à la fois par issue ou PR ; durée limitée à 20 minutes et 20 tours.
+- Un seul run à la fois par issue ou PR ; durée limitée à 20 minutes et 20 tours (une tâche trop large s'arrête sur `error_max_turns`
+  et le coût déjà engagé est perdu : voir plus haut).
 - Une exécution qui échoue (limite d'usage, secret absent ou expiré, délai) publie un commentaire d'échec dans la conversation.
 - L'application GitHub ne peut pas modifier `.github/workflows/` : le workflow ne peut pas être modifié par le pont.
 
 ## Reprise sans doublon
 
-1. Avant de relancer une tâche, chercher une branche `claude/...` ou une PR qui la traite déjà (GitHub conserve tout).
+1. Avant de relancer une tâche, chercher une branche `claude/...` ou une PR qui la traite déjà (GitHub conserve tout) : deux envois
+   de la même commande ont déjà produit deux branches identiques.
 2. Chaque exécution réussie laisse un commentaire de suivi ; chaque échec laisse un commentaire d'échec avec le lien du run.
 3. Si deux commandes attendent derrière une exécution en cours sur la même conversation, GitHub ne garde que la dernière :
    renvoyer la commande manquante. Les commentaires de bots n'évincent jamais une commande.

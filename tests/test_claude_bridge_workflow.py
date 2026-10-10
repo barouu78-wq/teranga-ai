@@ -95,6 +95,7 @@ def test_failures_are_reported_in_the_conversation_without_retriggering_the_brid
     assert "if: failure()" in step and "gh issue comment" in step
     assert "/claude" not in step  # le commentaire d'échec ne doit jamais relancer le pont
     assert "github.event.issue.number" in step and "${{ github.event.comment" not in step  # pas d'entrée libre dans le shell
+    assert "20 tours" in step and "branche claude/" in step  # cause observée (error_max_turns) et risque de doublon
 
 
 def test_system_prompt_forbids_main_workflows_and_untested_claims():
@@ -106,6 +107,6 @@ def test_system_prompt_forbids_main_workflows_and_untested_claims():
 
 def test_documentation_matches_the_workflow():
     for needle in ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY", "facturée", "protection", "main", "37998631452",
-                   "Non vérifié", "doublon"):
+                   "Non vérifié", "doublon", "error_max_turns", "claude/pr-394-20261010-0736", "38035381220"):
         assert needle in DOC, needle
     assert "Examiner et fusionner la PR qui ajoute" not in DOC  # étape périmée : le workflow est déjà sur main
