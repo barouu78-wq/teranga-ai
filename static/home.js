@@ -688,6 +688,7 @@ function setLang(next){
   $('fxTitle').textContent=lang==='en'?'Currency converter':lang==='wo'?'Soppi xaalis':lang==='ff'?'Waylugol ceede':'Convertisseur';
   $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
+  renderVoiceState();
   if(rec)rec.lang=voiceMap[lang];
 }
 document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
@@ -1090,7 +1091,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     const msg=offline
       ?(lang==='en'?'You are offline. Teranga needs internet to answer; guides you already opened stay available.':'Tu es hors ligne. Teranga a besoin d’internet pour répondre ; les guides déjà ouverts restent consultables.')
       :aborted
-      ?T[lang].timeout
+      ?(timedOut?T[lang].timeout:(lang==='en'?'Answer stopped.':'Réponse interrompue.'))
       :err.status===429
         ?T[lang].rateLimit
         :raw;
@@ -1139,9 +1140,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     send.textContent=T[lang].send;
     if(voiceConversation&&autoVoice&&!voiceSpeaking&&!voiceSTTBusy){
       voiceWaitingForAnswer=false;
-      voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
       setTimeout(startVoiceCapture,140);
-    }else if(!voiceConversation)input.focus();
+    }else if(!voiceConversation&&!fromVoice)input.focus();  // un arrêt vocal n'ouvre pas le clavier
   }
 }
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
@@ -1235,15 +1235,96 @@ const VOICE_MAX_MS=30000;
 const VOICE_NOISE_CALIBRATION_MS=550;
 const VOICE_BARGE_MS=220;
 const VOICE_RESTART_MS=90;
+// Au-delà, on cesse de rouvrir le micro tout seul : un lieu bruyant ou une panne ne doivent pas
+// épuiser les transcriptions (45 par heure et par personne) en boucle.
+const VOICE_MAX_MISSES=3;
 
-function voiceStatus(text){
-  if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
+// ── État de la conversation vocale ─────────────────────────────────────────────
+// Une seule source de vérité : voicePhase() lit l'état réel (micro, transcription, réflexion,
+// lecture). La barre #voiceBar l'affiche (même sur l'accueil téléphone, où la barre du bas est
+// cachée) et #voiceState l'annonce aux lecteurs d'écran. Wolof et pulaar : seuls les mots déjà
+// traduits dans l'interface le sont, le reste s'affiche en français (à faire relire).
+const VOICE_TEXT={
+  fr:{starting:'J’active le micro…',listening:'Je t’écoute…',hearing:'Je t’entends…',transcribing:'Je transcris…',
+    thinking:'Je réfléchis…',speaking:'Je parle…',stop:'Arrêter',stopLabel:'Arrêter la conversation vocale',interrupt:'Couper la voix et parler',
+    close:'Fermer',retry:'Réessayer',talk:'Parler',unclear:'Je n’ai pas bien entendu. Parle encore.',
+    stopped:'Mode vocal arrêté.',micOff:'Microphone indisponible.',failed:'Je n’ai pas bien compris. Réessaie.',
+    tooMany:'Trop de demandes vocales. Réessaie dans {n} s.',
+    gaveUp:'Je n’arrive pas à te comprendre. Touche le micro pour reprendre.'},
+  en:{starting:'Starting the microphone…',listening:'I’m listening…',hearing:'I hear you…',transcribing:'Transcribing…',
+    thinking:'Thinking…',speaking:'Speaking…',stop:'Stop',stopLabel:'Stop the voice conversation',interrupt:'Interrupt and speak',
+    close:'Close',retry:'Retry',talk:'Speak',unclear:'I didn’t catch that. Try again.',
+    stopped:'Voice mode stopped.',micOff:'Microphone unavailable.',failed:'I didn’t quite catch that. Try again.',
+    tooMany:'Too many voice requests. Try again in {n}s.',
+    gaveUp:'I can’t make out what you say. Tap the microphone to resume.'},
+  wo:{listening:'Maa ngi déglu…',hearing:'Maa ngi déglu…',talk:'Wax'},
+  ff:{listening:'Mi heɗii…',hearing:'Mi heɗii…'}
+};
+function vt(key,n){
+  const own=VOICE_TEXT[lang];
+  return String((own&&own[key])||VOICE_TEXT.fr[key]||'').replace('{n}',n===undefined?'':n);
+}
+let voiceNotice=null, voiceNoticeId=0, voiceTicker=0, voiceShown='', voiceSpoke=false, voiceTranscribing=false;
+function voicePhase(){
+  if(!voiceConversation)return '';
+  if(voiceSpeaking){voiceSpoke=true;return 'speaking';}
+  // La voix se prépare (appel /tts) : « Je parle » seulement quand le son part, sans clignoter entre deux phrases.
+  if(voiceTtsPlaying||voiceTtsQueue.length)return voiceSpoke?'speaking':'thinking';
+  voiceSpoke=false;
+  if(voiceTranscribing)return 'transcribing';
+  if(inflight||voiceSTTBusy)return 'thinking';
+  if(voiceCaptureBusy&&!listening)return 'starting';
+  return listening&&voiceSpeechStarted?'hearing':'listening';
+}
+// Message court affiché dans la barre (info : disparaît seul ; sticky : reste jusqu'à une action).
+function voiceNote(text,opts){
+  const o=opts||{};
+  voiceNotice={id:++voiceNoticeId,text,sticky:!!o.sticky,until:Date.now()+(o.ms||3500),retry:o.retry||null};
+  ensureVoiceTicker();
+}
+function clearVoiceNotice(){
+  voiceNotice=null;
+  renderVoiceState();
+}
+function renderVoiceState(){
+  const bar=$('voiceBar');
+  if(!bar)return;
+  const phase=voicePhase();
+  // Un message d'information cède la place dès qu'un nouveau tour commence (je parle, on me répond).
+  if(voiceNotice&&!voiceNotice.sticky&&(Date.now()>voiceNotice.until||phase==='hearing'||phase==='transcribing'||phase==='speaking'))voiceNotice=null;
+  const note=voiceNotice;
+  const mode=note?(note.sticky?'error':'info'):phase;
+  const text=note?note.text:(phase?vt(phase):'');
+  const key=[mode,text,!!(note&&note.retry),voiceConversation,lang].join('|');
+  if(key!==voiceShown){
+    voiceShown=key;
+    bar.hidden=!mode;
+    bar.dataset.phase=mode;
+    $('voiceText').textContent=text;
+    $('voiceState').textContent=text;
+    const retry=$('voiceRetry');
+    retry.hidden=!(note&&note.retry);
+    retry.textContent=vt('retry');
+    const stop=$('voiceStop');
+    stop.textContent=voiceConversation?vt('stop'):vt('close');
+    stop.setAttribute('aria-label',voiceConversation?vt('stopLabel'):vt('close'));
+  }
+  // Le micro (barre du bas) et celui de l'accueil disent ce qu'un appui va faire :
+  // pendant la voix il la coupe et écoute ; sinon il arrête la conversation, ou la démarre.
+  const label=voiceSpeaking?vt('interrupt'):voiceConversation?vt('stopLabel'):vt('talk');
+  [mic,$('heroMic')].forEach(b=>{
+    if(b&&!b.disabled&&b.getAttribute('aria-label')!==label){b.setAttribute('aria-label',label);b.title=label;}
+  });
+  if(!voiceConversation&&!voiceNotice&&voiceTicker){clearInterval(voiceTicker);voiceTicker=0;}
+}
+function ensureVoiceTicker(){
+  if(!voiceTicker)voiceTicker=setInterval(renderVoiceState,250);
+  renderVoiceState();
 }
 function voiceSetMicState(on){
   listening=!!on;
   mic.classList.toggle('listen',!!on);
-  mic.setAttribute('aria-label',on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler'));
-  mic.title=on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler');
+  renderVoiceState();
 }
 function clearVoiceRestart(){
   clearTimeout(voiceRestartTimer);
@@ -1352,10 +1433,21 @@ function voiceFileName(type){
   if(t.includes('wav'))return 'teranga-voice.wav';
   return 'teranga-voice.webm';
 }
+// Transcription en cours : annulable (bouton « Arrêter »), et chaque envoi a son numéro pour qu'un
+// envoi abandonné ne remette pas à zéro l'état du suivant.
+let voiceSttCtrl=null, voiceSttGen=0, voiceMisses=0;
+function abortVoiceStt(){
+  const ctrl=voiceSttCtrl;
+  voiceSttCtrl=null;
+  if(ctrl){try{ctrl.abort();}catch(_){}}
+}
 async function postVoiceAudio(blob,turnId){
   if(!blob||!blob.size||voiceSTTBusy||!voiceConversation||turnId!==voiceTurnId)return;
-  voiceSTTBusy=true;voiceWaitingForAnswer=true;
-  voiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+  const gen=++voiceSttGen;
+  const ctrl=new AbortController();voiceSttCtrl=ctrl;
+  voiceSTTBusy=true;voiceWaitingForAnswer=true;voiceTranscribing=true;
+  // Délai avant de rouvrir le micro si rien d'autre ne le fait (texte vide, erreur, réponse sans voix).
+  let resumeIn=200;
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
     if(!voiceConversation||turnId!==voiceTurnId)return;
@@ -1368,7 +1460,7 @@ async function postVoiceAudio(blob,turnId){
     let res=await fetch('/stt',{
       method:'POST',
       headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-      body:form,credentials:'same-origin'
+      body:form,credentials:'same-origin',signal:ctrl.signal
     });
     if(res.status===403){
       await refreshCsrf();
@@ -1376,36 +1468,48 @@ async function postVoiceAudio(blob,turnId){
       res=await fetch('/stt',{
         method:'POST',
         headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-        body:form,credentials:'same-origin'
+        body:form,credentials:'same-origin',signal:ctrl.signal
       });
     }
     const data=await res.json().catch(()=>({}));
     if(!voiceConversation||turnId!==voiceTurnId)return;
+    voiceTranscribing=false;
     if(!res.ok){const error=new Error(data.error||'stt');error.status=res.status;error.retryAfter=res.headers.get('Retry-After')||'';throw error;}
     const text=String(data.text||'').replace(/\s+/g,' ').trim();
     if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
       endVoiceMode();
-      voiceStatus(lang==='fr'?'Mode vocal arrêté.':lang==='en'?'Voice mode stopped.':T[lang].hintTouch);
+      voiceNote(vt('stopped'));
       return;
     }
     if(!text){
       voiceWaitingForAnswer=false;
-      voiceStatus(lang==='fr'?'Je n’ai pas bien entendu. Parle encore.':lang==='en'?'I didn’t catch that. Try again.':T[lang].hintTouch);
-      scheduleVoiceCapture(280);
+      if(++voiceMisses>=VOICE_MAX_MISSES){endVoiceMode();voiceNote(vt('gaveUp'),{sticky:true});return;}
+      voiceNote(vt('unclear'));
+      resumeIn=280;
       return;
     }
+    voiceMisses=0;
     input.value=text;
     input.dispatchEvent(new Event('input',{bubbles:true}));
     await ask(text,true);
   }catch(err){
     voiceWaitingForAnswer=false;
-    if(voiceConversation){
+    // Arrêt demandé ou nouveau tour : l'échec d'un envoi abandonné ne dit rien.
+    if(voiceConversation&&turnId===voiceTurnId){
       const waitSeconds=err.status===429?Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||5)):0;
-      voiceStatus(waitSeconds?(lang==='fr'?'Trop de demandes vocales. Réessaie dans '+waitSeconds+' s.':lang==='en'?'Too many voice requests. Try again in '+waitSeconds+'s.':T[lang].hintTouch):lang==='fr'?'Je n’ai pas bien compris. Réessaie.':lang==='en'?'I didn’t quite catch that. Try again.':T[lang].hintTouch);
-      scheduleVoiceCapture(waitSeconds?waitSeconds*1000:500);
+      if(!waitSeconds&&++voiceMisses>=VOICE_MAX_MISSES){endVoiceMode();voiceNote(vt('gaveUp'),{sticky:true});return;}
+      voiceNote(waitSeconds?vt('tooMany',waitSeconds):vt('failed'),{ms:waitSeconds?waitSeconds*1000:3500});
+      resumeIn=waitSeconds?waitSeconds*1000:500;
     }
   }finally{
-    voiceSTTBusy=false;
+    if(gen===voiceSttGen){
+      voiceSTTBusy=false;voiceTranscribing=false;
+      if(voiceSttCtrl===ctrl)voiceSttCtrl=null;
+      // Avant, scheduleVoiceCapture() était appelé pendant que voiceSTTBusy était encore vrai : il ne
+      // faisait rien, et l'écoute ne reprenait jamais après un texte vide, une erreur de transcription
+      // ou du chat. Si une voix est en cours, c'est sa fin qui rouvre le micro.
+      if(voiceConversation&&turnId===voiceTurnId&&!inflight&&!voiceSpeaking&&!voiceTtsPlaying&&!voiceTtsQueue.length)scheduleVoiceCapture(resumeIn);
+    }
   }
 }
 function finishVoiceRecording(){
@@ -1433,7 +1537,6 @@ async function startVoiceCapture(){
     voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
     voiceNoiseFloor=.008;voiceNoiseSamples=0;
     voiceSetMicState(true);
-    voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
 
     if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))voiceRecorderMime='audio/webm;codecs=opus';
     else if(MediaRecorder.isTypeSupported('audio/webm'))voiceRecorderMime='audio/webm';
@@ -1477,7 +1580,6 @@ async function startVoiceCapture(){
         if(!voiceSpeechStarted){
           voiceSpeechStarted=true;
           voiceSpeechStartedAt=now;
-          voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'Listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
         }
         voiceLastLoudAt=now;
       }
@@ -1495,7 +1597,7 @@ async function startVoiceCapture(){
       try{rec.start();}catch(_){}
     }else{
       endVoiceMode();
-      voiceStatus(lang==='fr'?'Microphone indisponible.':lang==='en'?'Microphone unavailable.':'Micro indisponible.');
+      voiceNote(vt('micOff'),{sticky:true});
     }
   }
 }
@@ -1504,18 +1606,26 @@ function beginVoiceMode(){
   LS.setItem('teranga-voice','1');
   document.body.classList.add('voice-active');
   $('voiceToggle').textContent=T[lang].vOn;
-  voiceStatus(lang==='fr'?'Mode vocal · parle naturellement.':lang==='en'?'Voice mode · speak naturally.':lang==='wo'?'Mode baat · wax ak yomb.':'Mode baat · haal no feewi.');
+  voiceNotice=null;voiceMisses=0;
+  ensureVoiceTicker();
 }
 function endVoiceMode(){
   clearVoiceSilence();
   voiceConversation=false;voiceWaitingForAnswer=false;
   voiceDraft='';
   voiceTurnId++;
+  abortVoiceStt();
   stopVoiceCapture();stopVoiceMonitor();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
   $('voiceToggle').textContent=T[lang].vOff;
-  voiceStatus(T[lang].hintTouch);
+  renderVoiceState();
+}
+// Arrêt complet, quelle que soit l'étape : plus d'écoute, plus de voix, plus de réponse en attente.
+function stopVoiceConversation(){
+  endVoiceMode();
+  stopSpeakingForListening();
+  if(inflight)inflight.abort();
 }
 function stopSpeakingForListening(){
   clearVoiceTtsQueue();
@@ -1539,7 +1649,6 @@ function finishSpeech(btn){
   resetListenButton(btn);
   if(voiceConversation&&!inflight&&!voiceSTTBusy){
     voiceWaitingForAnswer=false;
-    voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
     scheduleVoiceCapture(180);
   }
 }
@@ -1591,8 +1700,17 @@ mic.onclick=()=>{
     return;
   }
   if(listening||voiceCaptureBusy){endVoiceMode();return;}
+  // Transcription, réflexion ou voix qui se prépare : le micro rouge arrête tout (il restait sans effet).
+  if(voiceConversation&&(voiceSTTBusy||inflight||voiceTtsPlaying||voiceTtsQueue.length)){stopVoiceConversation();return;}
   beginVoiceMode();
   startVoiceCapture();
+};
+$('voiceStop').onclick=()=>{
+  if(voiceConversation)stopVoiceConversation();
+  else clearVoiceNotice();
+  // Le bouton disparaît : le focus clavier revient sur le micro visible au lieu de se perdre.
+  const target=[mic,$('heroMic')].find(b=>b&&b.offsetParent);
+  if(target)target.focus();
 };
 $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;
