@@ -132,6 +132,14 @@ PROBES = [
  ("fr","À quoi sert l'IPRES ?",["l'IPRES gère les retraites"]),
  ("fr","Comment s'inscrire à Campusen après le bac ?",["orientation.campusen.sn"]),
  ("en","How do I get my Senegalese ID card renewed?",["Carte d'identité biométrique CEDEAO"]),
+ # calculs faits par le code (services/calculators.py)
+ ("fr","Combien font 50 000 FCFA en euros ?",["CALCUL VÉRIFIÉ (fait par le code, à recopier tel quel)","50 000 FCFA = 76,22 €"]),
+ ("en","How much is 50 euros in CFA francs?",["50 € = 32 797,85 FCFA"]),
+ ("fr","Combien vaut 100 dollars en FCFA ?",["le taux de change varie chaque jour","aucun chiffre n'est calculé"]),
+ ("fr","J'achète à 3000 et je vends 4500, quelle est ma marge ?",["Marge : 4 500 - 3 000 = 1 500","Taux de marque (marge ÷ prix de vente) : 33,33 %."]),
+ ("fr","-20 % sur 15 000 FCFA",["prix après remise : 15 000 - 3 000 = 12 000 FCFA"]),
+ ("fr","5 nuits à 40 000 FCFA la nuit, ça fait combien ?",["5 nuits x 40 000 = 200 000 FCFA."]),
+ ("fr","Hôtel 150 000, transport 80 000, repas 50 000 FCFA. Total ?",["Total : 150 000 + 80 000 + 50 000 = 280 000 FCFA."]),
 ]
 
 HARD=[
@@ -192,6 +200,14 @@ NOISE=[  # (question, textes qui NE doivent PAS apparaître)
  ("fr","Le Sénégal est-il un pays agréable ?",["CEDEAO","Woyofal","Campusen"]),
  ("fr","Parle-moi de la Maison des Esclaves",["Woyofal","Campusen","CEDEAO"]),
  ("fr","Comment aller à l'université Cheikh Anta Diop ?",["Campusen"]),
+ # aucune demande de calcul : pas de bloc « CALCUL VÉRIFIÉ »
+ ("fr","Un hôtel à 50 000 FCFA la nuit, c'est cher ?",["CALCUL VÉRIFIÉ"]),
+ ("fr","Combien coûte un taxi à Dakar ?",["CALCUL VÉRIFIÉ"]),
+ ("fr","Je pars 7 jours avec 500 000 FCFA, que faire ?",["CALCUL VÉRIFIÉ"]),
+ ("fr","Quel est le taux de change euro FCFA ?",["CALCUL VÉRIFIÉ"]),
+ ("fr","Parle-moi de Gorée",["CALCUL VÉRIFIÉ"]),
+ ("fr","La Tabaski 2027, c'est quand ?",["CALCUL VÉRIFIÉ"]),
+ ("fr","Combien vaut 100 dollars en FCFA ?",["577"]),
 ]
 
 

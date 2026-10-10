@@ -218,6 +218,8 @@ ff:{
 }
 };
 let audience=storageGet('teranga-audience','tourist');
+// Une valeur périmée ou altérée du stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
+if(!['tourist','resident','diaspora','merchant'].includes(audience))audience='tourist';
 const audienceContext={
  tourist:{
   fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",

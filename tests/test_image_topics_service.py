@@ -9,11 +9,18 @@ def test_knowledge_image_titles_uses_region_and_place_queries():
         "places": [{"name": "Lac Rose", "image_queries": ["Lac Retba"]}],
     }
 
+    # Une demande sur Gorée ne renvoie plus la région Dakar ni ses autres requêtes
+    # (« Dakar », « Dakar skyline ») : seul le lieu cité est cherché, précisé par « Sénégal ».
     assert knowledge_image_titles(
         "photos de Gorée",
         knowledge,
         normalize=lambda value: str(value).lower(),
-    ) == ["Dakar", "Gorée", "Dakar skyline"]
+    ) == ["Gorée Sénégal"]
+    assert knowledge_image_titles(
+        "photos du Lac Rose",
+        knowledge,
+        normalize=lambda value: str(value).lower(),
+    ) == ["Lac Rose", "Lac Retba"]
 
 
 def test_fetch_topic_images_prefers_specific_place_queries_and_deduplicates():

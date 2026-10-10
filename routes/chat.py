@@ -228,7 +228,8 @@ def register_chat_route(app, deps):
                 else:
                     reply, sources, image, maps = complete_reply(payload)
                     sources = merged_sources(sources)
-                    if reply and answer_cache is not None:
+                    # Une réponse coupée (limite de longueur) ne doit pas être resservie à tout le monde.
+                    if reply and answer_cache is not None and not payload.get("reply_incomplete"):
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
                 sources = merged_sources(sources)
                 if not reply:
@@ -311,9 +312,11 @@ def register_chat_route(app, deps):
                         reply = clean_answer(getattr(response, "output_text", "") or "")
                         sources = extract_sources(response) or sources
                         image, maps = chat_enrichment_result(enrichments)
+                        if getattr(response, "status", None) == "incomplete":
+                            payload["reply_incomplete"] = True
                     else:
                         reply, sources, image, maps = complete_reply(payload)
-                    completed = bool(reply)
+                    completed = bool(reply) and not payload.get("reply_incomplete")
                     # Jamais de bulle vide : la base de connaissances, sinon un message clair.
                     reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
                     answer_parts.append(reply)

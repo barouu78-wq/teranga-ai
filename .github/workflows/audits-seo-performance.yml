@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - "scripts/audit_seo.py"
+      - "scripts/diagnose_tls.py"
       - "services/**"
       - "routes/**"
       - "templates/**"
@@ -50,6 +51,9 @@ jobs:
     name: Diagnostic HTTPS, disponibilité et latence publique
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Tester les pages publiques et diagnostiquer TLS
         id: public-check
         continue-on-error: true
@@ -145,6 +149,24 @@ jobs:
         with:
           name: rapport-public-https-performance
           path: rapport-public.json
+          if-no-files-found: warn
+          retention-days: 30
+      # Lecture seule : montre, adresse par adresse, quel serveur présente quel certificat (une connexion sur deux
+      # peut échouer si le DNS pointe vers plusieurs serveurs). Ne change rien au contrôle strict ci-dessus.
+      - name: Diagnostiquer le certificat présenté par chaque adresse
+        if: always()
+        continue-on-error: true
+        run: |
+          python scripts/diagnose_tls.py --json-file diagnostic-tls.json | tee diagnostic-tls.txt
+          { echo "### Diagnostic TLS par adresse"; echo '```'; cat diagnostic-tls.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Publier le diagnostic TLS par adresse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-tls-par-adresse
+          path: |
+            diagnostic-tls.json
+            diagnostic-tls.txt
           if-no-files-found: warn
           retention-days: 30
       - name: Bloquer si le contrôle public a échoué

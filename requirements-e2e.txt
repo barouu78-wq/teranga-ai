@@ -1,0 +1,6 @@
+# Tests end-to-end (clics réels dans Chromium) : en plus des dépendances de développement.
+# Puis, une fois : python -m playwright install --with-deps chromium
+# Sans Playwright, les tests de tests/e2e sont IGNORÉS (skipped), ce qui n'est pas un succès :
+# lancer avec E2E_REQUIRED=1 pour qu'un navigateur manquant fasse échouer au lieu d'ignorer.
+-r requirements-dev.txt
+playwright>=1.47,<2
