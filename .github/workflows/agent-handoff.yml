@@ -20,8 +20,12 @@ permissions:
 jobs:
   triage-audit-failure:
     name: Créer un relais QA / développeur si un audit échoue
+    # Un échec sur une PR n'ouvre pas de ticket : le contrôle rouge de la PR suffit, et le sondage du site public
+    # (programmé, manuel ou sur main) ne dépend pas du code de la PR. Sans cela, chaque PR créait son propre ticket.
     if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'failure') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'failure' &&
+       github.event.workflow_run.event != 'pull_request') ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +65,8 @@ jobs:
             const runUrl = run.html_url;
             const sha = run.head_sha;
             const branch = run.head_branch;
-            const title = `[Agent QA] Audit SEO/performance en échec — run ${runId}`;
+            // Titre fixe : un seul ticket ouvert pour ce sujet ; chaque nouvel échec s'ajoute en commentaire avec son exécution.
+            const title = "[Agent QA] Audit SEO/performance en échec";
             const body = [
               "## Relais automatique Teranga AI",
               "",
@@ -92,7 +97,7 @@ jobs:
               state: "open",
               per_page: 100
             });
-            const match = existing.data.find(issue => !issue.pull_request && issue.title === title);
+            const match = existing.data.find(issue => !issue.pull_request && issue.title.startsWith(title));
             if (match) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
