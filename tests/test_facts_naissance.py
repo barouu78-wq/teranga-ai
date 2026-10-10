@@ -25,6 +25,8 @@ POSITIVE = [
     ("Comment obtenir un jugement supplétif ?", "président du tribunal d'instance"),
     ("Naissance non déclarée depuis plus d'un an, que faire ?", "Après un an"),
     ("How do I register my baby's birth in Senegal?", "centre d'état civil"),
+    ("Mon bébé est né à Dakar hier, comment le déclarer ?", "jusqu'à 45 jours après la naissance"),
+    ("Ma fille est née à la maison, comment la déclarer ?", "y compris pour une naissance à domicile"),
 ]
 
 NEGATIVE = [
@@ -39,6 +41,8 @@ NEGATIVE = [
     "Comment inscrire mon enfant à l'école ?",
     "Parle-moi de Gorée",
     "Quels sont les numéros d'urgence au Sénégal ?",
+    "J'ai un enfant, comment le déclarer aux impôts ?",
+    "Mon enfant ne veut pas déclarer ses jouets",
 ]
 
 

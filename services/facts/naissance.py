@@ -23,6 +23,8 @@ TOPICS = (
      r"\bnaissances? (non |pas |jamais |mal )?declaree?s?\b|"
      r"\b(enfants?|bebes?|fils|filles?)\b.{0,40}\b(pas|jamais|non)\b.{0,15}\bdeclar(e|ee|es|ees)\b|"
      r"\b(bebes?|enfants?)\b.{0,80}\benregistr\w*.{0,50}\b(etat civil|mairie)\b|"
+     r"\b(bebes?|enfants?|fils|filles?)\b(?=.*(\bnee\b|\bne (a|au|en)\b|\bnaissance\b|\bnaitre\b|\baccouch\w*)).{0,80}"
+     r"\bdeclar(er|ation)\b|"
      r"\benregistr\w* (\w+ ){0,2}naissances?\b|\bregistres? (de l )?(etat civil|des naissances)\b|"
      r"\bjugements? suppletifs?\b|\bdeclarations? tardives?\b|\bautorisation d inscription\b|\banec\b|"
      r"\bagence nationale de l etat civil\b|"
