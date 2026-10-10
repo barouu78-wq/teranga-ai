@@ -2,7 +2,7 @@
 // Ressources statiques : cache d'abord (mise à jour en arrière-plan).
 // Pages : réseau d'abord, copie gardée ; hors ligne → copie ou page /offline.
 // Jamais en cache : chat, voix, API, jeton CSRF, proxy d'images.
-const VERSION = 'teranga-v9';
+const VERSION = 'teranga-v10';
 const STATIC_CACHE = VERSION + '-static';
 const PAGES_CACHE = VERSION + '-pages';
 const MAX_PAGES = 40;
