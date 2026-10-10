@@ -1,1 +1,1 @@
-canal,type,pays,ville,audience_estimee,source_audience,contact_public,proposition,date_contact,statut,prochaine_action,notes
+canal,type,segment,pays,ville,audience_estimee,source_audience,source_url,date_verification,score,contact_public,proposition,date_contact,statut,prochaine_action,notes

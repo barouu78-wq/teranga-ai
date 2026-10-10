@@ -72,6 +72,7 @@ Suivre chaque mois :
 2. Construire une liste de prospection qualifiée Sénégal + France à partir du modèle `docs/prospection_modele.csv` (canal, audience et sa source, contact public, proposition, date, statut, prochaine action). N'y inscrire que des contacts publics réellement vérifiés.
 3. Démonstration de 5 minutes prête : `docs/DEMO.md` (chat, voix en wolof, planificateur, fiches lieux, partage, widget).
 4. Proposer un pilote à 2 ou 3 acteurs du tourisme (hôtel, agence, restaurant) avec des indicateurs définis à l'avance.
+5. Plan opérationnel de 30 jours (Dakar d'abord, offres, qualification, suivi, messages e-mail et PME) : `docs/AGENT-COMMERCIAL-30-JOURS.md`.
 
 ## 8. Feuille de route produit
 - Court terme : stabilité et sécurité en production (Redis partagé, `TERANGA_ENV=production`, quotas), mesure d'audience.
