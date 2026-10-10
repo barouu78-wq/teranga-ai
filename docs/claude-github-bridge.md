@@ -112,7 +112,9 @@ commence par la commande lance le pont, donc consomme des crédits ou l'abonneme
 - **Protection de la branche `main`** (Settings → Branches ou Rulesets) : exiger une PR, les contrôles `pytest` et `e2e`, et interdire
   les poussées directes et forcées. C'est indispensable : le script de poussée de l'action accepte n'importe quel nom de branche
   valide, `main` compris ; seule la protection GitHub l'interdit réellement.
-- **Un des deux secrets** (voir le tableau) et, pour l'API, une limite de dépense mensuelle.
+- **Un des deux secrets** (voir le tableau). Constat : `ANTHROPIC_API_KEY` est **déjà configuré** (tous les runs du 10 octobre
+  l'ont utilisé), donc rien à ajouter pour que le pont tourne. Reste à fixer, côté console Anthropic, une **limite de dépense
+  mensuelle** pour cette clé : chaque run se facture.
 - **L'application GitHub Claude** installée sur le dépôt (elle l'est : `claude[bot]` a répondu) et GitHub Actions autorisé.
 - Optionnel, à tester lors d'un run avec écriture : `persist-credentials: false` à l'étape de checkout, pour que le jeton de
   l'étape `pip install` ne reste pas dans la configuration git. Non appliqué ici faute de test réel.
