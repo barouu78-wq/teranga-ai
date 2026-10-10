@@ -86,11 +86,11 @@ def test_existing_protection_and_urgence_answers_are_unchanged():
 
 def test_every_figure_has_a_source_and_every_unstable_claim_is_hedged():
     assert "à vérifier" in ALL_FACTS and "pas confirmés" in ALL_FACTS
-    numbers = {n.strip() for n in re.findall(r"\d[\d  ]*\d|\d", ALL_FACTS)}
+    numbers = {n.strip() for n in re.findall(r"\d+(?:\s\d{3})*", ALL_FACTS)}
     # 1515 SAMU ; 7 000 / 3 500 FCFA (CMU) ; 0 à 5 ans, 60 ans ; niveaux 1, 2, 3 ; 2016, 2013, 2020, 2026 ; code 16/2026 ;
     # 18 août ; 50 textes ; numéro vert 800 00 50 50 ; « Covid-19 » (19).
     allowed = {"1515", "7 000", "3 500", "0", "5", "60", "1", "2", "3", "2016", "2013", "2020", "2026", "16", "18",
-               "50", "800 00 50 50", "000", "19"}
+               "50", "800", "00", "19"}
     unexpected = numbers - allowed
     assert not unexpected, f"chiffres non prévus (à sourcer ou retirer) : {unexpected}"
 
