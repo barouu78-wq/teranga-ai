@@ -21,6 +21,49 @@ def test_privacy_contact_email_is_configurable(monkeypatch):
     assert "Google Play" in render_privacy("fr", "")
 
 
+PROVIDER_KEYS = ("ANTHROPIC_API_KEY", "TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY")
+
+
+def _privacy(lang, monkeypatch, **keys):
+    from routes.legal import render_privacy
+
+    for name in PROVIDER_KEYS:
+        monkeypatch.delenv(name, raising=False)
+    for name, value in keys.items():
+        monkeypatch.setenv(name, value)
+    return render_privacy(lang, "")
+
+
+def test_privacy_names_no_optional_provider_when_none_is_enabled(monkeypatch):
+    for lang in ("fr", "en"):
+        page = _privacy(lang, monkeypatch)
+        for name in ("Anthropic", "Tavily", "Firecrawl"):
+            assert name not in page, (lang, name)
+        assert "Exa " not in page and "via Exa" not in page
+
+
+def test_privacy_names_each_optional_provider_only_when_its_key_is_present(monkeypatch):
+    secret = "valeur-secrete-123"
+    fr = _privacy("fr", monkeypatch, ANTHROPIC_API_KEY=secret)
+    assert "Anthropic (Claude)" in fr and "Tavily" not in fr and "Firecrawl" not in fr
+    fr = _privacy("fr", monkeypatch, TAVILY_API_KEY=secret, EXA_API_KEY=secret, FIRECRAWL_API_KEY=secret)
+    assert "via Tavily" in fr and "via Exa" in fr and "via Firecrawl" in fr and "Anthropic" not in fr
+    en = _privacy("en", monkeypatch, ANTHROPIC_API_KEY=secret, TAVILY_API_KEY=secret, FIRECRAWL_API_KEY=secret)
+    assert "Anthropic (Claude)" in en and "via Tavily" in en and "via Firecrawl" in en and "via Exa" not in en
+    # Seule la présence d'une clé est lue : sa valeur ne figure jamais dans la page.
+    assert secret not in fr and secret not in en
+
+
+def test_privacy_route_follows_the_environment(monkeypatch):
+    from app import app
+
+    for name in PROVIDER_KEYS:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "valeur-secrete-123")
+    page = app.test_client().get("/confidentialite").get_data(as_text=True)
+    assert "via Firecrawl" in page and "valeur-secrete-123" not in page
+
+
 def test_asset_links_declare_the_android_app(monkeypatch):
     from app import app
     from routes.legal import ANDROID_CERT_SHA256, asset_links
