@@ -49,6 +49,9 @@ jobs:
 
   performance-smoke:
     name: Diagnostic HTTPS, disponibilité et latence publique
+    # Sonde le site EN LIGNE : son résultat ne dépend pas du code d'une PR. Sur une PR il restait rouge tant que le DNS
+    # était défaillant et ouvrait un ticket par PR. Il tourne en programmation (lundi) et à la main.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
