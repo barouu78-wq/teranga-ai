@@ -1138,6 +1138,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     }
   }finally{
     clearTimeout(kill);
+    // Réponse finie, ratée ou arrêtée : plus rien de son flux ne doit être lu (le délai de la 1re partie, le texte reçu).
+    resetVoiceStreamTts();
     inflight=null;
     send.dataset.mode='';
     send.disabled=false;

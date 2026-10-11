@@ -437,6 +437,35 @@ def test_a_rate_limited_voice_says_when_to_retry_and_stops_asking(page, base_url
     assert page.errors == []
 
 
+def test_audio_that_cannot_be_played_is_reported(page, base_url):
+    """Un fichier de voix illisible (ou une lecture refusée par le navigateur) ne doit pas rester muet et sans explication."""
+    bench = VoiceBench(page, base_url)
+    bench.tts_handler = lambda route, n: route.fulfill(body=b"ceci n'est pas du son", content_type="audio/wav")
+    bench.open()
+    bench.tap_mic()
+    bench.wait_recording(timeout=T)
+    bench.speak_one_turn()
+    text = page.locator("#voiceText")
+    expect(text).to_have_text(re.compile("pas pu lire"), timeout=T)
+    expect(text).to_have_text(LISTENING, timeout=20000)
+    bench.wait_recording(timeout=T)
+    assert page.errors == []
+
+
+def test_a_typed_question_is_still_read_once_in_one_call(page, base_url):
+    """Garde-fou (déjà vert avant) : hors conversation vocale, la réponse écrite se lit d'un seul appel, une seule fois."""
+    bench = VoiceBench(page, base_url).open()
+    page.fill("#input", "Bonjour")
+    page.click("#send")
+    bench.wait_tts_calls(1, timeout=T)
+    page.wait_for_function("() => window.__mic.audios.length >= 1", timeout=T)
+    page.wait_for_function("() => window.__mic.playing() === 0", timeout=T)
+    page.wait_for_timeout(500)
+    assert bench.tts_texts() == ["Réponse 1."]
+    assert page.evaluate("() => window.__mic.audios.length") == 1
+    expect(page.locator("#voiceBar")).to_be_hidden()
+
+
 # ── Limites de débit : le budget de découpage ────────────────────────────────────────────────────────
 
 

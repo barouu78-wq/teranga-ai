@@ -316,6 +316,8 @@ async function playVoiceTtsQueue(){
       player.onerror=done;
       player.play().catch(done);
     });
+    // Le son n'a jamais démarré (lecture refusée par le navigateur, fichier illisible) : à dire, pas à taire.
+    if(!started&&item.turn===voiceTtsTurn&&voiceConversation&&!voiceTtsIssue)voiceTtsIssue={status:0,retry:''};
   }catch(err){
     if(item.turn===voiceTtsTurn){
       if(!voiceConversation)speakFallback(item.text);
