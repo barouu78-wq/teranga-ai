@@ -72,9 +72,7 @@ ce qu'il sait, **repris tel quel** (aucune reformulation, aucun fait ajouté) :
 
 Quand rien ne correspond, le site préfère **ne rien inventer** : le message honnête (« pas de réponse
 prête ») renvoie vers `/lieux`, `/urgences`, `/calendrier-fetes-senegal` et `/trip-planner`, et ne
-rappelle les numéros d'urgence que si la question touche à une urgence. Il est prêt dans
-`knowledge_fallback(..., always=True)`, mais le chat ne l'utilise pas encore : en attendant, une
-question sans rapport avec la base reçoit toujours le message d'erreur habituel.
+rappelle les numéros d'urgence que si la question touche à une urgence.
 
 Pour le développeur : un nouveau sujet de repères pratiques reçoit son titre dans `_TITLES`
 (`services/fallback_answer.py`) ; sans titre, il s'affiche sous « Repères pratiques ».

@@ -9,6 +9,7 @@ import inspect
 import json
 import os
 import re
+from types import SimpleNamespace
 
 import pytest
 
@@ -34,9 +35,8 @@ def _broken(*_args, **_kwargs):
     raise RuntimeError("Error code: 503 - upstream unavailable")
 
 
-def _post(monkeypatch, message, json_mode=False, ip=None):
-    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", _broken)
-    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", _broken)
+def _client_post(message, json_mode=False, ip=None, language="fr"):
+    """Requête /chat identique à celle du site : la question courante est déjà le dernier élément de history."""
     client = app_module.app.test_client()
     token = client.get("/csrf", base_url=B).get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
@@ -45,7 +45,18 @@ def _post(monkeypatch, message, json_mode=False, ip=None):
         headers["X-Teranga-Mode"] = "json"
     # Message unique à chaque appel : jamais servi depuis le cache des réponses.
     extra = {"environ_base": {"REMOTE_ADDR": ip}} if ip else {}
-    return client.post("/chat", json={"message": message, "language": "fr"}, headers=headers, base_url=B, **extra)
+    body = {"message": message, "history": [{"role": "user", "content": message}], "language": language, "audience": "tourist"}
+    return client.post("/chat", json=body, headers=headers, base_url=B, **extra)
+
+
+def _post(monkeypatch, message, json_mode=False, ip=None, language="fr"):
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", _broken)
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", _broken)
+    return _client_post(message, json_mode, ip, language)
+
+
+def _events(response):
+    return [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line.strip()]
 
 
 def test_fallback_uses_the_place_history_and_access():
@@ -77,15 +88,31 @@ def test_json_mode_answers_from_the_knowledge_base(monkeypatch):
     assert "Saint-Louis" in data["reply"]
 
 
-def test_unknown_topic_still_reports_the_outage(monkeypatch):
-    # « Quelle heure est-il à Tokyo ? » déclenche désormais le repère « heure » (mode autonome) : on prend
-    # une question que la base ne connaît vraiment pas. Sans `always`, le chat garde son message d'erreur.
-    response = _post(monkeypatch, "Qui va gagner le match de ce soir, panne ?", json_mode=True)
-    assert response.status_code == 503 and "error" in response.get_json()
+def test_unknown_topic_gets_the_honest_message_instead_of_an_error(monkeypatch):
+    """Panne de l'IA et question hors base : le chat dit qu'il préfère ne rien inventer (200), il ne répond plus 503.
+
+    Avant, `fallback_for` appelait `knowledge_fallback` sans `always=True` : une question sans rapport avec la
+    base recevait « service indisponible » (503 en JSON, événement `error` en flux), alors que le message
+    honnête et les pages utiles de `no_ready_answer` existent depuis le mode autonome. (« Quelle heure est-il
+    à Tokyo ? » déclenche le repère « heure » : on prend une question que la base ne connaît vraiment pas.)"""
+    question = "Qui va gagner le match de ce soir, panne ?"
+    response = _post(monkeypatch, question, json_mode=True, ip="198.51.100.31")
+    body = response.get_json()
+    assert response.status_code == 200 and "error" not in body and body["degraded"] is True
+    assert body["reply"] == no_ready_answer(question)
+    assert "ne rien inventer" in body["reply"] and "teranga-ai.fr/lieux" in body["reply"]
+    events = _events(_post(monkeypatch, question + " (flux)", ip="198.51.100.32"))
+    assert not any("error" in e for e in events)
+    assert "".join(e.get("d", "") for e in events) == no_ready_answer(question + " (flux)")
+    assert events[-1] == {"degraded": True, "done": True}
 
 
 def test_stream_never_ends_with_an_empty_bubble(monkeypatch):
-    """Flux sans texte puis réponse complète vide : un message s'affiche quand même."""
+    """Flux sans texte puis réponse complète vide : un message s'affiche quand même.
+
+    Avant, ce cas finissait sur « Je n'ai pas réussi à répondre » seulement parce que `fallback_for` renvoyait
+    None pour une question hors base. Le secours renvoie maintenant le message honnête (« je préfère ne rien
+    inventer », avec les pages utiles) : toujours du texte, jamais de fait inventé."""
 
     class Empty:
         output_text = ""
@@ -94,16 +121,10 @@ def test_stream_never_ends_with_an_empty_bubble(monkeypatch):
         return iter([]) if stream else Empty()
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", create_response)
-    client = app_module.app.test_client()
-    token = client.get("/csrf", base_url=B).get_json()["token"]
-    client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
-    response = client.post(
-        "/chat", json={"message": "Question sans réponse du modèle 42", "language": "fr"},
-        headers={"X-CSRF-Token": token, "Origin": B}, base_url=B,
-    )
-    events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line.strip()]
+    message = "Question sans réponse du modèle 42"
+    events = _events(_client_post(message))
     text = "".join(e.get("d", "") for e in events)
-    assert "pas réussi à répondre" in text and events[-1].get("done")
+    assert text == no_ready_answer(message) and "ne rien inventer" in text and events[-1].get("done")
 
 
 # --- Mode autonome : repères pratiques, fêtes, message honnête -------------------------------------------------
@@ -447,3 +468,101 @@ def test_json_mode_gives_the_emergency_numbers_even_for_an_unlisted_emergency(mo
     data = response.get_json()
     assert response.status_code == 200 and data["degraded"] is True
     assert "Sapeurs-pompiers 18" in data["reply"] and "pas de réponse prête" in data["reply"]
+
+
+# --- Panne réelle de l'IA : la chaîne de secours finit toujours sur du texte --------------------------------------
+
+
+@pytest.mark.parametrize("question", NOTHING)
+def test_every_off_topic_question_gets_the_honest_message_when_the_ai_is_down(monkeypatch, question):
+    body = _post(monkeypatch, question, json_mode=True, ip="198.51.100.34").get_json()
+    assert body["reply"] == no_ready_answer(question) and body["degraded"] is True
+
+
+def test_unknown_topic_in_english_gets_the_english_honest_message(monkeypatch):
+    question = "Who will win tonight's match, outage?"
+    body = _post(monkeypatch, question, json_mode=True, ip="198.51.100.33", language="en").get_json()
+    assert body["reply"] == no_ready_answer(question, "en") and "would rather not make anything up" in body["reply"]
+
+
+def test_the_honest_message_is_never_cached(monkeypatch):
+    """Le message de secours n'est pas une réponse : dès que l'IA revient, la même question reçoit sa vraie réponse."""
+    question = "Qui va gagner le match de dimanche, panne puis retour ?"
+    assert "ne rien inventer" in _post(monkeypatch, question, json_mode=True, ip="198.51.100.35").get_json()["reply"]
+    calls = []
+
+    def working(payload):
+        calls.append(payload["message"])
+        return "Réponse normale de l'IA, bien plus longue que soixante caractères pour être mise en cache.", [], None, None
+
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", working)
+    body = _client_post(question, json_mode=True, ip="198.51.100.35").get_json()
+    assert body["reply"].startswith("Réponse normale") and calls == [question]
+
+
+def test_a_failing_backup_ai_leaves_the_honest_message(monkeypatch):
+    """Claude configuré mais en panne (ou muet) : la chaîne finit sur la base du site, pas sur une erreur."""
+    import routes.chat as chat_routes
+
+    monkeypatch.setattr(chat_routes, "backup_enabled", lambda: True)
+    monkeypatch.setattr(chat_routes, "claude_is_primary", lambda: False)
+    question = "Qui va gagner le match de ce soir, relais muet ?"
+    for backup in (lambda *_a, **_k: "", _broken):
+        monkeypatch.setattr(chat_routes, "backup_complete", backup)
+        body = _post(monkeypatch, question, json_mode=True, ip="198.51.100.36").get_json()
+        assert body["reply"] == no_ready_answer(question)
+
+
+def test_the_503_is_kept_only_when_the_fallback_itself_breaks(monkeypatch):
+    """Dernier recours : si même le secours échoue, l'erreur claire (503 + Retry-After en JSON, `error` en flux)."""
+    import routes.chat as chat_routes
+
+    monkeypatch.setattr(chat_routes, "knowledge_fallback", _broken)
+    response = _post(monkeypatch, "Qui va gagner le match de ce soir, repli cassé ?", json_mode=True, ip="198.51.100.37")
+    assert response.status_code == 503 and response.headers["Retry-After"] == "10" and "error" in response.get_json()
+    events = _events(_post(monkeypatch, "Qui va gagner le match de ce soir, repli cassé (flux) ?", ip="198.51.100.38"))
+    assert len(events) == 1 and events[0].get("error")
+
+
+class _Empty:
+    output_text = ""
+
+
+def _failed_event():
+    return SimpleNamespace(type="response.failed", response=SimpleNamespace(error=SimpleNamespace(message="overloaded", code="server_error")))
+
+
+def _raising_stream():
+    yield SimpleNamespace(type="response.created")
+    raise ConnectionError("stream reset")
+
+
+# Les pannes réelles du fournisseur : à la création, au milieu du flux avant tout texte, événement `response.failed`,
+# flux vide suivi d'un appel complet qui échoue ou qui revient vide.
+PANNES = {
+    "creation": (_broken, _broken),
+    "flux_interrompu": (lambda payload, stream=False: _raising_stream(), _broken),
+    "response_failed": (lambda payload, stream=False: iter([_failed_event()]), _broken),
+    "flux_vide_puis_erreur": (lambda payload, stream=False: iter([]) if stream else _broken(), _broken),
+    "flux_vide_puis_vide": (lambda payload, stream=False: iter([]) if stream else _Empty(), lambda payload: ("", [], None, None)),
+}
+
+
+@pytest.mark.parametrize("name", list(PANNES))
+@pytest.mark.parametrize("question", ["Qui va gagner le match de ce soir ?", "Parle-moi de Gorée", "Il y a un incendie dans mon immeuble"])
+def test_a_real_outage_never_gives_an_empty_bubble_nor_an_invented_fact(monkeypatch, name, question):
+    """Quelle que soit la panne : du texte tiré de la base du site (ou le message honnête), jamais une bulle vide.
+
+    Le texte affiché est exactement celui de `knowledge_fallback(..., always=True)` : repris de la base vérifiée,
+    sans reformulation ni fait ajouté."""
+    create_response, complete_reply = PANNES[name]
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", create_response)
+    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", complete_reply)
+    unique = f"{question} ({name})"
+    expected = knowledge_fallback(unique, PLACES, DISHES, "fr", always=True)
+    events = _events(_client_post(unique, ip="198.51.100.39"))
+    text = "".join(e.get("d", "") for e in events)
+    assert text.strip() and text == expected, (name, events)
+    assert not any("error" in e for e in events) and events[-1].get("done")
+    if "incendie" in question:
+        assert "Sapeurs-pompiers 18" in text

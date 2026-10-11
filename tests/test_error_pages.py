@@ -38,6 +38,9 @@ def test_ai_failure_in_json_mode_is_503_with_retry_after(monkeypatch):
 
     # Mode JSON : passe par complete_reply ; aucun appel réseau réel.
     monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", broken)
+    # Depuis le mode autonome branché (always=True), une panne de l'IA reçoit le message honnête de la base du
+    # site (200). Le 503 avec Retry-After reste le dernier recours quand même ce secours échoue.
+    monkeypatch.setattr("routes.chat.knowledge_fallback", broken)
     client = app_module.app.test_client()
     token = client.get("/csrf", base_url=B).get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
