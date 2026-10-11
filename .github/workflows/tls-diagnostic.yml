@@ -1,0 +1,46 @@
+name: TLS domain diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tls-domain-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Inspect public TLS certificates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout diagnostic branch
+        uses: actions/checkout@v4
+        with:
+          ref: diagnostic/tls-domain-cert
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install OpenSSL
+        run: |
+          openssl version
+      - name: Diagnose public certificates (read-only)
+        run: |
+          python scripts/diagnose_tls.py --json-file tls-report.json
+          python - <<'PY'
+          import json
+          with open("tls-report.json", encoding="utf-8") as f:
+              report = json.load(f)
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+      - name: Upload TLS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teranga-ai-tls-diagnostic
+          path: tls-report.json
+          if-no-files-found: warn
+          retention-days: 14
