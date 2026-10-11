@@ -16,6 +16,12 @@ seulement ensuite livre la suite.
 
 Appels de voix coupés : la page peut annuler un appel /tts en vol (« Arrêter »). page.route ne le dit
 pas au test ; window.__tts.calls note donc, pour chaque appel, si la page l'a annulé (tts_calls_aborted).
+
+Chronologie et retards SIMULÉS (banc de latence) : la page note l'heure (performance.now) de la fin de parole,
+de chaque envoi vers /stt, /chat, /tts, de leur réponse, du premier événement du flux et de chaque son qui démarre
+ou finit (window.__mic.marks). delays(stt=…, chat=…, tts=…) fait attendre la page avant d'envoyer la requête, pour
+imiter un fournisseur lent. Ces chiffres viennent du banc et d'aucun vrai fournisseur : ils servent à repérer une
+régression du site, pas à dire combien de temps met la voix en vrai.
 """
 
 import json
@@ -31,6 +37,7 @@ FAKE_CHAT_STREAM = """
     manual: false, calls: 0, bodies: [], controller: null, ended: false, aborted: false,
     encoder: new TextEncoder(),
     event(obj) {
+      if (!chat.firstMarked) { chat.firstMarked = true; mark('chat-first-event'); }
       try { chat.controller.enqueue(chat.encoder.encode(JSON.stringify(obj) + "\\n")); return true; }
       catch (_) { return false; }  // flux déjà annulé par la page (« Arrêter ») : la suite n'arrive plus
     },
@@ -40,10 +47,26 @@ FAKE_CHAT_STREAM = """
     },
   };
   const tts = window.__tts = { calls: [] };
+  const delays = window.__delays = { stt: 0, chat: 0, tts: 0 };
+  const mark = (name) => { if (window.__mic) window.__mic.mark(name); };
   const nativeFetch = window.fetch.bind(window);
+  // Attente simulée d'un fournisseur lent, avant l'envoi réel ; annulée si la page abandonne la requête.
+  const later = (ms, signal) => new Promise((resolve, reject) => {
+    if (!ms) return resolve();
+    const timer = setTimeout(resolve, ms);
+    if (signal) signal.addEventListener('abort', () => { clearTimeout(timer); reject(new DOMException('Aborted', 'AbortError')); });
+  });
+  const named = { '/stt': 'stt', '/chat': 'chat', '/tts': 'tts' };
+  const forward = (name, input, init) => {
+    const wait = delays[name] || 0;
+    const send = () => nativeFetch(input, init).then(response => { mark(name + '-head'); return response; });
+    return wait ? later(wait, init && init.signal).then(send) : send();
+  };
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.href);
     const headers = (init && init.headers) || {};
+    const name = named[url.pathname];
+    if (name && !(name === 'chat' && headers['X-Teranga-Mode'])) mark(name + '-sent');
     if (url.pathname === '/tts') {
       const call = { aborted: false };
       tts.calls.push(call);
@@ -55,6 +78,8 @@ FAKE_CHAT_STREAM = """
       chat.bodies.push(init && init.body ? String(init.body) : '');
       chat.ended = false;
       chat.aborted = false;
+      chat.firstMarked = false;
+      mark('chat-head');
       const body = new ReadableStream({
         start(controller) {
           chat.controller = controller;
@@ -67,7 +92,7 @@ FAKE_CHAT_STREAM = """
       });
       return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'application/x-ndjson' } }));
     }
-    return nativeFetch(input, init);
+    return name ? forward(name, input, init) : nativeFetch(input, init);
   };
 })();
 """
@@ -76,8 +101,13 @@ FAKE_CHAT_STREAM = """
 FAKE_MIC = """
 (() => {
   const mic = window.__mic = {
-    level: 0, calls: 0, error: null, gains: [], recorders: [], contexts: [], audios: [],
-    set(v) { mic.level = v; mic.gains.forEach(g => { g.gain.value = v; }); },
+    level: 0, calls: 0, error: null, gains: [], recorders: [], contexts: [], audios: [], marks: [],
+    // Repère horodaté (banc de latence) : « speech-end » quand la parole retombe, « sound » quand un son démarre.
+    mark(name) { mic.marks.push({ name, at: performance.now() }); },
+    set(v) {
+      if (mic.level > 0 && v === 0) mic.mark('speech-end');
+      mic.level = v; mic.gains.forEach(g => { g.gain.value = v; });
+    },
     recording() { return mic.recorders.filter(r => r.state === 'recording').length; },
     playing() { return mic.audios.filter(a => !a.paused && !a.ended).length; },
   };
@@ -91,7 +121,12 @@ FAKE_MIC = """
   };
   const NativeAudio = window.Audio;
   window.Audio = class extends NativeAudio {
-    constructor(...args) { super(...args); mic.audios.push(this); }
+    constructor(...args) {
+      super(...args);
+      mic.audios.push(this);
+      this.addEventListener('playing', () => mic.mark('sound'));
+      this.addEventListener('ended', () => mic.mark('sound-end'));
+    }
   };
   navigator.mediaDevices.getUserMedia = async () => {
     mic.calls++;
@@ -227,6 +262,37 @@ class VoiceBench:
 
     def chat_stream_aborted(self):
         return self.page.evaluate("() => window.__chat.aborted")
+
+    def delays(self, stt=0, chat=0, tts=0):
+        """À appeler avant open() : la page attend ce délai (ms) avant d'envoyer chaque requête (fournisseur lent SIMULÉ)."""
+        self.page.add_init_script(f"Object.assign(window.__delays, {json.dumps({'stt': stt, 'chat': chat, 'tts': tts})})")
+
+    def marks(self):
+        """Tous les repères de la page, dans l'ordre : [(nom, ms depuis le chargement de la page), …]."""
+        return [(m["name"], m["at"]) for m in self.page.evaluate("() => window.__mic.marks")]
+
+    def wait_sounds(self, count, timeout=8000):
+        """Attend que `count` sons aient démarré depuis le chargement de la page (un par morceau de voix)."""
+        self.page.wait_for_function(
+            "n => window.__mic.marks.filter(m => m.name === 'sound').length >= n", arg=count, timeout=timeout
+        )
+
+    def turn_timeline(self, turn=1):
+        """Chronologie du tour numéro `turn` (1 = le premier), en ms depuis sa fin de parole.
+
+        Les noms : speech-end, stt-sent, stt-head, chat-sent, chat-head, chat-first-event, tts-sent, tts-head, sound.
+        Pour chaque nom c'est la PREMIÈRE occurrence du tour (le 1er morceau de voix). Un nom qui n'a pas eu lieu manque.
+        """
+        marks = self.marks()
+        starts = [i for i, (name, _) in enumerate(marks) if name == "speech-end"]
+        assert len(starts) >= turn, f"{len(starts)} fin(s) de parole, le tour {turn} n'a pas eu lieu"
+        begin = starts[turn - 1]
+        end = starts[turn] if len(starts) > turn else len(marks)
+        origin = marks[begin][1]
+        line = {}
+        for name, at in marks[begin:end]:
+            line.setdefault(name, at - origin)
+        return line
 
     def open(self, path="/"):
         self.page.goto(self.base_url + path)
