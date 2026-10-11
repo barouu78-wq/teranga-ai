@@ -13,6 +13,7 @@ from .model_params import openai_model
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
 from .action_executor import prepare_action
 from .intelligence import is_acknowledgement
+from .truncation import prepare_cut_history
 
 
 _AUDIENCE_INSTRUCTIONS = {
@@ -188,6 +189,11 @@ def photo_request(message: str, history) -> tuple[bool, str]:
 
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
+    # Dernière réponse coupée par la limite de longueur ? Le modèle en reçoit la fin, sans la mention : « continue » reprend alors où elle s'est arrêtée.
+    previous_cut = False
+    if isinstance(data, dict) and isinstance(data.get("history"), list):
+        history_for_model, previous_cut = prepare_cut_history(data["history"], max_history_item_length)
+        data = {**data, "history": history_for_model}
     normalized, error = normalize_chat_input(
         data,
         sanitize=sanitize,
@@ -276,6 +282,12 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         )
     else:
         planner_instruction = ""
+    cut_instruction = (
+        "SUITE D'UNE RÉPONSE COUPÉE : ta dernière réponse a été arrêtée par la limite de longueur (elle s'arrête brusquement, parfois au milieu d'une phrase). "
+        "Si l'utilisateur demande la suite (« continue »), reprends exactement là où elle s'est arrêtée, sans répéter ce qui précède et sans ajouter de mention de coupure ; "
+        "sois plus concis pour terminer. S'il pose une autre question, réponds-y normalement."
+        if previous_cut else ""
+    )
     trip_edit_proposal = None
     region_names = _REGION_NAMES
     edit_match = re.search(
@@ -320,6 +332,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             memory_line,
             source_line,
             planner_instruction,
+            cut_instruction,
         )
         if part
     )

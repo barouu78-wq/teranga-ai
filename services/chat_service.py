@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from .backup_ai import claude_events, claude_is_primary, claude_response
 from .model_params import clean_model_name, openai_complex_model, openai_model
 from .orchestrator import build_agent_plan, run_enrichments
+from .truncation import mark_incomplete
 
 # Images et carte dépendent d'appels réseau lents (Google, Wikimedia) : elles
 # sont lancées en parallèle de la génération du texte au lieu de l'attendre.
@@ -169,9 +170,8 @@ def build_chat_service(
     def complete_reply(payload):
         enrichments = start_enrichments(payload)
         response = create_response(payload, stream=False)
-        if getattr(response, "status", None) == "incomplete":
-            # Coupée par la limite de longueur : la route ne doit pas la mettre en cache.
-            payload["reply_incomplete"] = True
+        # Coupée par la limite de longueur : la route ne la met pas en cache et ajoute la mention « Réponse coupée ».
+        mark_incomplete(payload, response)
         text = clean_answer(getattr(response, "output_text", "") or "")
         image, map_result = enrichment_result(enrichments)
         return (
