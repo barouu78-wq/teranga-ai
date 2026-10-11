@@ -45,6 +45,8 @@ ALIASES = {
     "/fetes": "/calendrier-fetes-senegal", "/calendrier": "/calendrier-fetes-senegal",
     "/kit-media": "/media-kit", "/kitmedia": "/media-kit",
     "/regions": "/regions-senegal", "/places": "/lieux", "/explore": "/explorer",
+    # Adresses courtes que l'on tape ou que l'on cite, sans page propre : la page réelle porte le nom du lieu.
+    "/meteo": "/meteo-dakar", "/goree": "/visiter-goree",
     "/sitemap": "/sitemap.xml",
     "/apple-touch-icon.png": "/icon-192.png", "/apple-touch-icon-precomposed.png": "/icon-192.png",
 }
