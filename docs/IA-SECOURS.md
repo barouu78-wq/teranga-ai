@@ -83,6 +83,11 @@ Journaux Render : `chat_fallback_used mode=stream` ou `mode=json` quand la base 
 
 - Chat : réponse écrite complète. Les photos et la carte viennent d'autres services et restent
   les mêmes quelle que soit l'IA.
+- Réponse coupée par la limite de longueur (OpenAI ou Claude, IA principale ou de secours) : le chat
+  ajoute à la fin « Réponse coupée : écris « continue » pour avoir la suite. » (en anglais : « Answer cut
+  short: type “continue” to get the rest. »). Pour que « continue » reprenne où elle s'est arrêtée, le
+  modèle reçoit la fin de sa réponse coupée. Une réponse coupée n'est jamais mise en cache. Le planificateur
+  de voyage a son propre flux et n'est pas concerné.
 - Planificateur : itinéraire complet. Il passe sur l'autre IA si la clé existe, mais n'a **pas** de repli
   sur la base du site (un itinéraire demande une IA) : si aucune IA ne répond, il affiche son message
   d'erreur.

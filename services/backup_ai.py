@@ -18,6 +18,8 @@ import threading
 from types import SimpleNamespace
 from typing import Any, Iterator
 
+from .truncation import is_cut_by_length, with_cut_notice
+
 DEFAULT_MODEL = "claude-opus-5-5"
 # Re-exécute côté serveur une demande refusée par prudence sur le modèle recommandé.
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -143,8 +145,14 @@ def backup_complete(
     max_tokens: int = 2000,
     timeout: float = 60.0,
     client: Any = None,
+    language: str | None = None,
 ) -> str:
-    """Texte de la réponse de Claude, ou "" si Claude n'est pas configuré."""
+    """Texte de la réponse de Claude, ou "" si Claude n'est pas configuré.
+
+    Avec `language` (chat), si Claude s'arrête à la limite de longueur, la mention « Réponse coupée » est ajoutée
+    dans cette langue. Sans `language` (planificateur : le texte est du JSON), le texte est rendu tel quel."""
     if not backup_enabled() or not str(prompt or "").strip():
         return ""
-    return claude_response(prompt, system=system, max_tokens=max_tokens, timeout=timeout, client=client).output_text.strip()
+    final = claude_response(prompt, system=system, max_tokens=max_tokens, timeout=timeout, client=client)
+    text = final.output_text.strip()
+    return with_cut_notice(text, language) if language and is_cut_by_length(final) else text

@@ -13,6 +13,7 @@ from services.backup_ai import backup_complete, backup_enabled, claude_is_primar
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
+from services.truncation import cut_notice, is_cut_by_length, mark_incomplete, with_cut_notice
 
 
 def register_chat_route(app, deps):
@@ -59,6 +60,7 @@ def register_chat_route(app, deps):
                     system=payload.get("instructions", ""),
                     max_tokens=1500,
                     timeout=45,
+                    language=payload.get("language", "fr"),  # mention « Réponse coupée » si Claude atteint la limite
                 )
                 if reply:
                     logger.warning("chat_backup_ai_used")
@@ -233,6 +235,9 @@ def register_chat_route(app, deps):
                     # Une réponse coupée (limite de longueur) ne doit pas être resservie à tout le monde.
                     if reply and answer_cache is not None and not payload.get("reply_incomplete"):
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
+                    if reply and payload.get("reply_cut"):
+                        # Arrêtée par la limite de longueur : le dire (après la mise en cache, qui l'a écartée).
+                        reply = with_cut_notice(reply, payload.get("language", "fr"))
                 sources = merged_sources(sources)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
@@ -263,6 +268,7 @@ def register_chat_route(app, deps):
             first_output_logged = False
             yielded = False
             completed = False  # réponse terminée par le modèle (pas coupée, pas de secours)
+            cut = False  # arrêtée par la limite de longueur : la mention « Réponse coupée » est ajoutée
             sources = []
             answer_parts = []
             # Les enrichissements (images, carte) tournent pendant que le modèle écrit.
@@ -307,6 +313,8 @@ def register_chat_route(app, deps):
                             yielded = True
                             answer_parts.append(clean_answer(text))
                             yield json.dumps({"d": answer_parts[-1]}, ensure_ascii=False) + "\n"
+                    elif etype == "response.incomplete" and is_cut_by_length(getattr(event, "response", None)):
+                        cut = True
                 if not yielded:
                     if enrichments is not None:
                         # Les enrichissements déjà lancés servent encore : un seul appel texte en plus.
@@ -314,16 +322,22 @@ def register_chat_route(app, deps):
                         reply = clean_answer(getattr(response, "output_text", "") or "")
                         sources = extract_sources(response) or sources
                         image, maps = chat_enrichment_result(enrichments)
-                        if getattr(response, "status", None) == "incomplete":
-                            payload["reply_incomplete"] = True
+                        mark_incomplete(payload, response)
                     else:
                         reply, sources, image, maps = complete_reply(payload)
                     completed = bool(reply) and not payload.get("reply_incomplete")
+                    cut = bool(reply) and bool(payload.get("reply_cut"))
                     # Jamais de bulle vide : la base de connaissances, sinon un message clair.
                     reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
+                    if cut:
+                        reply = with_cut_notice(reply, payload.get("language", "fr"))
                     answer_parts.append(reply)
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
+                    if cut:
+                        notice = "\n\n" + cut_notice(payload.get("language", "fr"))
+                        answer_parts.append(notice)
+                        yield json.dumps({"d": notice}, ensure_ascii=False) + "\n"
                     if enrichments is not None:
                         image, maps = chat_enrichment_result(enrichments)
                     elif run_chat_enrichments:
