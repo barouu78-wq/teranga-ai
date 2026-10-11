@@ -149,7 +149,7 @@ def should_use_web(message, context=""):
         # (Le texte de la question est mis en minuscules sans accents avant la recherche ; seules les apostrophes
         # droite et courbe restent distinctes.)
         # Impôts, salaires et frais fixés par la loi ou par décret, loyers : les montants changent.
-        "tva", "smig", "smag", "salaire minimum", "frais", "loyer", "coute", "coutent",
+        "tva", "smig", "smag", "salaire minimum", "frais", "loyer moyen", "loyers", "coute", "coutent",
         # Alertes sanitaires et épidémies (comme le paludisme plus haut).
         "dengue", "cholera", "epidemie", "ebola", "mpox", "covid", "rougeole", "meningite",
         # Perturbations du quotidien : circulation, électricité, eau, manifestations.
@@ -159,9 +159,10 @@ def should_use_web(message, context=""):
         "panne d'electricite", "panne d’electricite", "coupure d'eau", "coupure d’eau",
         # Emploi, concours, calendrier scolaire.
         "recrutement", "concours", "bfem", "annee scolaire", "rentree scolaire",
-        # Voyage et argent : vols (pluriel des mots de moins de 4 lettres), compagnies, change, opérateurs, transferts,
-        # papiers, avis aux voyageurs.
-        "vols", "compagnie aerienne", "compagnies aeriennes", "operateur", "permis de conduire", "papiers",
+        # Voyage et argent : vols d'avion (« vols » seul parle aussi de cambriolages), compagnies, change, opérateurs,
+        # transferts, papiers, avis aux voyageurs.
+        "vols pour", "vols vers", "vols directs", "vols depuis", "vols entre", "vols annules", "vols low cost",
+        "compagnie aerienne", "compagnies aeriennes", "operateur", "permis de conduire", "papiers",
         "western union", "moneygram", "worldremit",
         "changer mes euros", "changer des euros", "changer de l'argent", "changer de l’argent", "changer mon argent",
         "changer mes dollars", "changer des dollars",

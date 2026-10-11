@@ -39,6 +39,7 @@ AVEC_WEB = [
     "Quel est le SMIG au Sénégal ?",
     "Quels sont les frais de Western Union ?",
     "Le loyer moyen à Dakar",
+    "Les loyers à Dakar",
     "Quel est le montant des frais de scolarité à l'UCAD ?",
     # santé publique
     "Quelle est la situation de la dengue à Dakar ?",
@@ -113,6 +114,8 @@ SANS_WEB = [
     "Je veux changer de numéro",
     "Mes souvenirs d'enfance à Dakar, comment les écrire dans un livre ?",
     "Comment apprendre le wolof ?",
+    "Il y a beaucoup de vols dans mon quartier, que faire ?",  # « vols » = cambriolages, pas vols d'avion
+    "Je veux négocier mon loyer avec le propriétaire",  # « loyer » seul : une négociation, pas un montant à chercher
 ]
 
 
