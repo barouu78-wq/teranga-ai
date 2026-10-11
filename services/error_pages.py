@@ -55,7 +55,8 @@ ALIASES = {
 def redirect_target(path: str, exists) -> str:
     """Page existante la plus proche d'une adresse introuvable, ou "".
 
-    Barres « / » en trop, majuscules et alias connus. `exists(chemin)` dit si une
+    Barres « / » en trop, ponctuation collée à la fin (adresse copiée dans une phrase :
+    « …/assistant-senegal. »), majuscules et alias connus. `exists(chemin)` dit si une
     route y répond. Le résultat commence toujours par un seul « / » : jamais de
     redirection vers un autre site (« //exemple.com »).
     """
@@ -66,6 +67,8 @@ def redirect_target(path: str, exists) -> str:
     if re.search(r"[\x00-\x1f\x7f]", path or ""):
         return ""
     clean = "/" + re.sub(r"/{2,}", "/", path or "").strip("/")
+    # Le point, la virgule ou la parenthèse qui suivaient l'adresse dans le texte copié (jamais la « / » racine).
+    clean = clean.rstrip(".,;:)")
     for candidate in (clean, clean.lower()):
         candidate = ALIASES.get(candidate, candidate)
         if candidate != path and candidate.startswith("/") and not candidate.startswith("//") and exists(candidate):

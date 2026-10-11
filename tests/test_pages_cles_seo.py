@@ -119,3 +119,35 @@ def test_home_page_links_to_each_real_page(client):
 
 def test_dakar_page_links_to_the_weather_and_gorée_pages(client):
     assert {"/meteo-dakar", "/visiter-goree"} <= _internal_targets(client, "/dakar")
+
+
+# Constat du 8 octobre 2026 (journaux de Render) : l'outil d'inspection de Google a reçu un 404 sur
+# « /assistant-senegal. » (point final copié avec l'adresse), alors que « /assistant-senegal » répond 200.
+@pytest.mark.parametrize(
+    "typed,target",
+    [
+        ("/assistant-senegal.", "/assistant-senegal"),
+        ("/dakar,", "/dakar"),
+        ("/visiter-goree)", "/visiter-goree"),
+        ("/meteo.", "/meteo-dakar"),
+        ("/sitemap.xml.", "/sitemap.xml"),
+    ],
+)
+def test_punctuation_copied_with_the_address_redirects_to_the_real_page(client, typed, target):
+    response = client.get(typed, base_url=B, headers=HTML, follow_redirects=False)
+    assert response.status_code == 301
+    assert _path(response.headers["Location"]) == target
+
+
+def test_punctuation_on_an_unknown_address_stays_a_noindex_404(client):
+    response = client.get("/adresse-inconnue.", base_url=B, headers=HTML)
+    assert response.status_code == 404
+    assert 'content="noindex"' in response.get_data(as_text=True)
+
+
+def test_redirect_with_trailing_punctuation_never_leaves_the_site():
+    from services.error_pages import redirect_target
+
+    for hostile in ("//exemple.com.", "/.", "/..", "//.", "/\\exemple.com.", "/exemple.com/.\r\n"):
+        target = redirect_target(hostile, lambda path: True)
+        assert target == "" or (target.startswith("/") and not target.startswith("//")), hostile
