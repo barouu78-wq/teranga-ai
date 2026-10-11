@@ -16,7 +16,6 @@ os.environ.pop("ANTHROPIC_API_KEY", None)
 import pytest
 
 import app as app_module
-import routes.chat as chat_routes
 from services import backup_ai
 from services.backup_ai import backup_complete, claude_events
 from services.truncation import (
