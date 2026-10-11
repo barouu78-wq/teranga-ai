@@ -95,7 +95,7 @@ def test_build_model_kwargs_adds_web_tool_and_domains():
     }]
 
 
-def test_build_model_kwargs_applies_senegal_transport_sources():
+def test_build_model_kwargs_does_not_restrict_transport_to_state_sites():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -112,10 +112,11 @@ def test_build_model_kwargs_applies_senegal_transport_sources():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["transports.gouv.sn", "gov.sn"]
+    # Horaires et prix des transports : pas de filtre sur les seuls sites de l'État (ils ne contiennent pas la réponse).
+    assert "filters" not in result["tools"][0]
 
 
-def test_build_model_kwargs_applies_senegal_food_sources():
+def test_build_model_kwargs_does_not_restrict_food_to_state_sites():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -132,7 +133,8 @@ def test_build_model_kwargs_applies_senegal_food_sources():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["agriculture.gouv.sn", "tourisme.gouv.sn"]
+    # Restaurants et cuisine : pas de filtre sur les seuls sites de l'État (ils ne contiennent pas la réponse).
+    assert "filters" not in result["tools"][0]
 
 
 # --- Noms des modèles : valeurs par défaut inchangées, réglables par l'environnement ---

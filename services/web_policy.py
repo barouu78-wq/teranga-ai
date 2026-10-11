@@ -10,24 +10,33 @@ from functools import lru_cache
 
 from services.validation import normalize
 
+# Le filtre de domaines (« allowed_domains » de l'outil de recherche web) n'est dur que lorsque la réponse EST une
+# information officielle : statistiques, démarches, météo. Pour un restaurant, un horaire de TER, un prix ou un voyage,
+# les sites de l'État ne contiennent pas la réponse : ces sujets ne sont plus limités (les domaines de référence
+# restent demandés au modèle par la ligne « POLITIQUE DE SOURCES » du contexte, sans exclure le reste du web).
+# « gouv.sn » couvre tous les ministères (sante.gouv.sn, education.gouv.sn, sec.gouv.sn…), pas seulement ceux nommés.
 SOURCE_FILTERS = {
-    "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
-    "economy": ("ansd.sn", "gov.sn", "worldbank.org"),
-    "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gov.sn", "fao.org"),
-    "territory": ("ansd.sn", "gov.sn", "tourisme.gouv.sn"),
-    "travel": ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn"),
-    "transport": ("transports.gouv.sn", "gov.sn", "ansd.sn"),
-    "food": ("agriculture.gouv.sn", "tourisme.gouv.sn", "gov.sn"),
-    "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
-    "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
-    "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
+    "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org", "gouv.sn"),
+    "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gov.sn", "fao.org", "gouv.sn"),
+    "territory": ("ansd.sn", "gov.sn", "tourisme.gouv.sn", "gouv.sn"),
+    "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn", "gouv.sn"),
     "weather": ("anacim.sn", "ansd.sn", "gov.sn"),
 }
+
+# Un mot de 4 lettres ou plus accepte le pluriel (« vols », « restaurants », « pharmacies »), sauf quand le pluriel
+# change de sens (« la ferme » ≠ « les fermes »).
+_NO_PLURAL = frozenset({"ferme"})
+
+
+def _term_regex(term: str) -> str:
+    plural = len(term) >= 4 and term[-1].isalpha() and term[-1] not in "sx" and term not in _NO_PLURAL
+    return re.escape(term) + ("s?" if plural else "")
+
 
 @lru_cache(maxsize=32)
 def _compiled_term_pattern(terms: tuple[str, ...]) -> re.Pattern[str]:
     alternatives = "|".join(
-        re.escape(term)
+        _term_regex(term)
         for term in sorted(set(terms), key=len, reverse=True)
     )
     return re.compile(rf"(?<!\w)(?:{alternatives})(?!\w)")
@@ -137,6 +146,37 @@ def should_use_web(message, context=""):
         "faux billet", "faux billets", "fausse monnaie", "contrefaçon", "contrefacon", "faux sms", "faux visa",
         "faux visas", "usurpation", "sim swap", "code secret", "code otp", "reclamation", "réclamation",
         "yas money", "monnaie electronique", "monnaie électronique",
+        # (Le texte de la question est mis en minuscules sans accents avant la recherche ; seules les apostrophes
+        # droite et courbe restent distinctes.)
+        # Impôts, salaires et frais fixés par la loi ou par décret, loyers : les montants changent.
+        "tva", "smig", "smag", "salaire minimum", "frais", "loyer", "coute", "coutent",
+        # Alertes sanitaires et épidémies (comme le paludisme plus haut).
+        "dengue", "cholera", "epidemie", "ebola", "mpox", "covid", "rougeole", "meningite",
+        # Perturbations du quotidien : circulation, électricité, eau, manifestations.
+        "embouteillage", "delestage", "penurie", "manif", "manifs",
+        "coupure d'electricite", "coupures d'electricite", "coupure d’electricite", "coupures d’electricite",
+        "coupure de courant", "coupures de courant", "panne de courant", "pannes de courant",
+        "panne d'electricite", "panne d’electricite", "coupure d'eau", "coupure d’eau",
+        # Emploi, concours, calendrier scolaire.
+        "recrutement", "concours", "bfem", "annee scolaire", "rentree scolaire",
+        # Voyage et argent : vols (pluriel des mots de moins de 4 lettres), compagnies, change, opérateurs, transferts,
+        # papiers, avis aux voyageurs.
+        "vols", "compagnie aerienne", "compagnies aeriennes", "operateur", "permis de conduire", "papiers",
+        "western union", "moneygram", "worldremit",
+        "changer mes euros", "changer des euros", "changer de l'argent", "changer de l’argent", "changer mon argent",
+        "changer mes dollars", "changer des dollars",
+        "consignes de voyage", "conseils aux voyageurs", "avis aux voyageurs",
+        # Sport et pouvoirs publics.
+        "entraineur", "joue quand", "jouent quand", "quand joue", "quand jouent", "prochain match", "qui dirige",
+        # Sujets des repères sourcés (code du travail, état civil, santé publique, campagne agricole, pêche, jeunes) :
+        # les règles et les dates se vérifient en ligne ; chaque mot est donné avec et sans accents.
+        "code du travail", "licenciement", "conge de maternite", "congé de maternité", "inspection du travail",
+        "declaration de naissance", "déclaration de naissance",
+        "mutuelle de sante", "mutuelle de santé", "assurance maladie universelle",
+        "code de la securite sociale", "code de la sécurité sociale", "cesarienne", "césarienne", "dialyse",
+        "poste de sante", "poste de santé",
+        "campagne agricole", "semences", "engrais", "permis de peche", "permis de pêche", "repos biologique",
+        "bons de formation", "3fpt", "anpej", "nano-credit", "nano-crédit",
     )
     if _contains_any(lowered, dynamic_intents):
         return True
