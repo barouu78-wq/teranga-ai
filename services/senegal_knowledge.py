@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 # Official administrative coverage: all 14 regions of Senegal.
@@ -55,7 +56,26 @@ _QUERY_STOPWORDS = frozenset({
     "francs", "franc", "when", "which", "much", "many", "does", "from", "with", "have", "there", "best",
     "good", "need", "should", "your", "enfant", "jour", "jours", "date", "dates", "numero", "numeros",
     "appeler", "besoin", "doit", "dois", "peut", "peux", "possible", "meilleur", "meilleure", "sénégal",
+    # Mots de liaison, verbes et adjectifs courants : « depuis hier » ou « où se trouve » faisaient remonter Gorée ou
+    # le parc du Niokolo-Koba (qui emploient ces mots), « visite guidée » tous les lieux qui parlent d'un guide,
+    # « souvenirs » la Cathédrale du Souvenir africain, « sénégalais » les manufactures sénégalaises.
+    "depuis", "pendant", "aller", "allez", "allons", "venir", "viens", "vient", "pays", "moment", "trouve", "trouver",
+    "trouvent", "cherche", "chercher", "cherchez", "longue", "famille", "frais", "naissance", "arrivee", "voyage",
+    "voyages", "voyager", "beaucoup", "fils", "taxi", "taxis", "senegalais", "senegalaise", "senegalaises",
+    "francais", "francaise", "francaises", "guidee", "guidees", "guides", "souvenir", "souvenirs",
+    "femme", "femmes", "homme", "hommes", "seul", "seule",
+    # Villes et pays où vit la diaspora : ils ne désignent pas un lieu du Sénégal (« passeport à Paris »).
+    "paris", "france", "europe", "usa", "canada", "belgique", "espagne", "italie", "allemagne",
+    # Mois : « en décembre » ne désigne ni un lieu ni une personne.
+    "janvier", "fevrier", "mars", "avril", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre",
 })
+
+# « Ça ne marche pas » est le verbe : seul « marché » désigne un marché (les accents sont retirés avant la recherche).
+_VERBE_MARCHER = re.compile(
+    r"\b(?:ca|cela|il|elle|ils|elles|on|je|tu|nous|vous|ne|n|wave|orange money|internet|reseau|wifi|appli|application|"
+    r"telephone|compteur|carte)\s+march(?:e|ent|ons|ez)\b|"
+    r"\bmarch(?:e|ent)\s+(?:pas|plus|bien|mal|toujours|encore|jamais|aussi)\b"
+)
 
 
 _SHORT_STOPWORDS = frozenset({
@@ -65,6 +85,10 @@ _SHORT_STOPWORDS = frozenset({
     "ici", "peu", "tre", "plus", "tout", "tous", "faut", "fait", "dit", "vas", "vais", "veux", "cest", "quoi", "lequel",
     "naka", "nga", "laa", "dem", "ngi", "bou", "rek", "ana", "ans", "eau", "ete", "jai", "ont", "fin", "mois",
 })
+
+
+# Une personne n'est retrouvée par un mot de sa fiche (et non par son nom) que si au plus trois fiches l'emploient.
+_PEOPLE_MAX_FICHES = 3
 
 
 def _words(text: str) -> frozenset:
@@ -222,6 +246,13 @@ def load_senegal_knowledge(path: Path | None = None) -> dict:
                     *map(str, region.get("foods", [])),
                 ]))
                 region["_search_words"] = _words(region["_search_haystack"])
+                # Où se trouve la région (nom, localités, sites) : sans les thèmes ni les spécialités, que
+                # beaucoup de régions partagent (« poisson », « thiéboudienne »).
+                region["_geo_words"] = _words(_fold(" ".join([
+                    str(region.get("name", "")),
+                    *map(str, region.get("places", [])),
+                    *map(str, region.get("highlights", [])),
+                ])))
         for place in data.get("places", []):
             if isinstance(place, dict):
                 place["_search_haystack"] = _fold(" ".join([
@@ -318,11 +349,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         )
 
         folded_value = _fold(value)
-        if re.search(r"urgence|police|pompier|samu|ambulance|secours|accident|hopital|malade|vol[eé]", folded_value):
+        if re.search(r"urgence|police|pompier|samu|ambulance|secours|accident|hopital|malade|(?<![a-z])vol(?:e|ee|es|ees|er|eur|eurs)(?![a-z])", folded_value):
             numbers = "; ".join(f"{n.get('service')} {n.get('number')} ({n.get('scope')})" for n in profile.get("emergency_numbers", []))
             if numbers:
                 lines.append(f"- Numéros d'urgence au Sénégal : {numbers}.")
-        if re.search(r"superficie|frontiere|voisin|independance|combien de region|departement|langue|population|fleuve|geographie|indicatif|(?<![a-z])prises?(?![a-z])|electri|voltage|conduite|conduit", folded_value):
+        if re.search(r"superficie|frontiere|voisin|independance|combien de region|departement|langue|population|fleuve|geographie|indicatif|(?<![a-z])prises?(?![a-z])(?! (?:de(?! courant)|d|en|a)\b)|electri|voltage|conduite|conduit", folded_value):
             geo = profile.get("geography", {})
             practical = profile.get("practical", {})
             lines.append(
@@ -339,7 +370,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
     # Mots de 3 lettres gardés (« HLM », « lac », « TER ») sauf les mots outils.
     tokens = [
-        token for token in re.findall(r"[a-z0-9]+", _fold(value))
+        token for token in re.findall(r"[a-z0-9]+", _VERBE_MARCHER.sub(" ", _fold(value)))
         if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
     ]
     matched_regions = []
@@ -347,6 +378,13 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         words = region.get("_search_words") or _words(region.get("_search_haystack", ""))
         if tokens and any(_hit(token, words) for token in tokens):
             matched_regions.append(region)
+    # Une région nommée (ou dont on cite une localité) passe avant celles qui ne ressemblent à la question que par
+    # un thème ou un plat : « poisson à Saint-Louis » ne ramène pas quatre autres régions.
+    located = [
+        region for region in matched_regions
+        if any(_hit(token, region.get("_geo_words") or frozenset()) for token in tokens)
+    ]
+    matched_regions = located or matched_regions
     if matched_regions:
         lines.append("CONTEXTE RÉGIONAL PERTINENT :")
         for region in matched_regions[:max_regions]:
@@ -374,7 +412,12 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             if hits:
                 score = hits + 2 * sum(1 for token in tokens if _hit(token, name_words))
                 scored.append((-score, index, place))
-        matched_places = [place for _, _, place in sorted(scored, key=lambda item: item[:2])]
+        ranked = sorted(scored, key=lambda item: item[:2])
+        # Quand un lieu est nommé dans la question (score 3 ou plus), un lieu qui ne partage avec elle qu'un seul mot
+        # de son texte (score 1) n'est pas demandé : « Saly » ne ramène pas Ziguinchor parce qu'il y fait « nuit ».
+        if ranked and -ranked[0][0] >= 3:
+            ranked = [item for item in ranked if -item[0] >= 2]
+        matched_places = [place for _, _, place in ranked]
         if matched_places:
             lines.append("LIEUX PERTINENTS :")
             for rank, place in enumerate(matched_places[:max_places]):
@@ -395,15 +438,28 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         # Une personne citée par son nom passe avant les mentions dans un texte ;
         # le nom est comparé mot à mot (« Laye » ne désigne pas « Abdoulaye »).
         named, mentioned = [], []
+        fiches = []
         for person in people:
             name_words = set(re.findall(r"[a-z0-9]+", _fold(person.get("name", ""))))
-            haystack = _fold(f"{person.get('name', '')} {person.get('period', '')} {person.get('text', '')}")
+            # La fiche s'arrête au premier saut de ligne : la suite d'une entrée peut être une consigne de style,
+            # qui ne dit rien de la personne et ne doit pas servir à la retrouver.
+            fiche = str(person.get("text", "")).split("\n", 1)[0]
+            fiches.append((person, name_words, _words(_fold(f"{person.get('name', '')} {person.get('period', '')} {fiche}"))))
+        # Un mot que plus de _PEOPLE_MAX_FICHES fiches emploient (« dakar », « politique ») ne désigne personne.
+        usage = Counter(word for _, _, words in fiches for word in words)
+        for person, name_words, words in fiches:
             name_hits = sum(1 for token in tokens if token in name_words)
             if name_hits:
                 named.append((-name_hits, len(named), person))
-            elif any(token in haystack for token in tokens):
-                mentioned.append(person)
-        matched_people = [person for _, _, person in sorted(named, key=lambda item: item[:2])] or mentioned
+                continue
+            # Mots entiers (« cher » n'est pas dans « chercheur »), rares, d'au moins 5 lettres (« TER », « BRT »,
+            # « près » sont trop ambigus).
+            rare_hits = sum(1 for token in tokens if len(token) >= 5 and token in words and usage[token] <= _PEOPLE_MAX_FICHES)
+            if rare_hits:
+                mentioned.append((-rare_hits, len(mentioned), person))
+        matched_people = [person for _, _, person in sorted(named, key=lambda item: item[:2])] or [
+            person for _, _, person in sorted(mentioned, key=lambda item: item[:2])
+        ]
         if matched_people:
             lines.append("PERSONNALITÉS PERTINENTES :")
             for person in matched_people[:4]:
