@@ -9,6 +9,7 @@ from flask import Response, jsonify, request, stream_with_context
 from services.answer_cache import cache_key, replay_chunks
 from services.external_research import attach_external_data
 from services.fallback_answer import knowledge_fallback
+from services.latency import PAYLOAD_KEY, LatencyTrace
 from services.backup_ai import backup_complete, backup_enabled, claude_is_primary
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
@@ -89,9 +90,9 @@ def register_chat_route(app, deps):
     answer_cache = deps.get("answer_cache")
     cache_model = deps.get("cache_model", "")
 
-    @app.post("/chat")
-    @require_json_post
-    def chat():
+    def chat_body(trace):
+        """Corps de la route /chat. `trace` chronomètre les étapes (services/latency.py) : il ne change aucune réponse."""
+        trace.mode = "json" if request.headers.get("X-Teranga-Mode", "").lower() == "json" else "flux"
         ip = client_ip()
         identity = abuse_key(ip)
         if abuse_blocked(ip) or abuse_blocked(identity):
@@ -105,10 +106,17 @@ def register_chat_route(app, deps):
             return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
         parse_started_at = time.perf_counter()
-        payload, error = parse_chat_payload()
+        with trace.stage("contexte"):
+            payload, error = parse_chat_payload()
         logger.info("chat_payload_ms %.2f", (time.perf_counter() - parse_started_at) * 1000)
         if error:
             return error
+
+        def first_word():
+            """Juste avant d'envoyer le premier texte au client : fige le délai « premier mot » et le modèle appelé."""
+            trace.first_word()
+            trace.model = payload.get(PAYLOAD_KEY)
+
         if payload["use_web"]:
             # Même identité que plus haut (déjà vérifiée contre les abus).
             web_identity = identity
@@ -164,6 +172,7 @@ def register_chat_route(app, deps):
 
         key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
         cached = answer_cache.get(key) if key else None
+        trace.cache = bool(cached)
         if cached:
             logger.info("chat_cache_hit")
 
@@ -173,7 +182,8 @@ def register_chat_route(app, deps):
             external_research_context = deps.get("external_research_context")
             if callable(external_research_context):
                 try:
-                    research = external_research_context(payload.get("message", ""))
+                    with trace.stage("recherche"):
+                        research = external_research_context(payload.get("message", ""))
                     # Le contenu web est une donnée non fiable : bloc délimité dans l'entrée, jamais dans les instructions.
                     if isinstance(research, dict) and attach_external_data(payload, research.get("context")):
                         payload["external_sources"] = research.get("sources", [])
@@ -230,7 +240,9 @@ def register_chat_route(app, deps):
                 if cached:
                     reply, sources, image, maps = cached["reply"], cached.get("sources") or [], cached.get("image"), cached.get("map")
                 else:
-                    reply, sources, image, maps = complete_reply(payload)
+                    with trace.stage("fournisseur"):
+                        reply, sources, image, maps = complete_reply(payload)
+                    trace.model = payload.get(PAYLOAD_KEY)
                     sources = merged_sources(sources)
                     # Une réponse coupée (limite de longueur) ne doit pas être resservie à tout le monde.
                     if reply and answer_cache is not None and not payload.get("reply_incomplete"):
@@ -245,9 +257,11 @@ def register_chat_route(app, deps):
                 return jsonify({"reply": reply, "share": share, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr")), "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
+                trace.model = payload.get(PAYLOAD_KEY)
                 fallback = fallback_for(payload)
                 if fallback:
                     logger.warning("chat_fallback_used mode=json")
+                    trace.status = "secours"
                     return jsonify({"reply": fallback, "degraded": True, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr"))})
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
 
@@ -255,9 +269,11 @@ def register_chat_route(app, deps):
             def generate_cached():
                 reply = cached["reply"]
                 for chunk in replay_chunks(reply):
+                    trace.first_word()
                     yield json.dumps({"d": chunk}, ensure_ascii=False) + "\n"
                 for event in finishing_events(reply, cached.get("sources") or [], cached.get("image"), cached.get("map")):
                     yield json.dumps(event, ensure_ascii=False) + "\n"
+                trace.status = "ok"
                 yield json.dumps({"done": True}) + "\n"
 
             return Response(stream_with_context(generate_cached()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
@@ -278,6 +294,7 @@ def register_chat_route(app, deps):
                 else None
             )
             try:
+                trace.begin("fournisseur")
                 stream = create_response(payload, stream=True)
                 logger.info("chat_model_startup_ms %.2f", (time.perf_counter() - model_started_at) * 1000)
                 for event in stream:
@@ -298,6 +315,7 @@ def register_chat_route(app, deps):
                             logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
                         yielded = True
                         answer_parts.append(delta)
+                        first_word()
                         yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
                     elif etype == "response.completed":
                         completed = True
@@ -312,6 +330,7 @@ def register_chat_route(app, deps):
                         if text and not yielded:
                             yielded = True
                             answer_parts.append(clean_answer(text))
+                            first_word()
                             yield json.dumps({"d": answer_parts[-1]}, ensure_ascii=False) + "\n"
                     elif etype == "response.incomplete" and is_cut_by_length(getattr(event, "response", None)):
                         cut = True
@@ -328,10 +347,13 @@ def register_chat_route(app, deps):
                     completed = bool(reply) and not payload.get("reply_incomplete")
                     cut = bool(reply) and bool(payload.get("reply_cut"))
                     # Jamais de bulle vide : la base de connaissances, sinon un message clair.
+                    if not reply:
+                        trace.status = "secours"
                     reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
                     if cut:
                         reply = with_cut_notice(reply, payload.get("language", "fr"))
                     answer_parts.append(reply)
+                    first_word()
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
                     if cut:
@@ -352,19 +374,31 @@ def register_chat_route(app, deps):
                 # Une réponse coupée (limite de longueur) ou de secours ne doit pas être resservie 12 h à tout le monde.
                 if answer_cache is not None and key and completed:
                     answer_cache.set(key, reply=final_reply, sources=sources, image=image, maps=maps)
+                trace.status = trace.status or "ok"
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
+                trace.end("fournisseur")
+                trace.model = payload.get(PAYLOAD_KEY)
                 # Rien n'a encore été affiché : répondre avec la base plutôt qu'une erreur.
                 fallback = None if yielded else fallback_for(payload)
                 if fallback:
                     logger.warning("chat_fallback_used mode=stream")
+                    trace.status = "secours"
+                    first_word()
                     yield json.dumps({"d": fallback}, ensure_ascii=False) + "\n"
                     places = places_with_booking(payload.get("message", ""), payload.get("language", "fr"))
                     if places:
                         yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
                     yield json.dumps({"degraded": True, "done": True}) + "\n"
                     return
+                trace.status = "erreur"
                 yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
         return Response(stream_with_context(generate()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
+
+    @app.post("/chat")
+    @require_json_post
+    def chat():
+        # Une ligne de journal « latence » par requête (étapes, premier mot, cache) : des nombres, jamais de texte.
+        return LatencyTrace("chat").run(app, chat_body)

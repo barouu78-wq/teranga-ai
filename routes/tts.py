@@ -5,6 +5,8 @@ import re
 
 from flask import Response, jsonify, request
 
+from services.latency import LatencyTrace
+
 
 def register_tts_route(app, deps):
     require_json_post = deps["require_json_post"]
@@ -33,9 +35,7 @@ def register_tts_route(app, deps):
         text = re.sub(r'\s+', ' ', text).strip()
         return text[:MAX_TTS_LENGTH]
 
-    @app.post("/tts")
-    @require_json_post
-    def tts():
+    def tts_body(trace):
         ip = client_ip()
         identity = abuse_key(ip)
         if abuse_blocked(ip) or abuse_blocked(identity):
@@ -59,15 +59,23 @@ def register_tts_route(app, deps):
             return jsonify({"error": "Texte manquant."}), 400
         try:
             from services.voice_quality import tts_instruction
-            speech = client.audio.speech.create(
-                model="gpt-4o-mini-tts",
-                voice=os.getenv("TTS_VOICE", "cedar"),
-                input=text,
-                instructions=tts_instruction(language),
-                response_format="wav",
-                speed=0.98,
-            )
+            trace.model = "gpt-4o-mini-tts"
+            with trace.stage("fournisseur"):
+                speech = client.audio.speech.create(
+                    model="gpt-4o-mini-tts",
+                    voice=os.getenv("TTS_VOICE", "cedar"),
+                    input=text,
+                    instructions=tts_instruction(language),
+                    response_format="wav",
+                    speed=0.98,
+                )
             return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store", "Content-Type": "audio/wav"})
         except Exception:
             app.logger.exception("Erreur /tts")
             return jsonify({"error": "Impossible de générer la voix pour le moment."}), 502
+
+    @app.post("/tts")
+    @require_json_post
+    def tts():
+        # Une ligne de journal « latence » par requête : des nombres, jamais le texte lu à voix haute.
+        return LatencyTrace("tts").run(app, tts_body)
