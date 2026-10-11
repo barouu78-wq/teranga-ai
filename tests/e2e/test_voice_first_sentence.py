@@ -105,7 +105,7 @@ def test_page_budget_follows_the_server_limit_of_tts():
 def test_service_worker_version_changed_with_the_voice_files():
     sw = (ROOT / "static" / "sw.js").read_text(encoding="utf-8")
     match = re.search(r"const VERSION = 'teranga-v(\d+)';", sw)
-    assert match and int(match.group(1)) >= 11
+    assert match and int(match.group(1)) >= 12
 
 
 # ── Découpage en phrases ────────────────────────────────────────────────────────────────────────────
