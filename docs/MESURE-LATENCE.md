@@ -180,3 +180,28 @@ au plus, sinon `autre`). Toute autre valeur devient `-`. Ni le texte de la quest
 texte transcrit ou lu à voix haute, ni l'adresse IP, ni l'identifiant du visiteur, ni une clé, ni un
 message d'erreur du fournisseur n'entrent dans la ligne. `tests/test_latence_confidentialite.py` le
 vérifie sur la vraie application et échoue si un texte de test y apparaît.
+
+## Côté navigateur : le banc simulé de la voix
+
+Les lignes `latence` mesurent le serveur. En conversation vocale, l'attente que la personne ressent commence plus
+tôt : quand elle a fini de parler. Le test `tests/e2e/test_voice_latency.py` découpe ce trajet dans Chromium, avec de
+**faux** fournisseurs auxquels on impose un retard fixe. Ses chiffres sont **simulés** : ils ne disent rien du temps
+réel d'OpenAI ni d'un téléphone. Ils servent à repérer une régression du site, jamais à annoncer un temps de réponse.
+
+| Étape, dans l'ordre | Ce qu'elle attend | Où |
+|---|---|---|
+| 1. Silence | 720 ms sans voix (`VOICE_SILENCE_MS`), contrôlés toutes les 55 ms, puis l'arrêt de l'enregistreur : environ 800 ms | `static/home.js` |
+| 2. Transcription | l'envoi de l'audio à `/stt` et le fournisseur (ligne `route=stt`) | `routes/stt.py` |
+| 3. Passage `/stt` → `/chat` | le travail de la page : quelques ms (environ 40 ms navigateur ralenti 12 fois) | `static/home.js` |
+| 4. Réponse du chat | le premier jeton, puis une première partie complète d'au moins 60 caractères lus (`VOICE_FIRST_MIN`) (ligne `route=chat`) | `routes/chat.py` |
+| 5. Attente de la première partie | 700 ms (`VOICE_FIRST_WAIT_MS`) quand la réponse semble courte (moins de 240 caractères reçus), pour qu'une réponse courte reste en un seul appel à `/tts` ; aucune attente sinon | `templates/home.html` |
+| 6. Voix | la demande à `/tts` et le fournisseur (ligne `route=tts`) | `routes/tts.py` |
+| 7. Démarrage du son | le fichier reçu, le lecteur monté, `play()` : environ 5 ms (environ 100 ms navigateur ralenti 12 fois) | `templates/home.html` |
+
+```bash
+E2E_REQUIRED=1 pytest -q tests/e2e/test_voice_latency.py -s                          # le détail de chaque tour
+E2E_CPU_THROTTLE=12 E2E_REQUIRED=1 pytest -q tests/e2e/test_voice_latency.py -s      # navigateur ralenti 12 fois
+```
+
+Les seuils du test sont des **garde-fous de non-régression** du banc, larges exprès (le test doit passer aussi sur une
+machine chargée), pas des objectifs. Comme pour le serveur, l'objectif se fixe après une mesure réelle.
