@@ -207,7 +207,9 @@ SEO_PAGES = {
             ("Quels quartiers de Dakar peut-on explorer ?", "Plateau, Médina, Almadies, Ngor, Ouakam et d'autres quartiers peuvent être décrits selon votre activité."),
             ("Peut-on préparer une journée à Dakar ?", "Oui. Indiquez votre point de départ, le temps disponible et vos centres d'intérêt.")
         ],
-        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("senegal", "Guide du Sénégal")]
+        # visiter-dakar et assistant-ia-dakar n'étaient liées par aucune page : elles ne sont
+        # plus atteignables que par le plan du site tant qu'elles ne figurent pas ici.
+        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-dakar", "Visiter Dakar"), ("assistant-ia-dakar", "Assistant IA Dakar"), ("senegal", "Guide du Sénégal")]
     },
     "pour-les-entreprises": {
         "title": "Teranga AI pour les entreprises au Sénégal et en France",
@@ -615,6 +617,15 @@ def _seo_extra_html(slug, places=None, dishes=None):
             parts.insert(0, "<section><h2>Histoire de l'île de Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["history"])))
             if chosen[0].get("access"):
                 parts.insert(1, "<section><h2>Comment aller à Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["access"])))
+    if slug == "regions-senegal":
+        # La liste des régions en texte brut ne menait nulle part : les 14 pages /regions/<nom>
+        # n'étaient atteignables que depuis une fiche de lieu (3 clics) ou le plan du site.
+        cards = "".join(
+            '<a class="card" href="/regions/%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (region_slug(name), escape(name), escape(REGION_CONTENT[name][0]))
+            for name in REGION_SEO_NAMES
+        )
+        parts.insert(0, '<section><h2>Le guide de chaque région</h2><div class="grid">%s</div></section>' % cards)
     if slug in SEO_PAGE_DISHES and dishes:
         items = "".join(
             "<h3>%s</h3><p>%s</p>" % (escape(str(d.get("name", ""))), escape(str(d.get("text", ""))))
