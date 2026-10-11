@@ -57,10 +57,18 @@ from services.text import fold_text
 # (rage, morsures de serpent), CDC (Yellow Book), Croix-Rouge américaine et MSD Manuals (scorpions, réactions
 # allergiques). Brûlures et coupures : Croix-Rouge de Belgique (via l'ULB), ameli.fr et Croix-Rouge française (cités par
 # Allodocteurs), CHUV. Numéros : ceux déjà vérifiés dans le sujet « urgences » (SAMU 1515), aucun autre.
+# « Sûr » (sans danger) s'écrit « sur » sans accent, comme la préposition (« sur la corniche », « sur Mermoz ») : on ne
+# le retient que devant une fin de phrase ou un complément de sécurité (« pour une femme seule », « la nuit »).
+_SUR_FIN = (r"(?=\s*[?!.,;:]|\s*$|\s+(?:pour|de|d|a|au|aux|en|dans|la nuit|le soir|le jour|aujourd hui|actuellement|"
+            r"maintenant|ces jours|ici|aussi|encore|toujours|apres|avec|meme|seule?s?)\b)")
+_SUR = (r"\b(?:pays|endroit|quartier|ville|zone|lieu|plage|dakar|senegal|casamance) (?:est |est il |est elle |reste )?"
+        r"(?:vraiment |bien |tres |assez |plutot )?surs?" + _SUR_FIN + r"|"
+        r"\b(?:est|sont) (?:ce|il|elle|ils|elles) (?:vraiment |bien |tres |assez |plutot )?surs?" + _SUR_FIN)
+
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
     ("urgences", r"urgen|police|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
-     r"(pays|endroit|quartier|ville|dakar|senegal) (est il |est elle )?sur\b|est (il|elle|ce) sur\b|securi(?!te (sociale|familiale|alimentaire))|\bsafe\b|"
+     + _SUR + r"|securi(?!te (sociale|familiale|alimentaire))|\bsafe\b|"
      r"safety|emergenc|fievre|malade|blesse|hopital|hospital|medecin|doctor",
      ("Numéros d'urgence gratuits depuis tous les téléphones, même sans crédit : Police 17, Sapeurs-pompiers 18, "
       "SAMU (urgence médicale) 1515. Gendarmerie : numéro vert 800 00 20 20. SOS Médecins Dakar : 33 889 15 15.",
@@ -166,7 +174,12 @@ TOPICS = (
       "repas, voir un professionnel de santé.",
       "Voyageur : avant le départ, vérifier que l'assurance couvre les soins et le rapatriement sanitaire ; en cas "
       "d'hospitalisation ou de problème grave, prévenir son ambassade ou son consulat (urgence médicale : SAMU 1515).")),
-    ("argent", r"\beuros?\b|fcfa|\bcfa\b|\bfrancs? cfa\b|\bxof\b|taux de change|\bchange\b|convert|dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
+    # « change » seul est aussi le verbe (« j'ai changé d'avis ») : il faut une devise, un bureau ou un taux.
+    ("argent", r"\beuros?\b|fcfa|\bcfa\b|\bfrancs? cfa\b|\bxof\b|taux de change|bureaux? de change|\ble change\b|"
+     r"\bchanger (mes |des |de l |l |ses |son |mon |du )?(euros?|dollars?|argent|cfa|fcfa|devises?|monnaie|livres?)\b|"
+     r"\bchange (euro|dollar|cfa|fcfa)|\bchange (my |some |your )?(money|euros?|dollars?|cash|currency)\b|"
+     r"exchange rate|currency exchange|money exchange|exchange money|"
+     r"dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
      r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit",
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
       "Pour le dollar ou la livre, le taux varie : utiliser le taux du jour.",
@@ -273,13 +286,19 @@ TOPICS = (
     ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
      ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
-    ("electricite", r"\bprises?\b|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
+    # « prise de commande », « prise en charge », « prise de sang », « prise d'otage » ne sont pas une prise électrique.
+    ("electricite", r"\bprises?\b(?! (de(?! courant)|d|en|a)\b)|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
      ("Électricité : 230 V, 50 Hz ; prises de type C, D, E et K (les prises européennes fonctionnent en général). "
       "Coupures possibles : une batterie externe est utile.",)),
-    ("heure", r"\bheures?\b|decalage|fuseau|time zone|timezone|time difference",
+    # Le fuseau et le décalage, pas toute « heure » (d'ouverture, de vol, de prière, « à quelle heure part le ferry »).
+    ("heure", r"decalage|fuseau|time zone|timezone|time difference|heure (locale|gmt|utc)|\b(gmt|utc)\b|changement d heure|"
+     r"quelle heure (est il|fait il|y a t il)|il est quelle heure|l heure (a|au|en|de|du) (dakar|senegal|paris|france)|"
+     r"heure (de|d) (paris|france|dakar|ete|hiver)|what time is it|local time|current time",
      ("Heure : UTC+0 toute l'année, sans changement d'heure. Par rapport à Paris : 1 h de moins en hiver, 2 h de "
       "moins en été.",)),
-    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|douane|customs",
+    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|douane|customs|"
+     r"\bpapiers? (pour|afin de) (voyager|venir|entrer|aller|partir)|(voyager|venir|entrer|arriver) (au|en) senegal.{0,80}\bpapiers?\b|"
+     r"documents? de voyage|travel documents?|entry requirements?",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
       "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
@@ -288,13 +307,17 @@ TOPICS = (
      ("Saison sèche environ de novembre à mai (la plus confortable, fraîche le soir sur la côte) ; saison des pluies "
       "environ de juillet à octobre (plus tôt et plus longue en Casamance), pistes parfois difficiles. L'intérieur "
       "(Tambacounda, Kédougou, Matam) est très chaud de mars à juin. Prévisions officielles : ANACIM.",)),
-    ("entreprise", r"entreprise|societe|creer (une |mon |ma |son |sa )?(activite|business|startup|boite)|immatricul|"
+    # « société » seul parle aussi de la vie en société ou d'une banque : il faut une forme juridique ou « créer ».
+    ("entreprise", r"entreprise|societe (anonyme|a responsabilite|commerciale|unipersonnelle)|"
+     r"(creer|ouvrir|monter|enregistrer|immatriculer|fonder|lancer) (une |ma |sa |notre |la )?societe|"
+     r"creer (une |mon |ma |son |sa )?(activite|business|startup|boite)|immatricul|"
      r"ninea|rccm|apix|statut juridique|business|startup|\bgie\b|\bsarl\b|suarl",
      ("Créer une activité : entreprise individuelle, GIE (groupement), SARL ou SUARL. L'immatriculation donne un "
       "NINEA (identifiant fiscal) et un RCCM ; le guichet unique de l'APIX centralise les formalités à Dakar. "
       "Accompagnement possible : DER/FJ, FONGIP (garantie), chambres de commerce. Vérifier les conditions actuelles.",)),
     ("transport", r"\btaxis?\b|sept places|7 places|\bter\b|\bbrt\b|\bbus\b|dem dikk|aibd|aeroport|airport|ferry|chaloupe|bateau|"
-     r"voiture|\blocations?\b|car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
+     r"voiture|\blocations? (de |d |du )?(une |un |la |ma )?(vehicule|auto|moto|scooter|velo|4x4|minibus|bus|camion|chauffeur|quad)s?\b|"
+     r"car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
      ("AIBD (aéroport Blaise Diagne) : à Diass, environ 45 km du centre de Dakar par l'autoroute à péage.",
       "Taxis sans compteur : fixer le prix avant de monter ; applications Yango ou Heetch avec prix affiché.",
       "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio (vérifier si le prolongement vers "
@@ -303,15 +326,23 @@ TOPICS = (
       "chauffeur. Casamance : avion vers Ziguinchor ou Cap Skirring, bateau de nuit Dakar–Ziguinchor (environ 15 h), "
       "ou route par la Gambie (pont de Farafenni).",
       "Gorée : chaloupe depuis la gare maritime de Dakar, environ 20 minutes.")),
-    ("foncier", r"terrain|parcelle|titre foncier|acheter (une |un )?(maison|appartement|terrain)|construire (une |ma |sa |notre )?maison|"
-     r"immobilier|notaire|cadastre|bail|deliberation|land\b|plot of land|real estate",
+    # Pas un « terrain de foot » ni « island » (qui contient « land »).
+    ("foncier", r"terrain(?! (de|d) (foot|football|basket|basketball|sport|tennis|golf|jeux?|camping|rugby|handball|volley))|"
+     r"parcelle|titre foncier|acheter (une |un )?(maison|appartement|terrain)|construire (une |ma |sa |notre )?maison|"
+     r"immobilier|notaire|cadastre|bail|deliberation|\bland\b|plot of land|real estate",
      ("Acheter un terrain : le titre foncier (TF) est la forme la plus sûre ; un bail ou une délibération (affectation "
       "d'une terre du domaine national) ne donnent pas la même sécurité. Vérifier le titre et l'absence d'hypothèque "
       "auprès de la Conservation de la propriété foncière (DGID), passer par un notaire, visiter le terrain et le "
       "faire borner par un géomètre.",
       "Diaspora : ne jamais payer un intermédiaire sans documents vérifiés ; méfiance face aux ventes doubles et aux "
       "procurations douteuses ; garder chaque paiement traçable (virement, reçu signé).")),
-    ("vente", r"vendre|vente|(trouver|avoir|attirer) (des |plus de )?clients|whatsapp|boutique en ligne|e commerce|commerce en ligne|marge|fixer (mon |le )?prix|"
+    # Vendre un bien (maison, voiture) n'est pas le commerce ; WhatsApp seul n'est pas la vente (« groupe de famille »).
+    ("vente", r"vendre(?! (ma |mon |mes |une |un |la |le |les |notre |nos )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
+     r"vente(?! (de |d |du |des )?(une |un )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
+     r"(trouver|avoir|attirer) (des |plus de )?clients|whatsapp business|whatsapp (pro|catalogue|boutique)|"
+     r"(vendre|vente|clients?|commandes?|boutique|catalogue|livraison|commerc\w+|business)\b.{0,40}\bwhatsapp|"
+     r"\bwhatsapp\b.{0,40}\b(vendre|vente|clients?|commandes?|boutique|catalogue|livraison|commerc\w+|business)|"
+     r"boutique en ligne|e commerce|commerce en ligne|marge|fixer (mon |le )?prix|"
      r"livraison|sell|customers|online shop",
      ("Vendre sur WhatsApp : compte WhatsApp Business (catalogue, message d'accueil, réponses rapides), photos nettes "
       "avec le prix, statuts quotidiens, liste de diffusion des clients ; paiement par Wave ou Orange Money marchand ; "
@@ -403,6 +434,22 @@ _FOREIGN_TRAVELLER = re.compile(
     r"\b(francais\w*|americain\w*|belge|canadien\w*|britannique|suisse|allemand\w*|italien\w*|espagnol\w*|"
     r"french|american|british|german|canadian|touriste\w*|tourist\w*|foreigner)\b"
 )
+# Voyager DEPUIS le Sénégal : « Un Sénégalais peut-il aller en France sans visa ? » parle du visa de la France, pas
+# de l'entrée au Sénégal (le repère « visa » dit que les Européens n'ont pas besoin de visa : c'est le mauvais sens).
+_FOREIGN_DESTINATION = re.compile(
+    r"\b(?:france|espagne|italie|allemagne|belgique|suisse|portugal|pays bas|hollande|royaume uni|angleterre|"
+    r"grande bretagne|irlande|suede|norvege|danemark|finlande|pologne|autriche|grece|turquie|russie|europe|schengen|"
+    r"union europeenne|canada|quebec|etats unis|usa|amerique|bresil|mexique|argentine|chine|japon|coree|inde|dubai|"
+    r"emirats|qatar|arabie saoudite|la mecque|mecque|liban|maroc|algerie|tunisie|egypte|mauritanie|mali|gambie|guinee|"
+    r"cote d ivoire|burkina|niger|nigeria|ghana|benin|togo|cameroun|gabon|congo|afrique du sud|angola|kenya|ethiopie|"
+    r"rwanda|australie|uk|united kingdom|united states)\b"
+)
+_SENEGAL_DESTINATION = re.compile(
+    r"\bpour (?:le |l )?senegal\b|\b(?:pour|vers) dakar\b|"
+    r"\b(?:entrer|venir|arriver|voyager|aller|partir|rentrer|rester|sejourner|visiter) (?:au|en|vers|a) (?:le )?(?:senegal|dakar)\b|"
+    r"\b(?:to|into|for|visit|visiting|enter|in) (?:the )?senegal\b|\baibd\b"
+)
+_LOCAL_TRANSPORT = re.compile(r"\b(?:taxis?|sept places|ter|brt|bus|dem dikk|aibd|aeroport|ferry|chaloupe|bateau)\b")
 # « Arnaque » peut aussi être le titre d'un film ou d'une série : sans mot d'argent, de téléphone ou de visa, la
 # question ne parle pas de fraude.
 _FICTION_WORDS = re.compile(
@@ -434,6 +481,10 @@ def matching_topics(question: str, limit: int = 3) -> list[str]:
     # « Renouveler mon passeport sénégalais » parle de papiers, pas du visa d'entrée d'un touriste.
     if "papiers" in names and "visa" in names and not _ENTRY_WORDS.search(folded):
         names.remove("visa")
+    # Un voyage vers l'étranger (« visa pour l'Espagne », « aller au Canada ») : ni l'entrée au Sénégal ni les
+    # transports locaux, sauf si la question parle d'un transport d'ici (aéroport, bus, ferry…).
+    if _FOREIGN_DESTINATION.search(folded) and not _SENEGAL_DESTINATION.search(folded):
+        names = [name for name in names if name != "visa" and (name != "transport" or _LOCAL_TRANSPORT.search(folded))]
     if "papiers" in names and _FOREIGN_TRAVELLER.search(folded) and "senegalais" not in folded:
         names.remove("papiers")
     names.sort(key=lambda name: name not in _SPECIFIC_FIRST)  # tri stable : l'ordre du tableau est gardé ensuite
