@@ -65,5 +65,9 @@ def test_browser_names_the_recording_after_its_real_type():
 
 
 def test_service_worker_version_was_bumped_with_home_js():
+    # Le numéro monte à chaque changement de home.js (v9 : nom du fichier audio ; v10 : état vocal).
+    import re
+
     sw = (Path(__file__).resolve().parents[1] / "static" / "sw.js").read_text(encoding="utf-8")
-    assert "const VERSION = 'teranga-v9';" in sw
+    match = re.search(r"const VERSION = 'teranga-v(\d+)';", sw)
+    assert match and int(match.group(1)) >= 9
