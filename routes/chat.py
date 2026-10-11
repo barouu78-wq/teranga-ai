@@ -7,6 +7,7 @@ import time
 from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
+from services.external_research import attach_external_data
 from services.fallback_answer import knowledge_fallback
 from services.backup_ai import backup_complete, backup_enabled, claude_is_primary
 from services.monetization import affiliate_config, booking_links
@@ -167,11 +168,8 @@ def register_chat_route(app, deps):
             if callable(external_research_context):
                 try:
                     research = external_research_context(payload.get("message", ""))
-                    if isinstance(research, dict) and research.get("context"):
-                        payload["instructions"] = (
-                            str(payload.get("instructions", ""))
-                            + "\n\n" + str(research["context"])
-                        )
+                    # Le contenu web est une donnée non fiable : bloc délimité dans l'entrée, jamais dans les instructions.
+                    if isinstance(research, dict) and attach_external_data(payload, research.get("context")):
                         payload["external_sources"] = research.get("sources", [])
                         payload["use_web"] = False
                         logger.info("external_research_used provider=%s", research.get("provider", "unknown"))
