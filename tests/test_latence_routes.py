@@ -219,3 +219,22 @@ def test_tts_failure_and_empty_text(monkeypatch, lines):
     failed_call, empty = (h.fields(line) for line in lines)
     assert failed_call["statut"] == "erreur" and failed_call["fournisseur_ms"] != "-"
     assert empty["statut"] == "invalide" and empty["fournisseur_ms"] == "-"
+
+
+# --- Requêtes refusées avant ou dans la route -------------------------------------------------------------
+
+
+def test_chat_refused_by_the_csrf_check_leaves_no_line_but_stt_leaves_an_invalide_one(lines):
+    client = h.app_module.app.test_client()
+    refused = client.post("/chat", json={"message": "Bonjour"}, headers={"Origin": h.B}, base_url=h.B)
+    assert refused.status_code == 403
+    refused.close()
+    assert lines == []  # le contrôle CSRF de /chat répond avant la route, donc avant la mesure
+    refused = client.post(
+        "/stt", data={}, content_type="multipart/form-data", headers={"Origin": h.app_module.SITE_URL},
+        environ_base={"REMOTE_ADDR": h.next_ip()},
+    )
+    assert refused.status_code == 403
+    refused.close()
+    f = one(lines)
+    assert f["route"] == "stt" and f["statut"] == "invalide" and f["fournisseur_ms"] == "-"
