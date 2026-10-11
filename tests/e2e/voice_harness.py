@@ -250,6 +250,14 @@ class VoiceBench:
             self.page.wait_for_timeout(50)
             attente += 50
 
+    def wait_stt_calls(self, count, timeout=8000):
+        """Attend que la page ait envoyé au moins `count` enregistrements à la transcription (sans pause à durée fixe)."""
+        attente = 0
+        while len(self.stt_calls) < count:
+            assert attente < timeout, f"/stt : {len(self.stt_calls)} appel(s) en {timeout} ms, {count} attendu(s)"
+            self.page.wait_for_timeout(50)
+            attente += 50
+
     def tts_calls_aborted(self):
         """Pour chaque appel /tts parti de la page : vrai si la page l'a annulé."""
         return self.page.evaluate("() => window.__tts.calls.map(call => call.aborted)")
