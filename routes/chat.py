@@ -12,6 +12,7 @@ from services.backup_ai import backup_complete, backup_enabled, claude_is_primar
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
+from services.truncation import cut_notice, is_cut_by_length, mark_incomplete, with_cut_notice
 
 
 def register_chat_route(app, deps):
@@ -56,6 +57,7 @@ def register_chat_route(app, deps):
                     system=payload.get("instructions", ""),
                     max_tokens=1500,
                     timeout=45,
+                    language=payload.get("language", "fr"),  # mention « Réponse coupée » si Claude atteint la limite
                 )
                 if reply:
                     logger.warning("chat_backup_ai_used")
@@ -231,6 +233,9 @@ def register_chat_route(app, deps):
                     # Une réponse coupée (limite de longueur) ne doit pas être resservie à tout le monde.
                     if reply and answer_cache is not None and not payload.get("reply_incomplete"):
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
+                    if reply and payload.get("reply_cut"):
+                        # Arrêtée par la limite de longueur : le dire (après la mise en cache, qui l'a écartée).
+                        reply = with_cut_notice(reply, payload.get("language", "fr"))
                 sources = merged_sources(sources)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
