@@ -147,9 +147,18 @@ def render_international_page(lang, topic, site_url):
         for l in LANGS
     )
     alternates += f'<link rel="alternate" hreflang="x-default" href="{site_url.rstrip("/")}{_localized_path("en", topic)}">'
+    # Tous les sujets de la langue (et non les 8 premiers) : sinon sim-card, weather, visa et
+    # trip-planner n'avaient aucun lien entrant et ne se trouvaient que dans le plan du site.
     related = "".join(
         f'<a href="{_localized_path(lang, t)}">{escape(TOPICS[t][lang][0])}</a>'
-        for t in list(TOPICS)[:8] if t != topic
+        for t in TOPICS if t != topic
+    )
+    # Même sujet dans les autres langues : relie entre elles les 5 versions d'une page
+    # (les balises hreflang du <head> ne sont pas des liens que le robot suit comme tels).
+    switch_label = {"en": "Languages", "es": "Idiomas", "de": "Sprachen", "it": "Lingue", "fr": "Langues"}[lang]
+    lang_switch = "".join(
+        f'<a href="{_localized_path(l, topic)}" lang="{escape(l)}" hreflang="{escape(l)}">{escape(LANG_NAMES[l])}</a>'
+        for l in LANGS if l != lang
     )
     faq_ld = [{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in FAQ[lang]]
     ld = {
@@ -178,7 +187,7 @@ def render_international_page(lang, topic, site_url):
 <title>{escape(title)}</title><script type="application/ld+json">{ld_json}</script>
 {HEAD_ASSETS}
 </head><body>{site_header(lang=lang)}<main>
-<div class="related">{related}<button id="share-page" class="share-page" type="button" data-copied="{escape({"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}[lang])}" data-failed="{escape({"en":"Copy the page address","es":"Copie la dirección de la página","de":"Seitenadresse kopieren","it":"Copia l’indirizzo della pagina","fr":"Copiez l’adresse de la page"}[lang])}">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script src="{asset_url("share-page.js")}" defer></script></div><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
+<div class="related">{related}<button id="share-page" class="share-page" type="button" data-copied="{escape({"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}[lang])}" data-failed="{escape({"en":"Copy the page address","es":"Copie la dirección de la página","de":"Seitenadresse kopieren","it":"Copia l’indirizzo della pagina","fr":"Copiez l’adresse de la page"}[lang])}">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script src="{asset_url("share-page.js")}" defer></script></div><nav class="lang-switch" aria-label="{escape(switch_label)}">{lang_switch}</nav><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
 <h1>{escape(title)}</h1><p class="intro">{escape(description)}</p>{sections}
 <section><h2>{"Frequently asked questions" if lang=="en" else "Preguntas frecuentes" if lang=="es" else "Häufige Fragen" if lang=="de" else "Domande frequenti" if lang=="it" else "Questions fréquentes"}</h2>{faq}</section>
 <div class="ctaBox"><strong>{escape(cta)}</strong><p><a class="cta primary" href="/">{escape({"en":"Open Teranga AI","es":"Abrir Teranga AI","de":"Teranga AI öffnen","it":"Apri Teranga AI","fr":"Ouvrir Teranga AI"}[lang])}</a></p></div>
