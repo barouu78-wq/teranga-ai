@@ -2,6 +2,10 @@ name: TLS domain diagnostic
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/diagnose_tls.py"
+      - ".github/workflows/tls-diagnostic.yml"
 
 permissions:
   contents: read
@@ -16,26 +20,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout diagnostic branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: diagnostic/tls-domain-cert
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install OpenSSL
+      - name: Diagnose public certificates
         run: |
           openssl version
-      - name: Diagnose public certificates (read-only)
-        run: |
           python scripts/diagnose_tls.py --json-file tls-report.json
-          python - <<'PY'
-          import json
-          with open("tls-report.json", encoding="utf-8") as f:
-              report = json.load(f)
-          print(json.dumps(report, ensure_ascii=False, indent=2))
-          PY
       - name: Upload TLS report
         if: always()
         uses: actions/upload-artifact@v4
