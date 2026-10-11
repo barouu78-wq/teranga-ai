@@ -315,7 +315,7 @@ async function playVoiceTtsQueue(){
   try{
     if(!item.blob){item.blob=fetchVoiceBlob(item);item.blob.catch(()=>{});}
     const blob=await item.blob;
-    if(item.turn!==voiceTtsTurn||!autoVoice){dropPreparedVoice(item);return;}
+    if(item.turn!==voiceTtsTurn||!autoVoice)return;
     prefetchVoiceTts();
     // Le lecteur a pu être monté pendant le morceau précédent (prepareVoicePlayer) ; sinon on le monte maintenant.
     const url=item.url||URL.createObjectURL(blob);
@@ -349,6 +349,7 @@ async function playVoiceTtsQueue(){
       else if(!voiceTtsIssue||(err&&err.status===429))voiceTtsIssue={status:(err&&err.status)||0,retry:(err&&err.retryAfter)||''};
     }
   }finally{
+    dropPreparedVoice(item);  // lecture abandonnée avant le son : le lecteur monté à l'avance est libéré (sans effet sinon)
     if(run===voiceTtsRun){
       voiceSpeaking=false;
       document.body.classList.remove('assistant-speaking');
