@@ -11,8 +11,14 @@ pas le droit de faire.
 - **Claude Code (la session principale) est le chef de projet.** Il lance les agents, relit leurs PR, teste les PR
   fusionnées ensemble, fusionne ce que la règle en vigueur lui permet (tests, outils, documents, correctifs invisibles,
   contrôles verts) et surveille la production après chaque fusion.
-- **Les agents font un sujet chacun.** Ils travaillent dans un espace de travail isolé, ouvrent une PR **brouillon** en
-  français et ne fusionnent jamais. Ils ne se parlent pas entre eux : ils rendent un rapport au chef de projet.
+- **Les agents font un sujet chacun.** Ils ouvrent une PR **brouillon** en français et ne fusionnent jamais. Ils ne se
+  parlent pas entre eux : ils rendent un rapport au chef de projet.
+- **Isolation.** Les quatre agents qui écrivent des fichiers (`qualite-ia`, `verificateur-reperes`, `voix`,
+  `seo-visibilite`) déclarent `isolation: worktree` dans leur en-tête : chacun travaille dans sa propre copie du dépôt,
+  sans partager fichiers ni index Git avec un autre agent. Sans isolation, deux agents lancés ensemble se mêlent et une PR
+  peut contenir le sujet de l'autre. Si un lancement n'applique pas ce réglage (un défaut a été signalé pour des agents
+  fournis par un plugin), passer `isolation: "worktree"` dans l'appel à l'outil Agent. Les agents en lecture seule n'en
+  ont pas besoin.
 
 ## Les neuf agents
 
