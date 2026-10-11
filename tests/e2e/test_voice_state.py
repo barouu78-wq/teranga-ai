@@ -41,11 +41,14 @@ def test_phone_home_shows_each_step_of_the_voice_turn(page, base_url):
     expect(text).to_have_text(re.compile("transcris"))
     expect(live).to_have_text(re.compile("transcris"))
 
+    bench.wait_held("stt")
     bench.release("stt", json={"text": "Quelle heure est-il à Dakar ?"})
     expect(text).to_have_text(re.compile("réfléchis"))
 
+    bench.wait_held("chat")
     bench.release("chat", body=stream({"d": "Il est midi."}), content_type="application/x-ndjson")
     expect(text).to_have_text(re.compile("réfléchis"))  # la voix se prépare : on ne dit pas « je parle » avant le son
+    bench.wait_held("tts")
 
     bench.release("tts", body=wav_bytes(2500), content_type="audio/wav")
     expect(text).to_have_text(re.compile("parle"))
@@ -117,6 +120,7 @@ def test_stop_button_stops_everything_in_every_phase(page, base_url, phase):
         expect(page.locator("#voiceText")).to_have_text(re.compile("transcris"))
     if phase == "thinking":
         expect(page.locator("#voiceText")).to_have_text(re.compile("transcris"))
+        bench.wait_held("stt")
         bench.release("stt", json={"text": "Bonjour"})
         expect(page.locator("#voiceText")).to_have_text(re.compile("réfléchis"))
     if phase == "speaking":
@@ -161,6 +165,7 @@ def test_mic_button_stops_while_the_answer_is_prepared(page, base_url, phase):
     bench.speak_one_turn()
     expect(page.locator("#voiceText")).to_have_text(re.compile("transcris"))
     if phase == "thinking":
+        bench.wait_held("stt")
         bench.release("stt", json={"text": "Bonjour"})
         expect(page.locator("#voiceText")).to_have_text(re.compile("réfléchis"))
     page.click("#mic")

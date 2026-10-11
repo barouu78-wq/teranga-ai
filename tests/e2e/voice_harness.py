@@ -105,6 +105,18 @@ class VoiceBench:
         """La requête reste en attente jusqu'à release() : on observe l'état pendant l'attente."""
         setattr(self, f"{name}_handler", lambda route, n: self.held[name].append(route))
 
+    def wait_held(self, name, timeout=8000):
+        """Attend que la page ait réellement envoyé la requête avant de la libérer.
+
+        Sur une machine chargée, la requête part plus tard : un release() trop tôt ne trouve rien à
+        libérer, et la requête arrivée ensuite reste en attente pour toujours.
+        """
+        attente = 0
+        while not self.held[name]:
+            assert attente < timeout, f"la page n'a jamais envoyé /{name} en {timeout} ms"
+            self.page.wait_for_timeout(50)
+            attente += 50
+
     def release(self, name, **response):
         """Répond aux requêtes en attente. Si la page les a abandonnées entre-temps, c'est normal."""
         routes, self.held[name] = self.held[name], []
