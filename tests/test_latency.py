@@ -51,11 +51,11 @@ def lines():
 def test_chat_line_has_a_stable_layout():
     line = format_line("chat", {
         "total_ms": 2310.44, "contexte_ms": 12.8, "recherche_ms": None, "premier_mot_ms": 1480.25,
-        "fournisseur_ms": 1410.9, "cache": False, "modele": "gpt-5.6-luna", "mode": "flux", "statut": "ok",
+        "fournisseur_ms": 1410.9, "cache": False, "web": True, "modele": "gpt-5.6-luna", "mode": "flux", "statut": "ok",
     })
     assert line == (
         "latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 "
-        "fournisseur_ms=1410.9 cache=non modele=gpt-5.6-luna mode=flux statut=ok"
+        "fournisseur_ms=1410.9 cache=non web=oui modele=gpt-5.6-luna mode=flux statut=ok"
     )
 
 
@@ -74,12 +74,12 @@ def test_every_value_is_neutralised_so_free_text_cannot_reach_the_line():
     hostile = "Quelle est ma question secrète ? clé=sk-123 ip=203.0.113.9"
     line = format_line("chat", {
         "total_ms": hostile, "contexte_ms": hostile, "recherche_ms": [hostile], "premier_mot_ms": float("nan"),
-        "fournisseur_ms": float("inf"), "cache": hostile, "modele": hostile, "mode": hostile, "statut": hostile,
+        "fournisseur_ms": float("inf"), "cache": hostile, "web": hostile, "modele": hostile, "mode": hostile, "statut": hostile,
         "message": hostile, "ip": hostile,  # clés inconnues : ignorées
     })
     assert line == (
         "latence route=chat total_ms=- contexte_ms=- recherche_ms=- premier_mot_ms=- fournisseur_ms=- "
-        "cache=- modele=autre mode=- statut=erreur"
+        "cache=- web=- modele=autre mode=- statut=erreur"
     )
     assert "secrète" not in line and "sk-" not in line and "203.0.113.9" not in line
 
@@ -119,7 +119,7 @@ def test_stages_are_measured_and_accumulated(lines):
     clock.tick(8)
     trace.status = "ok"
     trace.emit()
-    assert lines == ["latence route=chat total_ms=70.0 contexte_ms=12.0 recherche_ms=50.0 premier_mot_ms=- fournisseur_ms=- cache=- modele=- mode=- statut=ok"]
+    assert lines == ["latence route=chat total_ms=70.0 contexte_ms=12.0 recherche_ms=50.0 premier_mot_ms=- fournisseur_ms=- cache=- web=- modele=- mode=- statut=ok"]
 
 
 def test_a_failing_stage_is_still_measured_and_the_exception_is_not_swallowed():
@@ -146,7 +146,7 @@ def test_first_word_is_counted_once_and_stops_the_provider_timer(lines):
     trace.emit()
     assert lines == [
         "latence route=chat total_ms=1015.0 contexte_ms=10.0 recherche_ms=- premier_mot_ms=415.0 "
-        "fournisseur_ms=400.0 cache=non modele=gpt-5.6-luna mode=flux statut=ok"
+        "fournisseur_ms=400.0 cache=non web=- modele=gpt-5.6-luna mode=flux statut=ok"
     ]
 
 

@@ -191,6 +191,7 @@ def register_chat_route(app, deps):
                         logger.info("external_research_used provider=%s", research.get("provider", "unknown"))
                 except Exception:  # noqa: BLE001 - la recherche externe est facultative
                     logger.warning("external_research_failed")
+        trace.web = bool(payload.get("use_web"))  # outil de recherche web du fournisseur (inclus dans fournisseur_ms)
 
 
         def merged_sources(sources):
@@ -273,7 +274,7 @@ def register_chat_route(app, deps):
                     yield json.dumps({"d": chunk}, ensure_ascii=False) + "\n"
                 for event in finishing_events(reply, cached.get("sources") or [], cached.get("image"), cached.get("map")):
                     yield json.dumps(event, ensure_ascii=False) + "\n"
-                trace.status = "ok"
+                trace.ok()
                 yield json.dumps({"done": True}) + "\n"
 
             return Response(stream_with_context(generate_cached()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
@@ -374,7 +375,7 @@ def register_chat_route(app, deps):
                 # Une réponse coupée (limite de longueur) ou de secours ne doit pas être resservie 12 h à tout le monde.
                 if answer_cache is not None and key and completed:
                     answer_cache.set(key, reply=final_reply, sources=sources, image=image, maps=maps)
-                trace.status = trace.status or "ok"
+                trace.ok()
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
