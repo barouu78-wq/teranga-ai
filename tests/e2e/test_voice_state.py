@@ -3,7 +3,11 @@
 import re
 
 import pytest
-from playwright.sync_api import expect
+
+try:
+    from playwright.sync_api import expect
+except ImportError:  # pragma: no cover - la fixture « browser » (conftest) ignore ou fait échouer selon E2E_REQUIRED
+    expect = None
 
 from .voice_harness import VoiceBench, stream, wav_bytes
 
