@@ -20,6 +20,7 @@ EXPECTED = {
 }
 READ_ONLY = {"gardien-prod", "relecteur-pr", "securite", "ops-infra", "mesure-latence"}
 WRITE_TOOLS = {"Edit", "Write", "NotebookEdit"}
+WRITERS = {"qualite-ia", "verificateur-reperes", "voix", "seo-visibilite"}
 BASE_TOOLS = {"Read", "Grep", "Glob", "Bash", "Edit", "Write", "WebFetch", "WebSearch"}
 RENDER_READ = re.compile(r"^mcp__Render__(list|get)_[a-z_]+$")
 SECRET_PATTERNS = [
@@ -100,3 +101,32 @@ def test_le_document_presente_chaque_agent(nom):
 def test_regles_de_securite_repetees_dans_la_doc():
     for phrase in ("jamais de fusion", "Pousser après chaque étape", "Trois agents en parallèle au maximum"):
         assert phrase.lower() in DOC.lower(), phrase
+
+
+@pytest.mark.parametrize("nom", sorted(WRITERS))
+def test_les_agents_qui_ecrivent_travaillent_dans_leur_propre_copie(nom):
+    champs, _, _ = _agent(nom)
+    assert WRITE_TOOLS & set(_outils(champs)), f"{nom} est censé écrire des fichiers"
+    assert champs.get("isolation") == "worktree", "deux agents lancés ensemble ne doivent pas partager l'index Git"
+
+
+def test_tout_agent_qui_peut_ecrire_est_isole():
+    for nom in EXPECTED:
+        champs, _, _ = _agent(nom)
+        if WRITE_TOOLS & set(_outils(champs)):
+            assert champs.get("isolation") == "worktree", nom
+
+
+def test_le_document_explique_l_isolation():
+    assert "isolation: worktree" in DOC
+
+
+def test_gardien_prod_lit_la_limite_de_memoire_et_ne_la_suppose_pas():
+    _, corps, _ = _agent("gardien-prod")
+    assert "memory_limit" in corps
+    assert "la limite est de 512" not in corps.lower()
+
+
+def test_gardien_prod_ne_traite_pas_le_nombre_de_processus_comme_une_invariante():
+    _, corps, _ = _agent("gardien-prod")
+    assert "GUNICORN_WORKERS" in corps and "par défaut" in corps

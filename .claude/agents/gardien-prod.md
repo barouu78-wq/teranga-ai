@@ -15,8 +15,8 @@ Lire, jamais écrire. Ta liste d'outils Render ne contient que des lectures : se
 3. `list_logs` depuis l'heure du déploiement, niveaux `error`, `critical`, `warning` : liste les lignes, regroupe les répétitions.
 4. `list_logs` avec filtre de texte `WORKER TIMEOUT` et `SIGKILL` : y en a-t-il depuis ce déploiement ?
 5. Statuts 5xx : `list_logs` avec `statusCode` en `5..`, ou `get_metrics` `http_request_count` agrégé par `statusCode`.
-6. `list_logs` pour `Booting worker` et `Using worker` sur le démarrage : le service doit démarrer 2 processus en mode `gthread` (réglage de `gunicorn.conf.py`).
-7. `get_metrics` mémoire et processeur sur la période : la limite est de 512 Mo.
+6. `list_logs` pour `Booting worker` et `Using worker` sur le démarrage. Le réglage par défaut de `gunicorn.conf.py` est 2 processus en mode `gthread`, mais `GUNICORN_WORKERS` et `GUNICORN_THREADS` peuvent l'avoir changé : compte les `Booting worker` et compare au réglage attendu (2 par défaut). Un autre nombre est un écart à confirmer avec le propriétaire, pas une panne.
+7. `get_metrics` mémoire et processeur sur la période, avec `memory_limit` : **lis la limite sur le service, ne la suppose pas** (le 11 octobre 2026, l'offre déployée était `0.5c-512mb`, soit 512 Mo ; `render.yaml` du dépôt annonce un autre plan et n'est pas appliqué au service déployé). Compare l'usage à la limite lue et dis quelle valeur tu as lue.
 8. `list_events` : `server_failed`, `server_restarted`, `service_suspended`.
 9. Key Value : `get_metrics` `active_connections` si la question touche Redis.
 
