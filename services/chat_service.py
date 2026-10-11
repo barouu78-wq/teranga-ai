@@ -4,7 +4,8 @@ import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
-from .backup_ai import claude_events, claude_is_primary, claude_response
+from .backup_ai import claude_events, claude_is_primary, claude_model, claude_response
+from .latency import note_model
 from .model_params import clean_model_name, openai_complex_model, openai_model
 from .orchestrator import build_agent_plan, run_enrichments
 from .truncation import mark_incomplete
@@ -103,6 +104,7 @@ def build_chat_service(
 
     def create_response(payload, stream):
         if claude_is_primary():
+            note_model(payload, claude_model())  # pour la ligne de latence ; openai_response le remplace si OpenAI prend le relais
             if hasattr(logger, "info"):
                 logger.info("chat_ai_provider claude")
             if stream:
@@ -116,6 +118,7 @@ def build_chat_service(
 
     def openai_response(payload, stream):
         plan = agent_plan(payload)
+        note_model(payload, plan.model)  # pour la ligne de latence
         # Secours = l'autre modèle configuré (et non des noms en dur).
         fallback_model = model if plan.model == complex_model else complex_model
         if hasattr(logger, "info"):
