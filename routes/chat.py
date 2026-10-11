@@ -160,12 +160,15 @@ def register_chat_route(app, deps):
             def generate_photo_only():
                 try:
                     image = fetch_topic_images(photo_query)
+                    trace.first_word()
                     yield json.dumps({"d": photo_lead(image)}, ensure_ascii=False) + "\n"
                     if image:
                         yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+                    trace.ok()
                     yield json.dumps({"done": True}) + "\n"
                 except Exception as exc:
                     logger.exception("Erreur stream photo-only /chat")
+                    trace.status = "erreur"
                     yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})

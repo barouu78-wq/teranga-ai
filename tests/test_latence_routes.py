@@ -238,3 +238,27 @@ def test_chat_refused_by_the_csrf_check_leaves_no_line_but_stt_leaves_an_invalid
     refused.close()
     f = one(lines)
     assert f["route"] == "stt" and f["statut"] == "invalide" and f["fournisseur_ms"] == "-"
+
+
+# --- Demande de photos seule (flux) : relecture automatique de la PR #435 -----------------------------------
+
+
+PHOTO_QUESTION = "Montre-moi des photos de la Pointe des Almadies"
+
+
+def test_a_photo_only_stream_that_reaches_its_end_is_ok_and_has_a_first_word(monkeypatch, lines):
+    monkeypatch.setattr(h.app_module, "_fetch_topic_images", lambda *args, **kwargs: [])
+    finish(post_chat(PHOTO_QUESTION))
+    f = one(lines)
+    assert f["route"] == "chat" and f["mode"] == "flux"
+    assert f["statut"] == "ok", "un flux de photos mené à son terme était compté comme « abandon »"
+    assert number(f["premier_mot_ms"]) <= number(f["total_ms"])
+
+
+def test_a_photo_only_stream_that_fails_is_an_error(monkeypatch, lines):
+    def boom(*args, **kwargs):
+        raise RuntimeError("images en panne")
+
+    monkeypatch.setattr(h.app_module, "_fetch_topic_images", boom)
+    finish(post_chat(PHOTO_QUESTION))
+    assert one(lines)["statut"] == "erreur"
