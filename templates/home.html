@@ -216,6 +216,7 @@ function resetVoiceStreamTts(){
 function clearVoiceTtsQueue(){
   voiceTtsTurn++;
   voiceTtsRun++;
+  voiceTtsQueue.forEach(dropPreparedVoice);
   voiceTtsQueue=[];
   resetVoiceStreamTts();
   voiceStreamTtsMuted=true;
@@ -234,9 +235,31 @@ function queueVoiceSpeech(text){
 // Le morceau suivant est demandé à /tts pendant que le précédent se lit : pas de blanc entre les deux.
 function prefetchVoiceTts(){
   const next=voiceTtsQueue[0];
-  if(!voiceTtsPlaying||!next||next.blob)return;
-  next.blob=fetchVoiceBlob(next);
-  next.blob.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+  if(!voiceTtsPlaying||!next)return;
+  if(!next.blob){
+    next.blob=fetchVoiceBlob(next);
+    next.blob.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+  }
+  prepareVoicePlayer(next);
+}
+// Dès que le son du morceau suivant est là, son lecteur est monté et charge le fichier pendant que le précédent parle :
+// à la fin du premier, le second démarre sans attendre que le navigateur ouvre le fichier (le blanc entre deux morceaux).
+// Aucun appel de plus à /tts : c'est le même son, seulement monté plus tôt.
+function prepareVoicePlayer(item){
+  if(item.preparing)return;
+  item.preparing=true;
+  item.blob.then(blob=>{
+    if(item.dropped||item.turn!==voiceTtsTurn||!autoVoice)return;
+    item.url=URL.createObjectURL(blob);
+    item.audio=createVoiceAudio(item.url);
+  }).catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+}
+// Un morceau monté à l'avance mais jamais lu (« Arrêter », micro, nouvelle question) : son lecteur et son fichier sont libérés.
+function dropPreparedVoice(item){
+  if(!item)return;
+  item.dropped=true;
+  if(item.audio){try{item.audio.pause();}catch(_){}item.audio=null;}
+  if(item.url){URL.revokeObjectURL(item.url);item.url='';}
 }
 async function fetchVoiceBlob(item){
   const cacheKey=lang+'|'+item.text;
@@ -286,7 +309,7 @@ function reportVoiceTtsIssue(){
 async function playVoiceTtsQueue(){
   if(voiceTtsPlaying||!voiceTtsQueue.length||!autoVoice)return;
   const item=voiceTtsQueue.shift();
-  if(!item||item.turn!==voiceTtsTurn)return playVoiceTtsQueue();
+  if(!item||item.turn!==voiceTtsTurn){dropPreparedVoice(item);return playVoiceTtsQueue();}
   voiceTtsPlaying=true;
   const run=++voiceTtsRun;
   try{
@@ -294,8 +317,10 @@ async function playVoiceTtsQueue(){
     const blob=await item.blob;
     if(item.turn!==voiceTtsTurn||!autoVoice)return;
     prefetchVoiceTts();
-    const url=URL.createObjectURL(blob);
-    const player=createVoiceAudio(url);
+    // Le lecteur a pu être monté pendant le morceau précédent (prepareVoicePlayer) ; sinon on le monte maintenant.
+    const url=item.url||URL.createObjectURL(blob);
+    const player=item.audio||createVoiceAudio(url);
+    item.audio=null;item.url='';  // à partir d'ici le lecteur appartient à cette lecture
     audio=player;
     // « Je parle » seulement quand le son démarre vraiment (pas si le navigateur refuse la lecture).
     let started=false;
@@ -324,6 +349,7 @@ async function playVoiceTtsQueue(){
       else if(!voiceTtsIssue||(err&&err.status===429))voiceTtsIssue={status:(err&&err.status)||0,retry:(err&&err.retryAfter)||''};
     }
   }finally{
+    dropPreparedVoice(item);  // lecture abandonnée avant le son : le lecteur monté à l'avance est libéré (sans effet sinon)
     if(run===voiceTtsRun){
       voiceSpeaking=false;
       document.body.classList.remove('assistant-speaking');

@@ -1338,10 +1338,12 @@ function clearVoiceRestart(){
   clearTimeout(voiceRestartTimer);
   voiceRestartTimer=0;
 }
-function scheduleVoiceCapture(delay=VOICE_RESTART_MS){
+// opts.keepNoiseFloor : la personne parle déjà quand l'écoute s'ouvre (elle vient de couper la voix) ; l'écoute garde
+// le bruit de fond mesuré juste avant au lieu de le réapprendre (voir startVoiceCapture).
+function scheduleVoiceCapture(delay=VOICE_RESTART_MS,opts){
   clearVoiceRestart();
   if(!voiceConversation||voiceSpeaking||voiceSTTBusy||inflight)return;
-  voiceRestartTimer=setTimeout(()=>{voiceRestartTimer=0;startVoiceCapture();},delay);
+  voiceRestartTimer=setTimeout(()=>{voiceRestartTimer=0;startVoiceCapture(opts);},delay);
 }
 function rmsFromAnalyser(){
   if(!voiceAnalyser)return 0;
@@ -1422,7 +1424,7 @@ function startVoiceMonitor(){
       if(now-voiceBargeInStartedAt>=VOICE_BARGE_MS&&now-started>300){
         voiceBargeInStartedAt=0;
         stopSpeakingForListening();
-        scheduleVoiceCapture(40);
+        scheduleVoiceCapture(40,{keepNoiseFloor:true});
         return;
       }
     }else voiceBargeInStartedAt=0;
@@ -1527,8 +1529,12 @@ function finishVoiceRecording(){
   if(!recorder)return;
   try{recorder.stop();}catch(_){}
 }
-async function startVoiceCapture(){
+async function startVoiceCapture(opts){
   if(!voiceConversation||voiceSpeaking||inflight||voiceSTTBusy||voiceCaptureBusy)return;
+  // Écoute rouverte par une interruption : la personne parle DÉJÀ. Réapprendre le bruit de fond pendant ces premières
+  // 550 ms aurait pris sa voix pour du bruit (seuil trop haut, parole jamais détectée, rien d'envoyé). On garde donc le
+  // bruit mesuré pendant l'écoute d'avant (même lieu, quelques secondes plus tôt) ; l'écoute suivante le réapprend.
+  const keepNoise=!!(opts&&opts.keepNoiseFloor);
   voiceCaptureBusy=true;
   const turnId=++voiceTurnId;
   try{
@@ -1543,7 +1549,7 @@ async function startVoiceCapture(){
       return;
     }
     voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
-    voiceNoiseFloor=.008;voiceNoiseSamples=0;
+    if(!keepNoise){voiceNoiseFloor=.008;voiceNoiseSamples=0;}
     voiceSetMicState(true);
 
     if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))voiceRecorderMime='audio/webm;codecs=opus';
@@ -1579,7 +1585,7 @@ async function startVoiceCapture(){
       const rms=rmsFromAnalyser();
       const now=Date.now();
       const elapsed=now-startedAt;
-      if(!voiceSpeechStarted&&elapsed<VOICE_NOISE_CALIBRATION_MS){
+      if(!keepNoise&&!voiceSpeechStarted&&elapsed<VOICE_NOISE_CALIBRATION_MS){
         voiceNoiseSamples++;
         voiceNoiseFloor=voiceNoiseSamples===1?rms:(voiceNoiseFloor*.9+rms*.1);
       }

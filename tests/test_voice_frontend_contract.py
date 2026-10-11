@@ -13,7 +13,7 @@ def test_voice_mode_stop_releases_the_microphone():
 
 def test_voice_capture_start_cancels_after_stream_wait():
     html = home_source()
-    marker = "async function startVoiceCapture(){"
+    marker = "async function startVoiceCapture(opts){"  # opts : { keepNoiseFloor } après une interruption par la voix
     start = html.rindex(marker)
     end = html.index("\n}", start) + 2
     function = html[start:end]
