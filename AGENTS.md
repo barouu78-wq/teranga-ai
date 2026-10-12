@@ -60,6 +60,7 @@ un contrôle qui n'a pas tourné.
 | `banc-ia` | après toute modification du contexte de l'IA |
 | `audit-seo` | après toute modification de page (`python scripts/audit_seo.py`) |
 | `publier-android` | Google Play : test interne, test fermé, lien `assetlinks.json` |
+| `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
 
 ## Règles à respecter
 
