@@ -15,7 +15,7 @@
   --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
   /* Alias pour les pages plus anciennes */
   --text:var(--ink);--panel:var(--surface);--green:var(--sen-green);
-  color-scheme:light;
+  color-scheme:only light; /* interdit l'assombrissement automatique de Chrome (tests/e2e/test_sombre_automatique.py) */
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0e1512;--surface:#17201b;--surface-2:#1f2a24;--ink:#f3eee4;--muted:#b3b9ad;
