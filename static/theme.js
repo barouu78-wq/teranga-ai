@@ -1,6 +1,6 @@
 // Thème du site, partagé par l'accueil et toutes les pages.
-// Mode « auto » (par défaut) : jour = « Terre de Teranga », nuit (18 h–6 h,
-// heure du visiteur) = « Nuit de Dakar ». Le visiteur peut forcer clair/sombre.
+// Mode « auto » (par défaut) : jour = « Vert Sénégal », nuit (18 h–6 h,
+// heure du visiteur) = « Nuit verte ». Le visiteur peut forcer clair/sombre.
 // Les grandes fêtes ajoutent une touche (data-fete) sans changer la base.
 (function(){
   var KEY='teranga-theme';

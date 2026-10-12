@@ -285,7 +285,7 @@ if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 // Logo Teranga (même dessin que l'en-tête) à la place de l'émoji 🌴.
-const AVATAR_SVG='<svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="currentColor"/></svg>';
+const AVATAR_SVG='<svg viewBox="0 5 100 100" aria-hidden="true"><use href="#sn-lion"/></svg>'; // lion dessiné une fois dans home.html (#sn-lion)
 function cleanReply(text){
   return String(text||'')
     .replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''))
@@ -347,7 +347,7 @@ function setChatMode(on){
 function hideHero(){setChatMode(true);}
 function showHero(){setChatMode(false);}
 function applyThemeColor(){
-  $('themeColor').content=document.body.dataset.theme==='dark'?'#0b0f17':'#fbf3e6';
+  $('themeColor').content=document.body.dataset.theme==='dark'?'#0e1512':'#f7f3e8';
 }
 const THEME_LABELS={
   fr:{auto:'Thème : automatique (jour/nuit)',light:'Thème : clair',dark:'Thème : sombre'},
