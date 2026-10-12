@@ -58,8 +58,8 @@ def test_la_banniere_est_decorative_avec_baobab_drapeau_et_lion():
     assert 'aria-hidden="true"' in banniere.split(">", 1)[0]
     assert '<use href="#sn-baobab"/>' in banniere and '<use href="#sn-lion"/>' in banniere
     assert banniere.count("<i></i>") == 3  # bande vert, or, rouge
-    for couleur in ("#0f6a43", "#f0c63d", "#c93636"):
-        assert f"background:{couleur}" in HOME
+    for rang, couleur in enumerate(("#0f6a43", "#f0c63d", "#c93636"), 1):
+        assert f".scene-flag i:nth-child({rang}){{background:{couleur}}}" in HOME
 
 
 @pytest.mark.parametrize("dessin", ["sn-lion", "sn-baobab", "LION_SVG"])
@@ -84,7 +84,7 @@ def test_les_pages_secondaires_ont_le_lion_dans_l_en_tete():
 
 @pytest.mark.parametrize("nom,texte", [("templates/home.html", HOME), ("static/site.css", SITE_CSS)])
 def test_chaque_palette_reste_lisible(nom, texte):
-    """WCAG : texte ≥ 4,5 pour 1 (corps, texte discret, texte des boutons) ; bouton contre le fond ≥ 3 pour 1."""
+    """WCAG : texte ≥ 4,5 pour 1 (corps, discret, liens, titres, texte des boutons) ; bouton contre le fond ≥ 3 pour 1."""
     palettes = list(blocs_de_couleurs(texte))
     assert len(palettes) >= 2, nom  # au moins le jour et la nuit
     for jetons in palettes:
@@ -92,6 +92,9 @@ def test_chaque_palette_reste_lisible(nom, texte):
             if fond in jetons:
                 assert contraste(jetons["ink"], jetons[fond]) >= 4.5, (nom, "ink", fond)
                 assert contraste(jetons["muted"], jetons[fond]) >= 4.5, (nom, "muted", fond)
+                for texte_couleur in ("link", "title"):
+                    if texte_couleur in jetons:
+                        assert contraste(jetons[texte_couleur], jetons[fond]) >= 4.5, (nom, texte_couleur, fond)
         assert contraste(jetons["accent-ink"], jetons["accent"]) >= 4.5, (nom, "accent-ink")
         assert contraste(jetons["accent"], jetons["bg"]) >= 3, (nom, "accent")
 
@@ -103,4 +106,5 @@ def test_le_jour_est_vert_senegal_et_la_nuit_verte(nom, texte):
     nuit = [p for p in palettes if p["bg"] == "#0e1512"]
     assert jour and all(p["accent"] == "#0f6a43" for p in jour), nom
     assert nuit and all(p["accent"] == "#e3a33b" for p in nuit), nom
-    assert "#111215" not in texte and "#b5451b" not in texte, "ancienne palette encore présente"
+    for ancienne in ("#111215", "#b5451b", "#fbf3e6", "#7a2c10", "122,44,16"):
+        assert ancienne not in texte, f"ancienne palette encore présente : {ancienne}"
