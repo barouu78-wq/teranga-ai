@@ -519,6 +519,44 @@ function addProjectOffer(col,idea){
   };
   box.append(btn,more,out);col.appendChild(box);
 }
+// Boutons de suite (version 9) : les 2 ou 3 suggestions que le serveur joint déjà à chaque réponse
+// (`ux.followups`, services/intelligence.py). Un appui pose la suggestion comme nouvelle question, sauf
+// « Préciser ma demande », qui remet le curseur dans la zone de saisie. Une seule rangée : sous la dernière réponse.
+const FOLLOWUP_CLARIFY='Préciser ma demande';
+// Page en anglais : libellés du serveur traduits ; un libellé inconnu n'a pas de bouton plutôt qu'un bouton en français.
+const FOLLOWUP_EN={'Budget':'Budget','Transport':'Transport','Programme détaillé':'Detailed itinerary',
+  'Itinéraire':'Route','Prix':'Prices','Alternative':'Alternatives','Options':'Options','Localiser':'Show on a map',
+  "Plan d'action":'Action plan','Opportunités':'Opportunities','Offres':'Job offers','CV':'CV','Formations':'Courses',
+  'Conditions':'Requirements',"Plan d'apprentissage":'Learning plan','Financement':'Funding','Comparer':'Compare',
+  'Demain':'Tomorrow','Cette semaine':'This week','Prévisions':'Forecast','Plus de photos':'More photos',
+  'Que voir ?':'What to see?','Préciser ma demande':'Refine my question','Que faire ensuite ?':'What next?'};
+function followupLabel(item){
+  if(lang!=='en')return item;  // wolof et pulaar : le français, comme le reste des textes non traduits
+  const at=item.match(/^(.+?) à (.+)$/);  // « Prix à Dakar » → « Prices in Dakar »
+  if(at&&FOLLOWUP_EN[at[1]])return FOLLOWUP_EN[at[1]]+' in '+at[2];
+  return FOLLOWUP_EN[item]||'';
+}
+function clearFollowups(){document.querySelectorAll('.followups').forEach(row=>row.remove());}
+function addFollowups(col,ux){
+  clearFollowups();
+  if(!ux||ux.show_followups!==true||!Array.isArray(ux.followups))return;
+  const items=[];
+  for(const raw of ux.followups){
+    const item=String(raw||'').trim().slice(0,80);
+    const label=item?followupLabel(item):'';
+    if(label&&!items.some(x=>x.label===label))items.push({item,label});
+    if(items.length===3)break;
+  }
+  if(!items.length)return;
+  const row=document.createElement('div');row.className='followups';row.setAttribute('role','group');
+  row.setAttribute('aria-label',lang==='en'?'To continue':'Pour continuer');
+  for(const {item,label} of items){
+    const btn=document.createElement('button');btn.type='button';btn.className='followup';btn.textContent=label;
+    btn.onclick=()=>{if(item===FOLLOWUP_CLARIFY){input.focus();return;}ask(label);};
+    row.appendChild(btn);
+  }
+  col.appendChild(row);
+}
 function renderInlineProject(container,p){
   const h=document.createElement('h3');h.textContent='🚀 '+(p.name||(lang==='en'?'Your project':'Ton projet'));
   const meta=document.createElement('p');meta.className='project-meta';
@@ -952,6 +990,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   // une seconde requête (qui dérèglerait le bouton Envoyer/Arrêter).
   if(inflight){send.classList.remove('nudge');void send.offsetWidth;send.classList.add('nudge');return;}
   hideHero();
+  clearFollowups();  // nouvelle question : les suggestions de la réponse précédente ne servent plus
   if(!isRetry){
     addMsg('user',text,{animate:true});
     history.push({role:'user',content:text});
@@ -1075,6 +1114,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addMap(wait.col,map);
     addPlaceLinks(wait.col,places);
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
+    if(reply)addFollowups(wait.col,ux);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
