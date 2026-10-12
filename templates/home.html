@@ -494,7 +494,10 @@ body[data-theme="dark"]{
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0}
-html{color-scheme:light}
+/* Racine : « only light » interdit à Chrome (« thème sombre pour les sites ») de repeindre la page ; avec notre thème
+   de nuit, elle annonce « dark ». Sinon Chrome assombrissait par-dessus (tests/e2e/test_sombre_automatique.py). */
+html{color-scheme:only light}
+html:has(>body[data-theme="dark"]){color-scheme:dark}
 body[data-theme="dark"]{color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--font);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;text-rendering:optimizeLegibility}
 a{color:var(--link)}
