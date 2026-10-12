@@ -968,6 +968,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
+  resetVoiceStreamTts();  // nouvelle réponse : la voix repart de zéro (rien du tour précédent, voix de nouveau permise)
   // Délai d'INACTIVITÉ : une longue réponse qui arrive encore n'est jamais coupée.
   let kill=0,timedOut=false;
   const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
@@ -1080,8 +1081,9 @@ async function ask(preset,fromVoice=false,isRetry=false){
     persist();
     if(autoVoice&&reply){
       voiceWaitingForAnswer=true;
-      flushVoiceStreamTts(reply);
-      if(!voiceStreamTtsCount&&!voiceTtsQueue.length)queueVoiceSpeech(reply);
+      // Conversation vocale : la suite de la réponse part d'un seul appel (la première partie est déjà partie
+      // pendant le flux). Question écrite : toute la réponse. Voix coupée pendant la réponse : rien.
+      if(!flushVoiceStreamTts(reply)&&!voiceStreamTtsMuted)queueVoiceSpeech(reply);
     }
   }catch(err){
     const aborted=err.name==='AbortError';
@@ -1136,6 +1138,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     }
   }finally{
     clearTimeout(kill);
+    // Réponse finie, ratée ou arrêtée : plus rien de son flux ne doit être lu (le délai de la 1re partie, le texte reçu).
+    resetVoiceStreamTts();
     inflight=null;
     send.dataset.mode='';
     send.disabled=false;
@@ -1252,12 +1256,14 @@ const VOICE_TEXT={
     close:'Fermer',retry:'Réessayer',talk:'Parler',unclear:'Je n’ai pas bien entendu. Parle encore.',
     stopped:'Mode vocal arrêté.',micOff:'Microphone indisponible.',failed:'Je n’ai pas bien compris. Réessaie.',
     tooMany:'Trop de demandes vocales. Réessaie dans {n} s.',
+    ttsFailed:'Je n’ai pas pu lire toute la réponse à voix haute. Elle reste écrite.',
     gaveUp:'Je n’arrive pas à te comprendre. Touche le micro pour reprendre.'},
   en:{starting:'Starting the microphone…',listening:'I’m listening…',hearing:'I hear you…',transcribing:'Transcribing…',
     thinking:'Thinking…',speaking:'Speaking…',stop:'Stop',stopLabel:'Stop the voice conversation',interrupt:'Interrupt and speak',
     close:'Close',retry:'Retry',talk:'Speak',unclear:'I didn’t catch that. Try again.',
     stopped:'Voice mode stopped.',micOff:'Microphone unavailable.',failed:'I didn’t quite catch that. Try again.',
     tooMany:'Too many voice requests. Try again in {n}s.',
+    ttsFailed:'I couldn’t read the whole answer aloud. It’s still on screen.',
     gaveUp:'I can’t make out what you say. Tap the microphone to resume.'},
   wo:{listening:'Maa ngi déglu…',hearing:'Maa ngi déglu…',talk:'Wax'},
   ff:{listening:'Mi heɗii…',hearing:'Mi heɗii…'}

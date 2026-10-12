@@ -110,20 +110,178 @@ let voiceTtsQueue=[];
 let voiceTtsPlaying=false;
 let voiceTtsTurn=0;
 let voiceStreamTtsBuffer='';
-let voiceStreamTtsCount=0;
+let voiceStreamTtsCount=0;   // parties déjà envoyées à la voix pendant le flux de cette réponse (0 ou 1)
+let voiceStreamTtsFed=false; // le flux de cette réponse a fourni du texte
+let voiceStreamTtsMuted=false; // voix coupée pendant cette réponse (Arrêter, micro, coupure) : la suite ne se lit pas
+let voiceStreamTtsTimer=0;   // délai avant de lancer la 1re partie d'une réponse qui semble courte
+let voiceTtsIssue=null;      // lecture échouée pendant cette réponse : dite dans la barre quand la file est vide
+let voiceTtsPauseUntil=0;    // après un 429 de /tts : plus d'appel avant cette date
+let voiceTtsLog=[];          // dates des appels /tts de cette page (budget de l'heure)
+const voiceTtsCalls=new Set(); // appels /tts en vol (annulés par « Arrêter »)
+
+// ── La voix démarre avant la fin de la réponse ─────────────────────────────
+// En conversation vocale la réponse arrive en flux. Dès que sa première partie est complète, elle part
+// vers /tts ; la suite est lue d'UN seul appel quand le flux est fini. Un appel par phrase épuiserait la
+// limite de /tts (15 par minute, 45 par heure et par visiteur : TTS_RATE_LIMIT et TTS_HOURLY_LIMIT, app.py).
+// Deux appels par réponse au plus, et une réponse courte reste à un seul appel.
+const VOICE_FIRST_MIN=60;           // 1re partie : au moins 60 caractères lus (≈ 4 s de parole), sinon la phrase suivante s'y ajoute
+const VOICE_SHORT_REPLY=240;        // texte reçu en dessous : la réponse semble courte (voir VOICE_FIRST_WAIT_MS)
+const VOICE_FIRST_WAIT_MS=700;      // réponse qui semble courte : délai avant de lancer la 1re partie, au cas où le flux finit tout de suite (un seul appel)
+const VOICE_CHUNK_MAX=1400;         // /tts coupe à 1800 caractères : une très longue suite est découpée par phrases
+const VOICE_TTS_HOURLY_LIMIT=45;    // = TTS_HOURLY_LIMIT d'app.py (un test vérifie qu'elles restent égales)
+const VOICE_TTS_RESERVE=15;         // appels de l'heure gardés pour des réponses d'un seul appel : on ne découpe plus au-delà
+// Après ces abréviations un point ne finit pas la phrase (« Dr. Diop », « St. Louis », « etc. »).
+const VOICE_ABBREVIATIONS=new Set(['m','mm','mme','mmes','mlle','mlles','mr','mrs','ms','dr','drs','pr','prof','st','ste','sts','stes','sgt','cdt','cne','col','gal','gén','lt','cie','sté','ets','éts','av','bd','bp','cp','tel','tél','fig','env','etc','cf','ex','vs','jr','sr','inc','ltd','co','vol','éd','réf','approx','qqch','qqn','apr']);
+// Mentions ajoutées par le serveur à une réponse tronquée (CUT_NOTICES, services/truncation.py) :
+// écrites à l'écran, jamais lues à voix haute.
+const VOICE_CUT_NOTICES=['Réponse coupée : écris « continue » pour avoir la suite.','Answer cut short: type “continue” to get the rest.'];
+
+function speechText(text){
+  let out=String(text||'');
+  VOICE_CUT_NOTICES.forEach(notice=>{out=out.split(notice).join(' ');});
+  return out;
+}
+function voiceSpokenLength(text){
+  return cleanReply(speechText(text)).replace(/\s+/g,' ').trim().length;
+}
+// Fins de phrase sûres d'un texte, en positions (juste après le signe). Un point n'en est pas une dans
+// « 3.5 », une adresse, « Dr. », « M. », une initiale, « etc. », un numéro de liste ni des points de
+// suspension ; une minuscule après le signe veut dire que la phrase continue. Un faux « pas de coupure »
+// ne coûte qu'une première partie plus longue ; une fausse coupure casse la phrase : on préfère la première.
+// Sans caractère visible après le signe la fin n'est pas sûre (« 27. » peut devenir « 27.5 ») : `final`
+// l'accepte pour le texte complet.
+function voiceSentenceEnds(text,final){
+  const ends=[];
+  const re=/[.!?…]+(?:[)\]»”"’']|\s[)\]»”])*|\n/g;  // le signe, puis ce qui le ferme (« Bonjour. »)
+  let m;
+  while((m=re.exec(text))){
+    const end=m.index+m[0].length;
+    const next=/^\s*(\S)/.exec(text.slice(end));
+    if(!next&&!final)break;
+    if(m[0]==='\n'){ends.push(end);continue;}
+    const gap=text.charAt(end);
+    if(gap&&!/\s/.test(gap))continue;
+    const sign=/^[.!?…]+/.exec(m[0])[0];
+    if(sign!=='.'&&/^[.…]+$/.test(sign))continue;
+    if(next&&/\p{Ll}/u.test(next[1]))continue;
+    if(sign==='.'){
+      const before=text.slice(0,m.index);
+      const word=(/([\p{L}\p{N}]+)$/u.exec(before)||['',''])[1].toLowerCase();
+      if(/^\p{L}$/u.test(word)||VOICE_ABBREVIATIONS.has(word))continue;
+      if(/^\d+$/.test(word)&&/(^|\n)\s*\d+$/.test(before))continue;
+    }
+    ends.push(end);
+  }
+  return ends;
+}
+// Fin de la première partie à lire pendant le flux : la première fin de phrase sûre qui donne au moins
+// VOICE_FIRST_MIN caractères lus (une phrase plus courte est lue avec la suivante). 0 s'il n'y en a pas encore.
+function voiceFirstPartEnd(text){
+  for(const end of voiceSentenceEnds(text)){
+    if(voiceSpokenLength(text.slice(0,end))>=VOICE_FIRST_MIN)return end;
+  }
+  return 0;
+}
+// La suite, en morceaux d'au plus VOICE_CHUNK_MAX caractères, coupés entre deux phrases.
+function voiceSpeechChunks(text){
+  text=String(text||'');
+  const chunks=[];
+  let start=0,last=0;
+  for(const end of voiceSentenceEnds(text,true)){
+    if(end-start>VOICE_CHUNK_MAX&&last>start){chunks.push(text.slice(start,last));start=last;}
+    last=end;
+  }
+  chunks.push(text.slice(start));
+  return chunks.filter(chunk=>chunk.trim());
+}
+// Budget de /tts : cette page compte ses appels de l'heure (la limite du serveur est par visiteur).
+// On ne découpe une réponse en deux appels que s'il en reste assez ; sinon elle se lit d'un seul appel.
+function voiceTtsUsed(){
+  const since=Date.now()-3600000;
+  voiceTtsLog=voiceTtsLog.filter(time=>time>since);
+  return voiceTtsLog.length;
+}
+function voiceSplitAllowed(){
+  return Date.now()>=voiceTtsPauseUntil&&voiceTtsUsed()+2<=VOICE_TTS_HOURLY_LIMIT-VOICE_TTS_RESERVE;
+}
+function resetVoiceStreamTts(){
+  clearTimeout(voiceStreamTtsTimer);
+  voiceStreamTtsTimer=0;
+  voiceStreamTtsBuffer='';
+  voiceStreamTtsCount=0;
+  voiceStreamTtsFed=false;
+  voiceStreamTtsMuted=false;
+}
 
 function clearVoiceTtsQueue(){
   voiceTtsTurn++;
   voiceTtsRun++;
   voiceTtsQueue=[];
-  voiceStreamTtsBuffer='';
-  voiceStreamTtsCount=0;
+  resetVoiceStreamTts();
+  voiceStreamTtsMuted=true;
+  voiceTtsIssue=null;
+  // Les appels en vol sont coupés : pas de voix qui arrive après « Arrêter ».
+  voiceTtsCalls.forEach(ctrl=>{try{ctrl.abort();}catch(_){}});
+  voiceTtsCalls.clear();
 }
 function queueVoiceSpeech(text){
-  text=cleanReply(text||'').replace(/\s+/g,' ').trim();
+  text=cleanReply(speechText(text)).replace(/\s+/g,' ').trim();
   if(!text||text.length<4||!autoVoice)return;
-  voiceTtsQueue.push({text,turn:voiceTtsTurn});
+  voiceTtsQueue.push({text,turn:voiceTtsTurn,blob:null});
   playVoiceTtsQueue();
+  prefetchVoiceTts();
+}
+// Le morceau suivant est demandé à /tts pendant que le précédent se lit : pas de blanc entre les deux.
+function prefetchVoiceTts(){
+  const next=voiceTtsQueue[0];
+  if(!voiceTtsPlaying||!next||next.blob)return;
+  next.blob=fetchVoiceBlob(next);
+  next.blob.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+}
+async function fetchVoiceBlob(item){
+  const cacheKey=lang+'|'+item.text;
+  const cached=ttsCache.get(cacheKey);
+  if(cached)return cached;
+  const pause=voiceTtsPauseUntil-Date.now();
+  if(pause>0){
+    const error=new Error('tts-pause');
+    error.status=429;
+    error.retryAfter=String(Math.ceil(pause/1000));
+    throw error;
+  }
+  if(!cookie('teranga_csrf'))await refreshCsrf();
+  if(item.turn!==voiceTtsTurn)throw new Error('voice-cancelled');
+  const ctrl=new AbortController();
+  voiceTtsCalls.add(ctrl);
+  const kill=setTimeout(()=>ctrl.abort(),45000);
+  voiceTtsLog.push(Date.now());
+  try{
+    const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}),null,ctrl.signal);
+    if(!res.ok){
+      const error=new Error('tts');
+      error.status=res.status;
+      error.retryAfter=res.headers.get('Retry-After')||'';
+      // Limite atteinte : on cesse de demander la voix le temps indiqué (sans quoi chaque essai compte contre le visiteur).
+      if(res.status===429)voiceTtsPauseUntil=Date.now()+Math.min(300,Math.max(1,Number.parseInt(error.retryAfter,10)||8))*1000;
+      throw error;
+    }
+    const blob=await res.blob();
+    if(!blob.size)throw new Error('tts-empty');
+    while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
+    ttsCache.set(cacheKey,blob);
+    return blob;
+  }finally{
+    clearTimeout(kill);
+    voiceTtsCalls.delete(ctrl);
+  }
+}
+// Ce qui n'a pas pu être lu est dit dans la barre, une fois la file vide : jamais de silence sans explication.
+function reportVoiceTtsIssue(){
+  const issue=voiceTtsIssue;
+  voiceTtsIssue=null;
+  if(!issue||!voiceConversation)return;
+  const wait=issue.status===429?Math.min(300,Math.max(1,Number.parseInt(issue.retry||'0',10)||8)):0;
+  voiceNote(wait?vt('tooMany',wait):vt('ttsFailed'),{ms:wait?wait*1000:5000});
 }
 async function playVoiceTtsQueue(){
   if(voiceTtsPlaying||!voiceTtsQueue.length||!autoVoice)return;
@@ -131,83 +289,87 @@ async function playVoiceTtsQueue(){
   if(!item||item.turn!==voiceTtsTurn)return playVoiceTtsQueue();
   voiceTtsPlaying=true;
   const run=++voiceTtsRun;
-  const cacheKey=lang+'|'+item.text;
   try{
-    if(!cookie('teranga_csrf'))await refreshCsrf();
-    let blob=ttsCache.get(cacheKey);
-    if(!blob){
-      const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
-      if(!res.ok){
-        const error=new Error('tts');
-        error.status=res.status;
-        error.retryAfter=res.headers.get('Retry-After')||'';
-        throw error;
-      }
-      blob=await res.blob();
-      if(item.turn!==voiceTtsTurn||!autoVoice)return;
-      if(!blob.size)throw new Error('tts-empty');
-      while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
-      ttsCache.set(cacheKey,blob);
-    }
-    if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
+    if(!item.blob){item.blob=fetchVoiceBlob(item);item.blob.catch(()=>{});}
+    const blob=await item.blob;
+    if(item.turn!==voiceTtsTurn||!autoVoice)return;
+    prefetchVoiceTts();
     const url=URL.createObjectURL(blob);
-    audio=createVoiceAudio(url);
-    voiceSpeaking=true;
-    document.body.classList.add('assistant-speaking');
+    const player=createVoiceAudio(url);
+    audio=player;
+    // « Je parle » seulement quand le son démarre vraiment (pas si le navigateur refuse la lecture).
+    let started=false;
+    player.onplaying=()=>{
+      if(started||audio!==player)return;
+      started=true;
+      voiceSpeaking=true;
+      document.body.classList.add('assistant-speaking');
+      if(voiceConversation)startVoiceMonitor();
+    };
     await new Promise(resolve=>{
       const done=()=>{
         if(audio&&audio.src===url)audio=null;
         URL.revokeObjectURL(url);
         resolve();
       };
-      audio.onended=done;
-      audio.onerror=done;
-      audio.play().catch(done);
-      if(voiceConversation)startVoiceMonitor();
+      player.onended=done;
+      player.onerror=done;
+      player.play().catch(done);
     });
-  }catch(_){
-    if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text);
+    // Le son n'a jamais démarré (lecture refusée par le navigateur, fichier illisible) : à dire, pas à taire.
+    if(!started&&item.turn===voiceTtsTurn&&voiceConversation&&!voiceTtsIssue)voiceTtsIssue={status:0,retry:''};
+  }catch(err){
+    if(item.turn===voiceTtsTurn){
+      if(!voiceConversation)speakFallback(item.text);
+      else if(!voiceTtsIssue||(err&&err.status===429))voiceTtsIssue={status:(err&&err.status)||0,retry:(err&&err.retryAfter)||''};
+    }
   }finally{
     if(run===voiceTtsRun){
       voiceSpeaking=false;
       document.body.classList.remove('assistant-speaking');
       voiceTtsPlaying=false;
       if(voiceTtsQueue.length&&autoVoice)playVoiceTtsQueue();
-      else if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+      else{
+        reportVoiceTtsIssue();
+        if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+      }
     }
   }
 }
 function feedVoiceStreamTts(delta){
-  if(!autoVoice||!voiceConversation||!delta)return;
+  if(!autoVoice||!voiceConversation||!delta||voiceStreamTtsMuted)return;
+  voiceStreamTtsFed=true;
   voiceStreamTtsBuffer+=delta;
-  if(voiceStreamTtsCount>=3)return;
-  // Une fin de phrase doit être suivie d'un espace : « 27. » en fin de morceau
-  // peut encore devenir « 27.5 » avec le morceau suivant.
-  const re=/([.!?…]+)(?=\s)/g;
-  let match,last=0;
-  while(voiceStreamTtsCount<3&&(match=re.exec(voiceStreamTtsBuffer))){
-    const end=match.index+match[0].length;
-    const sentence=voiceStreamTtsBuffer.slice(last,end).trim();
-    last=end;
-    if(sentence.length>=4){
-      queueVoiceSpeech(sentence);
-      voiceStreamTtsCount++;
-    }
-  }
-  if(last)voiceStreamTtsBuffer=voiceStreamTtsBuffer.slice(last).trimStart();
+  launchVoiceFirstPart(false);
 }
-function flushVoiceStreamTts(reply){
-  if(!autoVoice||!voiceConversation)return;
-  const rest=voiceStreamTtsBuffer.trim();
-  voiceStreamTtsBuffer='';
-  // La synthèse vocale est limitée (~1800 caractères) : la fin d'une longue
-  // réponse est découpée en morceaux de phrases au lieu d'être coupée.
-  let chunk='';
-  for(const sentence of rest.match(/[^.!?…]+(?:[.!?…]+|$)/g)||[]){
-    if(chunk&&(chunk+sentence).length>1400){queueVoiceSpeech(chunk);chunk='';}
-    chunk+=sentence;
+// Envoie la première partie à la voix dès qu'elle est complète. Si la réponse semble courte (peu de texte reçu),
+// on attend un instant : si le flux se termine tout de suite, un seul appel lira tout.
+function launchVoiceFirstPart(late){
+  if(voiceStreamTtsCount||voiceStreamTtsMuted||!voiceConversation||!voiceSplitAllowed())return;
+  const text=voiceStreamTtsBuffer;
+  const end=voiceFirstPartEnd(text);
+  if(!end)return;
+  if(!late&&voiceSpokenLength(text)<VOICE_SHORT_REPLY){
+    if(!voiceStreamTtsTimer)voiceStreamTtsTimer=setTimeout(()=>{voiceStreamTtsTimer=0;launchVoiceFirstPart(true);},VOICE_FIRST_WAIT_MS);
+    return;
   }
-  if(chunk.trim())queueVoiceSpeech(chunk);
+  clearTimeout(voiceStreamTtsTimer);
+  voiceStreamTtsTimer=0;
+  voiceStreamTtsBuffer=text.slice(end).trimStart();
+  voiceStreamTtsCount=1;
+  queueVoiceSpeech(text.slice(0,end));
+}
+// Fin du flux : la suite part d'un seul appel (en plusieurs seulement si elle dépasse VOICE_CHUNK_MAX).
+// Renvoie vrai si la conversation vocale s'est occupée de la voix (sinon l'appelant lit la réponse entière).
+function flushVoiceStreamTts(reply){
+  const fed=voiceStreamTtsFed;
+  const muted=voiceStreamTtsMuted;
+  const rest=fed?voiceStreamTtsBuffer:String(reply||'');
+  resetVoiceStreamTts();
+  voiceStreamTtsMuted=muted;
+  if(!autoVoice||!voiceConversation)return false;
+  if(!muted)voiceSpeechChunks(rest).forEach(queueVoiceSpeech);
+  return true;
 }
 
 function clearVoiceSilence(){
@@ -260,6 +422,8 @@ function resetListenButton(b){
   if(speakingBtn===b)speakingBtn=null;
 }
 async function speak(text,btn){
+  // La mention « Réponse coupée… » reste à l'écran : elle n'est jamais lue.
+  text=speechText(text).trim();
   if(!text)return;
   if(speakingBtn&&speakingBtn!==btn)resetListenButton(speakingBtn);
   stopSpeakingForListening();
@@ -272,6 +436,7 @@ async function speak(text,btn){
     let blob=ttsCache.get(cacheKey);
     if(!blob){
       if(!cookie('teranga_csrf'))await refreshCsrf();
+      voiceTtsLog.push(Date.now());  // compte dans le budget de /tts de l'heure
       const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
       if(stale())return;
       if(!res.ok)throw new Error('tts');
