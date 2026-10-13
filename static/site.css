@@ -37,6 +37,9 @@ img{max-width:100%}
 
 /* En-tête commun */
 .site-header{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:14px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
+/* Lien « Aller au contenu » : caché jusqu'à ce que le clavier l'atteigne. */
+.skip-link{position:absolute;left:12px;top:-120px;z-index:100;min-height:44px;display:inline-flex;align-items:center;padding:10px 16px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none}
+.skip-link:focus{top:8px}
 .site-brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;min-width:0}
 .site-mark{flex:0 0 36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--sen-green)}
 .site-mark svg{width:32px;height:32px}

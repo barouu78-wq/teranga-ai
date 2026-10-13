@@ -79,6 +79,8 @@ _NAV = {
     "en": (("/explorer", "Explore"), ("/lieux", "Places"), ("/trip-planner?lang=en", "Plan a trip"), ("/en/senegal-travel-guide", "Guide")),
 }
 _CTA = {"fr": "Poser une question", "en": "Ask Teranga AI"}
+# Lien « Aller au contenu » (règles d'interface de Vercel) : il saute l'en-tête et la navigation.
+_SKIP = {"fr": "Aller au contenu", "en": "Skip to content"}
 _FOOTER = {
     "fr": (("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/calendrier-fetes-senegal", "Fêtes"), ("/urgences", "Urgences"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
     "en": (("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/calendrier-fetes-senegal", "Festivals"), ("/urgences", "Emergency"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
@@ -117,10 +119,12 @@ def site_header(current: str = "", lang: str = "fr") -> str:
         for href, label in _NAV[ui]
     )
     return (
+        f'<a class="skip-link" href="#contenu">{escape(_SKIP[ui])}</a>'
         '<header class="site-header">'
-        f'<a class="site-brand" href="/"><span class="site-mark">{_MARK}</span><strong>Teranga <em>AI</em></strong></a>'
+        f'<a class="site-brand" href="/"><span class="site-mark">{_MARK}</span><strong translate="no">Teranga <em>AI</em></strong></a>'
         f'<div class="site-nav">{links}<a class="site-cta" href="/">{escape(_CTA[ui])}</a></div>'
         "</header>"
+        '<span id="contenu" tabindex="-1"></span>'
     )
 
 
