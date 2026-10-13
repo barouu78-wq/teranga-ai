@@ -23,7 +23,7 @@ fr:{
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
-  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
@@ -46,7 +46,7 @@ en:{
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
   timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
-  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
@@ -712,6 +712,7 @@ function setLang(next){
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
+  if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
   if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
   if($('planCtaTitle')){$('planCtaTitle').textContent=t.planTitle||t.journeyTravel;$('planCtaHint').textContent=t.planHint||t.journeyTravelHint;}
