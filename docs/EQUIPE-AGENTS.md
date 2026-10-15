@@ -23,8 +23,8 @@ de faire.
 | Pôle qualité | `relecteur-pr` | relecture indépendante avant fusion |
 | Pôle qualité | `securite` | revue de sécurité |
 | Pôle visibilité | `seo-visibilite` | moteurs de recherche |
-| Pôle visibilité | `communication` | brouillons de publications (Instagram), jamais publiés par l'agent |
-| Pôle commercial | `partenariats` | prospects, argumentaires, partenaire pilote, suivi par `/go/` ; n'envoie jamais rien |
+| Pôle visibilité | `communication` | marketing : astuces WhatsApp, scripts TikTok et Reels, Instagram, groupes de la diaspora, calendrier ; jamais publiés par l'agent |
+| Pôle commercial | `partenariats` | trouve de nouveaux partenaires sur des sources publiques vérifiées, prospects, argumentaires, relances, partenaire pilote, suivi par `/go/` ; n'envoie jamais rien |
 
 Ce que les agents ne font jamais, quel que soit leur pôle : envoyer un message, publier, acheter, signer, créer un
 compte, changer le DNS, un secret ou un réglage de production. Ils le préparent ; le propriétaire le fait.
@@ -52,8 +52,8 @@ compte, changer le DNS, un secret ou un réglage de production. Ils le préparen
 | `analyste` | conseil de la semaine ; avant une décision de priorité ou de prix | Render en lecture, shell, aucune écriture de fichier | tableau des indicateurs, mesuré et estimé séparés |
 | `chef-produit` | avant de construire une fonction ; hésitation entre deux idées | dépôt (documents seulement), pas de shell | fiche dans `docs/produit/` en PR brouillon |
 | `developpeur` | une correction ou petite fonction du plan hors voix, SEO, repères et contexte de l'IA | dépôt | PR brouillon, test vu rouge puis vert |
-| `partenariats` | démarcher un établissement, préparer un rendez-vous, suivre le pilote | dépôt | prospects, brouillons de messages, fiche pilote, PR brouillon |
-| `communication` | publications de la semaine, annonce d'une nouveauté | dépôt (documents seulement), pas de shell | `docs/communication/<semaine>.md` en PR brouillon |
+| `partenariats` | chaque jeudi ; démarcher un établissement, préparer un rendez-vous, suivre le pilote | dépôt, web (sources publiques) | 5 prospects vérifiés, brouillons de messages, relances, fiche pilote, PR brouillon |
+| `communication` | chaque lundi ; annonce d'une nouveauté | dépôt (documents seulement) et web, pas de shell | `docs/communication/<semaine>.md` (WhatsApp, vidéos, Instagram, diaspora) en PR brouillon |
 | `gardien-prod` | après chaque fusion sur `main`, ou « comment va le site » | Render en lecture seule, aucun shell | rapport OK / À SURVEILLER / ALERTE avec les lignes et heures |
 | `relecteur-pr` | avant de fusionner une PR qui change le code, le contexte de l'IA ou l'écran | lecture du dépôt, shell, aucune écriture de fichier | verdict et défauts classés avec scénario |
 | `securite` | PR touchant `app.py`, `routes/`, la CSP, la recherche externe ou un workflow ; chaque mois | lecture du dépôt, shell, aucune écriture de fichier | constats avec scénario d'attaque réaliste |
@@ -119,3 +119,16 @@ PR, ce qui n'est pas vérifié, et les décisions demandées au propriétaire.
   de bord (issue #417).
 - **Le pont GitHub** (`docs/claude-github-bridge.md`) lance des tâches courtes de Claude depuis un commentaire ; il est
   facturé à l'usage.
+
+## Tâches planifiées
+
+Le rythme tourne tout seul grâce à des tâches planifiées Claude (heure de Paris). Chacune ouvre une session neuve sur
+ce dépôt, lance les agents indiqués et rend son rapport au propriétaire. Aucune ne fusionne, ne publie ni n'envoie.
+
+| Quand | Tâche | Agents |
+|---|---|---|
+| lundi matin | Marketing de la semaine | `communication` |
+| lundi matin | Conseil de la semaine (`conseil-hebdo`) | `gardien-prod`, `analyste`, `seo-visibilite` |
+| mercredi matin | Qualité de l'IA | `qualite-ia`, puis `relecteur-pr` |
+| jeudi matin | Commercial et partenaires | `partenariats` |
+| le 1er du mois | Sécurité et repères | `securite`, `verificateur-reperes` |

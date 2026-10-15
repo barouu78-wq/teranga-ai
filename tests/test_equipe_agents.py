@@ -199,3 +199,18 @@ def test_l_en_tete_reste_du_yaml_valide(nom):
     """
     champs, _, _ = _agent(nom)
     assert ": " not in champs["description"]
+
+
+def test_partenariats_trouve_des_partenaires_sur_des_sources_publiques_seulement():
+    champs, corps, _ = _agent("partenariats")
+    assert {"WebFetch", "WebSearch"} <= set(_outils(champs)), "trouver un partenaire demande d'ouvrir sa page"
+    minuscules = corps.lower()
+    assert "sources interdites" in minuscules and "airbnb" in minuscules
+    assert "deviner un" in minuscules
+
+
+def test_communication_couvre_le_marketing_sans_shell():
+    champs, corps, _ = _agent("communication")
+    assert "Bash" not in _outils(champs)
+    for canal in ("WhatsApp", "TikTok", "Instagram", "diaspora"):
+        assert canal in corps, canal
