@@ -1,6 +1,6 @@
 # Équipe d'agents de Teranga AI
 
-Neuf agents spécialisés sont décrits dans `.claude/agents/`. Toute session Claude Code ouverte sur ce dépôt (locale ou
+Onze agents spécialisés : neuf techniques et deux commerciaux, sont décrits dans `.claude/agents/`. Toute session Claude Code ouverte sur ce dépôt (locale ou
 dans le cloud) les connaît et peut les lancer. Ce document dit qui fait quoi, dans quel ordre, et ce que chacun n'a
 pas le droit de faire.
 
@@ -13,14 +13,14 @@ pas le droit de faire.
   contrôles verts) et surveille la production après chaque fusion.
 - **Les agents font un sujet chacun.** Ils ouvrent une PR **brouillon** en français et ne fusionnent jamais. Ils ne se
   parlent pas entre eux : ils rendent un rapport au chef de projet.
-- **Isolation.** Les quatre agents qui écrivent des fichiers (`qualite-ia`, `verificateur-reperes`, `voix`,
-  `seo-visibilite`) déclarent `isolation: worktree` dans leur en-tête : chacun travaille dans sa propre copie du dépôt,
+- **Isolation.** Les six agents qui écrivent des fichiers (`qualite-ia`, `verificateur-reperes`, `voix`,
+  `seo-visibilite`, `contenu-reseaux`, `prospection`) déclarent `isolation: worktree` dans leur en-tête : chacun travaille dans sa propre copie du dépôt,
   sans partager fichiers ni index Git avec un autre agent. Sans isolation, deux agents lancés ensemble se mêlent et une PR
   peut contenir le sujet de l'autre. Si un lancement n'applique pas ce réglage (un défaut a été signalé pour des agents
   fournis par un plugin), passer `isolation: "worktree"` dans l'appel à l'outil Agent. Les agents en lecture seule n'en
   ont pas besoin.
 
-## Les neuf agents
+## Les onze agents
 
 | Agent | À utiliser quand | Accès | Livrable |
 |---|---|---|---|
@@ -33,6 +33,8 @@ pas le droit de faire.
 | `seo-visibilite` | après toute modification de page ; le lundi | dépôt | PR brouillon, résultat de l'audit |
 | `ops-infra` | savoir ce qui tourne sur Coolify, puis OVH | jetons en lecture seule de l'environnement, requêtes `GET` | état lu, avec ce qui n'a pas pu l'être |
 | `mesure-latence` | une fois l'instrumentation en ligne, avant toute décision de vitesse | journaux Render en lecture, shell | médianes et p95 par étape, propositions chiffrées |
+| `contenu-reseaux` | le lundi ; idées de publications | dépôt, web ; ne publie jamais | PR brouillon : 7 astuces WhatsApp, 3 scripts vidéo, 1 publication diaspora, sources |
+| `prospection` | le jeudi ; besoin de prospects | dépôt, web (sources publiques) ; n'envoie jamais | PR brouillon : 5 prospects vérifiés, messages personnalisés, relances |
 
 « Lecture seule » veut dire : aucun outil d'écriture de fichiers dans la liste de l'agent. Le shell reste disponible pour
 lire et lancer des contrôles ; la consigne de l'agent interdit le reste. Un test (`tests/test_equipe_agents.py`) vérifie
@@ -49,12 +51,15 @@ Deux agents ne modifient pas le même fichier en même temps : les fusions devie
 | `services/senegal_knowledge.py`, `services/practical_facts.py`, `services/web_policy.py`, `services/guide_modes.py` | `qualite-ia` |
 | `services/facts/*.py` | `verificateur-reperes` |
 | pages, modèles, `scripts/audit_seo.py` | `seo-visibilite` |
+| `docs/contenu/` | `contenu-reseaux` |
+| `docs/prospects-*.csv`, `docs/messages-prospects-prets.md` | `prospection` |
 
 ## Rythme conseillé
 
 1. **Avant une fusion** : `relecteur-pr` ; en plus `securite` si la PR touche l'un des sujets de sécurité.
 2. **Après une fusion** : `gardien-prod`, dans les minutes qui suivent le déploiement.
-3. **Chaque lundi** : `seo-visibilite`. **Chaque mois** : `securite` et `verificateur-reperes`.
+3. **Chaque lundi** : `seo-visibilite` et `contenu-reseaux`. **Chaque mercredi** : `qualite-ia`. **Chaque jeudi** :
+   `prospection`. **Chaque mois** : `securite` et `verificateur-reperes`.
 4. **Avant une décision de vitesse** : `mesure-latence`, jamais sur une estimation.
 
 ## Règles communes
@@ -80,3 +85,19 @@ PR, ce qui n'est pas vérifié, et les décisions demandées au propriétaire.
   de bord (issue #417).
 - **Le pont GitHub** (`docs/claude-github-bridge.md`) lance des tâches courtes de Claude depuis un commentaire ; il est
   facturé à l'usage.
+
+## Tâches planifiées
+
+Le rythme ci-dessus tourne tout seul grâce à des tâches planifiées Claude (heure de Paris). Chacune ouvre une session
+neuve sur ce dépôt, lance les agents indiqués, puis rend son rapport au propriétaire. Aucune ne fusionne, ne publie
+ni n'envoie de message.
+
+| Quand | Tâche | Agents |
+|---|---|---|
+| lundi matin | Contenu de la semaine | `contenu-reseaux` |
+| lundi matin | Santé et SEO | `gardien-prod`, `seo-visibilite` |
+| mercredi matin | Qualité de l'IA | `qualite-ia` |
+| jeudi matin | Prospection | `prospection` |
+| le 1er du mois | Sécurité et repères | `securite`, `verificateur-reperes` |
+
+Les autres agents (`relecteur-pr`, `voix`, `ops-infra`, `mesure-latence`) se lancent à la demande.

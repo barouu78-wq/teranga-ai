@@ -16,11 +16,13 @@ DOC = (ROOT / "docs" / "EQUIPE-AGENTS.md").read_text(encoding="utf-8")
 
 EXPECTED = {
     "gardien-prod", "relecteur-pr", "securite", "qualite-ia", "verificateur-reperes",
-    "voix", "seo-visibilite", "ops-infra", "mesure-latence",
+    "voix", "seo-visibilite", "ops-infra", "mesure-latence", "contenu-reseaux", "prospection",
 }
 READ_ONLY = {"gardien-prod", "relecteur-pr", "securite", "ops-infra", "mesure-latence"}
 WRITE_TOOLS = {"Edit", "Write", "NotebookEdit"}
-WRITERS = {"qualite-ia", "verificateur-reperes", "voix", "seo-visibilite"}
+WRITERS = {
+    "qualite-ia", "verificateur-reperes", "voix", "seo-visibilite", "contenu-reseaux", "prospection",
+}
 BASE_TOOLS = {"Read", "Grep", "Glob", "Bash", "Edit", "Write", "WebFetch", "WebSearch"}
 RENDER_READ = re.compile(r"^mcp__Render__(list|get)_[a-z_]+$")
 SECRET_PATTERNS = [
@@ -44,7 +46,7 @@ def _outils(champs):
     return [t.strip() for t in champs.get("tools", "").split(",") if t.strip()]
 
 
-def test_les_neuf_agents_sont_presents_et_pas_d_autres():
+def test_les_onze_agents_sont_presents_et_pas_d_autres():
     assert {p.stem for p in AGENTS.glob("*.md")} == EXPECTED
 
 
@@ -130,3 +132,11 @@ def test_gardien_prod_lit_la_limite_de_memoire_et_ne_la_suppose_pas():
 def test_gardien_prod_ne_traite_pas_le_nombre_de_processus_comme_une_invariante():
     _, corps, _ = _agent("gardien-prod")
     assert "GUNICORN_WORKERS" in corps and "par défaut" in corps
+
+
+@pytest.mark.parametrize("nom", ["contenu-reseaux", "prospection"])
+def test_les_agents_commerciaux_ne_publient_ni_n_envoient_rien(nom):
+    _, corps, _ = _agent(nom)
+    minuscules = corps.lower()
+    assert "ne publies rien" in minuscules or "n'envoies aucun message" in minuscules
+    assert "aucun fait inventé" in minuscules or "pas de faux chiffres" in minuscules
