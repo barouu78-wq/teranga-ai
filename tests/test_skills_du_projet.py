@@ -34,6 +34,9 @@ def test_chaque_skill_a_un_en_tete_chargeable(nom):
     assert champs.get("name") == nom  # le nom doit être celui du dossier
     assert re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", nom) and len(nom) <= 64
     assert 20 <= len(champs.get("description", "")) <= 1024
+    # Un « : » suivi d'une espace rend l'en-tête illisible pour un lecteur YAML strict (cas d'ajouter-un-lieu,
+    # corrigé le 15 octobre 2026) ; Claude Code le tolère aujourd'hui, d'autres outils non.
+    assert ": " not in champs["description"]
 
 
 @pytest.mark.parametrize("nom", NOMS)

@@ -61,6 +61,7 @@ un contrôle qui n'a pas tourné.
 | `audit-seo` | après toute modification de page (`python scripts/audit_seo.py`) |
 | `publier-android` | Google Play : test interne, test fermé, lien `assetlinks.json` |
 | `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
+| `conseil-hebdo` | chaque lundi, ou « où en est le projet » : réunion de l'entreprise d'agents (`docs/EQUIPE-AGENTS.md`) |
 | `deboguer-methodiquement` | test rouge, bug, alerte : trouver la cause avant de corriger |
 | `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |
 | `verifier-avant-d-annoncer` | avant de dire « fini », « vert » ou « en ligne » : la preuve fraîche |

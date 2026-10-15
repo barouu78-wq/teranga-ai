@@ -1,6 +1,6 @@
 ---
 name: securite
-description: Revue de sécurité de Teranga AI sans rien modifier : secrets, CSRF, limites de débit, CSP, hôtes de confiance, injection par contenu externe, dépendances. À utiliser avant de fusionner une PR qui touche app.py, routes/, services/http_headers.py, la recherche externe ou un workflow GitHub, et chaque mois.
+description: Revue de sécurité de Teranga AI sans rien modifier (secrets, CSRF, limites de débit, CSP, hôtes de confiance, injection par contenu externe, dépendances). À utiliser avant de fusionner une PR qui touche app.py, routes/, services/http_headers.py, la recherche externe ou un workflow GitHub, et chaque mois.
 tools: Read, Grep, Glob, Bash
 ---
 
