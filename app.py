@@ -449,10 +449,12 @@ from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
 from services.observability import build_request_log
 from services.analytics import analytics_config, inject_analytics
+from services.posthog_consent import posthog_config, inject_posthog
 from services.compression import gzip_response
 
 # Mesure d'audience optionnelle (Plausible, Umami…) : désactivée sans ANALYTICS_SCRIPT_URL.
 ANALYTICS = analytics_config(os.getenv("ANALYTICS_SCRIPT_URL"), os.getenv("ANALYTICS_SITE_ID"))
+POSTHOG = posthog_config(os.getenv("POSTHOG_PROJECT_KEY"), os.getenv("POSTHOG_API_HOST"), os.getenv("POSTHOG_ASSET_HOST"))
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -631,13 +633,14 @@ def compress_response(response):
 @app.after_request
 def add_security_headers(response):
     response = inject_analytics(response, ANALYTICS)
+    response = inject_posthog(response, POSTHOG)
     return _add_security_headers(
         response,
         path=request.path,
         nonce=getattr(request, "_csp_nonce", ""),
         is_secure=request.is_secure,
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
-        extra_script_origins=(ANALYTICS["origin"],) if ANALYTICS else (),
+        extra_script_origins=tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else []))),
         versioned=_is_current_asset(request.path, request.args.get("v", "")),
     )
 
