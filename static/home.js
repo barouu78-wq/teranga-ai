@@ -568,6 +568,7 @@ function renderInlineProject(container,p){
   (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
   container.replaceChildren(h,meta,next,list);
   renderProjectProgress(container,p);
+  renderProjectActionChecklist(container,p);
   const links=document.createElement('div');links.className='place-links';
   const q='?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');
   const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'🔎 Opportunities':'🔎 Opportunités';
@@ -746,6 +747,46 @@ function themeInit(){
   setInterval(()=>{if((document.body.dataset.themeMode||'auto')==='auto')applyTheme();},5*60*1000);
 }
 
+function renderProjectActionChecklist(container,project){
+  const steps=Array.isArray(project.steps)?project.steps:[];
+  if(!steps.length)return;
+  const completed=Array.isArray(project.completed_actions)?project.completed_actions:[];
+  const box=document.createElement('section');box.className='project-progress project-action-checklist';
+  const title=document.createElement('div');title.className='project-progress-title';
+  title.textContent=lang==='en'?'Action checklist':'Mes actions à réaliser';box.appendChild(title);
+  const hint=document.createElement('p');
+  hint.textContent=lang==='en'?'Tick each action when it is done. Your progress is saved on this device.':'Coche chaque action quand elle est terminée. Ton avancement est enregistré sur cet appareil.';
+  box.appendChild(hint);
+  const list=document.createElement('div');list.className='project-action-list';
+  steps.forEach((step,index)=>{
+    const label=document.createElement('label');label.className='project-action-item';
+    const input=document.createElement('input');input.type='checkbox';input.checked=completed.includes(index);
+    input.setAttribute('aria-label',(lang==='en'?'Completed: ':'Action terminée : ')+String(step.title||step.action||('Action '+(index+1))));
+    const copy=document.createElement('span');
+    const name=document.createElement('strong');name.textContent=step.title||((lang==='en'?'Action ':'Action ')+(index+1));copy.appendChild(name);
+    if(step.action){const detail=document.createElement('small');detail.textContent=step.action;copy.appendChild(detail);}
+    label.append(input,copy);
+    input.addEventListener('change',()=>{
+      const updated=new Set(Array.isArray(project.completed_actions)?project.completed_actions:[]);
+      if(input.checked)updated.add(index);else updated.delete(index);
+      project.completed_actions=[...updated].filter(n=>Number.isInteger(n)&&n>=0&&n<steps.length).sort((a,b)=>a-b);
+      saveProjectHistory(project);
+      const count=project.completed_actions.length;
+      status.textContent=lang==='en'?count+' of '+steps.length+' actions completed':count+' action(s) sur '+steps.length+' terminée(s)';
+      progress.style.width=Math.round(count/steps.length*100)+'%';
+    });
+    list.appendChild(label);
+  });
+  box.appendChild(list);
+  const status=document.createElement('p');status.className='project-progress-hint';
+  status.textContent=lang==='en'?completed.length+' of '+steps.length+' actions completed':completed.length+' action(s) sur '+steps.length+' terminée(s)';
+  box.appendChild(status);
+  const track=document.createElement('div');track.setAttribute('role','progressbar');track.setAttribute('aria-label',lang==='en'?'Project action progress':'Avancement des actions du projet');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(steps.length));track.setAttribute('aria-valuenow',String(completed.length));
+  track.style.cssText='height:6px;border-radius:999px;overflow:hidden;background:var(--line);';
+  const progress=document.createElement('div');progress.style.cssText='height:100%;border-radius:999px;background:var(--accent,#16856b);width:'+Math.round(completed.length/steps.length*100)+'%;transition:width .2s ease;';
+  track.appendChild(progress);box.appendChild(track);
+  container.querySelector('.project-action-checklist')?.remove();container.appendChild(box);
+}
 function renderProjectTracking(container,project){
   const tracking=project.tracking||{};
   const box=document.createElement('div');box.className='project-progress';
@@ -941,6 +982,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     $('projectForm').hidden=true;
     $('projectResultActions').hidden=false;
     saveProjectHistory(p);
+    renderProjectActionChecklist(result,p);
   }catch(err){error.textContent=friendlyError(err);}
   finally{button.disabled=false;button.textContent=idleLabel;}
 });
