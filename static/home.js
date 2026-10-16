@@ -511,7 +511,7 @@ function addProjectOffer(col,idea){
       if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
       renderInlineProject(out,data.project);
       btn.remove();more.remove();
-      try{LS.setItem('teranga-project-last',JSON.stringify(data.project));}catch(_){}
+      saveProjectHistory(data.project);
     }catch(err){
       const p=document.createElement('p');p.className='project-error';p.textContent=friendlyError(err);out.replaceChildren(p);
       btn.disabled=false;btn.textContent=idle;
@@ -770,7 +770,7 @@ async function advanceProjectStage(container,project,stage){
     const data=await res.json().catch(()=>({}));
     if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
     Object.assign(project,data.project);
-    try{LS.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    saveProjectHistory(project);
     renderProjectProgress(container,project);
     renderProjectTracking(container,project);
   }catch(_){
@@ -804,7 +804,62 @@ function openProjectModal(){
   const modal=$('projectModal');
   if(!modal)return;
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  renderProjectHistory();
   $('projectIdea')?.focus();
+}
+function readProjectHistory(){
+  try{
+    const raw=LS.getItem('teranga-project-history');
+    const items=raw?JSON.parse(raw):[];
+    return Array.isArray(items)?items.filter(p=>p&&typeof p==='object'&&typeof p.name==='string').slice(0,20):[];
+  }catch(_){return [];}
+}
+function saveProjectHistory(project){
+  if(!project||typeof project!=='object')return;
+  const item={...project,history_id:project.history_id||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),saved_at:new Date().toISOString()};
+  const items=readProjectHistory().filter(p=>p.history_id!==item.history_id);
+  items.unshift(item);
+  try{
+    LS.setItem('teranga-project-history',JSON.stringify(items.slice(0,20)));
+    LS.setItem('teranga-project-last',JSON.stringify(item));
+  }catch(_){}
+  if($('projectModal')?.classList.contains('open'))renderProjectHistory();
+  return item;
+}
+function renderProjectHistory(){
+  const panel=document.querySelector('#projectModal .project-panel');
+  const form=$('projectForm');
+  if(!panel||!form)return;
+  let section=$('projectHistory');
+  if(!section){
+    section=document.createElement('section');section.id='projectHistory';section.className='project-history';
+    const title=document.createElement('h3');title.textContent=lang==='en'?'My saved projects':'Mes projets enregistrés';
+    section.appendChild(title);panel.insertBefore(section,form);
+  }
+  section.replaceChildren();
+  const title=document.createElement('h3');title.textContent=lang==='en'?'My saved projects':'Mes projets enregistrés';section.appendChild(title);
+  const items=readProjectHistory();
+  if(!items.length){
+    const empty=document.createElement('p');empty.textContent=lang==='en'?'Your projects will appear here after you create one.':'Tes projets apparaîtront ici après la première création.';section.appendChild(empty);return;
+  }
+  items.forEach(project=>{
+    const row=document.createElement('div');row.className='project-history-item';
+    const info=document.createElement('div');
+    const name=document.createElement('strong');name.textContent=project.name||'Mon projet';info.appendChild(name);
+    const meta=document.createElement('small');meta.textContent=(project.stage_label||project.stage||'Idée')+(project.city?' · '+project.city:'');info.appendChild(meta);
+    const open=document.createElement('button');open.type='button';open.textContent=lang==='en'?'Resume':'Reprendre';
+    open.addEventListener('click',()=>{
+      form.hidden=true;$('projectResult').hidden=false;$('projectResultActions').hidden=false;
+      renderInlineProject($('projectResult'),project);renderProjectTracking($('projectResult'),project);
+      closeProjectModal();openProjectModal();
+    });
+    const remove=document.createElement('button');remove.type='button';remove.textContent=lang==='en'?'Delete':'Supprimer';remove.setAttribute('aria-label',(lang==='en'?'Delete ':'Supprimer ')+(project.name||'projet'));
+    remove.addEventListener('click',()=>{
+      try{LS.setItem('teranga-project-history',JSON.stringify(readProjectHistory().filter(p=>p.history_id!==project.history_id)));}catch(_){}
+      renderProjectHistory();
+    });
+    row.append(info,open,remove);section.appendChild(row);
+  });
 }
 function closeProjectModal(){
   const modal=$('projectModal');
@@ -883,7 +938,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     result.hidden=false;
     $('projectForm').hidden=true;
     $('projectResultActions').hidden=false;
-    try{LS.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
+    saveProjectHistory(p);
   }catch(err){error.textContent=friendlyError(err);}
   finally{button.disabled=false;button.textContent=idleLabel;}
 });
