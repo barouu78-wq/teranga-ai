@@ -198,6 +198,26 @@ def test_project_history_keeps_new_project_when_storage_is_full(page, base_url):
     assert page.errors == []
 
 
+def test_project_history_keeps_new_project_when_every_write_fails(page, base_url):
+    # Lecture possible mais toute écriture refusée (quota totalement plein) :
+    # l'ancienne liste du navigateur ne doit pas masquer le nouveau projet.
+    page.add_init_script("""(() => {
+      const old = Array.from({length: 3}, (_, i) => ({name: 'Ancien ' + i, history_id: 'old-' + i}));
+      localStorage.setItem('teranga-project-history', JSON.stringify(old));
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (key.startsWith('teranga-project-')) throw new DOMException('quota', 'QuotaExceededError');
+        return setItem.call(this, key, value);
+      };
+    })()""")
+    page.goto(base_url + "/")
+    result = page.evaluate(PROJECT_TO_SAVE)
+    ids = [p["history_id"] for p in result["history"]]
+    assert ids == [result["id"], "old-0", "old-1", "old-2"]
+    assert result["history"][0]["completed_actions"] == [0]
+    assert page.errors == []
+
+
 def test_project_history_survives_blocked_storage(page, base_url):
     # Stockage bloqué (mode privé strict) : l'enregistrement ne plante pas et le
     # projet reste disponible pendant la visite.

@@ -8,11 +8,14 @@ const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
 // privé, cookies bloqués), on garde les valeurs en mémoire au lieu de planter
 // — un accès qui lève une erreur arrêtait le bouton en plein milieu.
 const safeStore=kind=>{
-  let store=null;const mem=new Map();
+  // stale : clés dont la dernière écriture n'a pas atteint le navigateur (quota
+  // plein…) ; on relit alors la valeur en mémoire plutôt que l'ancienne copie.
+  let store=null;const mem=new Map(),stale=new Set();
   try{store=window[kind];const k='__teranga_test';store.setItem(k,'1');store.removeItem(k);}catch(_){store=null;}
   return{
-    getItem:k=>{try{if(store)return store.getItem(k);}catch(_){}return mem.has(k)?mem.get(k):null;},
-    setItem:(k,v)=>{mem.set(k,String(v));try{if(store)store.setItem(k,String(v));}catch(_){}},
+    getItem:k=>{if(!stale.has(k)){try{if(store)return store.getItem(k);}catch(_){}}return mem.has(k)?mem.get(k):null;},
+    // Renvoie true seulement si la valeur est réellement enregistrée par le navigateur.
+    setItem:(k,v)=>{mem.set(k,String(v));try{if(store){store.setItem(k,String(v));stale.delete(k);return true;}}catch(_){}stale.add(k);return false;},
     removeItem:k=>{mem.delete(k);try{if(store)store.removeItem(k);}catch(_){}},
   };
 };
@@ -863,14 +866,13 @@ function saveProjectHistory(project){
   const item={...project};
   try{
     const items=[item,...readProjectHistory().filter(p=>p.history_id!==item.history_id)].slice(0,20);
-    // Quota plein : LS.setItem échoue en silence et l'ancienne liste resterait
-    // lue, sans ce projet ni ses actions cochées. On relit pour vérifier et on
-    // retire les projets les plus anciens jusqu'à ce que l'écriture passe.
-    for(let n=items.length;n>0;n--){
-      const raw=JSON.stringify(items.slice(0,n));
-      LS.setItem('teranga-project-history',raw);
-      if(LS.getItem('teranga-project-history')===raw)break;
-    }
+    // Quota plein : on retire les projets les plus anciens jusqu'à ce que
+    // l'écriture passe, pour garder ce projet et ses actions cochées.
+    let saved=false;
+    for(let n=items.length;n>0&&!saved;n--)saved=LS.setItem('teranga-project-history',JSON.stringify(items.slice(0,n)));
+    // Rien n'a pu être écrit (stockage bloqué ou plein) : la liste complète
+    // reste en mémoire pour la visite au lieu de l'ancienne liste.
+    if(!saved)LS.setItem('teranga-project-history',JSON.stringify(items));
     LS.setItem('teranga-project-last',JSON.stringify(item));
   }catch(_){}
   if($('projectModal')?.classList.contains('open'))renderProjectHistory();
