@@ -853,7 +853,7 @@ function renderProjectHistory(){
     open.addEventListener('click',()=>{
       form.hidden=true;$('projectResult').hidden=false;$('projectResultActions').hidden=false;
       renderInlineProject($('projectResult'),project);renderProjectTracking($('projectResult'),project);
-      closeProjectModal();openProjectModal();
+      section.hidden=true;
     });
     const remove=document.createElement('button');remove.type='button';remove.textContent=lang==='en'?'Delete':'Supprimer';remove.setAttribute('aria-label',(lang==='en'?'Delete ':'Supprimer ')+(project.name||'projet'));
     remove.addEventListener('click',()=>{
