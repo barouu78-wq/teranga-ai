@@ -6,6 +6,7 @@ si la configuration est incomplète ; les valeurs d'hôte doivent venir du compt
 from __future__ import annotations
 
 from html import escape
+import re
 from urllib.parse import urlparse
 
 
@@ -13,7 +14,7 @@ def posthog_config(project_key: object, api_host: object, asset_host: object) ->
     key = str(project_key or "").strip()
     api = str(api_host or "").strip().rstrip("/")
     assets = str(asset_host or "").strip().rstrip("/")
-    if not key.startswith("phc_") or len(key) > 200:
+    if not re.fullmatch(r"phc_[A-Za-z0-9_-]{1,196}", key):
         return None
     parsed_api, parsed_assets = urlparse(api), urlparse(assets)
     for parsed in (parsed_api, parsed_assets):
