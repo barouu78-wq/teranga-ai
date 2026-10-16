@@ -816,7 +816,9 @@ function readProjectHistory(){
 }
 function saveProjectHistory(project){
   if(!project||typeof project!=='object')return;
-  const item={...project,history_id:project.history_id||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)),saved_at:new Date().toISOString()};
+  project.history_id=project.history_id||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+  project.saved_at=new Date().toISOString();
+  const item={...project};
   const items=readProjectHistory().filter(p=>p.history_id!==item.history_id);
   items.unshift(item);
   try{
