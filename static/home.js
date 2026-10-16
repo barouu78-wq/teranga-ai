@@ -8,11 +8,14 @@ const storageRemove=(key)=>{try{localStorage.removeItem(key)}catch(_) {}};
 // privé, cookies bloqués), on garde les valeurs en mémoire au lieu de planter
 // — un accès qui lève une erreur arrêtait le bouton en plein milieu.
 const safeStore=kind=>{
-  let store=null;const mem=new Map();
+  // stale : clés dont la dernière écriture n'a pas atteint le navigateur (quota
+  // plein…) ; on relit alors la valeur en mémoire plutôt que l'ancienne copie.
+  let store=null;const mem=new Map(),stale=new Set();
   try{store=window[kind];const k='__teranga_test';store.setItem(k,'1');store.removeItem(k);}catch(_){store=null;}
   return{
-    getItem:k=>{try{if(store)return store.getItem(k);}catch(_){}return mem.has(k)?mem.get(k):null;},
-    setItem:(k,v)=>{mem.set(k,String(v));try{if(store)store.setItem(k,String(v));}catch(_){}},
+    getItem:k=>{if(!stale.has(k)){try{if(store)return store.getItem(k);}catch(_){}}return mem.has(k)?mem.get(k):null;},
+    // Renvoie true seulement si la valeur est réellement enregistrée par le navigateur.
+    setItem:(k,v)=>{mem.set(k,String(v));try{if(store){store.setItem(k,String(v));stale.delete(k);return true;}}catch(_){}stale.add(k);return false;},
     removeItem:k=>{mem.delete(k);try{if(store)store.removeItem(k);}catch(_){}},
   };
 };
@@ -511,7 +514,7 @@ function addProjectOffer(col,idea){
       if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
       renderInlineProject(out,data.project);
       btn.remove();more.remove();
-      try{LS.setItem('teranga-project-last',JSON.stringify(data.project));}catch(_){}
+      saveProjectHistory(data.project);
     }catch(err){
       const p=document.createElement('p');p.className='project-error';p.textContent=friendlyError(err);out.replaceChildren(p);
       btn.disabled=false;btn.textContent=idle;
@@ -568,6 +571,7 @@ function renderInlineProject(container,p){
   (p.steps||[]).forEach(step=>{const li=document.createElement('li');const b=document.createElement('b');b.textContent=step.title||'';const s=document.createElement('span');s.textContent=step.action||'';li.append(b,s);list.appendChild(li);});
   container.replaceChildren(h,meta,next,list);
   renderProjectProgress(container,p);
+  renderProjectActionChecklist(container,p);
   const links=document.createElement('div');links.className='place-links';
   const q='?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');
   const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'🔎 Opportunities':'🔎 Opportunités';
@@ -746,6 +750,47 @@ function themeInit(){
   setInterval(()=>{if((document.body.dataset.themeMode||'auto')==='auto')applyTheme();},5*60*1000);
 }
 
+function renderProjectActionChecklist(container,project){
+  const steps=Array.isArray(project.steps)?project.steps:[];
+  if(!steps.length)return;
+  const completed=Array.isArray(project.completed_actions)?project.completed_actions:[];
+  const box=document.createElement('section');box.className='project-progress project-action-checklist';
+  const title=document.createElement('div');title.className='project-progress-title';
+  title.textContent=lang==='en'?'Action checklist':'Mes actions à réaliser';box.appendChild(title);
+  const hint=document.createElement('p');
+  hint.textContent=lang==='en'?'Tick each action when it is done. Your progress is saved on this device.':'Coche chaque action quand elle est terminée. Ton avancement est enregistré sur cet appareil.';
+  box.appendChild(hint);
+  const list=document.createElement('div');list.className='project-action-list';
+  steps.forEach((step,index)=>{
+    const label=document.createElement('label');label.className='project-action-item';
+    const input=document.createElement('input');input.type='checkbox';input.checked=completed.includes(index);
+    input.setAttribute('aria-label',(lang==='en'?'Completed: ':'Action terminée : ')+String(step.title||step.action||('Action '+(index+1))));
+    const copy=document.createElement('span');
+    const name=document.createElement('strong');name.textContent=step.title||((lang==='en'?'Action ':'Action ')+(index+1));copy.appendChild(name);
+    if(step.action){const detail=document.createElement('small');detail.textContent=step.action;copy.appendChild(detail);}
+    label.append(input,copy);
+    input.addEventListener('change',()=>{
+      const updated=new Set(Array.isArray(project.completed_actions)?project.completed_actions:[]);
+      if(input.checked)updated.add(index);else updated.delete(index);
+      project.completed_actions=[...updated].filter(n=>Number.isInteger(n)&&n>=0&&n<steps.length).sort((a,b)=>a-b);
+      saveProjectHistory(project);
+      const count=project.completed_actions.length;
+      status.textContent=lang==='en'?count+' of '+steps.length+' actions completed':count+' action(s) sur '+steps.length+' terminée(s)';
+      progress.style.width=Math.round(count/steps.length*100)+'%';
+      track.setAttribute('aria-valuenow',String(count));
+    });
+    list.appendChild(label);
+  });
+  box.appendChild(list);
+  const status=document.createElement('p');status.className='project-progress-hint';
+  status.textContent=lang==='en'?completed.length+' of '+steps.length+' actions completed':completed.length+' action(s) sur '+steps.length+' terminée(s)';
+  box.appendChild(status);
+  const track=document.createElement('div');track.setAttribute('role','progressbar');track.setAttribute('aria-label',lang==='en'?'Project action progress':'Avancement des actions du projet');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax',String(steps.length));track.setAttribute('aria-valuenow',String(completed.length));
+  track.style.cssText='height:6px;border-radius:999px;overflow:hidden;background:var(--line);';
+  const progress=document.createElement('div');progress.style.cssText='height:100%;border-radius:999px;background:var(--accent,#16856b);width:'+Math.round(completed.length/steps.length*100)+'%;transition:width .2s ease;';
+  track.appendChild(progress);box.appendChild(track);
+  container.querySelector('.project-action-checklist')?.remove();container.appendChild(box);
+}
 function renderProjectTracking(container,project){
   const tracking=project.tracking||{};
   const box=document.createElement('div');box.className='project-progress';
@@ -770,7 +815,7 @@ async function advanceProjectStage(container,project,stage){
     const data=await res.json().catch(()=>({}));
     if(!res.ok||!data.project)throw new Error(data.error||T[lang].err);
     Object.assign(project,data.project);
-    try{LS.setItem('teranga-project-last',JSON.stringify(project));}catch(_){}
+    saveProjectHistory(project);
     renderProjectProgress(container,project);
     renderProjectTracking(container,project);
   }catch(_){
@@ -804,7 +849,69 @@ function openProjectModal(){
   const modal=$('projectModal');
   if(!modal)return;
   modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  renderProjectHistory();
   $('projectIdea')?.focus();
+}
+function readProjectHistory(){
+  try{
+    const raw=LS.getItem('teranga-project-history');
+    const items=raw?JSON.parse(raw):[];
+    return Array.isArray(items)?items.filter(p=>p&&typeof p==='object'&&typeof p.name==='string').slice(0,20):[];
+  }catch(_){return [];}
+}
+function saveProjectHistory(project){
+  if(!project||typeof project!=='object')return;
+  project.history_id=project.history_id||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+  project.saved_at=new Date().toISOString();
+  const item={...project};
+  try{
+    const items=[item,...readProjectHistory().filter(p=>p.history_id!==item.history_id)].slice(0,20);
+    // Quota plein : on retire les projets les plus anciens jusqu'à ce que
+    // l'écriture passe, pour garder ce projet et ses actions cochées.
+    let saved=false;
+    for(let n=items.length;n>0&&!saved;n--)saved=LS.setItem('teranga-project-history',JSON.stringify(items.slice(0,n)));
+    // Rien n'a pu être écrit (stockage bloqué ou plein) : la liste complète
+    // reste en mémoire pour la visite au lieu de l'ancienne liste.
+    if(!saved)LS.setItem('teranga-project-history',JSON.stringify(items));
+    LS.setItem('teranga-project-last',JSON.stringify(item));
+  }catch(_){}
+  if($('projectModal')?.classList.contains('open'))renderProjectHistory();
+  return item;
+}
+function renderProjectHistory(){
+  const panel=document.querySelector('#projectModal .project-panel');
+  const form=$('projectForm');
+  if(!panel||!form)return;
+  let section=$('projectHistory');
+  if(!section){
+    section=document.createElement('section');section.id='projectHistory';section.className='project-history';
+    const title=document.createElement('h3');title.textContent=lang==='en'?'My saved projects':'Mes projets enregistrés';
+    section.appendChild(title);panel.insertBefore(section,form);
+  }
+  section.replaceChildren();
+  const title=document.createElement('h3');title.textContent=lang==='en'?'My saved projects':'Mes projets enregistrés';section.appendChild(title);
+  const items=readProjectHistory();
+  if(!items.length){
+    const empty=document.createElement('p');empty.textContent=lang==='en'?'Your projects will appear here after you create one.':'Tes projets apparaîtront ici après la première création.';section.appendChild(empty);return;
+  }
+  items.forEach(project=>{
+    const row=document.createElement('div');row.className='project-history-item';
+    const info=document.createElement('div');
+    const name=document.createElement('strong');name.textContent=project.name||'Mon projet';info.appendChild(name);
+    const meta=document.createElement('small');meta.textContent=(project.stage_label||project.stage||'Idée')+(project.city?' · '+project.city:'');info.appendChild(meta);
+    const open=document.createElement('button');open.type='button';open.textContent=lang==='en'?'Resume':'Reprendre';
+    open.addEventListener('click',()=>{
+      form.hidden=true;$('projectResult').hidden=false;$('projectResultActions').hidden=false;
+      renderInlineProject($('projectResult'),project);renderProjectTracking($('projectResult'),project);
+      section.hidden=true;
+    });
+    const remove=document.createElement('button');remove.type='button';remove.textContent=lang==='en'?'Delete':'Supprimer';remove.setAttribute('aria-label',(lang==='en'?'Delete ':'Supprimer ')+(project.name||'projet'));
+    remove.addEventListener('click',()=>{
+      try{LS.setItem('teranga-project-history',JSON.stringify(readProjectHistory().filter(p=>p.history_id!==project.history_id)));}catch(_){}
+      renderProjectHistory();
+    });
+    row.append(info,open,remove);section.appendChild(row);
+  });
 }
 function closeProjectModal(){
   const modal=$('projectModal');
@@ -883,7 +990,8 @@ $('projectForm')?.addEventListener('submit',async e=>{
     result.hidden=false;
     $('projectForm').hidden=true;
     $('projectResultActions').hidden=false;
-    try{LS.setItem('teranga-project-last',JSON.stringify(p));}catch(_){}
+    saveProjectHistory(p);
+    renderProjectActionChecklist(result,p);
   }catch(err){error.textContent=friendlyError(err);}
   finally{button.disabled=false;button.textContent=idleLabel;}
 });

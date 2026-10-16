@@ -168,6 +168,71 @@ def test_project_plan_is_built_inside_the_chat(page, base_url):
     assert page.errors == []
 
 
+PROJECT_TO_SAVE = """() => {
+  const saved = saveProjectHistory({name: 'Jus de bissap', steps: [{title: 'Tester'}], completed_actions: [0]});
+  return {id: saved.history_id, history: readProjectHistory()};
+}"""
+
+
+def test_project_history_keeps_new_project_when_storage_is_full(page, base_url):
+    # 20 anciens projets déjà enregistrés, et un quota qui refuse la liste complète :
+    # le nouveau projet (et son action cochée) doit quand même être enregistré.
+    page.add_init_script("""(() => {
+      const old = Array.from({length: 20}, (_, i) => ({name: 'Ancien ' + i, history_id: 'old-' + i, notes: 'x'.repeat(400)}));
+      localStorage.setItem('teranga-project-history', JSON.stringify(old));
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (key === 'teranga-project-history' && String(value).length > 6000) {
+          throw new DOMException('quota', 'QuotaExceededError');
+        }
+        return setItem.call(this, key, value);
+      };
+    })()""")
+    page.goto(base_url + "/")
+    result = page.evaluate(PROJECT_TO_SAVE)
+    stored = page.evaluate("JSON.parse(localStorage.getItem('teranga-project-history'))")
+    assert stored[0]["history_id"] == result["id"]
+    assert stored[0]["completed_actions"] == [0]
+    assert 1 < len(stored) < 20 and stored[1]["history_id"] == "old-0"
+    assert result["history"][0]["history_id"] == result["id"]
+    assert page.errors == []
+
+
+def test_project_history_keeps_new_project_when_every_write_fails(page, base_url):
+    # Lecture possible mais toute écriture refusée (quota totalement plein) :
+    # l'ancienne liste du navigateur ne doit pas masquer le nouveau projet.
+    page.add_init_script("""(() => {
+      const old = Array.from({length: 3}, (_, i) => ({name: 'Ancien ' + i, history_id: 'old-' + i}));
+      localStorage.setItem('teranga-project-history', JSON.stringify(old));
+      const setItem = Storage.prototype.setItem;
+      Storage.prototype.setItem = function (key, value) {
+        if (key.startsWith('teranga-project-')) throw new DOMException('quota', 'QuotaExceededError');
+        return setItem.call(this, key, value);
+      };
+    })()""")
+    page.goto(base_url + "/")
+    result = page.evaluate(PROJECT_TO_SAVE)
+    ids = [p["history_id"] for p in result["history"]]
+    assert ids == [result["id"], "old-0", "old-1", "old-2"]
+    assert result["history"][0]["completed_actions"] == [0]
+    assert page.errors == []
+
+
+def test_project_history_survives_blocked_storage(page, base_url):
+    # Stockage bloqué (mode privé strict) : l'enregistrement ne plante pas et le
+    # projet reste disponible pendant la visite.
+    page.add_init_script("""(() => {
+      for (const name of ['getItem', 'setItem', 'removeItem']) {
+        Storage.prototype[name] = () => { throw new DOMException('bloqué', 'SecurityError'); };
+      }
+    })()""")
+    page.goto(base_url + "/")
+    result = page.evaluate(PROJECT_TO_SAVE)
+    assert [p["history_id"] for p in result["history"]] == [result["id"]]
+    assert result["history"][0]["completed_actions"] == [0]
+    assert page.errors == []
+
+
 def _fill_planner(page):
     page.fill("input[name='arrival']", "2026-12-01")
     page.fill("input[name='departure']", "2026-12-02")
