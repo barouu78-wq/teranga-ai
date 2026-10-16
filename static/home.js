@@ -861,10 +861,16 @@ function saveProjectHistory(project){
   project.history_id=project.history_id||('p-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
   project.saved_at=new Date().toISOString();
   const item={...project};
-  const items=readProjectHistory().filter(p=>p.history_id!==item.history_id);
-  items.unshift(item);
   try{
-    LS.setItem('teranga-project-history',JSON.stringify(items.slice(0,20)));
+    const items=[item,...readProjectHistory().filter(p=>p.history_id!==item.history_id)].slice(0,20);
+    // Quota plein : LS.setItem échoue en silence et l'ancienne liste resterait
+    // lue, sans ce projet ni ses actions cochées. On relit pour vérifier et on
+    // retire les projets les plus anciens jusqu'à ce que l'écriture passe.
+    for(let n=items.length;n>0;n--){
+      const raw=JSON.stringify(items.slice(0,n));
+      LS.setItem('teranga-project-history',raw);
+      if(LS.getItem('teranga-project-history')===raw)break;
+    }
     LS.setItem('teranga-project-last',JSON.stringify(item));
   }catch(_){}
   if($('projectModal')?.classList.contains('open'))renderProjectHistory();
