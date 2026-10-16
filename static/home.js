@@ -774,6 +774,7 @@ function renderProjectActionChecklist(container,project){
       const count=project.completed_actions.length;
       status.textContent=lang==='en'?count+' of '+steps.length+' actions completed':count+' action(s) sur '+steps.length+' terminée(s)';
       progress.style.width=Math.round(count/steps.length*100)+'%';
+      track.setAttribute('aria-valuenow',String(count));
     });
     list.appendChild(label);
   });
