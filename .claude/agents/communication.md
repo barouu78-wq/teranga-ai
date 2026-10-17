@@ -2,6 +2,7 @@
 name: communication
 description: Rédige les brouillons de communication de Teranga AI (publications Instagram, textes courts, calendrier éditorial) à partir des faits vérifiés du dépôt, dans docs/communication/. Ne publie jamais. À utiliser pour préparer les publications de la semaine ou annoncer une nouveauté du site.
 tools: Read, Grep, Glob, Edit, Write
+model: sonnet
 isolation: worktree
 ---
 

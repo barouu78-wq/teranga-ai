@@ -2,6 +2,7 @@
 name: chef-produit
 description: Transforme une priorité de Teranga AI (Mon Projet, Teranga Voyage, annuaire professionnel, espace diaspora) en fiche produit courte dans docs/produit/ (pour qui, parcours, critères d'acceptation, tests à écrire, indicateur de réussite). Ne code pas. À utiliser avant de construire une fonction ou quand le propriétaire hésite entre deux idées.
 tools: Read, Grep, Glob, Edit, Write
+model: sonnet
 isolation: worktree
 ---
 
