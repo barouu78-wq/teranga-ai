@@ -276,3 +276,14 @@ def test_starts_new_subject_reconnait_les_renvois_de_lieu(message, expected):
     from services.intelligence import starts_new_subject
 
     assert starts_new_subject(message, own_subject=True) is expected
+
+
+def test_la_en_tete_de_phrase_et_y_compris_ne_renvoient_pas_au_lieu_du_fil():
+    # « Là, … » ouvre une phrase ; « y compris » n'est pas le « y » de lieu.
+    from services.intelligence import starts_new_subject
+    assert starts_new_subject("là je veux savoir le prix du visa", own_subject=True)
+    assert starts_new_subject("Là, parlons de Dakar", own_subject=True)
+    assert starts_new_subject("Quels sont les hôtels à Dakar y compris Almadies ?", own_subject=True)
+    # Le « là » de lieu et le « y » de lieu gardent le fil.
+    assert not starts_new_subject("on peut manger là ?", own_subject=True)
+    assert not starts_new_subject("faut-il un visa pour y aller ?", own_subject=True)

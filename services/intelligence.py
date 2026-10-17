@@ -227,8 +227,9 @@ def starts_new_subject(message: str, *, own_subject: bool) -> bool:
 # Renvois au lieu du tour précédent (texte sans accents, apostrophes en espaces). « y » compte, sauf dans
 # « il y a » / « y en a » qui n'est pas un renvoi (« y a t il un hôpital ? »). « là » seul se lit avant la
 # suppression des accents, pour ne pas le confondre avec l'article « la ».
-_PLACE_BACK_REFERENCE = re.compile(r"\by\b(?! (?:a|avait|aura|aurait|en a)\b)|\bla[ -]?bas\b|\bsur place\b")
-_LA_ALONE = re.compile(r"(?<![\w-])là(?![\w-])")
+_PLACE_BACK_REFERENCE = re.compile(r"\by\b(?! (?:a|avait|aura|aurait|en a|compris)\b)|\bla[ -]?bas\b|\bsur place\b")
+# « là » en tête de phrase (« Là, parlons de Dakar ») ouvre la phrase, il ne désigne pas le lieu du fil.
+_LA_ALONE = re.compile(r"(?<=\w )là(?![\w-])")
 
 
 def detect_language(text: str) -> str:
