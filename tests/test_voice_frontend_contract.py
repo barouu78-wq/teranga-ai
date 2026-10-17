@@ -44,3 +44,13 @@ def test_queued_tts_uses_item_generation_after_network_wait():
     function = html[start:end]
     assert "if(item.turn!==voiceTtsTurn||!autoVoice)return;" in function
     assert "if(voiceTtsTurn!==speechTurn)return;" not in function
+
+
+def test_tts_requests_give_up_quickly():
+    # La voix n'attend plus 45 s (délai général des requêtes) : 30 s au plus, lecture auto comme bouton « Écouter ».
+    html = home_source()
+    assert "const VOICE_TTS_TIMEOUT_MS=30000;" in html
+    assert "setTimeout(()=>ctrl.abort(),VOICE_TTS_TIMEOUT_MS)" in html
+    start = html.rindex("async function speak(text,btn){")
+    function = html[start:html.index("\n}", start) + 2]
+    assert "timeoutSignal(VOICE_TTS_TIMEOUT_MS)" in function

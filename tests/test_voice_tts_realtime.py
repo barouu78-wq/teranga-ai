@@ -165,3 +165,15 @@ def test_realtime_call_is_rate_limited(monkeypatch):
              for _ in range(5)]
     assert codes[:3] == [200, 200, 200] and 429 in codes[3:]
     assert len(captured) == 3
+
+
+def test_tts_provider_call_has_a_short_timeout(monkeypatch):
+    # Production : une voix a échoué après 130 s (50 s de lecture × 2 essais, réglage global du chat).
+    # La voix a son propre délai : au plus 5 s pour se connecter et 20 s sans recevoir d'octet.
+    calls = []
+    _fake_speech(monkeypatch, calls)
+    client, headers, env = _client("203.0.113.104")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 200
+    timeout = calls[0]["timeout"]
+    assert timeout.connect <= 5 and timeout.read <= 20
