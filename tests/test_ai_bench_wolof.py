@@ -58,8 +58,10 @@ def test_wolof_name_of_dakar_is_dakar(language, question):
 
 
 def test_dakaar_gets_the_same_places_as_dakar():
-    wolof = _context(_payload("Nettali ma taariixu Ndakaaru, te won ma dëkk bi."), "")
-    french = _context(_payload("Nettali ma taariixu Dakar, te won ma dëkk bi."), "")
+    wolof_question = "Nettali ma taariixu Ndakaaru, te won ma dëkk bi."
+    french_question = "Nettali ma taariixu Dakar, te won ma dëkk bi."
+    wolof = _context(_payload(wolof_question), wolof_question)
+    french = _context(_payload(french_question), french_question)
     places = lambda text: text.split("LIEUX PERTINENTS :", 1)[1].split("\n\n", 1)[0] if "LIEUX PERTINENTS :" in text else ""
     assert places(wolof) and places(wolof) == places(french)
 

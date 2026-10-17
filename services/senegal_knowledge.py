@@ -18,8 +18,12 @@ SENEGAL_REGIONS = (
     "Louga", "Matam", "Saint-Louis", "Sédhiou", "Tambacounda", "Thiès", "Ziguinchor",
 )
 
+# Noms wolof de Dakar, tels que les écrivent les suggestions wolof du site (static/home.js) :
+# « Lan mooy tàkk-tàkk Dakaar tey? », « Nettali ma taariixu Ndakaaru… ».
+WOLOF_PLACE_NAMES = {"dakaar": "dakar", "ndakaaru": "dakar"}
+
 REGION_ALIASES = {
-    "Dakar": ("dakar",), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
+    "Dakar": ("dakar", *WOLOF_PLACE_NAMES), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
     "Kaffrine": ("kaffrine",), "Kaolack": ("kaolack",),
     "Kédougou": ("kedougou", "kédougou"), "Kolda": ("kolda",), "Louga": ("louga",),
     "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis"),
@@ -422,8 +426,10 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # « histoire ») ; les mots de la question qui ne désignent pas un lieu
     # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
     # Mots de 3 lettres gardés (« HLM », « lac », « TER ») sauf les mots outils.
+    # Un nom wolof (« Ndakaaru ») cherche les mêmes lieux que son nom français.
     tokens = [
-        token for token in re.findall(r"[a-z0-9]+", _LANGUE_SUJET.sub(" ", _VERBE_MARCHER.sub(" ", _fold(value))))
+        WOLOF_PLACE_NAMES.get(token, token)
+        for token in re.findall(r"[a-z0-9]+", _LANGUE_SUJET.sub(" ", _VERBE_MARCHER.sub(" ", _fold(value))))
         if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
     ]
     places = data.get("places", [])
