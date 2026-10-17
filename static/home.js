@@ -552,7 +552,8 @@ function addFollowups(col,ux){
   row.setAttribute('aria-label',lang==='en'?'To continue':'Pour continuer');
   for(const {item,label} of items){
     const btn=document.createElement('button');btn.type='button';btn.className='followup';btn.textContent=label;
-    btn.onclick=()=>{if(item===FOLLOWUP_CLARIFY){input.focus();return;}ask(label);};
+    // startsWith : « Préciser ma demande à Dakar » (lieu ajouté par un serveur plus ancien) reste ce bouton.
+    btn.onclick=()=>{if(item.startsWith(FOLLOWUP_CLARIFY)){input.focus();return;}ask(label);};
     row.appendChild(btn);
   }
   col.appendChild(row);

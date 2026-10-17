@@ -839,7 +839,7 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     # Repères pratiques par thème (services/facts/*.py) : ajouter un fichier invalide aussi les anciennes réponses.
     + b"".join(path.read_bytes() for path in sorted((BASE_DIR / "services" / "facts").glob("*.py")))
     # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
-    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py"))
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py", "intelligence.py"))
     # Calculs faits par le code : une correction invalide aussi les anciennes réponses.
     + (BASE_DIR / "services" / "calculators.py").read_bytes()
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
