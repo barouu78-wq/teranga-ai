@@ -98,6 +98,22 @@ def test_filters_keep_only_matching_lines():
     assert flux["lues"] == 2 and flux["metriques"]["total_ms"]["mediane"] == 500.0
 
 
+def test_first_sound_of_the_voice_is_summarised_and_can_be_kept_alone_with_mode_flux():
+    """Après le passage de la voix en flux : premier_son_ms est le temps que le visiteur attend avant d'entendre."""
+    lines = [
+        "latence route=tts total_ms=9000.0 fournisseur_ms=900.0 modele=x statut=ok premier_son_ms=900.0 mode=flux",
+        "latence route=tts total_ms=7000.0 fournisseur_ms=700.0 modele=x statut=ok premier_son_ms=700.0 mode=flux",
+        "latence route=tts total_ms=15300.0 fournisseur_ms=15200.0 modele=x statut=ok premier_son_ms=- mode=fichier",
+        "latence route=tts total_ms=15000.0 fournisseur_ms=14900.0 modele=x statut=ok",  # ligne d'avant le changement
+    ]
+    everything = summarize(read_records(lines))[0]
+    assert everything["metriques"]["premier_son_ms"] == {"n": 2, "mediane": 800.0, "p95": 900.0}
+    flux = summarize(read_records(lines), filters={"mode": "flux"})[0]
+    assert flux["lues"] == 2 and flux["metriques"]["total_ms"]["mediane"] == 8000.0
+    _, out, _ = run("\n".join(lines), "--garder", "mode=flux")
+    assert re.search(r"premier_son_ms\s+n=2\s+médiane=800\.0\s+p95=900\.0", out)
+
+
 def test_command_line_prints_median_p95_and_counts_per_route():
     code, out, _ = run("\n".join([chat(f"{i}.0") for i in range(1, 21)] + ["bruit sans rapport"]))
     assert code == 0

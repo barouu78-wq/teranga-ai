@@ -167,12 +167,58 @@ def post_stt(*, ip=None, audio=b"RIFF\x00\x00\x00\x00WAVEfake", text="bonjour", 
     )
 
 
-def post_tts(text="Bonjour", *, ip=None, error=None, monkeypatch=None):
+class SpeechStream:
+    """Remplace `client.audio.speech.with_streaming_response.create` : un son en morceaux (format « pcm »).
+
+    `error` : le fournisseur refuse avant tout son ; `cut` : il coupe après ce nombre de morceaux (message `cut_message`)."""
+
+    def __init__(self, chunks=(b"\x10\x00" * 2400, b"\x20\x00" * 2400), error=None, cut=None, cut_message="coupure"):
+        self.chunks = list(chunks)
+        self.error = error
+        self.cut = cut
+        self.cut_message = cut_message
+        self.calls = []
+        self.closed = 0
+
+    def __call__(self, **kwargs):
+        self.calls.append(kwargs)
+        return self
+
+    def __enter__(self):
+        if self.error:
+            raise RuntimeError(self.error)
+        return self
+
+    def __exit__(self, *exc):
+        self.closed += 1
+        return False
+
+    def iter_bytes(self, chunk_size=None):
+        for index, chunk in enumerate(self.chunks):
+            if self.cut is not None and index >= self.cut:
+                raise RuntimeError(self.cut_message)
+            yield chunk
+
+
+def install_speech_stream(monkeypatch, **kwargs):
+    fake = SpeechStream(**kwargs)
+    monkeypatch.setattr(app_module.client.audio.speech.with_streaming_response, "create", fake)
+    return fake
+
+
+def post_tts(text="Bonjour", *, ip=None, error=None, monkeypatch=None, flux=False, cut=None):
+    """`flux=True` : la page demande le son en flux (conversation vocale) ; sinon le fichier WAV entier.
+
+    En flux, `error` seul : refus avant tout son ; avec `cut` : coupure après `cut` morceaux, avec ce message."""
     def create(**kwargs):
         if error:
             raise RuntimeError(error)
         return SimpleNamespace(content=b"RIFFfakewav")
 
     monkeypatch.setattr(app_module.client.audio.speech, "create", create)
+    install_speech_stream(monkeypatch, error=None if cut is not None else error, cut=cut, cut_message=error or "coupure")
     client, headers, environ = make_client(ip)
-    return client.post("/tts", json={"text": text, "language": "fr"}, headers=headers, base_url=B, environ_base=environ)
+    body = {"text": text, "language": "fr"}
+    if flux:
+        body["flux"] = True
+    return client.post("/tts", json=body, headers=headers, base_url=B, environ_base=environ)

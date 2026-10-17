@@ -39,6 +39,9 @@ class Inert:
     def first_word(self):
         pass
 
+    def first_sound(self):
+        pass
+
     def ok(self):
         pass
 
@@ -85,6 +88,9 @@ def scenarios(monkeypatch):
     out["tts"] = snapshot(h.post_tts("Bonjour **Dakar**", monkeypatch=monkeypatch))
     out["tts_panne"] = snapshot(h.post_tts("Bonjour", error="tts en panne", monkeypatch=monkeypatch))
     out["tts_vide"] = snapshot(h.post_tts("   ", monkeypatch=monkeypatch))
+    out["tts_flux"] = snapshot(h.post_tts("Bonjour **Dakar**", flux=True, monkeypatch=monkeypatch))
+    out["tts_flux_panne"] = snapshot(h.post_tts("Bonjour", flux=True, error="tts en panne", monkeypatch=monkeypatch))
+    out["tts_flux_coupe"] = snapshot(h.post_tts("Bonjour", flux=True, cut=1, error="coupure", monkeypatch=monkeypatch))
     return out
 
 

@@ -150,6 +150,25 @@ def test_first_word_is_counted_once_and_stops_the_provider_timer(lines):
     ]
 
 
+def test_first_sound_of_the_voice_is_counted_once_and_written_at_the_end_of_the_tts_line(lines):
+    """/tts en flux : premier_son_ms (premier octet de son envoyé) et le mode, ajoutés APRÈS statut : les lectures
+    qui s'arrêtent à statut (scripts, recherches dans les journaux) restent justes."""
+    trace, clock = make("tts")
+    trace.begin("fournisseur")
+    clock.tick(800)
+    trace.first_sound()
+    clock.tick(4000)
+    trace.first_sound()  # les morceaux suivants ne comptent pas
+    trace.status, trace.model, trace.mode = "ok", "gpt-4o-mini-tts", "flux"
+    trace.emit()
+    assert lines == [
+        "latence route=tts total_ms=4800.0 fournisseur_ms=800.0 modele=gpt-4o-mini-tts statut=ok premier_son_ms=800.0 mode=flux"
+    ]
+    assert format_line("tts", {"total_ms": 9, "mode": "fichier", "statut": "ok"}).endswith("statut=ok premier_son_ms=- mode=fichier")
+    assert format_line("tts", {"total_ms": 9, "mode": "secret"}).endswith("mode=-")
+    assert format_line("stt", {"total_ms": 9, "statut": "ok"}) == "latence route=stt total_ms=9.0 fournisseur_ms=- modele=- statut=ok"
+
+
 def test_end_without_begin_does_nothing():
     trace, _ = make()
     trace.end("fournisseur")

@@ -38,8 +38,13 @@ GRAMMAR = {
         r"statut=(?:ok|secours|erreur|abandon|refuse|invalide)"
     ),
     "voix": re.compile(
-        rf"latence route=(?:stt|tts) total_ms={MS} fournisseur_ms={MS} modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{{0,47}}|-) "
+        rf"latence route=stt total_ms={MS} fournisseur_ms={MS} modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{{0,47}}|-) "
         r"statut=(?:ok|secours|erreur|abandon|refuse|invalide)"
+    ),
+    # /tts : mêmes champs que /stt, puis le premier son (flux) et le mode, ajoutés en fin de ligne.
+    "tts": re.compile(
+        rf"latence route=tts total_ms={MS} fournisseur_ms={MS} modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{{0,47}}|-) "
+        rf"statut=(?:ok|secours|erreur|abandon|refuse|invalide) premier_son_ms={MS} mode=(?:flux|fichier|-)"
     ),
 }
 
@@ -50,7 +55,7 @@ def leaks(lines, secrets=SECRETS):
 
 
 def off_grammar(lines):
-    return [line for line in lines if not (GRAMMAR["chat"].fullmatch(line) or GRAMMAR["voix"].fullmatch(line))]
+    return [line for line in lines if not any(grammar.fullmatch(line) for grammar in GRAMMAR.values())]
 
 
 @pytest.fixture
@@ -110,6 +115,11 @@ def run_everything(monkeypatch):
     h.post_tts(SPOKEN, ip=ip, monkeypatch=monkeypatch).close()
     h.post_tts(SPOKEN, error=PROVIDER_ERROR, ip=ip, monkeypatch=monkeypatch).close()
     runs += 5
+    # 8. voix en flux : succès, refus du fournisseur avant tout son, coupure en plein flux (message secret)
+    finish(h.post_tts(SPOKEN, flux=True, ip=ip, monkeypatch=monkeypatch))
+    h.post_tts(SPOKEN, flux=True, error=PROVIDER_ERROR, ip=ip, monkeypatch=monkeypatch).close()
+    finish(h.post_tts(SPOKEN, flux=True, cut=1, error=PROVIDER_ERROR, ip=ip, monkeypatch=monkeypatch))
+    runs += 3
     return runs
 
 

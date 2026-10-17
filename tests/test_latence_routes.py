@@ -221,6 +221,47 @@ def test_tts_failure_and_empty_text(monkeypatch, lines):
     assert empty["statut"] == "invalide" and empty["fournisseur_ms"] == "-"
 
 
+# --- /tts en flux : le premier son ------------------------------------------------------------------------
+
+
+def test_tts_flux_line_measures_the_first_sound(monkeypatch, lines):
+    """Le gain se mesurera en production avec premier_son_ms (premier octet de son envoyé au visiteur)."""
+    response = h.post_tts("Bonjour Dakar", flux=True, monkeypatch=monkeypatch)
+    assert response.status_code == 200 and response.mimetype == "audio/pcm"
+    finish(response)
+    f = one(lines)
+    assert f["route"] == "tts" and f["statut"] == "ok" and f["mode"] == "flux" and f["modele"] == "gpt-4o-mini-tts"
+    assert number(f["fournisseur_ms"]) <= number(f["premier_son_ms"]) <= number(f["total_ms"])
+
+
+def test_tts_file_line_says_fichier_and_has_no_first_sound(monkeypatch, lines):
+    h.post_tts("Bonjour Dakar", monkeypatch=monkeypatch).close()
+    f = one(lines)
+    assert f["mode"] == "fichier" and f["premier_son_ms"] == "-" and f["statut"] == "ok"
+
+
+def test_tts_flux_refused_before_any_sound_cut_in_the_middle_or_left_by_the_visitor(monkeypatch, lines):
+    h.post_tts("Bonjour", flux=True, error="tts en panne", monkeypatch=monkeypatch).close()
+    finish(h.post_tts("Bonjour", flux=True, cut=1, monkeypatch=monkeypatch))
+    response = h.post_tts("Bonjour", flux=True, monkeypatch=monkeypatch)
+    next(iter(response.response))  # le visiteur reçoit le premier son, puis coupe (« Arrêter »)
+    response.close()
+    refused, cut, left = (h.fields(line) for line in lines)
+    assert refused["statut"] == "erreur" and refused["premier_son_ms"] == "-" and refused["fournisseur_ms"] != "-"
+    assert cut["statut"] == "erreur" and cut["premier_son_ms"] != "-"
+    assert left["statut"] == "abandon" and left["premier_son_ms"] != "-"
+
+
+def test_tts_flux_closes_the_provider_connection_when_the_visitor_leaves(monkeypatch):
+    """« Arrêter » coupe la requête : la route cesse de lire le fournisseur et ferme sa connexion."""
+    fake = h.install_speech_stream(monkeypatch, chunks=[b"\x10\x00" * 2400] * 50)
+    client, headers, environ = h.make_client()
+    response = client.post("/tts", json={"text": "Bonjour", "flux": True}, headers=headers, base_url=h.B, environ_base=environ)
+    next(iter(response.response))
+    response.close()
+    assert fake.closed == 1
+
+
 # --- Requêtes refusées avant ou dans la route -------------------------------------------------------------
 
 

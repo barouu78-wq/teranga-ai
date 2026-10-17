@@ -16,6 +16,11 @@ seulement ensuite livre la suite.
 
 Appels de voix coupés : la page peut annuler un appel /tts en vol (« Arrêter »). page.route ne le dit
 pas au test ; window.__tts.calls note donc, pour chaque appel, si la page l'a annulé (tts_calls_aborted).
+
+Voix en flux, même principe que /chat : avec stream_tts(), chaque appel /tts reçoit un vrai flux de son PCM
+(16 bits, 24 000 Hz, mono, comme le format « pcm » du fournisseur) que le test livre morceau par morceau
+(tts_chunk), termine (tts_end) ou coupe (tts_fail). Le son joué par la page passe alors par des tampons Web
+Audio, comptés dans window.__mic.sources (sound_started, sound_playing), et non par des éléments <audio>.
 """
 
 import json
@@ -39,16 +44,40 @@ FAKE_CHAT_STREAM = """
       try { chat.controller.close(); } catch (_) {}
     },
   };
-  const tts = window.__tts = { calls: [] };
+  // Son PCM 16 bits, petit-boutiste, 24 000 Hz, mono : un la doux (assez faible pour ne gêner personne).
+  const pcm = ms => {
+    const samples = Math.round(24000 * ms / 1000);
+    const view = new DataView(new ArrayBuffer(samples * 2));
+    for (let i = 0; i < samples; i++) view.setInt16(i * 2, Math.round(Math.sin(i / 24000 * 2 * Math.PI * 440) * 3000), true);
+    return new Uint8Array(view.buffer);
+  };
+  const tts = window.__tts = {
+    calls: [], manual: false,
+    pick(index) { return tts.calls[index < 0 ? tts.calls.length + index : index]; },
+    chunk(index, ms) {
+      try { tts.pick(index).controller.enqueue(pcm(ms)); return true; } catch (_) { return false; }  // flux annulé par la page
+    },
+    end(index) { const call = tts.pick(index); call.ended = true; try { call.controller.close(); } catch (_) {} },
+    fail(index) { const call = tts.pick(index); call.ended = true; try { call.controller.error(new TypeError('network error')); } catch (_) {} },
+  };
   const nativeFetch = window.fetch.bind(window);
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.href);
     const headers = (init && init.headers) || {};
     if (url.pathname === '/tts') {
-      const call = { aborted: false };
+      let sent = {};
+      try { sent = JSON.parse(String(init && init.body || '{}')); } catch (_) {}
+      const call = { aborted: false, ended: false, text: sent.text, flux: sent.flux === true, controller: null };
       tts.calls.push(call);
       const signal = init && init.signal;
-      if (signal) signal.addEventListener('abort', () => { call.aborted = true; });
+      if (signal) signal.addEventListener('abort', () => {
+        call.aborted = true;
+        if (call.controller) { try { call.controller.error(new DOMException('Aborted', 'AbortError')); } catch (_) {} }
+      });
+      if (tts.manual) {
+        const body = new ReadableStream({ start(controller) { call.controller = controller; } });
+        return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'audio/pcm' } }));
+      }
     }
     if (chat.manual && url.pathname === '/chat' && !headers['X-Teranga-Mode']) {
       chat.calls++;
@@ -76,10 +105,19 @@ FAKE_CHAT_STREAM = """
 FAKE_MIC = """
 (() => {
   const mic = window.__mic = {
-    level: 0, calls: 0, error: null, gains: [], recorders: [], contexts: [], audios: [],
+    level: 0, calls: 0, error: null, gains: [], recorders: [], contexts: [], audios: [], sources: [],
     set(v) { mic.level = v; mic.gains.forEach(g => { g.gain.value = v; }); },
     recording() { return mic.recorders.filter(r => r.state === 'recording').length; },
     playing() { return mic.audios.filter(a => !a.paused && !a.ended).length; },
+    // Voix en flux : tampons Web Audio lancés par la page, et ceux qui jouent encore (ni finis ni arrêtés).
+    soundPlaying() { return mic.sources.filter(s => !s.ended).length; },
+  };
+  const nativeStart = AudioBufferSourceNode.prototype.start;
+  AudioBufferSourceNode.prototype.start = function (...args) {
+    const entry = { ended: false, seconds: this.buffer ? this.buffer.duration : 0 };
+    mic.sources.push(entry);
+    this.addEventListener('ended', () => { entry.ended = true; });
+    return nativeStart.apply(this, args);
   };
   const Native = window.MediaRecorder;
   window.MediaRecorder = class extends Native {
@@ -227,6 +265,40 @@ class VoiceBench:
 
     def chat_stream_aborted(self):
         return self.page.evaluate("() => window.__chat.aborted")
+
+    # ── Voix en flux ──────────────────────────────────────────────────────────────────────────────────
+
+    def stream_tts(self):
+        """À appeler avant open() : chaque appel /tts reçoit un flux de son que le test livre (tts_chunk, tts_end)."""
+        self.page.add_init_script("window.__tts.manual = true")
+
+    def wait_tts_stream(self, calls=1, timeout=8000):
+        """Attend que la page ait ouvert `calls` flux /tts (comme wait_held pour une requête retenue)."""
+        self.page.wait_for_function("n => window.__tts.calls.length >= n", arg=calls, timeout=timeout)
+
+    def tts_chunk(self, ms, call=-1):
+        """Livre `ms` millisecondes de son au flux `call` (le dernier par défaut) ; le flux reste ouvert."""
+        self.wait_tts_stream(call + 1 if call >= 0 else 1)
+        return self.page.evaluate("([i, ms]) => window.__tts.chunk(i, ms)", [call, ms])
+
+    def tts_end(self, call=-1):
+        self.wait_tts_stream(call + 1 if call >= 0 else 1)
+        self.page.evaluate("i => window.__tts.end(i)", call)
+
+    def tts_fail(self, call=-1):
+        """Le réseau coupe le flux en route."""
+        self.wait_tts_stream(call + 1 if call >= 0 else 1)
+        self.page.evaluate("i => window.__tts.fail(i)", call)
+
+    def tts_requests(self):
+        """Ce que la page a demandé à /tts : texte et demande de flux, pour chaque appel."""
+        return self.page.evaluate("() => window.__tts.calls.map(c => ({text: c.text, flux: c.flux, ended: c.ended}))")
+
+    def sound_started(self):
+        return self.page.evaluate("() => window.__mic.sources.length")
+
+    def sound_playing(self):
+        return self.page.evaluate("() => window.__mic.soundPlaying()")
 
     def open(self, path="/"):
         self.page.goto(self.base_url + path)
