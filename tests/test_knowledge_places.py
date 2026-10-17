@@ -32,6 +32,7 @@ def test_new_places_cite_their_sources():
         "pointe-des-almadies", "parc-de-hann", "toubab-dialaw", "keur-moussa", "kayar", "mar-lodj", "pointe-de-sangomar",
         "gandiol", "enampore", "elinkine", "abene", "nioro-du-rip", "thilogne",
         "ile-a-morphil", "aere-lao", "cas-cas", "sinthiou-bamambe", "waounde", "podor",
+        "reserve-de-guembeul", "reserve-de-kalissaye", "grand-theatre-national",
     ):
         place = next(p for p in DATA["places"] if p["id"] == place_id)
         assert place.get("sources"), place_id
