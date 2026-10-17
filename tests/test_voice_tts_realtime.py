@@ -165,3 +165,16 @@ def test_realtime_call_is_rate_limited(monkeypatch):
              for _ in range(5)]
     assert codes[:3] == [200, 200, 200] and 429 in codes[3:]
     assert len(captured) == 3
+
+
+def test_tts_has_its_own_short_timeout(monkeypatch):
+    """Une lecture a échoué après 130,8 s le 13 octobre 2026 : sans délai propre, /tts héritait des 50 s du client
+    OpenAI (app.py), avec une nouvelle tentative. Les lectures réussies ont toutes duré moins de 27 s (11-13 octobre)."""
+    calls = []
+    _fake_speech(monkeypatch, calls)
+    client, headers, env = _client("203.0.113.104")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 200
+    delai = calls[0].get("timeout")
+    assert delai is not None, "la voix doit avoir son propre délai"
+    assert delai.read <= 30 and delai.connect <= 5

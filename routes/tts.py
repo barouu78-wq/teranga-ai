@@ -3,9 +3,15 @@
 import os
 import re
 
+import httpx
 from flask import Response, jsonify, request
 
 from services.latency import LatencyTrace
+
+# Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
+# une lecture a échoué après 130,8 s le 13 octobre 2026. Les lectures réussies mesurées (11-13 octobre) ont toutes
+# duré moins de 27 s : 30 s les laisse passer et rend la main bien plus tôt en cas de panne.
+TTS_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 
 
 def register_tts_route(app, deps):
@@ -68,6 +74,7 @@ def register_tts_route(app, deps):
                     instructions=tts_instruction(language),
                     response_format="wav",
                     speed=0.98,
+                    timeout=TTS_TIMEOUT,
                 )
             return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store", "Content-Type": "audio/wav"})
         except Exception:
