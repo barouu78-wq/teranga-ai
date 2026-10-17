@@ -569,7 +569,11 @@ def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> d
     }
     followups.extend(labels.get(intent, ("Préciser ma demande", "Comparer", "Que faire ensuite ?")))
     if place and intent != "photos":
-        followups = [f"{item} à {place}" if item != "Comparer" and " à " not in item else item for item in followups]
+        # « Préciser ma demande » remet le curseur dans la zone de saisie (static/home.js) : jamais de lieu ajouté.
+        followups = [
+            f"{item} à {place}" if item not in {"Comparer", "Préciser ma demande"} and " à " not in item else item
+            for item in followups
+        ]
     mode = "action" if intent in {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"} else "answer"
     if intent_context.get("needs_images"):
         mode = "visual"
