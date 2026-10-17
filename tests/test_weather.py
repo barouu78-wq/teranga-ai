@@ -171,3 +171,14 @@ def test_chat_waits_for_the_weather_only_a_short_budget(monkeypatch):
     with app_module.app.test_request_context("/chat", method="POST", json={"message": "Quel temps fait-il à Dakar ?", "language": "fr"}):
         app_module.parse_chat_payload()
     assert 0 < seen["budget"] <= 1.5
+
+
+def test_weather_question_falls_back_to_web_search_when_open_meteo_is_slow(monkeypatch):
+    import app as app_module
+
+    monkeypatch.setattr(app_module, "live_weather_context", lambda *a, **k: None)
+    with app_module.app.test_request_context("/chat", method="POST", json={"message": "Quel temps fait-il à Dakar ?", "language": "fr"}):
+        payload, error = app_module.parse_chat_payload()
+    assert error is None
+    # Sans relevé, la recherche web répond (sinon l'IA dirait seulement qu'elle n'a pas de données).
+    assert payload["use_web"] is True and not payload.get("live_weather")

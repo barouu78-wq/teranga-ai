@@ -740,6 +740,9 @@ def parse_chat_payload():
             payload["instructions"] += "\n\n" + weather
             payload["use_web"] = False
             payload["live_weather"] = True
+        elif (payload.get("intent_context") or {}).get("intent") == "weather":
+            # Pas de relevé (Open-Meteo lent ou indisponible, lieu hors du Sénégal) : la recherche web répond.
+            payload["use_web"] = True
     if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
     if error == "empty":
