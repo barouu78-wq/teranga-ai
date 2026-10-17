@@ -1,0 +1,40 @@
+name: TLS domain diagnostic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/diagnose_tls.py"
+      - ".github/workflows/tls-diagnostic.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tls-domain-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: Inspect public TLS certificates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: diagnostic/tls-domain-cert
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Diagnose public certificates
+        run: |
+          openssl version
+          python scripts/diagnose_tls.py --json-file tls-report.json
+      - name: Upload TLS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: teranga-ai-tls-diagnostic
+          path: tls-report.json
+          if-no-files-found: warn
+          retention-days: 14
