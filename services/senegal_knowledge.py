@@ -103,6 +103,12 @@ _SHORT_STOPWORDS = frozenset({
 })
 
 
+# Mots communs d'un nom de lieu (« Village des Arts », « Musée Senghor ») : seuls dans la question, ils ne nomment pas
+# ce lieu (« musée » reste un nom : il dit ce qu'est le lieu, et « quels musées visiter » doit ramener les musées). « un village à visiter » ne ramenait plus que le Village des Arts, « où est né Senghor ? » que le musée et
+# plus Joal-Fadiouth. Avec un autre mot du nom (« musée Senghor », « Maison des Esclaves »), le lieu reste nommé.
+_NOMS_COMMUNS = frozenset({"village", "villages", "maison", "maisons", "senghor", "ndiaye"})
+
+
 # Une personne n'est retrouvée par un mot de sa fiche (et non par son nom) que si au plus trois fiches l'emploient.
 _PEOPLE_MAX_FICHES = 3
 
@@ -450,6 +456,8 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
             hit_tokens = {token for token in tokens if _hit(token, words)}
             if hit_tokens:
                 name_tokens = {token for token in tokens if _hit(token, name_words)}
+                if len(name_tokens) == 1 and name_tokens <= _NOMS_COMMUNS:
+                    name_tokens = set()
                 score = len([token for token in tokens if token in hit_tokens]) + 2 * len([t for t in tokens if t in name_tokens])
                 scored.append((-score, index, place, frozenset(hit_tokens), frozenset(name_tokens)))
         ranked = sorted(scored, key=lambda item: item[:2])
