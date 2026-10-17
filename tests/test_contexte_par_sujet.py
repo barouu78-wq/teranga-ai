@@ -50,7 +50,14 @@ def _block(instructions, title):
         return []
     block = instructions.split(title, 1)[1]
     stop = re.search(r"\n[A-ZÉ][A-ZÉÈ ’']{5,}", block)
-    return re.findall(r"^- ([^:(]+?)\s*[:(]", block[: stop.start()] if stop else block, re.M)
+    # Découpage sans expression régulière à quantificateurs voisins (alerte CodeQL « expression polynomiale »).
+    names = []
+    for line in (block[: stop.start()] if stop else block).splitlines():
+        if line.startswith("- "):
+            name = re.split(r"[:(]", line[2:], maxsplit=1)
+            if len(name) == 2 and name[0].strip():
+                names.append(name[0].strip())
+    return names
 
 
 def places(payload):
@@ -70,7 +77,12 @@ def dishes(payload):
 
 
 def dossiers(payload):
-    return re.findall(r"DOSSIER HISTORIQUE — ([^:]+) :", payload["instructions"])
+    titles = []
+    for line in payload["instructions"].splitlines():
+        _, found, rest = line.partition("DOSSIER HISTORIQUE — ")
+        if found and " :" in rest:
+            titles.append(rest.split(" :", 1)[0])
+    return titles
 
 
 # Le cas du propriétaire.
