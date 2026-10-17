@@ -23,15 +23,15 @@ def _tabaski():
 
 
 def test_slug_is_stable_and_url_safe():
-    assert event_slug(_tabaski()) == "tabaski-aid-el-kebir-2027-05-17"
+    assert event_slug(_tabaski()) == "tabaski-aid-el-kebir-2027"
     jazz = next(e for e in upcoming_events(TODAY) if "jazz" in e["name"])
-    assert event_slug(jazz) == "festival-international-de-jazz-de-saint-louis-2027-05-04"
+    assert event_slug(jazz) == "festival-international-de-jazz-de-saint-louis-2027"
 
 
 def test_find_event_only_returns_upcoming_events():
-    assert find_event("tabaski-aid-el-kebir-2027-05-17", TODAY)["name"].startswith("Tabaski")
+    assert find_event("tabaski-aid-el-kebir-2027", TODAY)["name"].startswith("Tabaski")
     # Le Magal 2026 (2 août) est passé : plus de rappel.
-    assert find_event("grand-magal-de-touba-2026-08-02", TODAY) is None
+    assert find_event("grand-magal-de-touba-2026", TODAY) is None
     assert find_event("../../etc/passwd", TODAY) is None
 
 
@@ -52,10 +52,18 @@ def test_confirmed_event_has_no_estimate_mention_and_multi_day_end():
     assert "DTEND;VALUE=DATE:20270509" in ics
 
 
-def test_two_reminders_one_week_and_one_day_before():
+def test_two_reminders_at_9am_one_week_and_one_day_before():
     ics = calendar_ics([_tabaski()], B, NOW)
     assert ics.count("BEGIN:VALARM") == 2
-    assert "TRIGGER:-P7D" in ics and "TRIGGER:-P1D" in ics
+    # Fête sans heure = minuit : -P6DT15H et -PT15H sonnent à 9 h, pas en pleine nuit.
+    assert "TRIGGER:-P6DT15H" in ics and "TRIGGER:-PT15H" in ics
+
+
+def test_slugs_are_unique_for_every_event():
+    from services.events import EVENTS
+
+    slugs = [event_slug({"name": e[2], "start": e[0]}) for e in EVENTS]
+    assert len(slugs) == len(set(slugs))
 
 
 def test_ics_is_valid_rfc5545():
@@ -81,7 +89,8 @@ def test_routes_serve_calendar_files():
     from app import app
 
     client = app.test_client()
-    one = client.get("/calendrier-fetes-senegal/tabaski-aid-el-kebir-2027-05-17.ics", base_url=B)
+    # Fête à venir à la date réelle du test : le test ne vieillit pas.
+    one = client.get(f"/calendrier-fetes-senegal/{event_slug(upcoming_events()[-1])}.ics", base_url=B)
     assert one.status_code == 200
     assert one.mimetype == "text/calendar"
     assert "attachment" in one.headers["Content-Disposition"]
@@ -93,7 +102,7 @@ def test_routes_serve_calendar_files():
 
 def test_page_offers_a_reminder_per_event_and_for_all():
     page = render_events_page(B, TODAY)
-    assert 'href="/calendrier-fetes-senegal/tabaski-aid-el-kebir-2027-05-17.ics"' in page
+    assert 'href="/calendrier-fetes-senegal/tabaski-aid-el-kebir-2027.ics"' in page
     assert 'href="/calendrier-fetes-senegal.ics"' in page
     assert "Me le rappeler" in page
     assert page.count('class="cta reminder"') == len(upcoming_events(TODAY))

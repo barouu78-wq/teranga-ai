@@ -16,7 +16,8 @@ from services.events import upcoming_events
 from services.text import fold_text
 
 _PRODID = "-//Teranga AI//Calendrier des fetes du Senegal//FR"
-_ALARMS = (("P7D", "dans une semaine"), ("P1D", "demain"))
+# Relatifs à minuit le jour de la fête : 9 h une semaine avant, puis 9 h la veille.
+_ALARMS = (("P6DT15H", "dans une semaine"), ("PT15H", "demain"))
 _ESTIMATE_NOTE = (
     "Date estimée, à vérifier : les fêtes musulmanes suivent le calendrier lunaire et la date est "
     "confirmée quelques jours avant par la commission nationale du croissant lunaire ou les familles religieuses."
@@ -24,9 +25,12 @@ _ESTIMATE_NOTE = (
 
 
 def event_slug(event: dict) -> str:
-    """« Tabaski (Aïd el-Kébir) » du 17 mai 2027 → « tabaski-aid-el-kebir-2027-05-17 »."""
+    """« Tabaski (Aïd el-Kébir) » de 2027 → « tabaski-aid-el-kebir-2027 ».
+
+    Nom et année seulement : quand une date estimée est confirmée (Tabaski du 17 au 16 mai),
+    le lien reste valable et l'agenda remplace l'événement (même UID) au lieu de le doubler."""
     words = re.sub(r"[^a-z0-9]+", "-", fold_text(event["name"])).strip("-")
-    return f"{words}-{event['start'].isoformat()}"
+    return f"{words}-{event['start'].year}"
 
 
 def find_event(slug: str, today: _dt.date | None = None) -> dict | None:
