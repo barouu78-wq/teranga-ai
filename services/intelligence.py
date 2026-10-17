@@ -202,6 +202,24 @@ def continues_plan(message: str) -> bool:
     return bool(_PLAN_EDIT.search(text))
 
 
+def starts_new_subject(message: str, *, own_subject: bool) -> bool:
+    """Vrai si le message ouvre un nouveau sujet : il nomme le sien (`own_subject` : lieu, plat, dossier, langue,
+    repère pratique national) et ne renvoie pas au tour précédent.
+
+    Les fiches de la base (lieux, régions, personnalités, dossiers) sont alors choisies sur ce message seul : sans
+    cela, « c est quoi le yassa » après Kédougou puis Podor recevait les fiches de ces deux lieux et le dossier du
+    Fouta-Toro. Une relance (« Et à Podor ? », « Ça coûte combien à Saly ? »), un renvoi (« Précise l'histoire »)
+    ou une retouche du plan (« Ajoute une journée au Djoudj ») garde le fil, comme un message sans sujet propre
+    (« Combien de temps faut-il pour la visite ? » après Gorée)."""
+    if not own_subject:
+        return False
+    text = _normalize(message).replace("'", " ")
+    words = re.findall(r"[a-z0-9]+", text)
+    if len(words) <= 8 and (_FOLLOW_UP_OPENER.match(text) or any(word in _BACK_REFERENCES for word in words)):
+        return False
+    return not _PLAN_EDIT.search(text)
+
+
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
     english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
@@ -316,6 +334,14 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     found_cities = [x for x in _CONTEXT_CITIES if x in mentioned]
     found_regions = [x for x in _CONTEXT_REGIONS if x in mentioned]
     intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(text_value, term) for term in terms)]
+    # Relance courte qui a son propre sujet (« Et pour manger ? » après la météo) : le lieu du fil reste, mais pas
+    # son sujet. Sans cela, le modèle lisait « Intentions détectées : weather, food » pour une question de repas.
+    # Le prix et le moment (« Et le prix ? », « Et demain ? ») précisent le sujet du fil sans le remplacer.
+    current_text = _normalize(message)
+    if history and len(current_text.split()) <= 8 and _SHORT_FOLLOW_UP.match(current_text):
+        own_intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(current_text, term) for term in terms)]
+        if set(own_intents) - {"price", "news"}:
+            intents = own_intents
     currency_amounts = re.findall(
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,

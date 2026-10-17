@@ -12,7 +12,9 @@ from .language_quality import language_instruction
 from .model_params import openai_model
 from .orchestrator import build_action_request, build_agent_plan as build_orchestrator_plan
 from .action_executor import prepare_action
-from .intelligence import is_acknowledgement
+from .intelligence import is_acknowledgement, starts_new_subject
+from .practical_facts import matching_topics
+from .senegal_knowledge import names_own_subject
 from .truncation import prepare_cut_history
 
 
@@ -61,6 +63,24 @@ _FOLLOWUP_RULE = (
     "Les éléments de la section CONTEXTE DE LA DEMANDE sont des déductions automatiques : ne les cite pas comme si l'utilisateur les avait explicitement déclarés."
 )
 STATIC_RULES = "\n\n".join((_KNOWLEDGE_WEB_RULE, _WEATHER_RULE, _FOLLOWUP_RULE))
+
+# Repères pratiques valables partout au Sénégal (services/practical_facts.py) : une question sur eux a son propre
+# sujet, quel que soit le lieu du fil. Transports, santé et saison dépendent du lieu (« Quelle saison pour y aller ? ») :
+# ils n'en font pas partie.
+_NATIONAL_TOPICS = frozenset({
+    "urgences", "premiers_secours", "argent", "arnaques", "mobile_money", "sim", "electricite", "heure", "visa",
+    "entreprise", "foncier", "vente", "papiers", "factures", "protection", "etudes", "langue",
+})
+
+
+def _has_own_subject(message: str, knowledge, own_context) -> bool:
+    """Le message nomme seul son sujet : un lieu, un plat, un dossier, une langue ou un repère pratique national."""
+    return (
+        bool(own_context.get("has_place"))
+        or bool(detect_location(message))
+        or names_own_subject(knowledge, message)
+        or bool(_NATIONAL_TOPICS.intersection(matching_topics(message)))
+    )
 
 _STEP_LABELS = {
     "prepare_context": "préparer le contexte",
@@ -245,6 +265,15 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             f"{trip_context}"
         )
     enriched_context = context["query"]
+    intents_shown = context.get("intents", [])
+    # Nouveau sujet (« c est quoi le yassa » après Kédougou puis Podor) : les fiches de la base et les intentions
+    # affichées viennent de la question seule, plus des quatre tours d'avant. Le lieu du fil reste dans la ligne
+    # « Contexte géographique » (utile pour « pharmacie de garde ») et le modèle garde la conversation.
+    if routing_history and not selected_place_from_ui:
+        own_context = infer_senegal_context([], message)
+        if starts_new_subject(message, own_subject=_has_own_subject(message, senegal_knowledge, own_context)):
+            enriched_context = own_context["query"]
+            intents_shown = own_context.get("intents", [])
     if context["has_place"]:
         if selected_place_from_ui:
             place_line = (
@@ -258,7 +287,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             )
     else:
         place_line = "Aucun lieu sénégalais fiable n'a été détecté ; n'invente pas de localisation."
-    intent_line = "Intentions détectées : " + (", ".join(context.get("intents", [])) or "générale") + "."
+    intent_line = "Intentions détectées : " + (", ".join(intents_shown) or "générale") + "."
     constraint_line = "Contraintes détectées : " + (", ".join(context.get("constraints", [])) or "aucune") + "."
     structured_memory = intent_context.get("memory") or {}
     agent_plan = build_orchestrator_plan({**context, "action_confirmed": action_confirmed, "use_web": bool(intent_context.get("needs_web_search")), "message": message, "intent_context": intent_context}, model=openai_model())
