@@ -46,7 +46,7 @@ un contrôle qui n'a pas tourné.
 | `templates/home.html` + `static/home.js` | Accueil et chat (design v2) |
 | `static/site.css` | Feuille des pages secondaires (mêmes jetons de couleur que l'accueil) |
 | `static/sw.js` | Service worker (hors connexion) : changer `VERSION` quand les fichiers préchargés changent |
-| `data/senegal_knowledge.json` | Base de connaissances : 93 lieux, 19 plats, 14 régions |
+| `data/senegal_knowledge.json` | Base de connaissances : 96 lieux, 19 plats, 14 régions |
 | `data/partners.json` | Adresses partenaires (toujours affichées « Partenaire ») |
 | `docs/` | Guides pour le propriétaire (monétisation, partenaires, Google Play, IA de secours) |
 

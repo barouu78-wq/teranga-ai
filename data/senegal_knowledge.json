@@ -3508,9 +3508,9 @@
       "type": "natural_site",
       "region": "Saint-Louis",
       "locality": "Gandiol",
-      "summary": "Réserve de 720 ha au sud de Saint-Louis, consacrée à l'élevage et à la réintroduction d'espèces menacées comme les oryx et les gazelles dama.",
+      "summary": "Réserve de 720 ha au sud de Saint-Louis, consacrée à la reproduction surveillée et à l'élevage d'espèces menacées, notamment les oryx et les gazelles dama ; c'est aussi un centre de réintroduction de gazelles.",
       "history": "Créée en 1983 dans un but scientifique, classée réserve de faune (catégorie IV de l'UICN) la même année. Inscrite sur la liste Ramsar des zones humides d'importance internationale le 29 septembre 1986.",
-      "what_to_see": "Oryx et gazelles dama; tortues sillonnées; phacochères, patas et varans; lagunes saumâtres; flamants roses et nidification d'avocettes",
+      "what_to_see": "Oryx et gazelles dama; tortues sillonnées; phacochères, patas et varans; lagunes saumâtres; environ 200 espèces d'oiseaux dont des flamants; plus grand site de nidification d'avocettes du Sénégal",
       "latitude": 15.9219,
       "longitude": -16.4646,
       "image_queries": [
@@ -3535,9 +3535,9 @@
       "type": "natural_site",
       "region": "Ziguinchor",
       "locality": "Kafountine",
-      "summary": "Réserve d'îlots sableux à l'embouchure du marigot de Kalissaye, en Basse-Casamance, refuge d'oiseaux marins, de tortues marines et de lamantins.",
-      "history": "Créée en juillet 1978 pour protéger les colonies d'oiseaux marins nicheurs et les sites de ponte des tortues marines. Jusqu'à 10 000 sternes caspiennes y ont été comptées dans les années 1980.",
-      "what_to_see": "Îles du Bliss et de Karones; sternes caspiennes et royales; pélicans; limicoles migrateurs; tortues marines; lamantins",
+      "summary": "Réserve à l'embouchure du marigot de Kalissaye, dans le delta de la Casamance, entre les îles du Bliss et de Karones, pour les oiseaux marins et les tortues marines.",
+      "history": "Créée en juillet 1978 pour protéger les colonies d'oiseaux marins et les tortues marines. Jusqu'à 10 000 sternes caspiennes y ont été comptées dans les années 1980.",
+      "what_to_see": "Îles du Bliss et de Karones; sternes caspiennes et royales; pélicans; limicoles; tortues marines; lamantins",
       "latitude": 12.667,
       "longitude": -16.75,
       "coordinates_precision": "approximate",
@@ -3555,7 +3555,7 @@
         "Kalyssaye",
         "Réserve de Kalissaye"
       ],
-      "access": "Dans la commune de Kafountine (Bignona), en pirogue à travers les bolongs. Conditions d'accès et d'ouverture : à vérifier auprès du conservateur ou sur place."
+      "access": "Dans la commune de Kafountine (Bignona). Wikipédia la dit fermée à cause du conflit en Casamance, un article de 2024 décrit une visite en pirogue par les bolongs : ouverture et accès à vérifier sur place."
     },
     {
       "id": "grand-theatre-national",
@@ -3565,7 +3565,7 @@
       "locality": "Dakar-Plateau",
       "summary": "Grande salle de spectacle de Dakar, de 1 800 places, au carrefour Cyrnos et du boulevard de l'Arsenal.",
       "history": "Inauguré le 15 avril 2011, il fait partie du projet des « sept merveilles » du parc culturel de Dakar. Sa construction a mobilisé plus de 400 ouvriers sénégalais et chinois pendant plus de 27 mois. Il porte le nom de Doudou Ndiaye Rose.",
-      "what_to_see": "Spectacles de musique, de danse et de théâtre; architecture du bâtiment; programmation à vérifier avant de venir",
+      "what_to_see": "Représentations d'œuvres du répertoire sénégalais, africain et mondial; programmation à vérifier avant de venir",
       "latitude": 14.6831,
       "longitude": -17.4383,
       "image_queries": [
@@ -3578,8 +3578,6 @@
       ],
       "aliases": [
         "Grand Théâtre national",
-        
-        "Grand Théâtre national du Sénégal",
         "Grand Théâtre"
       ],
       "access": "Carrefour Cyrnos et boulevard de l'Arsenal, entre le Plateau et la Médina. Programme et billets : à vérifier auprès du théâtre."
