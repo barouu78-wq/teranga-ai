@@ -12,6 +12,7 @@ import pytest
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from app import app, parse_chat_payload  # noqa: E402
+from services.dakar_date import today_line  # noqa: E402
 
 PROBES = [
  # urgences et santé
@@ -215,7 +216,8 @@ def _context(question, lang):
     with app.test_request_context("/chat", method="POST", json={"message": question, "language": lang}):
         payload, error = parse_chat_payload()
     assert error is None
-    return payload["instructions"].replace(question, " ")
+    # Ni la question ni la date du jour (« 18 », « 2027 ») ne doivent compter comme un fait trouvé.
+    return payload["instructions"].replace(question, " ").replace(today_line(payload["language"]), " ")
 
 
 @pytest.mark.parametrize("lang,question,expected", PROBES + HARD, ids=[q for _, q, _ in PROBES + HARD])
