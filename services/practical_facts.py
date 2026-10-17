@@ -257,7 +257,8 @@ TOPICS = (
      r"\b(mauvais numero|par erreur|mauvais destinataire|mauvaise personne)\b.{0,40}\b(argent|virement|fcfa)\b|"
      r"\berreur (de |d )?(transfert|envoi|numero|destinataire)\b.{0,40}\b(argent|wave|orange|mobile)\b|"
      r"\bannuler (un |mon |le |ce )?(transfert d argent|virement|envoi d argent|paiement mobile)\b",
-     ("À quoi ça sert : Wave, Orange Money et Free Money sont des services de monnaie électronique (un portefeuille sur "
+     ("À quoi ça sert : Wave, Orange Money et Free Money (opérateur devenu Yas) sont des services de monnaie "
+      "électronique (un portefeuille sur "
       "le téléphone) pour envoyer et recevoir de l'argent, payer des commerçants et des factures (dont l'électricité "
       "Woyofal), recharger du crédit ou un forfait, déposer ou retirer des espèces chez un agent. Free Sénégal est "
       "devenu Yas (annonce de novembre 2024) : vérifier le nom actuel du service dans l'application. Frais, plafonds et "

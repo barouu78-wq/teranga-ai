@@ -12,3 +12,9 @@ def test_le_repere_sim_nomme_yas_et_plus_free_seul():
     context = practical_context("quelle carte sim acheter a l aeroport ?")
     assert "Yas" in context
     assert "Orange, Free et Expresso" not in context
+
+
+def test_le_repere_mobile_money_ne_presente_plus_free_money_sans_le_nouveau_nom():
+    context = practical_context("comment marche orange money ?")
+    assert "Wave, Orange Money et Free Money sont" not in context
+    assert "Yas" in context
