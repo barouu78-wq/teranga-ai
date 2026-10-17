@@ -78,7 +78,8 @@ def test_home_links_project_builder_to_partner_directory():
 def test_home_v2_hero_matches_mockup():
     html = home_source()
     assert 'id="heroAsk"' in html and 'id="heroInput"' in html and 'id="heroMic"' in html
-    assert 'href="/lieux/goree"' in html and 'href="/lieux/lac-rose"' in html
+    # « À découvrir » : deux lieux tirés par le serveur à chaque visite (tests/test_discover.py).
+    assert "__DISCOVER_TILES__" in html and 'href="/lieux"' in html
     assert 'href="/trip-planner"' in html and "planTitle:'Planifier mon voyage'" in html
     # Micro : icône au trait, plus d'émoji.
     assert ">🎤<" not in html
