@@ -1,5 +1,4 @@
 import hashlib
-import datetime
 import hmac
 import json
 import os
@@ -851,7 +850,8 @@ register_chat_route(app, {
     # de la base de connaissances invalide les anciennes réponses en cache.
     # Le prompt système, les partenaires et le modèle complexe en font partie aussi,
     # ainsi que la date (un partenariat expiré ne doit plus apparaître le lendemain).
-    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
+    # C'est la date de Dakar, celle écrite dans les instructions : une réponse n'est jamais resservie un autre jour.
+    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + dakar_today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,
