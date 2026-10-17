@@ -106,7 +106,12 @@ Deux agents ne modifient pas le même fichier en même temps : les fusions devie
 - Aucun fait inventé, aucun secret écrit, demandé ou affiché. Les jetons vivent dans les réglages de l'environnement.
 - Dire ce qui n'a pas tourné : **exécuté et réussi**, **exécuté et échoué**, **ignoré** (raison), **non exécuté** (outil
   manquant). Ne jamais écrire « vert » pour un contrôle qui n'a pas tourné.
-- Trois agents en parallèle au maximum : ils consomment le quota de la session.
+- **Un agent à la fois** par défaut (choix du propriétaire du 17 octobre 2026 : le quota de la semaine a été épuisé
+  le 15 octobre) ; trois agents en parallèle au maximum, seulement sur demande du propriétaire.
+- **Modèle selon le travail.** Les agents qui lisent ou rédigent (`analyste`, `gardien-prod`, `mesure-latence`,
+  `seo-visibilite`, `communication`, `chef-produit`) déclarent `model: sonnet`, moins coûteux. Ceux qui écrivent du
+  code ou le relisent (`developpeur`, `qualite-ia`, `voix`, `verificateur-reperes`, `relecteur-pr`, `securite`,
+  `ops-infra`) gardent le modèle de la session.
 
 ## Format commun du rapport final
 

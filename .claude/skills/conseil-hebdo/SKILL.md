@@ -6,9 +6,9 @@ description: Conduire la réunion hebdomadaire de l'entreprise d'agents de Teran
 # Conseil de la semaine
 
 Le chef de projet (la session Claude Code principale) conduit la réunion. Le propriétaire décide. Les agents
-rapportent. Trois agents en parallèle au maximum.
+rapportent. Un agent à la fois, pour économiser le quota.
 
-## 1. Lire l'état (en parallèle)
+## 1. Lire l'état (un agent après l'autre)
 - `gardien-prod` : santé de la production depuis le dernier conseil (déploiements, 5xx, WORKER TIMEOUT, mémoire).
 - `analyste` : tableau des indicateurs sur 7 jours, comparé à la semaine précédente.
 - `seo-visibilite` : audit du lundi.

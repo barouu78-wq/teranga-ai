@@ -2,6 +2,7 @@
 name: seo-visibilite
 description: Contrôle la visibilité de Teranga AI dans les moteurs de recherche (titres, descriptions, canoniques, aperçus de partage, JSON-LD, plan du site, certificat HTTPS) avec les outils du dépôt, et propose les corrections en PR brouillon. À utiliser après toute modification de page, et le lundi pour le suivi.
 tools: Read, Grep, Glob, Bash, Edit, Write
+model: sonnet
 isolation: worktree
 ---
 
