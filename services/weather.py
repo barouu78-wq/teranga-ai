@@ -12,14 +12,22 @@ import re
 import threading
 import time
 import unicodedata
-from datetime import datetime
+from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 API = "https://api.open-meteo.com/v1/forecast"
 CACHE_SECONDS = 15 * 60
+# Relevé un peu ancien servi tout de suite pendant qu'un nouveau est demandé
+# (l'heure du relevé figure dans le texte donné à l'IA).
+STALE_SECONDS = 60 * 60
 _CACHE: dict[tuple[float, float], tuple[float, dict]] = {}
 _LOCK = threading.Lock()
+# Appels Open-Meteo en arrière-plan : une réponse lente n'immobilise pas le chat.
+_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix="meteo")
+_PENDING: dict[tuple[float, float], Future] = {}
 
 # Codes météo WMO utilisés par Open-Meteo.
 _CODES = {
@@ -89,6 +97,49 @@ def fetch_forecast(lat: float, lon: float, *, opener=None, now=None) -> dict:
     return data
 
 
+def _refresh(lat: float, lon: float, opener=None) -> Future:
+    """Appel Open-Meteo en arrière-plan ; un seul à la fois par lieu."""
+    key = (round(lat, 2), round(lon, 2))
+    with _LOCK:
+        pending = _PENDING.get(key)
+        if pending is not None and not pending.done():
+            return pending
+        future = _EXECUTOR.submit(fetch_forecast, lat, lon, opener=opener)
+        _PENDING[key] = future
+    return future
+
+
+def forecast_within(lat: float, lon: float, budget: float, *, opener=None, now=None) -> dict | None:
+    """Prévisions sans attendre plus de ``budget`` secondes ; None si Open-Meteo est trop lent.
+
+    Un relevé récent sert directement. Un relevé de moins d'une heure sert aussi, et un
+    nouveau est demandé en arrière-plan. Sinon l'appel attend au plus ``budget`` : au-delà,
+    il continue seul et remplit le cache pour la question suivante.
+    """
+    key = (round(lat, 2), round(lon, 2))
+    now = time.monotonic() if now is None else now
+    with _LOCK:
+        cached = _CACHE.get(key)
+    age = now - cached[0] if cached else None
+    if age is not None and age < CACHE_SECONDS:
+        return cached[1]
+    future = _refresh(lat, lon, opener)
+    if age is not None and age < STALE_SECONDS and _same_day_in_dakar(cached[1]):
+        return cached[1]
+    try:
+        return future.result(timeout=budget)
+    except FutureTimeout:
+        if future.done():
+            raise  # TimeoutError levé par l'appel lui-même : service indisponible, pas lent
+        return None
+
+
+def _same_day_in_dakar(data: dict) -> bool:
+    """Le relevé date-t-il d'aujourd'hui à Dakar (UTC+0) ? Sinon « Aujourd'hui » serait la veille."""
+    observed = str((data.get("current") or {}).get("time") or "")[:10]
+    return observed == datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
 def _describe(code, language):
     pair = _CODES.get(int(code)) if code is not None else None
     return (pair[1] if language == "en" else pair[0]) if pair else ("variable" if language == "en" else "temps variable")
@@ -145,8 +196,14 @@ def _names_unknown_place(message: str) -> bool:
     return bool(_PLACE_AFTER_PREPOSITION.search(_normalize(message)))
 
 
-def live_weather_context(locations: dict, intent_context: dict, message: str, language: str = "fr", *, opener=None, logger=None):
-    """Texte météo prêt pour le prompt, ou None (lieu inconnu, service indisponible)."""
+def live_weather_context(
+    locations: dict, intent_context: dict, message: str, language: str = "fr", *, opener=None, logger=None,
+    budget: float | None = None,
+):
+    """Texte météo prêt pour le prompt, ou None (lieu inconnu, service indisponible ou trop lent).
+
+    Avec ``budget`` (secondes), l'attente d'Open-Meteo est bornée (voir ``forecast_within``).
+    """
     if (intent_context or {}).get("intent") != "weather":
         return None
     found = resolve_location(locations, (intent_context or {}).get("location"), message)
@@ -158,7 +215,15 @@ def live_weather_context(locations: dict, intent_context: dict, message: str, la
         return None
     name, lat, lon = found
     try:
-        return format_forecast(name, fetch_forecast(lat, lon, opener=opener), language)
+        if budget is None:
+            data = fetch_forecast(lat, lon, opener=opener)
+        else:
+            data = forecast_within(lat, lon, budget, opener=opener)
+            if data is None:
+                if logger is not None:
+                    logger.info("open-meteo trop lent: recherche web")
+                return None
+        return format_forecast(name, data, language)
     except Exception as exc:  # noqa: BLE001 - la recherche web prend le relais
         if logger is not None:
             logger.warning("open-meteo indisponible: %s", type(exc).__name__)
