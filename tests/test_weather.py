@@ -1,6 +1,7 @@
 import io
 import json
 import os
+from datetime import datetime, timezone
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
@@ -100,15 +101,48 @@ def test_recently_stale_forecast_is_served_at_once_and_refreshed_in_the_backgrou
 
     weather._CACHE.clear()
     key = (round(14.7167, 2), round(-17.4677, 2))
-    weather._CACHE[key] = (time.monotonic() - weather.CACHE_SECONDS - 60, SAMPLE)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    reading = {**SAMPLE, "current": {**SAMPLE["current"], "time": today + "T14:00"}}
+    weather._CACHE[key] = (time.monotonic() - weather.CACHE_SECONDS - 60, reading)
     calls, release = [], threading.Event()
     text = weather.live_weather_context(LOCATIONS, {"intent": "weather"}, "météo Dakar", opener=_slow_opener(calls, release), budget=0.05)
-    assert "relevée le 05/10 14:00" in text  # l'heure du relevé reste affichée
+    assert "14:00" in text  # l'heure du relevé reste affichée
     release.set()
     deadline = time.monotonic() + 2
     while weather._CACHE[key][0] < time.monotonic() - weather.CACHE_SECONDS and time.monotonic() < deadline:
         time.sleep(0.01)
     assert len(calls) == 1 and time.monotonic() - weather._CACHE[key][0] < weather.CACHE_SECONDS
+
+
+def test_recent_reading_from_yesterday_is_not_served_after_midnight():
+    import threading
+    import time
+
+    weather._CACHE.clear()
+    key = (round(14.7167, 2), round(-17.4677, 2))
+    # SAMPLE date du 05/10/2026 : « Aujourd'hui » y serait la veille.
+    weather._CACHE[key] = (time.monotonic() - weather.CACHE_SECONDS - 60, SAMPLE)
+    release = threading.Event()
+    assert weather.live_weather_context(LOCATIONS, {"intent": "weather"}, "météo Dakar", opener=_slow_opener([], release), budget=0.05) is None
+    release.set()
+
+
+def test_open_meteo_timeout_is_logged_as_an_outage_not_as_slowness():
+    weather._CACHE.clear()
+    logs = []
+
+    class Logger:
+        def info(self, *args):
+            logs.append(("info", args[0]))
+
+        def warning(self, *args):
+            logs.append(("warning", args[0] % args[1:]))
+
+    def broken(request, timeout=4):
+        raise TimeoutError("lent")
+
+    assert weather.live_weather_context(LOCATIONS, {"intent": "weather"}, "météo Ziguinchor", opener=broken, budget=0.5, logger=Logger()) is None
+    assert logs == [("warning", "open-meteo indisponible: TimeoutError")]
 
 
 def test_too_old_forecast_is_not_served_without_a_fresh_reading():

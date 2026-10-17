@@ -14,7 +14,7 @@ import time
 import unicodedata
 from concurrent.futures import Future, ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -124,12 +124,20 @@ def forecast_within(lat: float, lon: float, budget: float, *, opener=None, now=N
     if age is not None and age < CACHE_SECONDS:
         return cached[1]
     future = _refresh(lat, lon, opener)
-    if age is not None and age < STALE_SECONDS:
+    if age is not None and age < STALE_SECONDS and _same_day_in_dakar(cached[1]):
         return cached[1]
     try:
         return future.result(timeout=budget)
     except FutureTimeout:
+        if future.done():
+            raise  # TimeoutError levé par l'appel lui-même : service indisponible, pas lent
         return None
+
+
+def _same_day_in_dakar(data: dict) -> bool:
+    """Le relevé date-t-il d'aujourd'hui à Dakar (UTC+0) ? Sinon « Aujourd'hui » serait la veille."""
+    observed = str((data.get("current") or {}).get("time") or "")[:10]
+    return observed == datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def _describe(code, language):
