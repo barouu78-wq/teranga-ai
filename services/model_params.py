@@ -9,6 +9,9 @@ from typing import Any
 
 CHAT_MAX_OUTPUT_TOKENS = 800
 WEB_OR_PLANNER_MAX_OUTPUT_TOKENS = 1200
+# Effort « medium » ou plus (modèle complexe) : le raisonnement seul peut dépasser 800 jetons,
+# et la réponse visible était coupée. Ce plafond n'est atteint que si le modèle en a besoin.
+REASONING_MAX_OUTPUT_TOKENS = 2000
 PROMPT_CACHE_KEY = "teranga-chat-v1"
 
 # Noms des modèles OpenAI par défaut. Chacun se règle par une variable d'environnement
@@ -74,7 +77,11 @@ def build_model_kwargs(
         # Les tokens de raisonnement sont décomptés de max_output_tokens : une
         # limite trop basse tronque la réponse visible. La longueur effective
         # reste pilotée par les consignes du prompt.
-        "max_output_tokens": WEB_OR_PLANNER_MAX_OUTPUT_TOKENS if (use_web or planner) else CHAT_MAX_OUTPUT_TOKENS,
+        "max_output_tokens": (
+            REASONING_MAX_OUTPUT_TOKENS if effort not in ("none", "minimal", "low")
+            else WEB_OR_PLANNER_MAX_OUTPUT_TOKENS if (use_web or planner)
+            else CHAT_MAX_OUTPUT_TOKENS
+        ),
         "reasoning": {"effort": effort},
         "truncation": "auto",
         "stream": stream,
