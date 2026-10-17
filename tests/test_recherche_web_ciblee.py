@@ -264,3 +264,11 @@ def test_chat_route_sends_the_cleaned_query_to_the_search_provider(monkeypatch):
     assert len(sent) == 1
     assert sent[0] != "et en bus ?"
     assert "aibd" in sent[0].casefold() and "bus" in sent[0].casefold()
+
+
+def test_numero_senegalais_avec_indicatif_sans_plus_n_est_pas_envoye():
+    # « 221 » collé au numéro, sans « + » ni « 00 » : c'est quand même un numéro personnel.
+    query = research_query(site("appelle 221771234567 pour le prix du ferry"))
+    assert "221771234567" not in query
+    assert "ferry" in query
+

@@ -209,12 +209,14 @@ def should_use_web(message, context=""):
 RESEARCH_QUERY_MAX_CHARS = 300  # hors URL, qui n'est jamais coupée (Firecrawl lit la page demandée)
 _PREVIOUS_TURN_MAX_CHARS = 200
 _URL = re.compile(r"(https?://[^\s<>'\"]+)")
-_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+# Partie locale bornée (64 caractères au plus, RFC 5321) et commencée en début de mot : temps linéaire
+# même sur une longue suite de « + » (alerte CodeQL « expression polynomiale »).
+_EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]{1,64}@[\w-]+(?:\.[\w-]+)+")
 _PHONE = re.compile(
     r"(?<![\w+])(?:"
     r"(?:\+|00)\d{1,3}(?:[\s.-]?\d){8,11}"         # international : +221 77 123 45 67, 0033 6 12 34 56 78
-    r"|7[05-8][\s.]?\d{3}(?:[\s.]?\d{2}){2}"      # mobile sénégalais : 77 123 45 67
-    r"|3[03][\s.]?\d{3}(?:[\s.]?\d{2}){2}"        # fixe sénégalais : 33 823 45 67
+    r"|(?:221[\s.]?)?7[05-8][\s.]?\d{3}(?:[\s.]?\d{2}){2}"  # mobile sénégalais : 77 123 45 67, 221771234567
+    r"|(?:221[\s.]?)?3[03][\s.]?\d{3}(?:[\s.]?\d{2}){2}"  # fixe sénégalais : 33 823 45 67
     r"|0[1-9](?:[\s.]?\d{2}){4}"                  # France : 06 12 34 56 78
     r")(?!\w)"
 )
