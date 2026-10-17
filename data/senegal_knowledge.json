@@ -3581,6 +3581,56 @@
         "Grand Théâtre"
       ],
       "access": "Carrefour Cyrnos et boulevard de l'Arsenal, entre le Plateau et la Médina. Programme et billets : à vérifier auprès du théâtre."
+    },
+    {
+      "id": "musee-senghor",
+      "name": "Musée Léopold Sédar Senghor (maison de Senghor)",
+      "type": "museum",
+      "region": "Dakar",
+      "locality": "Fann Résidence",
+      "summary": "Ancienne maison du président-poète Léopold Sédar Senghor, devenue musée, près de la Corniche Ouest.",
+      "history": "Maison construite à la fin des années 1970 sur une parcelle d'environ 8 000 m². Rachetée par l'État et réhabilitée, elle a été inaugurée comme musée le 30 novembre 2014, lors du XVe sommet de la Francophonie.",
+      "what_to_see": "Pièces de réception, salon blanc avec sculptures et collections personnelles, bureau et bibliothèque de Senghor, chambres de la famille, jardin avec piscine; visite guidée",
+      "latitude": 14.6935,
+      "longitude": -17.4705,
+      "image_queries": [
+        "Musée Léopold Sédar Senghor Fann",
+        "Maison de Senghor musée"
+      ],
+      "sources": [
+        "https://au-senegal.com/la-maison-de-senghor-est-devenue-musee,10713.html",
+        "https://lepetitjournal.com/dakar/a-voir-a-faire/musee-senghor-dakar-la-rencontre-de-lhomme-de-culture-244339"
+      ],
+      "aliases": [
+        "Musée Senghor",
+        "Maison de Senghor",
+        "Maison Senghor"
+      ],
+      "access": "Rue Léo Frobenius, Fann Résidence. Jours, horaires et tarifs : à vérifier avant de venir."
+    },
+    {
+      "id": "village-des-arts",
+      "name": "Village des Arts",
+      "type": "cultural_site",
+      "region": "Dakar",
+      "locality": "Yoff, route de l'aéroport",
+      "summary": "Lieu d'ateliers d'artistes sur environ 4 hectares, avec la galerie Léopold Sédar Senghor, près du stade Léopold Sédar Senghor.",
+      "history": "Les ateliers logeaient d'abord les ouvriers chinois qui ont construit le stade Léopold Sédar Senghor. Après leur départ en 1998, le ministère de la Culture les a attribués à des artistes, issus de l'École des Beaux-Arts de Dakar ou autodidactes. La galerie a été réhabilitée avec la Fondation Sonatel.",
+      "what_to_see": "Galerie Léopold Sédar Senghor, ateliers d'artistes, sculptures en plein air; expositions et programmation à vérifier",
+      "latitude": 14.7455,
+      "longitude": -17.4525,
+      "image_queries": [
+        "Village des Arts Dakar",
+        "Galerie Léopold Sédar Senghor Village des Arts"
+      ],
+      "sources": [
+        "https://au-senegal.com/le-village-des-arts-fait-peau-neuve,15755.html",
+        "https://www.seneplus.com/node/32813"
+      ],
+      "aliases": [
+        "Village des Arts"
+      ],
+      "access": "Route de l'aéroport, à environ 500 m du stade Léopold Sédar Senghor. Horaires et expositions : à vérifier."
     }
   ],
   "authoritative_sources": [
