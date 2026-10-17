@@ -95,7 +95,7 @@ def test_build_model_kwargs_adds_web_tool_and_domains():
     }]
 
 
-def test_build_model_kwargs_applies_senegal_transport_sources():
+def test_build_model_kwargs_transport_searches_the_open_web():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -112,10 +112,12 @@ def test_build_model_kwargs_applies_senegal_transport_sources():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["transports.gouv.sn", "gov.sn"]
+    # Ferry, TER, taxi : la réponse est chez l'opérateur ; pas de liste fermée de domaines.
+    assert result["tools"][0]["type"] == "web_search"
+    assert "filters" not in result["tools"][0]
 
 
-def test_build_model_kwargs_applies_senegal_food_sources():
+def test_build_model_kwargs_food_searches_the_open_web():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -132,7 +134,29 @@ def test_build_model_kwargs_applies_senegal_food_sources():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["agriculture.gouv.sn", "tourisme.gouv.sn"]
+    # Restaurants : pas au ministère de l'Agriculture ; pas de liste fermée de domaines.
+    assert result["tools"][0]["type"] == "web_search"
+    assert "filters" not in result["tools"][0]
+
+
+def test_build_model_kwargs_keeps_official_sources_for_administration():
+    from services.web_policy import preferred_domains
+    result = build_model_kwargs(
+        {
+            "use_web": True,
+            "planner": False,
+            "deep_reasoning": False,
+            "instructions": "i",
+            "input_text": "q",
+            "intent_context": {"domain": "administration"},
+        },
+        model="gpt-test",
+        reasoning_effort=lambda web, planner: "low",
+        search_context_size=lambda domain, planner: "low",
+        preferred_domains=preferred_domains,
+        stream=False,
+    )
+    assert result["tools"][0]["filters"]["allowed_domains"] == ["diplomatie.gouv.sn", "interieur.gouv.sn", "gouv.sn"]
 
 
 # --- Noms des modèles : valeurs par défaut inchangées, réglables par l'environnement ---
