@@ -1,0 +1,49 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>
+@font-face{font-family:Bri;src:url('{{FONTS}}bricolage-grotesque.woff2') format('woff2')}
+@font-face{font-family:Atk;src:url('{{FONTS}}atkinson-hyperlegible-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:Atk;src:url('{{FONTS}}atkinson-hyperlegible-700.woff2') format('woff2');font-weight:700}
+:root{--bg:#0e1512;--s:#17201b;--s2:#1f2a24;--gold:#e3a33b;--gold2:#e7bb63;--ink:#f3efe2;--muted:#b9b4a2;--g:#00853f;--y:#fdef42;--r:#e31b23}
+*{box-sizing:border-box;margin:0}html,body{width:540px;height:960px;overflow:hidden}
+body{background:radial-gradient(120% 80% at 50% 0%,#1d3a2a 0%,var(--bg) 55%,#08100c 100%);color:var(--ink);font-family:Atk,sans-serif}
+.flag{position:absolute;top:0;left:0;right:0;height:8px;display:flex}.flag i{flex:1}.flag i:nth-child(1){background:var(--g)}.flag i:nth-child(2){background:var(--y)}.flag i:nth-child(3){background:var(--r)}
+.scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;text-align:center;opacity:0;animation:scene 4s ease both}
+@keyframes scene{0%{opacity:0;transform:translateY(24px)}12%{opacity:1;transform:none}88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-16px)}}
+@keyframes first{0%{opacity:1;transform:none}88%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-16px)}}
+@keyframes last{0%{opacity:0;transform:translateY(24px)}12%{opacity:1;transform:none}100%{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:translateY(18px) scale(.96)}100%{opacity:1;transform:none}}
+@keyframes grow{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+.lion svg{width:220px;height:220px;fill:var(--gold);filter:drop-shadow(0 0 28px rgba(227,163,59,.45))}
+h1{font-family:Bri,sans-serif;font-size:64px;line-height:1.05;letter-spacing:-.01em}h1 em{font-style:normal;color:var(--gold)}
+h2{text-wrap:balance;font-family:Bri,sans-serif;font-size:42px;line-height:1.12;margin-bottom:28px}
+.sub{font-size:26px;color:var(--muted);margin-top:16px;line-height:1.35}
+.pop{opacity:0;animation:pop .6s ease-out both}
+.bubble{align-self:stretch;background:var(--s2);border:1px solid rgba(231,187,99,.35);border-radius:22px 22px 22px 6px;padding:18px 22px;font-size:25px;text-align:left;margin:9px 0}
+.bubble small{display:block;color:var(--gold2);font-size:16px;font-weight:700;letter-spacing:.08em;margin-bottom:4px}
+.mic{position:relative;width:170px;height:170px;margin-bottom:46px}.mic span{position:absolute;inset:0;border-radius:50%;background:var(--gold);animation:pulse 1.6s ease-out infinite}.mic span:nth-child(2){animation-delay:.8s}
+.mic b{position:absolute;inset:0;border-radius:50%;background:var(--gold);display:grid;place-items:center}.mic svg{width:76px;height:76px;fill:none;stroke:#0e1512;stroke-width:2.2;stroke-linecap:round}
+.day{align-self:stretch;display:flex;gap:16px;align-items:center;background:var(--s);border-left:5px solid var(--gold);border-radius:16px;padding:16px 20px;margin:8px 0;text-align:left}
+.day strong{font-family:Bri,sans-serif;color:var(--gold);font-size:22px;min-width:92px}.day span{font-size:24px}
+.tag{font-size:17px;color:var(--muted);margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-self:stretch}.card{background:var(--s);border:1px solid rgba(231,187,99,.3);border-radius:18px;padding:24px 14px;font-size:24px;font-weight:700}
+.url{font-family:Bri,sans-serif;font-size:58px;color:var(--gold);margin:22px 0 10px}
+.small-lion svg{width:120px;height:120px;fill:var(--gold)}
+</style></head><body><div class="flag"><i></i><i></i><i></i></div>
+<section class="scene" style="animation:first 4s ease both;animation-delay:0s"><div class="lion">{{LION}}</div><h1 style="margin-top:26px">Teranga <em>AI</em></h1><p class="sub">L'assistant IA du Sénégal</p></section>
+<section class="scene" style="animation-delay:4s;animation-duration:5s"><h2>Pose ta question</h2>
+<div class="bubble pop" style="animation-delay:4.6s"><small>FRANÇAIS</small>Que voir à Dakar ce week-end ?</div>
+<div class="bubble pop" style="animation-delay:5.4s"><small>ENGLISH</small>How do I get from AIBD to Dakar?</div>
+<div class="bubble pop" style="animation-delay:6.2s"><small>WOLOF</small>Nanga def ?</div>
+<p class="sub pop" style="animation-delay:7s">En français, en anglais ou en wolof</p></section>
+<section class="scene" style="animation-delay:9s"><div class="mic"><span></span><span></span><b><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></b></div><h2>Parle-lui.</h2><p class="sub">Teranga te répond à voix haute.</p></section>
+<section class="scene" style="animation-delay:13s"><h2>Ton voyage, jour par jour</h2>
+<div class="day pop" style="animation-delay:13.5s"><strong>Jour 1</strong><span>Dakar et l'île de Gorée</span></div>
+<div class="day pop" style="animation-delay:14.1s"><strong>Jour 2</strong><span>Le lac Rose</span></div>
+<div class="day pop" style="animation-delay:14.7s"><strong>Jour 3</strong><span>Saint-Louis</span></div>
+<p class="tag pop" style="animation-delay:15.2s">Exemple de planificateur — à adapter à ton séjour</p></section>
+<section class="scene" style="animation-delay:17s"><h2>Des repères vérifiés</h2><div class="grid">
+<div class="card pop" style="animation-delay:17.4s">Urgences</div><div class="card pop" style="animation-delay:17.7s">Argent et mobile money</div>
+<div class="card pop" style="animation-delay:18s">Cartes SIM</div><div class="card pop" style="animation-delay:18.3s">Démarches</div></div>
+<p class="sub pop" style="animation-delay:18.8s">Sourcés, et marqués « à vérifier » quand ça peut changer</p></section>
+<section class="scene" style="animation:last 4s ease both;animation-delay:21s"><div class="small-lion">{{LION}}</div><p class="url">teranga-ai.fr</p><p class="sub">L'IA au service du Sénégal<br>et de sa diaspora</p></section>
+</body></html>
