@@ -14,6 +14,7 @@ from .orchestrator import build_action_request, build_agent_plan as build_orches
 from .action_executor import prepare_action
 from .intelligence import is_acknowledgement, starts_new_subject
 from .practical_facts import matching_topics
+from .text import fold_text
 from .senegal_knowledge import names_own_subject
 from .truncation import prepare_cut_history
 
@@ -73,13 +74,30 @@ _NATIONAL_TOPICS = frozenset({
 })
 
 
+# Repères nationaux dont les mots déclencheurs parlent souvent du lieu du fil : « c'est dangereux ? », « c'est sûr ? »,
+# « la police est présente ? » (urgences), « y a du wifi ? » (sim). Ils ne font un nouveau sujet que s'ils sont nommés :
+# numéro d'urgence, secours, ou le pays entier (« le senegal est il un pays sur ? ») ; carte SIM, opérateur, forfait.
+_NAMED_ONLY = {
+    "urgences": re.compile(r"urgen|pompier|samu|ambulance|numero|commissariat|gendarmerie|\b(?:pays|senegal)\b"),
+    "sim": re.compile(r"\b(?:e?sim|operateurs?|forfaits?|data)\b|telephone portable|phone plan"),
+}
+
+
+def _names_national_topic(message: str) -> bool:
+    folded = fold_text(message)
+    return any(
+        topic in _NATIONAL_TOPICS and (topic not in _NAMED_ONLY or _NAMED_ONLY[topic].search(folded))
+        for topic in matching_topics(message)
+    )
+
+
 def _has_own_subject(message: str, knowledge, own_context) -> bool:
     """Le message nomme seul son sujet : un lieu, un plat, un dossier, une langue ou un repère pratique national."""
     return (
         bool(own_context.get("has_place"))
         or bool(detect_location(message))
         or names_own_subject(knowledge, message)
-        or bool(_NATIONAL_TOPICS.intersection(matching_topics(message)))
+        or _names_national_topic(message)
     )
 
 _STEP_LABELS = {
