@@ -51,3 +51,14 @@ def test_ou_est_ne_senghor_garde_joal(data):
 def test_le_lieu_reste_nomme_avec_deux_mots_de_son_nom(data):
     assert "Village des Arts" in format_senegal_knowledge(data, "le Village des Arts")
     assert "Musée Léopold Sédar Senghor" in format_senegal_knowledge(data, "visiter le musée Senghor")
+
+
+def test_une_question_sur_les_musees_ramene_les_musees(data):
+    lieux = _lieux(format_senegal_knowledge(data, "quels musées visiter à Dakar ?"))
+    assert lieux[0].startswith("Musée"), lieux
+    assert "Musée Léopold Sédar Senghor" in lieux, lieux
+
+
+def test_un_musee_nomme_ne_ramene_que_lui(data):
+    lieux = _lieux(format_senegal_knowledge(data, "musée des civilisations noires"))
+    assert lieux == ["Musée des Civilisations Noires"], lieux

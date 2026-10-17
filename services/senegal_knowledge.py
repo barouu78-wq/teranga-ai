@@ -104,9 +104,9 @@ _SHORT_STOPWORDS = frozenset({
 
 
 # Mots communs d'un nom de lieu (« Village des Arts », « Musée Senghor ») : seuls dans la question, ils ne nomment pas
-# ce lieu. « un village à visiter » ne ramenait plus que le Village des Arts, « où est né Senghor ? » que le musée et
+# ce lieu (« musée » reste un nom : il dit ce qu'est le lieu, et « quels musées visiter » doit ramener les musées). « un village à visiter » ne ramenait plus que le Village des Arts, « où est né Senghor ? » que le musée et
 # plus Joal-Fadiouth. Avec un autre mot du nom (« musée Senghor », « Maison des Esclaves »), le lieu reste nommé.
-_NOMS_COMMUNS = frozenset({"village", "villages", "musee", "musees", "maison", "maisons", "senghor", "ndiaye"})
+_NOMS_COMMUNS = frozenset({"village", "villages", "maison", "maisons", "senghor", "ndiaye"})
 
 
 # Une personne n'est retrouvée par un mot de sa fiche (et non par son nom) que si au plus trois fiches l'emploient.
