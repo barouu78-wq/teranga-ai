@@ -290,6 +290,47 @@ def _matched_dishes(data: dict, folded_query: str, limit: int = 4) -> list[dict]
     return found[:limit]
 
 
+# Langues dont la base a des phrases sûres (voir format_senegal_knowledge) : une question sur elles a son propre sujet.
+_LANGUAGE_SUBJECT = re.compile(r"(?<![a-z])(?:wolof|pulaar|pular|fulfulde)(?![a-z])")
+
+
+def _place_names_pattern(data: dict) -> re.Pattern | None:
+    """Noms et autres noms des lieux de la base, en expressions entières (« lac rose », « djoudj », « sandaga »).
+
+    Calculé une fois, puis gardé dans la base elle-même (comme les autres clés « _ »)."""
+    if "_place_names_match" not in data:
+        names = set()
+        for place in data.get("places", []):
+            if isinstance(place, dict):
+                for name in (place.get("name", ""), *(place.get("aliases") or [])):
+                    folded = _fold(name).strip()
+                    if len(folded) >= 3:
+                        names.add(folded)
+        ordered = sorted(names, key=len, reverse=True)
+        data["_place_names_match"] = (
+            re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(n) for n in ordered) + r")(?![a-z0-9])") if ordered else None
+        )
+    return data["_place_names_match"]
+
+
+def names_own_subject(data, message: str) -> bool:
+    """Le message nomme-t-il, seul, un sujet de la base : lieu, plat ou boisson, dossier historique, langue ?
+
+    Sert à reconnaître un changement de sujet (services/intelligence.py, `starts_new_subject`) : les fiches du
+    fil ne sont alors plus ajoutées à celles de la question."""
+    if not isinstance(data, dict):
+        return False
+    folded = _fold(message)
+    if _LANGUAGE_SUBJECT.search(folded):
+        return True
+    if _matched_dishes(data, folded, limit=1):
+        return True
+    if any(isinstance(d, dict) and d.get("_match") is not None and d["_match"].search(folded) for d in data.get("history_dossiers", [])):
+        return True
+    pattern = _place_names_pattern(data)
+    return bool(pattern and pattern.search(folded))
+
+
 def _knowledge_domain(query: str) -> str:
     value = str(query or "").casefold()
     domain_terms = {
