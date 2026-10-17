@@ -214,3 +214,65 @@ def test_le_lieu_du_fil_reste_dans_le_contexte_geographique(previous, message, p
     # (« pharmacie de garde » après Ouakam reste utile à Ouakam).
     payload = site(previous, message)
     assert f"Contexte géographique détecté : {place}." in payload["instructions"]
+
+
+# Relances qui perdaient leur lieu (relecture de la PR 471, comparaison main / branche).
+# 1. Un repère national ne fait un nouveau sujet que s'il est nommé : « dangereux », « sûr », « la police est
+#    présente ? » ou « wifi » parlent du lieu du fil, pas des numéros d'urgence ni de la carte SIM.
+# 2. « y », « là », « là-bas », « sur place » renvoient au lieu du fil.
+# 3. Une relance qui renvoie au fil et nomme un lieu garde les deux.
+
+RELANCES_SUR_LE_LIEU = [
+    (("visiter le lac rose",), "c'est dangereux ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "c'est dangereux de s'y baigner ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "c'est dangereux de s'y baigner ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "est-ce dangereux la nuit ?", {"Île de Gorée"}),
+    (("visiter le lac rose",), "et la nuit, c'est sûr ? la police est présente ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "faut-il un visa pour y aller ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "y a du wifi ?", {"Île de Gorée"}),
+    (("visiter le lac rose",), "on mange quoi là-bas ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "on peut dormir là ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "combien de temps pour y aller depuis saly ?", {"Lac Rose / Lac Retba", "Saly"}),
+    (("visiter le lac rose",), "il y a un taxi pour y aller depuis dakar ?", {"Lac Rose / Lac Retba", "Corniche de Dakar"}),
+]
+
+
+@pytest.mark.parametrize("previous,message,kept", RELANCES_SUR_LE_LIEU, ids=[case[1] for case in RELANCES_SUR_LE_LIEU])
+def test_une_relance_sur_le_lieu_du_fil_le_garde(previous, message, kept):
+    found = places(site(*previous, message))
+    assert kept <= set(found), found
+
+
+def test_est_ce_dangereux_la_nuit_ne_fait_pas_venir_un_autre_lieu():
+    assert "Ziguinchor" not in places(site("que voir a gorée", "est-ce dangereux la nuit ?"))
+
+
+# Cas négatifs voisins : un repère national nommé reste un nouveau sujet.
+
+NATIONAL_NOMME = [
+    (("visiter le lac rose",), "numero des pompiers", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "le senegal est il un pays sur ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "il faut un visa pour le senegal ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "quel forfait internet prendre ?", {"Île de Gorée"}),
+]
+
+
+@pytest.mark.parametrize("previous,message,absent", NATIONAL_NOMME, ids=[case[1] for case in NATIONAL_NOMME])
+def test_un_repere_national_nomme_reste_un_nouveau_sujet(previous, message, absent):
+    found = places(site(*previous, message))
+    assert not absent & set(found), found
+
+
+@pytest.mark.parametrize("message,expected", [
+    ("faut-il un visa pour y aller ?", False),  # « y aller » renvoie au lieu du fil
+    ("il y a un taxi pour y aller depuis dakar ?", False),
+    ("on mange quoi là-bas ?", False),
+    ("il fait chaud sur place ?", False),
+    ("on peut dormir là ?", False),
+    ("y a t il un visa pour le senegal ?", True),  # « il y a » n'est pas un renvoi
+    ("il y a un visa pour le senegal ?", True),
+])
+def test_starts_new_subject_reconnait_les_renvois_de_lieu(message, expected):
+    from services.intelligence import starts_new_subject
+
+    assert starts_new_subject(message, own_subject=True) is expected
