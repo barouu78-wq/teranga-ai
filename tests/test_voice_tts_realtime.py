@@ -2,6 +2,8 @@
 
 import os
 
+import pytest
+
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 import app as app_module  # noqa: E402
@@ -207,5 +209,10 @@ def test_tts_cut_mid_stream_keeps_what_was_sent(monkeypatch):
     client, headers, env = _client("203.0.113.107")
     response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
     assert response.status_code == 200
-    assert response.data == fake_speech.FAKE_MP3[0]
+    parts = iter(response.response)
+    assert next(parts) == fake_speech.FAKE_MP3[0]  # le début part quand même
+    # Puis l'erreur remonte : la connexion est coupée sans fin propre, la page ne met pas le son tronqué en cache.
+    with pytest.raises(RuntimeError):
+        next(parts)
+    response.close()
     assert fake.state["closed"]

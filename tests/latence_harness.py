@@ -172,5 +172,9 @@ def post_tts(text="Bonjour", *, ip=None, error=None, monkeypatch=None, late_erro
     fake_speech.install(monkeypatch, app_module.client, [], error=error, late_error=late_error)
     client, headers, environ = make_client(ip)
     response = client.post("/tts", json={"text": text, "language": "fr"}, headers=headers, base_url=B, environ_base=environ)
-    response.get_data()  # le son arrive en flux : le visiteur l'écoute jusqu'au bout (sinon la ligne dirait « abandon »)
+    try:
+        response.get_data()  # le son arrive en flux : le visiteur l'écoute jusqu'au bout (sinon la ligne dirait « abandon »)
+    except RuntimeError:
+        if not late_error:
+            raise  # seule la coupure demandée par le test peut interrompre le flux
     return response

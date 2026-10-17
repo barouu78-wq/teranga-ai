@@ -511,16 +511,22 @@ async function speak(text,btn){
       if(!cookie('teranga_csrf'))await refreshCsrf();
       voiceTtsLog.push(Date.now());  // compte dans le budget de /tts de l'heure
       // Abandon à VOICE_TTS_TIMEOUT_MS sans réponse ; un flux qui a commencé se lit jusqu'au bout.
+      // L'appel est rangé avec ceux de la lecture auto : « Arrêter » coupe aussi ce flux (et la génération côté serveur).
       const ctrl=new AbortController();
+      voiceTtsCalls.add(ctrl);
       const kill=setTimeout(()=>ctrl.abort(),VOICE_TTS_TIMEOUT_MS);
       let res;
-      try{res=await postJSON('/tts',JSON.stringify({text,language:lang}),null,ctrl.signal);}finally{clearTimeout(kill);}
+      try{res=await postJSON('/tts',JSON.stringify({text,language:lang}),null,ctrl.signal);}
+      catch(err){voiceTtsCalls.delete(ctrl);throw err;}
+      finally{clearTimeout(kill);}
+      if(stale()||!res.ok)voiceTtsCalls.delete(ctrl);
       if(stale())return;
       if(!res.ok)throw new Error('tts');
       if(voiceStreamable(res)){
         audioData=voiceAudioStream(res);
-        audioData.blob.then(blob=>cacheVoiceBlob(cacheKey,blob),()=>{});
+        audioData.blob.then(blob=>cacheVoiceBlob(cacheKey,blob),()=>{}).finally(()=>voiceTtsCalls.delete(ctrl));
       }else{
+        voiceTtsCalls.delete(ctrl);
         audioData=await res.blob();
         if(stale())return;
         if(!audioData.size)throw new Error('tts-empty');

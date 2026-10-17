@@ -102,9 +102,12 @@ def register_tts_route(app, deps):
                         yield chunk
                 trace.ok()
             except Exception:
-                # Coupure en plein flux : le début déjà envoyé se lit, la ligne de latence dit « erreur ».
+                # Coupure en plein flux : le début déjà envoyé se lit, la ligne de latence dit « erreur », et l'erreur
+                # remonte pour que la connexion soit coupée sans fin de flux propre : le navigateur voit l'échec et ne
+                # garde pas en cache un son tronqué.
                 trace.status = "erreur"
                 app.logger.exception("Erreur /tts (flux)")
+                raise
             finally:
                 trace.end("fournisseur")
                 upstream.__exit__(None, None, None)

@@ -217,7 +217,6 @@ def test_tts_line_measures_the_provider_call(monkeypatch, lines):
 
 def test_tts_line_cut_mid_stream_is_an_error(monkeypatch, lines):
     response = h.post_tts("Bonjour", late_error="coupure", monkeypatch=monkeypatch)
-    response.get_data()
     response.close()
     f = one(lines)
     assert f["statut"] == "erreur" and f["premier_mot_ms"] != "-"

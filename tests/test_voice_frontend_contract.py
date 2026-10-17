@@ -56,3 +56,5 @@ def test_tts_requests_give_up_quickly():
     # Le délai ne vaut que jusqu'à la réponse : un son en flux qui a commencé n'est pas coupé à 30 s.
     assert "const kill=setTimeout(()=>ctrl.abort(),VOICE_TTS_TIMEOUT_MS);" in function
     assert "finally{clearTimeout(kill);}" in function
+    # « Arrêter » coupe aussi le flux du bouton « Écouter » (clearVoiceTtsQueue annule voiceTtsCalls).
+    assert "voiceTtsCalls.add(ctrl);" in function
