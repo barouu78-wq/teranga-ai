@@ -1,5 +1,4 @@
 import hashlib
-import datetime
 import hmac
 import json
 import os
@@ -39,6 +38,7 @@ from routes.emergency import register_emergency_routes
 from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
+from services.dakar_date import dakar_today, today_line
 from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
@@ -449,10 +449,12 @@ from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
 from services.observability import build_request_log
 from services.analytics import analytics_config, inject_analytics
+from services.posthog_consent import posthog_config, inject_posthog
 from services.compression import gzip_response
 
 # Mesure d'audience optionnelle (Plausible, Umami…) : désactivée sans ANALYTICS_SCRIPT_URL.
 ANALYTICS = analytics_config(os.getenv("ANALYTICS_SCRIPT_URL"), os.getenv("ANALYTICS_SITE_ID"))
+POSTHOG = posthog_config(os.getenv("POSTHOG_PROJECT_KEY"), os.getenv("POSTHOG_API_HOST"), os.getenv("POSTHOG_ASSET_HOST"))
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -631,13 +633,14 @@ def compress_response(response):
 @app.after_request
 def add_security_headers(response):
     response = inject_analytics(response, ANALYTICS)
+    response = inject_posthog(response, POSTHOG)
     return _add_security_headers(
         response,
         path=request.path,
         nonce=getattr(request, "_csp_nonce", ""),
         is_secure=request.is_secure,
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
-        extra_script_origins=(ANALYTICS["origin"],) if ANALYTICS else (),
+        extra_script_origins=tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else []))),
         versioned=_is_current_asset(request.path, request.args.get("v", "")),
     )
 
@@ -705,6 +708,8 @@ def parse_chat_payload():
         system_prompt=SYSTEM_PROMPT,
     )
     if payload and not payload.get("photo_only"):
+        # Date du jour à Dakar : sans elle, « ce week-end », « cette année » ou « la prochaine Tabaski » sont mal situés.
+        payload["instructions"] += "\n\n" + today_line(payload.get("language", "fr"))
         raw = request.get_json(silent=True) or {}
         modes = detect_modes(payload.get("message", ""), raw.get("history") if isinstance(raw.get("history"), list) else None)
         if modes:
@@ -836,7 +841,7 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     # Repères pratiques par thème (services/facts/*.py) : ajouter un fichier invalide aussi les anciennes réponses.
     + b"".join(path.read_bytes() for path in sorted((BASE_DIR / "services" / "facts").glob("*.py")))
     # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
-    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py"))
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py", "intelligence.py"))
     # Calculs faits par le code : une correction invalide aussi les anciennes réponses.
     + (BASE_DIR / "services" / "calculators.py").read_bytes()
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
@@ -848,7 +853,8 @@ register_chat_route(app, {
     # de la base de connaissances invalide les anciennes réponses en cache.
     # Le prompt système, les partenaires et le modèle complexe en font partie aussi,
     # ainsi que la date (un partenariat expiré ne doit plus apparaître le lendemain).
-    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
+    # C'est la date de Dakar, celle écrite dans les instructions : une réponse n'est jamais resservie un autre jour.
+    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + dakar_today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,

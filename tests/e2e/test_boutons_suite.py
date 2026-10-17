@@ -72,6 +72,25 @@ def test_clarify_puts_the_cursor_back_and_sends_nothing(page, base_url):
     assert page.errors == []
 
 
+def test_preciser_suivi_d_un_lieu_remet_le_curseur_sans_rien_envoyer(page, base_url):
+    # Le serveur ajoutait le lieu (« Préciser ma demande à Dakar ») et la page, qui comparait le texte exact,
+    # l'envoyait comme une question. Le libellé avec un lieu reste reconnu (serveur pas encore à jour).
+    ux = {"intent": "general_information", "show_followups": True,
+          "followups": ["Préciser ma demande à Dakar", "Comparer", "Que faire ensuite ? à Dakar"]}
+    # Seconde réponse prévue : si le bouton envoie quand même une question, l'échec le dit clairement.
+    sent = chat_route(page, base_url, [({"d": "Réponse sur Dakar."}, {"ux": ux}), ({"d": "Question envoyée."},)])
+    page.goto(base_url + "/")
+    ask(page, "Parle-moi de Dakar")
+    page.get_by_text("Réponse sur Dakar.").wait_for(timeout=5000)
+    page.get_by_role("button", name="Préciser ma demande à Dakar").click()
+    assert page.evaluate("document.activeElement && document.activeElement.id") == "input"
+    # ask() affiche la bulle de la question avant tout envoi : une seule bulle, aucune question posée.
+    assert page.locator(".msg.user").count() == 1
+    page.wait_for_timeout(300)  # absence de requête : rien à attendre, même délai que le test précédent
+    assert sent == ["Parle-moi de Dakar"]
+    assert page.errors == []
+
+
 def test_only_the_latest_answer_keeps_its_suggestions(page, base_url):
     chat_route(page, base_url, [
         ({"d": "Première réponse."}, {"ux": TRANSPORT}),
