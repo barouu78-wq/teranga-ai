@@ -257,7 +257,8 @@ TOPICS = (
      r"\b(mauvais numero|par erreur|mauvais destinataire|mauvaise personne)\b.{0,40}\b(argent|virement|fcfa)\b|"
      r"\berreur (de |d )?(transfert|envoi|numero|destinataire)\b.{0,40}\b(argent|wave|orange|mobile)\b|"
      r"\bannuler (un |mon |le |ce )?(transfert d argent|virement|envoi d argent|paiement mobile)\b",
-     ("À quoi ça sert : Wave, Orange Money et Free Money sont des services de monnaie électronique (un portefeuille sur "
+     ("À quoi ça sert : Wave, Orange Money et Free Money (opérateur devenu Yas) sont des services de monnaie "
+      "électronique (un portefeuille sur "
       "le téléphone) pour envoyer et recevoir de l'argent, payer des commerçants et des factures (dont l'électricité "
       "Woyofal), recharger du crédit ou un forfait, déposer ou retirer des espèces chez un agent. Free Sénégal est "
       "devenu Yas (annonce de novembre 2024) : vérifier le nom actuel du service dans l'application. Frais, plafonds et "
@@ -284,7 +285,8 @@ TOPICS = (
       "télécoms, reçoit les réclamations sur le service téléphonique et internet. Coordonnées et délais changent : à "
       "vérifier sur les sites des opérateurs, de la BCEAO et de l'ARTP.")),
     ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
-     ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
+     ("Opérateurs : Orange, Yas (ex-Free, nouveau nom annoncé en novembre 2024) et Expresso. Carte SIM en boutique, "
+      "en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
     # « prise de commande », « prise en charge », « prise de sang », « prise d'otage » ne sont pas une prise électrique.
     ("electricite", r"\bprises?\b(?! (de(?! courant)|d|en|a)\b)|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
