@@ -73,7 +73,7 @@ _INTENT_REGEXES = {
         r"(?<!\w)(?:fai\w*|fera\w*) (?:tres |trop |si |aussi |vraiment )?chaud(?!\w)|"
         r"(?<!\w)chaude?s? (?:a|au|en|ce|cette|aujourd|demain|la nuit|le soir)(?!\w)"
     ),
-    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|prendre|prends|prend|pris) car(?!\w)"),
+    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|quel|quelle|prendre|prends|prend|pris) car(?!\w)|\bgare routiere\b"),
 }
 # Vacances, voyage ou séjour qui ne sont pas un projet (texte sans accents) : un souhait, un retour ou un titre
 # administratif. « bonnes vacances ! » ou « titre de séjour » lançaient le planificateur et le modèle complexe.
