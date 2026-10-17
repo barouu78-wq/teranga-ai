@@ -18,13 +18,16 @@ Appels de voix coupés : la page peut annuler un appel /tts en vol (« Arrêter 
 pas au test ; window.__tts.calls note donc, pour chaque appel, si la page l'a annulé (tts_calls_aborted).
 """
 
+import base64
 import json
 import struct
+from pathlib import Path
 
 # Flux de /chat piloté par le test : remplace fetch('/chat') par une réponse dont le corps est un
 # ReadableStream alimenté par window.__chat.event(...) et fermé par window.__chat.end().
 # Ne s'active que si le test a demandé stream_chat() ; la demande « mode json » (repli) passe au réseau.
-# Les appels à /tts sont seulement notés (annulés ou non), puis transmis tels quels.
+# Les appels à /tts sont notés (annulés ou non), puis transmis tels quels ; si le test a demandé stream_tts(),
+# /tts répond par un flux MP3 que le test alimente (tts_push) et ferme (tts_end), comme un vrai son en flux.
 FAKE_CHAT_STREAM = """
 (() => {
   const chat = window.__chat = {
@@ -39,7 +42,14 @@ FAKE_CHAT_STREAM = """
       try { chat.controller.close(); } catch (_) {}
     },
   };
-  const tts = window.__tts = { calls: [] };
+  const tts = window.__tts = {
+    calls: [], manual: false, controllers: [],
+    push(b64) {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      try { tts.controllers[tts.controllers.length - 1].enqueue(bytes); return true; } catch (_) { return false; }
+    },
+    end() { try { tts.controllers[tts.controllers.length - 1].close(); } catch (_) {} },
+  };
   const nativeFetch = window.fetch.bind(window);
   window.fetch = (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input.url, location.href);
@@ -49,6 +59,17 @@ FAKE_CHAT_STREAM = """
       tts.calls.push(call);
       const signal = init && init.signal;
       if (signal) signal.addEventListener('abort', () => { call.aborted = true; });
+      if (tts.manual) {
+        const body = new ReadableStream({
+          start(controller) {
+            tts.controllers.push(controller);
+            if (signal) signal.addEventListener('abort', () => {
+              try { controller.error(new DOMException('Aborted', 'AbortError')); } catch (_) {}
+            });
+          },
+        });
+        return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'audio/mpeg' } }));
+      }
     }
     if (chat.manual && url.pathname === '/chat' && !headers['X-Teranga-Mode']) {
       chat.calls++;
@@ -111,6 +132,11 @@ FAKE_MIC = """
   };
 })();
 """
+
+
+def mp3_bytes():
+    """Un vrai MP3 de 2 s (son de 330 Hz, 32 kbit/s, mono), produit une fois avec ffmpeg."""
+    return (Path(__file__).with_name("voix.mp3")).read_bytes()
 
 
 def wav_bytes(ms=400, rate=8000):
@@ -206,6 +232,21 @@ class VoiceBench:
     def chat_end(self):
         self.wait_chat_stream()
         self.page.evaluate("() => window.__chat.end()")
+
+    def stream_tts(self):
+        """À appeler avant open() : /tts répond par un flux MP3 que le test alimente (tts_push, tts_end)."""
+        self.page.add_init_script("window.__tts.manual = true")
+
+    def wait_tts_stream(self, calls=1, timeout=8000):
+        self.page.wait_for_function("n => window.__tts.controllers.length >= n", arg=calls, timeout=timeout)
+
+    def tts_push(self, data):
+        self.wait_tts_stream()
+        return self.page.evaluate("b => window.__tts.push(b)", base64.b64encode(data).decode("ascii"))
+
+    def tts_end(self):
+        self.wait_tts_stream()
+        self.page.evaluate("() => window.__tts.end()")
 
     def wait_tts_calls(self, count, timeout=8000):
         """Attend que la page ait envoyé au moins `count` demandes de voix (sans pause à durée fixe)."""

@@ -1,11 +1,11 @@
 """Voix : lecture à voix haute (/tts) et conversation vocale (/realtime-call), avec le fournisseur simulé."""
 
 import os
-from types import SimpleNamespace
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 import app as app_module  # noqa: E402
+import fake_speech  # noqa: E402
 
 B = "https://teranga-ai.fr"
 
@@ -18,18 +18,8 @@ def _client(ip):
     return client, headers, {"REMOTE_ADDR": ip}
 
 
-def _fake_speech(monkeypatch, calls, fail=False):
-    def create(**kwargs):
-        calls.append(kwargs)
-        if fail:
-            raise RuntimeError("fournisseur indisponible")
-        return SimpleNamespace(content=b"RIFFfakewav")
-
-    monkeypatch.setattr(app_module.client.audio.speech, "create", create)
-    # /tts passe par client.with_options(...) : la copie renvoyée doit rester ce client, dont « create » est truqué.
-    options = []
-    monkeypatch.setattr(app_module.client, "with_options", lambda **kw: (options.append(kw), app_module.client)[1])
-    return options
+def _fake_speech(monkeypatch, calls, fail=False, **options):
+    return fake_speech.install(monkeypatch, app_module.client, calls, error="fournisseur indisponible" if fail else None, **options)
 
 
 def test_tts_reads_clean_text_and_returns_audio(monkeypatch):
@@ -38,8 +28,8 @@ def test_tts_reads_clean_text_and_returns_audio(monkeypatch):
     client, headers, env = _client("203.0.113.101")
     text = "## Titre\n- **Gorée** : voir [le site](https://exemple.sn/x) et https://exemple.sn\n1. Prendre la chaloupe"
     response = client.post("/tts", json={"text": text, "language": "zz"}, base_url=B, headers=headers, environ_base=env)
-    assert response.status_code == 200 and response.mimetype == "audio/wav"
-    assert response.data == b"RIFFfakewav" and response.headers["Cache-Control"] == "no-store"
+    assert response.status_code == 200 and response.mimetype == "audio/mpeg"
+    assert response.data == b"".join(fake_speech.FAKE_MP3) and response.headers["Cache-Control"] == "no-store"
     spoken = calls[0]["input"]
     assert "http" not in spoken and "**" not in spoken and "##" not in spoken and "[" not in spoken
     assert "Gorée" in spoken and "le site" in spoken and "Prendre la chaloupe" in spoken
@@ -175,12 +165,47 @@ def test_tts_has_its_own_short_timeout(monkeypatch):
     """Une lecture a échoué après 130,8 s le 13 octobre 2026 : sans délai propre, /tts héritait des 50 s du client
     OpenAI (app.py), avec une nouvelle tentative. Les lectures réussies ont toutes duré moins de 27 s (11-13 octobre)."""
     calls = []
-    options = _fake_speech(monkeypatch, calls)
+    fake = _fake_speech(monkeypatch, calls)
     client, headers, env = _client("203.0.113.104")
     response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
     assert response.status_code == 200
     delai = calls[0].get("timeout")
     assert delai is not None, "la voix doit avoir son propre délai"
     assert delai.read <= 30 and delai.connect <= 5
-    # Sans nouvelle tentative : 30 s + 30 s dépasseraient les 45 s après lesquels la page abandonne (home.html).
-    assert options and options[-1].get("max_retries") == 0
+    # Sans nouvelle tentative : une seconde synthèse arriverait après l'abandon de la page.
+    assert fake.options and fake.options[-1].get("max_retries") == 0
+
+
+def test_tts_streams_compressed_audio_as_it_arrives(monkeypatch):
+    # Premier son en moins de 3 s : le MP3 part vers le navigateur morceau par morceau,
+    # sans attendre la fin de la génération (11 à 18 s en WAV, mesuré sur Render du 14 au 16 octobre).
+    calls = []
+    fake = _fake_speech(monkeypatch, calls)
+    client, headers, env = _client("203.0.113.105")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 200 and response.is_streamed
+    assert response.headers["X-Accel-Buffering"] == "no"
+    assert calls[0]["response_format"] == "mp3"
+    parts = list(response.response)
+    assert parts[0] == fake_speech.FAKE_MP3[0] and b"".join(parts) == b"".join(fake_speech.FAKE_MP3)
+    response.close()
+    assert fake.state["closed"]
+
+
+def test_tts_without_any_audio_is_a_failure(monkeypatch):
+    calls = []
+    fake = _fake_speech(monkeypatch, calls, chunks=())
+    client, headers, env = _client("203.0.113.106")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 502 and "voix" in response.get_json()["error"]
+    assert fake.state["closed"]
+
+
+def test_tts_cut_mid_stream_keeps_what_was_sent(monkeypatch):
+    calls = []
+    fake = _fake_speech(monkeypatch, calls, late_error="coupure")
+    client, headers, env = _client("203.0.113.107")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 200
+    assert response.data == fake_speech.FAKE_MP3[0]
+    assert fake.state["closed"]

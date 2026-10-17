@@ -62,7 +62,8 @@ def test_chat_line_has_a_stable_layout():
 def test_voice_line_is_shorter_and_keeps_the_same_keys():
     line = format_line("stt", {"total_ms": 950.1, "fournisseur_ms": 902.6, "modele": "gpt-4o-transcribe", "statut": "ok"})
     assert line == "latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe statut=ok"
-    assert format_line("tts", {"total_ms": 1}).startswith("latence route=tts total_ms=1.0 fournisseur_ms=- modele=- statut=")
+    # /tts envoie le son en flux : sa ligne dit aussi le premier octet de son (premier_mot_ms).
+    assert format_line("tts", {"total_ms": 1}).startswith("latence route=tts total_ms=1.0 premier_mot_ms=- fournisseur_ms=- modele=- statut=")
 
 
 def test_a_missing_value_is_a_dash_and_a_cache_hit_is_oui():
@@ -89,7 +90,7 @@ def test_unknown_route_is_labelled_autre_and_loses_everything_else():
 
 
 def test_negative_durations_are_clamped_and_booleans_are_not_numbers():
-    assert format_line("tts", {"total_ms": -4, "fournisseur_ms": True}).startswith("latence route=tts total_ms=0.0 fournisseur_ms=-")
+    assert format_line("tts", {"total_ms": -4, "fournisseur_ms": True}).startswith("latence route=tts total_ms=0.0 premier_mot_ms=- fournisseur_ms=-")
 
 
 @pytest.mark.parametrize("code, expected", [
