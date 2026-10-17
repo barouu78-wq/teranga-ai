@@ -22,12 +22,15 @@ _INTENT_PATTERNS = {
         "sejour", "séjour", "vacances", "planifier", "planning",
     ),
     # « temps » seul est exclu : « combien de temps » n'est pas une question météo.
+    # « chaud » seul est exclu : « le mafé est trop chaud » parle d'un plat (voir _INTENT_REGEXES).
     "weather": ("meteo", "météo", "weather", "quel temps", "temps qu'il fait", "il fait chaud", "fait-il",
-                "pleut", "pleuvoir", "pluie", "pluies", "orage", "orages", "chaud", "chaleur",
+                "pleut", "pleuvoir", "pluie", "pluies", "orage", "orages", "chaleur",
                 "temperature", "température", "previsions", "prévisions", "forecast", "rain", "raining"),
     "health": ("santé", "sante", "vaccination", "hôpital", "hopital", "pharmacie", "urgence", "samu", "maladie"),
+    # « car » seul est exclu : c'est surtout la conjonction (« je suis fatigué car j'ai mal dormi ») ;
+    # le car (bus) est reconnu par _INTENT_REGEXES.
     "transport": (
-        "transport", "bus", "taxi", "car", "aeroport", "aéroport",
+        "transport", "bus", "taxi", "cars", "car rapide", "ndiaga ndiaye", "aeroport", "aéroport",
         "airport", "ter", "train",
     ),
     "restaurant": ("restaurant", "manger", "eat", "cuisine", "plat", "plats"),
@@ -63,6 +66,23 @@ _NORMALIZED_INTENT_PATTERNS = {
     intent: tuple(_normalize(pattern) for pattern in patterns)
     for intent, patterns in _INTENT_PATTERNS.items()
 }
+# Mots ambigus reconnus seulement dans leur sens utile (texte sans accents) : la chaleur du temps (« il fait trop
+# chaud », « c'est chaud à Dakar en ce moment ? ») et le car précédé d'un article ou d'un verbe (« prendre le car »).
+_INTENT_REGEXES = {
+    "weather": re.compile(
+        r"(?<!\w)(?:fai\w*|fera\w*) (?:tres |trop |si |aussi |vraiment )?chaud(?!\w)|"
+        r"(?<!\w)chaude?s? (?:a|au|en|ce|cette|aujourd|demain|la nuit|le soir)(?!\w)"
+    ),
+    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|prendre|prends|prend|pris) car(?!\w)"),
+}
+# Vacances, voyage ou séjour qui ne sont pas un projet (texte sans accents) : un souhait, un retour ou un titre
+# administratif. « bonnes vacances ! » ou « titre de séjour » lançaient le planificateur et le modèle complexe.
+_NOT_A_TRIP = re.compile(
+    r"(?<!\w)(?:bon(?:ne)?s? (?:vacances|voyage|sejour|route)|"
+    r"(?:fini|finis|termine|terminees?|rentre|rentree|rentrer|retour|revenu|revenue|reviens|apres) "
+    r"(?:de |des |mes |les |nos |ses |tes )?vacances|"
+    r"(?:titre|carte|permis|autorisation|visa) de sejour)(?!\w)"
+)
 _NORMALIZED_LOCATION_ALIASES = {
     location: tuple(_normalize(alias) for alias in aliases)
     for location, aliases in _LOCATION_ALIASES.items()
@@ -245,8 +265,12 @@ def detect_intent(text: str) -> str:
     normalized = _normalize(text)
     if _BUSINESS_CREATION.search(normalized) and not re.search(r"(?<!\w)(compte|account|porte|fenetre|carte|session)(?!\w)", normalized):
         return "project"
+    normalized = _NOT_A_TRIP.sub(" ", normalized)
     for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
         if any(re.search(r"(?<!\w)" + re.escape(pattern) + r"(?!\w)", normalized) for pattern in patterns):
+            return intent
+        extra = _INTENT_REGEXES.get(intent)
+        if extra is not None and extra.search(normalized):
             return intent
     return "general_information"
 
@@ -333,7 +357,8 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     mentioned = {name for _, name in mentions}
     found_cities = [x for x in _CONTEXT_CITIES if x in mentioned]
     found_regions = [x for x in _CONTEXT_REGIONS if x in mentioned]
-    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(text_value, term) for term in terms)]
+    intent_text = _NOT_A_TRIP.sub(" ", text_value)
+    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(intent_text, term) for term in terms)]
     # Relance courte qui a son propre sujet (« Et pour manger ? » après la météo) : le lieu du fil reste, mais pas
     # son sujet. Sans cela, le modèle lisait « Intentions détectées : weather, food » pour une question de repas.
     # Le prix et le moment (« Et le prix ? », « Et demain ? ») précisent le sujet du fil sans le remplacer.
@@ -406,7 +431,7 @@ def should_use_planner(context: dict[str, Any]) -> bool:
     if context.get("standalone_request"):
         context = infer_senegal_context([], str(context.get("message") or ""))
     intents = set(context.get("intents", []))
-    query = context.get("query", "")
+    query = _NOT_A_TRIP.sub(" ", str(context.get("query", "")))
     planning_terms = (
         "planifie", "programme", "organise", "itineraire", "itinéraire",
         "journee", "journée", "sejour", "séjour", "vacances", "weekend",
