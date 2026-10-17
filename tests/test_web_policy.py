@@ -8,9 +8,11 @@ def test_official_domains_for_senegal_statistics():
 
 
 def test_travel_source_policy():
-    domains = preferred_domains("travel")
-    assert domains[:2] == ("tourisme.gouv.sn", "ansd.sn")
-    assert "unesco.org" in domains
+    # Hôtels, excursions, visites : les sites de l'État ne contiennent pas la réponse. Pas de filtre dur ; les sites de
+    # référence (tourisme.gouv.sn, unesco.org…) restent demandés au modèle par la « POLITIQUE DE SOURCES » (source_domains).
+    assert preferred_domains("travel") == ()
+    from services.senegal_knowledge import source_domains
+    assert source_domains("travel")[:2] == ("tourisme.gouv.sn", "ansd.sn") and "unesco.org" in source_domains("travel")
 
 
 def test_weather_source_policy():
@@ -54,8 +56,12 @@ def test_should_use_web_avoids_generic_false_positives():
 
 
 def test_transport_and_food_source_policy():
-    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
-    assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
+    # Horaires du TER, prix d'un ticket, restaurants : cherchés sur tout le web, plus sur trois sites de l'État.
+    assert preferred_domains("transport") == ()
+    assert preferred_domains("food") == ()
+    from services.senegal_knowledge import source_domains
+    assert source_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
+    assert source_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
 
 
 def test_web_matcher_keeps_word_boundaries_with_cached_patterns():
