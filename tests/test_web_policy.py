@@ -4,13 +4,12 @@ from services.web_policy import preferred_domains, reasoning_effort, search_cont
 def test_official_domains_for_senegal_statistics():
     domains = preferred_domains("society")
     assert "ansd.sn" in domains
-    assert "gov.sn" in domains
+    assert "gouv.sn" in domains  # sites de l'État sénégalais : .gouv.sn
 
 
 def test_travel_source_policy():
-    domains = preferred_domains("travel")
-    assert domains[:2] == ("tourisme.gouv.sn", "ansd.sn")
-    assert "unesco.org" in domains
+    # Hôtels, horaires, prix : chez les opérateurs, pas au ministère. Pas de liste fermée de domaines.
+    assert preferred_domains("travel") == ()
 
 
 def test_weather_source_policy():
@@ -54,8 +53,9 @@ def test_should_use_web_avoids_generic_false_positives():
 
 
 def test_transport_and_food_source_policy():
-    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
-    assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
+    # Ferry, TER, taxi, restaurants : la recherche ne se limite plus au ministère ni à l'ANSD.
+    assert preferred_domains("transport") == ()
+    assert preferred_domains("food") == ()
 
 
 def test_web_matcher_keeps_word_boundaries_with_cached_patterns():

@@ -10,18 +10,17 @@ from functools import lru_cache
 
 from services.validation import normalize
 
+# Liste FERMÉE de domaines pour l'outil de recherche web (allowed_domains) : rien en dehors n'est lu.
+# Seulement pour les sujets où la source officielle EST la réponse (statistiques, démarches, météo).
+# Les sites de l'État sénégalais sont en « .gouv.sn » (base : authoritative_sources), d'où « gouv.sn ».
+# Ferry, hôtel, restaurant, prix, concert : la réponse est chez l'opérateur, absent de ces listes ;
+# ces sujets n'ont donc pas de liste fermée (les sources à privilégier restent écrites dans le prompt).
 SOURCE_FILTERS = {
-    "society": ("ansd.sn", "gov.sn", "who.int", "worldbank.org"),
-    "economy": ("ansd.sn", "gov.sn", "worldbank.org"),
-    "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gov.sn", "fao.org"),
-    "territory": ("ansd.sn", "gov.sn", "tourisme.gouv.sn"),
-    "travel": ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gov.sn"),
-    "transport": ("transports.gouv.sn", "gov.sn", "ansd.sn"),
-    "food": ("agriculture.gouv.sn", "tourisme.gouv.sn", "gov.sn"),
-    "culture": ("unesco.org", "tourisme.gouv.sn", "gov.sn"),
-    "environment": ("tourisme.gouv.sn", "unesco.org", "gov.sn", "who.int"),
-    "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gov.sn"),
-    "weather": ("anacim.sn", "ansd.sn", "gov.sn"),
+    "society": ("ansd.sn", "gouv.sn", "who.int", "worldbank.org"),
+    "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gouv.sn", "fao.org"),
+    "territory": ("ansd.sn", "gouv.sn", "tourisme.gouv.sn"),
+    "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gouv.sn"),
+    "weather": ("anacim.sn", "ansd.sn", "gouv.sn"),
 }
 
 @lru_cache(maxsize=32)
