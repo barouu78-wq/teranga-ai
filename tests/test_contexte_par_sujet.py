@@ -190,3 +190,15 @@ def test_starts_new_subject(message, own_subject, expected):
     from services.intelligence import starts_new_subject
 
     assert starts_new_subject(message, own_subject=own_subject) is expected
+
+
+@pytest.mark.parametrize("previous,message,place", [
+    ("que voir a saint louis", "y a t il un hopital ?", "saint louis"),
+    ("que voir a ouakam", "pharmacie de garde", "ouakam"),
+    ("que faire a saly", "quelle carte sim prendre a l aeroport", "saly"),
+])
+def test_le_lieu_du_fil_reste_dans_le_contexte_geographique(previous, message, place):
+    # Garde-fou : un nouveau sujet retire les fiches touristiques du fil, pas le repère de lieu
+    # (« pharmacie de garde » après Ouakam reste utile à Ouakam).
+    payload = site(previous, message)
+    assert f"Contexte géographique détecté : {place}." in payload["instructions"]
