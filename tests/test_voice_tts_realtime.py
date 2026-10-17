@@ -26,6 +26,10 @@ def _fake_speech(monkeypatch, calls, fail=False):
         return SimpleNamespace(content=b"RIFFfakewav")
 
     monkeypatch.setattr(app_module.client.audio.speech, "create", create)
+    # /tts passe par client.with_options(...) : la copie renvoyée doit rester ce client, dont « create » est truqué.
+    options = []
+    monkeypatch.setattr(app_module.client, "with_options", lambda **kw: (options.append(kw), app_module.client)[1])
+    return options
 
 
 def test_tts_reads_clean_text_and_returns_audio(monkeypatch):
@@ -165,3 +169,18 @@ def test_realtime_call_is_rate_limited(monkeypatch):
              for _ in range(5)]
     assert codes[:3] == [200, 200, 200] and 429 in codes[3:]
     assert len(captured) == 3
+
+
+def test_tts_has_its_own_short_timeout(monkeypatch):
+    """Une lecture a échoué après 130,8 s le 13 octobre 2026 : sans délai propre, /tts héritait des 50 s du client
+    OpenAI (app.py), avec une nouvelle tentative. Les lectures réussies ont toutes duré moins de 27 s (11-13 octobre)."""
+    calls = []
+    options = _fake_speech(monkeypatch, calls)
+    client, headers, env = _client("203.0.113.104")
+    response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
+    assert response.status_code == 200
+    delai = calls[0].get("timeout")
+    assert delai is not None, "la voix doit avoir son propre délai"
+    assert delai.read <= 30 and delai.connect <= 5
+    # Sans nouvelle tentative : 30 s + 30 s dépasseraient les 45 s après lesquels la page abandonne (home.html).
+    assert options and options[-1].get("max_retries") == 0

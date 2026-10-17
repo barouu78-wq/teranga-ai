@@ -57,7 +57,14 @@ def _block(instructions, title):
         return []
     block = instructions.split(title, 1)[1]
     stop = re.search(r"\n[A-ZÉ][A-ZÉÈ ’']{5,}", block)
-    return re.findall(r"^- ([^:(]+?)\s*[:(]", block[: stop.start()] if stop else block, re.M)
+    # Découpage ligne par ligne (alerte CodeQL « expression polynomiale » sur l'ancienne expression).
+    names = []
+    for line in (block[: stop.start()] if stop else block).splitlines():
+        if line.startswith("- "):
+            name = re.split(r"[:(]", line[2:], maxsplit=1)
+            if len(name) == 2 and name[0].strip():
+                names.append(name[0].strip())
+    return names
 
 
 def places(payload):
@@ -274,3 +281,10 @@ def test_un_billet_d_avion_ne_ramene_ni_goree_ni_cap_skirring():
 def test_un_plat_ou_un_theme_sans_lieu_nomme_garde_ses_regions():
     assert "Saint-Louis" in regions(site("poisson a saint-louis"))
     assert regions(site("ou manger du poisson grille")) != []
+
+
+def test_quel_car_et_gare_routiere_restent_du_transport():
+    # Relecture de la PR : ces deux questions de transport ne doivent pas tomber en information générale.
+    from services.intelligence import detect_intent
+    assert detect_intent("quel car pour Mbour") == "transport"
+    assert detect_intent("gare routiere car") == "transport"

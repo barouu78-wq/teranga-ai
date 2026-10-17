@@ -73,7 +73,7 @@ _INTENT_REGEXES = {
         r"(?<!\w)(?:fai\w*|fera\w*) (?:tres |trop |si |aussi |vraiment )?chaud(?!\w)|"
         r"(?<!\w)chaude?s? (?:a|au|en|ce|cette|aujourd|demain|la nuit|le soir)(?!\w)"
     ),
-    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|prendre|prends|prend|pris) car(?!\w)"),
+    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|quel|quelle|prendre|prends|prend|pris) car(?!\w)|\bgare routiere\b"),
 }
 # Vacances, voyage ou séjour qui ne sont pas un projet (texte sans accents) : un souhait, un retour ou un titre
 # administratif. « bonnes vacances ! » ou « titre de séjour » lançaient le planificateur et le modèle complexe.
@@ -238,7 +238,19 @@ def starts_new_subject(message: str, *, own_subject: bool) -> bool:
     words = re.findall(r"[a-z0-9]+", text)
     if len(words) <= 8 and (_FOLLOW_UP_OPENER.match(text) or any(word in _BACK_REFERENCES for word in words)):
         return False
+    # Renvoi au lieu du fil (« faut-il un visa pour y aller ? », « on mange quoi là-bas ? ») : le fil reste, même
+    # si la question nomme aussi un lieu (« combien de temps pour y aller depuis saly ? » garde le lac Rose et Saly).
+    if len(words) <= 12 and (_PLACE_BACK_REFERENCE.search(text) or _LA_ALONE.search(str(message or "").casefold())):
+        return False
     return not _PLAN_EDIT.search(text)
+
+
+# Renvois au lieu du tour précédent (texte sans accents, apostrophes en espaces). « y » compte, sauf dans
+# « il y a » / « y en a » qui n'est pas un renvoi (« y a t il un hôpital ? »). « là » seul se lit avant la
+# suppression des accents, pour ne pas le confondre avec l'article « la ».
+_PLACE_BACK_REFERENCE = re.compile(r"\by\b(?! (?:a|avait|aura|aurait|en a|compris)\b)|\bla[ -]?bas\b|\bsur place\b")
+# « là » en tête de phrase (« Là, parlons de Dakar ») ouvre la phrase, il ne désigne pas le lieu du fil.
+_LA_ALONE = re.compile(r"(?<=\w )là(?![\w-])")
 
 
 def detect_language(text: str) -> str:
