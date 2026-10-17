@@ -1,5 +1,6 @@
 // Planificateur de voyage (/trip-planner). Les textes traduits viennent du
 // bloc JSON #trip-config de la page : ce fichier est identique pour toutes les langues.
+// Ces textes sont déjà échappés pour le HTML : les afficher avec innerHTML, jamais textContent (sinon « &#x27; » apparaît).
 const CFG=JSON.parse(document.getElementById('trip-config').textContent);
 // Stockage sûr (mode privé, cookies bloqués) : jamais d'exception, repli mémoire.
 const safeStore=kind=>{let store=null;const mem=new Map();try{store=window[kind];store.setItem('__t','1');store.removeItem('__t');}catch(_){store=null;}return{getItem:k=>{try{if(store)return store.getItem(k);}catch(_){}return mem.has(k)?mem.get(k):null;},setItem:(k,v)=>{mem.set(k,String(v));try{if(store)store.setItem(k,String(v));}catch(_){}},removeItem:k=>{mem.delete(k);try{if(store)store.removeItem(k);}catch(_){}}};};
@@ -9,7 +10,7 @@ const escapeHtml=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 function syncDateHints(){[arrivalInput,departureInput].forEach(i=>{if(i&&i.parentElement)i.parentElement.classList.toggle('has-value',!!i.value)});if(arrivalInput&&departureInput)departureInput.min=arrivalInput.value||''}
 (function(){[arrivalInput,departureInput].forEach(i=>{if(!i)return;i.addEventListener('input',syncDateHints);i.addEventListener('change',syncDateHints)});syncDateHints()})();
 function show(i){current=Math.max(0,Math.min(i,steps.length-1));steps.forEach((s,n)=>s.classList.toggle('active',n===current));window.scrollTo({top:0,behavior:'smooth'})}
-function validDateStep(){const arrival=String(arrivalInput?.value||'');const departure=String(departureInput?.value||'');if(!arrival||!departure){status.textContent=""+CFG.date_required+"";if(!arrival)arrivalInput?.focus();else departureInput?.focus();return false}if(arrival>=departure){status.textContent=""+CFG.date_error+"";departureInput?.focus();return false}status.textContent='';return true}
+function validDateStep(){const arrival=String(arrivalInput?.value||'');const departure=String(departureInput?.value||'');if(!arrival||!departure){status.innerHTML=""+CFG.date_required+"";if(!arrival)arrivalInput?.focus();else departureInput?.focus();return false}if(arrival>=departure){status.innerHTML=""+CFG.date_error+"";departureInput?.focus();return false}status.textContent='';return true}
 arrivalInput?.addEventListener('change',()=>{if(arrivalInput.value)departureInput?.setAttribute('min',arrivalInput.value)});
 document.querySelectorAll('[data-next]').forEach(b=>b.addEventListener('click',()=>{
   if(current===0){if(!validDateStep())return}else if(!form.reportValidity())return;
