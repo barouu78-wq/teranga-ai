@@ -61,6 +61,14 @@ def test_une_vraie_suite_implicite_garde_le_lieu_du_tour_precedent():
     assert "Île de Gorée" in places(payload)
 
 
+def test_une_relance_qui_a_son_propre_sujet_garde_son_intention():
+    # Garde-fou : la copie n'est retirée que du texte du contexte (contextual_query). La retirer aussi des tours
+    # relus par build_intent_context faisait de « Et pour manger ? » après la météo une question météo
+    # (15 relances sur 183 changeaient d'intention dans la mesure de la PR).
+    payload = site("Et pour manger ?", previous=("Quel temps fait-il à Dakar ?",))
+    assert payload["intent_context"]["intent"] == "restaurant"
+
+
 def test_le_dernier_tour_identique_a_la_question_est_ignore_meme_avec_d_autres_espaces():
     history = [
         {"role": "user", "content": "Dakar"},

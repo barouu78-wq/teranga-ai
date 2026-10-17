@@ -261,9 +261,31 @@ def _recent_user_messages(history: list[dict[str, Any]] | None, limit: int = 6) 
     return messages
 
 
+def _without_current_turn(history: list[dict[str, Any]] | None, message: str) -> list[dict[str, Any]] | None:
+    """L'historique sans la copie de la question en cours.
+
+    Le site envoie la question deux fois : dans `message` et en dernier élément de `history` (static/home.js).
+    Comptée deux fois, ses mots pesaient double dans le choix des lieux (« taxi aibd dakar combien » : 8 lieux
+    au lieu de 2). Seul le dernier élément est retiré, s'il vient de l'utilisateur et a le même texte.
+    Réservé au texte du contexte (`contextual_query`) : retirée aussi des tours relus par `build_intent_context`,
+    la copie manquait et « Et pour manger ? » après la météo devenait une question météo.
+    """
+    if not isinstance(history, list) or not history:
+        return history
+    last = history[-1]
+    if (
+        isinstance(last, dict)
+        and str(last.get("role", "")).lower() == "user"
+        and " ".join(str(last.get("content") or "").split()) == " ".join(str(message or "").split())
+    ):
+        return history[:-1]
+    return history
+
+
 def contextual_query(history: list[dict[str, Any]] | None, message: str, max_history_items: int = 12, max_message_length: int = 2000) -> str:
     """Build an internal context query from recent user turns."""
     parts: list[str] = []
+    history = _without_current_turn(history, message)
     if isinstance(history, list):
         for item in history[-max_history_items:]:
             if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
