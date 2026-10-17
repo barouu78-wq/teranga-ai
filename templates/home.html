@@ -79,23 +79,26 @@ function createVoiceAudio(url){
       // Contexte audio encore suspendu (iPhone sans geste récent) : le son passerait
       // dans un circuit muet. On joue alors l'élément audio directement.
       if(voiceOutputContext.state!=='running')return el;
-      const source=voiceOutputContext.createMediaElementSource(el);
-      const gain=voiceOutputContext.createGain();
-      gain.gain.value=1.08;
-      const compressor=voiceOutputContext.createDynamicsCompressor();
-      compressor.threshold.value=-18;
-      compressor.knee.value=18;
-      compressor.ratio.value=2.5;
-      compressor.attack.value=.003;
-      compressor.release.value=.18;
-      source.connect(gain);
-      gain.connect(compressor);
-      compressor.connect(voiceOutputContext.destination);
+      voiceOutputContext.createMediaElementSource(el).connect(voiceOutputChain(voiceOutputContext).input);
     }
   }catch(_){
     el.volume=1;
   }
   return el;
+}
+// Réglage commun de la voix (un peu plus forte, dynamique adoucie) : élément <audio> et voix en flux.
+function voiceOutputChain(ctx){
+  const gain=ctx.createGain();
+  gain.gain.value=1.08;
+  const compressor=ctx.createDynamicsCompressor();
+  compressor.threshold.value=-18;
+  compressor.knee.value=18;
+  compressor.ratio.value=2.5;
+  compressor.attack.value=.003;
+  compressor.release.value=.18;
+  gain.connect(compressor);
+  compressor.connect(ctx.destination);
+  return {input:gain,release(){try{gain.disconnect();compressor.disconnect();}catch(_){}}};
 }
 
 // Teranga Voice v15 — natural turn-taking, fast first response, speech cleanup and cache.
@@ -227,21 +230,41 @@ function clearVoiceTtsQueue(){
 function queueVoiceSpeech(text){
   text=cleanReply(speechText(text)).replace(/\s+/g,' ').trim();
   if(!text||text.length<4||!autoVoice)return;
-  voiceTtsQueue.push({text,turn:voiceTtsTurn,blob:null});
+  voiceTtsQueue.push({text,turn:voiceTtsTurn,sound:null});
   playVoiceTtsQueue();
   prefetchVoiceTts();
 }
 // Le morceau suivant est demandé à /tts pendant que le précédent se lit : pas de blanc entre les deux.
 function prefetchVoiceTts(){
   const next=voiceTtsQueue[0];
-  if(!voiceTtsPlaying||!next||next.blob)return;
-  next.blob=fetchVoiceBlob(next);
-  next.blob.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+  if(!voiceTtsPlaying||!next||next.sound)return;
+  next.sound=fetchVoiceAudio(next);
+  next.sound.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
 }
-async function fetchVoiceBlob(item){
+
+// ── La voix arrive en flux ─────────────────────────────────────────────────
+// Avant, la page attendait le fichier WAV entier, et le serveur attendait lui-même tout le fichier chez le
+// fournisseur : rien ne s'entendait avant la fin de la génération (médiane 15,3 s mesurée côté serveur du 11 au
+// 13 octobre 2026). La page demande maintenant le son en flux ({flux:true}) : /tts relaie le PCM du fournisseur
+// (16 bits signés, petit-boutiste, 24 000 Hz, mono) dès les premiers octets, et la page le joue par petits
+// tampons dans le contexte audio. Même texte, même nombre d'appels : seul le moment où l'on entend change.
+// Contexte audio inactif (iPhone sans geste récent) ou serveur qui répond en WAV : fichier entier, comme avant.
+const VOICE_PCM_TYPE='audio/pcm';
+const VOICE_PCM_RATE=24000;          // = TTS_PCM_RATE de routes/tts.py (un test vérifie qu'elles restent égales)
+const VOICE_STREAM_LEAD_MS=250;      // son reçu avant de commencer à jouer ; le double après un trou du réseau
+const VOICE_STREAM_STALL_MS=30000;   // plus aucun octet pendant 30 s : flux abandonné (le serveur fait de même)
+const VOICE_CONTEXT_WAIT_MS=300;     // attente maximale du réveil du contexte audio avant de lire d'un bloc
+
+function rememberVoiceBlob(cacheKey,blob){
+  while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
+  ttsCache.set(cacheKey,blob);
+}
+// Le son d'un morceau : {blob} (fichier entier : cache, serveur qui répond en WAV) ou {feed} (flux qui arrive encore).
+// La promesse se résout dès le premier son : le serveur n'envoie sa réponse qu'avec lui.
+async function fetchVoiceAudio(item){
   const cacheKey=lang+'|'+item.text;
   const cached=ttsCache.get(cacheKey);
-  if(cached)return cached;
+  if(cached)return {blob:cached};
   const pause=voiceTtsPauseUntil-Date.now();
   if(pause>0){
     const error=new Error('tts-pause');
@@ -254,9 +277,10 @@ async function fetchVoiceBlob(item){
   const ctrl=new AbortController();
   voiceTtsCalls.add(ctrl);
   const kill=setTimeout(()=>ctrl.abort(),45000);
+  let feed=null;
   voiceTtsLog.push(Date.now());
   try{
-    const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}),null,ctrl.signal);
+    const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang,flux:true}),null,ctrl.signal);
     if(!res.ok){
       const error=new Error('tts');
       error.status=res.status;
@@ -265,15 +289,174 @@ async function fetchVoiceBlob(item){
       if(res.status===429)voiceTtsPauseUntil=Date.now()+Math.min(300,Math.max(1,Number.parseInt(error.retryAfter,10)||8))*1000;
       throw error;
     }
-    const blob=await res.blob();
+    const pcm=String(res.headers.get('Content-Type')||'').toLowerCase().startsWith(VOICE_PCM_TYPE);
+    if(pcm&&res.body&&res.body.getReader){
+      feed=readVoiceFeed(res,ctrl,cacheKey);
+      return {feed};
+    }
+    let blob=await res.blob();
     if(!blob.size)throw new Error('tts-empty');
-    while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
-    ttsCache.set(cacheKey,blob);
-    return blob;
+    if(pcm)blob=voicePcmWav([blob],blob.size);  // navigateur sans lecture en flux : le son entier, en WAV
+    rememberVoiceBlob(cacheKey,blob);
+    return {blob};
   }finally{
     clearTimeout(kill);
-    voiceTtsCalls.delete(ctrl);
+    // Un flux reste « en vol » jusqu'à son dernier octet : « Arrêter » doit pouvoir le couper.
+    if(!feed)voiceTtsCalls.delete(ctrl);
   }
+}
+// Lit le flux en tâche de fond : les morceaux s'accumulent (feed.parts) et réveillent le lecteur (feed.wake).
+// La suite d'une réponse arrive ainsi pendant que sa 1re partie se lit, et se joue dès son tour venu.
+function readVoiceFeed(res,ctrl,cacheKey){
+  const feed={parts:[],bytes:0,done:false,error:null,wake:null};
+  const wake=()=>{const fn=feed.wake;feed.wake=null;if(fn)fn();};
+  let stall=0;
+  const arm=()=>{clearTimeout(stall);stall=setTimeout(()=>ctrl.abort(),VOICE_STREAM_STALL_MS);};
+  const reader=res.body.getReader();
+  arm();
+  (async()=>{
+    try{
+      for(;;){
+        const {value,done}=await reader.read();
+        if(done)break;
+        if(value&&value.length){feed.parts.push(value);feed.bytes+=value.length;arm();wake();}
+      }
+      if(feed.bytes)rememberVoiceBlob(cacheKey,voicePcmWav(feed.parts,feed.bytes));
+    }catch(err){
+      feed.error=err||new Error('tts-stream');
+    }finally{
+      clearTimeout(stall);
+      voiceTtsCalls.delete(ctrl);
+      feed.done=true;
+      wake();
+    }
+  })();
+  return feed;
+}
+// Le son reçu, en fichier WAV (en-tête de 44 octets) : lecture d'un bloc, et cache pour une relecture.
+function voicePcmWav(parts,bytes){
+  const size=bytes-(bytes%2);
+  const head=new DataView(new ArrayBuffer(44));
+  const tag=(at,text)=>{for(let i=0;i<4;i++)head.setUint8(at+i,text.charCodeAt(i));};
+  tag(0,'RIFF');head.setUint32(4,36+size,true);tag(8,'WAVE');tag(12,'fmt ');
+  head.setUint32(16,16,true);head.setUint16(20,1,true);head.setUint16(22,1,true);
+  head.setUint32(24,VOICE_PCM_RATE,true);head.setUint32(28,VOICE_PCM_RATE*2,true);
+  head.setUint16(32,2,true);head.setUint16(34,16,true);tag(36,'data');head.setUint32(40,size,true);
+  return new Blob([head.buffer,...parts],{type:'audio/wav'});
+}
+// Flux lu d'un bloc : on attend son dernier octet, puis il se lit comme un fichier.
+function voiceFeedBlob(feed){
+  return new Promise((resolve,reject)=>{
+    const check=()=>{
+      if(!feed.done){feed.wake=check;return;}
+      if(feed.bytes)resolve(voicePcmWav(feed.parts,feed.bytes));
+      else reject(feed.error||new Error('tts-empty'));
+    };
+    check();
+  });
+}
+// Contexte audio prêt à jouer le flux ? Suspendu (iPhone sans geste récent) : on essaie de le réveiller un
+// instant ; sinon le flux sera lu d'un bloc à la fin, comme avant.
+async function voiceStreamContext(){
+  const AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC)return null;
+  try{
+    if(!voiceOutputContext)voiceOutputContext=new AC();
+    if(voiceOutputContext.state!=='running'){
+      await Promise.race([voiceOutputContext.resume().catch(()=>{}),new Promise(ok=>setTimeout(ok,VOICE_CONTEXT_WAIT_MS))]);
+    }
+    return voiceOutputContext.state==='running'?voiceOutputContext:null;
+  }catch(_){return null;}
+}
+function voiceSoundStarted(){
+  voiceSpeaking=true;
+  document.body.classList.add('assistant-speaking');
+  if(voiceConversation)startVoiceMonitor();
+}
+// Un fichier entier, par un élément <audio>. Vrai si le son a réellement démarré.
+function playVoiceBlob(blob){
+  return new Promise(resolve=>{
+    const url=URL.createObjectURL(blob);
+    const player=createVoiceAudio(url);
+    audio=player;
+    // « Je parle » seulement quand le son démarre vraiment (pas si le navigateur refuse la lecture).
+    let started=false;
+    player.onplaying=()=>{
+      if(started||audio!==player)return;
+      started=true;
+      voiceSoundStarted();
+    };
+    const done=()=>{
+      if(audio&&audio.src===url)audio=null;
+      URL.revokeObjectURL(url);
+      resolve(started);
+    };
+    player.onended=done;
+    player.onerror=done;
+    player.play().catch(done);
+  });
+}
+// Le flux, joué au fil de l'eau : chaque morceau reçu devient un tampon joué juste après le précédent. On commence
+// dès VOICE_STREAM_LEAD_MS de son reçu ; après un trou du réseau, on attend le double avant de reprendre.
+// Vrai si le son a réellement démarré. « Arrêter » (audio.pause()) coupe tout de suite.
+function playVoiceFeed(feed,ctx){
+  return new Promise(resolve=>{
+    const out=voiceOutputChain(ctx);
+    const playing=new Set();
+    const lead=Math.round(VOICE_PCM_RATE*2*VOICE_STREAM_LEAD_MS/1000);  // en octets
+    let read=0,held=[],heldBytes=0,next=0,started=false,over=false,guard=0;
+    // Arrêt demandé de l'extérieur (stopSpeakingForListening) : c'est lui qui remet `audio` à zéro, après pause().
+    const player={src:'',pause(){finish(true);}};
+    audio=player;
+    function finish(stopped){
+      if(over)return;
+      over=true;
+      clearTimeout(guard);
+      if(feed.wake===pump)feed.wake=null;
+      playing.forEach(source=>{source.onended=null;try{source.stop();}catch(_){}});
+      playing.clear();
+      out.release();
+      if(!stopped&&audio===player)audio=null;
+      resolve(started);
+    }
+    function schedule(){
+      const bytes=new Uint8Array(heldBytes);
+      let at=0;
+      held.forEach(part=>{bytes.set(part,at);at+=part.length;});
+      const count=heldBytes>>1;
+      // Un octet seul (morceau coupé au milieu d'un échantillon) attend le morceau suivant.
+      held=heldBytes%2?[bytes.subarray(heldBytes-1)]:[];
+      heldBytes=held.length;
+      if(!count)return;
+      const buffer=ctx.createBuffer(1,count,VOICE_PCM_RATE);
+      const channel=buffer.getChannelData(0);
+      const view=new DataView(bytes.buffer,0,count*2);
+      for(let i=0;i<count;i++)channel[i]=view.getInt16(i*2,true)/32768;
+      const source=ctx.createBufferSource();
+      source.buffer=buffer;
+      source.connect(out.input);
+      source.onended=()=>{playing.delete(source);pump();};
+      const start=Math.max(next,ctx.currentTime+.03);
+      source.start(start);
+      next=start+buffer.duration;
+      playing.add(source);
+      if(!started){started=true;voiceSoundStarted();}
+    }
+    function pump(){
+      if(over)return;
+      while(read<feed.parts.length){const part=feed.parts[read++];held.push(part);heldBytes+=part.length;}
+      // Plus rien de prévu ou presque : on attend d'avoir de l'avance (au début, ou après un trou du réseau).
+      const dry=next<ctx.currentTime+.05;
+      const need=!started?lead:dry?lead*2:2;
+      if(heldBytes>=need||(feed.done&&heldBytes>1))schedule();
+      if(feed.done&&heldBytes<2&&!playing.size)finish();
+      else feed.wake=pump;
+      // Tout est reçu : si le contexte audio se fige (appel entrant, mise en veille), la fin ne viendrait jamais et
+      // l'écoute ne reprendrait pas. On termine au plus tard 2 s après la durée prévue.
+      if(feed.done&&!over&&!guard)guard=setTimeout(()=>finish(false),(Math.max(0,next-ctx.currentTime)+2)*1000);
+    }
+    pump();
+  });
 }
 // Ce qui n'a pas pu être lu est dit dans la barre, une fois la file vide : jamais de silence sans explication.
 function reportVoiceTtsIssue(){
@@ -290,34 +473,24 @@ async function playVoiceTtsQueue(){
   voiceTtsPlaying=true;
   const run=++voiceTtsRun;
   try{
-    if(!item.blob){item.blob=fetchVoiceBlob(item);item.blob.catch(()=>{});}
-    const blob=await item.blob;
+    if(!item.sound){item.sound=fetchVoiceAudio(item);item.sound.catch(()=>{});}
+    const sound=await item.sound;
     if(item.turn!==voiceTtsTurn||!autoVoice)return;
     prefetchVoiceTts();
-    const url=URL.createObjectURL(blob);
-    const player=createVoiceAudio(url);
-    audio=player;
-    // « Je parle » seulement quand le son démarre vraiment (pas si le navigateur refuse la lecture).
-    let started=false;
-    player.onplaying=()=>{
-      if(started||audio!==player)return;
-      started=true;
-      voiceSpeaking=true;
-      document.body.classList.add('assistant-speaking');
-      if(voiceConversation)startVoiceMonitor();
-    };
-    await new Promise(resolve=>{
-      const done=()=>{
-        if(audio&&audio.src===url)audio=null;
-        URL.revokeObjectURL(url);
-        resolve();
-      };
-      player.onended=done;
-      player.onerror=done;
-      player.play().catch(done);
-    });
-    // Le son n'a jamais démarré (lecture refusée par le navigateur, fichier illisible) : à dire, pas à taire.
-    if(!started&&item.turn===voiceTtsTurn&&voiceConversation&&!voiceTtsIssue)voiceTtsIssue={status:0,retry:''};
+    // En flux : joué au fil de l'eau si le contexte audio tourne, sinon lu d'un bloc à la fin du flux (comme avant).
+    const ctx=sound.feed?await voiceStreamContext():null;
+    if(item.turn!==voiceTtsTurn||!autoVoice)return;
+    let started;
+    if(ctx)started=await playVoiceFeed(sound.feed,ctx);
+    else{
+      const blob=sound.blob||await voiceFeedBlob(sound.feed);
+      if(item.turn!==voiceTtsTurn||!autoVoice)return;
+      started=await playVoiceBlob(blob);
+    }
+    // Le son n'a jamais démarré (lecture refusée par le navigateur, fichier illisible) ou le flux s'est coupé en
+    // route : à dire, pas à taire.
+    const cut=!!(sound.feed&&sound.feed.error);
+    if((!started||cut)&&item.turn===voiceTtsTurn&&voiceConversation&&!voiceTtsIssue)voiceTtsIssue={status:0,retry:''};
   }catch(err){
     if(item.turn===voiceTtsTurn){
       if(!voiceConversation)speakFallback(item.text);

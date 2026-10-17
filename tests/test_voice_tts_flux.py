@@ -82,7 +82,7 @@ def post(client, headers, env, body):
 def test_flux_relays_the_first_sound_before_the_provider_has_finished():
     """Avant : la route attendait tout le fichier (les trois morceaux) avant d'envoyer le moindre octet."""
     upstream = Upstream()
-    client, headers, env = mini_client(upstream, "203.0.113.150")
+    client, headers, env = mini_client(upstream, "203.0.113.230")
     response = post(client, headers, env, {"text": "Bonjour Dakar.", "language": "fr", "flux": True})
     assert response.status_code == 200 and response.mimetype == "audio/pcm"
     assert response.headers["Cache-Control"] == "no-store" and response.headers["X-Accel-Buffering"] == "no"
@@ -98,7 +98,7 @@ def test_flux_relays_the_first_sound_before_the_provider_has_finished():
 def test_flux_sends_the_provider_exactly_the_same_text_and_settings_as_the_file():
     """Même coût pour un même texte : mêmes caractères, mêmes consignes de voix, un seul appel ; seul le format change."""
     upstream = Upstream()
-    client, headers, env = mini_client(upstream, "203.0.113.151")
+    client, headers, env = mini_client(upstream, "203.0.113.231")
     text = "## Gorée\n- **Chaloupe** : voir [le site](https://exemple.sn/x). Départ du port de Dakar."
     post(client, headers, env, {"text": text, "language": "fr", "flux": True}).close()
     post(client, headers, env, {"text": text, "language": "fr"}).close()
@@ -111,7 +111,7 @@ def test_flux_sends_the_provider_exactly_the_same_text_and_settings_as_the_file(
 
 def test_flux_only_when_asked_with_true():
     upstream = Upstream()
-    client, headers, env = mini_client(upstream, "203.0.113.152")
+    client, headers, env = mini_client(upstream, "203.0.113.232")
     for value in ("oui", 1, None):
         response = post(client, headers, env, {"text": "Bonjour", "flux": value})
         assert response.status_code == 200 and response.mimetype == "audio/wav", value
@@ -122,11 +122,11 @@ def test_flux_only_when_asked_with_true():
 def test_a_provider_failure_before_any_sound_is_a_clean_502():
     """La réponse n'est envoyée qu'une fois le premier son reçu : une panne reste un 502 lisible, comme avant."""
     failing = Upstream(status=500)
-    client, headers, env = mini_client(failing, "203.0.113.153")
+    client, headers, env = mini_client(failing, "203.0.113.233")
     response = post(client, headers, env, {"text": "Bonjour", "flux": True})
     assert response.status_code == 502 and "voix" in response.get_json()["error"]
     silent = Upstream(chunks=())
-    client, headers, env = mini_client(silent, "203.0.113.154")
+    client, headers, env = mini_client(silent, "203.0.113.234")
     response = post(client, headers, env, {"text": "Bonjour", "flux": True})
     assert response.status_code == 502 and "voix" in response.get_json()["error"]
 
@@ -135,7 +135,7 @@ def test_a_stream_cut_by_the_provider_ends_early_and_is_logged_as_an_error():
     lines = h.capture_lines()
     try:
         upstream = Upstream(cut_after=1)
-        client, headers, env = mini_client(upstream, "203.0.113.155")
+        client, headers, env = mini_client(upstream, "203.0.113.235")
         response = post(client, headers, env, {"text": "Bonjour", "flux": True})
         assert response.status_code == 200
         assert b"".join(response.response) == SECOND  # ce qui est arrivé est relayé, puis le flux se ferme
@@ -148,7 +148,7 @@ def test_a_stream_cut_by_the_provider_ends_early_and_is_logged_as_an_error():
 
 def test_flux_counts_in_the_same_rate_limits_and_keeps_the_csrf_check():
     upstream = Upstream()
-    client, headers, env = mini_client(upstream, "203.0.113.156")
+    client, headers, env = mini_client(upstream, "203.0.113.236")
     codes = []
     for _ in range(app_module.TTS_RATE_LIMIT + 2):
         response = post(client, headers, env, {"text": "Bonjour", "flux": True})
@@ -157,7 +157,7 @@ def test_flux_counts_in_the_same_rate_limits_and_keeps_the_csrf_check():
     assert codes[0] == 200 and 429 in codes
     assert len(upstream.requests) <= app_module.TTS_RATE_LIMIT
     no_token = client.post("/tts", json={"text": "Bonjour", "flux": True}, base_url=B, headers={"Origin": B},
-                           environ_base={"REMOTE_ADDR": "203.0.113.157"})
+                           environ_base={"REMOTE_ADDR": "203.0.113.237"})
     assert no_token.status_code == 403
     assert len(upstream.requests) <= app_module.TTS_RATE_LIMIT
 

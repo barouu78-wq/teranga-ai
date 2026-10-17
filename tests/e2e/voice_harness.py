@@ -24,6 +24,7 @@ Audio, comptés dans window.__mic.sources (sound_started, sound_playing), et non
 """
 
 import json
+import math
 import struct
 
 # Flux de /chat piloté par le test : remplace fetch('/chat') par une réponse dont le corps est un
@@ -161,6 +162,12 @@ def wav_bytes(ms=400, rate=8000):
         + b"data" + struct.pack("<I", len(data))
     )
     return header + data
+
+
+def pcm_bytes(ms=400, rate=24000):
+    """Du son brut comme le format « pcm » du fournisseur : 16 bits signés, petit-boutiste, mono (un la doux)."""
+    samples = rate * ms // 1000
+    return b"".join(struct.pack("<h", round(3000 * math.sin(2 * math.pi * 440 * i / rate))) for i in range(samples))
 
 
 def stream(*events):

@@ -16,7 +16,7 @@ try:
 except ImportError:  # pragma: no cover - la fixture « browser » (conftest) ignore ou fait échouer selon E2E_REQUIRED
     expect = None
 
-from .voice_harness import VoiceBench
+from .voice_harness import VoiceBench, pcm_bytes
 
 T = 15000  # attentes visibles : larges, pour un navigateur ralenti
 LISTENING = re.compile("écoute")
@@ -176,6 +176,44 @@ def test_without_a_running_audio_context_the_voice_waits_for_the_whole_sound_as_
     assert bench.sound_started() == 0 and page.evaluate("() => window.__mic.audios.length") == 0
     bench.tts_end()
     expect(text).to_have_text(SPEAKING, timeout=T)  # le fichier entier, par l'élément <audio> d'avant
+    assert page.evaluate("() => window.__mic.audios.length") == 1
+    expect(text).to_have_text(LISTENING, timeout=20000)
+    bench.wait_recording(timeout=T)
+    assert page.errors == []
+
+
+def test_a_frozen_audio_context_does_not_block_listening(page, base_url):
+    """Le contexte audio peut se figer en pleine lecture (appel entrant, mise en veille du téléphone) : sans garde-fou,
+    la fin de la voix n'arrivait jamais et l'écoute ne reprenait pas."""
+    bench = streamed_voice(page, base_url)
+    text = page.locator("#voiceText")
+    bench.chat_event(d=SHORT)
+    bench.chat_end()
+    bench.wait_tts_stream(1, timeout=T)
+    bench.tts_chunk(600)
+    expect(text).to_have_text(SPEAKING, timeout=T)
+    page.evaluate("() => voiceOutputContext.suspend()")
+    bench.tts_end()
+    expect(text).to_have_text(LISTENING, timeout=20000)
+    bench.wait_recording(timeout=T)
+    assert page.errors == []
+
+
+def test_a_browser_that_cannot_read_a_stream_still_plays_the_whole_sound(page, base_url):
+    """Navigateur sans lecture du corps en flux (Response.body absent) : le son reçu d'un bloc est lu en WAV."""
+    page.add_init_script(
+        "(() => { const native = Object.getOwnPropertyDescriptor(Response.prototype, 'body');"
+        " Object.defineProperty(Response.prototype, 'body', {get() {"
+        " return String(this.headers.get('Content-Type') || '').startsWith('audio/pcm') ? null : native.get.call(this); }}); })()"
+    )
+    bench = VoiceBench(page, base_url)
+    bench.tts_handler = lambda route, n: route.fulfill(body=pcm_bytes(800), content_type="audio/pcm")
+    bench.open()
+    bench.tap_mic()
+    bench.wait_recording(timeout=T)
+    bench.speak_one_turn()
+    text = page.locator("#voiceText")
+    expect(text).to_have_text(SPEAKING, timeout=T)
     assert page.evaluate("() => window.__mic.audios.length") == 1
     expect(text).to_have_text(LISTENING, timeout=20000)
     bench.wait_recording(timeout=T)
