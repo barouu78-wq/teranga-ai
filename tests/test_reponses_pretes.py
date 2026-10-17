@@ -104,3 +104,37 @@ def test_quick_answer_is_streamed_without_calling_the_model(monkeypatch):
     text = "".join(e.get("d", "") for e in events)
     assert calls == [] and "Police secours : 17" in text
     assert any(e.get("done") for e in events)
+
+
+def _post(client, message, ip):
+    token = client.get("/csrf", base_url="https://teranga-ai.fr").get_json()["token"]
+    client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
+    return client.post(
+        "/chat",
+        json={"message": message, "language": "fr"},
+        headers={"X-CSRF-Token": token, "Origin": "https://teranga-ai.fr"},
+        base_url="https://teranga-ai.fr",
+        environ_base={"REMOTE_ADDR": ip},
+    )
+
+
+def test_quick_answer_does_not_use_the_web_search_quota():
+    import app as app_module
+
+    client = app_module.app.test_client()
+    # « urgence » déclenche la recherche web ; la réponse prête n'en fait pas : jamais de refus « trop de recherches ».
+    statuses = [_post(client, "Numéros d'urgence ?", "203.0.113.172").status_code for _ in range(12)]
+    assert statuses == [200] * 12
+
+
+def test_quick_answer_wins_over_an_older_model_answer_in_cache(monkeypatch):
+    import app as app_module
+
+    old = {"reply": "Gendarmerie : 800 00 20 20, SOS Médecins : 33 889 15 15.", "sources": []}
+    monkeypatch.setattr(app_module.ANSWER_CACHE, "get", lambda key: old)
+    text = "".join(
+        json.loads(line).get("d", "")
+        for line in _post(app_module.app.test_client(), "Quel est le numéro de la police ?", "203.0.113.173").get_data(as_text=True).splitlines()
+        if line
+    )
+    assert "Police secours : 17" in text and "800 00 20 20" not in text
