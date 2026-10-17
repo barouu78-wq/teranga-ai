@@ -35,7 +35,7 @@ from routes.monetization import register_monetization_routes
 from routes.coverage import register_coverage_routes
 from services.coverage_log import CoverageLog
 from routes.emergency import register_emergency_routes
-from routes.events import register_events_routes
+from routes.events import register_event_reminder_routes, register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
 from services.dakar_date import dakar_today, today_line
@@ -825,6 +825,7 @@ COVERAGE_LOG = CoverageLog(redis_client, logger=app.logger, places=SENEGAL_KNOWL
 register_coverage_routes(app, COVERAGE_LOG, rate_guard=rate_guard)
 register_emergency_routes(app, SITE_URL)
 register_events_routes(app, SITE_URL)
+register_event_reminder_routes(app, SITE_URL)
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,
