@@ -9,8 +9,8 @@ from flask import Response, jsonify, request
 from services.latency import LatencyTrace
 
 # Délai propre à la voix (le client OpenAI global attend 50 s, réglé pour les réponses avec recherche web) :
-# 5 s pour se connecter, 20 s au plus sans recevoir d'octet. Une voix plus lente ne sert plus à rien :
-# le navigateur abandonne à 30 s (VOICE_TTS_TIMEOUT_MS, templates/home.html).
+# 5 s pour se connecter, 20 s au plus sans recevoir d'octet, et aucune nouvelle tentative (une seconde
+# synthèse arriverait après l'abandon du navigateur, à 30 s : VOICE_TTS_TIMEOUT_MS, templates/home.html).
 TTS_TIMEOUT = httpx.Timeout(20.0, connect=5.0)
 
 
@@ -67,7 +67,7 @@ def register_tts_route(app, deps):
             from services.voice_quality import tts_instruction
             trace.model = "gpt-4o-mini-tts"
             with trace.stage("fournisseur"):
-                speech = client.audio.speech.create(
+                speech = client.with_options(max_retries=0).audio.speech.create(
                     model="gpt-4o-mini-tts",
                     voice=os.getenv("TTS_VOICE", "cedar"),
                     input=text,

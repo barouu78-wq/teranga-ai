@@ -26,6 +26,12 @@ def _fake_speech(monkeypatch, calls, fail=False):
         return SimpleNamespace(content=b"RIFFfakewav")
 
     monkeypatch.setattr(app_module.client.audio.speech, "create", create)
+    # La voix prend une copie du client sans nouvelle tentative : la copie est ce même client simulé.
+    def with_options(**options):
+        calls.append({"options": options})
+        return app_module.client
+
+    monkeypatch.setattr(app_module.client, "with_options", with_options)
 
 
 def test_tts_reads_clean_text_and_returns_audio(monkeypatch):
@@ -36,10 +42,10 @@ def test_tts_reads_clean_text_and_returns_audio(monkeypatch):
     response = client.post("/tts", json={"text": text, "language": "zz"}, base_url=B, headers=headers, environ_base=env)
     assert response.status_code == 200 and response.mimetype == "audio/wav"
     assert response.data == b"RIFFfakewav" and response.headers["Cache-Control"] == "no-store"
-    spoken = calls[0]["input"]
+    spoken = calls[1]["input"]
     assert "http" not in spoken and "**" not in spoken and "##" not in spoken and "[" not in spoken
     assert "Gorée" in spoken and "le site" in spoken and "Prendre la chaloupe" in spoken
-    assert len(calls) == 1
+    assert len(calls) == 2
 
 
 def test_tts_rejects_empty_text_and_reports_provider_failure(monkeypatch):
@@ -60,7 +66,7 @@ def test_tts_is_rate_limited_per_minute(monkeypatch):
     codes = [client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env).status_code
              for _ in range(app_module.TTS_RATE_LIMIT + 2)]
     assert codes[0] == 200 and 429 in codes
-    assert len(calls) <= app_module.TTS_RATE_LIMIT
+    assert len([c for c in calls if "input" in c]) <= app_module.TTS_RATE_LIMIT
 
 
 class _Upstream:
@@ -175,5 +181,6 @@ def test_tts_provider_call_has_a_short_timeout(monkeypatch):
     client, headers, env = _client("203.0.113.104")
     response = client.post("/tts", json={"text": "Bonjour"}, base_url=B, headers=headers, environ_base=env)
     assert response.status_code == 200
-    timeout = calls[0]["timeout"]
+    assert calls[0] == {"options": {"max_retries": 0}}
+    timeout = calls[1]["timeout"]
     assert timeout.connect <= 5 and timeout.read <= 20
