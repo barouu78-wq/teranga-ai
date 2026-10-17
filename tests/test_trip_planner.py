@@ -484,8 +484,8 @@ def test_trip_planner_share_link_is_restorable_and_url_safe():
 
     body = with_planner_script(_html("https://example.com", "fr"))
     assert "function encodeTrip(payload)" in body
-    assert "Partager ces préférences" in body
-    assert "Share these preferences" in with_planner_script(_html("https://example.com", "en"))
+    assert "Partager l’itinéraire" in body
+    assert "Share this itinerary" in with_planner_script(_html("https://example.com", "en"))
     assert "function decodeTrip(value)" in body
     assert "new TextEncoder().encode(JSON.stringify(payload))" in body
     assert "new TextDecoder().decode(bytes)" in body
@@ -975,3 +975,20 @@ def test_trip_planner_stream_errors_are_public_messages():
     app, _ = _stream_app(RuntimeError("secret internal detail"))
     last = _stream_lines(app)[-1]
     assert last["status"] == 503 and "secret" not in last["error"]
+
+
+def test_trip_planner_offers_pdf_and_native_share():
+    """Teranga 2.0, étape 1 : l'itinéraire se partage (WhatsApp…) et s'enregistre en PDF, sans service payant."""
+    from services.trip_planner import _html
+
+    fr = with_planner_script(_html("https://example.com", "fr"))
+    en = with_planner_script(_html("https://example.com", "en"))
+    assert 'id="trip-pdf"' in fr and "Enregistrer en PDF" in fr
+    assert "Save as PDF" in en
+    # PDF : la boîte d'impression du navigateur (« Enregistrer au format PDF »), hors ligne, sans serveur.
+    assert "window.print()" in fr
+    assert "@media print" in fr
+    # Partage natif d'abord (feuille de partage du téléphone), copie du lien sinon.
+    assert "navigator.share({title:document.title,url:location.href})" in fr
+    # Version imprimée : rappel « à vérifier » et mention de Teranga AI.
+    assert 'class="print-only"' in fr
