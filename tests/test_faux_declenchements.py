@@ -260,3 +260,17 @@ def test_une_question_de_langue_ne_fait_venir_ni_lieu_ni_personnalite(question):
 def test_une_personnalite_nommee_reste_trouvee():
     assert "Birago Diop" in people(site("qui est birago diop"))
     assert "Sadio Mané" in people(site("parle moi de sadio mane"))
+
+
+def test_un_lieu_nomme_sans_region_ne_ramene_pas_les_regions_du_poisson():
+    payload = site("une marchande de poisson a soumbedioune")
+    assert regions(payload) == []
+
+
+def test_un_billet_d_avion_ne_ramene_ni_goree_ni_cap_skirring():
+    assert places(site("le billet d avion est trop cher")) == []
+
+
+def test_un_plat_ou_un_theme_sans_lieu_nomme_garde_ses_regions():
+    assert "Saint-Louis" in regions(site("poisson a saint-louis"))
+    assert regions(site("ou manger du poisson grille")) != []
