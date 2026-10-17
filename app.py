@@ -39,6 +39,7 @@ from routes.emergency import register_emergency_routes
 from routes.events import register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
+from services.dakar_date import dakar_today, today_line
 from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
@@ -705,6 +706,8 @@ def parse_chat_payload():
         system_prompt=SYSTEM_PROMPT,
     )
     if payload and not payload.get("photo_only"):
+        # Date du jour à Dakar : sans elle, « ce week-end », « cette année » ou « la prochaine Tabaski » sont mal situés.
+        payload["instructions"] += "\n\n" + today_line(payload.get("language", "fr"))
         raw = request.get_json(silent=True) or {}
         modes = detect_modes(payload.get("message", ""), raw.get("history") if isinstance(raw.get("history"), list) else None)
         if modes:
