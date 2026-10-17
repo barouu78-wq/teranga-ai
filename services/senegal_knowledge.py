@@ -136,7 +136,8 @@ SENEGAL_DOMAINS = {
     "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
     "travel": ("voyage", "tourisme", "itinéraire", "visiter", "plage", "hôtel"),
-    "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD"),
+    # Ferry et chaloupe : sans eux, « prix du ferry pour Ziguinchor » tombait dans « economy » (mot « prix »).
+    "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD", "ferry", "ferries", "chaloupe"),
     "culture": ("culture", "histoire", "patrimoine", "musique", "tradition", "art"),
     "food": ("cuisine", "restaurant", "plat", "thieboudienne", "yassa", "mafé"),
     "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB", "business", "entrepreneur", "entreprendre"),
