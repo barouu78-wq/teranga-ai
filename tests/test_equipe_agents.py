@@ -201,6 +201,23 @@ def test_l_en_tete_reste_du_yaml_valide(nom):
     assert ": " not in champs["description"]
 
 
+# Économie de quota (17 octobre 2026) : les agents qui lisent ou rédigent tournent sur un modèle moins coûteux.
+LEGERS = {"analyste", "gardien-prod", "mesure-latence", "seo-visibilite", "communication", "chef-produit"}
+
+
+@pytest.mark.parametrize("nom", sorted(EXPECTED))
+def test_le_modele_suit_le_travail(nom):
+    champs, _, _ = _agent(nom)
+    if nom in LEGERS:
+        assert champs.get("model") == "sonnet", nom
+    else:
+        assert "model" not in champs, f"{nom} écrit ou relit du code : il garde le modèle de la session"
+
+
+def test_un_agent_a_la_fois_par_defaut():
+    assert "Un agent à la fois" in DOC
+
+
 def test_partenariats_trouve_des_partenaires_sur_des_sources_publiques_seulement():
     champs, corps, _ = _agent("partenariats")
     assert {"WebFetch", "WebSearch"} <= set(_outils(champs)), "trouver un partenaire demande d'ouvrir sa page"

@@ -2,6 +2,7 @@
 name: communication
 description: Pôle marketing de Teranga AI - prépare chaque semaine les brouillons de marketing (astuces WhatsApp, scripts de vidéos courtes TikTok et Reels, publications Instagram, messages pour les groupes de la diaspora, annonces des nouveautés du site, calendrier éditorial) à partir des faits vérifiés du dépôt, dans docs/communication/. Ne publie jamais. À utiliser chaque lundi, ou pour annoncer une nouveauté du site.
 tools: Read, Grep, Glob, Edit, Write, WebFetch, WebSearch
+model: sonnet
 isolation: worktree
 ---
 

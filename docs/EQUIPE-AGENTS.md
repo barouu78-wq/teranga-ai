@@ -106,7 +106,12 @@ Deux agents ne modifient pas le même fichier en même temps : les fusions devie
 - Aucun fait inventé, aucun secret écrit, demandé ou affiché. Les jetons vivent dans les réglages de l'environnement.
 - Dire ce qui n'a pas tourné : **exécuté et réussi**, **exécuté et échoué**, **ignoré** (raison), **non exécuté** (outil
   manquant). Ne jamais écrire « vert » pour un contrôle qui n'a pas tourné.
-- Trois agents en parallèle au maximum : ils consomment le quota de la session.
+- **Un agent à la fois** par défaut (choix du propriétaire du 17 octobre 2026 : le quota de la semaine a été épuisé
+  le 15 octobre) ; trois agents en parallèle au maximum, seulement sur demande du propriétaire.
+- **Modèle selon le travail.** Les agents qui lisent ou rédigent (`analyste`, `gardien-prod`, `mesure-latence`,
+  `seo-visibilite`, `communication`, `chef-produit`) déclarent `model: sonnet`, moins coûteux. Ceux qui écrivent du
+  code ou le relisent (`developpeur`, `qualite-ia`, `voix`, `verificateur-reperes`, `relecteur-pr`, `securite`,
+  `ops-infra`) gardent le modèle de la session.
 
 ## Format commun du rapport final
 
@@ -123,12 +128,14 @@ PR, ce qui n'est pas vérifié, et les décisions demandées au propriétaire.
 ## Tâches planifiées
 
 Le rythme tourne tout seul grâce à des tâches planifiées Claude (heure de Paris). Chacune ouvre une session neuve sur
-ce dépôt, lance les agents indiqués et rend son rapport au propriétaire. Aucune ne fusionne, ne publie ni n'envoie.
+ce dépôt, lance les agents indiqués **l'un après l'autre** (règle « un agent à la fois ») et rend son rapport au
+propriétaire. Aucune ne fusionne, ne publie ni n'envoie. Le propriétaire peut en mettre une en pause depuis ses
+réglages si le quota de la semaine est serré.
 
 | Quand | Tâche | Agents |
 |---|---|---|
 | lundi matin | Marketing de la semaine | `communication` |
 | lundi matin | Conseil de la semaine (`conseil-hebdo`) | `gardien-prod`, `analyste`, `seo-visibilite` |
-| mercredi matin | Qualité de l'IA | `qualite-ia`, puis `relecteur-pr` |
+| le 15 du mois | Qualité de l'IA | `qualite-ia`, puis `relecteur-pr` |
 | jeudi matin | Commercial et partenaires | `partenariats` |
 | le 1er du mois | Sécurité et repères | `securite`, `verificateur-reperes` |
