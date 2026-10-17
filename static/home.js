@@ -27,7 +27,7 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -50,7 +50,7 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
   hint:'Live answers · Enter to send',
@@ -715,6 +715,10 @@ function setLang(next){
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
   if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
   if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
+  // Cartes « À découvrir » (tirées par le serveur) : la région dans la langue choisie ; « UNESCO » ne change pas.
+  document.querySelectorAll('.place-tile[data-region]:not([data-unesco])').forEach(tile=>{
+    const sub=tile.querySelector('small');if(sub)sub.textContent=(t.regionOf||T.fr.regionOf).replace('{r}',tile.dataset.region);
+  });
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
   if($('planCtaTitle')){$('planCtaTitle').textContent=t.planTitle||t.journeyTravel;$('planCtaHint').textContent=t.planHint||t.journeyTravelHint;}
   renderJourneyLabels();
@@ -1208,10 +1212,10 @@ $('heroAsk')?.addEventListener('submit',e=>{
   ask(q);
 });
 $('heroMic')?.addEventListener('click',()=>mic.click());
-// Photos des deux lieux à découvrir (mêmes images que les fiches), sans bloquer l'affichage.
+// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage.
 document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
   try{
-    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||''),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
     const d=await r.json();const img=(d.images||[])[0];if(!img)return;
     const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
     const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';

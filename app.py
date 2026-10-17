@@ -42,6 +42,7 @@ from services.dakar_date import dakar_today, today_line
 from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
+from services.discover import discover_pool
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
 from services.youth_opportunities import find_youth_opportunities
@@ -919,6 +920,7 @@ register_system_routes(app, {
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
     "home_html": HOME_HTML,
+    "discover_places": discover_pool(SENEGAL_KNOWLEDGE),
     "site_url": SITE_URL,
     "build_icon_png": build_icon_png,
 })
