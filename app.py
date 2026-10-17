@@ -847,8 +847,11 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
 ).hexdigest()[:12]
 
+from services.quick_answers import quick_answer as _quick_answer
+
 register_chat_route(app, {
     "answer_cache": ANSWER_CACHE,
+    "quick_answer": _quick_answer,
     # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
     # de la base de connaissances invalide les anciennes réponses en cache.
     # Le prompt système, les partenaires et le modèle complexe en font partie aussi,

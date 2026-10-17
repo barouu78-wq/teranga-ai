@@ -47,6 +47,7 @@ def register_chat_route(app, deps):
     knowledge_places = deps.get("knowledge_places") or []
     knowledge_dishes = deps.get("knowledge_dishes") or []
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+    quick_answer = deps.get("quick_answer")  # réponses prêtes sans le modèle (services/quick_answers.py)
     coverage_log = deps.get("coverage_log")  # compteurs anonymes par thème (services/coverage_log.py)
 
     def fallback_for(payload):
@@ -175,6 +176,9 @@ def register_chat_route(app, deps):
 
         key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
         cached = answer_cache.get(key) if key else None
+        if not cached and quick_answer is not None:
+            # Réponse prête (numéros d'urgence vérifiés) : servie comme une réponse en cache, sans le modèle.
+            cached = quick_answer(payload, request.get_json(silent=True))
         trace.cache = bool(cached)
         if cached:
             logger.info("chat_cache_hit")
