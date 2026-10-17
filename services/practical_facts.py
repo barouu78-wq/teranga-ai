@@ -296,7 +296,9 @@ TOPICS = (
      r"heure (de|d) (paris|france|dakar|ete|hiver)|what time is it|local time|current time",
      ("Heure : UTC+0 toute l'année, sans changement d'heure. Par rapport à Paris : 1 h de moins en hiver, 2 h de "
       "moins en été.",)),
-    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|douane|customs|"
+    # « douane » et « customs » n'en font pas partie : passer la douane (médicaments, cigarettes) n'est pas le visa,
+    # et aucun repère douane vérifié n'existe encore.
+    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|"
      r"\bpapiers? (pour|afin de) (voyager|venir|entrer|aller|partir)|(voyager|venir|entrer|arriver) (au|en) senegal.{0,80}\bpapiers?\b|"
      r"documents? de voyage|travel documents?|entry requirements?",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
@@ -338,6 +340,8 @@ TOPICS = (
       "procurations douteuses ; garder chaque paiement traçable (virement, reçu signé).")),
     # Vendre un bien (maison, voiture) n'est pas le commerce ; WhatsApp seul n'est pas la vente (« groupe de famille »).
     ("vente", r"vendre(?! (ma |mon |mes |une |un |la |le |les |notre |nos )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
+     # « je vends des légumes » (le commerçant parle de son activité), pas « je vends ma voiture ».
+     r"\b(je|j|nous) (re)?vend(s|ons)\b(?! (ma |mon |mes |une |un |la |le |les |notre |nos )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
      r"vente(?! (de |d |du |des )?(une |un )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
      r"(trouver|avoir|attirer) (des |plus de )?clients|whatsapp business|whatsapp (pro|catalogue|boutique)|"
      r"(vendre|vente|clients?|commandes?|boutique|catalogue|livraison|commerc\w+|business)\b.{0,40}\bwhatsapp|"
