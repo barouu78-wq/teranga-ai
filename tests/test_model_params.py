@@ -52,7 +52,7 @@ def test_build_model_kwargs_uses_medium_for_planner_model():
         "intent_context": {"domain": "travel"},
     })
     assert result["reasoning"] == {"effort": "medium"}
-    assert result["max_output_tokens"] == 1200
+    assert result["max_output_tokens"] == 2000  # raisonnement « medium » : budget élargi (était 1200)
 
 
 def test_build_model_kwargs_keeps_luna_fast_even_for_complex_payload():
@@ -266,3 +266,36 @@ def test_model_names_are_written_in_one_place_only():
         if path.name != "model_params.py" and "gpt-5.6" in path.read_text(encoding="utf-8")
     ]
     assert offenders == []
+
+
+# --- Budget de raisonnement : l'effort « medium » a la place d'écrire sa réponse ---
+
+def test_deep_reasoning_on_complex_model_gets_room_for_reasoning_and_answer():
+    from services.model_params import REASONING_MAX_OUTPUT_TOKENS
+
+    result = _kwargs({
+        "use_web": False, "planner": False, "deep_reasoning": True,
+        "instructions": "i", "input_text": "q",
+    })
+    assert result["reasoning"] == {"effort": "medium"}
+    # 800 jetons, raisonnement compris, coupaient les réponses approfondies.
+    assert result["max_output_tokens"] == REASONING_MAX_OUTPUT_TOKENS == 2000
+
+
+def test_planner_with_web_on_complex_model_gets_the_reasoning_budget():
+    result = _kwargs({
+        "use_web": True, "planner": True, "deep_reasoning": False,
+        "instructions": "i", "input_text": "q", "intent_context": {"domain": "travel"},
+    })
+    assert result["reasoning"] == {"effort": "medium"} and result["max_output_tokens"] == 2000
+
+
+def test_fast_model_and_low_override_keep_the_short_budget():
+    payload = {"use_web": False, "planner": False, "deep_reasoning": True, "instructions": "i", "input_text": "q"}
+    assert _kwargs(payload, model="gpt-5.6-luna")["max_output_tokens"] == 800
+    assert _kwargs(payload, override="low")["max_output_tokens"] == 800
+
+
+def test_explicit_medium_override_gets_the_reasoning_budget():
+    payload = {"use_web": False, "planner": False, "deep_reasoning": False, "instructions": "i", "input_text": "q"}
+    assert _kwargs(payload, override="medium")["max_output_tokens"] == 2000
