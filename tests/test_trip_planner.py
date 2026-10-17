@@ -990,5 +990,5 @@ def test_trip_planner_offers_pdf_and_native_share():
     assert "@media print" in fr
     # Partage natif d'abord (feuille de partage du téléphone), copie du lien sinon.
     assert "navigator.share({title:document.title,url:location.href})" in fr
-    # Version imprimée : date d'impression et rappel « à vérifier ».
+    # Version imprimée : rappel « à vérifier » et mention de Teranga AI.
     assert 'class="print-only"' in fr
