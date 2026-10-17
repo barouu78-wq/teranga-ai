@@ -80,9 +80,10 @@ def test_filters_name_the_real_senegalese_government_domain():
 
 
 @pytest.mark.parametrize("domain", ["transport", "travel", "food", "economy", "culture", "environment"])
-def test_topics_answered_by_operators_have_no_hard_domain_filter(domain):
-    """Ferry, hôtel, restaurant, prix, concert : la réponse est chez l'opérateur, pas au ministère ni à l'ANSD."""
-    assert preferred_domains(domain) == ()
+def test_every_topic_keeps_its_official_domain_list(domain):
+    """Décision du propriétaire (17/10/2026) : la recherche reste limitée aux sites officiels pour ces sujets aussi."""
+    assert preferred_domains(domain)
+    assert "gouv.sn" in preferred_domains(domain)
 
 
 @pytest.mark.parametrize("message,previous,expected_first", [
@@ -104,10 +105,10 @@ def test_official_topics_keep_their_official_filter(monkeypatch, message, previo
 
 @pytest.mark.parametrize("message", ["Où manger du thiéboudienne à Dakar ?", "Meilleurs hôtels à Cap Skirring",
                                      "prix du ferry pour ziguinchor", "Comment créer une entreprise au Sénégal ?"])
-def test_operator_questions_search_the_open_web(message):
+def test_operator_questions_stay_on_official_sites(message):
     payload = site(message)
     assert payload["use_web"] is True
-    assert allowed_domains(payload) == []
+    assert "gouv.sn" in allowed_domains(payload)
 
 
 # --- Quand chercher : faux déclenchements et voisins qui doivent toujours chercher -------------------------------

@@ -8,8 +8,9 @@ def test_official_domains_for_senegal_statistics():
 
 
 def test_travel_source_policy():
-    # Hôtels, horaires, prix : chez les opérateurs, pas au ministère. Pas de liste fermée de domaines.
-    assert preferred_domains("travel") == ()
+    domains = preferred_domains("travel")
+    assert domains[:2] == ("tourisme.gouv.sn", "ansd.sn")
+    assert "unesco.org" in domains
 
 
 def test_weather_source_policy():
@@ -53,9 +54,8 @@ def test_should_use_web_avoids_generic_false_positives():
 
 
 def test_transport_and_food_source_policy():
-    # Ferry, TER, taxi, restaurants : la recherche ne se limite plus au ministère ni à l'ANSD.
-    assert preferred_domains("transport") == ()
-    assert preferred_domains("food") == ()
+    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gouv.sn")
+    assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
 
 
 def test_web_matcher_keeps_word_boundaries_with_cached_patterns():

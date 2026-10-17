@@ -95,7 +95,7 @@ def test_build_model_kwargs_adds_web_tool_and_domains():
     }]
 
 
-def test_build_model_kwargs_transport_searches_the_open_web():
+def test_build_model_kwargs_applies_senegal_transport_sources():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -112,12 +112,10 @@ def test_build_model_kwargs_transport_searches_the_open_web():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    # Ferry, TER, taxi : la réponse est chez l'opérateur ; pas de liste fermée de domaines.
-    assert result["tools"][0]["type"] == "web_search"
-    assert "filters" not in result["tools"][0]
+    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["transports.gouv.sn", "gouv.sn"]
 
 
-def test_build_model_kwargs_food_searches_the_open_web():
+def test_build_model_kwargs_applies_senegal_food_sources():
     from services.web_policy import preferred_domains
     result = build_model_kwargs(
         {
@@ -134,9 +132,7 @@ def test_build_model_kwargs_food_searches_the_open_web():
         preferred_domains=preferred_domains,
         stream=False,
     )
-    # Restaurants : pas au ministère de l'Agriculture ; pas de liste fermée de domaines.
-    assert result["tools"][0]["type"] == "web_search"
-    assert "filters" not in result["tools"][0]
+    assert result["tools"][0]["filters"]["allowed_domains"][:2] == ["agriculture.gouv.sn", "tourisme.gouv.sn"]
 
 
 def test_build_model_kwargs_keeps_official_sources_for_administration():

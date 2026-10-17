@@ -11,14 +11,18 @@ from functools import lru_cache
 from services.validation import normalize, sanitize_text
 
 # Liste FERMÉE de domaines pour l'outil de recherche web (allowed_domains) : rien en dehors n'est lu.
-# Seulement pour les sujets où la source officielle EST la réponse (statistiques, démarches, météo).
 # Les sites de l'État sénégalais sont en « .gouv.sn » (base : authoritative_sources), d'où « gouv.sn ».
-# Ferry, hôtel, restaurant, prix, concert : la réponse est chez l'opérateur, absent de ces listes ;
-# ces sujets n'ont donc pas de liste fermée (les sources à privilégier restent écrites dans le prompt).
+# Décision du propriétaire (17/10/2026) : les listes de sites officiels restent pour tous les sujets.
 SOURCE_FILTERS = {
     "society": ("ansd.sn", "gouv.sn", "who.int", "worldbank.org"),
+    "economy": ("ansd.sn", "gouv.sn", "worldbank.org"),
     "agriculture": ("ansd.sn", "agriculture.gouv.sn", "gouv.sn", "fao.org"),
     "territory": ("ansd.sn", "gouv.sn", "tourisme.gouv.sn"),
+    "travel": ("tourisme.gouv.sn", "ansd.sn", "unesco.org", "gouv.sn"),
+    "transport": ("transports.gouv.sn", "gouv.sn", "ansd.sn"),
+    "food": ("agriculture.gouv.sn", "tourisme.gouv.sn", "gouv.sn"),
+    "culture": ("unesco.org", "tourisme.gouv.sn", "gouv.sn"),
+    "environment": ("tourisme.gouv.sn", "unesco.org", "gouv.sn", "who.int"),
     "administration": ("diplomatie.gouv.sn", "interieur.gouv.sn", "gouv.sn"),
     "weather": ("anacim.sn", "ansd.sn", "gouv.sn"),
 }
