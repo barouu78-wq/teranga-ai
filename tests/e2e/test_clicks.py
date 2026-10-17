@@ -570,3 +570,15 @@ def test_home_audience_profiles_respond_and_persist(page, base_url, audience, ex
     page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
     assert page.errors == []
 
+
+
+def test_trip_date_error_shows_a_plain_apostrophe(page, base_url):
+    """Départ avant l'arrivée : « d'arrivée » s'affiche tel quel, pas « d&#x27;arrivée »."""
+    page.goto(base_url + "/trip-planner")
+    page.fill("input[name=arrival]", "2026-11-10")
+    page.fill("input[name=departure]", "2026-11-05")
+    page.click("[data-next]")
+    text = page.locator("#status").inner_text()
+    assert "d'arrivée" in text, text
+    assert "&" not in text, text
+    assert page.errors == []
