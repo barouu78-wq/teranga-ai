@@ -201,6 +201,15 @@ def test_standalone_question_query_does_not_drag_the_previous_turn():
     assert "merci" not in query.casefold() and "taux euro cfa" in query.casefold()
 
 
+def test_query_names_the_place_chosen_in_the_interface():
+    body = {"message": "c est ouvert ?", "history": [{"role": "user", "content": "c est ouvert ?"}],
+            "language": "fr", "audience": "tourist", "context_place": "Gorée"}
+    with app.test_request_context("/chat", method="POST", json=body):
+        payload, error = parse_chat_payload()
+    assert error is None and payload["use_web"] is True
+    assert research_query(payload) == "Gorée c est ouvert ?"
+
+
 def test_query_is_anchored_to_senegal_only_when_needed():
     assert research_query(site("taux euro cfa aujourd hui")).endswith("Sénégal")
     assert research_query(site("prix du ferry pour ziguinchor")) == "prix du ferry pour ziguinchor"
@@ -217,9 +226,10 @@ def test_query_drops_email_addresses_and_phone_numbers_but_keeps_amounts():
 
 def test_query_is_bounded_and_keeps_an_explicit_url():
     url = "https://teranga-ai.fr/lieux/ile-de-goree"
-    long_message = "prix actuel de la chaloupe " + "vraiment " * 300 + url
-    query = research_query(site(long_message[:1990]))
-    assert url in query
+    long_message = "prix actuel de la chaloupe " + url + " " + "vraiment " * 200
+    assert len(long_message) < 2000  # sous la limite du message : rien n'est coupé avant la requête
+    query = research_query(site(long_message))
+    assert url in query and query.startswith("prix actuel de la chaloupe")
     assert len(query.replace(url, "")) <= 320
 
 

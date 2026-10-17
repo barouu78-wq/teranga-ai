@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 
-from services.validation import normalize
+from services.validation import normalize, sanitize_text
 
 # Liste FERMÉE de domaines pour l'outil de recherche web (allowed_domains) : rien en dehors n'est lu.
 # Seulement pour les sujets où la source officielle EST la réponse (statistiques, démarches, météo).
@@ -202,6 +202,88 @@ def should_use_web(message, context=""):
     )
     return _contains_any(combined, contextual_dynamic)
 
+
+# --- Requête de la recherche externe (Tavily, Exa, Firecrawl) -----------------------------------------------------
+# Elle part chez un tiers : courte, centrée sur le sujet, sans adresse e-mail ni numéro de téléphone.
+
+RESEARCH_QUERY_MAX_CHARS = 300  # hors URL, qui n'est jamais coupée (Firecrawl lit la page demandée)
+_PREVIOUS_TURN_MAX_CHARS = 200
+_URL = re.compile(r"(https?://[^\s<>'\"]+)")
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+_PHONE = re.compile(
+    r"(?<![\w+])(?:"
+    r"(?:\+|00)\d{1,3}(?:[\s.-]?\d){8,11}"         # international : +221 77 123 45 67, 0033 6 12 34 56 78
+    r"|7[05-8][\s.]?\d{3}(?:[\s.]?\d{2}){2}"      # mobile sénégalais : 77 123 45 67
+    r"|3[03][\s.]?\d{3}(?:[\s.]?\d{2}){2}"        # fixe sénégalais : 33 823 45 67
+    r"|0[1-9](?:[\s.]?\d{2}){4}"                  # France : 06 12 34 56 78
+    r")(?!\w)"
+)
+_FOLLOW_UP_OPENER = re.compile(r"(?:et|and|what about|pareil|meme chose)\b")
+
+
+def _scrub(text: object) -> str:
+    """Espaces normalisés, sans e-mail ni téléphone ; les URL restent intactes."""
+    parts = _URL.split(sanitize_text(text, 4000))
+    cleaned = [part if index % 2 else _PHONE.sub(" ", _EMAIL.sub(" ", part)) for index, part in enumerate(parts)]
+    return " ".join("".join(cleaned).split())
+
+
+def _bounded(text: str, limit: int) -> str:
+    """Les premiers mots jusqu'à ``limit`` caractères ; les URL sont toujours gardées."""
+    kept, size, full = [], 0, False
+    for word in text.split():
+        if _URL.fullmatch(word):
+            kept.append(word)
+        elif not full and size + len(word) <= limit:
+            kept.append(word)
+            size += len(word) + 1
+        else:
+            full = True
+    return " ".join(kept)
+
+
+def _previous_user_turn(contextual_query: str, current: str) -> str:
+    """Dernière question de l'utilisateur avant celle-ci (le site envoie aussi la question courante dans le fil)."""
+    parts = [part.strip() for part in str(contextual_query or "").split(" | ") if part.strip()]
+    while parts and normalize(parts[-1]) == current:
+        parts.pop()
+    if parts and normalize(parts[-1]).endswith(current):
+        parts.pop()  # « Lieu : question » : lieu choisi dans l'interface, pas un tour précédent
+    return parts[-1] if parts else ""
+
+
+def research_query(payload: dict) -> str:
+    """Requête de recherche externe : la question, plus le sujet du fil quand elle y renvoie.
+
+    « Et en bus ? » après « prix du taxi AIBD Dakar » devient « prix du taxi aibd dakar Et en bus ? » ;
+    une question complète garde seulement son texte. « Sénégal » est ajouté quand rien ne situe la recherche.
+    """
+    message = _scrub((payload or {}).get("message"))
+    if not message:
+        return ""
+    current = normalize(message)
+    intent = payload.get("intent_context") or {}
+    context = payload.get("context") or {}
+    place = str(context.get("place") or "").strip()
+    contextual = str(payload.get("contextual_query") or "")
+    words = re.findall(r"[a-z0-9]+", current.replace("'", " "))
+    refers_back = (
+        intent.get("context_source") == "conversation"
+        or len(words) <= 2
+        or bool(_FOLLOW_UP_OPENER.match(current))
+        or not should_use_web(message)  # la recherche vient du fil, pas de la question seule
+    )
+    subject = _bounded(_scrub(_previous_user_turn(contextual, current)), _PREVIOUS_TURN_MAX_CHARS) if refers_back else ""
+    chosen_in_interface = bool(place) and contextual.startswith(f"{place} : ")
+    if not subject and place and normalize(place) not in current and (refers_back or chosen_in_interface):
+        subject = place
+    query = f"{subject} {message}" if subject else message
+    folded = normalize(query)
+    anchor = ""
+    if "senegal" not in folded and not (place and normalize(place) in folded):
+        anchor = "Senegal" if payload.get("language") == "en" else "Sénégal"
+    limit = RESEARCH_QUERY_MAX_CHARS - (len(anchor) + 1 if anchor else 0)
+    return f"{_bounded(query, limit)} {anchor}".strip()
 
 
 def reasoning_effort(use_web: bool, planner: bool) -> str:

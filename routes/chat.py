@@ -15,6 +15,7 @@ from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
 from services.truncation import cut_notice, is_cut_by_length, mark_incomplete, with_cut_notice
+from services.web_policy import research_query
 
 
 def register_chat_route(app, deps):
@@ -186,7 +187,8 @@ def register_chat_route(app, deps):
             if callable(external_research_context):
                 try:
                     with trace.stage("recherche"):
-                        research = external_research_context(payload.get("message", ""))
+                        # Requête nettoyée : sujet du fil pour un suivi, sans e-mail ni téléphone, longueur bornée.
+                        research = external_research_context(research_query(payload))
                     # Le contenu web est une donnée non fiable : bloc délimité dans l'entrée, jamais dans les instructions.
                     if isinstance(research, dict) and attach_external_data(payload, research.get("context")):
                         payload["external_sources"] = research.get("sources", [])
