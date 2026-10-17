@@ -201,8 +201,12 @@ class SpeechStream:
 
 
 def install_speech_stream(monkeypatch, **kwargs):
+    """Installe le faux flux. /tts passe par client.with_options(...) : la copie renvoyée reste ce client (dont les
+    appels audio sont truqués), et les options demandées sont notées dans `fake.options`."""
     fake = SpeechStream(**kwargs)
+    fake.options = []
     monkeypatch.setattr(app_module.client.audio.speech.with_streaming_response, "create", fake)
+    monkeypatch.setattr(app_module.client, "with_options", lambda **kw: (fake.options.append(kw), app_module.client)[1])
     return fake
 
 
@@ -216,6 +220,7 @@ def post_tts(text="Bonjour", *, ip=None, error=None, monkeypatch=None, flux=Fals
         return SimpleNamespace(content=b"RIFFfakewav")
 
     monkeypatch.setattr(app_module.client.audio.speech, "create", create)
+    # Installe aussi client.with_options (renvoie ce client truqué), pour le flux comme pour le fichier.
     install_speech_stream(monkeypatch, error=None if cut is not None else error, cut=cut, cut_message=error or "coupure")
     client, headers, environ = make_client(ip)
     body = {"text": text, "language": "fr"}

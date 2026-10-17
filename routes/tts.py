@@ -10,8 +10,9 @@ from services.latency import LatencyTrace
 
 # Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
 # une lecture a échoué après 130,8 s le 13 octobre 2026. Les lectures réussies mesurées (11-13 octobre) ont toutes
-# duré moins de 27 s : 30 s les laisse passer et rend la main bien plus tôt en cas de panne. En flux, la limite de
-# lecture vaut entre deux morceaux (httpx) : un fournisseur muet 30 s est abandonné, une longue voix ne l'est pas.
+# duré moins de 27 s : 30 s les laisse passer et rend la main bien plus tôt en cas de panne (sans nouvelle tentative).
+# En flux, la limite de lecture vaut entre deux morceaux (httpx) : un fournisseur muet 30 s est abandonné, une longue
+# voix ne l'est pas.
 TTS_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 
 # Voix en flux (conversation vocale) : le fichier WAV entier faisait attendre toute la génération avant le moindre
@@ -80,6 +81,9 @@ def register_tts_route(app, deps):
         try:
             from services.voice_quality import tts_instruction
             trace.model = "gpt-4o-mini-tts"
+            # Sans nouvelle tentative : 30 s + 30 s dépasseraient les 45 s après lesquels la page abandonne la voix
+            # (templates/home.html). Même procédé que le planificateur (services/trip_planner.py). En flux aussi.
+            api = client.with_options(timeout=TTS_TIMEOUT, max_retries=0) if hasattr(client, "with_options") else client
             # Les mêmes réglages en flux et en fichier : seul response_format change.
             params = {
                 "model": "gpt-4o-mini-tts",
@@ -90,18 +94,18 @@ def register_tts_route(app, deps):
                 "timeout": TTS_TIMEOUT,
             }
             if flux:
-                return stream_speech(trace, params)
+                return stream_speech(trace, api, params)
             with trace.stage("fournisseur"):
-                speech = client.audio.speech.create(response_format="wav", **params)
+                speech = api.audio.speech.create(response_format="wav", **params)
             return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store", "Content-Type": "audio/wav"})
         except Exception:
             app.logger.exception("Erreur /tts")
             return jsonify({"error": "Impossible de générer la voix pour le moment."}), 502
 
-    def stream_speech(trace, params):
+    def stream_speech(trace, api, params):
         """Relaie le son du fournisseur morceau par morceau. La réponse ne part qu'avec le premier son : une panne
         avant (refus, délai, son vide) reste un 502 lisible, comme en fichier."""
-        upstream = client.audio.speech.with_streaming_response.create(response_format="pcm", **params)
+        upstream = api.audio.speech.with_streaming_response.create(response_format="pcm", **params)
         with trace.stage("fournisseur"):
             provider = upstream.__enter__()
             try:

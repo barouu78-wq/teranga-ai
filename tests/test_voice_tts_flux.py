@@ -67,7 +67,8 @@ def mini_client(upstream, ip):
              "sanitize_text")
     deps = {name: getattr(app_module, name) for name in names}
     transport = sdk_httpx.Client(transport=sdk_httpx.MockTransport(upstream.handler))
-    deps["client"] = OpenAI(api_key="test-key", max_retries=0, http_client=transport)
+    # Comme le client partagé d'app.py, ce client refait une tentative ; /tts doit l'empêcher (with_options).
+    deps["client"] = OpenAI(api_key="test-key", max_retries=1, http_client=transport)
     register_tts_route(mini, deps)
     token = app_module.app.test_client().get("/csrf", base_url=B).get_json()["token"]
     client = mini.test_client()
@@ -125,6 +126,7 @@ def test_a_provider_failure_before_any_sound_is_a_clean_502():
     client, headers, env = mini_client(failing, "203.0.113.233")
     response = post(client, headers, env, {"text": "Bonjour", "flux": True})
     assert response.status_code == 502 and "voix" in response.get_json()["error"]
+    assert len(failing.requests) == 1, "sans nouvelle tentative, en flux comme en fichier"
     silent = Upstream(chunks=())
     client, headers, env = mini_client(silent, "203.0.113.234")
     response = post(client, headers, env, {"text": "Bonjour", "flux": True})
@@ -174,6 +176,7 @@ def test_the_real_app_streams_without_compression(monkeypatch):
     assert b"".join(response.response) == b"".join(fake.chunks)
     response.close()
     assert fake.calls[0]["response_format"] == "pcm" and fake.calls[0]["timeout"].read <= 30
+    assert fake.options and fake.options[-1].get("max_retries") == 0  # sans nouvelle tentative
     assert fake.closed == 1, "la connexion au fournisseur doit être fermée à la fin du flux"
 
 

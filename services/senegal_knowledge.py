@@ -68,7 +68,19 @@ _QUERY_STOPWORDS = frozenset({
     "paris", "france", "europe", "usa", "canada", "belgique", "espagne", "italie", "allemagne",
     # Mois : « en décembre » ne désigne ni un lieu ni une personne.
     "janvier", "fevrier", "mars", "avril", "juin", "juillet", "aout", "septembre", "octobre", "novembre", "decembre",
+    # Mots administratifs : « titre de séjour » ou « titre foncier » faisaient venir Sadio Mané et Koli Tenguella
+    # (leurs fiches parlent de « titres »), « séjour » la Grande Mosquée de Diourbel.
+    "titre", "titres", "sejour", "sejours",
+    # « le billet d'avion est trop cher » faisait venir Gorée (billet de chaloupe) et Cap Skirring (accès en avion).
+    "billet", "billets", "avion", "avions",
 })
+
+# La langue comme sujet (« comment on dit merci en wolof », « apprendre le wolof ») : le mot ne désigne ni un lieu
+# ni une personne (il faisait venir Richard-Toll, Louga et Birago Diop). Les phrases wolof sûres restent ajoutées.
+_LANGUE_SUJET = re.compile(
+    r"\b(?:en|le|du|parler|parle|parles|apprendre|apprends|traduire|traduis|traduction|langue|mots?|phrases?|dit|dire)"
+    r"\s+(?:le\s+)?(?:wolof|pulaar|pular|serere?|diola|joola|mandingue)\b"
+)
 
 # « Ça ne marche pas » est le verbe : seul « marché » désigne un marché (les accents sont retirés avant la recherche).
 _VERBE_MARCHER = re.compile(
@@ -136,7 +148,8 @@ SENEGAL_DOMAINS = {
     "agriculture": ("agriculture", "élevage", "pêche", "horticulture"),
     "territory": ("régions", "départements", "communes", "villes", "géographie"),
     "travel": ("voyage", "tourisme", "itinéraire", "visiter", "plage", "hôtel"),
-    "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD"),
+    # Ferry et chaloupe : sans eux, « prix du ferry pour Ziguinchor » tombait dans « economy » (mot « prix »).
+    "transport": ("transport", "TER", "BRT", "bus", "taxi", "aéroport", "AIBD", "ferry", "ferries", "chaloupe"),
     "culture": ("culture", "histoire", "patrimoine", "musique", "tradition", "art"),
     "food": ("cuisine", "restaurant", "plat", "thieboudienne", "yassa", "mafé"),
     "economy": ("économie", "emploi", "prix", "entreprise", "commerce", "PIB", "business", "entrepreneur", "entreprendre"),
@@ -290,6 +303,47 @@ def _matched_dishes(data: dict, folded_query: str, limit: int = 4) -> list[dict]
     return found[:limit]
 
 
+# Langues dont la base a des phrases sûres (voir format_senegal_knowledge) : une question sur elles a son propre sujet.
+_LANGUAGE_SUBJECT = re.compile(r"(?<![a-z])(?:wolof|pulaar|pular|fulfulde)(?![a-z])")
+
+
+def _place_names_pattern(data: dict) -> re.Pattern | None:
+    """Noms et autres noms des lieux de la base, en expressions entières (« lac rose », « djoudj », « sandaga »).
+
+    Calculé une fois, puis gardé dans la base elle-même (comme les autres clés « _ »)."""
+    if "_place_names_match" not in data:
+        names = set()
+        for place in data.get("places", []):
+            if isinstance(place, dict):
+                for name in (place.get("name", ""), *(place.get("aliases") or [])):
+                    folded = _fold(name).strip()
+                    if len(folded) >= 3:
+                        names.add(folded)
+        ordered = sorted(names, key=len, reverse=True)
+        data["_place_names_match"] = (
+            re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(n) for n in ordered) + r")(?![a-z0-9])") if ordered else None
+        )
+    return data["_place_names_match"]
+
+
+def names_own_subject(data, message: str) -> bool:
+    """Le message nomme-t-il, seul, un sujet de la base : lieu, plat ou boisson, dossier historique, langue ?
+
+    Sert à reconnaître un changement de sujet (services/intelligence.py, `starts_new_subject`) : les fiches du
+    fil ne sont alors plus ajoutées à celles de la question."""
+    if not isinstance(data, dict):
+        return False
+    folded = _fold(message)
+    if _LANGUAGE_SUBJECT.search(folded):
+        return True
+    if _matched_dishes(data, folded, limit=1):
+        return True
+    if any(isinstance(d, dict) and d.get("_match") is not None and d["_match"].search(folded) for d in data.get("history_dossiers", [])):
+        return True
+    pattern = _place_names_pattern(data)
+    return bool(pattern and pattern.search(folded))
+
+
 def _knowledge_domain(query: str) -> str:
     value = str(query or "").casefold()
     domain_terms = {
@@ -370,9 +424,40 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # (raconte, histoire, visiter…) ne servent pas à choisir les lieux.
     # Mots de 3 lettres gardés (« HLM », « lac », « TER ») sauf les mots outils.
     tokens = [
-        token for token in re.findall(r"[a-z0-9]+", _VERBE_MARCHER.sub(" ", _fold(value)))
+        token for token in re.findall(r"[a-z0-9]+", _LANGUE_SUJET.sub(" ", _VERBE_MARCHER.sub(" ", _fold(value))))
         if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
     ]
+    places = data.get("places", [])
+    ranked = []
+    # Mots de la question qui nomment le lieu le plus pertinent, quand il est nommé par au moins deux d'entre eux
+    # (« lac » et « rose ») : un lieu ou une région qui ne partage qu'une partie de ce nom (« lac » pour le lac de
+    # Guiers et la région de Saint-Louis) n'est pas demandé.
+    named_tokens: set = set()
+    if tokens and places:
+        # Classement par pertinence : un mot présent dans le nom du lieu compte
+        # triple (« fort de Sédhiou », « marché de Diaobé ») ; sinon l'ordre du
+        # fichier faisait passer Gorée ou Mbour avant le lieu demandé.
+        scored = []
+        for index, place in enumerate(places):
+            words = place.get("_search_words") or _words(place.get("_search_haystack", ""))
+            name_words = place.get("_search_name_words") or _words(_fold(place.get("name", "")))
+            hit_tokens = {token for token in tokens if _hit(token, words)}
+            if hit_tokens:
+                name_tokens = {token for token in tokens if _hit(token, name_words)}
+                score = len([token for token in tokens if token in hit_tokens]) + 2 * len([t for t in tokens if t in name_tokens])
+                scored.append((-score, index, place, frozenset(hit_tokens), frozenset(name_tokens)))
+        ranked = sorted(scored, key=lambda item: item[:2])
+        # Quand un lieu est nommé dans la question (score 3 ou plus), un lieu qui ne partage avec elle qu'un seul mot
+        # de son texte (score 1) n'est pas demandé : « Saly » ne ramène pas Ziguinchor parce qu'il y fait « nuit ».
+        if ranked and -ranked[0][0] >= 3:
+            ranked = [item for item in ranked if -item[0] >= 2]
+        if ranked and len(ranked[0][4]) >= 2:
+            named_tokens = set(ranked[0][4])
+            ranked = [ranked[0]] + [
+                item for item in ranked[1:]
+                if not (item[4] and item[4] < named_tokens and item[3] <= named_tokens)
+            ]
+
     matched_regions = []
     for region in regions:
         words = region.get("_search_words") or _words(region.get("_search_haystack", ""))
@@ -385,6 +470,17 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         if any(_hit(token, region.get("_geo_words") or frozenset()) for token in tokens)
     ]
     matched_regions = located or matched_regions
+    # Un lieu nommé dans la question, mais qu'aucune région ne cite : les régions qui ne lui ressemblent que par un
+    # thème ou un plat (« poisson ») ne sont pas demandées (« une marchande de poisson à Soumbédioune » en
+    # recevait cinq).
+    if not located and ranked and ranked[0][4]:
+        matched_regions = []
+    if named_tokens:
+        matched_regions = [
+            region for region in matched_regions
+            if all(_hit(token, region.get("_search_words") or frozenset()) for token in named_tokens)
+            or any(_hit(token, region.get("_search_words") or frozenset()) for token in tokens if token not in named_tokens)
+        ]
     if matched_regions:
         lines.append("CONTEXTE RÉGIONAL PERTINENT :")
         for region in matched_regions[:max_regions]:
@@ -399,25 +495,8 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 f"Pratique: {dossier.get('practical') or ''}"
             )
 
-    places = data.get("places", [])
-    if tokens and places:
-        # Classement par pertinence : un mot présent dans le nom du lieu compte
-        # triple (« fort de Sédhiou », « marché de Diaobé ») ; sinon l'ordre du
-        # fichier faisait passer Gorée ou Mbour avant le lieu demandé.
-        scored = []
-        for index, place in enumerate(places):
-            words = place.get("_search_words") or _words(place.get("_search_haystack", ""))
-            name_words = place.get("_search_name_words") or _words(_fold(place.get("name", "")))
-            hits = sum(1 for token in tokens if _hit(token, words))
-            if hits:
-                score = hits + 2 * sum(1 for token in tokens if _hit(token, name_words))
-                scored.append((-score, index, place))
-        ranked = sorted(scored, key=lambda item: item[:2])
-        # Quand un lieu est nommé dans la question (score 3 ou plus), un lieu qui ne partage avec elle qu'un seul mot
-        # de son texte (score 1) n'est pas demandé : « Saly » ne ramène pas Ziguinchor parce qu'il y fait « nuit ».
-        if ranked and -ranked[0][0] >= 3:
-            ranked = [item for item in ranked if -item[0] >= 2]
-        matched_places = [place for _, _, place in ranked]
+    if ranked:
+        matched_places = [item[2] for item in ranked]
         if matched_places:
             lines.append("LIEUX PERTINENTS :")
             for rank, place in enumerate(matched_places[:max_places]):
