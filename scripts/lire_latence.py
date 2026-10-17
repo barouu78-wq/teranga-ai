@@ -28,7 +28,9 @@ from collections import Counter
 from collections.abc import Iterable
 from typing import TextIO
 
-METRICS = ("total_ms", "contexte_ms", "recherche_ms", "premier_mot_ms", "fournisseur_ms")
+# premier_son_ms : /tts en flux (octobre 2026), ce que le visiteur attend avant d'entendre ; `--garder mode=flux`
+# sépare la voix en flux des lectures d'un seul fichier (bouton « Écouter », planificateur).
+METRICS = ("total_ms", "contexte_ms", "recherche_ms", "premier_mot_ms", "premier_son_ms", "fournisseur_ms")
 MIN_FOR_P95 = 20  # en dessous, le p95 n'est que la valeur la plus lente ou presque : on le dit
 
 _LINE = re.compile(r"\blatence\s+(route=[^\s\",}]+(?:\s+[a-z_]+=[^\s\",}]+)*)")

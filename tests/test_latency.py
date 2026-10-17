@@ -210,6 +210,10 @@ def test_an_explicit_status_wins_over_the_http_code():
 
 # --- Intégration Flask : run / follow ---------------------------------------------------------------------
 
+# Depuis la voix en flux (octobre 2026), la ligne /tts a deux champs après statut ; ces routes d'essai ne les
+# renseignent pas. On vérifie la fin exacte de la ligne, comme avant.
+TTS_TAIL = " premier_son_ms=- mode=-"
+
 
 def mini_app():
     app = Flask(__name__)
@@ -252,14 +256,14 @@ def test_run_returns_the_same_response_and_writes_the_line_on_close(lines):
     assert response.get_json() == {"a": 1}
     assert lines == []  # la ligne part à la fermeture de la réponse, comme le fait le serveur WSGI
     response.close()
-    assert len(lines) == 1 and lines[0].endswith("statut=ok")
+    assert len(lines) == 1 and lines[0].endswith("statut=ok" + TTS_TAIL)
 
 
 def test_run_keeps_tuple_status_and_headers(lines):
     response = mini_app().test_client().get("/tuple")
     assert response.status_code == 429 and response.headers["Retry-After"] == "8"
     response.close()
-    assert lines[0].endswith("statut=refuse")
+    assert lines[0].endswith("statut=refuse" + TTS_TAIL)
 
 
 def test_an_exception_is_relaunched_and_logged_without_its_message(lines):
@@ -268,7 +272,7 @@ def test_an_exception_is_relaunched_and_logged_without_its_message(lines):
     response = app.test_client().get("/boom")
     response.close()
     assert response.status_code == 500
-    assert len(lines) == 1 and lines[0].endswith("statut=erreur") and "secret" not in lines[0]
+    assert len(lines) == 1 and lines[0].endswith("statut=erreur" + TTS_TAIL) and "secret" not in lines[0]
 
 
 def test_a_stream_read_to_the_end_is_ok_and_one_closed_early_is_an_abandon(lines):
@@ -279,7 +283,7 @@ def test_a_stream_read_to_the_end_is_ok_and_one_closed_early_is_an_abandon(lines
     early = client.get("/stream")
     assert next(early.response) == b"a"
     early.close()
-    assert [line.rsplit(" ", 1)[1] for line in lines] == ["statut=ok", "statut=abandon"]
+    assert [line.split(" statut=", 1)[1] for line in lines] == ["ok" + TTS_TAIL, "abandon" + TTS_TAIL]
 
 
 # --- Journal dédié ----------------------------------------------------------------------------------------

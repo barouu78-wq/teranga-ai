@@ -12,6 +12,7 @@ accéléré par ce changement, et aucune question, réponse, adresse IP ou clé 
 ```text
 latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non web=non modele=gpt-5.6-luna mode=flux statut=ok
 latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe statut=ok
+latence route=tts total_ms=9120.4 fournisseur_ms=840.2 modele=gpt-4o-mini-tts statut=ok premier_son_ms=841.0 mode=flux
 ```
 
 (Chiffres inventés pour montrer la forme : ce ne sont pas des mesures.)
@@ -23,14 +24,17 @@ latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe s
 | `contexte_ms` | préparation du contexte de l'IA : `parse_chat_payload` et tout son assemblage (base de connaissances, repères pratiques, calendrier, partenaires, **météo en direct** si la question en demande) |
 | `recherche_ms` | temps passé dans le connecteur de recherche externe (Tavily, Exa, Firecrawl) quand il est appelé ; `-` s'il ne l'est pas. Proche de `0.0` si aucune clé de recherche n'est configurée |
 | `premier_mot_ms` | du début de la requête au **premier texte envoyé au visiteur**. `-` en mode JSON et si rien n'a été écrit |
-| `fournisseur_ms` | attente du fournisseur d'IA : de l'envoi de la requête au modèle jusqu'au premier mot (en mode JSON : tout l'appel). Pour `/stt` et `/tts` : la durée de l'appel au fournisseur de voix |
+| `fournisseur_ms` | attente du fournisseur d'IA : de l'envoi de la requête au modèle jusqu'au premier mot (en mode JSON : tout l'appel). Pour `/stt` et `/tts` en fichier : la durée de l'appel au fournisseur de voix ; pour `/tts` en flux : l'attente jusqu'au premier son |
+| `premier_son_ms` | `/tts` seulement : du début de la requête au **premier son envoyé au visiteur** (voix en flux). `-` en fichier et si aucun son n'est parti |
 | `cache` | `oui` si la réponse vient du cache des réponses (aucun modèle appelé), `non` sinon, `-` pour les demandes de photos seules et les requêtes refusées avant |
 | `web` | `oui` si le modèle a reçu l'**outil de recherche web du fournisseur**. Son temps est **dans** `fournisseur_ms` (il ne se sépare pas) ; la recherche externe de `recherche_ms` le remplace quand elle réussit |
 | `modele` | nom du modèle réellement appelé (lu dans la configuration), `-` s'il n'y en a pas (cache, photos, requête refusée) |
-| `mode` | `flux` (le site) ou `json` (reprise du site quand le flux n'a donné aucun texte) |
+| `mode` | chat : `flux` (le site) ou `json` (reprise du site quand le flux n'a donné aucun texte). `/tts` : `flux` (conversation vocale, le son est relayé dès les premiers octets) ou `fichier` (WAV entier : bouton « Écouter », planificateur) |
 | `statut` | `ok`, `secours` (l'IA a échoué, réponse de repli), `erreur`, `abandon` (le visiteur a fermé avant la fin), `refuse` (limite de débit, HTTP 429), `invalide` (requête refusée, 4xx) |
 
-Les lignes `/stt` et `/tts` n'ont que `total_ms`, `fournisseur_ms`, `modele` et `statut`.
+Les lignes `/stt` n'ont que `total_ms`, `fournisseur_ms`, `modele` et `statut`. Les lignes `/tts` ont en plus,
+**après** `statut`, `premier_son_ms` et `mode` (ajoutés en octobre 2026 avec la voix en flux ; les lignes plus
+anciennes ne les ont pas). Pour comparer la voix en flux seule : `python scripts/lire_latence.py --garder mode=flux`.
 
 Un nombre se lit en millisecondes avec une décimale. `-` veut dire « sans objet » : ce n'est pas zéro et le
 script l'ignore.
@@ -63,6 +67,7 @@ régulières. Exemples de paramètres :
 | toutes les lignes | `latence route=` |
 | le chat seulement | `latence route=chat` |
 | la voix | `latence route=stt` puis `latence route=tts` |
+| la voix en flux (premier son) | `latence route=tts .*mode=flux` |
 | les erreurs du chat | `latence route=chat .*statut=erreur` |
 | les réponses du cache | `latence route=chat .*cache=oui` |
 

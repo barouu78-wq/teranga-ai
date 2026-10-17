@@ -6,6 +6,12 @@ Format (stable, sur UNE seule ligne, des paires ``clé=valeur`` séparées par u
 
     latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non web=non modele=nom-du-modele mode=flux statut=ok
     latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe statut=ok
+    latence route=tts total_ms=9120.4 fournisseur_ms=840.2 modele=gpt-4o-mini-tts statut=ok premier_son_ms=841.0 mode=flux
+
+/tts (octobre 2026) : ``premier_son_ms`` (premier octet de son envoyé au visiteur, voix en flux) et ``mode``
+(``flux`` ou ``fichier``) sont ajoutés APRÈS ``statut`` : une lecture qui s'arrête à ``statut`` reste juste. En flux,
+``fournisseur_ms`` est l'attente du fournisseur jusqu'au premier son (comme pour le premier mot du chat) ; en
+fichier, tout l'appel.
 
 Confidentialité : la ligne n'est construite QUE à partir de nombres (millisecondes) et d'étiquettes fixes
 (route, oui/non, mode, statut) ou validées (nom de modèle, lu dans la configuration, jamais dans la requête).
@@ -38,9 +44,11 @@ CHAT_FIELDS = (
     "total_ms", "contexte_ms", "recherche_ms", "premier_mot_ms", "fournisseur_ms", "cache", "web", "modele", "mode", "statut",
 )
 VOICE_FIELDS = ("total_ms", "fournisseur_ms", "modele", "statut")
-FIELDS_BY_ROUTE: dict[str, tuple[str, ...]] = {"chat": CHAT_FIELDS, "stt": VOICE_FIELDS, "tts": VOICE_FIELDS}
+TTS_FIELDS = (*VOICE_FIELDS, "premier_son_ms", "mode")
+FIELDS_BY_ROUTE: dict[str, tuple[str, ...]] = {"chat": CHAT_FIELDS, "stt": VOICE_FIELDS, "tts": TTS_FIELDS}
 
-MODES = frozenset({"flux", "json"})
+# flux : réponse envoyée au fil de l'eau (chat, voix en flux) · json : chat d'un bloc · fichier : voix d'un bloc (WAV).
+MODES = frozenset({"flux", "json", "fichier"})
 # ok : réponse normale · secours : réponse de repli (IA en panne) · erreur : échec côté serveur ou fournisseur ·
 # abandon : le visiteur a fermé la connexion avant la fin · refuse : limite de débit (429) · invalide : requête refusée (4xx).
 STATUSES = frozenset({"ok", "secours", "erreur", "abandon", "refuse", "invalide"})
@@ -154,6 +162,7 @@ class LatencyTrace:
         self._starts: dict[str, float] = {}
         self._stages: dict[str, float] = {}
         self._first_word_ms: float | None = None
+        self._first_sound_ms: float | None = None
         self._emitted = False
         self._http_status: int | None = None
         self._streamed = False
@@ -196,6 +205,14 @@ class LatencyTrace:
             self._first_word_ms = self.elapsed_ms()
             self.end("fournisseur")
 
+    def first_sound(self) -> None:
+        """/tts en flux : à appeler juste avant d'envoyer au visiteur le premier son ; seul le premier appel compte.
+
+        Comme ``first_word`` pour le chat, il arrête le chronomètre « fournisseur » (attente jusqu'au premier son)."""
+        if self._first_sound_ms is None:
+            self._first_sound_ms = self.elapsed_ms()
+            self.end("fournisseur")
+
     def ok(self) -> None:
         """La réponse est allée jusqu'au bout : « ok », sauf si la route a déjà signalé « secours » ou « erreur »."""
         if self.status is None:
@@ -236,6 +253,7 @@ class LatencyTrace:
             "contexte_ms": self._stages.get("contexte"),
             "recherche_ms": self._stages.get("recherche"),
             "premier_mot_ms": self._first_word_ms,
+            "premier_son_ms": self._first_sound_ms,
             "fournisseur_ms": self._stages.get("fournisseur"),
             "cache": self.cache,
             "web": self.web,
