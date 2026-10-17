@@ -10,7 +10,7 @@ from services.latency import LatencyTrace
 
 # Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
 # une lecture a échoué après 130,8 s le 13 octobre 2026. Les lectures réussies mesurées (11-13 octobre) ont toutes
-# duré moins de 27 s : 30 s les laisse passer et rend la main bien plus tôt en cas de panne.
+# duré moins de 27 s : 30 s les laisse passer et rend la main bien plus tôt en cas de panne (sans nouvelle tentative).
 TTS_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
 
 
@@ -66,8 +66,11 @@ def register_tts_route(app, deps):
         try:
             from services.voice_quality import tts_instruction
             trace.model = "gpt-4o-mini-tts"
+            # Sans nouvelle tentative : 30 s + 30 s dépasseraient les 45 s après lesquels la page abandonne la voix
+            # (templates/home.html). Même procédé que le planificateur (services/trip_planner.py).
+            api = client.with_options(timeout=TTS_TIMEOUT, max_retries=0) if hasattr(client, "with_options") else client
             with trace.stage("fournisseur"):
-                speech = client.audio.speech.create(
+                speech = api.audio.speech.create(
                     model="gpt-4o-mini-tts",
                     voice=os.getenv("TTS_VOICE", "cedar"),
                     input=text,

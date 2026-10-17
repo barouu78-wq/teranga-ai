@@ -174,5 +174,6 @@ def post_tts(text="Bonjour", *, ip=None, error=None, monkeypatch=None):
         return SimpleNamespace(content=b"RIFFfakewav")
 
     monkeypatch.setattr(app_module.client.audio.speech, "create", create)
+    monkeypatch.setattr(app_module.client, "with_options", lambda **kw: app_module.client)
     client, headers, environ = make_client(ip)
     return client.post("/tts", json={"text": text, "language": "fr"}, headers=headers, base_url=B, environ_base=environ)
