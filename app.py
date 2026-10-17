@@ -677,6 +677,8 @@ from services.weather import build_locations, live_weather_context
 from services.guide_modes import detect_modes, mode_instructions
 
 WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("places", []))
+# Attente maximale d'Open-Meteo avant de répondre (son délai réseau va jusqu'à 4 s).
+WEATHER_BUDGET_SECONDS = 1.2
 
 
 _EVENT_WORDS = re.compile(
@@ -717,7 +719,7 @@ def parse_chat_payload():
             payload["modes"] = sorted(modes)
         weather = live_weather_context(
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
-            payload.get("language", "fr"), logger=app.logger,
+            payload.get("language", "fr"), logger=app.logger, budget=WEATHER_BUDGET_SECONDS,
         )
         # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte.
         if _EVENT_WORDS.search(payload.get("message", "")):
@@ -738,6 +740,9 @@ def parse_chat_payload():
             payload["instructions"] += "\n\n" + weather
             payload["use_web"] = False
             payload["live_weather"] = True
+        elif (payload.get("intent_context") or {}).get("intent") == "weather":
+            # Pas de relevé (Open-Meteo lent ou indisponible, lieu hors du Sénégal) : la recherche web répond.
+            payload["use_web"] = True
     if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
     if error == "empty":
