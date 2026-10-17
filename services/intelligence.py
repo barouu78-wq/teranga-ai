@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, classify_domain, source_domains
+from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, WOLOF_PLACE_NAMES, classify_domain, source_domains
 from .web_policy import should_use_web
 from .validation import sanitize_text
 
@@ -48,7 +48,7 @@ _INTENT_PATTERNS = {
 _DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project", "health"}
 
 _LOCATION_ALIASES = {
-    "dakar": ("dakar",),
+    "dakar": ("dakar", *WOLOF_PLACE_NAMES),
     "goree": ("goree", "gorée", "ile de goree", "île de gorée"),
     "saint-louis": ("saint-louis", "saint louis"),
     "lac rose": ("lac rose", "lake retba", "retba"),
@@ -107,6 +107,7 @@ _CONTEXT_ALIASES = {
     "ile de goree": "goree", "île de gorée": "goree",
     "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
     "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
+    **WOLOF_PLACE_NAMES,
 }
 
 def _contains_term(text: str, term: str) -> bool:
