@@ -284,7 +284,8 @@ TOPICS = (
       "télécoms, reçoit les réclamations sur le service téléphonique et internet. Coordonnées et délais changent : à "
       "vérifier sur les sites des opérateurs, de la BCEAO et de l'ARTP.")),
     ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
-     ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
+     ("Opérateurs : Orange, Yas (ex-Free, nouveau nom annoncé en novembre 2024) et Expresso. Carte SIM en boutique, "
+      "en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
     # « prise de commande », « prise en charge », « prise de sang », « prise d'otage » ne sont pas une prise électrique.
     ("electricite", r"\bprises?\b(?! (de(?! courant)|d|en|a)\b)|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",

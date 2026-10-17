@@ -107,7 +107,7 @@ PROBES = [
  ("fr","Qui est Lat Dior ?",["Lat Dior"]),
  # pratique
  ("fr","Quelle est la meilleure période pour visiter le Sénégal ?",["Saison sèche environ de novembre à mai"]),
- ("fr","Quelle carte SIM acheter au Sénégal ?",["Orange, Free et Expresso"]),
+ ("fr","Quelle carte SIM acheter au Sénégal ?",["Orange, Yas (ex-Free"]),
  ("fr","Quel type de prise électrique au Sénégal ?",["230 V"]),
  ("fr","Combien coûte un taxi à Dakar ?",["fixer le prix avant de monter"]),
  ("fr","Comment négocier au marché ?",["NÉGOCIATION"]),
@@ -151,7 +151,7 @@ HARD=[
  ("en","How do I get from Dakar airport to the city?",["45 km"]),
  ("en","When is Tabaski this year?",["Tabaski (Aïd el-Kébir)"]),
  ("en","Can I pay with my phone in Senegal?",["Wave et Orange Money"]),
- ("en","Where can I buy a SIM card in Dakar?",["Orange, Free et Expresso"]),
+ ("en","Where can I buy a SIM card in Dakar?",["Orange, Yas (ex-Free"]),
  ("en","What languages are spoken in Senegal?",["wolof est la langue la plus parlée"]),
  ("fr","Je me suis fait voler mon téléphone",["Police 17"]),
  ("fr","On parle quelle langue à Dakar ?",["wolof est la langue la plus parlée"]),
