@@ -626,7 +626,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 /* Retour immédiat au toucher sur tous les boutons. */
 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button:active:not(:disabled){transform:scale(.97)}
-.icon{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.icon{position:relative;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+/* Zone tactile de 44 px (36 px dessinés sur téléphone), sans changer le dessin ; ::after sert au « A » du thème. */
+.icon::before{content:"";position:absolute;inset:-4px}
 .icon svg{width:18px;height:18px}
 .icon:hover{border-color:var(--line-strong)}
 body:not(.has-chat) #resetBtn{display:none}
@@ -737,8 +739,9 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 
 /* Partage */
 .spread{display:flex;flex-wrap:wrap;gap:8px}
-.spread a,.spread button{padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
-.spread .wa{background:#128c7e;border-color:#128c7e;color:#fff}
+.spread a,.spread button{position:relative;padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
+/* Vert WhatsApp foncé : texte blanc à 5,6:1 (#128c7e ne donnait que 4,1:1, tests/e2e/test_zones_tactiles.py). */
+.spread .wa{background:#0e7569;border-color:#0e7569;color:#fff}
 .spread .install{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .spread .install[hidden]{display:none}
 
@@ -747,7 +750,9 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 .seo h2,.guide-section h2{margin:0 0 6px;font:600 22px/1.2 var(--font-display)}
 .seo p,.guide-section p{margin:0;color:var(--muted);font-size:15px}
 .guide-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.guide-links a{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.spread a::after,.spread button::after{content:"";position:absolute;inset:-2px 0}
+.guide-links a{position:relative;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.guide-links a::after{content:"";position:absolute;inset:-3px 0}
 .guide-links a:hover{border-color:var(--accent);color:var(--link)}
 body.has-chat .seo,body.has-chat .guide-section{display:none}
 
@@ -1003,7 +1008,9 @@ body.voice-active #heroMic{background:var(--sen-red);color:#fff}
 .hero-discover{order:7;display:flex;flex-direction:column;gap:10px}
 .hero-discover-head{display:flex;justify-content:space-between;align-items:baseline}
 .hero-discover-head h2{margin:0;font:700 19px/1.2 var(--font-display)}
-.hero-discover-head a{font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+.hero-discover-head a{position:relative;font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+/* Zones tactiles de 44 px sans changer le dessin (tests/e2e/test_zones_tactiles.py). */
+.hero-discover-head a::after{content:"";position:absolute;inset:-11px -4px}
 .hero-discover-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .place-tile{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
 .place-tile-img{display:block;height:96px;background-size:cover!important;background-position:center!important}
