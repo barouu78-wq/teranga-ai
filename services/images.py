@@ -180,6 +180,28 @@ def _google_photo_matches_query(query, alt, page_url):
     return True
 
 
+def _google_error_details(exc, api_key=""):
+    """(status, reason, message) d'une erreur Google, sur une ligne, sans la clé ; chaînes vides si illisible."""
+    try:
+        body = exc.read().decode("utf-8", errors="replace")
+    except Exception:
+        body = ""
+    if api_key:
+        body = body.replace(api_key, "[REDACTED]")
+    try:
+        error = (json.loads(body) or {}).get("error") or {}
+    except (ValueError, AttributeError):
+        error = {}
+    if not isinstance(error, dict):
+        error = {}
+    first = (error.get("errors") or [{}])[0]
+    if not isinstance(first, dict):
+        first = {}
+    message = str(error.get("message") or first.get("message") or body[:200])
+    message = " ".join(message.split())[:200]
+    return str(error.get("status") or ""), str(first.get("reason") or ""), message
+
+
 def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
     """Recherche d'images via Google Custom Search JSON API."""
     query = str(query or "").strip()
@@ -207,14 +229,14 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         with opener(req, timeout=8) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except HTTPError as exc:
-        try:
-            body = exc.read().decode("utf-8", errors="replace")
-        except Exception:
-            body = ""
-        safe_body = body.replace(api_key, "[REDACTED]") if api_key else body
-        message = "Google Custom Search HTTP %s pour %r (cx=%s): %s" % (exc.code, query, cse_id, safe_body[:1200])
-        logger.error(message)
-        print(message, flush=True)
+        # Raison lisible jointe à l'erreur : l'appelant distingue un refus d'accès (définitif) d'un quota
+        # (passager). Une seule ligne de journal, sans la clé ni le JSON complet (avant : plus de 20 lignes
+        # par refus, doublées par un print).
+        exc.google_status, exc.google_reason, exc.google_message = _google_error_details(exc, api_key)
+        logger.warning(
+            "Google Custom Search HTTP %s pour %r (cx=%s) : %s %s - %s",
+            exc.code, query, cse_id, exc.google_status or "?", exc.google_reason or "?", exc.google_message or "?",
+        )
         raise
 
     candidates, seen = [], set()

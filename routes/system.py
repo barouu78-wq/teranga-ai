@@ -56,6 +56,8 @@ def register_system_routes(app, deps):
     redis_configured = deps.get("redis_configured", redis_client is not None)
     # Seulement « configuré ou non » : jamais la clé elle-même.
     google_images = "configured" if deps.get("google_images_configured") else "missing"
+    # État à jour (pause de quota, accès refusé par Google) quand l'application le fournit.
+    google_images_status = deps.get("google_images_status")
 
     @app.route(f"/{indexnow_key}.txt")
     def indexnow():
@@ -73,7 +75,14 @@ def register_system_routes(app, deps):
                 redis_state = "ok" if redis_client.ping() else "unavailable"
             except Exception:
                 redis_state = "unavailable"
-        return jsonify({"status": "ok", "service": "teranga-ai", "redis": redis_state, "google_images": google_images}), 200, {"Cache-Control": "no-store"}
+        google_state = google_images
+        if google_images_status is not None:
+            try:
+                google_state = google_images_status()
+            # /health doit toujours répondre : on garde l'état de configuration.
+            except Exception:  # nosec B110
+                pass
+        return jsonify({"status": "ok", "service": "teranga-ai", "redis": redis_state, "google_images": google_state}), 200, {"Cache-Control": "no-store"}
 
     # Images partagées (aperçus WhatsApp/Facebook, favicon) : référencées par
     # toutes les pages, elles doivent toujours répondre.

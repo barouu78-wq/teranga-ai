@@ -379,35 +379,73 @@ def fetch_article_images(title, limit=6):
 
 
 GOOGLE_PAUSE_SECONDS = 6 * 60 * 60
-_GOOGLE_PAUSE_KEY = "teranga:google-images-paused"
+# Refus d'accès au projet (« This project does not have the access to Custom Search JSON API ») : l'API est
+# fermée aux nouveaux clients (fin annoncée au 1er janvier 2027). Réessayer toutes les 6 h ne change rien ;
+# une pause de 7 jours limite les appels inutiles, et changer la clé ou le cx relance l'essai aussitôt.
+GOOGLE_ACCESS_DENIED_PAUSE_SECONDS = 7 * 24 * 60 * 60
+_GOOGLE_QUOTA_REASONS = {"dailyLimitExceeded", "rateLimitExceeded", "userRateLimitExceeded", "quotaExceeded"}
+_GOOGLE_PAUSE_PREFIX = "teranga:google-images-paused:"
 _google_paused_until = 0.0
 _google_checked_until = 0.0
+_google_pause_reason = ""
+
+
+def _google_pause_key() -> str:
+    """Clé Redis propre à la configuration : une autre clé API ou un autre cx n'hérite pas de la pause."""
+    tag = hashlib.sha256(f"{GOOGLE_API_KEY}|{GOOGLE_CSE_ID}".encode("utf-8")).hexdigest()[:16]
+    return _GOOGLE_PAUSE_PREFIX + tag
 
 
 def google_images_paused() -> bool:
-    """Google a refusé l'accès (403) récemment : inutile de l'interroger."""
-    global _google_checked_until
+    """Google a refusé récemment (accès ou quota) : inutile de l'interroger."""
+    global _google_checked_until, _google_pause_reason
     now = time.time()
     if now < _google_paused_until:
         return True
     if redis_client is None or now < _google_checked_until:
         return False
-    # Une seule lecture Redis par minute : l'état ne change qu'après un refus (pause de 6 h).
+    # Une seule lecture Redis par minute : l'état ne change qu'après un refus.
     _google_checked_until = now + 60
     try:
-        return bool(redis_client.get(_GOOGLE_PAUSE_KEY))
+        value = redis_client.get(_google_pause_key())
     except Exception:
         return False
+    if not value:
+        return False
+    if isinstance(value, bytes):
+        value = value.decode("utf-8", errors="replace")
+    _google_pause_reason = "access_denied" if str(value) == "access_denied" else "paused"
+    return True
 
 
-def _pause_google_images(code) -> None:
-    """Coupe-circuit : après un refus, Google est mis en pause 6 h (puis réessayé)."""
-    global _google_paused_until
-    _google_paused_until = time.time() + GOOGLE_PAUSE_SECONDS
-    app.logger.warning("Google Images en pause %d h après HTTP %s", GOOGLE_PAUSE_SECONDS // 3600, code)
+def google_images_status() -> str:
+    """État lisible pour /health : missing, configured, paused (quota) ou access_denied (projet refusé)."""
+    if not GOOGLE_API_KEY or not GOOGLE_CSE_ID:
+        return "missing"
+    if google_images_paused():
+        return _google_pause_reason or "paused"
+    return "configured"
+
+
+def _google_access_denied(exc) -> bool:
+    if exc.code == 401:
+        return True
+    return exc.code == 403 and getattr(exc, "google_reason", "") not in _GOOGLE_QUOTA_REASONS
+
+
+def _pause_google_images(code, access_denied=False) -> None:
+    """Coupe-circuit : 6 h après un quota, 7 jours après un refus d'accès (puis réessayé)."""
+    global _google_paused_until, _google_pause_reason
+    seconds = GOOGLE_ACCESS_DENIED_PAUSE_SECONDS if access_denied else GOOGLE_PAUSE_SECONDS
+    _google_paused_until = time.time() + seconds
+    _google_pause_reason = "access_denied" if access_denied else "paused"
+    app.logger.warning(
+        "Google Images en pause %d h après HTTP %s (%s) : photos par Wikipédia et Wikimedia Commons",
+        seconds // 3600, code, "accès refusé au projet Google" if access_denied else "quota",
+    )
     if redis_client is not None:
         try:
-            redis_client.setex(_GOOGLE_PAUSE_KEY, GOOGLE_PAUSE_SECONDS, str(code))
+            redis_client.setex(_google_pause_key(), seconds, _google_pause_reason)
         # La pause reste active en mémoire même si Redis est injoignable.
         except Exception:  # nosec B110
             pass
@@ -419,11 +457,10 @@ def fetch_google_images(title, limit=4):
     try:
         return _fetch_google_images(title, GOOGLE_API_KEY, GOOGLE_CSE_ID, limit, urlopen)
     except HTTPError as exc:
-        # 403 (accès refusé, service fermé au compte) ou 429 (quota du jour
-        # épuisé) : chaque appel échouerait de la même façon. On passe
+        # 401/403 (accès refusé) ou 429/403 de quota : chaque appel échouerait de la même façon. On passe
         # directement à Wikipédia/Commons au lieu d'attendre un refus à chaque photo.
         if exc.code in (401, 403, 429):
-            _pause_google_images(exc.code)
+            _pause_google_images(exc.code, access_denied=_google_access_denied(exc))
             return []
         raise
 
@@ -916,6 +953,7 @@ register_system_routes(app, {
     "redis_client": redis_client,
     "redis_configured": bool(REDIS_URL),
     "google_images_configured": bool(GOOGLE_API_KEY and GOOGLE_CSE_ID),
+    "google_images_status": google_images_status,
     "issue_csrf": issue_csrf,
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
