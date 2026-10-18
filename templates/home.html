@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0907" id="themeColor">
+<meta name="theme-color" content="#f7f3e8" id="themeColor">
 <meta name="description" content="Teranga AI, l’assistant du Sénégal accessible depuis le Sénégal et la France. Dakar, AIBD, Gorée, météo, transport, voyage, culture, cuisine, diaspora et wolof.">
 <meta name="keywords" content="Teranga AI, assistant Sénégal, Sénégal France, diaspora sénégalaise, Dakar, AIBD, Gorée, météo Sénégal, voyage Sénégal, transport Sénégal, culture sénégalaise, cuisine sénégalaise, wolof">
 <meta name="robots" content="index,follow">
@@ -110,20 +110,251 @@ let voiceTtsQueue=[];
 let voiceTtsPlaying=false;
 let voiceTtsTurn=0;
 let voiceStreamTtsBuffer='';
-let voiceStreamTtsCount=0;
+let voiceStreamTtsCount=0;   // parties déjà envoyées à la voix pendant le flux de cette réponse (0 ou 1)
+let voiceStreamTtsFed=false; // le flux de cette réponse a fourni du texte
+let voiceStreamTtsMuted=false; // voix coupée pendant cette réponse (Arrêter, micro, coupure) : la suite ne se lit pas
+let voiceStreamTtsTimer=0;   // délai avant de lancer la 1re partie d'une réponse qui semble courte
+let voiceTtsIssue=null;      // lecture échouée pendant cette réponse : dite dans la barre quand la file est vide
+let voiceTtsPauseUntil=0;    // après un 429 de /tts : plus d'appel avant cette date
+let voiceTtsLog=[];          // dates des appels /tts de cette page (budget de l'heure)
+const voiceTtsCalls=new Set(); // appels /tts en vol (annulés par « Arrêter »)
+
+// ── La voix démarre avant la fin de la réponse ─────────────────────────────
+// En conversation vocale la réponse arrive en flux. Dès que sa première partie est complète, elle part
+// vers /tts ; la suite est lue d'UN seul appel quand le flux est fini. Un appel par phrase épuiserait la
+// limite de /tts (15 par minute, 45 par heure et par visiteur : TTS_RATE_LIMIT et TTS_HOURLY_LIMIT, app.py).
+// Deux appels par réponse au plus, et une réponse courte reste à un seul appel.
+const VOICE_FIRST_MIN=60;           // 1re partie : au moins 60 caractères lus (≈ 4 s de parole), sinon la phrase suivante s'y ajoute
+const VOICE_SHORT_REPLY=240;        // texte reçu en dessous : la réponse semble courte (voir VOICE_FIRST_WAIT_MS)
+const VOICE_FIRST_WAIT_MS=700;      // réponse qui semble courte : délai avant de lancer la 1re partie, au cas où le flux finit tout de suite (un seul appel)
+const VOICE_CHUNK_MAX=1400;         // /tts coupe à 1800 caractères : une très longue suite est découpée par phrases
+const VOICE_TTS_HOURLY_LIMIT=45;    // = TTS_HOURLY_LIMIT d'app.py (un test vérifie qu'elles restent égales)
+const VOICE_TTS_TIMEOUT_MS=30000;   // /tts abandonné au-delà (lecture auto et bouton « Écouter ») : jamais d'attente de 45 s
+const VOICE_TTS_RESERVE=15;         // appels de l'heure gardés pour des réponses d'un seul appel : on ne découpe plus au-delà
+// Après ces abréviations un point ne finit pas la phrase (« Dr. Diop », « St. Louis », « etc. »).
+const VOICE_ABBREVIATIONS=new Set(['m','mm','mme','mmes','mlle','mlles','mr','mrs','ms','dr','drs','pr','prof','st','ste','sts','stes','sgt','cdt','cne','col','gal','gén','lt','cie','sté','ets','éts','av','bd','bp','cp','tel','tél','fig','env','etc','cf','ex','vs','jr','sr','inc','ltd','co','vol','éd','réf','approx','qqch','qqn','apr']);
+// Mentions ajoutées par le serveur à une réponse tronquée (CUT_NOTICES, services/truncation.py) :
+// écrites à l'écran, jamais lues à voix haute.
+const VOICE_CUT_NOTICES=['Réponse coupée : écris « continue » pour avoir la suite.','Answer cut short: type “continue” to get the rest.'];
+
+// ── Le son se lit pendant qu'il arrive ──────────────────────────────────────
+// /tts envoie du MP3 en flux. Là où le navigateur sait lire un flux (MediaSource : Chrome, Android, Firefox,
+// Safari sur ordinateur), le son démarre dès les premiers octets au lieu d'attendre tout le fichier.
+// Ailleurs (iPhone), ou si la réponse n'est pas du MP3, on attend le fichier entier comme avant.
+function voiceStreamable(res){
+  try{
+    return !!(window.MediaSource&&res.body&&/audio\/mpeg/i.test(res.headers.get('Content-Type')||'')&&MediaSource.isTypeSupported('audio/mpeg'));
+  }catch(_){return false;}
+}
+// Lit le flux en arrière-plan (même avant sa lecture : morceau suivant préparé pendant que l'autre parle).
+// `blob` : le fichier complet, pour le cache, une fois le flux fini sans erreur.
+function voiceAudioStream(res){
+  const stream={parts:[],done:false,error:null,wake:null};
+  const reader=res.body.getReader();
+  const notify=()=>{const wake=stream.wake;stream.wake=null;if(wake)wake();};
+  stream.blob=(async()=>{
+    try{
+      for(;;){
+        const {done,value}=await reader.read();
+        if(done)break;
+        if(value&&value.length){stream.parts.push(value);notify();}
+      }
+    }catch(err){stream.error=err;}
+    stream.done=true;
+    notify();
+    if(stream.error||!stream.parts.length)throw stream.error||new Error('tts-empty');
+    return new Blob(stream.parts,{type:'audio/mpeg'});
+  })();
+  stream.blob.catch(()=>{});
+  return stream;
+}
+// Adresse à donner au lecteur : il joue ce qui est arrivé et attend la suite. Flux coupé : il lit ce qu'il a, puis s'arrête.
+function voiceStreamUrl(stream){
+  const source=new MediaSource();
+  const url=URL.createObjectURL(source);
+  source.addEventListener('sourceopen',async()=>{
+    try{
+      const buffer=source.addSourceBuffer('audio/mpeg');
+      let next=0;
+      for(;;){
+        while(next<stream.parts.length){
+          const part=stream.parts[next++];
+          await new Promise((ok,fail)=>{
+            buffer.addEventListener('updateend',ok,{once:true});
+            buffer.addEventListener('error',fail,{once:true});
+            buffer.appendBuffer(part);
+          });
+        }
+        if(stream.done)break;
+        await new Promise(wake=>{stream.wake=wake;});
+      }
+    }catch(_){}
+    try{if(source.readyState==='open')source.endOfStream();}catch(_){}
+  },{once:true});
+  return url;
+}
+function speechText(text){
+  let out=String(text||'');
+  VOICE_CUT_NOTICES.forEach(notice=>{out=out.split(notice).join(' ');});
+  return out;
+}
+function voiceSpokenLength(text){
+  return cleanReply(speechText(text)).replace(/\s+/g,' ').trim().length;
+}
+// Fins de phrase sûres d'un texte, en positions (juste après le signe). Un point n'en est pas une dans
+// « 3.5 », une adresse, « Dr. », « M. », une initiale, « etc. », un numéro de liste ni des points de
+// suspension ; une minuscule après le signe veut dire que la phrase continue. Un faux « pas de coupure »
+// ne coûte qu'une première partie plus longue ; une fausse coupure casse la phrase : on préfère la première.
+// Sans caractère visible après le signe la fin n'est pas sûre (« 27. » peut devenir « 27.5 ») : `final`
+// l'accepte pour le texte complet.
+function voiceSentenceEnds(text,final){
+  const ends=[];
+  const re=/[.!?…]+(?:[)\]»”"’']|\s[)\]»”])*|\n/g;  // le signe, puis ce qui le ferme (« Bonjour. »)
+  let m;
+  while((m=re.exec(text))){
+    const end=m.index+m[0].length;
+    const next=/^\s*(\S)/.exec(text.slice(end));
+    if(!next&&!final)break;
+    if(m[0]==='\n'){ends.push(end);continue;}
+    const gap=text.charAt(end);
+    if(gap&&!/\s/.test(gap))continue;
+    const sign=/^[.!?…]+/.exec(m[0])[0];
+    if(sign!=='.'&&/^[.…]+$/.test(sign))continue;
+    if(next&&/\p{Ll}/u.test(next[1]))continue;
+    if(sign==='.'){
+      const before=text.slice(0,m.index);
+      const word=(/([\p{L}\p{N}]+)$/u.exec(before)||['',''])[1].toLowerCase();
+      if(/^\p{L}$/u.test(word)||VOICE_ABBREVIATIONS.has(word))continue;
+      if(/^\d+$/.test(word)&&/(^|\n)\s*\d+$/.test(before))continue;
+    }
+    ends.push(end);
+  }
+  return ends;
+}
+// Fin de la première partie à lire pendant le flux : la première fin de phrase sûre qui donne au moins
+// VOICE_FIRST_MIN caractères lus (une phrase plus courte est lue avec la suivante). 0 s'il n'y en a pas encore.
+function voiceFirstPartEnd(text){
+  for(const end of voiceSentenceEnds(text)){
+    if(voiceSpokenLength(text.slice(0,end))>=VOICE_FIRST_MIN)return end;
+  }
+  return 0;
+}
+// La suite, en morceaux d'au plus VOICE_CHUNK_MAX caractères, coupés entre deux phrases.
+function voiceSpeechChunks(text){
+  text=String(text||'');
+  const chunks=[];
+  let start=0,last=0;
+  for(const end of voiceSentenceEnds(text,true)){
+    if(end-start>VOICE_CHUNK_MAX&&last>start){chunks.push(text.slice(start,last));start=last;}
+    last=end;
+  }
+  chunks.push(text.slice(start));
+  return chunks.filter(chunk=>chunk.trim());
+}
+// Budget de /tts : cette page compte ses appels de l'heure (la limite du serveur est par visiteur).
+// On ne découpe une réponse en deux appels que s'il en reste assez ; sinon elle se lit d'un seul appel.
+function voiceTtsUsed(){
+  const since=Date.now()-3600000;
+  voiceTtsLog=voiceTtsLog.filter(time=>time>since);
+  return voiceTtsLog.length;
+}
+function voiceSplitAllowed(){
+  return Date.now()>=voiceTtsPauseUntil&&voiceTtsUsed()+2<=VOICE_TTS_HOURLY_LIMIT-VOICE_TTS_RESERVE;
+}
+function resetVoiceStreamTts(){
+  clearTimeout(voiceStreamTtsTimer);
+  voiceStreamTtsTimer=0;
+  voiceStreamTtsBuffer='';
+  voiceStreamTtsCount=0;
+  voiceStreamTtsFed=false;
+  voiceStreamTtsMuted=false;
+}
 
 function clearVoiceTtsQueue(){
   voiceTtsTurn++;
   voiceTtsRun++;
   voiceTtsQueue=[];
-  voiceStreamTtsBuffer='';
-  voiceStreamTtsCount=0;
+  resetVoiceStreamTts();
+  voiceStreamTtsMuted=true;
+  voiceTtsIssue=null;
+  // Les appels en vol sont coupés : pas de voix qui arrive après « Arrêter ».
+  voiceTtsCalls.forEach(ctrl=>{try{ctrl.abort();}catch(_){}});
+  voiceTtsCalls.clear();
 }
 function queueVoiceSpeech(text){
-  text=cleanReply(text||'').replace(/\s+/g,' ').trim();
+  text=cleanReply(speechText(text)).replace(/\s+/g,' ').trim();
   if(!text||text.length<4||!autoVoice)return;
-  voiceTtsQueue.push({text,turn:voiceTtsTurn});
+  voiceTtsQueue.push({text,turn:voiceTtsTurn,blob:null});
   playVoiceTtsQueue();
+  prefetchVoiceTts();
+}
+// Le morceau suivant est demandé à /tts pendant que le précédent se lit : pas de blanc entre les deux.
+function prefetchVoiceTts(){
+  const next=voiceTtsQueue[0];
+  if(!voiceTtsPlaying||!next||next.blob)return;
+  next.blob=fetchVoiceBlob(next);
+  next.blob.catch(()=>{});  // l'échec est traité quand ce morceau arrive en tête de file
+}
+async function fetchVoiceBlob(item){
+  const cacheKey=lang+'|'+item.text;
+  const cached=ttsCache.get(cacheKey);
+  if(cached)return cached;
+  const pause=voiceTtsPauseUntil-Date.now();
+  if(pause>0){
+    const error=new Error('tts-pause');
+    error.status=429;
+    error.retryAfter=String(Math.ceil(pause/1000));
+    throw error;
+  }
+  if(!cookie('teranga_csrf'))await refreshCsrf();
+  if(item.turn!==voiceTtsTurn)throw new Error('voice-cancelled');
+  const ctrl=new AbortController();
+  voiceTtsCalls.add(ctrl);
+  const kill=setTimeout(()=>ctrl.abort(),VOICE_TTS_TIMEOUT_MS);
+  voiceTtsLog.push(Date.now());
+  let streaming=false;
+  try{
+    const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}),null,ctrl.signal);
+    if(!res.ok){
+      const error=new Error('tts');
+      error.status=res.status;
+      error.retryAfter=res.headers.get('Retry-After')||'';
+      // Limite atteinte : on cesse de demander la voix le temps indiqué (sans quoi chaque essai compte contre le visiteur).
+      if(res.status===429)voiceTtsPauseUntil=Date.now()+Math.min(300,Math.max(1,Number.parseInt(error.retryAfter,10)||8))*1000;
+      throw error;
+    }
+    if(voiceStreamable(res)){
+      // Flux : le délai d'abandon ne vaut que jusqu'aux premiers octets ; « Arrêter » coupe toujours la suite.
+      clearTimeout(kill);
+      streaming=true;
+      const stream=voiceAudioStream(res);
+      stream.blob.then(blob=>cacheVoiceBlob(cacheKey,blob),()=>{}).finally(()=>voiceTtsCalls.delete(ctrl));
+      return stream;
+    }
+    const blob=await res.blob();
+    if(!blob.size)throw new Error('tts-empty');
+    cacheVoiceBlob(cacheKey,blob);
+    return blob;
+  }finally{
+    clearTimeout(kill);
+    if(!streaming)voiceTtsCalls.delete(ctrl);
+  }
+}
+function cacheVoiceBlob(key,blob){
+  while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
+  ttsCache.set(key,blob);
+}
+// Un fichier entier (cache, iPhone) ou un flux : l'adresse que le lecteur joue.
+function voiceAudioUrl(audioData){
+  return audioData instanceof Blob?URL.createObjectURL(audioData):voiceStreamUrl(audioData);
+}
+// Ce qui n'a pas pu être lu est dit dans la barre, une fois la file vide : jamais de silence sans explication.
+function reportVoiceTtsIssue(){
+  const issue=voiceTtsIssue;
+  voiceTtsIssue=null;
+  if(!issue||!voiceConversation)return;
+  const wait=issue.status===429?Math.min(300,Math.max(1,Number.parseInt(issue.retry||'0',10)||8)):0;
+  voiceNote(wait?vt('tooMany',wait):vt('ttsFailed'),{ms:wait?wait*1000:5000});
 }
 async function playVoiceTtsQueue(){
   if(voiceTtsPlaying||!voiceTtsQueue.length||!autoVoice)return;
@@ -131,83 +362,87 @@ async function playVoiceTtsQueue(){
   if(!item||item.turn!==voiceTtsTurn)return playVoiceTtsQueue();
   voiceTtsPlaying=true;
   const run=++voiceTtsRun;
-  const cacheKey=lang+'|'+item.text;
   try{
-    if(!cookie('teranga_csrf'))await refreshCsrf();
-    let blob=ttsCache.get(cacheKey);
-    if(!blob){
-      const res=await postJSON('/tts',JSON.stringify({text:item.text,language:lang}));
-      if(!res.ok){
-        const error=new Error('tts');
-        error.status=res.status;
-        error.retryAfter=res.headers.get('Retry-After')||'';
-        throw error;
-      }
-      blob=await res.blob();
-      if(item.turn!==voiceTtsTurn||!autoVoice)return;
-      if(!blob.size)throw new Error('tts-empty');
-      while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
-      ttsCache.set(cacheKey,blob);
-    }
-    if(item.turn!==voiceTtsTurn||!autoVoice)throw new Error('voice-cancelled');
-    const url=URL.createObjectURL(blob);
-    audio=createVoiceAudio(url);
-    voiceSpeaking=true;
-    document.body.classList.add('assistant-speaking');
+    if(!item.blob){item.blob=fetchVoiceBlob(item);item.blob.catch(()=>{});}
+    const audioData=await item.blob;
+    if(item.turn!==voiceTtsTurn||!autoVoice)return;
+    prefetchVoiceTts();
+    const url=voiceAudioUrl(audioData);
+    const player=createVoiceAudio(url);
+    audio=player;
+    // « Je parle » seulement quand le son démarre vraiment (pas si le navigateur refuse la lecture).
+    let started=false;
+    player.onplaying=()=>{
+      if(started||audio!==player)return;
+      started=true;
+      voiceSpeaking=true;
+      document.body.classList.add('assistant-speaking');
+      if(voiceConversation)startVoiceMonitor();
+    };
     await new Promise(resolve=>{
       const done=()=>{
         if(audio&&audio.src===url)audio=null;
         URL.revokeObjectURL(url);
         resolve();
       };
-      audio.onended=done;
-      audio.onerror=done;
-      audio.play().catch(done);
-      if(voiceConversation)startVoiceMonitor();
+      player.onended=done;
+      player.onerror=done;
+      player.play().catch(done);
     });
-  }catch(_){
-    if(item.turn===voiceTtsTurn&&!voiceConversation)speakFallback(item.text);
+    // Le son n'a jamais démarré (lecture refusée par le navigateur, fichier illisible) : à dire, pas à taire.
+    if(!started&&item.turn===voiceTtsTurn&&voiceConversation&&!voiceTtsIssue)voiceTtsIssue={status:0,retry:''};
+  }catch(err){
+    if(item.turn===voiceTtsTurn){
+      if(!voiceConversation)speakFallback(item.text);
+      else if(!voiceTtsIssue||(err&&err.status===429))voiceTtsIssue={status:(err&&err.status)||0,retry:(err&&err.retryAfter)||''};
+    }
   }finally{
     if(run===voiceTtsRun){
       voiceSpeaking=false;
       document.body.classList.remove('assistant-speaking');
       voiceTtsPlaying=false;
       if(voiceTtsQueue.length&&autoVoice)playVoiceTtsQueue();
-      else if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+      else{
+        reportVoiceTtsIssue();
+        if(voiceConversation&&!inflight&&!voiceSTTBusy) scheduleVoiceCapture(120);
+      }
     }
   }
 }
 function feedVoiceStreamTts(delta){
-  if(!autoVoice||!voiceConversation||!delta)return;
+  if(!autoVoice||!voiceConversation||!delta||voiceStreamTtsMuted)return;
+  voiceStreamTtsFed=true;
   voiceStreamTtsBuffer+=delta;
-  if(voiceStreamTtsCount>=3)return;
-  // Une fin de phrase doit être suivie d'un espace : « 27. » en fin de morceau
-  // peut encore devenir « 27.5 » avec le morceau suivant.
-  const re=/([.!?…]+)(?=\s)/g;
-  let match,last=0;
-  while(voiceStreamTtsCount<3&&(match=re.exec(voiceStreamTtsBuffer))){
-    const end=match.index+match[0].length;
-    const sentence=voiceStreamTtsBuffer.slice(last,end).trim();
-    last=end;
-    if(sentence.length>=4){
-      queueVoiceSpeech(sentence);
-      voiceStreamTtsCount++;
-    }
-  }
-  if(last)voiceStreamTtsBuffer=voiceStreamTtsBuffer.slice(last).trimStart();
+  launchVoiceFirstPart(false);
 }
-function flushVoiceStreamTts(reply){
-  if(!autoVoice||!voiceConversation)return;
-  const rest=voiceStreamTtsBuffer.trim();
-  voiceStreamTtsBuffer='';
-  // La synthèse vocale est limitée (~1800 caractères) : la fin d'une longue
-  // réponse est découpée en morceaux de phrases au lieu d'être coupée.
-  let chunk='';
-  for(const sentence of rest.match(/[^.!?…]+(?:[.!?…]+|$)/g)||[]){
-    if(chunk&&(chunk+sentence).length>1400){queueVoiceSpeech(chunk);chunk='';}
-    chunk+=sentence;
+// Envoie la première partie à la voix dès qu'elle est complète. Si la réponse semble courte (peu de texte reçu),
+// on attend un instant : si le flux se termine tout de suite, un seul appel lira tout.
+function launchVoiceFirstPart(late){
+  if(voiceStreamTtsCount||voiceStreamTtsMuted||!voiceConversation||!voiceSplitAllowed())return;
+  const text=voiceStreamTtsBuffer;
+  const end=voiceFirstPartEnd(text);
+  if(!end)return;
+  if(!late&&voiceSpokenLength(text)<VOICE_SHORT_REPLY){
+    if(!voiceStreamTtsTimer)voiceStreamTtsTimer=setTimeout(()=>{voiceStreamTtsTimer=0;launchVoiceFirstPart(true);},VOICE_FIRST_WAIT_MS);
+    return;
   }
-  if(chunk.trim())queueVoiceSpeech(chunk);
+  clearTimeout(voiceStreamTtsTimer);
+  voiceStreamTtsTimer=0;
+  voiceStreamTtsBuffer=text.slice(end).trimStart();
+  voiceStreamTtsCount=1;
+  queueVoiceSpeech(text.slice(0,end));
+}
+// Fin du flux : la suite part d'un seul appel (en plusieurs seulement si elle dépasse VOICE_CHUNK_MAX).
+// Renvoie vrai si la conversation vocale s'est occupée de la voix (sinon l'appelant lit la réponse entière).
+function flushVoiceStreamTts(reply){
+  const fed=voiceStreamTtsFed;
+  const muted=voiceStreamTtsMuted;
+  const rest=fed?voiceStreamTtsBuffer:String(reply||'');
+  resetVoiceStreamTts();
+  voiceStreamTtsMuted=muted;
+  if(!autoVoice||!voiceConversation)return false;
+  if(!muted)voiceSpeechChunks(rest).forEach(queueVoiceSpeech);
+  return true;
 }
 
 function clearVoiceSilence(){
@@ -260,6 +495,8 @@ function resetListenButton(b){
   if(speakingBtn===b)speakingBtn=null;
 }
 async function speak(text,btn){
+  // La mention « Réponse coupée… » reste à l'écran : elle n'est jamais lue.
+  text=speechText(text).trim();
   if(!text)return;
   if(speakingBtn&&speakingBtn!==btn)resetListenButton(speakingBtn);
   stopSpeakingForListening();
@@ -269,20 +506,35 @@ async function speak(text,btn){
   if(btn){speakingBtn=btn;btn.dataset.speaking='1';btn.disabled=false;btn.textContent=T[lang].stop;}
   const cacheKey=lang+'|'+text;
   try{
-    let blob=ttsCache.get(cacheKey);
-    if(!blob){
+    let audioData=ttsCache.get(cacheKey);
+    if(!audioData){
       if(!cookie('teranga_csrf'))await refreshCsrf();
-      const res=await postJSON('/tts',JSON.stringify({text,language:lang}));
+      voiceTtsLog.push(Date.now());  // compte dans le budget de /tts de l'heure
+      // Abandon à VOICE_TTS_TIMEOUT_MS sans réponse ; un flux qui a commencé se lit jusqu'au bout.
+      // L'appel est rangé avec ceux de la lecture auto : « Arrêter » coupe aussi ce flux (et la génération côté serveur).
+      const ctrl=new AbortController();
+      voiceTtsCalls.add(ctrl);
+      const kill=setTimeout(()=>ctrl.abort(),VOICE_TTS_TIMEOUT_MS);
+      let res;
+      try{res=await postJSON('/tts',JSON.stringify({text,language:lang}),null,ctrl.signal);}
+      catch(err){voiceTtsCalls.delete(ctrl);throw err;}
+      finally{clearTimeout(kill);}
+      if(stale()||!res.ok)voiceTtsCalls.delete(ctrl);
       if(stale())return;
       if(!res.ok)throw new Error('tts');
-      blob=await res.blob();
-      if(stale())return;
-      if(!blob.size)throw new Error('tts-empty');
-      while(ttsCache.size>=TTS_CACHE_MAX)ttsCache.delete(ttsCache.keys().next().value);
-      ttsCache.set(cacheKey,blob);
+      if(voiceStreamable(res)){
+        audioData=voiceAudioStream(res);
+        audioData.blob.then(blob=>cacheVoiceBlob(cacheKey,blob),()=>{}).finally(()=>voiceTtsCalls.delete(ctrl));
+      }else{
+        voiceTtsCalls.delete(ctrl);
+        audioData=await res.blob();
+        if(stale())return;
+        if(!audioData.size)throw new Error('tts-empty');
+        cacheVoiceBlob(cacheKey,audioData);
+      }
     }
     if(stale())return;
-    const url=URL.createObjectURL(blob);
+    const url=voiceAudioUrl(audioData);
     audio=createVoiceAudio(url);
     voiceSpeaking=true;
     document.body.classList.add('assistant-speaking');
@@ -306,36 +558,43 @@ async function speak(text,btn){
 @font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
   --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
-  /* Jour : « Terre de Teranga » — ocre, terracotta, sable. */
-  --bg:#fbf3e6;--surface:#fffaf2;--surface-2:#f6e6cf;--ink:#2b1a10;--muted:#7a5a44;
-  --line:rgba(122,44,16,.13);--line-strong:rgba(122,44,16,.24);
-  --accent:#b5451b;--accent-ink:#ffffff;--accent-soft:rgba(181,69,27,.12);--link:#a33d17;
-  --gold:#9a5a0c;--gold-soft:rgba(201,125,18,.18);--title:#7a2c10;
-  --card-travel:#fde9cf;--card-discover:#f9dccf;
-  --shadow-sm:0 1px 2px rgba(122,44,16,.06),0 2px 10px rgba(122,44,16,.06);
-  --shadow:0 14px 40px rgba(122,44,16,.12);
+  /* Jour : « Vert Sénégal » — vert du drapeau, or et crème (contrastes : tests/test_design_lion_baobab.py). */
+  --bg:#f7f3e8;--surface:#fffdf6;--surface-2:#ebe6d3;--ink:#1c2a20;--muted:#5f6450;
+  --line:rgba(15,74,46,.14);--line-strong:rgba(15,74,46,.26);
+  --accent:#0f6a43;--accent-ink:#ffffff;--accent-soft:rgba(15,106,67,.12);--link:#0b5c3a;
+  --gold:#8a520a;--gold-soft:rgba(217,164,65,.22);--title:#0b4a2e;
+  --card-travel:#e3efe2;--card-discover:#f4e8cc;
+  --shadow-sm:0 1px 2px rgba(15,60,40,.06),0 2px 10px rgba(15,60,40,.06);
+  --shadow:0 14px 40px rgba(15,60,40,.12);
   --radius:18px;--radius-lg:26px;
   --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body[data-theme="dark"]{
-  /* Nuit : « Nuit de Dakar » — bleu nuit et or. */
-  --bg:#111215;--surface:#1d1f24;--surface-2:#26292f;--ink:#f3eee4;--muted:#b9b3a8;
-  --line:#2b2e35;--line-strong:#3a3e46;
-  --accent:#e3a33b;--accent-ink:#111215;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
+  /* Nuit : « Nuit verte » — noir teinté de vert et or. */
+  --bg:#0e1512;--surface:#17201b;--surface-2:#1f2a24;--ink:#f3eee4;--muted:#b3b9ad;
+  --line:#26322b;--line-strong:#34423a;
+  --accent:#e3a33b;--accent-ink:#0e1512;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
   --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
   --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%;margin:0}
-html{color-scheme:light}
+/* Racine : « only light » interdit à Chrome (« thème sombre pour les sites ») de repeindre la page ; avec notre thème
+   de nuit, elle annonce « dark ». Sinon Chrome assombrissait par-dessus (tests/e2e/test_sombre_automatique.py). */
+html{color-scheme:only light}
+html:has(>body[data-theme="dark"]){color-scheme:dark}
 body[data-theme="dark"]{color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--font);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;text-rendering:optimizeLegibility}
 a{color:var(--link)}
 button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--nav-gold);outline-offset:2px}
+:focus-visible{outline:2px solid var(--link);outline-offset:2px} /* contour clavier : couleur des liens, ≥ 3 pour 1 dans chaque thème (tests/test_contour_clavier.py) */
 [hidden]{display:none!important}
+/* Lien « Aller au contenu » : caché jusqu'à ce que le clavier l'atteigne (règles d'interface de Vercel). */
+.skip-link{position:absolute;left:12px;top:-120px;z-index:100;min-height:44px;display:inline-flex;align-items:center;padding:10px 16px;border-radius:12px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none}
+.skip-link:focus{top:calc(8px + env(safe-area-inset-top))}
+#stage:focus-visible{outline-offset:-2px}
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Fond : un simple halo doré, sans éléments décoratifs flottants. */
@@ -348,7 +607,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 20px 10px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .mark{flex:0 0 40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sen-green);box-shadow:var(--shadow-sm)}
-.mark svg{width:22px;height:22px}
+.mark svg{width:36px;height:36px}
 .brand strong{display:block;font:700 19px/1.1 var(--font-display);letter-spacing:-.01em;color:var(--ink);white-space:nowrap}
 .brand em{font-style:normal;color:var(--gold)}
 .brand span{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
@@ -367,7 +626,9 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 /* Retour immédiat au toucher sur tous les boutons. */
 button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button:active:not(:disabled){transform:scale(.97)}
-.icon{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.icon{position:relative;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+/* Zone tactile de 44 px (36 px dessinés sur téléphone), sans changer le dessin ; ::after sert au « A » du thème. */
+.icon::before{content:"";position:absolute;inset:-4px}
 .icon svg{width:18px;height:18px}
 .icon:hover{border-color:var(--line-strong)}
 body:not(.has-chat) #resetBtn{display:none}
@@ -394,6 +655,40 @@ body:not(.has-chat) #resetBtn{display:none}
 #fxWidget{order:6}
 .hero .spread{order:7}
 
+/* Bannière de l'accueil (décorative) : baobab au coucher du soleil, lune la nuit, bande du drapeau et médaillon
+   du lion, comme les deux symboles des armoiries du Sénégal. Dessins originaux, sans image externe. */
+.svg-defs{position:absolute;width:0;height:0;overflow:hidden}
+.hero-scene{position:relative;order:-1;margin-bottom:26px}
+.scene-sky{position:relative;height:150px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#f8d98a 0%,#f2a650 58%,#dc6a30 100%);box-shadow:var(--shadow-sm);color:#2a1c10}
+.scene-sun{position:absolute;left:62%;top:26px;width:70px;height:70px;border-radius:50%;background:#fff3c9;box-shadow:0 0 44px 12px rgba(255,236,170,.55)}
+.scene-tree{position:absolute;left:calc(68% - 75px);bottom:14px;width:150px;height:150px}
+.scene-ground{position:absolute;left:-8%;right:-8%;bottom:4px;height:26px;background:currentColor;border-radius:50% 50% 0 0/100% 100% 0 0}
+.scene-flag{position:absolute;left:0;right:0;bottom:0;height:6px;display:grid;grid-template-columns:repeat(3,1fr)}
+.scene-flag i:nth-child(1){background:#0f6a43}.scene-flag i:nth-child(2){background:#f0c63d}.scene-flag i:nth-child(3){background:#c93636}
+.scene-lion{position:absolute;left:14px;bottom:-34px;width:92px;height:92px;border-radius:50%;background:var(--sen-green);border:4px solid var(--bg);display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.scene-lion svg{width:80px;height:80px}
+body[data-theme="dark"] .scene-sky{background:linear-gradient(180deg,#0e1a2b 0%,#22304a 55%,#5a3940 100%);color:#070b12}
+body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box-shadow:0 0 30px 6px rgba(241,234,210,.25)}
+.scene-far{display:none}
+@media(min-width:760px){.scene-sky{height:190px}.scene-tree{width:190px;height:190px;left:calc(70% - 95px)}.scene-sun{left:66%;top:34px}
+  .scene-tree.scene-far{display:block;width:120px;height:120px;left:calc(30% - 60px);bottom:20px;opacity:.7}} /* un second baobab au loin sur grand écran */
+@media(forced-colors:active){.hero-scene{display:none}}
+/* Téléphone : bannière compacte, pour que la zone de question reste dans le premier écran
+   (vérifié de 360 × 560 à 390 × 844, avec et sans fête : tests/e2e/test_design_lion_baobab.py). */
+@media(max-width:720px){
+  .hero-scene{margin-bottom:16px}
+  .scene-sky{height:96px;border-radius:18px}
+  .scene-sun{left:64%;top:14px;width:46px;height:46px}
+  .scene-tree{left:calc(70% - 50px);bottom:9px;width:100px;height:100px}
+  .scene-ground{height:18px}
+  .scene-lion{left:12px;bottom:-22px;width:64px;height:64px;border-width:3px}
+  .scene-lion svg{width:56px;height:56px}
+  body[data-theme="dark"] .scene-sun{width:34px;height:34px}
+}
+/* Jour de fête sur un écran bas : la bande de la fête suffit. Écran très bas (téléphone couché) : pas de bannière. */
+@media(max-width:720px) and (max-height:700px){body[data-fete] .hero-scene{display:none}}
+@media(max-height:540px){.hero-scene{display:none}}
+
 /* Profil (touriste, résident…) */
 .audience-mode{display:flex;flex-wrap:wrap;gap:8px}
 .audience-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;min-width:0}
@@ -402,13 +697,15 @@ body:not(.has-chat) #resetBtn{display:none}
 .audience-btn small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .audience-btn.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .audience-btn.on span,.audience-btn.on small{color:inherit;opacity:.8}
-.audience-btn:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+.audience-btn:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 
 /* Les 4 parcours principaux */
 .journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .journey-strip button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:18px 16px 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
 .journey-strip [data-journey="travel"]>span{background:rgba(15,106,67,.14)}
+/* Boutons de suite (version 9) : sous la dernière réponse ; zones tactiles de 44 px. */
+.followups{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.followup{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1.25 var(--font);text-align:left;cursor:pointer}.followup:hover{border-color:var(--accent);color:var(--link)}
 .project-offer{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.project-offer-btn{padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer}.project-offer-btn:disabled{opacity:.6}.project-offer-more{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-weight:700;cursor:pointer}.project-offer-result{flex-basis:100%}.project-offer-result h3{margin:6px 0}.project-meta{color:var(--muted);margin:0 0 6px}
 .journey-strip [data-journey="discover"]>span{background:rgba(201,54,54,.12)}
 .journey-strip [data-journey="chat"]>span{background:var(--accent);color:var(--accent-ink)}
@@ -416,7 +713,7 @@ body:not(.has-chat) #resetBtn{display:none}
 .journey-strip small{max-width:100%;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .journey-strip button:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--line-strong)}
 .journey-strip button:active{transform:translateY(0)}
-.journey-strip button:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+.journey-strip button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 
 /* Questions rapides */
 .cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -442,8 +739,9 @@ body:not(.has-chat) #resetBtn{display:none}
 
 /* Partage */
 .spread{display:flex;flex-wrap:wrap;gap:8px}
-.spread a,.spread button{padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
-.spread .wa{background:#128c7e;border-color:#128c7e;color:#fff}
+.spread a,.spread button{position:relative;padding:9px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer}
+/* Vert WhatsApp foncé : texte blanc à 5,6:1 (#128c7e ne donnait que 4,1:1, tests/e2e/test_zones_tactiles.py). */
+.spread .wa{background:#0e7569;border-color:#0e7569;color:#fff}
 .spread .install{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .spread .install[hidden]{display:none}
 
@@ -452,7 +750,9 @@ body:not(.has-chat) #resetBtn{display:none}
 .seo h2,.guide-section h2{margin:0 0 6px;font:600 22px/1.2 var(--font-display)}
 .seo p,.guide-section p{margin:0;color:var(--muted);font-size:15px}
 .guide-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.guide-links a{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.spread a::after,.spread button::after{content:"";position:absolute;inset:-2px 0}
+.guide-links a{position:relative;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.guide-links a::after{content:"";position:absolute;inset:-3px 0}
 .guide-links a:hover{border-color:var(--accent);color:var(--link)}
 body.has-chat .seo,body.has-chat .guide-section{display:none}
 
@@ -463,7 +763,8 @@ body.has-chat #messages{padding-top:4px}
 .msg.user{justify-content:flex-end}
 .msg.is-new{animation:rise .24s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.avatar{flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:16px}
+.avatar{flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--sen-green);color:var(--accent);font-size:16px}
+.avatar svg{width:28px;height:28px}
 .col{display:flex;flex-direction:column;gap:8px;min-width:0;max-width:min(720px,86%)}
 .msg.user .col{align-items:flex-end}
 .bubble{padding:12px 16px;border-radius:20px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -506,7 +807,7 @@ body.has-chat #messages{padding-top:4px}
 .chips button:hover{border-color:var(--accent);color:var(--link)}
 body:not(.has-chat) .chips{display:none}
 .composer{max-width:820px;margin:0 auto;padding:6px;border-radius:22px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
-.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),var(--shadow)}
+.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft),var(--shadow);outline:2px solid var(--link);outline-offset:2px}
 .row{display:flex;align-items:flex-end;gap:6px}
 #input{flex:1;min-width:0;max-height:160px;padding:11px 12px;border:0;background:transparent;color:var(--ink);font-size:16px;line-height:1.45;resize:none;outline:none}
 #input::placeholder{color:var(--muted)}
@@ -515,7 +816,7 @@ body:not(.has-chat) .chips{display:none}
 #mic.listen,body.voice-active #mic{background:var(--sen-red);border-color:var(--sen-red);color:#fff;animation:pulse 1.2s infinite}
 #send{flex:0 0 auto;height:44px;padding:0 18px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font:700 15px/1 var(--font);cursor:pointer}
 #send:disabled{opacity:.45;cursor:default}
-#send:focus-visible,#mic:focus-visible,#voiceToggle:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+#send:focus-visible,#mic:focus-visible,#voiceToggle:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 .meta{max-width:820px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px 0;font-size:12px;color:var(--muted)}
 body:not(.has-chat) .meta{display:none}
 #voiceToggle{min-height:44px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer}
@@ -533,7 +834,7 @@ body:not(.has-chat) .meta{display:none}
 .voice-actions{display:flex;gap:8px;margin-left:auto}
 .voice-bar button{flex:0 0 auto;min-width:44px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font:700 14px/1 var(--font);cursor:pointer}
 .voice-bar button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.voice-bar button:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+.voice-bar button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avatar{animation:pulse 1.4s ease-in-out infinite}
 
 /* Onglets (mobile uniquement) */
@@ -542,7 +843,7 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
 .tabbar svg{width:22px;height:22px}
 .tabbar button.on{color:var(--link)}
 .tabbar button.on:after{content:"";position:absolute;top:-6px;left:50%;width:20px;height:3px;border-radius:0 0 3px 3px;background:var(--accent);transform:translateX(-50%)}
-.tabbar a:focus-visible,.tabbar button:focus-visible{outline:2px solid var(--nav-gold);outline-offset:-2px}
+.tabbar a:focus-visible,.tabbar button:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
 
 /* Module « Mon projet » */
 .project-modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(16,10,4,.45);backdrop-filter:blur(4px)}
@@ -637,17 +938,16 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .tabbar button.on:after{background:Highlight}
 }
 body.has-chat .dock{background:var(--bg)}
-/* Design automatique : jour « Terre de Teranga », nuit « Nuit de Dakar ». */
-body[data-theme="dark"]{background:#111215}
+/* Design automatique : jour « Vert Sénégal », nuit « Nuit verte ». */
+body[data-theme="dark"]{background:#0e1512}
 #heroTitle{color:var(--title)}
 body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e7bb63);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand .mark{background:var(--accent)}
-body[data-theme="dark"] .brand .mark{background:linear-gradient(135deg,#e7bb63,#a8741c)}
+.brand .mark{background:var(--sen-green)} /* le lion, sur le vert du drapeau dans les deux thèmes */
 .hero-signature{position:relative;min-height:14px}
 body:not([data-theme="dark"]) .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
   radial-gradient(circle at 12px 12px,#f2b632 5px,transparent 6px) 0 0/24px 24px,
-  radial-gradient(circle at 12px 12px,#1d7a4a 2.5px,transparent 3.5px) 12px 12px/24px 24px,
-  linear-gradient(90deg,#b5451b,#d9772b)}
+  radial-gradient(circle at 12px 12px,#f6e7c2 2.5px,transparent 3.5px) 12px 12px/24px 24px,
+  linear-gradient(90deg,#0f6a43,#1b8a57)}
 body:not([data-theme="dark"]) .hero-flag{display:none}
 .journey-strip button{border-radius:22px}
 .journey-strip [data-journey="travel"]{background:var(--card-travel)}
@@ -663,7 +963,7 @@ body[data-theme="dark"] .journey-strip button:last-child>span{background:rgba(0,
 body[data-fete] .fete-banner{display:inline-block}
 body[data-fete="independance"]:not([data-theme="dark"]) .hero-signature{background:linear-gradient(90deg,#0f6a43 0 33.3%,#f0c63d 33.3% 66.6%,#c93636 66.6%)}
 body[data-fete="nouvel-an"] .hero-signature{background:
-  radial-gradient(circle at 10px 10px,#f6dfa8 2px,transparent 3px) 0 0/20px 20px,linear-gradient(90deg,#7a2c10,#c97d12)}
+  radial-gradient(circle at 10px 10px,#f6dfa8 2px,transparent 3px) 0 0/20px 20px,linear-gradient(90deg,#0b4a2e,#c97d12)}
 /* Fêtes religieuses : décor visible de jour comme de nuit, symbole à droite. */
 body[data-fete="korite"] .hero-signature,body[data-fete="tabaski"] .hero-signature,body[data-fete="magal"] .hero-signature{height:44px;margin:0 -20px;padding:0 20px}
 body[data-fete="korite"] .hero-signature::after,body[data-fete="tabaski"] .hero-signature::after,body[data-fete="magal"] .hero-signature::after{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:24px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
@@ -695,12 +995,12 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 #audienceMode{order:4}
 .hero-ask{order:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface)}
 .hero-ask input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;color:var(--ink);font-size:16px;outline:none}
-.hero-ask:focus-within{border-color:var(--accent)}
+.hero-ask:focus-within{border-color:var(--accent);outline:2px solid var(--link);outline-offset:2px}
 #heroMic,#heroSend{flex:0 0 44px;height:44px;display:grid;place-items:center;border-radius:12px;border:0;cursor:pointer}
 #heroMic{background:var(--surface-2);color:var(--ink)}
 #heroSend{background:var(--accent);color:var(--accent-ink)}
 #heroMic svg,#heroSend svg,#mic svg{width:20px;height:20px}
-#heroMic:focus-visible,#heroSend:focus-visible{outline:2px solid var(--sen-gold);outline-offset:2px}
+#heroMic:focus-visible,#heroSend:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 body.voice-active #heroMic{background:var(--sen-red);color:#fff}
 .hero-chips{order:6;display:flex;flex-wrap:wrap;gap:8px}
 .hero-chips button{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
@@ -708,7 +1008,9 @@ body.voice-active #heroMic{background:var(--sen-red);color:#fff}
 .hero-discover{order:7;display:flex;flex-direction:column;gap:10px}
 .hero-discover-head{display:flex;justify-content:space-between;align-items:baseline}
 .hero-discover-head h2{margin:0;font:700 19px/1.2 var(--font-display)}
-.hero-discover-head a{font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+.hero-discover-head a{position:relative;font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
+/* Zones tactiles de 44 px sans changer le dessin (tests/e2e/test_zones_tactiles.py). */
+.hero-discover-head a::after{content:"";position:absolute;inset:-11px -4px}
 .hero-discover-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .place-tile{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--line);color:var(--ink);text-decoration:none}
 .place-tile-img{display:block;height:96px;background-size:cover!important;background-position:center!important}
@@ -727,6 +1029,8 @@ body.voice-active #heroMic{background:var(--sen-red);color:#fff}
 .audience-btn{min-height:44px;font-weight:700}
 .audience-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 body:not([data-fete]) .hero-signature{display:none}
+/* Bande de fête bord à bord : même retrait que #stage sur téléphone (14 px), sinon 6 px de défilement horizontal. */
+@media(max-width:680px){body[data-fete] .hero-signature{margin-left:-14px;margin-right:-14px;padding-left:14px;padding-right:14px}}
 /* Ordinateur : la barre de question reste en bas, le champ du haut est masqué. */
 @media(min-width:721px){.hero-ask{display:none}}
 /* Téléphone : avant la conversation, une seule zone de question (celle du haut). */
@@ -743,17 +1047,19 @@ body:not([data-fete]) .hero-signature{display:none}
 <script nonce="__CSP_NONCE__">
 // Thème appliqué avant le premier affichage (sinon éclair clair → sombre le soir).
 // Même règle que static/theme.js : auto = sombre de 18 h à 6 h.
-(function(){try{var m='auto';if(localStorage.getItem('teranga-theme-v')==='2'){var v=localStorage.getItem('teranga-theme');if(v==='light'||v==='dark')m=v;}var h=new Date().getHours();document.body.setAttribute('data-theme',m==='dark'||(m==='auto'&&(h>=18||h<6))?'dark':'light');}catch(e){}})();
+(function(){try{var m='auto';if(localStorage.getItem('teranga-theme-v')==='2'){var v=localStorage.getItem('teranga-theme');if(v==='light'||v==='dark')m=v;}var h=new Date().getHours(),d=m==='dark'||(m==='auto'&&(h>=18||h<6));document.body.setAttribute('data-theme',d?'dark':'light');var c=document.getElementById('themeColor');if(c)c.content=d?'#0e1512':'#f7f3e8';}catch(e){}})();
 </script>
+<a class="skip-link" id="skipLink" href="#stage">Aller au contenu</a>
+<svg class="svg-defs" aria-hidden="true" focusable="false"><symbol id="sn-lion" viewBox="0 5 100 100"><path d="M50,21 Q52,14.9 68.6,9.7 Q68.6,21.8 63.8,23.9 Q68.2,19.2 85.4,21.2 Q80.5,32.2 75.3,32.2 Q81.2,29.6 96.1,38.5 Q87.1,46.6 82.3,44.5 Q88.8,44.5 98.9,58.7 Q87.4,62.4 83.8,58.6 Q89.7,61.2 93.1,78.2 Q81.1,76.9 79.4,72 Q83.7,76.8 80,93.8 Q69.5,87.7 70,82.5 Q72,88.6 61.6,102.6 Q54.5,92.8 57.1,88.3 Q56.4,94.7 41.2,103.2 Q38.7,91.4 42.9,88.3 Q39.7,93.8 22.4,95.5 Q24.9,83.7 30,82.5 Q24.8,86.3 8.3,80.7 Q15.4,71 20.6,72 Q14.2,73.3 1.4,61.6 Q11.9,55.5 16.2,58.6 Q9.9,57.2 3,41.2 Q15,40 17.7,44.5 Q12.5,40.7 12.6,23.3 Q24.1,27.1 24.7,32.2 Q21.5,26.7 28.8,10.8 Q37.7,19 36.2,23.9 Q35.5,17.5 48.6,6 Q53.4,17.1 50,21 Z" fill="#b8741a"/><path d="M57.2,26.9 Q60.2,22.1 76.1,22.1 Q73.1,32.2 69.4,33.5 Q74.3,30.6 88.4,38 Q81.1,45.5 77.2,44.9 Q82.9,44.7 91.9,57.8 Q81.9,61.1 78.8,58.7 Q83.9,61.1 85.8,77 Q75.4,75.2 73.7,71.7 Q77.2,76.2 71.5,91.1 Q63.1,84.7 63.3,80.8 Q64.2,86.4 52.2,96.9 Q47.8,87.4 49.8,84 Q48,89.4 32.5,93.2 Q33,82.7 36.3,80.6 Q32.2,84.5 16.8,80.7 Q22.1,71.6 26,71.3 Q20.6,72.9 8.6,62.3 Q17.6,56.8 21.2,58.3 Q15.6,57.2 10,42.2 Q20.5,41.5 23,44.5 Q18.6,40.9 20.5,25.1 Q30.1,29.3 31,33.1 Q28.7,27.9 37.8,14.8 Q44.3,23 43.3,26.8 Q43.7,21.1 57.9,13.7 Q59.9,24.1 57.2,26.9 Z" fill="#d99a2b"/><path d="M52.5,31.1 Q54.3,27.6 66.3,25 Q65.9,33 65.5,36.4 Q69,34.4 80.5,38.8 Q75.9,45.3 73.7,47.9 Q77.6,48.1 84.9,58 Q77.6,60.9 74.3,62 Q77.5,64.3 78.3,76.6 Q70.5,75.1 67.2,74.2 Q68.6,77.8 62.7,88.6 Q57,83.1 54.6,80.6 Q53.9,84.4 43,90.3 Q41.2,82.6 40.6,79.2 Q37.9,82 25.6,81.1 Q28.2,73.6 29.6,70.4 Q25.7,71.3 15.9,63.9 Q22.2,59 25,57.1 Q21.3,55.8 17,44.2 Q24.9,43.5 28.4,43.4 Q26,40.3 28.6,28.3 Q35.7,31.9 38.7,33.7 Q38.3,29.8 47,21.1 Q51,28 52.5,31.1 Z" fill="#ecbd55"/><circle cx="32" cy="34" r="7" fill="#f3d49a"/><circle cx="32" cy="34" r="3.4" fill="#36210f" opacity=".5"/><circle cx="68" cy="34" r="7" fill="#f3d49a"/><circle cx="68" cy="34" r="3.4" fill="#36210f" opacity=".5"/><path d="M50,29 C64,29 72,40 72,54 C72,66 63,75 56,81 Q50,85 44,81 C37,75 28,66 28,54 C28,40 36,29 50,29 Z" fill="#f3d49a"/><path d="M45.5,31 Q50,29.5 54.5,31 L55,57 Q50,59 45,57 Z" fill="#fbe9c2"/><path d="M33,45 L46,48.5 L45.5,50.5 L34,48 Z" fill="#36210f"/><path d="M67,45 L54,48.5 L54.5,50.5 L66,48 Z" fill="#36210f"/><path d="M35,50.5 Q40.5,48.5 46,52.5 Q40.5,55 35,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/><path d="M65,50.5 Q59.5,48.5 54,52.5 Q59.5,55 65,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/><circle cx="41.5" cy="51.6" r="1.7" fill="#36210f"/><circle cx="58.5" cy="51.6" r="1.7" fill="#36210f"/><ellipse cx="44.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/><ellipse cx="55.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/><path d="M44.5,59.5 L55.5,59.5 Q57.5,60.5 55.6,63 L51.2,67 Q50,68 48.8,67 L44.4,63 Q42.5,60.5 44.5,59.5 Z" fill="#36210f"/><path d="M50,67.5 L50,71 M50,71 Q47,74.5 43.5,72.5 M50,71 Q53,74.5 56.5,72.5" stroke="#36210f" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M46,77.5 Q50,80 54,77.5" stroke="#36210f" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".45"/></symbol><symbol id="sn-baobab" viewBox="0 0 100 100"><path d="M45,47 C39,38 30,34 17,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M31,35 C29,30 27,26 22,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M17,33 L11,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M47,45 C45,36 42,28 37,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M37,20 L33,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M40,25 L34,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,45 L50,22" stroke="currentColor" stroke-width="3.8" fill="none" stroke-linecap="round"/><path d="M50,22 L48,15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,27 L55,21" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M53,45 C55,36 58,28 63,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M63,20 L67,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M60,25 L66,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M55,47 C61,38 70,34 83,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M69,35 C71,30 73,26 78,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M83,33 L89,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M34,93 C30,78 33,60 41,46 L59,46 C67,60 70,78 66,93 Z" fill="currentColor"/></symbol></svg>
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
 <header>
   <div class="brand">
     <div class="mark" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="#f6e7c2" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="#e2b34a"/></svg>
+      <svg viewBox="0 5 100 100"><use href="#sn-lion"/></svg>
     </div>
     <div>
-      <strong>Teranga <em>AI</em></strong>
+      <strong translate="no">Teranga <em>AI</em></strong>
       <span><i class="dot"></i> <span id="sub">Assistant Sénégal</span></span>
     </div>
   </div>
@@ -774,8 +1080,9 @@ body:not([data-fete]) .hero-signature{display:none}
     </button>
   </div>
 </header>
-<div id="stage">
+<main id="stage" tabindex="-1">
   <div id="hero" class="hero">
+    <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-lion"><svg viewBox="0 5 100 100"><use href="#sn-lion"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
@@ -796,8 +1103,7 @@ body:not([data-fete]) .hero-signature{display:none}
 <section class="hero-discover" aria-labelledby="discoverTitle">
   <div class="hero-discover-head"><h2 id="discoverTitle">À découvrir</h2><a href="/lieux" id="allPlaces">Tous les lieux</a></div>
   <div class="hero-discover-grid">
-    <a class="place-tile" href="/lieux/goree" data-photo="Île de Gorée Sénégal"><span class="place-tile-img" style="background:#2e5d63"></span><strong>Île de Gorée</strong><small>Dakar · UNESCO</small></a>
-    <a class="place-tile" href="/lieux/lac-rose" data-photo="Lac Rose Retba Sénégal"><span class="place-tile-img" style="background:#8a4b5c"></span><strong>Lac Rose</strong><small>Région de Dakar</small></a>
+    __DISCOVER_TILES__
   </div>
 </section>
 <a class="plan-cta" id="planCta" href="/trip-planner"><span><strong id="planCtaTitle">Planifier mon voyage</strong><small id="planCtaHint">Un programme jour par jour en 1 minute</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -846,7 +1152,7 @@ body:not([data-fete]) .hero-signature{display:none}
     </div>
   </section>
   <div id="messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
-</div>
+</main>
 <!-- État de la conversation vocale : visible partout (même avant la première question sur téléphone). -->
 <div class="voice-bar" id="voiceBar" data-phase="" hidden>
   <span class="voice-dot" aria-hidden="true"></span>

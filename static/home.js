@@ -23,11 +23,11 @@ fr:{
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
-  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -46,11 +46,11 @@ en:{
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
   timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
-  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
   hint:'Live answers · Enter to send',
@@ -285,7 +285,7 @@ if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
 // Logo Teranga (même dessin que l'en-tête) à la place de l'émoji 🌴.
-const AVATAR_SVG='<svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="currentColor"/></svg>';
+const AVATAR_SVG='<svg viewBox="0 5 100 100" aria-hidden="true"><use href="#sn-lion"/></svg>'; // lion dessiné une fois dans home.html (#sn-lion)
 function cleanReply(text){
   return String(text||'')
     .replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''))
@@ -347,7 +347,7 @@ function setChatMode(on){
 function hideHero(){setChatMode(true);}
 function showHero(){setChatMode(false);}
 function applyThemeColor(){
-  $('themeColor').content=document.body.dataset.theme==='dark'?'#0b0f17':'#fbf3e6';
+  $('themeColor').content=document.body.dataset.theme==='dark'?'#0e1512':'#f7f3e8';
 }
 const THEME_LABELS={
   fr:{auto:'Thème : automatique (jour/nuit)',light:'Thème : clair',dark:'Thème : sombre'},
@@ -519,6 +519,45 @@ function addProjectOffer(col,idea){
   };
   box.append(btn,more,out);col.appendChild(box);
 }
+// Boutons de suite (version 9) : les 2 ou 3 suggestions que le serveur joint déjà à chaque réponse
+// (`ux.followups`, services/intelligence.py). Un appui pose la suggestion comme nouvelle question, sauf
+// « Préciser ma demande », qui remet le curseur dans la zone de saisie. Une seule rangée : sous la dernière réponse.
+const FOLLOWUP_CLARIFY='Préciser ma demande';
+// Page en anglais : libellés du serveur traduits ; un libellé inconnu n'a pas de bouton plutôt qu'un bouton en français.
+const FOLLOWUP_EN={'Budget':'Budget','Transport':'Transport','Programme détaillé':'Detailed itinerary',
+  'Itinéraire':'Route','Prix':'Prices','Alternative':'Alternatives','Options':'Options','Localiser':'Show on a map',
+  "Plan d'action":'Action plan','Opportunités':'Opportunities','Offres':'Job offers','CV':'CV','Formations':'Courses',
+  'Conditions':'Requirements',"Plan d'apprentissage":'Learning plan','Financement':'Funding','Comparer':'Compare',
+  'Demain':'Tomorrow','Cette semaine':'This week','Prévisions':'Forecast','Plus de photos':'More photos',
+  'Que voir ?':'What to see?','Préciser ma demande':'Refine my question','Que faire ensuite ?':'What next?'};
+function followupLabel(item){
+  if(lang!=='en')return item;  // wolof et pulaar : le français, comme le reste des textes non traduits
+  const at=item.match(/^(.+?) à (.+)$/);  // « Prix à Dakar » → « Prices in Dakar »
+  if(at&&FOLLOWUP_EN[at[1]])return FOLLOWUP_EN[at[1]]+' in '+at[2];
+  return FOLLOWUP_EN[item]||'';
+}
+function clearFollowups(){document.querySelectorAll('.followups').forEach(row=>row.remove());}
+function addFollowups(col,ux){
+  clearFollowups();
+  if(!ux||ux.show_followups!==true||!Array.isArray(ux.followups))return;
+  const items=[];
+  for(const raw of ux.followups){
+    const item=String(raw||'').trim().slice(0,80);
+    const label=item?followupLabel(item):'';
+    if(label&&!items.some(x=>x.label===label))items.push({item,label});
+    if(items.length===3)break;
+  }
+  if(!items.length)return;
+  const row=document.createElement('div');row.className='followups';row.setAttribute('role','group');
+  row.setAttribute('aria-label',lang==='en'?'To continue':'Pour continuer');
+  for(const {item,label} of items){
+    const btn=document.createElement('button');btn.type='button';btn.className='followup';btn.textContent=label;
+    // startsWith : « Préciser ma demande à Dakar » (lieu ajouté par un serveur plus ancien) reste ce bouton.
+    btn.onclick=()=>{if(item.startsWith(FOLLOWUP_CLARIFY)){input.focus();return;}ask(label);};
+    row.appendChild(btn);
+  }
+  col.appendChild(row);
+}
 function renderInlineProject(container,p){
   const h=document.createElement('h3');h.textContent='🚀 '+(p.name||(lang==='en'?'Your project':'Ton projet'));
   const meta=document.createElement('p');meta.className='project-meta';
@@ -674,7 +713,12 @@ function setLang(next){
   $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
+  if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
   if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
+  // Cartes « À découvrir » (tirées par le serveur) : la région dans la langue choisie ; « UNESCO » ne change pas.
+  document.querySelectorAll('.place-tile[data-region]:not([data-unesco])').forEach(tile=>{
+    const sub=tile.querySelector('small');if(sub)sub.textContent=(t.regionOf||T.fr.regionOf).replace('{r}',tile.dataset.region);
+  });
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
   if($('planCtaTitle')){$('planCtaTitle').textContent=t.planTitle||t.journeyTravel;$('planCtaHint').textContent=t.planHint||t.journeyTravelHint;}
   renderJourneyLabels();
@@ -952,6 +996,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   // une seconde requête (qui dérèglerait le bouton Envoyer/Arrêter).
   if(inflight){send.classList.remove('nudge');void send.offsetWidth;send.classList.add('nudge');return;}
   hideHero();
+  clearFollowups();  // nouvelle question : les suggestions de la réponse précédente ne servent plus
   if(!isRetry){
     addMsg('user',text,{animate:true});
     history.push({role:'user',content:text});
@@ -968,6 +1013,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
   const ctrl=new AbortController();inflight=ctrl;
+  resetVoiceStreamTts();  // nouvelle réponse : la voix repart de zéro (rien du tour précédent, voix de nouveau permise)
   // Délai d'INACTIVITÉ : une longue réponse qui arrive encore n'est jamais coupée.
   let kill=0,timedOut=false;
   const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
@@ -1074,14 +1120,16 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addMap(wait.col,map);
     addPlaceLinks(wait.col,places);
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
+    if(reply)addFollowups(wait.col,ux);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply){
       voiceWaitingForAnswer=true;
-      flushVoiceStreamTts(reply);
-      if(!voiceStreamTtsCount&&!voiceTtsQueue.length)queueVoiceSpeech(reply);
+      // Conversation vocale : la suite de la réponse part d'un seul appel (la première partie est déjà partie
+      // pendant le flux). Question écrite : toute la réponse. Voix coupée pendant la réponse : rien.
+      if(!flushVoiceStreamTts(reply)&&!voiceStreamTtsMuted)queueVoiceSpeech(reply);
     }
   }catch(err){
     const aborted=err.name==='AbortError';
@@ -1136,6 +1184,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     }
   }finally{
     clearTimeout(kill);
+    // Réponse finie, ratée ou arrêtée : plus rien de son flux ne doit être lu (le délai de la 1re partie, le texte reçu).
+    resetVoiceStreamTts();
     inflight=null;
     send.dataset.mode='';
     send.disabled=false;
@@ -1162,10 +1212,11 @@ $('heroAsk')?.addEventListener('submit',e=>{
   ask(q);
 });
 $('heroMic')?.addEventListener('click',()=>mic.click());
-// Photos des deux lieux à découvrir (mêmes images que les fiches), sans bloquer l'affichage.
+// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage. Vignette de 500 px :
+// la carte fait 170 px, la vignette de 1 280 px de la fiche pesait jusqu'à 537 Ko.
 document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
   try{
-    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||'')+'&w=500',window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
     const d=await r.json();const img=(d.images||[])[0];if(!img)return;
     const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
     const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';
@@ -1252,12 +1303,14 @@ const VOICE_TEXT={
     close:'Fermer',retry:'Réessayer',talk:'Parler',unclear:'Je n’ai pas bien entendu. Parle encore.',
     stopped:'Mode vocal arrêté.',micOff:'Microphone indisponible.',failed:'Je n’ai pas bien compris. Réessaie.',
     tooMany:'Trop de demandes vocales. Réessaie dans {n} s.',
+    ttsFailed:'Je n’ai pas pu lire toute la réponse à voix haute. Elle reste écrite.',
     gaveUp:'Je n’arrive pas à te comprendre. Touche le micro pour reprendre.'},
   en:{starting:'Starting the microphone…',listening:'I’m listening…',hearing:'I hear you…',transcribing:'Transcribing…',
     thinking:'Thinking…',speaking:'Speaking…',stop:'Stop',stopLabel:'Stop the voice conversation',interrupt:'Interrupt and speak',
     close:'Close',retry:'Retry',talk:'Speak',unclear:'I didn’t catch that. Try again.',
     stopped:'Voice mode stopped.',micOff:'Microphone unavailable.',failed:'I didn’t quite catch that. Try again.',
     tooMany:'Too many voice requests. Try again in {n}s.',
+    ttsFailed:'I couldn’t read the whole answer aloud. It’s still on screen.',
     gaveUp:'I can’t make out what you say. Tap the microphone to resume.'},
   wo:{listening:'Maa ngi déglu…',hearing:'Maa ngi déglu…',talk:'Wax'},
   ff:{listening:'Mi heɗii…',hearing:'Mi heɗii…'}

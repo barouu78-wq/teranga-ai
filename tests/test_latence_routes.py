@@ -206,11 +206,20 @@ def test_stt_without_audio_never_reaches_the_provider(monkeypatch, lines):
 
 def test_tts_line_measures_the_provider_call(monkeypatch, lines):
     response = h.post_tts("Bonjour Dakar", monkeypatch=monkeypatch)
-    assert response.status_code == 200 and response.data == b"RIFFfakewav"
+    assert response.status_code == 200 and response.data == b"".join(h.fake_speech.FAKE_MP3)
     response.close()
     f = one(lines)
     assert f["route"] == "tts" and f["statut"] == "ok" and f["modele"] == "gpt-4o-mini-tts"
+    # premier_mot_ms : premier octet de son envoyé ; fournisseur_ms : tout le temps passé chez le fournisseur.
+    assert number(f["premier_mot_ms"]) <= number(f["total_ms"])
     assert number(f["fournisseur_ms"]) <= number(f["total_ms"])
+
+
+def test_tts_line_cut_mid_stream_is_an_error(monkeypatch, lines):
+    response = h.post_tts("Bonjour", late_error="coupure", monkeypatch=monkeypatch)
+    response.close()
+    f = one(lines)
+    assert f["statut"] == "erreur" and f["premier_mot_ms"] != "-"
 
 
 def test_tts_failure_and_empty_text(monkeypatch, lines):

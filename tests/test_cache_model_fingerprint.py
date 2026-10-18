@@ -48,3 +48,11 @@ def test_answer_cache_key_depends_on_the_model_fingerprint():
     assert key is not None
     assert cache_key(payload, {}, model="autre-modele:abc") != key
     assert cache_key(payload, {}, model="gpt-5.6-luna:abc") == key
+
+
+def test_cache_fingerprint_follows_the_choice_of_places():
+    # services/intelligence.py construit le texte qui choisit les lieux envoyés à l'IA (contextual_query) :
+    # le corriger doit invalider les anciennes réponses, comme pour senegal_knowledge.py.
+    source = (ROOT / "app.py").read_text(encoding="utf-8")
+    block = source.split("_CACHE_MODEL_BASE = ", 1)[1].split("\n\n", 1)[0]
+    assert '"intelligence.py"' in block

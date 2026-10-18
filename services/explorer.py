@@ -43,7 +43,8 @@ def render_explorer_page(places, regions, selected_region=""):
 .explorer-hero{margin-bottom:18px}
 .explorer-hero h1{margin-top:6px}
 .regions{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.regions a{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.regions a{position:relative;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;text-decoration:none}
+.regions a::after,.place-actions a::after{content:"";position:absolute;inset:-3px 0}
 .regions a:hover{border-color:var(--accent);color:var(--link)}
 .regions a[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
@@ -60,7 +61,7 @@ def render_explorer_page(places, regions, selected_region=""):
 .grid article h2{margin:4px 16px 6px;font-size:21px}
 .grid article p{flex:1;margin:0 16px 14px;color:var(--muted);font-size:15px}
 .place-actions{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px 16px;border-top:1px solid var(--line)}
-.place-actions a{display:inline-flex;align-items:center;min-height:40px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none}
+.place-actions a{display:inline-flex;align-items:center;min-height:40px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-size:13px;font-weight:600;text-decoration:none;position:relative}
 .place-actions a.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .place-actions a:hover{border-color:var(--line-strong)}
 </style><script>

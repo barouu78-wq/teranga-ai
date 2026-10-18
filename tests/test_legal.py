@@ -60,7 +60,8 @@ def test_manifest_uses_the_new_brand_colors():
     from app import app
 
     manifest = app.test_client().get("/manifest.webmanifest").get_json()
-    assert manifest["theme_color"] == "#b5451b" and manifest["background_color"] == "#fbf3e6"
+    # Couleurs « Vert Sénégal » depuis le design lion + baobab (tests/test_design_lion_baobab.py).
+    assert manifest["theme_color"] == "#0f6a43" and manifest["background_color"] == "#f7f3e8"
 
 
 def test_manifest_has_store_ready_screenshots_and_shortcuts():
