@@ -6,7 +6,7 @@ import re
 import secrets
 import threading
 import time
-from functools import wraps
+from functools import lru_cache, wraps
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import build_opener, urlopen
@@ -390,10 +390,21 @@ _google_checked_until = 0.0
 _google_pause_reason = ""
 
 
+@lru_cache(maxsize=4)
+def _google_config_tag(api_key: str, cse_id: str) -> str:
+    """Empreinte courte de la configuration Google, qui ne révèle pas la clé.
+
+    La clé API est un secret : un SHA-256 simple permettrait de tester des clés candidates très vite (alerte
+    CodeQL de #494). PBKDF2 est une dérivation volontairement lente ; calculée une fois par configuration,
+    elle est la même dans tous les workers.
+    """
+    material = f"{api_key}|{cse_id}".encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", material, b"teranga:google-images-pause", 100_000).hex()[:16]
+
+
 def _google_pause_key() -> str:
     """Clé Redis propre à la configuration : une autre clé API ou un autre cx n'hérite pas de la pause."""
-    tag = hashlib.sha256(f"{GOOGLE_API_KEY}|{GOOGLE_CSE_ID}".encode("utf-8")).hexdigest()[:16]
-    return _GOOGLE_PAUSE_PREFIX + tag
+    return _GOOGLE_PAUSE_PREFIX + _google_config_tag(GOOGLE_API_KEY, GOOGLE_CSE_ID)
 
 
 def google_images_paused() -> bool:
@@ -433,15 +444,21 @@ def _google_access_denied(exc) -> bool:
     return exc.code == 403 and getattr(exc, "google_reason", "") not in _GOOGLE_QUOTA_REASONS
 
 
-def _pause_google_images(code, access_denied=False) -> None:
-    """Coupe-circuit : 6 h après un quota, 7 jours après un refus d'accès (puis réessayé)."""
+def _pause_google_images(exc) -> None:
+    """Coupe-circuit : 6 h après un quota, 7 jours après un refus d'accès (puis réessayé).
+
+    Seule ligne de journal d'un refus : code HTTP, raison et message de Google (sans la clé), durée de la pause.
+    """
     global _google_paused_until, _google_pause_reason
+    access_denied = _google_access_denied(exc)
     seconds = GOOGLE_ACCESS_DENIED_PAUSE_SECONDS if access_denied else GOOGLE_PAUSE_SECONDS
     _google_paused_until = time.time() + seconds
     _google_pause_reason = "access_denied" if access_denied else "paused"
     app.logger.warning(
-        "Google Images en pause %d h après HTTP %s (%s) : photos par Wikipédia et Wikimedia Commons",
-        seconds // 3600, code, "accès refusé au projet Google" if access_denied else "quota",
+        "Google Images en pause %d h après HTTP %s (%s : %s %s - %s) : photos par Wikipédia et Wikimedia Commons",
+        seconds // 3600, exc.code, "accès refusé au projet Google" if access_denied else "quota",
+        getattr(exc, "google_status", "") or "?", getattr(exc, "google_reason", "") or "?",
+        getattr(exc, "google_message", "") or "?",
     )
     if redis_client is not None:
         try:
@@ -460,7 +477,7 @@ def fetch_google_images(title, limit=4):
         # 401/403 (accès refusé) ou 429/403 de quota : chaque appel échouerait de la même façon. On passe
         # directement à Wikipédia/Commons au lieu d'attendre un refus à chaque photo.
         if exc.code in (401, 403, 429):
-            _pause_google_images(exc.code, access_denied=_google_access_denied(exc))
+            _pause_google_images(exc)
             return []
         raise
 

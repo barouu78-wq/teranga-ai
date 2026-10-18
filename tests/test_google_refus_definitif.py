@@ -6,6 +6,7 @@ Custom Search JSON API est fermée aux nouveaux clients (fin annoncée au 1er ja
 doit couper Google longtemps, une ligne de journal suffit, et changer la clé ou le cx doit relancer l'essai.
 """
 
+import hashlib
 import io
 import json
 import logging
@@ -108,16 +109,46 @@ def test_changer_la_cle_ou_le_cx_relance_l_essai(monkeypatch, google):
 
 def test_une_seule_ligne_de_journal_sans_cle_ni_json(monkeypatch, google, caplog, capsys):
     _refuse_with(monkeypatch, REFUS_ACCES)
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.DEBUG):
         app_module.fetch_google_images("Île de Ngor Dakar")
-    google_lines = [r.getMessage() for r in caplog.records if "Google" in r.getMessage()]
-    assert google_lines, "le refus doit rester visible dans les journaux"
-    for line in google_lines:
-        assert "\n" not in line
-        assert "cle-de-test-123" not in line
-        assert '"errors"' not in line
-    assert any("does not have the access" in line for line in google_lines)
+    google_lines = [r.getMessage() for r in caplog.records if "google" in r.getMessage().lower()]
+    # Une ligne au total par refus (relecture de #494 : services/images.py et app.py en écrivaient chacun une).
+    assert len(google_lines) == 1, google_lines
+    (line,) = google_lines
+    assert "\n" not in line
+    assert "cle-de-test-123" not in line
+    assert '"errors"' not in line
+    # La ligne unique garde tout le diagnostic : code, raison de Google, message et durée de la pause.
+    assert "403" in line and "forbidden" in line and "does not have the access" in line
+    assert "168 h" in line
     assert capsys.readouterr().out == "", "plus de print() : il doublait chaque ligne dans Render"
+
+
+def test_un_quota_ecrit_aussi_une_seule_ligne(monkeypatch, google, caplog):
+    _refuse_with(monkeypatch, QUOTA_JOUR)
+    with caplog.at_level(logging.DEBUG):
+        app_module.fetch_google_images("Dakar")
+    google_lines = [r.getMessage() for r in caplog.records if "google" in r.getMessage().lower()]
+    assert len(google_lines) == 1, google_lines
+    assert "dailyLimitExceeded" in google_lines[0] and "6 h" in google_lines[0]
+
+
+def test_le_nom_de_la_pause_ne_derive_pas_la_cle_par_un_hachage_rapide(google):
+    # Alerte CodeQL de #494 : un SHA-256 simple de la clé API permettrait de tester des clés candidates très vite.
+    nom = app_module._google_pause_key()
+    sha256_simple = hashlib.sha256(b"cle-de-test-123|cx-test").hexdigest()[:16]
+    assert "cle-de-test-123" not in nom
+    assert sha256_simple not in nom
+    assert nom == app_module._google_pause_key(), "même configuration, même pause (tous les workers)"
+
+
+def test_changer_la_cle_api_relance_aussi_l_essai(monkeypatch, google):
+    _refuse_with(monkeypatch, REFUS_ACCES)
+    app_module.fetch_google_images("Dakar")
+    monkeypatch.setattr(app_module, "GOOGLE_API_KEY", "nouvelle-cle-456")
+    monkeypatch.setattr(app_module, "_google_paused_until", 0.0)
+    monkeypatch.setattr(app_module, "_google_checked_until", 0.0)
+    assert not app_module.google_images_paused()
 
 
 def test_l_erreur_porte_la_raison_lisible_pour_l_appelant():

@@ -230,13 +230,9 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
             data = json.loads(resp.read().decode("utf-8"))
     except HTTPError as exc:
         # Raison lisible jointe à l'erreur : l'appelant distingue un refus d'accès (définitif) d'un quota
-        # (passager). Une seule ligne de journal, sans la clé ni le JSON complet (avant : plus de 20 lignes
-        # par refus, doublées par un print).
+        # (passager) et écrit la seule ligne de journal, sans la clé ni le JSON complet (avant : plus de 20
+        # lignes par refus, doublées par un print).
         exc.google_status, exc.google_reason, exc.google_message = _google_error_details(exc, api_key)
-        logger.warning(
-            "Google Custom Search HTTP %s pour %r (cx=%s) : %s %s - %s",
-            exc.code, query, cse_id, exc.google_status or "?", exc.google_reason or "?", exc.google_message or "?",
-        )
         raise
 
     candidates, seen = [], set()
