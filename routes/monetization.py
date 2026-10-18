@@ -27,8 +27,8 @@ OFFERS = (
         "Adresse partenaire",
         "Votre hôtel, restaurant, agence ou service de guide apparaît, avec la mention « Partenaire », "
         "sur les fiches des lieux de votre ville et dans les recommandations de l'assistant quand un "
-        "visiteur cherche ce que vous proposez. Premier mois offert, puis "
-        f"{PARTNER_MONTHLY_PRICE} par mois, sans engagement.",
+        f"visiteur cherche ce que vous proposez. {PARTNER_MONTHLY_PRICE} par mois, sans engagement ; "
+        "offre de lancement : premier mois offert aux premiers partenaires.",
     ),
     (
         "Bouton Teranga AI sur votre site",
@@ -104,7 +104,7 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 <h1>Devenir partenaire de Teranga AI</h1>
 <p class="intro">Chaque jour, des voyageurs et des membres de la diaspora demandent à Teranga AI où dormir, quoi visiter et qui contacter au Sénégal. Soyez la réponse.</p>
 <section><h2>Nos offres</h2><div class="grid">{cards}</div></section>
-<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Adresse partenaire : premier mois offert, puis {PARTNER_MONTHLY_PRICE} par mois, sans engagement ; autres offres : tarif sur demande.</p></section>
+<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Adresse partenaire : {PARTNER_MONTHLY_PRICE} par mois, sans engagement (offre de lancement : premier mois offert aux premiers partenaires) ; autres offres : tarif sur demande.</p></section>
 <section id="demande"><h2>Demander un partenariat</h2><p>Présentez votre activité en une minute : nous vous recontactons par téléphone, WhatsApp ou e-mail.</p>{_request_form()}</section>
 <section><h2>{_contact_title()}</h2>{_contact_links("Partenariat Teranga AI")}</section>
 </article></main>{site_footer()}</body></html>"""

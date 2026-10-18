@@ -22,6 +22,10 @@ def test_le_prix_decide_est_15_000_fcfa():
 def test_la_page_des_offres_affiche_le_prix_et_le_mois_offert():
     html = render_offers_page()
     assert "premier mois offert" in html.lower()
+    # Relecture de #498 : le mois offert est une offre de lancement (les premiers partenaires, voir
+    # docs/MONETISATION.md), pas une promesse faite à chaque nouvelle demande.
+    assert "premier mois offert aux premiers partenaires" in html.lower()
+    assert "premier mois offert, puis" not in html.lower()
     assert f"{PARTNER_MONTHLY_PRICE} par mois" in html
     assert "sans engagement" in html
     # Plus de « tarifs sur demande » pour l'adresse partenaire : le prix est public.
