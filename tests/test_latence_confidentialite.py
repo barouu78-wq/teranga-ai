@@ -38,7 +38,7 @@ GRAMMAR = {
         r"statut=(?:ok|secours|erreur|abandon|refuse|invalide)"
     ),
     "voix": re.compile(
-        rf"latence route=(?:stt|tts) total_ms={MS} fournisseur_ms={MS} modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{{0,47}}|-) "
+        rf"latence route=(?:stt total_ms={MS}|tts total_ms={MS} premier_mot_ms={MS}) fournisseur_ms={MS} modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{{0,47}}|-) "
         r"statut=(?:ok|secours|erreur|abandon|refuse|invalide)"
     ),
 }

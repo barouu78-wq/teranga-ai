@@ -3501,6 +3501,136 @@
         "Mausolée Seydina Limamou Laye Yoff"
       ],
       "access": "À Yoff, au nord de Dakar ; tenue couverte et discrétion, se renseigner sur place avant d'entrer."
+    },
+    {
+      "id": "reserve-de-guembeul",
+      "name": "Réserve spéciale de faune de Guembeul",
+      "type": "natural_site",
+      "region": "Saint-Louis",
+      "locality": "Gandiol",
+      "summary": "Réserve de 720 ha au sud de Saint-Louis, consacrée à la reproduction surveillée et à l'élevage d'espèces menacées, notamment les oryx et les gazelles dama ; c'est aussi un centre de réintroduction de gazelles.",
+      "history": "Créée en 1983 dans un but scientifique, classée réserve de faune (catégorie IV de l'UICN) la même année. Inscrite sur la liste Ramsar des zones humides d'importance internationale le 29 septembre 1986.",
+      "what_to_see": "Oryx et gazelles dama; tortues sillonnées; phacochères, patas et varans; lagunes saumâtres; environ 200 espèces d'oiseaux dont des flamants; plus grand site de nidification d'avocettes du Sénégal",
+      "latitude": 15.9219,
+      "longitude": -16.4646,
+      "image_queries": [
+        "Réserve de Guembeul Sénégal",
+        "Guembeul gazelles Saint-Louis"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Guembeul_Natural_Reserve",
+        "https://au-senegal.com/reserve-speciale-de-faune-de-guembeul,2866.html"
+      ],
+      "aliases": [
+        "Guembeul",
+        "Gueumbeul",
+        "Réserve de Guembeul",
+        "Guembeul Natural Reserve"
+      ],
+      "access": "À une douzaine de kilomètres au sud de Saint-Louis, sur la route de Gandiol. Horaires, tarif et guide : à vérifier sur place."
+    },
+    {
+      "id": "reserve-de-kalissaye",
+      "name": "Réserve ornithologique de Kalissaye",
+      "type": "natural_site",
+      "region": "Ziguinchor",
+      "locality": "Kafountine",
+      "summary": "Réserve à l'embouchure du marigot de Kalissaye, dans le delta de la Casamance, entre les îles du Bliss et de Karones, pour les oiseaux marins et les tortues marines.",
+      "history": "Créée en juillet 1978 pour protéger les colonies d'oiseaux marins et les tortues marines. Jusqu'à 10 000 sternes caspiennes y ont été comptées dans les années 1980.",
+      "what_to_see": "Îles du Bliss et de Karones; sternes caspiennes et royales; pélicans; limicoles; tortues marines; lamantins",
+      "latitude": 12.667,
+      "longitude": -16.75,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Réserve ornithologique de Kalissaye Sénégal",
+        "Kalissaye Casamance oiseaux"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/R%C3%A9serve_ornithologique_de_Kalissaye",
+        "https://en.wikipedia.org/wiki/Kalissaye_Avifaunal_Reserve",
+        "https://fr.allafrica.com/stories/202406050184.html"
+      ],
+      "aliases": [
+        "Kalissaye",
+        "Kalyssaye",
+        "Réserve de Kalissaye"
+      ],
+      "access": "Dans la commune de Kafountine (Bignona). Wikipédia la dit fermée à cause du conflit en Casamance, un article de 2024 décrit une visite en pirogue par les bolongs : ouverture et accès à vérifier sur place."
+    },
+    {
+      "id": "grand-theatre-national",
+      "name": "Grand Théâtre national Doudou Ndiaye Rose",
+      "type": "cultural_site",
+      "region": "Dakar",
+      "locality": "Dakar-Plateau",
+      "summary": "Grande salle de spectacle de Dakar, de 1 800 places, au carrefour Cyrnos et du boulevard de l'Arsenal.",
+      "history": "Inauguré le 15 avril 2011, il fait partie du projet des « sept merveilles » du parc culturel de Dakar. Sa construction a mobilisé plus de 400 ouvriers sénégalais et chinois pendant plus de 27 mois. Il porte le nom de Doudou Ndiaye Rose.",
+      "what_to_see": "Représentations d'œuvres du répertoire sénégalais, africain et mondial; programmation à vérifier avant de venir",
+      "latitude": 14.6831,
+      "longitude": -17.4383,
+      "image_queries": [
+        "Grand Théâtre national Dakar",
+        "Grand Théâtre Doudou Ndiaye Rose Dakar"
+      ],
+      "sources": [
+        "https://au-senegal.com/grand-theatre-national-doudou-ndiaye-rose,3330.html",
+        "https://www.au-senegal.com/le-grand-theatre-national-une-des-7-merveilles-du-senegal,3120.html"
+      ],
+      "aliases": [
+        "Grand Théâtre national",
+        "Grand Théâtre"
+      ],
+      "access": "Carrefour Cyrnos et boulevard de l'Arsenal, entre le Plateau et la Médina. Programme et billets : à vérifier auprès du théâtre."
+    },
+    {
+      "id": "musee-senghor",
+      "name": "Musée Léopold Sédar Senghor (maison de Senghor)",
+      "type": "museum",
+      "region": "Dakar",
+      "locality": "Fann Résidence",
+      "summary": "Ancienne maison du président-poète Léopold Sédar Senghor, devenue musée, près de la Corniche Ouest.",
+      "history": "Maison construite à la fin des années 1970 sur une parcelle d'environ 8 000 m². Rachetée par l'État et réhabilitée, elle a été inaugurée comme musée le 30 novembre 2014, lors du XVe sommet de la Francophonie.",
+      "what_to_see": "Pièces de réception, salon blanc avec sculptures et collections personnelles, bureau et bibliothèque de Senghor, chambres de la famille, jardin avec piscine; visite guidée",
+      "latitude": 14.6935,
+      "longitude": -17.4705,
+      "image_queries": [
+        "Musée Léopold Sédar Senghor Fann",
+        "Maison de Senghor musée"
+      ],
+      "sources": [
+        "https://au-senegal.com/la-maison-de-senghor-est-devenue-musee,10713.html",
+        "https://lepetitjournal.com/dakar/a-voir-a-faire/musee-senghor-dakar-la-rencontre-de-lhomme-de-culture-244339"
+      ],
+      "aliases": [
+        "Musée Senghor",
+        "Maison de Senghor",
+        "Maison Senghor"
+      ],
+      "access": "Rue Léo Frobenius, Fann Résidence. Jours, horaires et tarifs : à vérifier avant de venir."
+    },
+    {
+      "id": "village-des-arts",
+      "name": "Village des Arts",
+      "type": "cultural_site",
+      "region": "Dakar",
+      "locality": "Yoff",
+      "summary": "Lieu d'ateliers d'artistes sur environ 4 hectares, avec la galerie Léopold Sédar Senghor, près du stade Léopold Sédar Senghor.",
+      "history": "Les ateliers logeaient d'abord les ouvriers chinois qui ont construit le stade Léopold Sédar Senghor. Après leur départ en 1998, le ministère de la Culture les a attribués à des artistes, issus de l'École des Beaux-Arts de Dakar ou autodidactes. La galerie a été réhabilitée avec la Fondation Sonatel.",
+      "what_to_see": "Galerie Léopold Sédar Senghor, ateliers d'artistes, sculptures en plein air; expositions et programmation à vérifier",
+      "latitude": 14.7455,
+      "longitude": -17.4525,
+      "image_queries": [
+        "Village des Arts Dakar",
+        "Galerie Léopold Sédar Senghor Village des Arts"
+      ],
+      "sources": [
+        "https://au-senegal.com/le-village-des-arts-fait-peau-neuve,15755.html",
+        "https://www.seneplus.com/node/32813"
+      ],
+      "aliases": [
+        "Village des Arts"
+      ],
+      "access": "À Yoff, à environ 500 m du stade Léopold Sédar Senghor. Horaires et expositions : à vérifier."
     }
   ],
   "authoritative_sources": [

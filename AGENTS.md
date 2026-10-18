@@ -46,7 +46,7 @@ un contrôle qui n'a pas tourné.
 | `templates/home.html` + `static/home.js` | Accueil et chat (design v2) |
 | `static/site.css` | Feuille des pages secondaires (mêmes jetons de couleur que l'accueil) |
 | `static/sw.js` | Service worker (hors connexion) : changer `VERSION` quand les fichiers préchargés changent |
-| `data/senegal_knowledge.json` | Base de connaissances : 93 lieux, 19 plats, 14 régions |
+| `data/senegal_knowledge.json` | Base de connaissances : 98 lieux, 19 plats, 14 régions |
 | `data/partners.json` | Adresses partenaires (toujours affichées « Partenaire ») |
 | `docs/` | Guides pour le propriétaire (monétisation, partenaires, Google Play, IA de secours) |
 
@@ -60,6 +60,15 @@ un contrôle qui n'a pas tourné.
 | `banc-ia` | après toute modification du contexte de l'IA |
 | `audit-seo` | après toute modification de page (`python scripts/audit_seo.py`) |
 | `publier-android` | Google Play : test interne, test fermé, lien `assetlinks.json` |
+| `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
+| `faire-une-video` | vidéo courte (Reels, TikTok, présentation) avec les vrais écrans du site (`scripts/video/`) |
+| `conseil-hebdo` | chaque lundi, ou « où en est le projet » : réunion de l'entreprise d'agents (`docs/EQUIPE-AGENTS.md`) |
+| `deboguer-methodiquement` | test rouge, bug, alerte : trouver la cause avant de corriger |
+| `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |
+| `verifier-avant-d-annoncer` | avant de dire « fini », « vert » ou « en ligne » : la preuve fraîche |
+| `recevoir-une-relecture` | relecture ou commentaire sur une PR : vérifier chaque remarque avant d'agir |
+
+Les quatre derniers sont adaptés de Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`).
 
 ## Règles à respecter
 

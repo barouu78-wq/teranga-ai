@@ -7,10 +7,91 @@ pour la page, le jeton CSRF et les fichiers statiques.
 Un « tour » de parole : tap_mic() puis say() (le volume monte, puis retombe : le silence qui suit
 termine l'enregistrement), puis le site appelle /stt, /chat et /tts, que le test peut laisser en
 attente avec hold() pour observer l'état pendant l'attente, puis libérer avec release().
+
+Flux de /chat en deux temps : page.route répond d'un seul bloc (route.fulfill n'envoie pas la réponse
+par morceaux), ce qui ne permet pas de prouver qu'une action part AVANT la fin du flux. Avec
+stream_chat(), la page reçoit à la place un vrai flux (ReadableStream) que le test alimente morceau par
+morceau (chat_event) puis termine (chat_end) : la première phrase est livrée, le test observe /tts, puis
+seulement ensuite livre la suite.
+
+Appels de voix coupés : la page peut annuler un appel /tts en vol (« Arrêter »). page.route ne le dit
+pas au test ; window.__tts.calls note donc, pour chaque appel, si la page l'a annulé (tts_calls_aborted).
 """
 
+import base64
 import json
 import struct
+from pathlib import Path
+
+# Flux de /chat piloté par le test : remplace fetch('/chat') par une réponse dont le corps est un
+# ReadableStream alimenté par window.__chat.event(...) et fermé par window.__chat.end().
+# Ne s'active que si le test a demandé stream_chat() ; la demande « mode json » (repli) passe au réseau.
+# Les appels à /tts sont notés (annulés ou non), puis transmis tels quels ; si le test a demandé stream_tts(),
+# /tts répond par un flux MP3 que le test alimente (tts_push) et ferme (tts_end), comme un vrai son en flux.
+FAKE_CHAT_STREAM = """
+(() => {
+  const chat = window.__chat = {
+    manual: false, calls: 0, bodies: [], controller: null, ended: false, aborted: false,
+    encoder: new TextEncoder(),
+    event(obj) {
+      try { chat.controller.enqueue(chat.encoder.encode(JSON.stringify(obj) + "\\n")); return true; }
+      catch (_) { return false; }  // flux déjà annulé par la page (« Arrêter ») : la suite n'arrive plus
+    },
+    end() {
+      chat.ended = true;
+      try { chat.controller.close(); } catch (_) {}
+    },
+  };
+  const tts = window.__tts = {
+    calls: [], manual: false, controllers: [],
+    push(b64) {
+      const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+      try { tts.controllers[tts.controllers.length - 1].enqueue(bytes); return true; } catch (_) { return false; }
+    },
+    end() { try { tts.controllers[tts.controllers.length - 1].close(); } catch (_) {} },
+  };
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    const url = new URL(typeof input === 'string' ? input : input.url, location.href);
+    const headers = (init && init.headers) || {};
+    if (url.pathname === '/tts') {
+      const call = { aborted: false };
+      tts.calls.push(call);
+      const signal = init && init.signal;
+      if (signal) signal.addEventListener('abort', () => { call.aborted = true; });
+      if (tts.manual) {
+        const body = new ReadableStream({
+          start(controller) {
+            tts.controllers.push(controller);
+            if (signal) signal.addEventListener('abort', () => {
+              try { controller.error(new DOMException('Aborted', 'AbortError')); } catch (_) {}
+            });
+          },
+        });
+        return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'audio/mpeg' } }));
+      }
+    }
+    if (chat.manual && url.pathname === '/chat' && !headers['X-Teranga-Mode']) {
+      chat.calls++;
+      chat.bodies.push(init && init.body ? String(init.body) : '');
+      chat.ended = false;
+      chat.aborted = false;
+      const body = new ReadableStream({
+        start(controller) {
+          chat.controller = controller;
+          const signal = init && init.signal;
+          if (signal) signal.addEventListener('abort', () => {
+            chat.aborted = true;
+            try { controller.error(new DOMException('Aborted', 'AbortError')); } catch (_) {}
+          });
+        },
+      });
+      return Promise.resolve(new Response(body, { status: 200, headers: { 'Content-Type': 'application/x-ndjson' } }));
+    }
+    return nativeFetch(input, init);
+  };
+})();
+"""
 
 # Installé avant le script de la page : faux micro, enregistreurs et lecteurs comptés.
 FAKE_MIC = """
@@ -53,6 +134,11 @@ FAKE_MIC = """
 """
 
 
+def mp3_bytes():
+    """Un vrai MP3 de 2 s (son de 330 Hz, 32 kbit/s, mono), produit une fois avec ffmpeg."""
+    return (Path(__file__).with_name("voix.mp3")).read_bytes()
+
+
 def wav_bytes(ms=400, rate=8000):
     """Un vrai fichier WAV (silence) : le lecteur le joue puis déclenche « ended »."""
     samples = rate * ms // 1000
@@ -85,6 +171,7 @@ class VoiceBench:
         )
         self.tts_handler = lambda route, n: route.fulfill(body=wav_bytes(), content_type="audio/wav")
         page.add_init_script(FAKE_MIC)
+        page.add_init_script(FAKE_CHAT_STREAM)
         page.route(f"{base_url}/stt", self._stt)
         page.route(f"{base_url}/chat", self._chat)
         page.route(f"{base_url}/tts", self._tts)
@@ -128,6 +215,59 @@ class VoiceBench:
 
     def tts_texts(self):
         return [json.loads(r.post_data)["text"] for r in self.tts_calls]
+
+    def stream_chat(self):
+        """À appeler avant open() : /chat répond par un flux que le test alimente (chat_event, chat_end)."""
+        self.page.add_init_script("window.__chat.manual = true")
+
+    def wait_chat_stream(self, calls=1, timeout=8000):
+        """Attend que la page ait ouvert le flux de /chat (comme wait_held pour une requête retenue)."""
+        self.page.wait_for_function("n => window.__chat.calls >= n", arg=calls, timeout=timeout)
+
+    def chat_event(self, **event):
+        """Livre un événement NDJSON au flux ouvert ; le flux reste ouvert (la suite n'est pas arrivée)."""
+        self.wait_chat_stream()
+        self.page.evaluate("e => window.__chat.event(e)", event)
+
+    def chat_end(self):
+        self.wait_chat_stream()
+        self.page.evaluate("() => window.__chat.end()")
+
+    def stream_tts(self):
+        """À appeler avant open() : /tts répond par un flux MP3 que le test alimente (tts_push, tts_end)."""
+        self.page.add_init_script("window.__tts.manual = true")
+
+    def wait_tts_stream(self, calls=1, timeout=8000):
+        self.page.wait_for_function("n => window.__tts.controllers.length >= n", arg=calls, timeout=timeout)
+
+    def tts_push(self, data):
+        self.wait_tts_stream()
+        return self.page.evaluate("b => window.__tts.push(b)", base64.b64encode(data).decode("ascii"))
+
+    def tts_end(self):
+        self.wait_tts_stream()
+        self.page.evaluate("() => window.__tts.end()")
+
+    def wait_tts_calls(self, count, timeout=8000):
+        """Attend que la page ait envoyé au moins `count` demandes de voix (sans pause à durée fixe)."""
+        attente = 0
+        while len(self.tts_calls) < count:
+            assert attente < timeout, f"/tts : {len(self.tts_calls)} appel(s) en {timeout} ms, {count} attendu(s)"
+            self.page.wait_for_timeout(50)
+            attente += 50
+
+    def tts_calls_aborted(self):
+        """Pour chaque appel /tts parti de la page : vrai si la page l'a annulé."""
+        return self.page.evaluate("() => window.__tts.calls.map(call => call.aborted)")
+
+    def wait_tts_aborted(self, count, timeout=8000):
+        """Attend que la page ait annulé `count` appels /tts (annulation immédiate : « Arrêter » coupe les appels en vol)."""
+        self.page.wait_for_function(
+            "n => window.__tts.calls.filter(call => call.aborted).length >= n", arg=count, timeout=timeout
+        )
+
+    def chat_stream_aborted(self):
+        return self.page.evaluate("() => window.__chat.aborted")
 
     def open(self, path="/"):
         self.page.goto(self.base_url + path)

@@ -257,7 +257,8 @@ TOPICS = (
      r"\b(mauvais numero|par erreur|mauvais destinataire|mauvaise personne)\b.{0,40}\b(argent|virement|fcfa)\b|"
      r"\berreur (de |d )?(transfert|envoi|numero|destinataire)\b.{0,40}\b(argent|wave|orange|mobile)\b|"
      r"\bannuler (un |mon |le |ce )?(transfert d argent|virement|envoi d argent|paiement mobile)\b",
-     ("À quoi ça sert : Wave, Orange Money et Free Money sont des services de monnaie électronique (un portefeuille sur "
+     ("À quoi ça sert : Wave, Orange Money et Free Money (opérateur devenu Yas) sont des services de monnaie "
+      "électronique (un portefeuille sur "
       "le téléphone) pour envoyer et recevoir de l'argent, payer des commerçants et des factures (dont l'électricité "
       "Woyofal), recharger du crédit ou un forfait, déposer ou retirer des espèces chez un agent. Free Sénégal est "
       "devenu Yas (annonce de novembre 2024) : vérifier le nom actuel du service dans l'application. Frais, plafonds et "
@@ -284,7 +285,8 @@ TOPICS = (
       "télécoms, reçoit les réclamations sur le service téléphonique et internet. Coordonnées et délais changent : à "
       "vérifier sur les sites des opérateurs, de la BCEAO et de l'ARTP.")),
     ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
-     ("Opérateurs : Orange, Free et Expresso. Carte SIM en boutique, en kiosque ou à l'aéroport, avec un passeport "
+     ("Opérateurs : Orange, Yas (ex-Free, nouveau nom annoncé en novembre 2024) et Expresso. Carte SIM en boutique, "
+      "en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
     # « prise de commande », « prise en charge », « prise de sang », « prise d'otage » ne sont pas une prise électrique.
     ("electricite", r"\bprises?\b(?! (de(?! courant)|d|en|a)\b)|electri|voltage|adaptateur|\badapter\b|\bplugs?\b|\bcourant electrique\b",
@@ -296,7 +298,9 @@ TOPICS = (
      r"heure (de|d) (paris|france|dakar|ete|hiver)|what time is it|local time|current time",
      ("Heure : UTC+0 toute l'année, sans changement d'heure. Par rapport à Paris : 1 h de moins en hiver, 2 h de "
       "moins en été.",)),
-    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|douane|customs|"
+    # « douane » et « customs » n'en font pas partie : passer la douane (médicaments, cigarettes) n'est pas le visa,
+    # et aucun repère douane vérifié n'existe encore.
+    ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|"
      r"\bpapiers? (pour|afin de) (voyager|venir|entrer|aller|partir)|(voyager|venir|entrer|arriver) (au|en) senegal.{0,80}\bpapiers?\b|"
      r"documents? de voyage|travel documents?|entry requirements?",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
@@ -338,6 +342,8 @@ TOPICS = (
       "procurations douteuses ; garder chaque paiement traçable (virement, reçu signé).")),
     # Vendre un bien (maison, voiture) n'est pas le commerce ; WhatsApp seul n'est pas la vente (« groupe de famille »).
     ("vente", r"vendre(?! (ma |mon |mes |une |un |la |le |les |notre |nos )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
+     # « je vends des légumes » (le commerçant parle de son activité), pas « je vends ma voiture ».
+     r"\b(je|j|nous) (re)?vend(s|ons)\b(?! (ma |mon |mes |une |un |la |le |les |notre |nos )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
      r"vente(?! (de |d |du |des )?(une |un )?(maison|terrain|voiture|appartement|parcelle|moto|villa|immeuble|vehicule)s?\b)|"
      r"(trouver|avoir|attirer) (des |plus de )?clients|whatsapp business|whatsapp (pro|catalogue|boutique)|"
      r"(vendre|vente|clients?|commandes?|boutique|catalogue|livraison|commerc\w+|business)\b.{0,40}\bwhatsapp|"

@@ -6,7 +6,8 @@ HOME = Path(__file__).resolve().parents[1] / "templates" / "home.html"
 
 def test_accessibility_has_visible_focus_and_reduced_motion():
     html = home_source()
-    assert ":focus-visible{outline:2px solid var(--nav-gold)" in html
+    # Couleur des liens depuis la version 9 : l'or ne faisait que 2 à 3 pour 1 en thème jour (tests/test_contour_clavier.py).
+    assert ":focus-visible{outline:2px solid var(--link)" in html
     assert "@media(prefers-reduced-motion:reduce)" in html
     assert "scroll-behavior:auto!important" in html
 

@@ -3,6 +3,7 @@
 import pytest
 
 from app import app, parse_chat_payload
+from services.dakar_date import today_line
 
 BENCH = [
     ("fr", "Comment dire bonjour en pulaar ?", ["Jam waali", "PHRASES PULAAR"]),
@@ -29,7 +30,8 @@ def test_fouta_and_practical_context_has_the_facts(lang, question, expected):
     with app.test_request_context("/chat", method="POST", json={"message": question, "language": lang}):
         payload, error = parse_chat_payload()
     assert error is None
-    context = payload["instructions"].replace(question, " ").casefold()
+    # Ni la question ni la date du jour (« 18 » le 18 du mois) ne doivent compter comme un fait trouvé.
+    context = payload["instructions"].replace(question, " ").replace(today_line(payload["language"]), " ").casefold()
     missing = [fact for fact in expected if fact.casefold() not in context]
     assert not missing, f"Faits absents du contexte : {missing}"
 

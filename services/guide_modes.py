@@ -28,10 +28,15 @@ _MARKET_PLACE_TERMS = (
 # Gestes de négociation, avec ou sans marché cité.
 _MARKET_BARGAIN_TERMS = (
     "negocier", "negocie", "negociation", "marchander", "marchandage", "marchande",
-    "trop cher", "bon prix", "juste prix", "prix juste", "faire baisser", "baisser le prix",
+    "bon prix", "juste prix", "prix juste", "faire baisser", "baisser le prix",
     "bargain", "bargaining", "haggle", "haggling",
 )
-_MARKET_TERMS = _MARKET_PLACE_TERMS + _MARKET_BARGAIN_TERMS
+# « trop cher » seul se dit d'un billet d'avion ou d'un restaurant : il ne compte qu'au marché.
+_WEAK_BARGAIN_TERMS = ("trop cher", "trop chere")
+# La marchande (la personne) n'est pas le geste de marchander : « une marchande de poisson à Soumbédioune ».
+_SELLER_NOUN = re.compile(
+    r"(?<![\w])(?:une|la|les|des|cette|ces|ma|ta|sa|mes|nos|aux|est|sont|grande|vieille) marchandes?(?![\w])"
+)
 # « souvenirs » seul parle aussi de mémoire (« mes souvenirs d'enfance ») : il ne compte qu'avec un geste d'achat.
 _SOUVENIR_TERMS = ("souvenir", "souvenirs")
 _SHOPPING_TERMS = (
@@ -72,7 +77,12 @@ _NOT_A_TOUR = re.compile(
     r"(?<![\w])visiter (?:un|une|des|mon|ma|mes|notre) (?:appartement|maison|logement|terrain|chambre|studio|villa|local|bureau|immeuble|boutique)|"
     r"(?<![\w])racontes?[- ](?:moi |nous )?(?:une |un |des )?(?:blague|plaisanterie|devinette|journee|vie)s?|"
     r"(?<![\w])patrimoine (?:familial|immobilier|foncier|financier|personnel)|"
-    r"(?<![\w])histoire (?:de|du|des|d') ?(?:mon|ma|mes|ton|ta|tes|son|sa|ses|notre|nos|votre|vos|leur|leurs)(?![\w])"
+    r"(?<![\w])histoire (?:de|du|des|d') ?(?:mon|ma|mes|ton|ta|tes|son|sa|ses|notre|nos|votre|vos|leur|leurs)(?![\w])|"
+    # « ça n'a rien à voir », « rien à voir avec », « c'est à voir » (mais « il n'y a rien à voir à Kaolack ? » est
+    # une question de visite) ; « cartes de visite », « droit de visite ».
+    r"(?<![\w])(?<!y )(?:n['’ ]?a|a|ont) rien a voir(?![\w])|(?<![\w])rien a voir avec(?![\w])|"
+    r"(?<![\w])(?:c['’ ]est|ca reste) a voir(?![\w])|"
+    r"(?<![\w])(?:cartes?|droits?) de visite(?![\w])"
 )
 
 
@@ -101,14 +111,18 @@ def _practice_continues(text: str, history) -> bool:
 
 def _is_market(text: str) -> bool:
     """Le message parle-t-il du marché où l'on marchande (et pas du marché du travail, d'un loyer ou d'un vol) ?"""
-    text = _NOT_A_BAZAAR.sub(" ", text)
-    place = _has(text, _MARKET_PLACE_TERMS) or (_has(text, _SOUVENIR_TERMS) and _has(text, _SHOPPING_TERMS))
-    bargain = _has(text, _MARKET_BARGAIN_TERMS)
+    text = _SELLER_NOUN.sub(" ", _NOT_A_BAZAAR.sub(" ", text))
+    market_place = _has(text, _MARKET_PLACE_TERMS)
+    shopping = _has(text, _SHOPPING_TERMS)
+    place = market_place or (_has(text, _SOUVENIR_TERMS) and shopping)
+    bargain = _has(text, _MARKET_BARGAIN_TERMS) or (market_place and _has(text, _WEAK_BARGAIN_TERMS))
     if place and not bargain and _has(text, _INCIDENT_TERMS):
         return False
     if bargain and not place and _has(text, _NOT_MARKET_OBJECTS):
         return False
-    return place or bargain
+    # Un marché seulement cité (« l'histoire du marché Kermel », « une marchande à Soumbédioune ») n'est pas une
+    # demande de négociation : il faut un achat ou un geste de marchandage.
+    return bargain or (place and shopping)
 
 
 def detect_modes(message: object, history=None) -> set[str]:

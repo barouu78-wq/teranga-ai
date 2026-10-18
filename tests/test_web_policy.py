@@ -4,7 +4,7 @@ from services.web_policy import preferred_domains, reasoning_effort, search_cont
 def test_official_domains_for_senegal_statistics():
     domains = preferred_domains("society")
     assert "ansd.sn" in domains
-    assert "gov.sn" in domains
+    assert "gouv.sn" in domains  # sites de l'État sénégalais : .gouv.sn
 
 
 def test_travel_source_policy():
@@ -54,7 +54,7 @@ def test_should_use_web_avoids_generic_false_positives():
 
 
 def test_transport_and_food_source_policy():
-    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gov.sn")
+    assert preferred_domains("transport")[:2] == ("transports.gouv.sn", "gouv.sn")
     assert preferred_domains("food")[:2] == ("agriculture.gouv.sn", "tourisme.gouv.sn")
 
 
