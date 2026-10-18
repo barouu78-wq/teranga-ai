@@ -45,7 +45,7 @@ Avant de commencer :
 > ✅ Votre établissement apparaît avec le badge **Partenaire** sur les pages des lieux de [Ville] (exemple : teranga-ai.fr/lieux/[lieu]).
 > ✅ Quand un visiteur demande à l'assistant où dormir, manger ou trouver un guide à [Ville], il peut vous recommander, toujours en précisant que vous êtes partenaire.
 > ✅ Lien direct vers votre site, votre téléphone ou votre WhatsApp.
-> 🎁 **Le premier mois est offert** pour les premiers partenaires. Ensuite, c'est [prix] FCFA par mois, sans engagement.
+> 🎁 **Le premier mois est offert** pour les premiers partenaires. Ensuite, c'est 15 000 FCFA par mois, sans engagement.
 > On commence ?
 
 *(Joins la capture d'écran de la fiche du lieu.)*
@@ -91,7 +91,7 @@ S'il n'y a pas de réponse après la relance : on n'insiste pas. On note « pas 
 3. Envoie-lui le lien de la page où il apparaît.
 4. Note-le dans `docs/prospection_modele.csv` (statut : « partenaire », date de fin).
 5. Une semaine avant la fin du mois offert, envoie-lui ce message :
-   > Bonjour [Prénom], votre mois offert se termine le [date]. Pour continuer, c'est [prix] FCFA par mois, par Wave ou Orange Money. On continue ensemble ?
+   > Bonjour [Prénom], votre mois offert se termine le [date]. Pour continuer, c'est 15 000 FCFA par mois, par Wave ou Orange Money. On continue ensemble ?
 
 ---
 
