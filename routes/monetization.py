@@ -17,12 +17,18 @@ from services.partner_requests import KINDS, PartnerRequests
 from services.monetization import affiliate_config, affiliate_target, clean_query
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header, social_meta
 
+# Décision du propriétaire du 18 octobre 2026 (plan « de A à Z », décision 1) : un seul prix, en FCFA, après le
+# mois offert. Les messages prêts à envoyer (docs/VENTES-MESSAGES.md, docs/messages-prospects-prets.md) reprennent
+# ce montant ; tests/test_prix_partenaire.py vérifie qu'ils restent d'accord.
+PARTNER_MONTHLY_PRICE = "15 000 FCFA"
+
 OFFERS = (
     (
         "Adresse partenaire",
         "Votre hôtel, restaurant, agence ou service de guide apparaît, avec la mention « Partenaire », "
         "sur les fiches des lieux de votre ville et dans les recommandations de l'assistant quand un "
-        "visiteur cherche ce que vous proposez.",
+        "visiteur cherche ce que vous proposez. Premier mois offert, puis "
+        f"{PARTNER_MONTHLY_PRICE} par mois, sans engagement.",
     ),
     (
         "Bouton Teranga AI sur votre site",
@@ -98,7 +104,7 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 <h1>Devenir partenaire de Teranga AI</h1>
 <p class="intro">Chaque jour, des voyageurs et des membres de la diaspora demandent à Teranga AI où dormir, quoi visiter et qui contacter au Sénégal. Soyez la réponse.</p>
 <section><h2>Nos offres</h2><div class="grid">{cards}</div></section>
-<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Tarifs de lancement sur demande, adaptés à la taille de votre activité.</p></section>
+<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Adresse partenaire : premier mois offert, puis {PARTNER_MONTHLY_PRICE} par mois, sans engagement ; autres offres : tarif sur demande.</p></section>
 <section id="demande"><h2>Demander un partenariat</h2><p>Présentez votre activité en une minute : nous vous recontactons par téléphone, WhatsApp ou e-mail.</p>{_request_form()}</section>
 <section><h2>{_contact_title()}</h2>{_contact_links("Partenariat Teranga AI")}</section>
 </article></main>{site_footer()}</body></html>"""
