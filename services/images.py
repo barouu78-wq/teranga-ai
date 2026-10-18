@@ -387,6 +387,24 @@ def _article_title_candidates(title):
     return [f"{base} (Sénégal)", base]
 
 
+def _lead_image_page_url(article, opener, lang="fr"):
+    """Page Commons de la photo principale de l'article (pageimages), ou "" si l'API ne la donne pas."""
+    params = {"action": "query", "format": "json", "titles": article, "redirects": "1",
+              "prop": "pageimages", "piprop": "name"}
+    req = Request(f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(params),
+                  headers={"User-Agent": wikimedia_user_agent()})
+    try:
+        with opener(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return ""  # sans photo principale, l'ordre de l'API reste valable
+    for page in ((data.get("query") or {}).get("pages") or {}).values():
+        name = str(page.get("pageimage") or "")
+        if name:
+            return "https://commons.wikimedia.org/wiki/" + quote("File:" + name.replace(" ", "_"), safe=":")
+    return ""
+
+
 def fetch_article_images(title, limit=6, image_validator=None, display_url_builder=None, urlopen_fn=None, lang="fr"):
     """Photos choisies par les rédacteurs de l'article Wikipédia du lieu.
 
@@ -462,8 +480,12 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
                 "license": meta_text("LicenseShortName"),
                 "page_url": "https://commons.wikimedia.org/wiki/" + quote(file_title.replace(" ", "_"), safe=":"),
             })
-            if len(out) >= limit:
-                break
+        # L'API renvoie les fichiers par ordre alphabétique (« Aéroport… » passait devant la ville) : la photo
+        # principale choisie par les rédacteurs de l'article passe en premier (tests/test_photo_principale.py).
+        if len(out) > 1:
+            lead = _lead_image_page_url(article, opener, lang)
+            out.sort(key=lambda item: item["page_url"] != lead)
+        del out[limit:]
         if out:
             break
     if not out and failures:
