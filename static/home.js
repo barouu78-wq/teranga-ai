@@ -1212,10 +1212,11 @@ $('heroAsk')?.addEventListener('submit',e=>{
   ask(q);
 });
 $('heroMic')?.addEventListener('click',()=>mic.click());
-// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage.
+// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage. Vignette de 500 px :
+// la carte fait 170 px, la vignette de 1 280 px de la fiche pesait jusqu'à 537 Ko.
 document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
   try{
-    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||''),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||'')+'&w=500',window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
     const d=await r.json();const img=(d.images||[])[0];if(!img)return;
     const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
     const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';

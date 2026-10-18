@@ -580,6 +580,21 @@ def usable_wiki_image(src: object) -> str:
     return src
 
 
+# Largeurs de vignette que Wikimedia sert sans calcul supplémentaire (paliers standard). Une carte de l'accueil
+# (170 px, écran ×3) n'a pas besoin des 1 280 px de la fiche du lieu (tests/test_vignettes_legeres.py).
+THUMB_STEPS = (330, 500, 960)
+_THUMB_PATH = re.compile(r"(/thumb/[^?#]+/)(\d+)px-([^/?#]+)$")
+
+
+def smaller_thumb(src: object, width: int) -> str:
+    """Même photo Wikimedia en vignette plus étroite ; jamais agrandie, et seulement une vignette du relais."""
+    src = str(src or "")
+    match = _THUMB_PATH.search(src)
+    if width not in THUMB_STEPS or not match or not allowed_image_url(src) or int(match.group(2)) <= width:
+        return src
+    return src[:match.start()] + f"{match.group(1)}{width}px-{match.group(3)}"
+
+
 def image_proxy_url(src: object) -> str:
     src = usable_wiki_image(src)
     return f"/image-proxy?url={quote(src, safe='')}" if src else ""
