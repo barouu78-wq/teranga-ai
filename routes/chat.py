@@ -15,6 +15,7 @@ from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
 from services.truncation import cut_notice, is_cut_by_length, mark_incomplete, with_cut_notice
+from services.web_policy import research_query
 
 
 def register_chat_route(app, deps):
@@ -47,6 +48,7 @@ def register_chat_route(app, deps):
     knowledge_places = deps.get("knowledge_places") or []
     knowledge_dishes = deps.get("knowledge_dishes") or []
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+    quick_answer = deps.get("quick_answer")  # réponses prêtes sans le modèle (services/quick_answers.py)
     coverage_log = deps.get("coverage_log")  # compteurs anonymes par thème (services/coverage_log.py)
 
     def fallback_for(payload):
@@ -117,6 +119,12 @@ def register_chat_route(app, deps):
             trace.first_word()
             trace.model = payload.get(PAYLOAD_KEY)
 
+        # Réponse prête (numéros d'urgence vérifiés) : servie comme une réponse en cache, sans le modèle ni la
+        # recherche web, avant toute ancienne réponse du modèle en cache.
+        ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None else None
+        if ready:
+            payload["use_web"] = False
+
         if payload["use_web"]:
             # Même identité que plus haut (déjà vérifiée contre les abus).
             web_identity = identity
@@ -174,7 +182,7 @@ def register_chat_route(app, deps):
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
         key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
-        cached = answer_cache.get(key) if key else None
+        cached = ready or (answer_cache.get(key) if key else None)
         trace.cache = bool(cached)
         if cached:
             logger.info("chat_cache_hit")
@@ -186,7 +194,8 @@ def register_chat_route(app, deps):
             if callable(external_research_context):
                 try:
                     with trace.stage("recherche"):
-                        research = external_research_context(payload.get("message", ""))
+                        # Requête nettoyée : sujet du fil pour un suivi, sans e-mail ni téléphone, longueur bornée.
+                        research = external_research_context(research_query(payload))
                     # Le contenu web est une donnée non fiable : bloc délimité dans l'entrée, jamais dans les instructions.
                     if isinstance(research, dict) and attach_external_data(payload, research.get("context")):
                         payload["external_sources"] = research.get("sources", [])

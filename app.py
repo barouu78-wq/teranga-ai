@@ -1,5 +1,4 @@
 import hashlib
-import datetime
 import hmac
 import json
 import os
@@ -36,12 +35,14 @@ from routes.monetization import register_monetization_routes
 from routes.coverage import register_coverage_routes
 from services.coverage_log import CoverageLog
 from routes.emergency import register_emergency_routes
-from routes.events import register_events_routes
+from routes.events import register_event_reminder_routes, register_events_routes
 from services.monetization import load_partners, partners_context, partners_for_text
 from services.events import events_context
+from services.dakar_date import dakar_today, today_line
 from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
+from services.discover import discover_pool
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
 from services.youth_opportunities import find_youth_opportunities
@@ -449,10 +450,12 @@ from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
 from services.observability import build_request_log
 from services.analytics import analytics_config, inject_analytics
+from services.posthog_consent import posthog_config, inject_posthog
 from services.compression import gzip_response
 
 # Mesure d'audience optionnelle (Plausible, Umami…) : désactivée sans ANALYTICS_SCRIPT_URL.
 ANALYTICS = analytics_config(os.getenv("ANALYTICS_SCRIPT_URL"), os.getenv("ANALYTICS_SITE_ID"))
+POSTHOG = posthog_config(os.getenv("POSTHOG_PROJECT_KEY"), os.getenv("POSTHOG_API_HOST"), os.getenv("POSTHOG_ASSET_HOST"))
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -631,13 +634,14 @@ def compress_response(response):
 @app.after_request
 def add_security_headers(response):
     response = inject_analytics(response, ANALYTICS)
+    response = inject_posthog(response, POSTHOG)
     return _add_security_headers(
         response,
         path=request.path,
         nonce=getattr(request, "_csp_nonce", ""),
         is_secure=request.is_secure,
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
-        extra_script_origins=(ANALYTICS["origin"],) if ANALYTICS else (),
+        extra_script_origins=tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else []))),
         versioned=_is_current_asset(request.path, request.args.get("v", "")),
     )
 
@@ -674,6 +678,8 @@ from services.weather import build_locations, live_weather_context
 from services.guide_modes import detect_modes, mode_instructions
 
 WEATHER_LOCATIONS = build_locations(_REGION_COORDS, SENEGAL_KNOWLEDGE.get("places", []))
+# Attente maximale d'Open-Meteo avant de répondre (son délai réseau va jusqu'à 4 s).
+WEATHER_BUDGET_SECONDS = 1.2
 
 
 _EVENT_WORDS = re.compile(
@@ -705,6 +711,8 @@ def parse_chat_payload():
         system_prompt=SYSTEM_PROMPT,
     )
     if payload and not payload.get("photo_only"):
+        # Date du jour à Dakar : sans elle, « ce week-end », « cette année » ou « la prochaine Tabaski » sont mal situés.
+        payload["instructions"] += "\n\n" + today_line(payload.get("language", "fr"))
         raw = request.get_json(silent=True) or {}
         modes = detect_modes(payload.get("message", ""), raw.get("history") if isinstance(raw.get("history"), list) else None)
         if modes:
@@ -712,7 +720,7 @@ def parse_chat_payload():
             payload["modes"] = sorted(modes)
         weather = live_weather_context(
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
-            payload.get("language", "fr"), logger=app.logger,
+            payload.get("language", "fr"), logger=app.logger, budget=WEATHER_BUDGET_SECONDS,
         )
         # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte.
         if _EVENT_WORDS.search(payload.get("message", "")):
@@ -733,6 +741,9 @@ def parse_chat_payload():
             payload["instructions"] += "\n\n" + weather
             payload["use_web"] = False
             payload["live_weather"] = True
+        elif (payload.get("intent_context") or {}).get("intent") == "weather":
+            # Pas de relevé (Open-Meteo lent ou indisponible, lieu hors du Sénégal) : la recherche web répond.
+            payload["use_web"] = True
     if error == "invalid":
         return None, (jsonify({"error": "Requête invalide."}), 400)
     if error == "empty":
@@ -815,6 +826,7 @@ COVERAGE_LOG = CoverageLog(redis_client, logger=app.logger, places=SENEGAL_KNOWL
 register_coverage_routes(app, COVERAGE_LOG, rate_guard=rate_guard)
 register_emergency_routes(app, SITE_URL)
 register_events_routes(app, SITE_URL)
+register_event_reminder_routes(app, SITE_URL)
 
 register_youth_project_route(app, {
     "require_json_post": require_json_post,
@@ -836,19 +848,23 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
     # Repères pratiques par thème (services/facts/*.py) : ajouter un fichier invalide aussi les anciennes réponses.
     + b"".join(path.read_bytes() for path in sorted((BASE_DIR / "services" / "facts").glob("*.py")))
     # Repères pratiques et calendrier : une mise à jour invalide les anciennes réponses.
-    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py"))
+    + b"".join((BASE_DIR / "services" / name).read_bytes() for name in ("practical_facts.py", "events.py", "senegal_knowledge.py", "chat_payload_service.py", "guide_modes.py", "intelligence.py"))
     # Calculs faits par le code : une correction invalide aussi les anciennes réponses.
     + (BASE_DIR / "services" / "calculators.py").read_bytes()
     + os.getenv("OPENAI_COMPLEX_MODEL", "gpt-5.6-sol").encode("utf-8")
 ).hexdigest()[:12]
 
+from services.quick_answers import quick_answer as _quick_answer
+
 register_chat_route(app, {
     "answer_cache": ANSWER_CACHE,
+    "quick_answer": _quick_answer,
     # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
     # de la base de connaissances invalide les anciennes réponses en cache.
     # Le prompt système, les partenaires et le modèle complexe en font partie aussi,
     # ainsi que la date (un partenariat expiré ne doit plus apparaître le lendemain).
-    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + datetime.date.today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
+    # C'est la date de Dakar, celle écrite dans les instructions : une réponse n'est jamais resservie un autre jour.
+    "cache_model": lambda: _CACHE_MODEL_BASE + ":" + dakar_today().isoformat() + (":" + claude_model() if claude_is_primary() else ""),
     "require_json_post": require_json_post,
     "client_ip": client_ip,
     "abuse_key": abuse_key,
@@ -904,6 +920,7 @@ register_system_routes(app, {
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
     "home_html": HOME_HTML,
+    "discover_places": discover_pool(SENEGAL_KNOWLEDGE),
     "site_url": SITE_URL,
     "build_icon_png": build_icon_png,
 })

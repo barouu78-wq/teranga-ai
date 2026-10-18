@@ -3,9 +3,16 @@
 import os
 import re
 
+import httpx
 from flask import Response, jsonify, request
 
 from services.latency import LatencyTrace
+
+# Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
+# une lecture a échoué après 130,8 s le 13 octobre 2026. 5 s pour se connecter, 30 s au plus sans recevoir d'octet
+# (le son arrive en flux : c'est l'attente entre deux morceaux, pas la durée totale), sans nouvelle tentative.
+TTS_TIMEOUT = httpx.Timeout(30.0, connect=5.0)
+TTS_CHUNK_BYTES = 4096  # ≈ 1 s de MP3 : le premier morceau part sans attendre
 
 
 def register_tts_route(app, deps):
@@ -57,22 +64,55 @@ def register_tts_route(app, deps):
             language = "fr"
         if not text:
             return jsonify({"error": "Texte manquant."}), 400
+        # Le son part vers le navigateur dès ses premiers octets (MP3, compressé) au lieu d'attendre toute la
+        # génération en WAV (11 à 18 s mesurées sur Render) : le navigateur commence à lire pendant la suite.
+        upstream = None
         try:
             from services.voice_quality import tts_instruction
             trace.model = "gpt-4o-mini-tts"
-            with trace.stage("fournisseur"):
-                speech = client.audio.speech.create(
-                    model="gpt-4o-mini-tts",
-                    voice=os.getenv("TTS_VOICE", "cedar"),
-                    input=text,
-                    instructions=tts_instruction(language),
-                    response_format="wav",
-                    speed=0.98,
-                )
-            return Response(speech.content, mimetype="audio/wav", headers={"Cache-Control": "no-store", "Content-Type": "audio/wav"})
+            trace.begin("fournisseur")
+            upstream = client.with_options(max_retries=0).audio.speech.with_streaming_response.create(
+                model="gpt-4o-mini-tts",
+                voice=os.getenv("TTS_VOICE", "cedar"),
+                input=text,
+                instructions=tts_instruction(language),
+                response_format="mp3",
+                speed=0.98,
+                timeout=TTS_TIMEOUT,
+            )
+            chunks = upstream.__enter__().iter_bytes(TTS_CHUNK_BYTES)
+            first = next((chunk for chunk in chunks if chunk), b"")
+            if not first:
+                raise RuntimeError("voix vide")
         except Exception:
+            trace.end("fournisseur")
+            if upstream is not None:
+                upstream.__exit__(None, None, None)
             app.logger.exception("Erreur /tts")
             return jsonify({"error": "Impossible de générer la voix pour le moment."}), 502
+        # premier_mot_ms de la ligne de latence = premier octet de son envoyé ; fournisseur_ms = toute la génération.
+        trace.first_word()
+        trace.begin("fournisseur")
+
+        def audio():
+            try:
+                yield first
+                for chunk in chunks:
+                    if chunk:
+                        yield chunk
+                trace.ok()
+            except Exception:
+                # Coupure en plein flux : le début déjà envoyé se lit, la ligne de latence dit « erreur », et l'erreur
+                # remonte pour que la connexion soit coupée sans fin de flux propre : le navigateur voit l'échec et ne
+                # garde pas en cache un son tronqué.
+                trace.status = "erreur"
+                app.logger.exception("Erreur /tts (flux)")
+                raise
+            finally:
+                trace.end("fournisseur")
+                upstream.__exit__(None, None, None)
+
+        return Response(audio(), mimetype="audio/mpeg", headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
     @app.post("/tts")
     @require_json_post

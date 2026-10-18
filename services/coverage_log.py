@@ -77,7 +77,12 @@ THEMES: tuple[Theme, ...] = (
     _theme("visa", "Visa et entrée dans le pays",
            "visa*, passeport, passport, formalites, douane*, entrer au senegal, entree au senegal, frontiere*, "
            "titre de sejour, carte de sejour, permis de sejour, entry requirements, customs",
-           "repere:visa"),
+           "repere:visa repere:frontieres"),
+    # Demande sur les pays voisins (Gambie, Mauritanie, Mali, Guinées) : avant d'investir dans un guide par pays.
+    # Un pays voisin cité avec un voyage arrive par le repère « frontieres » (voir _PRACTICAL_THEME).
+    _theme("pays_voisins", "Pays voisins et frontières",
+           "re:(?<!sans )frontieres?, poste frontiere, pays voisin*, pays limitrophe*, border, cross border",
+           "repere:frontieres"),
     _theme("argent", "Argent, change et paiements",
            "argent, euro*, fcfa, cfa, xof, change, changer de l argent, dollar*, payer, paiement*, wave, orange money, "
            "mobile money, carte bancaire, retrait*, distributeur*, atm, banque*, bancaire*, virement*, western union, "
@@ -245,7 +250,7 @@ _PRACTICAL_THEME = {
     "urgences": "urgences", "arnaques": "urgences", "sante": "sante", "argent": "argent", "mobile_money": "argent", "sim": "internet", "electricite": "electricite",
     "heure": "voyage", "visa": "visa", "saison": "meteo", "entreprise": "entreprise", "transport": "transport",
     "foncier": "logement", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
-    "protection": "protection_sociale", "etudes": "etudes", "langue": "langue",
+    "protection": "protection_sociale", "etudes": "etudes", "langue": "langue", "frontieres": "pays_voisins",
 }
 
 # Titres que services/senegal_knowledge.py, events.py et monetization.py mettent en début de ligne dans le contexte

@@ -1,0 +1,289 @@
+"""Le contexte envoyé à l'IA suit le sujet de la question, pas les quatre tours d'avant.
+
+Mesure sur main (corps de requête de static/home.js, question en dernier élément de history) :
+« que voir a kedougou », « et a podor ? », puis « c est quoi le yassa » recevait les fiches Podor et Kédougou,
+les régions Saint-Louis et Kédougou, El Hadji Omar Tall, Baaba Maal, Mansour Seck et les deux dossiers du
+Fouta-Toro : le choix des lieux (services/senegal_knowledge.py) lisait les quatre derniers tours collés à la
+question (services/intelligence.py, contextual_query), même quand le sujet avait changé.
+
+Désormais, une question qui nomme son propre sujet (lieu, plat, dossier historique, langue, repère pratique
+national comme la carte SIM ou les urgences) et ne renvoie pas au tour précédent choisit ses fiches seule.
+Une vraie relance (« Et à Podor ? », « Combien de temps faut-il pour la visite ? », « Et pour dormir ? »)
+garde le lieu du fil.
+"""
+
+import os
+import re
+
+import pytest
+
+os.environ.setdefault("OPENAI_API_KEY", "test-key")
+
+import app as app_module  # noqa: E402
+
+
+def site(*turns, audience="tourist"):
+    """Corps de requête comme static/home.js : la question courante est aussi le dernier élément de history."""
+    *previous, message = turns
+    history = []
+    for text in previous:
+        history += [{"role": "user", "content": text}, {"role": "assistant", "content": "(réponse)"}]
+    history.append({"role": "user", "content": message})
+    body = {"message": message, "history": history, "language": "fr", "audience": audience}
+    with app_module.app.test_request_context("/chat", method="POST", json=body):
+        payload, error = app_module.parse_chat_payload()
+    assert error is None
+    return payload
+
+
+@pytest.fixture(autouse=True)
+def _meteo_simulee(monkeypatch):
+    """Météo en direct remplacée par un faux (aucun réseau) qui suit la même condition : intention « weather »."""
+    def fake(locations, intent_context, message, *args, **kwargs):
+        return "PRÉVISIONS SIMULÉES" if (intent_context or {}).get("intent") == "weather" else None
+
+    monkeypatch.setattr(app_module, "live_weather_context", fake)
+
+
+def _block(instructions, title):
+    if title not in instructions:
+        return []
+    block = instructions.split(title, 1)[1]
+    stop = re.search(r"\n[A-ZÉ][A-ZÉÈ ’']{5,}", block)
+    # Découpage sans expression régulière à quantificateurs voisins (alerte CodeQL « expression polynomiale »).
+    names = []
+    for line in (block[: stop.start()] if stop else block).splitlines():
+        if line.startswith("- "):
+            name = re.split(r"[:(]", line[2:], maxsplit=1)
+            if len(name) == 2 and name[0].strip():
+                names.append(name[0].strip())
+    return names
+
+
+def places(payload):
+    return _block(payload["instructions"], "LIEUX PERTINENTS :")
+
+
+def regions(payload):
+    return _block(payload["instructions"], "CONTEXTE RÉGIONAL PERTINENT :")
+
+
+def people(payload):
+    return _block(payload["instructions"], "PERSONNALITÉS PERTINENTES :")
+
+
+def dishes(payload):
+    return _block(payload["instructions"], "PLATS ET BOISSONS PERTINENTS :")
+
+
+def dossiers(payload):
+    titles = []
+    for line in payload["instructions"].splitlines():
+        _, found, rest = line.partition("DOSSIER HISTORIQUE — ")
+        if found and " :" in rest:
+            titles.append(rest.split(" :", 1)[0])
+    return titles
+
+
+# Le cas du propriétaire.
+
+def test_une_question_sur_un_plat_ne_recoit_pas_les_lieux_des_tours_precedents():
+    payload = site("que voir a kedougou", "et a podor ?", "c est quoi le yassa")
+    assert "Yassa" in dishes(payload)
+    assert not {"Podor", "Kédougou"} & set(places(payload))
+    assert not {"Saint-Louis", "Kédougou"} & set(regions(payload))
+    assert not any("Fouta" in title for title in dossiers(payload))
+    assert not {"El Hadji Omar Tall", "Baaba Maal", "Mansour Seck"} & set(people(payload))
+
+
+def test_une_vraie_relance_garde_le_lieu_du_tour_precedent():
+    # Cas positif voisin : « Et à Podor ? » se comprend avec « que voir » du tour d'avant.
+    payload = site("que voir a kedougou", "et a podor ?")
+    assert "Podor" in places(payload)
+
+
+# Nouveau sujet : la question choisit ses fiches seule.
+
+NOUVEAU_SUJET = [
+    # (tours précédents, question, fiches qui ne doivent plus venir), quatre profils.
+    (("que voir a kedougou", "et a podor ?"), "comment on dit merci en wolof", {"Podor", "Kédougou"}),
+    (("visiter saint louis 2 jours",), "numero police stp", {"Île de Saint-Louis", "Podor"}),
+    (("que faire a saly",), "quelle carte sim prendre a l aeroport", {"Saly"}),
+    (("what to see in casamance",), "how much is a sim card", {"Cap Skirring", "Oussouye"}),
+    (("magal touba c quand",), "recette thieboudienne", {"Touba", "Toubab Dialaw"}),
+    (("raconte l histoire de goree",), "c est quoi le mafe", {"Île de Gorée"}),
+    (("comment negocier au marche sandaga",), "quel temps demain a dakar", {"Marché Sandaga", "Marché Kermel"}),
+    (("c est quoi le fouta toro",), "meilleure plage pres de dakar", {"Île à Morphil"}),
+    (("que voir a kedougou",), "quelle est la monnaie du senegal", {"Kédougou"}),
+]
+
+
+@pytest.mark.parametrize("previous,message,absent", NOUVEAU_SUJET, ids=[case[1] for case in NOUVEAU_SUJET])
+def test_un_nouveau_sujet_ne_recoit_pas_les_fiches_du_sujet_precedent(previous, message, absent):
+    payload = site(*previous, message)
+    assert not absent & set(places(payload)), places(payload)
+
+
+def test_le_dossier_du_fouta_ne_suit_pas_une_question_sur_les_plages():
+    payload = site("c est quoi le fouta toro", "meilleure plage pres de dakar")
+    assert not any("Fouta" in title for title in dossiers(payload))
+
+
+@pytest.mark.parametrize("previous,message,absent,audience", [
+    ("je rentre a ziguinchor en aout", "comment envoyer de l argent avec wave", {"Ziguinchor"}, "diaspora"),
+    ("visiter mbour", "acheter un terrain titre foncier", {"Mbour"}, "diaspora"),
+    ("taxi de yoff a ouakam combien", "c est quoi le ninea", {"Corniche de Dakar", "Île de Ngor"}, "merchant"),
+], ids=["diaspora-wave", "diaspora-terrain", "commercant-ninea"])
+def test_profils_diaspora_et_commercant(previous, message, absent, audience):
+    payload = site(previous, message, audience=audience)
+    assert not absent & set(places(payload)), places(payload)
+
+
+def test_les_intentions_affichees_sont_celles_du_nouveau_sujet():
+    payload = site("visiter saint louis 2 jours", "numero police stp")
+    assert "Intentions détectées : générale." in payload["instructions"]
+
+
+# Vraies relances : le lieu du fil reste (cas positifs voisins).
+
+RELANCES = [
+    (("Je veux visiter Gorée",), "Combien de temps faut-il pour la visite ?", "Île de Gorée"),
+    (("que voir a podor",), "et pour dormir ?", "Podor"),
+    (("chaloupe goree",), "combien le billet ?", "Île de Gorée"),
+    (("je veux visiter la maison des esclaves",), "c est ouvert le lundi ?", "Île de Gorée"),
+    (("planifie 3 jours a saint louis",), "ajoute une journee au djoudj", "Île de Saint-Louis"),
+    (("parle moi de goree",), "precise l histoire", "Île de Gorée"),
+    (("je veux aller au lac rose",), "ca coute combien ?", "Lac Rose / Lac Retba"),
+]
+
+
+@pytest.mark.parametrize("previous,message,kept", RELANCES, ids=[case[1] for case in RELANCES])
+def test_une_relance_garde_le_lieu_du_fil(previous, message, kept):
+    assert kept in places(site(*previous, message))
+
+
+# « Et pour manger ? » après la météo : une relance de restauration sur le lieu de la météo.
+
+@pytest.mark.parametrize("weather_question,place", [
+    ("Quel temps fait-il à Dakar ?", "dakar"),
+    ("meteo saint louis demain", "saint-louis"),
+    ("il pleut a ziguinchor ?", "ziguinchor"),
+])
+def test_et_pour_manger_apres_la_meteo_est_une_relance_de_restauration(weather_question, place):
+    payload = site(weather_question, "Et pour manger ?")
+    intent_context = payload["intent_context"]
+    assert intent_context["intent"] == "restaurant"
+    assert intent_context["location"] == place
+    assert "PRÉVISIONS SIMULÉES" not in payload["instructions"]
+    assert "weather" not in payload["context"]["intents"]
+    assert "Intentions détectées : food." in payload["instructions"]
+    assert "DOMAINE PERTINENT (food)" in payload["instructions"]
+    assert intent_context["ux_hints"]["followups"][0] == f"Options à {place}"
+
+
+def test_et_demain_apres_la_meteo_reste_une_meteo():
+    # Cas positif voisin : une relance sans sujet propre garde l'intention du fil.
+    payload = site("Quel temps fait-il à Dakar ?", "Et demain ?")
+    assert payload["intent_context"]["intent"] == "weather"
+    assert "PRÉVISIONS SIMULÉES" in payload["instructions"]
+
+
+# La règle elle-même.
+
+@pytest.mark.parametrize("message,own_subject,expected", [
+    ("c est quoi le yassa", True, True),
+    ("et a podor ?", True, False),            # relance : « et »
+    ("ca coute combien a saly ?", True, False),  # renvoi : « ça »
+    ("ajoute une journee au djoudj", True, False),  # retouche du plan
+    ("Combien de temps faut-il pour la visite ?", False, False),  # aucun sujet propre
+    ("recette thieboudienne", True, True),     # deux mots, mais un sujet propre
+])
+def test_starts_new_subject(message, own_subject, expected):
+    from services.intelligence import starts_new_subject
+
+    assert starts_new_subject(message, own_subject=own_subject) is expected
+
+
+@pytest.mark.parametrize("previous,message,place", [
+    ("que voir a saint louis", "y a t il un hopital ?", "saint louis"),
+    ("que voir a ouakam", "pharmacie de garde", "ouakam"),
+    ("que faire a saly", "quelle carte sim prendre a l aeroport", "saly"),
+])
+def test_le_lieu_du_fil_reste_dans_le_contexte_geographique(previous, message, place):
+    # Garde-fou : un nouveau sujet retire les fiches touristiques du fil, pas le repère de lieu
+    # (« pharmacie de garde » après Ouakam reste utile à Ouakam).
+    payload = site(previous, message)
+    assert f"Contexte géographique détecté : {place}." in payload["instructions"]
+
+
+# Relances qui perdaient leur lieu (relecture de la PR 471, comparaison main / branche).
+# 1. Un repère national ne fait un nouveau sujet que s'il est nommé : « dangereux », « sûr », « la police est
+#    présente ? » ou « wifi » parlent du lieu du fil, pas des numéros d'urgence ni de la carte SIM.
+# 2. « y », « là », « là-bas », « sur place » renvoient au lieu du fil.
+# 3. Une relance qui renvoie au fil et nomme un lieu garde les deux.
+
+RELANCES_SUR_LE_LIEU = [
+    (("visiter le lac rose",), "c'est dangereux ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "c'est dangereux de s'y baigner ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "c'est dangereux de s'y baigner ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "est-ce dangereux la nuit ?", {"Île de Gorée"}),
+    (("visiter le lac rose",), "et la nuit, c'est sûr ? la police est présente ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "faut-il un visa pour y aller ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "y a du wifi ?", {"Île de Gorée"}),
+    (("visiter le lac rose",), "on mange quoi là-bas ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "on peut dormir là ?", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "combien de temps pour y aller depuis saly ?", {"Lac Rose / Lac Retba", "Saly"}),
+    (("visiter le lac rose",), "il y a un taxi pour y aller depuis dakar ?", {"Lac Rose / Lac Retba", "Corniche de Dakar"}),
+]
+
+
+@pytest.mark.parametrize("previous,message,kept", RELANCES_SUR_LE_LIEU, ids=[case[1] for case in RELANCES_SUR_LE_LIEU])
+def test_une_relance_sur_le_lieu_du_fil_le_garde(previous, message, kept):
+    found = places(site(*previous, message))
+    assert kept <= set(found), found
+
+
+def test_est_ce_dangereux_la_nuit_ne_fait_pas_venir_un_autre_lieu():
+    assert "Ziguinchor" not in places(site("que voir a gorée", "est-ce dangereux la nuit ?"))
+
+
+# Cas négatifs voisins : un repère national nommé reste un nouveau sujet.
+
+NATIONAL_NOMME = [
+    (("visiter le lac rose",), "numero des pompiers", {"Lac Rose / Lac Retba"}),
+    (("visiter le lac rose",), "le senegal est il un pays sur ?", {"Lac Rose / Lac Retba"}),
+    (("que voir a gorée",), "il faut un visa pour le senegal ?", {"Île de Gorée"}),
+    (("que voir a gorée",), "quel forfait internet prendre ?", {"Île de Gorée"}),
+]
+
+
+@pytest.mark.parametrize("previous,message,absent", NATIONAL_NOMME, ids=[case[1] for case in NATIONAL_NOMME])
+def test_un_repere_national_nomme_reste_un_nouveau_sujet(previous, message, absent):
+    found = places(site(*previous, message))
+    assert not absent & set(found), found
+
+
+@pytest.mark.parametrize("message,expected", [
+    ("faut-il un visa pour y aller ?", False),  # « y aller » renvoie au lieu du fil
+    ("il y a un taxi pour y aller depuis dakar ?", False),
+    ("on mange quoi là-bas ?", False),
+    ("il fait chaud sur place ?", False),
+    ("on peut dormir là ?", False),
+    ("y a t il un visa pour le senegal ?", True),  # « il y a » n'est pas un renvoi
+    ("il y a un visa pour le senegal ?", True),
+])
+def test_starts_new_subject_reconnait_les_renvois_de_lieu(message, expected):
+    from services.intelligence import starts_new_subject
+
+    assert starts_new_subject(message, own_subject=True) is expected
+
+
+def test_la_en_tete_de_phrase_et_y_compris_ne_renvoient_pas_au_lieu_du_fil():
+    # « Là, … » ouvre une phrase ; « y compris » n'est pas le « y » de lieu.
+    from services.intelligence import starts_new_subject
+    assert starts_new_subject("là je veux savoir le prix du visa", own_subject=True)
+    assert starts_new_subject("Là, parlons de Dakar", own_subject=True)
+    assert starts_new_subject("Quels sont les hôtels à Dakar y compris Almadies ?", own_subject=True)
+    # Le « là » de lieu et le « y » de lieu gardent le fil.
+    assert not starts_new_subject("on peut manger là ?", own_subject=True)
+    assert not starts_new_subject("faut-il un visa pour y aller ?", own_subject=True)

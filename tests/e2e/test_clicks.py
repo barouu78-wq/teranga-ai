@@ -496,6 +496,54 @@ def test_shared_link_restores_long_trip_with_unknown_region(page, base_url):
     assert "Étape 20" in page.locator("#result").inner_text()
     assert page.errors == []
 
+def _shared_trip_url(base_url):
+    import base64
+
+    days = [{"day": n, "title": f"Étape {n}", "region": "Dakar", "morning": "Gorée",
+             "afternoon": "Plage", "evening": "Dîner", "transport": "Taxi"} for n in range(1, 4)]
+    payload = {"arrival": "2026-11-01", "departure": "2026-11-04", "adults": 2, "children": 0,
+               "edited_plan": {"summary": "Trois jours à Dakar", "days": days, "practical_notes": []}}
+    encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    return f"{base_url}/trip-planner#trip={encoded}"
+
+
+def test_trip_pdf_button_prints_only_the_itinerary(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    # Sans le « ; true » final, Playwright appellerait la fonction renvoyée par l'expression.
+    page.evaluate("window.__printed = 0; window.print = () => { window.__printed += 1; }; true")
+    page.click("#trip-pdf")
+    assert page.evaluate("window.__printed") == 1
+    page.emulate_media(media="print")
+    assert page.is_visible(".day-card")
+    assert page.is_visible(".print-only")
+    for hidden in ("#planner", "#trip-pdf", "#copy", "#editor-actions", ".day-edit", "header", "footer"):
+        assert not page.is_visible(hidden), hidden
+    page.emulate_media(media="screen")
+    assert not page.is_visible(".print-only")
+    assert page.errors == []
+
+
+def test_trip_share_button_uses_the_phone_share_sheet(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    page.evaluate("window.__shared = null; navigator.share = async d => { window.__shared = d; }; true")
+    page.click("#copy")
+    page.wait_for_function("window.__shared !== null")
+    assert "#trip=" in page.evaluate("window.__shared.url")
+    assert page.errors == []
+
+
+def test_trip_share_button_copies_without_share_sheet(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    page.evaluate("delete Navigator.prototype.share")
+    page.click("#copy")
+    page.locator("#copy", has_text="Lien copié").wait_for(timeout=3000)
+    assert "#trip=" in page.evaluate("navigator.clipboard.readText()")
+    assert page.errors == []
+
+
 @pytest.mark.parametrize(
     "audience,expected_suggestion",
     [
@@ -522,3 +570,15 @@ def test_home_audience_profiles_respond_and_persist(page, base_url, audience, ex
     page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
     assert page.errors == []
 
+
+
+def test_trip_date_error_shows_a_plain_apostrophe(page, base_url):
+    """Départ avant l'arrivée : « d'arrivée » s'affiche tel quel, pas « d&#x27;arrivée »."""
+    page.goto(base_url + "/trip-planner")
+    page.fill("input[name=arrival]", "2026-11-10")
+    page.fill("input[name=departure]", "2026-11-05")
+    page.click("[data-next]")
+    text = page.locator("#status").inner_text()
+    assert "d'arrivée" in text, text
+    assert "&" not in text, text
+    assert page.errors == []

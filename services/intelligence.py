@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, classify_domain, source_domains
+from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, WOLOF_PLACE_NAMES, classify_domain, source_domains
 from .web_policy import should_use_web
 from .validation import sanitize_text
 
@@ -22,12 +22,15 @@ _INTENT_PATTERNS = {
         "sejour", "séjour", "vacances", "planifier", "planning",
     ),
     # « temps » seul est exclu : « combien de temps » n'est pas une question météo.
+    # « chaud » seul est exclu : « le mafé est trop chaud » parle d'un plat (voir _INTENT_REGEXES).
     "weather": ("meteo", "météo", "weather", "quel temps", "temps qu'il fait", "il fait chaud", "fait-il",
-                "pleut", "pleuvoir", "pluie", "pluies", "orage", "orages", "chaud", "chaleur",
+                "pleut", "pleuvoir", "pluie", "pluies", "orage", "orages", "chaleur",
                 "temperature", "température", "previsions", "prévisions", "forecast", "rain", "raining"),
     "health": ("santé", "sante", "vaccination", "hôpital", "hopital", "pharmacie", "urgence", "samu", "maladie"),
+    # « car » seul est exclu : c'est surtout la conjonction (« je suis fatigué car j'ai mal dormi ») ;
+    # le car (bus) est reconnu par _INTENT_REGEXES.
     "transport": (
-        "transport", "bus", "taxi", "car", "aeroport", "aéroport",
+        "transport", "bus", "taxi", "cars", "car rapide", "ndiaga ndiaye", "aeroport", "aéroport",
         "airport", "ter", "train",
     ),
     "restaurant": ("restaurant", "manger", "eat", "cuisine", "plat", "plats"),
@@ -45,7 +48,7 @@ _INTENT_PATTERNS = {
 _DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "photos", "career", "finance", "project", "health"}
 
 _LOCATION_ALIASES = {
-    "dakar": ("dakar",),
+    "dakar": ("dakar", *WOLOF_PLACE_NAMES),
     "goree": ("goree", "gorée", "ile de goree", "île de gorée"),
     "saint-louis": ("saint-louis", "saint louis"),
     "lac rose": ("lac rose", "lake retba", "retba"),
@@ -63,6 +66,23 @@ _NORMALIZED_INTENT_PATTERNS = {
     intent: tuple(_normalize(pattern) for pattern in patterns)
     for intent, patterns in _INTENT_PATTERNS.items()
 }
+# Mots ambigus reconnus seulement dans leur sens utile (texte sans accents) : la chaleur du temps (« il fait trop
+# chaud », « c'est chaud à Dakar en ce moment ? ») et le car précédé d'un article ou d'un verbe (« prendre le car »).
+_INTENT_REGEXES = {
+    "weather": re.compile(
+        r"(?<!\w)(?:fai\w*|fera\w*) (?:tres |trop |si |aussi |vraiment )?chaud(?!\w)|"
+        r"(?<!\w)chaude?s? (?:a|au|en|ce|cette|aujourd|demain|la nuit|le soir)(?!\w)"
+    ),
+    "transport": re.compile(r"(?<!\w)(?:le|un|en|du|au|ce|par|quel|quelle|prendre|prends|prend|pris) car(?!\w)|\bgare routiere\b"),
+}
+# Vacances, voyage ou séjour qui ne sont pas un projet (texte sans accents) : un souhait, un retour ou un titre
+# administratif. « bonnes vacances ! » ou « titre de séjour » lançaient le planificateur et le modèle complexe.
+_NOT_A_TRIP = re.compile(
+    r"(?<!\w)(?:bon(?:ne)?s? (?:vacances|voyage|sejour|route)|"
+    r"(?:fini|finis|termine|terminees?|rentre|rentree|rentrer|retour|revenu|revenue|reviens|apres) "
+    r"(?:de |des |mes |les |nos |ses |tes )?vacances|"
+    r"(?:titre|carte|permis|autorisation|visa) de sejour)(?!\w)"
+)
 _NORMALIZED_LOCATION_ALIASES = {
     location: tuple(_normalize(alias) for alias in aliases)
     for location, aliases in _LOCATION_ALIASES.items()
@@ -87,6 +107,7 @@ _CONTEXT_ALIASES = {
     "ile de goree": "goree", "île de gorée": "goree",
     "goree": "goree", "gorée": "goree", "lac rose": "lac rose",
     "alhadies": "almadies", "almalies": "almadies", "almaties": "almadies",
+    **WOLOF_PLACE_NAMES,
 }
 
 def _contains_term(text: str, term: str) -> bool:
@@ -202,6 +223,36 @@ def continues_plan(message: str) -> bool:
     return bool(_PLAN_EDIT.search(text))
 
 
+def starts_new_subject(message: str, *, own_subject: bool) -> bool:
+    """Vrai si le message ouvre un nouveau sujet : il nomme le sien (`own_subject` : lieu, plat, dossier, langue,
+    repère pratique national) et ne renvoie pas au tour précédent.
+
+    Les fiches de la base (lieux, régions, personnalités, dossiers) sont alors choisies sur ce message seul : sans
+    cela, « c est quoi le yassa » après Kédougou puis Podor recevait les fiches de ces deux lieux et le dossier du
+    Fouta-Toro. Une relance (« Et à Podor ? », « Ça coûte combien à Saly ? »), un renvoi (« Précise l'histoire »)
+    ou une retouche du plan (« Ajoute une journée au Djoudj ») garde le fil, comme un message sans sujet propre
+    (« Combien de temps faut-il pour la visite ? » après Gorée)."""
+    if not own_subject:
+        return False
+    text = _normalize(message).replace("'", " ")
+    words = re.findall(r"[a-z0-9]+", text)
+    if len(words) <= 8 and (_FOLLOW_UP_OPENER.match(text) or any(word in _BACK_REFERENCES for word in words)):
+        return False
+    # Renvoi au lieu du fil (« faut-il un visa pour y aller ? », « on mange quoi là-bas ? ») : le fil reste, même
+    # si la question nomme aussi un lieu (« combien de temps pour y aller depuis saly ? » garde le lac Rose et Saly).
+    if len(words) <= 12 and (_PLACE_BACK_REFERENCE.search(text) or _LA_ALONE.search(str(message or "").casefold())):
+        return False
+    return not _PLAN_EDIT.search(text)
+
+
+# Renvois au lieu du tour précédent (texte sans accents, apostrophes en espaces). « y » compte, sauf dans
+# « il y a » / « y en a » qui n'est pas un renvoi (« y a t il un hôpital ? »). « là » seul se lit avant la
+# suppression des accents, pour ne pas le confondre avec l'article « la ».
+_PLACE_BACK_REFERENCE = re.compile(r"\by\b(?! (?:a|avait|aura|aurait|en a|compris)\b)|\bla[ -]?bas\b|\bsur place\b")
+# « là » en tête de phrase (« Là, parlons de Dakar ») ouvre la phrase, il ne désigne pas le lieu du fil.
+_LA_ALONE = re.compile(r"(?<=\w )là(?![\w-])")
+
+
 def detect_language(text: str) -> str:
     normalized = _normalize(text)
     english_markers = ("hello", "please", "where", "what", "how", "why", "travel", "visit", "want", "can", "could", "would")
@@ -227,8 +278,12 @@ def detect_intent(text: str) -> str:
     normalized = _normalize(text)
     if _BUSINESS_CREATION.search(normalized) and not re.search(r"(?<!\w)(compte|account|porte|fenetre|carte|session)(?!\w)", normalized):
         return "project"
+    normalized = _NOT_A_TRIP.sub(" ", normalized)
     for intent, patterns in _NORMALIZED_INTENT_PATTERNS.items():
         if any(re.search(r"(?<!\w)" + re.escape(pattern) + r"(?!\w)", normalized) for pattern in patterns):
+            return intent
+        extra = _INTENT_REGEXES.get(intent)
+        if extra is not None and extra.search(normalized):
             return intent
     return "general_information"
 
@@ -261,9 +316,31 @@ def _recent_user_messages(history: list[dict[str, Any]] | None, limit: int = 6) 
     return messages
 
 
+def _without_current_turn(history: list[dict[str, Any]] | None, message: str) -> list[dict[str, Any]] | None:
+    """L'historique sans la copie de la question en cours.
+
+    Le site envoie la question deux fois : dans `message` et en dernier élément de `history` (static/home.js).
+    Comptée deux fois, ses mots pesaient double dans le choix des lieux (« taxi aibd dakar combien » : 8 lieux
+    au lieu de 2). Seul le dernier élément est retiré, s'il vient de l'utilisateur et a le même texte.
+    Réservé au texte du contexte (`contextual_query`) : retirée aussi des tours relus par `build_intent_context`,
+    la copie manquait et « Et pour manger ? » après la météo devenait une question météo.
+    """
+    if not isinstance(history, list) or not history:
+        return history
+    last = history[-1]
+    if (
+        isinstance(last, dict)
+        and str(last.get("role", "")).lower() == "user"
+        and " ".join(str(last.get("content") or "").split()) == " ".join(str(message or "").split())
+    ):
+        return history[:-1]
+    return history
+
+
 def contextual_query(history: list[dict[str, Any]] | None, message: str, max_history_items: int = 12, max_message_length: int = 2000) -> str:
     """Build an internal context query from recent user turns."""
     parts: list[str] = []
+    history = _without_current_turn(history, message)
     if isinstance(history, list):
         for item in history[-max_history_items:]:
             if not isinstance(item, dict) or str(item.get("role", "")).lower() != "user":
@@ -293,7 +370,16 @@ def infer_senegal_context(history: list[dict[str, Any]] | None, message: str) ->
     mentioned = {name for _, name in mentions}
     found_cities = [x for x in _CONTEXT_CITIES if x in mentioned]
     found_regions = [x for x in _CONTEXT_REGIONS if x in mentioned]
-    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(text_value, term) for term in terms)]
+    intent_text = _NOT_A_TRIP.sub(" ", text_value)
+    intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(intent_text, term) for term in terms)]
+    # Relance courte qui a son propre sujet (« Et pour manger ? » après la météo) : le lieu du fil reste, mais pas
+    # son sujet. Sans cela, le modèle lisait « Intentions détectées : weather, food » pour une question de repas.
+    # Le prix et le moment (« Et le prix ? », « Et demain ? ») précisent le sujet du fil sans le remplacer.
+    current_text = _normalize(message)
+    if history and len(current_text.split()) <= 8 and _SHORT_FOLLOW_UP.match(current_text):
+        own_intents = [name for name, terms in _CONTEXT_INTENT_GROUPS.items() if any(_contains_term(current_text, term) for term in terms)]
+        if set(own_intents) - {"price", "news"}:
+            intents = own_intents
     currency_amounts = re.findall(
         r"(?<![\w])(?:\d[\d\s.,]*)\s*(?:fcfa|f cfa|cfa|€|euros?|dollars?|\$)",
         text_value,
@@ -358,7 +444,7 @@ def should_use_planner(context: dict[str, Any]) -> bool:
     if context.get("standalone_request"):
         context = infer_senegal_context([], str(context.get("message") or ""))
     intents = set(context.get("intents", []))
-    query = context.get("query", "")
+    query = _NOT_A_TRIP.sub(" ", str(context.get("query", "")))
     planning_terms = (
         "planifie", "programme", "organise", "itineraire", "itinéraire",
         "journee", "journée", "sejour", "séjour", "vacances", "weekend",
@@ -547,7 +633,11 @@ def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> d
     }
     followups.extend(labels.get(intent, ("Préciser ma demande", "Comparer", "Que faire ensuite ?")))
     if place and intent != "photos":
-        followups = [f"{item} à {place}" if item != "Comparer" and " à " not in item else item for item in followups]
+        # « Préciser ma demande » remet le curseur dans la zone de saisie (static/home.js) : jamais de lieu ajouté.
+        followups = [
+            f"{item} à {place}" if item not in {"Comparer", "Préciser ma demande"} and " à " not in item else item
+            for item in followups
+        ]
     mode = "action" if intent in {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"} else "answer"
     if intent_context.get("needs_images"):
         mode = "visual"

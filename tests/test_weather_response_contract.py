@@ -16,5 +16,5 @@ def test_weather_response_contract_requires_verified_period_and_source():
 
 def test_weather_policy_does_not_allow_meteo_france_as_senegal_priority():
     source = POLICY.read_text(encoding="utf-8")
-    assert '"weather": ("anacim.sn", "ansd.sn", "gov.sn")' in source
+    assert '"weather": ("anacim.sn", "ansd.sn", "gouv.sn")' in source
     assert '"weather": ("meteofrance.com"' not in source
