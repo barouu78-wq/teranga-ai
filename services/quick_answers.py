@@ -75,11 +75,13 @@ _CONVERSION_WORDS = _FIXED_CURRENCY_WORDS | {
     "convertir", "conversion", "combien", "font", "fait", "vaut", "valent", "egal", "egale", "egalent",
     "donne", "donnent", "mille", "million", "millions", "un", "une", "ca",
 } | _FILLER_WORDS
+# Un opérateur de calcul n'est pas un mot : sans ce garde-fou, « 100 euros en FCFA * 2 » perdait son « * 2 ».
+_OPERATORS = re.compile(r"[*/+×÷%^]|\d\s*-\s*\d|\s-\s")
 
 
 def _conversion_line(message: str) -> str | None:
     """La ligne du calcul vérifié (« 100 € = 65 595,70 FCFA (…), parité fixe : … »), ou None."""
-    if len(message) > MAX_CHARS:
+    if len(message) > MAX_CHARS or _OPERATORS.search(message):
         return None
     words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
     if not any(word.isdigit() for word in words) or not _FIXED_CURRENCY_WORDS.intersection(words):
