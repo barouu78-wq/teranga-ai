@@ -119,8 +119,8 @@ def register_chat_route(app, deps):
             trace.first_word()
             trace.model = payload.get(PAYLOAD_KEY)
 
-        # Réponse prête (numéros d'urgence vérifiés) : servie comme une réponse en cache, sans le modèle ni la
-        # recherche web, avant toute ancienne réponse du modèle en cache.
+        # Réponse prête (numéros d'urgence vérifiés, conversion euro ↔ FCFA) : servie comme une réponse en
+        # cache, sans le modèle ni la recherche web, avant toute ancienne réponse du modèle en cache.
         ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None else None
         if ready:
             payload["use_web"] = False
