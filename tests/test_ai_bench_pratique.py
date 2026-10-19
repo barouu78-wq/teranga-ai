@@ -117,6 +117,10 @@ PROBES = [
  ("fr","Le Sénégal est-il un pays sûr ?",["Police 17","pickpockets"]),
  # diaspora / résident
  ("fr","Comment envoyer de l'argent au Sénégal ?",["Envoyer de l'argent vers le Sénégal"]),
+ # envoi d'argent : comparer le montant reçu ; sous la parité fixe, la différence est une marge du service
+ ("fr","Quel est le moins cher pour envoyer 200 euros au Sénégal ?",["montant reçu en FCFA"]),
+ ("fr","Western Union me donne 640 FCFA pour 1 euro, c'est normal ?",["en dessous de 655,957 FCFA pour 1 €"]),
+ ("en","Cheapest way to send money to Senegal from France?",["montant reçu en FCFA"]),
  ("fr","Comment créer une entreprise au Sénégal ?",["guichet unique de l'APIX"]),
  ("fr","Où trouver une pharmacie de garde à Dakar ?",["Pharmacie de garde"]),
  # papiers, factures, protection sociale, études

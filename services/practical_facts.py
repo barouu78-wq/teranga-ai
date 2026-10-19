@@ -186,7 +186,10 @@ TOPICS = (
       "Paiements : Wave et Orange Money (paiement mobile) sont partout, y compris chez les petits commerçants et "
       "certains taxis ; distributeurs nombreux en ville, rares en brousse ; garder des petites coupures.",
       "Envoyer de l'argent vers le Sénégal : services de transfert (Wave, Orange Money, Western Union, Remitly, "
-      "Wise…) avec réception sur un compte mobile money ou en espèces ; comparer les frais et le taux appliqué.")),
+      "Wise…) avec réception sur un compte mobile money ou en espèces. Pour comparer, regarder le montant reçu en FCFA "
+      "pour la même somme envoyée, frais compris. Depuis la zone euro, la parité est fixe : un taux annoncé en dessous "
+      "de 655,957 FCFA pour 1 € est une marge prise par le service, en plus des frais affichés. Frais et taux changent : "
+      "les vérifier au moment de l'envoi.")),
     ("arnaques", r"\barnaq\w*|\bescroc\w*|\bscams?\b|\bscammers?\b|\bswindl\w*|\bfraudsters?\b|"
      r"\bfaux (taxis?|guides?|billets?|visas?|policiers?|gendarmes?|agents?|commissaires?|douaniers?|recruteurs?|"
      r"recrutements?|sms|messages?|appels?|numeros?|proprietaires?|bailleurs?|vendeurs?|sites?|gains?)\b|"
