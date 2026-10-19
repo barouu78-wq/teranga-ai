@@ -184,6 +184,7 @@ def register_chat_route(app, deps):
         key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
         cached = ready or (answer_cache.get(key) if key else None)
         trace.cache = bool(cached)
+        trace.ready = bool(ready)
         if cached:
             logger.info("chat_cache_hit")
 

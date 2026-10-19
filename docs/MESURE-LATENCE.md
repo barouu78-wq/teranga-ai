@@ -10,7 +10,7 @@ accéléré par ce changement, et aucune question, réponse, adresse IP ou clé 
 ## À quoi ressemble une ligne
 
 ```text
-latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non web=non modele=gpt-5.6-luna mode=flux statut=ok
+latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non pret=non web=non modele=gpt-5.6-luna mode=flux statut=ok
 latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe statut=ok
 ```
 
@@ -25,6 +25,7 @@ latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe s
 | `premier_mot_ms` | du début de la requête au **premier texte envoyé au visiteur**. `-` en mode JSON et si rien n'a été écrit |
 | `fournisseur_ms` | attente du fournisseur d'IA : de l'envoi de la requête au modèle jusqu'au premier mot (en mode JSON : tout l'appel). Pour `/stt` et `/tts` : la durée de l'appel au fournisseur de voix |
 | `cache` | `oui` si la réponse vient du cache des réponses (aucun modèle appelé), `non` sinon, `-` pour les demandes de photos seules et les requêtes refusées avant |
+| `pret` | `oui` si c'est une **réponse prête** servie par Teranga lui-même, sans le modèle (numéros d'urgence, conversion euro ↔ FCFA… : `services/quick_answers.py`) ; elle compte aussi dans `cache=oui`. `non` sinon, `-` comme `cache`. Absent des lignes écrites avant le 19 octobre 2026. `scripts/lire_latence.py` en fait le groupe « chat, réponse prête » : c'est la part des questions traitées sans IA |
 | `web` | `oui` si le modèle a reçu l'**outil de recherche web du fournisseur**. Son temps est **dans** `fournisseur_ms` (il ne se sépare pas) ; la recherche externe de `recherche_ms` le remplace quand elle réussit |
 | `modele` | nom du modèle réellement appelé (lu dans la configuration), `-` s'il n'y en a pas (cache, photos, requête refusée) |
 | `mode` | `flux` (le site) ou `json` (reprise du site quand le flux n'a donné aucun texte) |
