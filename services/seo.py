@@ -119,7 +119,8 @@ SEO_PAGES = {
             ("L'assistant est-il réservé aux voyageurs ?", "Non. Il s'adresse aussi aux résidents, à la diaspora et aux commerçants."),
             ("Peut-on parler wolof ?", "Oui, Teranga AI propose le wolof en plus du français et de l'anglais. Le pulaar est en cours d'amélioration et n'est pas encore proposé dans l'interface."),
         ],
-        "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
+        "related": [("demarches-senegal", "Démarches"), ("calendrier-fetes-senegal", "Fêtes"), ("urgences", "Urgences"),
+                    ("france-senegal", "France ↔ Sénégal"), ("specialites-senegal", "Spécialités")],
     },
     "a-propos": {
         "title": "À propos de Teranga AI : assistant numérique du Sénégal",
@@ -591,6 +592,18 @@ SEO_PAGE_PLACES = {
     "visiter-goree": ["goree", "dakar-renaissance", "musee-civilisations", "iles-de-la-madeleine"],
 }
 SEO_PAGE_DISHES = {"specialites-senegal", "restaurants-dakar"}
+# Questions concrètes de la diaspora (plan du 19 octobre 2026, docs/PLAN-DIASPORA.md). Chacune a une réponse vérifiée :
+# réponse prête (services/quick_answers.py) ou repères (services/practical_facts.py), voir tests/test_page_diaspora.py.
+# Un clic pré-remplit la question dans Teranga ; elle n'est jamais envoyée sans l'utilisateur.
+DIASPORA_QUESTIONS = (
+    ("Argent", "100 euros en FCFA ?"),
+    ("Envoyer de l'argent", "Comment envoyer de l'argent au Sénégal ?"),
+    ("Fêtes", "C'est quand la Tabaski ?"),
+    ("Papiers", "Quels papiers pour renouveler ma carte d'identité ?"),
+    ("Terrain", "Que faut-il vérifier avant d'acheter un terrain au Sénégal ?"),
+    ("Arrivée", "Que prévoir en arrivant à l'aéroport AIBD ?"),
+    ("Urgences", "Quels numéros d'urgence au Sénégal ?"),
+)
 
 
 # Pages lues par les partenaires : l'appel à l'action mène au formulaire de demande.
@@ -626,6 +639,15 @@ def _seo_extra_html(slug, places=None, dishes=None):
             for name in REGION_SEO_NAMES
         )
         parts.insert(0, '<section><h2>Le guide de chaque région</h2><div class="grid">%s</div></section>' % cards)
+    if slug == "diaspora-senegalaise":
+        cards = "".join(
+            '<a class="card" href="/?q=%s"><strong>%s</strong><br><small>%s</small></a>'
+            # Espace insécable avant « ? » à l'affichage : le point d'interrogation ne passe jamais seul à la ligne.
+            % (quote(question, safe=""), escape(label), escape(question).replace(" ?", " ?"))
+            for label, question in DIASPORA_QUESTIONS
+        )
+        parts.insert(0, "<section><h2>Les questions de la diaspora</h2><p>Touchez une question : elle s'ouvre dans "
+                        'Teranga, prête à envoyer.</p><div class="grid">%s</div></section>' % cards)
     if slug in SEO_PAGE_DISHES and dishes:
         items = "".join(
             "<h3>%s</h3><p>%s</p>" % (escape(str(d.get("name", ""))), escape(str(d.get("text", ""))))
