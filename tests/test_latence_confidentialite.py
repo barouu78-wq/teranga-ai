@@ -34,7 +34,8 @@ MS = r"(?:\d+\.\d|-)"
 GRAMMAR = {
     "chat": re.compile(
         rf"latence route=chat total_ms={MS} contexte_ms={MS} recherche_ms={MS} premier_mot_ms={MS} fournisseur_ms={MS} "
-        r"cache=(?:oui|non|-) web=(?:oui|non|-) modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{0,47}|-) mode=(?:flux|json|-) "
+        r"cache=(?:oui|non|-) pret=(?:oui|non|-) web=(?:oui|non|-) modele=(?:[A-Za-z0-9][A-Za-z0-9._:-]{0,47}|-) "
+        r"mode=(?:flux|json|-) "
         r"statut=(?:ok|secours|erreur|abandon|refuse|invalide)"
     ),
     "voix": re.compile(
@@ -140,7 +141,7 @@ def test_every_status_and_route_was_actually_exercised(monkeypatch, lines):
 
 def test_the_detector_catches_a_leaked_question_ip_or_key():
     ip = IP_PREFIX + "77"
-    clean = "latence route=chat total_ms=12.0 contexte_ms=3.0 recherche_ms=- premier_mot_ms=9.0 fournisseur_ms=5.0 cache=non web=non modele=m mode=flux statut=ok"
+    clean = "latence route=chat total_ms=12.0 contexte_ms=3.0 recherche_ms=- premier_mot_ms=9.0 fournisseur_ms=5.0 cache=non pret=non web=non modele=m mode=flux statut=ok"
     assert leaks([clean]) == [] and off_grammar([clean]) == []
     for leaking in (clean + " q=" + QUESTION, clean + " ip=" + ip, clean + " cle=" + SEARCH_KEY, clean.replace("modele=m", "modele=" + ANSWER)):
         assert leaks([leaking]) != [] or off_grammar([leaking]) != []
