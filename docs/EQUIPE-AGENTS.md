@@ -33,6 +33,9 @@ compte, changer le DNS, un secret ou un réglage de production. Ils le préparen
 
 - **Le propriétaire décide.** Il fixe les priorités et valide ce qui change l'écran, ce que dit l'IA, les coûts, le
   DNS, les secrets et les réglages.
+- **Priorité en cours (décision du 19 octobre 2026)** : les premiers vrais utilisateurs, la diaspora d'abord, et la
+  visibilité de Teranga, jusqu'au 16 novembre 2026. Plan, messages et mesures : `docs/PLAN-DIASPORA.md`. Le conseil
+  du lundi part de ce plan.
 - **Claude Code (la session principale) est le chef de projet.** Il lance les agents, relit leurs PR, teste les PR
   fusionnées ensemble, fusionne ce que la règle en vigueur lui permet (tests, outils, documents, correctifs invisibles,
   contrôles verts) et surveille la production après chaque fusion.
