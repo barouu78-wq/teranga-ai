@@ -9,17 +9,22 @@ Une question courte qui ne demande qu'une conversion euro ↔ FCFA (« 100 euros
 services/calculators.py, à la parité fixe 1 € = 655,957 FCFA (décision du propriétaire du 19 octobre 2026 : Teranga
 répond seul à ce qu'il sait déjà calculer). Le dollar et la livre (taux variable) et l'anglais vont au modèle.
 
+Une question courte qui ne demande que la date d'une fête (« C'est quand la Tabaski ? ») reçoit la date du calendrier
+vérifié (services/events.py), avec son statut : une fête lunaire non confirmée reste « estimée ».
+
 Toute autre formulation (une situation, un lieu, une précision) va au modèle.
 """
 
 from __future__ import annotations
 
+import datetime as _dt
 import re
 from typing import Any
 
 from routes.emergency import ADVICE, EMBASSY_LINKS, EMERGENCY_NUMBERS
 from services.answer_cache import _has_earlier_turns
 from services.calculators import calculation_block
+from services.events import _ALIASES, _asked, french_date, upcoming_events
 from services.text import fold_text
 
 MAX_CHARS = 80
@@ -100,6 +105,60 @@ def _conversion_reply(line: str) -> str:
     ])
 
 
+# Date d'une fête : un mot qui demande « quand », le nom de la fête et des mots qui ne changent pas la demande.
+_WHEN_WORDS = {"quand", "date"}
+_HOLIDAY_WORDS = {word for names in _ALIASES.values() for name in names for word in name.split()} | {
+    "fete", "festival", "international", "grand", "saint", "louis", "touba",
+}
+_DATE_WORDS = _WHEN_WORDS | _HOLIDAY_WORDS | _FILLER_WORDS | {
+    "prochain", "prochaine", "tombe", "sera", "cette", "annee", "que",
+}
+
+
+def _today() -> _dt.date:
+    return _dt.date.today()
+
+
+def _asked_holiday(message: str) -> dict | None:
+    """La prochaine occurrence de la seule fête dont la question demande la date, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    folded = fold_text(message).lower()
+    words = re.findall(r"[a-z0-9]+", folded)
+    if not _WHEN_WORDS.intersection(words):
+        return None
+    years = {int(word) for word in words if word.isdigit() and len(word) == 4}
+    if any(word not in _DATE_WORDS and not (word.isdigit() and len(word) == 4) for word in words):
+        return None
+    # « 4 avril » (Indépendance) est le seul nom de fête avec un nombre : déjà couvert par « independance ».
+    named = {}
+    for event in upcoming_events(_today()):
+        if _asked(event, folded):
+            named.setdefault(event["name"], event)
+    if len(named) != 1:
+        return None
+    (event,) = named.values()
+    if years and years != {event["start"].year}:
+        return None
+    return event
+
+
+def _holiday_reply(event: dict) -> str:
+    when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
+    days = event["days_left"]
+    soon = "aujourd'hui" if days <= 0 else ("demain" if days == 1 else f"dans {days} jours")
+    lines = [f"{event['name']} : {when} ({soon})."]
+    if event["place"] != "Tout le pays":
+        lines.append(f"Lieu : {event['place']}.")
+    if event["confirmed"]:
+        lines.append("Date confirmée.")
+    else:
+        lines.append("Date estimée : les fêtes musulmanes suivent le calendrier lunaire, et la date exacte est fixée "
+                     "quelques jours avant, à l'observation du croissant de lune.")
+    lines += [event["tips"], "Toutes les fêtes de l'année : teranga-ai.fr/calendrier-fetes-senegal"]
+    return "\n".join(lines)
+
+
 def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[str, Any] | None:
     """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond)."""
     raw = raw if isinstance(raw, dict) else {}
@@ -117,4 +176,7 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         line = _conversion_line(message)
         if line:
             return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None}
+        event = _asked_holiday(message)
+        if event:
+            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}
     return None
