@@ -10,7 +10,8 @@ Colle (ou redirige) des lignes de journal sur l'entrée standard : seules celles
 Par défaut seules les requêtes au statut « ok » entrent dans les médianes et les p95 : une erreur
 rapide ou un secours ne doivent pas faire croire que le chat va vite. Le nombre de lignes de chaque
 statut reste affiché. Le chat est séparé selon `cache=oui|non` : une réponse du cache n'a rien à voir
-avec un appel au modèle.
+avec un appel au modèle. Les réponses prêtes (`pret=oui` : servies par Teranga sans le modèle) forment un
+groupe à part, « chat, réponse prête ».
 
 Méthodes (refaisables à la main, voir docs/MESURE-LATENCE.md) :
   - médiane : valeur du milieu des valeurs triées (moyenne des deux du milieu s'il y en a un nombre pair) ;
@@ -67,7 +68,12 @@ def percentile(values: list[float], pct: int) -> float:
 
 def group_name(record: dict[str, str]) -> str:
     route = record.get("route", "?")
-    return f"{route}, cache={record.get('cache', '-')}" if route == "chat" else route
+    if route != "chat":
+        return route
+    # Réponse prête (sans le modèle) : un groupe à part, pour compter ce que Teranga sert seul.
+    if record.get("pret") == "oui":
+        return "chat, réponse prête"
+    return f"{route}, cache={record.get('cache', '-')}"
 
 
 def read_records(lines: Iterable[str]) -> list[dict[str, str]]:

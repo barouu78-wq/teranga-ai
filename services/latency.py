@@ -4,7 +4,7 @@ Rien n'est optimisé ici : ce module sert à MESURER où le temps passe avant de
 
 Format (stable, sur UNE seule ligne, des paires ``clé=valeur`` séparées par une espace ; « - » = sans objet) :
 
-    latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non web=non modele=nom-du-modele mode=flux statut=ok
+    latence route=chat total_ms=2310.4 contexte_ms=12.8 recherche_ms=- premier_mot_ms=1480.2 fournisseur_ms=1410.9 cache=non pret=non web=non modele=nom-du-modele mode=flux statut=ok
     latence route=stt total_ms=950.1 fournisseur_ms=902.6 modele=gpt-4o-transcribe statut=ok
 
 Confidentialité : la ligne n'est construite QUE à partir de nombres (millisecondes) et d'étiquettes fixes
@@ -35,7 +35,8 @@ PAYLOAD_KEY = "latency_model"  # clé privée de la requête du chat : lue par r
 
 # Champs de chaque route, dans l'ordre d'écriture. Une clé absente de la requête s'écrit « - ».
 CHAT_FIELDS = (
-    "total_ms", "contexte_ms", "recherche_ms", "premier_mot_ms", "fournisseur_ms", "cache", "web", "modele", "mode", "statut",
+    "total_ms", "contexte_ms", "recherche_ms", "premier_mot_ms", "fournisseur_ms", "cache", "pret", "web", "modele", "mode",
+    "statut",
 )
 VOICE_FIELDS = ("total_ms", "fournisseur_ms", "modele", "statut")
 # /tts envoie le son en flux : premier_mot_ms y est le premier octet de son envoyé.
@@ -112,7 +113,7 @@ def _status(value: Any) -> str:
 def _render(key: str, value: Any) -> str:
     if key.endswith("_ms"):
         return _ms(value)
-    return {"cache": _yes_no, "web": _yes_no, "modele": _model, "mode": _mode, "statut": _status}[key](value)
+    return {"cache": _yes_no, "pret": _yes_no, "web": _yes_no, "modele": _model, "mode": _mode, "statut": _status}[key](value)
 
 
 def format_line(route: str, values: Mapping[str, Any]) -> str:
@@ -161,6 +162,8 @@ class LatencyTrace:
         self._streamed = False
         # Renseignés par la route.
         self.cache: bool | None = None
+        # Réponse prête (services/quick_answers.py), servie sans le modèle : comptée aussi dans « cache ».
+        self.ready: bool | None = None
         self.web: bool | None = None  # le modèle a-t-il cherché sur le web (outil du fournisseur, dans fournisseur_ms) ?
         self.model: str | None = None
         self.mode: str | None = None
@@ -240,6 +243,7 @@ class LatencyTrace:
             "premier_mot_ms": self._first_word_ms,
             "fournisseur_ms": self._stages.get("fournisseur"),
             "cache": self.cache,
+            "pret": self.ready,
             "web": self.web,
             "modele": self.model,
             "mode": self.mode,
