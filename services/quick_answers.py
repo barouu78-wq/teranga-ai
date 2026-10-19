@@ -12,6 +12,9 @@ répond seul à ce qu'il sait déjà calculer). Le dollar et la livre (taux vari
 Une question courte qui ne demande que la date d'une fête (« C'est quand la Tabaski ? ») reçoit la date du calendrier
 vérifié (services/events.py), avec son statut : une fête lunaire non confirmée reste « estimée ».
 
+Une question courte qui demande ce qu'est un plat, un en-cas, un dessert ou une boisson de la base (« C'est quoi le
+yassa ? ») reçoit sa description, telle quelle, de data/senegal_knowledge.json.
+
 Toute autre formulation (une situation, un lieu, une précision) va au modèle.
 """
 
@@ -19,12 +22,14 @@ from __future__ import annotations
 
 import datetime as _dt
 import re
+from functools import lru_cache
 from typing import Any
 
 from routes.emergency import ADVICE, EMBASSY_LINKS, EMERGENCY_NUMBERS
 from services.answer_cache import _has_earlier_turns
 from services.calculators import calculation_block
 from services.events import _ALIASES, _asked, french_date, upcoming_events
+from services.senegal_knowledge import load_senegal_knowledge
 from services.text import fold_text
 
 MAX_CHARS = 80
@@ -159,6 +164,56 @@ def _holiday_reply(event: dict) -> str:
     return "\n".join(lines)
 
 
+# Plat de la base : un mot qui demande « c'est quoi », le nom du plat et des mots qui ne changent pas la demande.
+_WHAT_WORDS = {"quoi", "qu", "definition", "signifie", "explique"}
+# Un ingrédient seul n'est pas le plat : « C'est quoi le gingembre ? » ne parle pas forcément du jus.
+_INGREDIENT_ALIASES = {"gingembre", "hibiscus"}
+
+
+def _folded(text: object) -> str:
+    return fold_text(str(text or "")).lower().strip()
+
+
+@lru_cache(maxsize=1)
+def _dish_index() -> tuple[tuple[tuple[re.Pattern, dict], ...], frozenset]:
+    """(motif du nom, plat) pour chaque plat décrit dans la base, et les mots de leurs noms ; chargés une fois."""
+    entries, name_words = [], set()
+    for dish in load_senegal_knowledge().get("dishes", []):
+        if not isinstance(dish, dict) or not dish.get("name") or not dish.get("text"):
+            continue
+        names = {_folded(name) for name in [dish["name"], *(dish.get("aliases") or [])]} - _INGREDIENT_ALIASES - {""}
+        for name in names:
+            name_words.update(re.findall(r"[a-z0-9]+", name))
+        pattern = re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+                             + r")(?![a-z0-9])")
+        entries.append((pattern, dish))
+    return tuple(entries), frozenset(name_words)
+
+
+def _asked_dish(message: str) -> dict | None:
+    """Le seul plat de la base dont la question demande ce qu'il est, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    folded = _folded(message)
+    words = re.findall(r"[a-z0-9]+", folded)
+    if not _WHAT_WORDS.intersection(words):
+        return None
+    entries, name_words = _dish_index()
+    allowed = _WHAT_WORDS | name_words | _FILLER_WORDS | {"que", "moi", "un", "une", "ca", "veut", "dire"}
+    if any(word not in allowed for word in words):
+        return None
+    found = [dish for pattern, dish in entries if pattern.search(folded)]
+    return found[0] if len(found) == 1 else None
+
+
+def _dish_reply(dish: dict) -> str:
+    lines = [f"{dish['name']} — {dish.get('kind') or 'spécialité'}", dish["text"]]
+    if dish.get("where"):
+        lines.append(f"Où : {dish['where']}.")
+    lines.append("Toutes les spécialités : teranga-ai.fr/specialites-senegal")
+    return "\n".join(lines)
+
+
 def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[str, Any] | None:
     """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond)."""
     raw = raw if isinstance(raw, dict) else {}
@@ -179,4 +234,7 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}
+        dish = _asked_dish(message)
+        if dish:
+            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None}
     return None
