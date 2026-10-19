@@ -35,6 +35,14 @@ NOT_ASKED = (
     "Comment envoyer 100 euros au Sénégal ?",
     "Que visiter à Dakar ?",
     "euros",
+    # Relecture de #503 : un opérateur de calcul n'est pas un mot, il ne doit pas disparaître de la question.
+    "100 euros en FCFA * 2",
+    "100 euros en FCFA / 2",
+    "100 € × 3 en FCFA",
+    "100 + 50 euros en FCFA",
+    "10 % de 100 euros en FCFA",
+    "100 - 20 euros en FCFA",
+    "100 euros en FCFA ^ 2",
 )
 
 
