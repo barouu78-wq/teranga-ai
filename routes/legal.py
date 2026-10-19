@@ -13,7 +13,7 @@ from flask import Response, jsonify, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
-_UPDATED = "8 octobre 2026"
+_UPDATED = "10 octobre 2026"
 
 _PRIVACY = {
     "fr": {
@@ -55,12 +55,52 @@ _PRIVACY = {
 }
 
 
+# Fournisseurs facultatifs : cités seulement s'ils sont réellement activés (clé présente chez l'hébergeur), pour que la
+# page reste exacte quelle que soit la configuration. Aucune valeur de clé n'est jamais lue ici, seulement sa présence.
+_OPTIONAL_PROVIDERS = {
+    "fr": {
+        "anthropic": " Si ce fournisseur est indisponible, ou si Anthropic (Claude) est choisi comme intelligence artificielle principale, les mêmes données sont envoyées à Anthropic pour produire la réponse.",
+        "tavily": " Recherche web via Tavily : la question est transmise.",
+        "exa": " Recherche web via Exa : la question est transmise.",
+        "firecrawl": " Lecture d'une page web dont vous écrivez l'adresse, via Firecrawl : l'adresse est transmise (n'écrivez pas d'adresse privée ni contenant un jeton).",
+    },
+    "en": {
+        "anthropic": " If that provider is unavailable, or if Anthropic (Claude) is chosen as the main AI, the same data is sent to Anthropic to produce the answer.",
+        "tavily": " Web search via Tavily: the question is sent.",
+        "exa": " Web search via Exa: the question is sent.",
+        "firecrawl": " Reading a web page whose address you type, via Firecrawl: the address is sent (do not type a private address or one containing a token).",
+    },
+}
+
+
+def _active_providers() -> dict[str, bool]:
+    def present(name: str) -> bool:
+        return bool(os.getenv(name, "").strip())
+    return {
+        "anthropic": present("ANTHROPIC_API_KEY"),
+        "tavily": present("TAVILY_API_KEY"),
+        "exa": present("EXA_API_KEY"),
+        "firecrawl": present("FIRECRAWL_API_KEY"),
+    }
+
+
+def _section_text(lang: str, index: int, text: str) -> str:
+    """Complète « Ce que vous écrivez » (0) et « Services tiers » (4) avec les fournisseurs activés."""
+    extra = _OPTIONAL_PROVIDERS[lang]
+    active = _active_providers()
+    if index == 0 and active["anthropic"]:
+        return text + extra["anthropic"]
+    if index == 4:
+        return text + "".join(extra[name] for name in ("tavily", "exa", "firecrawl") if active[name])
+    return text
+
+
 def render_privacy(lang: str, contact_email: str = "") -> str:
     copy = _PRIVACY[lang]
     contact = f' : <a href="mailto:{escape(contact_email)}">{escape(contact_email)}</a>' if contact_email else (" via la fiche de l'application sur Google Play" if lang == "fr" else " via the app's Google Play listing")
     sections = "".join(
-        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact)}</p></section>"
-        for title, text in copy["sections"]
+        f"<section><h2>{escape(title)}</h2><p>{escape(_section_text(lang, index, text)).replace('{contact}', contact)}</p></section>"
+        for index, (title, text) in enumerate(copy["sections"])
     )
     return f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
