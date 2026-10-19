@@ -776,9 +776,11 @@ def parse_chat_payload():
             WEATHER_LOCATIONS, payload.get("intent_context") or {}, payload.get("message", ""),
             payload.get("language", "fr"), logger=app.logger, budget=WEATHER_BUDGET_SECONDS,
         )
-        # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte.
+        # Question sur une fête ou un jour férié : les dates (et leur statut) en contexte, s'il en reste à venir.
         if _EVENT_WORDS.search(payload.get("message", "")):
-            payload["instructions"] += "\n\n" + events_context(query=payload.get("message", ""))
+            fetes = events_context(query=payload.get("message", ""))
+            if fetes:
+                payload["instructions"] += "\n\n" + fetes
         # Repères pratiques vérifiés (urgences, argent, visa, SIM…) quand la question en parle.
         practical = practical_context(payload.get("message", ""))
         if practical:

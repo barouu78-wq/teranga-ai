@@ -106,10 +106,13 @@ def events_context(today: _dt.date | None = None, query: str = "") -> str:
     """Bloc court pour l'assistant : les prochaines fêtes, avec le statut de la date.
 
     Les 6 plus proches, plus toute fête nommée dans la question même si elle est plus
-    lointaine (« C'est quand la Tabaski ? » en octobre)."""
+    lointaine (« C'est quand la Tabaski ? » en octobre). Rien après la dernière date du
+    calendrier : un titre seul ferait compter la question comme couverte (coverage_log)."""
     folded = _fold(query)
     upcoming = upcoming_events(today)
     chosen = upcoming[:6] + [e for e in upcoming[6:] if _asked(e, folded)]
+    if not chosen:
+        return ""
     lines = ["PROCHAINES FÊTES ET ÉVÉNEMENTS AU SÉNÉGAL (dates lunaires estimées tant que non confirmées) :"]
     for event in chosen:
         when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
