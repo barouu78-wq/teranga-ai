@@ -36,11 +36,19 @@ def _page():
     return response.get_data(as_text=True)
 
 
-def test_la_page_propose_les_questions_de_la_diaspora():
+def _section():
     html = _page()
     assert "Les questions de la diaspora" in html
-    links = [unescape(unquote(q)) for q in re.findall(r'href="/\?q=([^"]+)"', html)]
-    assert links == list(ATTENDU)
+    return html.split("Les questions de la diaspora", 1)[1].split("</section>", 1)[0]
+
+
+# Une carte : lien en français (lang=fr : les réponses prêtes sont en français), titre, question affichée.
+CARTE = re.compile(r'<a class="card" href="/\?lang=fr&amp;q=([^"]+)"><strong>([^<]+)</strong><br><small>([^<]+)</small></a>')
+
+
+def test_la_page_propose_les_questions_de_la_diaspora():
+    cards = CARTE.findall(_section())
+    assert [unquote(q) for q, _label, _text in cards] == list(ATTENDU)
 
 
 def test_chaque_question_proposee_a_une_reponse_verifiee(monkeypatch):
@@ -63,9 +71,11 @@ def quick_answer_for(module, question):
     return module.quick_answer({"message": question, "language": "fr"}, {})
 
 
-def test_les_questions_sont_de_vrais_liens_lisibles():
-    html = _page()
-    section = html.split("Les questions de la diaspora", 1)[1].split("</section>", 1)[0]
-    cards = re.findall(r'<a class="card" href="/\?q=[^"]+"><strong>([^<]+)</strong><br><small>([^<]+)</small></a>', section)
+def test_chaque_carte_affiche_la_question_qu_elle_envoie():
+    cards = CARTE.findall(_section())
     assert len(cards) == len(ATTENDU)
-    assert all(label.strip() and text.strip() for label, text in cards)
+    for query, label, text in cards:
+        assert label.strip(), query
+        # Le « ? » ne passe jamais seul à la ligne : espace insécable à l'affichage, espace normale dans la question.
+        assert text.endswith("\u00a0?"), text
+        assert unescape(text).replace("\u00a0", " ") == unquote(query)

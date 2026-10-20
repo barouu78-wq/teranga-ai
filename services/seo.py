@@ -119,8 +119,7 @@ SEO_PAGES = {
             ("L'assistant est-il réservé aux voyageurs ?", "Non. Il s'adresse aussi aux résidents, à la diaspora et aux commerçants."),
             ("Peut-on parler wolof ?", "Oui, Teranga AI propose le wolof en plus du français et de l'anglais. Le pulaar est en cours d'amélioration et n'est pas encore proposé dans l'interface."),
         ],
-        "related": [("demarches-senegal", "Démarches"), ("calendrier-fetes-senegal", "Fêtes"), ("urgences", "Urgences"),
-                    ("france-senegal", "France ↔ Sénégal"), ("specialites-senegal", "Spécialités")],
+        "related": [("demarches-senegal", "Démarches"), ("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal")],
     },
     "a-propos": {
         "title": "À propos de Teranga AI : assistant numérique du Sénégal",
@@ -641,9 +640,11 @@ def _seo_extra_html(slug, places=None, dishes=None):
         parts.insert(0, '<section><h2>Le guide de chaque région</h2><div class="grid">%s</div></section>' % cards)
     if slug == "diaspora-senegalaise":
         cards = "".join(
-            '<a class="card" href="/?q=%s"><strong>%s</strong><br><small>%s</small></a>'
-            # Espace insécable avant « ? » à l'affichage : le point d'interrogation ne passe jamais seul à la ligne.
-            % (quote(question, safe=""), escape(label), escape(question).replace(" ?", " ?"))
+            # lang=fr : les questions sont en français ; sans lui, un visiteur resté en anglais ou en wolof n'aurait pas
+            # les réponses prêtes (en français seulement). Espace insécable avant « ? » à l'affichage : le point
+            # d'interrogation ne passe jamais seul à la ligne.
+            '<a class="card" href="/?lang=fr&amp;q=%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (quote(question, safe=""), escape(label), escape(question).replace(" ?", "\u00a0?"))
             for label, question in DIASPORA_QUESTIONS
         )
         parts.insert(0, "<section><h2>Les questions de la diaspora</h2><p>Touchez une question : elle s'ouvre dans "
