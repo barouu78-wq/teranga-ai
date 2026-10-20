@@ -86,8 +86,9 @@ THEMES: tuple[Theme, ...] = (
     _theme("argent", "Argent, change et paiements",
            "argent, euro*, fcfa, cfa, xof, change, changer de l argent, dollar*, payer, paiement*, wave, orange money, "
            "mobile money, carte bancaire, retrait*, distributeur*, atm, banque*, bancaire*, virement*, western union, "
-           "transfert d argent, envoyer de l argent, monnaie, espece*, pourboire*, money, cash, payment",
-           "repere:argent repere:mobile_money"),
+           "transfert d argent, envoyer de l argent, envoi d argent, transferer de l argent, moneygram, remitly, "
+           "worldremit, monnaie, espece*, pourboire*, money, cash, payment",
+           "repere:argent repere:mobile_money repere:envoi_argent"),
     _theme("transport", "Transport et déplacements",
            "taxi*, sept places, 7 places, ter, brt, bus, car rapide, dem dikk, aibd, aeroport*, airport, ferry, chaloupe, "
            "bateau*, train, voiture*, location de voiture, louer une voiture, conduire, conduite, se deplacer, "
@@ -249,7 +250,7 @@ _COMPILED = tuple((theme, _compile(theme.keywords)) for theme in THEMES)
 _PRACTICAL_THEME = {
     "urgences": "urgences", "arnaques": "urgences", "sante": "sante", "argent": "argent", "mobile_money": "argent", "sim": "internet", "electricite": "electricite",
     "heure": "voyage", "visa": "visa", "saison": "meteo", "entreprise": "entreprise", "transport": "transport",
-    "foncier": "logement", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
+    "foncier": "logement", "envoi_argent": "argent", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
     "protection": "protection_sociale", "etudes": "etudes", "langue": "langue", "frontieres": "pays_voisins",
 }
 
