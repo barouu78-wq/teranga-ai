@@ -184,9 +184,8 @@ TOPICS = (
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
       "Pour le dollar ou la livre, le taux varie : utiliser le taux du jour.",
       "Paiements : Wave et Orange Money (paiement mobile) sont partout, y compris chez les petits commerçants et "
-      "certains taxis ; distributeurs nombreux en ville, rares en brousse ; garder des petites coupures.",
-      "Envoyer de l'argent vers le Sénégal : services de transfert (Wave, Orange Money, Western Union, Remitly, "
-      "Wise…) avec réception sur un compte mobile money ou en espèces ; comparer les frais et le taux appliqué.")),
+      "certains taxis ; distributeurs nombreux en ville, rares en brousse ; garder des petites coupures.")),
+    # Envoyer de l'argent vers le Sénégal (ou en recevoir) : sujet « envoi_argent », services/facts/envoi_argent.py.
     ("arnaques", r"\barnaq\w*|\bescroc\w*|\bscams?\b|\bscammers?\b|\bswindl\w*|\bfraudsters?\b|"
      r"\bfaux (taxis?|guides?|billets?|visas?|policiers?|gendarmes?|agents?|commissaires?|douaniers?|recruteurs?|"
      r"recrutements?|sms|messages?|appels?|numeros?|proprietaires?|bailleurs?|vendeurs?|sites?|gains?)\b|"
