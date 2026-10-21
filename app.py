@@ -601,6 +601,7 @@ GUARDED_LIMITS = {
     # Page privée des statistiques : quelques essais de mot de passe seulement.
     "stats_login": (5, 20),
     "affiliate_count": (6, 60),
+    "widget_count": (6, 60),
     "partner_request": (3, 10),
 }
 

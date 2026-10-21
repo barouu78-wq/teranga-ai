@@ -110,7 +110,10 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 </article></main>{site_footer()}</body></html>"""
 
 
-KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi"}
+KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi",
+               "widget": "Widget (visiteurs envoyés)"}
+# Lignes par mois (liens /go et partenaires du widget) au-delà desquelles un nouveau partenaire est compté « autre ».
+WIDGET_MAX_FIELDS = 500
 
 
 def _stats_token() -> str:
@@ -146,7 +149,7 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
                 for kind, source, n in month["rows"][:50]
             )
             table = (
-                f"<table><thead><tr><th>Lien</th><th>Page d'origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
+                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
                 if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
             )
             blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s)</h2><p>{kinds}</p>{table}</section>")
@@ -190,6 +193,18 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
             app.logger.warning("stats-partenaires: mot de passe refusé")
             return Response(render_stats_page(None, "Mot de passe incorrect."), status=403, mimetype="text/html", headers=headers)
         return Response(render_stats_page(stats.summary(), requests=partner_requests.recent()), mimetype="text/html", headers=headers)
+
+    @app.before_request
+    def count_widget_visit():
+        # Visiteur arrivé par le bouton du widget partenaire (static/widget.js) : compté par partenaire, sans
+        # donnée personnelle. Les pages passent par le serveur même avec le service worker (réseau d'abord).
+        if request.method != "GET" or request.path != "/" or request.args.get("utm_medium") != "widget":
+            return None
+        partner = re.sub(r"[^a-z0-9_-]", "", str(request.args.get("utm_source", "")).lower())[:40]
+        # Comme pour /go : quelques visites par minute et par visiteur, pour qu'un script ne gonfle pas les chiffres.
+        if partner and (rate_guard is None or rate_guard("widget_count") is None):
+            stats.record("widget", partner, max_fields=WIDGET_MAX_FIELDS)
+        return None
 
     @app.get("/go/<kind>")
     def affiliate_redirect(kind):
