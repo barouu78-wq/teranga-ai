@@ -978,7 +978,7 @@ def test_production_startup_contract():
     assert "key: OPENAI_API_KEY" in render
     assert "key: SECRET_KEY" in render
     assert "from app import app" in wsgi
-    assert "gunicorn>=" in requirements
+    assert "gunicorn==" in requirements  # versions figées : tests/test_versions_figees.py
 
 
 def test_structured_memory_separates_temporary_constraints_from_preferences():
