@@ -81,3 +81,11 @@ def test_e2e_fixture_still_fails_instead_of_skipping_when_required():
     source = (ROOT / "tests" / "e2e" / "conftest.py").read_text(encoding="utf-8")
     assert 'required = os.getenv("E2E_REQUIRED") == "1"' in source
     assert 'pytest.fail("Playwright non installé")' in source and 'pytest.skip("Playwright non installé")' in source
+
+
+def test_le_ci_teste_avec_le_python_de_la_production():
+    # Render construit le site avec Python 3.14 (journal de construction du 21 octobre 2026) : les tests et
+    # les clics réels doivent tourner sur la même version, sinon une différence de Python passe inaperçue.
+    workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
+    assert workflow.count('python-version: "3.14"') == 2
+    assert 'python-version: "3.12"' not in workflow

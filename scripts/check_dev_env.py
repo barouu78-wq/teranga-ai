@@ -59,7 +59,7 @@ def collect(require_e2e: bool = False) -> list[tuple[str, str, str]]:
     rows: list[tuple[str, str, str]] = []
     current = ".".join(str(part) for part in sys.version_info[:3])
     ok = sys.version_info[:2] >= MIN_PYTHON
-    rows.append(("python", "OK" if ok else "ABSENT", f"{current} (minimum {MIN_PYTHON[0]}.{MIN_PYTHON[1]}, CI en 3.12)"))
+    rows.append(("python", "OK" if ok else "ABSENT", f"{current} (minimum {MIN_PYTHON[0]}.{MIN_PYTHON[1]}, CI en 3.14, comme la production)"))
     for module, label in (("pytest", "pytest"), ("pytest_cov", "couverture (pytest-cov)")):
         found = importlib.util.find_spec(module) is not None
         rows.append((label, "OK" if found else "ABSENT", "installé" if found else INSTALL))
