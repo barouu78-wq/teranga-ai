@@ -14,7 +14,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          # Même version que la production (Render construit avec Python 3.14).
+          python-version: "3.14"
       - run: pip install -r requirements-dev.txt
       # Ruff et Bandit viennent de requirements-dev.txt : une seule source pour le CI et les développeurs.
       - name: Analyse du code (erreurs de syntaxe, noms inconnus, imports inutiles)
@@ -35,7 +36,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          # Même version que la production (Render construit avec Python 3.14).
+          python-version: "3.14"
       - run: pip install -r requirements-e2e.txt
       - run: python -m playwright install --with-deps chromium
       - run: pytest -q tests/e2e -rs
