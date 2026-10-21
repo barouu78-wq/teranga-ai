@@ -51,7 +51,10 @@ e-mails sont chez **OVH** ; le code est sur **GitHub**, et chaque fusion sur `ma
   - **Surtout pas `teranga-ai-1`** : c'est le site en ligne.
   - Ne jamais supprimer l'environnement ou le projet qui le contient : `teranga-redis` y est rangé et sert à la production.
 - [ ] **5. Vérifier.**
-  - Le workflow « TLS domain diagnostic » (lecture seule) donne `ok` pour les deux noms.
+  - Le diagnostic HTTPS (lecture seule) donne `ok` pour les deux noms. Il se lance à la main dans GitHub :
+    *Actions* → workflow `audits-seo-performance` → *Run workflow*. Le résultat est dans le job « Diagnostic HTTPS,
+    disponibilité et latence publique », étape « Diagnostiquer le certificat présenté par chaque adresse ». En local :
+    `python scripts/diagnose_tls.py`.
   - `/health` répond `"status": "ok"` et `"redis": "ok"`.
   - Le service `teranga-ai` apparaît comme suspendu dans Render.
 
@@ -78,7 +81,8 @@ Plus tard, à décider :
    - chez OVH, changer **seulement** la ligne A `@` et le CNAME `www` vers les cibles qu'il donne ;
    - ne jamais toucher aux lignes MX, SPF, DKIM, autodiscover et TXT Google.
 5. **Vérifier** :
-   - le workflow « TLS domain diagnostic » ;
+   - le diagnostic HTTPS : workflow `audits-seo-performance` (voir l'étape 5 du nettoyage), ou
+     `python scripts/diagnose_tls.py` ;
    - `/health` (avec `"redis": "ok"`) ;
    - `/.well-known/assetlinks.json`, dont dépend l'application Android ;
    - Google Search Console.
@@ -95,7 +99,9 @@ Plus tard, à décider :
 
 ## Sources (21 octobre 2026)
 
-- **DNS public et certificats** : workflow « TLS domain diagnostic », exécution 39563782861 (07:41 UTC).
+- **DNS public et certificats** : `scripts/diagnose_tls.py` lancé par le workflow « TLS domain diagnostic » de la
+  branche `diagnostic/tls-domain-cert`, exécution 39563782861 (07:41 UTC). Sur `main`, le même script tourne dans
+  `audits-seo-performance`.
   - `teranga-ai.fr` → `216.24.57.1` ; `www` → `216.24.57.16` et `.18`.
   - Certificats Google Trust Services valides jusqu'au 31 décembre 2026.
 - **Render** : API en lecture.
