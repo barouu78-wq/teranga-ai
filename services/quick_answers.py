@@ -9,6 +9,10 @@ Une question courte qui ne demande qu'une conversion euro ↔ FCFA (« 100 euros
 services/calculators.py, à la parité fixe 1 € = 655,957 FCFA (décision du propriétaire du 19 octobre 2026 : Teranga
 répond seul à ce qu'il sait déjà calculer). Le dollar et la livre (taux variable) et l'anglais vont au modèle.
 
+Une question qui donne la somme envoyée en euros et la somme reçue en FCFA (« J'ai envoyé 200 €, ma famille a reçu
+128 000 FCFA ») reçoit l'écart avec la parité fixe, en FCFA, en euros et en pourcentage : ce que le change a coûté, en
+plus des frais affichés. C'est un calcul, aucun taux ni frais n'est inventé. Le sens inverse (FCFA envoyés) va au modèle.
+
 Une question courte qui ne demande que la date d'une fête (« C'est quand la Tabaski ? ») reçoit la date du calendrier
 vérifié (services/events.py), avec son statut : une fête lunaire non confirmée reste « estimée ».
 
@@ -22,12 +26,22 @@ from __future__ import annotations
 
 import datetime as _dt
 import re
+from decimal import Decimal
 from functools import lru_cache
 from typing import Any
 
 from routes.emergency import ADVICE, EMBASSY_LINKS, EMERGENCY_NUMBERS
 from services.answer_cache import _has_earlier_turns
-from services.calculators import calculation_block
+from services.calculators import (
+    arrondir,
+    calculation_block,
+    eur_vers_fcfa,
+    fcfa_vers_eur,
+    format_montant,
+    format_nombre,
+    format_pourcent,
+    montants_du_texte,
+)
 from services.events import _ALIASES, _asked, french_date, upcoming_events
 from services.senegal_knowledge import load_senegal_knowledge
 from services.text import fold_text
@@ -111,6 +125,62 @@ def _conversion_reply(line: str) -> str:
 
 
 # Date d'une fête : un mot qui demande « quand », le nom de la fête et des mots qui ne changent pas la demande.
+# Écart d'un transfert euro → FCFA. Le texte est déjà sans accents (montants_du_texte).
+_TRANSFER_MAX_CHARS = 160
+_SENT = re.compile(r"\b(?:envoy|envoi|transfer|vire|verse)\w*")
+_RECEIVED = re.compile(r"\b(?:recu|recue|recus|recues|recoit|recoivent|recevoir|touche|touchee|touches|touchees|"
+                       r"arrive|arrivee|arrives|arrivees|obtenu|obtenue)\b")
+
+
+def _transfer_amounts(message: str) -> tuple[Decimal, Decimal] | None:
+    """(euros envoyés, FCFA reçus) si la question donne exactement ces deux montants, sinon None."""
+    if len(message) > _TRANSFER_MAX_CHARS:
+        return None
+    texte, montants = montants_du_texte(message)
+    euros = [m for m in montants if m.devise == "EUR"]
+    fcfa = [m for m in montants if m.devise == "XOF"]
+    if len(montants) != 2 or len(euros) != 1 or len(fcfa) != 1:
+        return None
+    euro, recu = euros[0], fcfa[0]
+    if not euro.valeur or recu.valeur is None:
+        return None
+    sent = [m.start() for m in _SENT.finditer(texte)]
+    received = [m.start() for m in _RECEIVED.finditer(texte)]
+    if not sent or not received:
+        return None
+
+    def distance(montant, positions):
+        return min(abs(position - montant.debut) for position in positions)
+
+    # Chaque montant va avec le verbe le plus proche : les euros envoyés, les FCFA reçus. Sinon (FCFA envoyés,
+    # euros reçus), c'est l'autre sens : le modèle répond.
+    if distance(euro, sent) > distance(euro, received) or distance(recu, received) > distance(recu, sent):
+        return None
+    # Bien plus que la parité : montants mal lus ou autre situation, le modèle répond.
+    if recu.valeur > eur_vers_fcfa(euro.valeur) * Decimal("1.05"):
+        return None
+    return euro.valeur, recu.valeur
+
+
+def _transfer_reply(euros: Decimal, recu: Decimal) -> str:
+    attendu = eur_vers_fcfa(euros)
+    lines = [f"Au taux officiel (parité fixe 1 € = 655,957 FCFA), {format_montant(euros, 'EUR')} = "
+             f"{format_nombre(attendu, 0)} FCFA."]
+    ecart = arrondir(attendu - recu, 0)
+    if ecart <= 0:
+        return "\n".join(lines + [
+            f"Montant reçu : {format_montant(recu, 'XOF')}. Il correspond à la parité : le change ne vous a rien coûté.",
+            "Le coût du transfert se limite alors aux frais payés à l'envoi.",
+        ])
+    perte = euros - fcfa_vers_eur(recu)
+    return "\n".join(lines + [
+        f"Montant reçu : {format_montant(recu, 'XOF')}, soit {format_nombre(ecart)} FCFA de moins "
+        f"({format_montant(perte, 'EUR')}, {format_pourcent(perte / euros * 100)} de la somme envoyée).",
+        "Cet écart est un coût du change (marge ou commission), en plus des frais payés à l'envoi.",
+        "Pour comparer deux services : regardez le montant reçu en FCFA pour la même somme envoyée, frais compris.",
+    ])
+
+
 _WHEN_WORDS = {"quand", "date"}
 _HOLIDAY_WORDS = {word for names in _ALIASES.values() for name in names for word in name.split()} | {
     "fete", "festival", "international", "grand", "saint", "louis", "touba",
@@ -231,6 +301,9 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         line = _conversion_line(message)
         if line:
             return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None}
+        transfer = _transfer_amounts(message)
+        if transfer:
+            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None}
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}
