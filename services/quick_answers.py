@@ -167,9 +167,15 @@ def _transfer_reply(euros: Decimal, recu: Decimal) -> str:
     lines = [f"Au taux officiel (parité fixe 1 € = 655,957 FCFA), {format_montant(euros, 'EUR')} = "
              f"{format_nombre(attendu, 0)} FCFA."]
     ecart = arrondir(attendu - recu, 0)
-    if ecart <= 0:
+    if ecart == 0:
         return "\n".join(lines + [
             f"Montant reçu : {format_montant(recu, 'XOF')}. Il correspond à la parité : le change ne vous a rien coûté.",
+            "Le coût du transfert se limite alors aux frais payés à l'envoi.",
+        ])
+    if ecart < 0:  # reçu au-dessus de la parité (jusqu'à 5 %) : on le dit tel quel
+        return "\n".join(lines + [
+            f"Montant reçu : {format_montant(recu, 'XOF')}, soit {format_nombre(-ecart)} FCFA de plus que la valeur à "
+            "la parité : le change ne vous a rien coûté.",
             "Le coût du transfert se limite alors aux frais payés à l'envoi.",
         ])
     perte = euros - fcfa_vers_eur(recu)

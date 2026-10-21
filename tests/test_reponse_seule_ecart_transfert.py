@@ -42,6 +42,16 @@ def test_les_formulations_courantes_sont_comprises(message):
     assert "3 394 FCFA de moins" in reply
 
 
+def test_un_montant_au_dessus_de_la_parite_est_dit_tel_quel():
+    # Relecture Codex de #516 : 66 000 FCFA pour 100 € n'est pas « conforme à la parité » (65 595,70 FCFA),
+    # c'est 404 FCFA de plus (66 000 − 65 595,70 = 404,30).
+    reply = _reponse("J'ai envoyé 100 € et reçu 66 000 FCFA")
+    assert reply is not None
+    assert "Montant reçu : 66 000 FCFA, soit 404 FCFA de plus que la valeur à la parité" in reply
+    assert "correspond à la parité" not in reply
+    assert "de moins" not in reply
+
+
 def test_un_montant_conforme_a_la_parite_n_a_pas_de_cout_de_change():
     reply = _reponse("J'ai envoyé 100 € et reçu 65 596 FCFA")
     assert reply is not None
