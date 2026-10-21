@@ -39,8 +39,8 @@ Le projet reste volontairement simple :
     ├── data/                          # données structurées du Sénégal
     ├── tests/                         # tests pytest
     ├── .github/workflows/tests.yml    # CI GitHub Actions
-    ├── Dockerfile                     # image de production (Coolify)
-    ├── render.yaml                    # déploiement Render (alternatif)
+    ├── Dockerfile                     # image pour un hébergeur à conteneurs (ancienne production Coolify)
+    ├── render.yaml                    # modèle Render, ne décrit pas la production actuelle (docs/INFRASTRUCTURE.md)
     ├── requirements.txt               # dépendances production
     └── requirements-dev.txt           # dépendances de développement
 
@@ -67,7 +67,9 @@ La CI exécute automatiquement les tests sur les pushes vers main, les pull requ
 
 ## ☁️ Déploiement
 
-La production utilise le Dockerfile (Coolify) avec Gunicorn. render.yaml reste disponible comme alternative.
+La production tourne sur Render (service `teranga-ai-1`, mise en ligne automatique à chaque fusion sur `main`), avec
+Gunicorn réglé par `gunicorn.conf.py`. Le domaine, le DNS et les e-mails sont chez OVH. La carte complète, les lignes DNS
+et la procédure pour tout reconstruire sont dans [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md).
 
 En production, définir TERANGA_ENV=production : l’application refuse alors de démarrer sans SECRET_KEY d’au moins 32 caractères et n’accepte que les hôtes listés dans TRUSTED_HOSTS.
 

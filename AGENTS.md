@@ -48,7 +48,7 @@ un contrôle qui n'a pas tourné.
 | `static/sw.js` | Service worker (hors connexion) : changer `VERSION` quand les fichiers préchargés changent |
 | `data/senegal_knowledge.json` | Base de connaissances : 98 lieux, 19 plats, 14 régions |
 | `data/partners.json` | Adresses partenaires (toujours affichées « Partenaire ») |
-| `docs/` | Guides pour le propriétaire (monétisation, partenaires, Google Play, IA de secours) |
+| `docs/` | Guides pour le propriétaire (monétisation, partenaires, Google Play, IA de secours, hébergement : `INFRASTRUCTURE.md`) |
 
 ## Skills du projet (`.claude/skills/`)
 
