@@ -1116,6 +1116,12 @@ def _calculs(question: object) -> list[str]:
         return (lignes + _conversion(texte, montants, cible, total, bool(lignes)))[:_MAX_LIGNES]
 
 
+def montants_du_texte(question: object) -> tuple[str, list[Montant]]:
+    """Texte préparé (minuscules, sans accents) et les montants qu'il contient, dates exclues."""
+    texte = _preparer(question)
+    return texte, [montant for montant in _montants(texte) if not montant.date]
+
+
 def calculation_block(question: object) -> str:
     """Bloc « CALCUL VÉRIFIÉ » pour la question, ou "" si elle ne demande aucun calcul."""
     try:
