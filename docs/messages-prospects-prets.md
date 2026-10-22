@@ -89,3 +89,81 @@ date de fin de l'essai. J'ajoute la fiche « Partenaire » au site le jour même
 Une seule relance, 4 ou 5 jours plus tard :
 
 > Salaam aleekum, je me permets de revenir vers vous au sujet de Teranga AI. Si ce n'est pas le bon moment, aucun souci. Bonne journée !
+
+---
+
+# Semaine du 22 octobre 2026 — Cap Skirring (Casamance)
+
+Quatre hébergements et une agence, chacun vérifié le 22 octobre 2026 sur sa fiche au-senegal.com (sources dans
+`docs/prospects-octobre-2026.csv`). Les sites officiels n'ont pas pu être ouverts cette semaine : relis le numéro
+sur le site de l'établissement avant d'envoyer si tu peux. Même méthode : message, puis capture de la page, une seule
+relance 4 ou 5 jours plus tard. Remplace seulement **[Ton prénom]**.
+
+*Numérotation à partir de 11 : les n° 6 à 10 sont ceux de la semaine du 18 octobre (PR séparée).*
+
+---
+
+## 11. Campement Chez Campos — Cap Skirring (Cap Randoulène)
+**WhatsApp : +221 77 297 77 39** (fixe : 33 991 41 50)
+
+> Salaam aleekum,
+> Je suis [Ton prénom], fondateur de **Teranga AI** (teranga-ai.fr), un assistant gratuit qui aide les voyageurs à préparer leur séjour au Sénégal, Casamance comprise.
+> J'ai lu qu'une partie des bénéfices du campement va à l'éducation des enfants au Sénégal, et que vous proposez des excursions : c'est le genre d'adresse que j'aime conseiller à ceux qui vont à Cap Skirring.
+> J'aimerais recommander Chez Campos sur la page Cap Skirring, avec la mention « Partenaire ». Le premier mois est offert.
+> Est-ce que je peux vous montrer en 2 minutes comment le campement apparaîtrait ?
+
+Page à capturer : teranga-ai.fr/lieux/cap-skirring
+
+---
+
+## 12. Hôtel Maya — Cap Skirring (baie de Boucotte)
+**WhatsApp : +221 77 616 33 07** (fixe : 33 902 31 49)
+
+> Bonjour,
+> Je suis [Ton prénom], de **Teranga AI** (teranga-ai.fr), l'assistant qui conseille les voyageurs au Sénégal : où dormir, où manger, quoi visiter.
+> Des paillotes autour d'une piscine, au bord de la plage de Boucotte, et un restaurant face à l'océan : l'Hôtel Maya répond à la fois à « où dormir » et « où manger » à Cap Skirring.
+> J'aimerais le recommander sur la page Cap Skirring, avec la mention « Partenaire » (premier mois offert).
+> Je vous envoie une capture de ce que verraient vos futurs clients ?
+
+Page à capturer : teranga-ai.fr/lieux/cap-skirring
+
+---
+
+## 13. Les Hibiscus — Cap Skirring (baie de Kabrousse)
+**WhatsApp : +221 77 022 19 44** (aussi 78 439 49 01 ; depuis la France : +33 6 17 77 77 70)
+
+> Bonjour,
+> Je suis [Ton prénom], fondateur de **Teranga AI** (teranga-ai.fr), un assistant gratuit pour préparer un voyage au Sénégal.
+> Des bungalows dans un parc de 10 hectares avec accès direct à la plage de Kabrousse : c'est une adresse que je voudrais pouvoir citer à ceux qui préparent un séjour à Cap Skirring.
+> Je cherche quelques hôtels de confiance à recommander sur la page Cap Skirring, avec la mention « Partenaire ». Le premier mois est offert.
+> Seriez-vous d'accord pour que je vous montre comment l'hôtel apparaîtrait ?
+
+Page à capturer : teranga-ai.fr/lieux/cap-skirring
+
+---
+
+## 14. Hôtel Balafon — Cap Skirring (centre du village)
+**WhatsApp : +221 77 816 08 96** (fixe : 33 993 54 00)
+
+> Salaam aleekum,
+> Je suis [Ton prénom], de **Teranga AI** (teranga-ai.fr), un assistant qui aide les voyageurs à organiser leur séjour au Sénégal.
+> La saison reprend à Cap Skirring, et beaucoup de visiteurs veulent loger au centre du village, à pied des restaurants et du marché : c'est exactement la situation du Balafon.
+> J'aimerais recommander l'hôtel sur la page Cap Skirring, avec la mention « Partenaire ». Le premier mois est offert.
+> Est-ce que je peux vous montrer en 2 minutes comment il apparaîtrait ?
+
+Page à capturer : teranga-ai.fr/lieux/cap-skirring
+
+---
+
+## 15. Air CM (Cap Casamance) — agence, Kabrousse
+**WhatsApp : +33 6 17 66 92 46** (au Sénégal : +221 77 653 97 21)
+
+> Bonjour,
+> Je suis [Ton prénom], fondateur de **Teranga AI** (teranga-ai.fr), un assistant gratuit qui aide les voyageurs, et la diaspora en France, à préparer un séjour au Sénégal.
+> Vos vols directs Paris – Cap Skirring reprennent cette saison : c'est la réponse la plus simple quand on me demande comment rejoindre la Casamance depuis la France.
+> J'aimerais citer Cap Casamance sur la page Cap Skirring, avec la mention « Partenaire ».
+> Auriez-vous 10 minutes cette semaine pour en parler ?
+
+Page à capturer : teranga-ai.fr/lieux/cap-skirring
+
+*Une agence peut aussi avoir un programme d'apport d'affaires : s'il existe, le lien passera par `/go/<type>`, marqué « Lien partenaire ». Ne promets aucun chiffre de visites.*
