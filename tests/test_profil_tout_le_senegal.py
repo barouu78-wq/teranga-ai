@@ -104,3 +104,28 @@ def test_chaque_suggestion_a_un_appui_verifie(label, question):
     fiches = any(titre in base for titre in ("LIEUX PERTINENTS", "PLATS ET BOISSONS", "PANORAMA DU SÉNÉGAL",
                                              "PHRASES WOLOF", "DOSSIER HISTORIQUE"))
     assert pret or reperes or fiches, f"« {question} » ({label}) n'a aucun appui vérifié"
+
+
+@pytest.mark.parametrize("extra", [{}, {"audience": "inconnu"}])
+def test_le_planificateur_sans_profil_choisi_part_du_profil_general(extra):
+    """Relecture Codex de #523 : sans profil, le planificateur annonçait au modèle une « préférence explicite » touriste."""
+    from flask import Flask
+    import services.trip_planner as trip_planner
+
+    captured = {}
+
+    class FakeResponses:
+        def create(self, **kwargs):
+            captured["prompt"] = kwargs["input"]
+            return type("Response", (), {"output_text": '{"summary":"ok","days":[],"practical_notes":[]}'})()
+
+    class FakeClient:
+        responses = FakeResponses()
+
+    planner_app = Flask(__name__)
+    trip_planner.register_trip_planner(planner_app, FakeClient(), "https://example.com")
+    response = planner_app.test_client().post(
+        "/api/trip-planner", headers={"Origin": "https://example.com"},
+        json={"arrival": "2026-10-01", "departure": "2026-10-03", **extra})
+    assert response.status_code == 200
+    assert "User profile: general" in captured["prompt"]
