@@ -62,6 +62,7 @@ un contrôle qui n'a pas tourné.
 | `publier-android` | Google Play : test interne, test fermé, lien `assetlinks.json` |
 | `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
 | `faire-une-video` | vidéo courte (Reels, TikTok, présentation) avec les vrais écrans du site (`scripts/video/`) |
+| `video-reponse` | vidéo « question → vraie réponse de Teranga » (style Nuit dorée) avec une réponse prête capturée (`scripts/video/reponses.py`) |
 | `conseil-hebdo` | chaque lundi, ou « où en est le projet » : réunion de l'entreprise d'agents (`docs/EQUIPE-AGENTS.md`) |
 | `deboguer-methodiquement` | test rouge, bug, alerte : trouver la cause avant de corriger |
 | `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |

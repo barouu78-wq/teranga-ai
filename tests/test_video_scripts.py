@@ -16,11 +16,12 @@ MODELES = sorted((VIDEO / "modeles").glob("*.html"))
 SKILL = (ROOT / ".claude" / "skills" / "faire-une-video" / "SKILL.md").read_text(encoding="utf-8")
 
 
-def test_les_deux_modeles_existent():
-    assert {m.name for m in MODELES} == {"presentation.html", "clip-pub.html"}
+def test_les_modeles_existent():
+    # reponse-nuit.html (24 octobre 2026) : « question → vraie réponse de Teranga », style « Nuit dorée ».
+    assert {m.name for m in MODELES} == {"presentation.html", "clip-pub.html", "reponse-nuit.html"}
 
 
-@pytest.mark.parametrize("script", ["rendu.py", "ecrans.py"])
+@pytest.mark.parametrize("script", ["rendu.py", "ecrans.py", "reponses.py"])
 def test_les_scripts_se_compilent(script):
     py_compile.compile(str(VIDEO / script), doraise=True)
 
@@ -46,3 +47,25 @@ def test_premiere_image_jamais_vide():
 def test_le_skill_rappelle_les_regles():
     for phrase in ("Aucune réponse de l'IA inventée", "aucune personne générée", "Première image", "Ne jamais publier"):
         assert phrase in SKILL, phrase
+
+
+def test_le_modele_reponse_montre_une_vraie_capture():
+    texte = (VIDEO / "modeles" / "reponse-nuit.html").read_text(encoding="utf-8")
+    assert "{{ECRANS}}reponse.jpg" in texte  # capture faite par scripts/video/reponses.py, jamais une réponse écrite à la main
+    assert "La vraie réponse de" in texte
+
+
+SKILL_REPONSE = ROOT / ".claude" / "skills" / "video-reponse" / "SKILL.md"
+
+
+def test_le_skill_video_reponse_existe_et_rappelle_les_regles():
+    texte = SKILL_REPONSE.read_text(encoding="utf-8")
+    assert texte.startswith("---\nname: video-reponse\ndescription: ")
+    for phrase in ("réponse prête", "scripts/video/reponses.py", "reponse-nuit.html", "Aucune réponse de l'IA inventée",
+                   "Ne jamais publier", "Première image", "date"):
+        assert phrase in texte, phrase
+
+
+def test_les_skills_video_sont_dans_la_carte_des_agents():
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    assert "`faire-une-video`" in agents and "`video-reponse`" in agents

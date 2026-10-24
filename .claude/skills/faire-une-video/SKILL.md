@@ -5,17 +5,20 @@ description: Fabriquer une vidéo courte de Teranga AI (Reels, TikTok, présenta
 
 # Faire une vidéo de Teranga AI
 
-Deux modèles existent dans `scripts/video/modeles/`, tous deux au format vertical 9:16 (1080×1920) :
+Trois modèles existent dans `scripts/video/modeles/`, tous au format vertical 9:16 (1080×1920) :
 
 | Modèle | Durée | Contenu |
 |---|---|---|
 | `presentation.html` | 25 s | lion, questions en français, anglais et wolof, voix, planificateur, repères vérifiés, teranga-ai.fr |
 | `clip-pub.html` | 19 s | style « pub d'application » : ruban doré, « Trop de questions ? », TERANGA vertical, téléphone en 3D avec les vrais écrans |
+| `reponse-nuit.html` | 18 s | style « Nuit dorée » (noir et or) : une question, la **vraie réponse prête** de Teranga en mode nuit, ses chiffres, l'adresse ; recette pas à pas dans le skill `video-reponse` |
 
 ## Étapes
 1. Lancer le site en local, sans vraie clé : `OPENAI_API_KEY=test-key python -c "from app import app; app.run(port=5055)"`.
 2. Capturer les vrais écrans (si le modèle en montre) :
-   `python scripts/video/ecrans.py /chemin/captures --theme light` (ou `dark`).
+   `python scripts/video/ecrans.py /chemin/captures --theme light` (ou `dark`) pour les pages ;
+   `python scripts/video/reponses.py /chemin/captures --question nom "question" "texte attendu"` pour une vraie réponse
+   prête (site lancé avec `ALLOWED_ORIGINS="http://127.0.0.1:5055"`, sinon `/chat` répond 403).
 3. Copier un modèle, changer les textes, les durées (`animation-delay`) et l'ordre des scènes.
 4. Rendre : `python scripts/video/rendu.py mon-modele.html sortie.mp4 --duree 19 --ecrans /chemin/captures`.
 5. Regarder avant de livrer : extraire quelques images avec ffmpeg et les lire
@@ -36,4 +39,8 @@ Les modèles sont dessinés pour 540×960 (rendu ×2). L'option `--format 16x9` 
 - **Son** : pas de musique ni de voix dans le MP4. Le propriétaire ajoute une musique libre de droits dans CapCut,
   Instagram ou TikTok.
 - **Publication** : la visibilité revient à ChatGPT et au propriétaire. Ne jamais publier soi-même.
+- **Date** : un fait qui change avec la date (heure d'été, fête à venir) ne doit pas devenir faux après la publication.
+- **Captures** : la question et le début de la réponse visibles, aucun mot coupé ; un texte trop long se règle par la
+  taille de police (« Commer-çants » a dû être refait le 24 octobre 2026).
+- **Légendes** : livrer avec la vidéo un fichier de légendes prêtes à copier-coller, avec seulement des faits montrés.
 - Pas de logo d'une autre marque, rien sur la politique.
