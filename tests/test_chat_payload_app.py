@@ -32,7 +32,7 @@ def test_parse_chat_payload_normalizes_invalid_language_and_audience():
         payload, error = parse_chat_payload()
 
     assert error is None
-    assert payload["audience"] == "tourist"
+    assert payload["audience"] == "general"  # profil inconnu → « Tout le Sénégal »
     assert "Réponds en français naturel" in payload["instructions"]
 
 

@@ -799,7 +799,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
         if pace not in options["pace"]:
             pace = "Équilibré"
         audience = str(body.get("audience", "tourist")).lower()[:16]
-        if audience not in {"tourist", "resident", "diaspora", "merchant"}:
+        if audience not in {"general", "tourist", "resident", "diaspora", "merchant"}:
             audience = "tourist"
         arrival_value = body["arrival"]
         departure_value = body["departure"]

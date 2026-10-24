@@ -19,7 +19,25 @@ from .senegal_knowledge import names_own_subject
 from .truncation import prepare_cut_history
 
 
+_GENERAL_FR = (
+    "Profil actif : tout le Sénégal. La personne peut être un habitant, un membre de la diaspora, un commerçant ou un "
+    "voyageur : réponds à toute question sur le Sénégal (vie quotidienne, démarches, santé, argent, travail, études, "
+    "entreprise, culture, histoire, religion, langues, voyage…) sans supposer qu'elle est touriste. Adapte la réponse à ce "
+    "que la question montre de sa situation ; si une précision change vraiment la réponse, pose une seule question courte."
+)
 _AUDIENCE_INSTRUCTIONS = {
+        # Consigne lue par le modèle seulement. En wolof et en pulaar, elle reste en français : la langue de la réponse
+        # est fixée par la consigne de langue, et aucune phrase dans ces langues n'est écrite sans relecture humaine.
+        "general": {
+            "fr": _GENERAL_FR,
+            "en": "Active profile: all of Senegal. The person may be a resident, a member of the diaspora, a merchant or a "
+                  "traveller: answer any question about Senegal (daily life, paperwork, health, money, work, studies, "
+                  "business, culture, history, religion, languages, travel…) without assuming they are a tourist. Adapt the "
+                  "answer to what the question shows about their situation; if one detail truly changes the answer, ask a "
+                  "single short question.",
+            "wo": _GENERAL_FR,
+            "ff": _GENERAL_FR,
+        },
         "tourist": {
             "fr": "Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
             "en": "Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",

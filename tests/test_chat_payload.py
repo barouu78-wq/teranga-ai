@@ -25,7 +25,7 @@ def test_normalize_chat_input_applies_defaults_and_limits():
     assert error is None
     assert result["message"] == "Bonjour"
     assert result["language"] == "fr"
-    assert result["audience"] == "tourist"
+    assert result["audience"] == "general"  # profil « Tout le Sénégal » par défaut
     assert result["history"] == [{"role": "user", "content": "Salut"}]
 
 

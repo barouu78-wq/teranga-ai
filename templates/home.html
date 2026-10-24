@@ -902,8 +902,9 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   #shareAppBtn{display:none}
   #stage{padding:4px 14px 12px}
   .hero{gap:16px;padding-top:12px}
-  .audience-mode{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
-  .audience-mode::-webkit-scrollbar{display:none}
+  /* Cinq profils depuis « Tout le Sénégal » : sur deux lignes plutôt qu'une rangée qui défile, chaque bouton reste
+     visible et atteignable sans glisser (tests/e2e/test_profiles.py). */
+  .audience-mode{flex-wrap:wrap}
   .audience-btn{flex:0 0 auto}
   .audience-btn small{display:none}
   .journey-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -921,6 +922,12 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .project-panel{border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:calc(var(--vvh,100vh) - 24px);padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
   .project-grid{grid-template-columns:1fr}
   .col{max-width:88%}
+}
+/* Écran très bas (≤ 600 px) : la rangée de profils défile sur une ligne, comme avant, pour garder la zone de question
+   dans le premier écran (tests/e2e/test_design_lion_baobab.py). */
+@media(max-width:680px) and (max-height:600px){
+  .audience-mode{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
+  .audience-mode::-webkit-scrollbar{display:none}
 }
 
 /* Petits téléphones : boutons de partage empilés */
@@ -1086,16 +1093,17 @@ body:not([data-fete]) .hero-signature{display:none}
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
-    <p id="heroText">Météo, trajets, plats, plages, marchés — Teranga t’oriente sans inventer les détails qui bougent.</p>
+    <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
-  <button type="button" class="audience-btn on" data-audience="tourist" aria-pressed="true"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
+  <button type="button" class="audience-btn on" data-audience="general" aria-pressed="true"><span>✦</span><b id="audienceGeneral">Tout le Sénégal</b><small id="audienceGeneralHint">Toutes vos questions</small></button>
+  <button type="button" class="audience-btn" data-audience="tourist" aria-pressed="false"><span>✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
   <button type="button" class="audience-btn" data-audience="resident" aria-pressed="false"><span>⌂</span><b id="audienceResident">Résident</b><small id="audienceResidentHint">Vivre au Sénégal</small></button>
   <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span>↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span>◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
 </div>
 <form class="hero-ask" id="heroAsk" autocomplete="off">
   <label class="sr-only" for="heroInput">Votre question</label>
-  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment aller à Gorée ?" enterkeyhint="send">
+  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment refaire ma carte d’identité ?" enterkeyhint="send">
   <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
   <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </form>

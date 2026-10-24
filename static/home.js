@@ -27,9 +27,9 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
-  heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
+  heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
   cards:[
@@ -50,9 +50,9 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
-  heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
+  heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
   cards:[
@@ -201,25 +201,30 @@ setInterval(loadFx,10*60*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
 const AUDIENCE={
 fr:{
+ general:[['Papiers',"Comment refaire ma carte d'identité ?"],['Santé',"Où trouver une pharmacie de garde ?"],['Argent',"Combien font 100 euros en FCFA ?"],['Voyage',"Que faire au Sénégal en une semaine ?"],['Arnaques',"On m'a arnaqué sur Wave, que faire ?"],['Électricité',"Comment acheter du crédit Woyofal ?"],['Études',"Comment obtenir une bourse d'études ?"],['Entreprise',"Comment créer mon entreprise au Sénégal ?"],['Fêtes',"C'est quand la Tabaski ?"],['Wolof',"Apprends-moi les salutations en wolof."]],
  tourist:[['Visite guidée',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Négocier au marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
  merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
 },
 en:{
+ general:[['Paperwork',"How do I renew my Senegalese ID card?"],['Health',"Where can I find an on-duty pharmacy?"],['Money',"How much is 100 euros in CFA francs?"],['Travel',"What can I do in Senegal in one week?"],['Scams',"I was scammed on Wave, what should I do?"],['Electricity',"How do I buy Woyofal electricity credit?"],['Studies',"How can I get a study grant?"],['Business',"How do I start a business in Senegal?"],['Holidays',"When is Tabaski?"],['Wolof',"Teach me greetings in Wolof."]],
  tourist:[['Guided tour','Be my guide: tell me the history of Gorée and what to see there.'],['Market bargaining','How do I bargain at Sandaga market? Give me the method and useful Wolof phrases.'],['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
  merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
 },
 wo:{
+ general:[['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
  tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Waxaale njëg',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Yoon',"Naka laa dem AIBD ba sama hôtel, te ñaata laa wara def budget?"],['Budget',"Ñaata laa wara def budget bés bu nekk ci Senegaal?"],['Jëfandikoo',"Yan ndigal yu am solo laa wara xam ngir visiter Dakar ak Gorée?"],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
  merchant:[['Njëg ak marge',"Jàppale ma defar njëg ak marge ci sama produit."],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['WhatsApp',"Naka laa mëna tëral commande yi ci WhatsApp?"],['Fey',"Yan yoon yu fey laa mëna jëfandikoo ngir sama clients?"],['Stock',"Jàppale ma tëral stock bi te moytu rupture."],['Client toubab',"Naka laa mëna dalal te jaay ak client turist bu jóge biti?"]]
 },
 ff:{
+ general:[['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
  tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Laawol','No mbaydi mi AIBD haa hôtel am, e hol ko mi heftin e budget?'],['Budget','Hol budget mi waɗa ñalawma e Senegaal?'],['Jokkondiral','Hol cuɓe mawɗe mi anndu ngam yahrude Dakar e Gorée?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
  merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
 }
 };
-let audience=storageGet('teranga-audience','tourist');
+// « Tout le Sénégal » par défaut : sans profil choisi, Teranga répond à toute question, pas seulement au voyage.
+let audience=storageGet('teranga-audience','general');
 // Une valeur périmée ou altérée du stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
-if(!['tourist','resident','diaspora','merchant'].includes(audience))audience='tourist';
+if(!['general','tourist','resident','diaspora','merchant'].includes(audience))audience='general';
 const audienceContext={
  tourist:{
   fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
@@ -250,6 +255,7 @@ const audienceContext={
 // Une icône fixe par bouton (même ordre dans toutes les langues) : deviner l'icône
 // d'après le titre traduit donnait des doublons et des erreurs selon la langue.
 const AUDIENCE_ICONS={
+ general:['doc','people','exchange','route','safety','home','culture','shop','guide','chat'],
  tourist:['guide','market','weather','route','money','safety','food','chat','exchange','wifi'],
  resident:['home','doc','money','place'],
  diaspora:['route','home','exchange','invest'],
@@ -257,6 +263,8 @@ const AUDIENCE_ICONS={
 };
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
+  const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes vos questions'];
+  $('audienceGeneral').textContent=generalLabels[0];$('audienceGeneralHint').textContent=generalLabels[1];
   const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
   $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
   $('audienceResident').textContent=labels[2];$('audienceResidentHint').textContent=labels[3];
@@ -739,7 +747,7 @@ function setLang(next){
 }
 document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
   const nextAudience=String(btn.dataset.audience||'').trim();
-  if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  if(!['general','tourist','resident','diaspora','merchant'].includes(nextAudience))return;
   audience=nextAudience;
   try{LS.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
