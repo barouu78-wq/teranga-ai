@@ -58,6 +58,23 @@ def test_la_limite_garde_la_photo_principale():
     assert _names(photos) == ["File:Ziguinchor_-_Port.jpg"]
 
 
+def test_plus_de_photos_reprend_l_article_deja_lu():
+    """« Plus de photos » demande plus de photos du même article (8, puis 16) : la même réponse de Wikipédia sert.
+
+    Avant, le cache dépendait du nombre demandé : chaque suite refaisait les deux appels à Wikipédia (images et photo
+    principale) pour lire exactement la même liste.
+    """
+    _ARTICLE_CACHE.clear()
+    requested = []
+    opener = _opener("Ziguinchor_-_Port.jpg", requested)
+    premiere = fetch_article_images("Ziguinchor", limit=2, urlopen_fn=opener)
+    appels = len(requested)
+    suite = fetch_article_images("Ziguinchor", limit=16, urlopen_fn=opener)
+    assert len(requested) == appels, "même article : aucun nouvel appel à Wikipédia"
+    assert _names(suite)[:2] == _names(premiere)
+    assert len(suite) == 3
+
+
 def test_une_seule_photo_ne_demande_pas_la_photo_principale():
     _ARTICLE_CACHE.clear()
     requested = []

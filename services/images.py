@@ -372,7 +372,7 @@ _ARTICLE_IMAGE_EXCLUDED = (
     "icon", "icone", "plan ", "diagram", "chart", "graph", "signature", "relief",
     "satellite", "population", "pictogram", "symbol", "stamp", "timbre", "banknote", "billet",
 )
-_ARTICLE_CACHE: dict[tuple[str, int], tuple[float, list[dict]]] = {}
+_ARTICLE_CACHE: dict[tuple[str], tuple[float, list[dict]]] = {}
 
 
 def _article_title_candidates(title):
@@ -410,10 +410,12 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
     candidates = _article_title_candidates(title)
     if not candidates:
         return []
-    cache_key = (_normalize(candidates[-1]), int(limit))
+    # Le cache garde toutes les photos retenues de l'article, quel que soit le nombre demandé : « Plus de photos »
+    # (16 au lieu de 8) relit la même liste au lieu de refaire les deux appels à Wikipédia.
+    cache_key = (_normalize(candidates[-1]),)
     cached = _ARTICLE_CACHE.get(cache_key)
     if cached is not None and time.monotonic() - cached[0] < _IMAGE_CACHE_TTL_SECONDS:
-        return [dict(item) for item in cached[1]]
+        return [dict(item) for item in cached[1][:limit]]
 
     opener = urlopen_fn or urlopen
     validate = image_validator or (lambda src: str(src or ""))
@@ -481,7 +483,6 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
         if len(out) > 1:
             lead = _lead_image_page_url(article, opener, lang)
             out.sort(key=lambda item: item["page_url"] != lead)
-        del out[limit:]
         if out:
             break
     if not out and failures:
@@ -492,7 +493,7 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
     if len(_ARTICLE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES and cache_key not in _ARTICLE_CACHE:
         _ARTICLE_CACHE.pop(min(list(_ARTICLE_CACHE.items()), key=lambda entry: entry[1][0])[0], None)
     _ARTICLE_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
-    return [dict(item) for item in out]
+    return [dict(item) for item in out[:limit]]
 
 
 def fetch_commons_image(title, image_validator=None, display_url_builder=None, urlopen_fn=None):
