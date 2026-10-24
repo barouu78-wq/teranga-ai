@@ -83,6 +83,8 @@ def test_c_est_quoi_le_plat_national_a_sa_reponse_prete():
     "Que visiter au Sénégal ?",
     "Itinéraire de 10 jours au Sénégal",
     "Idées de vacances au Sénégal",
+    # Relecture Codex de #520 : une fiche qui parle d'enfants (parc de Hann) ne doit pas remplacer le panorama.
+    "Que faire au Sénégal en une semaine avec des enfants ?",
 ])
 def test_une_question_de_voyage_sans_lieu_recoit_le_panorama_de_la_base(question):
     context = _base(question)
@@ -137,6 +139,8 @@ def test_un_mois_de_voyage_recoit_le_repere_des_saisons(question):
     "Inscription à l'université en octobre",
     "C'est quand la Tabaski en juin ?",
     "Je vais à la mairie en mars pour mon acte de naissance",
+    "Je rends visite à ma mère en janvier",  # relecture Codex de #520 : une visite ordinaire n'est pas un voyage
+    "Je pars en mission en mars",
 ])
 def test_un_mois_hors_voyage_ne_donne_pas_les_saisons(question):
     assert "saison" not in matching_topics(question)

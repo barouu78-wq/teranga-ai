@@ -562,7 +562,11 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     unesco = data.get("unesco_world_heritage", [])
     folded_value = _fold(value)
     sightseeing = _SIGHTSEEING.search(folded_value) or (_TRIP_WORDS.search(folded_value) and _COUNTRY.search(folded_value))
-    if not matched_regions and not ranked and sightseeing and not _NOT_SIGHTSEEING.search(folded_value):
+    # Un lieu ou une région vraiment nommés (pas une fiche trouvée par un mot commun : « enfants » ramène le parc de
+    # Hann, relecture Codex de #520) : leurs fiches suffisent.
+    names = _place_names_pattern(data)
+    named = bool(located) or bool(names and names.search(folded_value))
+    if not named and sightseeing and not _NOT_SIGHTSEEING.search(folded_value):
         lines.extend(_panorama(data))
     elif unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
         lines.append("PATRIMOINE MONDIAL UNESCO : " + ", ".join(unesco) + ".")

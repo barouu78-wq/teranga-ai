@@ -308,10 +308,12 @@ TOPICS = (
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
       "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
-    # Un mois cité avec un voyage (« Je pars au Sénégal en décembre ») : pas « partir à la retraite en janvier ».
+    # Un mois cité avec un vrai voyage (« Je pars au Sénégal en décembre », « vacances en août ») : pas « partir à la
+    # retraite en janvier », ni « rendre visite à ma mère en janvier » (relecture Codex de #520).
     ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
      r"hivernage|pluie|pleut|rainy|\brain\b|chaleur|heat|"
-     r"\b(?:pars|part|partir|partons|voyag\w*|vacances|sejour\w*|visiter|visite)\b(?! a la retraite)[^|?]{0,60}"
+     r"\b(?:voyag\w*|vacances|sejour\w*|(?:pars|part|partir|partons|aller|venir|viens|rentrer|rentre|visiter) "
+     r"(?:au |en |le )?senegal)\b[^|?]{0,60}"
      r"\ben (?:janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\b",
      ("Saison sèche environ de novembre à mai (la plus confortable, fraîche le soir sur la côte) ; saison des pluies "
       "environ de juillet à octobre (plus tôt et plus longue en Casamance), pistes parfois difficiles. L'intérieur "
