@@ -13,6 +13,10 @@ Une question qui donne la somme envoyée en euros et la somme reçue en FCFA («
 128 000 FCFA ») reçoit l'écart avec la parité fixe, en FCFA, en euros et en pourcentage : ce que le change a coûté, en
 plus des frais affichés. C'est un calcul, aucun taux ni frais n'est inventé. Le sens inverse (FCFA envoyés) va au modèle.
 
+Une question courte sur l'heure à Dakar ou le décalage avec Paris reçoit l'heure du moment à Dakar (UTC+0 toute l'année,
+repère vérifié) et l'écart actuel avec Paris (1 h ou 2 h, selon l'heure d'été française de la base des fuseaux). Une
+question sur l'indicatif du Sénégal reçoit +221 (repère vérifié). « À quelle heure part le ferry ? » va au modèle.
+
 Une question courte qui ne demande que la date d'une fête (« C'est quand la Tabaski ? ») reçoit la date du calendrier
 vérifié (services/events.py), avec son statut : une fête lunaire non confirmée reste « estimée ».
 
@@ -28,6 +32,7 @@ import datetime as _dt
 import re
 from decimal import Decimal
 from functools import lru_cache
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from typing import Any
 
 from routes.emergency import ADVICE, EMBASSY_LINKS, EMERGENCY_NUMBERS
@@ -187,6 +192,58 @@ def _transfer_reply(euros: Decimal, recu: Decimal) -> str:
     ])
 
 
+# Heure de Dakar et décalage avec Paris (sujet « heure » de practical_facts : UTC+0 toute l'année, sans changement
+# d'heure). L'heure du moment et l'heure d'été française viennent de la base des fuseaux (zoneinfo + tzdata).
+_TIME_WORDS = {"heure", "heures", "decalage", "horaire", "fuseau"}
+_TIME_ALLOWED = _TIME_WORDS | _FILLER_WORDS | {
+    "paris", "france", "entre", "et", "avec", "maintenant", "actuellement", "moment", "y", "t", "fait", "qu", "on",
+}
+
+
+def _now_utc() -> _dt.datetime:
+    return _dt.datetime.now(_dt.timezone.utc)
+
+
+def _asked_time(message: str) -> bool:
+    """« Quelle heure est-il à Dakar ? », « Décalage horaire Sénégal ? » ; pas « À quelle heure part le ferry ? »."""
+    if len(message) > MAX_CHARS:
+        return False
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    if not words or any(word not in _TIME_ALLOWED for word in words) or not _TIME_WORDS.intersection(words):
+        return False
+    return bool({"decalage", "fuseau", "dakar", "senegal"}.intersection(words))
+
+
+def _time_reply(now: _dt.datetime) -> str | None:
+    try:
+        dakar = now.astimezone(ZoneInfo("Africa/Dakar"))
+        paris = now.astimezone(ZoneInfo("Europe/Paris"))
+    except ZoneInfoNotFoundError:
+        return None  # base des fuseaux absente : le modèle répond avec le repère vérifié
+    ecart = round((paris.utcoffset() - dakar.utcoffset()).total_seconds() / 3600)
+    if dakar.utcoffset() != _dt.timedelta(0) or ecart not in (1, 2):
+        return None
+    saison = "heure d'été" if ecart == 2 else "heure d'hiver"
+    return "\n".join([
+        f"À Dakar, il est {dakar.hour} h {dakar.minute:02d} (heure du Sénégal, UTC+0).",
+        f"En ce moment, il y a {ecart} h de moins qu'à Paris ({saison} en France).",
+        "Le Sénégal ne change jamais d'heure : 1 h de moins que Paris en hiver, 2 h de moins en été.",
+    ])
+
+
+# Indicatif téléphonique (sujet « sim » de practical_facts : « Indicatif : +221 »).
+_PHONE_CODE_ALLOWED = _FILLER_WORDS | {"indicatif", "telephonique", "telephone", "international", "pays"}
+_PHONE_CODE_REPLY = "L'indicatif téléphonique du Sénégal est +221.\nDepuis l'étranger, composez +221 puis le numéro."
+
+
+def _asked_phone_code(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    return ("indicatif" in words and bool({"senegal", "dakar"}.intersection(words))
+            and all(word in _PHONE_CODE_ALLOWED for word in words))
+
+
 _WHEN_WORDS = {"quand", "date"}
 _HOLIDAY_WORDS = {word for names in _ALIASES.values() for name in names for word in name.split()} | {
     "fete", "festival", "international", "grand", "saint", "louis", "touba",
@@ -310,6 +367,12 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         transfer = _transfer_amounts(message)
         if transfer:
             return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None}
+        if _asked_time(message):
+            reply = _time_reply(_now_utc())
+            if reply:
+                return {"reply": reply, "sources": [], "image": None, "map": None}
+        if _asked_phone_code(message):
+            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None}
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}

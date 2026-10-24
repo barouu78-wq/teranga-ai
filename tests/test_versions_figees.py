@@ -27,5 +27,6 @@ def test_chaque_bibliotheque_de_production_a_une_version_figee():
 
 def test_les_bibliotheques_utilisees_par_le_code_sont_listees():
     noms = {ligne.split("==", 1)[0].lower() for ligne in _lignes()}
-    for nom in ("flask", "werkzeug", "gunicorn", "openai", "anthropic", "redis", "httpx", "pillow", "python-dotenv"):
+    for nom in ("flask", "werkzeug", "gunicorn", "openai", "anthropic", "redis", "httpx", "pillow", "python-dotenv",
+                "tzdata"):
         assert nom in noms
