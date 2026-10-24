@@ -129,3 +129,15 @@ def test_le_planificateur_sans_profil_choisi_part_du_profil_general(extra):
         json={"arrival": "2026-10-01", "departure": "2026-10-03", **extra})
     assert response.status_code == 200
     assert "User profile: general" in captured["prompt"]
+
+
+def test_les_moteurs_et_les_partages_presentent_teranga_pour_tout_le_senegal():
+    """Description Google, aperçus de partage et application : la vie quotidienne, pas seulement le voyage."""
+    client = app_module.app.test_client()
+    html = client.get("/", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    for balise in ('name="description"', 'property="og:description"', 'name="twitter:description"'):
+        contenu = re.search(r'<meta %s content="([^"]+)"' % balise, html).group(1)
+        for sujet in ("démarches", "santé", "voyage"):
+            assert sujet in contenu.lower(), (balise, sujet)
+    manifeste = client.get("/manifest.webmanifest", base_url="https://teranga-ai.fr").get_json()
+    assert "démarches" in manifeste["description"] and "santé" in manifeste["description"]
