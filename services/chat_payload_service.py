@@ -7,6 +7,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
+from .images import should_fetch_images
 from .intelligence import detect_location
 from .language_quality import language_instruction
 from .model_params import openai_model
@@ -202,27 +203,86 @@ _SHORT_YES = re.compile(
 )
 
 
+# « Plus de photos », « D'autres photos », « Encore des photos de Gorée », « More photos » : la suite d'une galerie.
+_MORE_PHOTOS = re.compile(r"\b(?:plus\s+d(?:e|['’])|autres?|encore|more|other|another)\b", re.I)
+# Mots d'une suite qui ne nomme aucun sujet (« Montre-moi d'autres photos, stp »).
+_MORE_PHOTOS_FILLER = re.compile(
+    r"\b(?:photos?|images?|nataal|plus|de|des|d|autres?|encore|une?|quelques|more|other|another|some|montre|moi|"
+    r"envoie|donne|fais|voir|je|veux|voudrais|show|send|give|me|please|stp|svp|merci|s|il|te|pla[iî]t)\b",
+    re.I,
+)
+
+
 def photo_request(message: str, history) -> tuple[bool, str]:
     """Décide si le message demande des photos, et avec quelle requête.
 
     Seul le message courant compte : une demande explicite, ou un « oui » court
     qui répond à une proposition de photos. Le sujet d'un « oui » est celui de
     la dernière demande de photos de l'utilisateur (« photos de Saly »), jamais
-    le mot « oui » lui-même. L'intention héritée de l'historique ne suffit pas :
-    « Parle-moi des personnages sénégalais » doit aller au modèle.
+    le mot « oui » lui-même ; de même pour « Plus de photos » (voir `photo_page`).
+    L'intention héritée de l'historique ne suffit pas : « Parle-moi des
+    personnages sénégalais » doit aller au modèle.
     """
-    text = str(message or "").strip()
-    if _PHOTO_WORDS.search(text):
-        return True, text
-    if not _SHORT_YES.match(text) or not isinstance(history, (list, tuple)):
-        return False, ""
-    turns = [item for item in history if isinstance(item, dict)]
+    gallery = _photo_gallery(message, history)
+    return (True, gallery[0]) if gallery else (False, "")
+
+
+def photo_page(message: str, history) -> int:
+    """Page de la galerie demandée : 0 pour une nouvelle demande, 1 pour le premier « Plus de photos », etc."""
+    gallery = _photo_gallery(message, history)
+    return gallery[1] if gallery else 0
+
+
+def _previous_turns(text: str, history) -> list[dict]:
+    turns = [item for item in history if isinstance(item, dict)] if isinstance(history, (list, tuple)) else []
     if turns and turns[-1].get("role") == "user" and str(turns[-1].get("content", "")).strip() == text:
         turns = turns[:-1]
+    return turns
+
+
+def _photo_gallery(message: str, history) -> tuple[str, int] | None:
+    """(requête de photos, page de la galerie), ou None si le message ne demande pas de photos."""
+    text = str(message or "").strip()
+    turns = _previous_turns(text, history)
+    if _PHOTO_WORDS.search(text):
+        follow_up = _gallery_follow_up(text, turns) if _MORE_PHOTOS.search(text) else None
+        return follow_up or (text, 0)
+    subject = _yes_to_photo_offer(text, turns)
+    return (subject, 0) if subject else None
+
+
+def _gallery_follow_up(text: str, turns: list[dict]) -> tuple[str, int] | None:
+    """« Plus de photos » : la galerie du tour précédent, page suivante. None : une nouvelle galerie.
+
+    Avant, la suite était cherchée telle quelle (« Voici quelques photos pour « Plus de photos » »), ou refaisait la
+    même recherche (« Encore des photos de Gorée ») et montrait les mêmes photos.
+    """
+    index = next((i for i in range(len(turns) - 1, -1, -1) if turns[i].get("role") == "user"), None)
+    if index is None:
+        return None
+    previous = str(turns[index].get("content", "")).strip()
+    own_subject = bool(re.sub(r"[\W_\d]+", "", _MORE_PHOTOS_FILLER.sub(" ", text)))
+    earlier = _photo_gallery(previous, turns[: index + 1])
+    if earlier is None:
+        # Après une réponse du modèle : la suite porte sur sa question. Une galerie n'y a été montrée que si la
+        # question demandait à voir (« … et montre la ville ») : la première page reste alors à montrer sinon.
+        if own_subject or not previous:
+            return None
+        return f"photos : {previous}", int(should_fetch_images(previous))
+    query, page = earlier
+    if own_subject and (detect_location(text) is None or detect_location(text) != detect_location(query)):
+        return None
+    return query, page + 1
+
+
+def _yes_to_photo_offer(text: str, turns: list[dict]) -> str:
+    """Sujet d'un « oui » court qui répond à une proposition de photos, sinon ""."""
+    if not _SHORT_YES.match(text):
+        return ""
     last_assistant = next((t for t in reversed(turns) if t.get("role") == "assistant"), None)
     offer = str((last_assistant or {}).get("content", ""))
     if "?" not in offer or not _PHOTO_WORDS.search(offer):
-        return False, ""
+        return ""
     user_turns = [str(t.get("content", "")).strip() for t in turns if t.get("role") == "user"]
     # Sujet : la dernière demande de photos, sinon la dernière question
     # (« Parle-moi de Saly » suivie d'une proposition de photos).
@@ -241,7 +301,7 @@ def photo_request(message: str, history) -> tuple[bool, str]:
     if not subject:
         question = next((t for t in reversed(user_turns) if t), "")
         subject = f"photos : {question}" if question else ""
-    return (True, subject) if subject else (False, "")
+    return subject
 
 
 def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_length, max_history_items, max_history_item_length, safe_languages, infer_senegal_context, build_intent_context, should_use_planner, build_planner_data, should_use_web, format_senegal_knowledge, senegal_knowledge, senegal_people, build_conversation, max_history_chars, system_prompt):
@@ -438,6 +498,7 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
         "contextual_query": enriched_context,
         "photo_only": photo_only,
         "photo_query": photo_query,
+        "photo_page": photo_page(message, history) if photo_only else 0,
         "trip_context": trip_context,
         "trip_edit_request": trip_edit_request,
         "trip_edit_proposal": trip_edit_proposal,

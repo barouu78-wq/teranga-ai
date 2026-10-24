@@ -518,7 +518,7 @@ def knowledge_image_titles(message, limit=4):
     return _knowledge_image_titles(message, SENEGAL_KNOWLEDGE, normalize=normalize, limit=limit)
 
 
-def fetch_topic_images(message):
+def fetch_topic_images(message, page=0):
     return _fetch_topic_images(
         message,
         SENEGAL_KNOWLEDGE,
@@ -532,6 +532,7 @@ def fetch_topic_images(message):
         fetch_city_image=fetch_city_image,
         image_proxy_url=image_proxy_url,
         logger=app.logger,
+        page=page,
     )
 
 

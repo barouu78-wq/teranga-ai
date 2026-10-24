@@ -142,8 +142,13 @@ def register_chat_route(app, deps):
 
         photo_only = bool(payload.get("photo_only"))
         photo_query = str(payload.get("photo_query") or payload.get("message", ""))
+        photo_page = int(payload.get("photo_page") or 0)
         if photo_only:
             language = payload.get("language", "fr")
+
+            def photo_gallery():
+                # « Plus de photos » : page suivante de la galerie, sans les photos déjà montrées.
+                return fetch_topic_images(photo_query, page=photo_page) if photo_page else fetch_topic_images(photo_query)
 
             def photo_lead(image):
                 # Le texte nomme le sujet réellement cherché et ne promet jamais
@@ -152,16 +157,24 @@ def register_chat_route(app, deps):
                 # « Saly Sénégal » est une précision de recherche, pas le sujet.
                 subject = re.sub(r"\s+s[ée]n[ée]gal$", "", subject, flags=re.I) or subject
                 if language == "en":
+                    if image and photo_page:
+                        return f"Here are more photos for “{subject}”." if subject else "Here are more photos."
                     if image:
                         return f"Here are some photos for “{subject}”." if subject else "Here are some photos."
+                    if photo_page:
+                        return "I couldn't find any other reliable photos for this subject. Try another place, for example Saint-Louis, Lompoul or the Pink Lake."
                     return "I couldn't find a reliable photo for this request. Try naming a specific place, for example Gorée, Saint-Louis or Lompoul."
+                if image and photo_page:
+                    return f"Voici d'autres photos pour « {subject} »." if subject else "Voici d'autres photos."
                 if image:
                     return f"Voici quelques photos pour « {subject} »." if subject else "Voici quelques photos."
+                if photo_page:
+                    return "Je n'ai pas trouvé d'autres photos fiables pour ce sujet. Essaie un autre lieu, par exemple Saint-Louis, Lompoul ou le lac Rose."
                 return "Je n'ai pas trouvé de photo fiable pour cette demande. Essaie en précisant un lieu, par exemple Gorée, Saint-Louis ou Lompoul."
 
             if request.headers.get("X-Teranga-Mode", "").lower() == "json":
                 try:
-                    image = fetch_topic_images(photo_query)
+                    image = photo_gallery()
                     return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
@@ -169,7 +182,7 @@ def register_chat_route(app, deps):
 
             def generate_photo_only():
                 try:
-                    image = fetch_topic_images(photo_query)
+                    image = photo_gallery()
                     trace.first_word()
                     yield json.dumps({"d": photo_lead(image)}, ensure_ascii=False) + "\n"
                     if image:
