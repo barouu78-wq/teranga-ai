@@ -409,7 +409,7 @@ def _google_pause_key() -> str:
 
 def google_images_paused() -> bool:
     """Google a refusé récemment (accès ou quota) : inutile de l'interroger."""
-    global _google_checked_until, _google_pause_reason
+    global _google_checked_until, _google_paused_until, _google_pause_reason
     now = time.time()
     if now < _google_paused_until:
         return True
@@ -426,6 +426,9 @@ def google_images_paused() -> bool:
     if isinstance(value, bytes):
         value = value.decode("utf-8", errors="replace")
     _google_pause_reason = "access_denied" if str(value) == "access_denied" else "paused"
+    # Pause lue dans Redis : gardée en mémoire jusqu'à la prochaine lecture. Sans elle, le worker répondait « pas
+    # en pause » pendant cette minute et refaisait un appel refusé (journaux Render, 17-24 octobre 2026).
+    _google_paused_until = _google_checked_until
     return True
 
 

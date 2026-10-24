@@ -169,6 +169,33 @@ def test_health_dit_que_google_refuse_l_acces(monkeypatch, google):
     assert data["google_images"] == "access_denied"
 
 
+def test_un_worker_qui_lit_la_pause_dans_redis_n_appelle_plus_google(monkeypatch, google):
+    """Constat de production (journaux Render, 17-24 octobre 2026) : chaque worker refaisait son propre appel refusé.
+
+    Après avoir lu la pause dans Redis, un worker répondait « en pause » une fois, puis « pas en pause » pendant 60 s
+    (il ne relit Redis qu'une fois par minute) : une demande de photos dans cette fenêtre, rouverte par chaque
+    /health d'UptimeRobot, appelait Google et écrivait une nouvelle ligne « en pause 168 h ».
+    """
+    google.setex(app_module._google_pause_key(), app_module.GOOGLE_ACCESS_DENIED_PAUSE_SECONDS, "access_denied")
+    calls = _refuse_with(monkeypatch, REFUS_ACCES)
+    assert app_module.google_images_status() == "access_denied"  # /health lit la pause dans Redis
+    assert app_module.fetch_google_images("Île de Gorée Sénégal") == []
+    assert app_module.google_images_paused()
+    assert calls == []
+
+
+def test_la_fin_de_la_pause_dans_redis_est_vue_dans_la_minute(monkeypatch, google):
+    clock = {"now": 1_000_000.0}
+    monkeypatch.setattr(app_module.time, "time", lambda: clock["now"])
+    google.setex(app_module._google_pause_key(), app_module.GOOGLE_PAUSE_SECONDS, "paused")
+    assert app_module.google_images_paused()
+    google.data.clear()  # la pause expire dans Redis
+    clock["now"] += 30
+    assert app_module.google_images_paused(), "une lecture de Redis par minute au plus"
+    clock["now"] += 31
+    assert not app_module.google_images_paused()
+
+
 def test_sans_cle_google_le_statut_reste_missing(monkeypatch):
     monkeypatch.setattr(app_module, "GOOGLE_API_KEY", "")
     assert app_module.google_images_status() == "missing"
