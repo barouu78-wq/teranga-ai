@@ -45,6 +45,20 @@ def test_un_suivi_sans_sujet_prend_le_sujet_du_fil():
     assert _states("Et pour y aller ?", fil) == {"nature": True}
 
 
+def test_un_suivi_prend_le_dernier_sujet_du_fil_pas_tout_le_fil():
+    # Relecture Codex de #519 : le fil contient les quatre derniers tours ; « Et pour y aller ? » parle de Gorée.
+    fil = [
+        {"role": "user", "content": "Qui était Senghor ?"}, {"role": "assistant", "content": "Senghor…"},
+        {"role": "user", "content": "Parle-moi de Gorée"}, {"role": "assistant", "content": "Gorée est…"},
+    ]
+    assert _states("Et pour y aller ?", fil) == {"voyage": True}
+    fil = [
+        {"role": "user", "content": "Parle-moi de Gorée"}, {"role": "assistant", "content": "Gorée est…"},
+        {"role": "user", "content": "Qui était Senghor ?"}, {"role": "assistant", "content": "Senghor…"},
+    ]
+    assert _states("Et ensuite ?", fil) == {"culture": True}
+
+
 def test_un_suivi_avec_son_propre_sujet_garde_le_sien():
     fil = [{"role": "user", "content": "Parle-moi du lac Rose"}, {"role": "assistant", "content": "Le lac Rose est…"}]
     assert set(_states("Faut-il un visa ?", fil)) == {"visa"}

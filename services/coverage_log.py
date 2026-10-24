@@ -353,18 +353,33 @@ def _names_a_place(text: str, places) -> bool:
     return bool(_REGION_NAME.search(fold_text(text)) or mentioned_places(text, places))
 
 
+def _active_turn(thread: str, message: str, places) -> tuple[str, bool]:
+    """Dernier tour de l'utilisateur, avant le suivi, qui a un sujet à lui, et s'il nomme un lieu.
+
+    « contextual_query » joint les quatre derniers tours par « | » : après « Qui était Senghor ? » puis « Parle-moi de
+    Gorée », « Et pour y aller ? » parle de Gorée, pas de Senghor (relecture Codex de #519)."""
+    turns = [turn for turn in thread.split(" | ") if turn.strip()]
+    if turns and fold_text(turns[-1]) == fold_text(message):
+        turns.pop()
+    for turn in reversed(turns):
+        cites = _names_a_place(turn, places)
+        if cites or themes_of(turn) != [OTHER]:
+            return turn, cites
+    return message, False
+
+
 def read_question(payload: dict, places=None) -> tuple[str, frozenset[str]]:
     """(texte qui porte le sujet, ce que le contexte de l'IA contenait pour lui), calculés une seule fois.
 
-    Le sujet est la question, ou, pour un suivi sans sujet propre (« Et pour y aller ? »), le fil récent avec lequel
-    la base a choisi ses fiches (« contextual_query »). Rien de ce texte n'est conservé."""
+    Le sujet est la question, ou, pour un suivi sans sujet propre (« Et pour y aller ? »), le dernier tour du fil
+    récent (« contextual_query ») qui en a un. Rien de ce texte n'est conservé."""
     message = str(payload.get("message") or "")
     signals = _context_signals(payload)
     subject, cites = message, _names_a_place(message, places)
     thread = str(payload.get("contextual_query") or "")
     if thread and fold_text(thread) != fold_text(message):
         if themes_of(message, frozenset(signals | ({"cite"} if cites else set()))) == [OTHER]:
-            subject, cites = thread, _names_a_place(thread, places)
+            subject, cites = _active_turn(thread, message, places)
     if cites:
         signals.add("cite")
     if _NATIONAL_LINE.search(str(payload.get("instructions") or "")) and _ASKS_CAPITAL.search(fold_text(subject)):
