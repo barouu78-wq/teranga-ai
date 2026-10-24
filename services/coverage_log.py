@@ -238,7 +238,8 @@ THEMES: tuple[Theme, ...] = (
            "ceremonie*, dot, belle famille, enfant*, bebe*, nounou, tontine*, voisin*, amitie, rencontre*, celibataire, "
            "couple*, politesse, etiquette",
            ""),
-    # Rien dans le contexte de l'IA ne décrit le service (pages, outils) : ces questions restent non couvertes.
+    # Rien dans le contexte de l'IA ne décrit le service (pages, outils) : seule la réponse prête de
+    # services/quick_answers.py (« Que peux-tu faire ? ») couvre ces questions.
     _theme("teranga_ai", "Questions sur Teranga AI",
            "teranga ai, re:qui es tu, re:tu es qui, re:qui etes vous, "
            "re:(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire, "
@@ -346,6 +347,8 @@ def _context_signals(payload: dict) -> set[str]:
         signals.add("meteo")
     if payload.get("use_web"):
         signals.add("web")
+    if payload.get("ready_answer"):
+        signals.add("pret")
     return signals
 
 
@@ -420,8 +423,9 @@ _BY_ID = {theme.id: theme for theme in THEMES}
 
 
 def covered(theme_id: str, signals: frozenset[str]) -> bool:
-    """Le contexte contenait-il quelque chose pour ce thème ? Une recherche web déclenchée suffit."""
-    if "web" in signals:
+    """Le contexte contenait-il quelque chose pour ce thème ? Une recherche web déclenchée suffit, comme une réponse
+    prête (services/quick_answers.py : faits vérifiés, sans le modèle)."""
+    if "web" in signals or "pret" in signals:
         return True
     theme = _BY_ID.get(theme_id)
     # « Autre » : les signaux larges ne prouvent rien sur un sujet que personne n'a su nommer.
