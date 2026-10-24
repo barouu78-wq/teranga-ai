@@ -13,6 +13,9 @@ redis==8.1.0
 httpx==0.28.1
 pillow==13.0.0
 python-dotenv==1.2.4
+# Base officielle des fuseaux horaires (zoneinfo) : heure de Dakar et heure d'été française (services/quick_answers.py),
+# présente même si le système n'a pas la sienne.
+tzdata==2026.5
 
 # Leurs dépendances, figées aussi : le CI teste exactement ce qui tourne en ligne
 annotated-types==0.8.0
