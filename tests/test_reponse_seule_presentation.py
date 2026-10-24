@@ -94,3 +94,26 @@ def test_une_reponse_prete_compte_comme_couverte_dans_stats_ia(monkeypatch):
     assert response.get_json()["reply"].startswith("Je suis Teranga AI")
     counters = redis.hashes[f"teranga:coverage:{dt.date.today().isoformat()}"]
     assert counters.get("teranga_ai|c") == 1 and "teranga_ai|n" not in counters
+
+
+# Relecture Codex de #521 : une réponse prête ne couvre que son propre thème, pas tous ceux de la question.
+
+@pytest.mark.parametrize("message,theme", [
+    ("Quel est le numéro de la police ?", "urgences"),
+    ("100 euros en FCFA", "argent"),
+    ("Indicatif du Sénégal ?", "internet"),
+    ("C'est quoi le yassa ?", "cuisine"),
+    ("Que peux-tu faire ?", "teranga_ai"),
+])
+def test_chaque_reponse_prete_porte_son_theme(message, theme):
+    from services.coverage_log import THEME_LABELS
+
+    answer = quick_answer({"message": message, "language": "fr"}, {"message": message, "language": "fr"})
+    assert answer is not None and answer["theme"] == theme and theme in THEME_LABELS
+
+
+def test_une_reponse_prete_ne_couvre_que_son_theme():
+    from services.coverage_log import classify
+
+    states = classify("Numéro de la police pour un accident de moto", frozenset({"pret:urgences"}))
+    assert states["urgences"] is True and states["transport"] is False

@@ -386,7 +386,9 @@ def _asked_about_teranga(message: str) -> bool:
 
 
 def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond)."""
+    """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond).
+
+    « theme » : le seul thème de /stats-ia que la réponse couvre (services/coverage_log.py)."""
     raw = raw if isinstance(raw, dict) else {}
     language = str(payload.get("language") or "fr")
     message = str(payload.get("message") or "")
@@ -397,26 +399,26 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
     if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request")):
         return None
     if _asks_emergency_numbers(message):
-        return {"reply": _emergency_reply(language), "sources": list(_SOURCES), "image": None, "map": None}
+        return {"reply": _emergency_reply(language), "sources": list(_SOURCES), "image": None, "map": None, "theme": "urgences"}
     if language == "fr":
         line = _conversion_line(message)
         if line:
-            return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None}
+            return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None, "theme": "argent"}
         transfer = _transfer_amounts(message)
         if transfer:
-            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None}
+            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None, "theme": "argent"}
         if _asked_time(message):
             reply = _time_reply(_now_utc())
             if reply:
-                return {"reply": reply, "sources": [], "image": None, "map": None}
+                return {"reply": reply, "sources": [], "image": None, "map": None, "theme": "voyage"}
         if _asked_phone_code(message):
-            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None}
+            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None, "theme": "internet"}
         if _asked_about_teranga(message):
-            return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None}
+            return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None, "theme": "teranga_ai"}
         event = _asked_holiday(message)
         if event:
-            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}
+            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
         dish = _asked_dish(message)
         if dish:
-            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None}
+            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None, "theme": "cuisine"}
     return None

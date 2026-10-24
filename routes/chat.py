@@ -124,7 +124,8 @@ def register_chat_route(app, deps):
         ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None else None
         if ready:
             payload["use_web"] = False
-            payload["ready_answer"] = True  # journal des lacunes : une réponse prête est vérifiée, donc couverte
+            # Journal des lacunes : une réponse prête est vérifiée ; elle couvre son thème, et seulement lui.
+            payload["ready_answer"] = ready.get("theme") or ""
 
         if payload["use_web"]:
             # Même identité que plus haut (déjà vérifiée contre les abus).

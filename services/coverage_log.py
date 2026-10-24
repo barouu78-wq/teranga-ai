@@ -347,8 +347,9 @@ def _context_signals(payload: dict) -> set[str]:
         signals.add("meteo")
     if payload.get("use_web"):
         signals.add("web")
-    if payload.get("ready_answer"):
-        signals.add("pret")
+    ready = str(payload.get("ready_answer") or "")
+    if ready in THEME_LABELS:
+        signals.add("pret:" + ready)
     return signals
 
 
@@ -424,8 +425,8 @@ _BY_ID = {theme.id: theme for theme in THEMES}
 
 def covered(theme_id: str, signals: frozenset[str]) -> bool:
     """Le contexte contenait-il quelque chose pour ce thème ? Une recherche web déclenchée suffit, comme une réponse
-    prête (services/quick_answers.py : faits vérifiés, sans le modèle)."""
-    if "web" in signals or "pret" in signals:
+    prête (services/quick_answers.py : faits vérifiés, sans le modèle) sur ce thème-là (« pret:<thème> »)."""
+    if "web" in signals or "pret:" + theme_id in signals:
         return True
     theme = _BY_ID.get(theme_id)
     # « Autre » : les signaux larges ne prouvent rien sur un sujet que personne n'a su nommer.
