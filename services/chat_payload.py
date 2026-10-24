@@ -36,9 +36,11 @@ def normalize_chat_input(
         and str(item.get("role", "")).lower() in {"user", "assistant"}
     ][-max_history_items:]
 
-    audience = str(data.get("audience", "tourist")).lower()[:16]
-    if audience not in {"tourist", "resident", "diaspora", "merchant"}:
-        audience = "tourist"
+    # « general » (Tout le Sénégal) par défaut : sans profil choisi, Teranga répond à toute question sur le Sénégal,
+    # sans supposer que la personne est touriste (tests/test_profil_tout_le_senegal.py).
+    audience = str(data.get("audience", "general")).lower()[:16]
+    if audience not in {"general", "tourist", "resident", "diaspora", "merchant"}:
+        audience = "general"
 
     context_place = sanitize(data.get("context_place", ""), 120).strip()
     trip_context = sanitize(data.get("trip_context", ""), 1600).strip()

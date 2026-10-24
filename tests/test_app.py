@@ -839,7 +839,7 @@ def test_chat_input_normalization_bounds_and_filters():
     assert error is None
     assert payload["message"] == "x" * 2000
     assert payload["language"] == "fr"
-    assert payload["audience"] == "tourist"
+    assert payload["audience"] == "general"  # profil « Tout le Sénégal » par défaut (test_profil_tout_le_senegal.py)
     assert len(payload["history"]) == 12
     assert all(item["role"] == "user" for item in payload["history"])
     assert all(item["content"] == "u" for item in payload["history"])
@@ -918,7 +918,7 @@ def test_home_audience_buttons_bind_directly():
     html = served_home(app.test_client())
 
     assert "document.querySelectorAll('.audience-btn').forEach" in html
-    assert "['tourist','resident','diaspora','merchant']" in html
+    assert "['general','tourist','resident','diaspora','merchant']" in html  # « Tout le Sénégal » en premier
     assert "diaspora:{" in html
     assert "resident:{" in html
 

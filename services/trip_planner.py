@@ -380,7 +380,7 @@ Budget level: {data['budget']}
 Pace: {data['pace']}
 Preferred regions: {', '.join(data['regions']) or 'none'}
 Selected place context: {data.get('context_place') or 'none'}
-User profile: {data.get('audience') or 'tourist'} (explicit preference; adapt priorities without inferring personal facts)
+User profile: {data.get('audience') or 'general'} (explicit preference; adapt priorities without inferring personal facts)
 Surprise me: {data['surprise']}
 {_places_block(known_places)}
 Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string, "places": [string]}}], "practical_notes": [string]}}. Create exactly {_day_count(data)} day objects, numbered 1 to {_day_count(data)}: day 1 is the arrival date and the last day is the day before departure.
@@ -798,9 +798,10 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
         pace = str(body.get("pace", "Équilibré"))[:40]
         if pace not in options["pace"]:
             pace = "Équilibré"
-        audience = str(body.get("audience", "tourist")).lower()[:16]
-        if audience not in {"tourist", "resident", "diaspora", "merchant"}:
-            audience = "tourist"
+        # Sans profil choisi : « Tout le Sénégal » (general), comme le chat ; pas une préférence touriste supposée.
+        audience = str(body.get("audience", "general")).lower()[:16]
+        if audience not in {"general", "tourist", "resident", "diaspora", "merchant"}:
+            audience = "general"
         arrival_value = body["arrival"]
         departure_value = body["departure"]
         if (

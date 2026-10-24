@@ -11,7 +11,7 @@ import pytest
 
 from .test_clicks import PLAN, _fill_planner, ask, stream
 
-PROFILES = ["tourist", "resident", "diaspora", "merchant"]
+PROFILES = ["general", "tourist", "resident", "diaspora", "merchant"]  # « Tout le Sénégal » par défaut
 
 
 def _chat_recorder(page, base_url, answer="Réponse du profil."):
@@ -46,7 +46,7 @@ def test_each_profile_sends_its_audience_and_its_suggestion_to_the_chat(page, ba
     assert page.errors == []
 
 
-def test_the_four_profiles_do_not_share_the_same_suggestions(page, base_url):
+def test_the_profiles_do_not_share_the_same_suggestions(page, base_url):
     page.goto(base_url + "/")
     seen = {}
     for audience in PROFILES:
@@ -54,9 +54,9 @@ def test_the_four_profiles_do_not_share_the_same_suggestions(page, base_url):
         _first_suggestion(page)
         seen[audience] = tuple(b.get_attribute("data-q") for b in page.locator("#heroChips button").all())
         assert len(seen[audience]) == 4, audience
-    assert len(set(seen.values())) == 4, seen
+    assert len(set(seen.values())) == len(PROFILES), seen
     # Aucune suggestion n'est reprise telle quelle d'un profil à l'autre en tête de liste.
-    assert len({questions[0] for questions in seen.values()}) == 4
+    assert len({questions[0] for questions in seen.values()}) == len(PROFILES)
 
 
 @pytest.mark.parametrize("audience", PROFILES)
@@ -75,16 +75,18 @@ def test_profile_survives_a_reload_and_is_still_sent_to_the_chat(page, base_url,
 
 
 @pytest.mark.parametrize("saved", ["pirate", "", "TOURIST ", "__proto__", "constructor"])
-def test_an_unknown_saved_profile_falls_back_to_tourist(page, base_url, saved):
-    """Une valeur périmée ou altérée dans le stockage ne doit ni vider les suggestions ni partir telle quelle au serveur."""
+def test_an_unknown_saved_profile_falls_back_to_general(page, base_url, saved):
+    """Une valeur périmée ou altérée dans le stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
+
+    Le profil de secours est « Tout le Sénégal » (general) depuis le 24 octobre 2026 : avant, c'était « tourist »."""
     bodies = _chat_recorder(page, base_url)
     page.add_init_script(f"try{{localStorage.setItem('teranga-audience',{json.dumps(saved)})}}catch(_){{}}")
     page.goto(base_url + "/")
-    assert page.locator('.audience-btn[data-audience="tourist"]').get_attribute("aria-pressed") == "true"
+    assert page.locator('.audience-btn[data-audience="general"]').get_attribute("aria-pressed") == "true"
     assert len(page.locator("#heroChips button").all()) == 4
     ask(page, "Bonjour")
     page.get_by_text("Réponse du profil.").wait_for(timeout=5000)
-    assert bodies[0]["audience"] == "tourist"
+    assert bodies[0]["audience"] == "general"
     assert page.errors == []
 
 
@@ -108,7 +110,7 @@ def test_profile_is_carried_to_the_trip_planner(page, base_url, audience):
 
 
 def test_profile_buttons_are_comfortable_to_tap_on_a_phone(page, base_url):
-    """La rangée des profils défile en horizontal sur téléphone : chaque bouton doit rester atteignable et assez grand."""
+    """Sur téléphone, chaque profil doit rester visible, atteignable et assez grand (deux lignes depuis le 5e profil)."""
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(base_url + "/")
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")  # la page ne défile pas de côté

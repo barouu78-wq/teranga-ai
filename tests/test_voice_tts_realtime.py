@@ -138,7 +138,9 @@ def test_realtime_call_builds_the_session_and_relays_the_answer(monkeypatch):
     assert request_sent.full_url == "https://api.openai.com/v1/realtime/calls"
     assert request_sent.headers["Authorization"].startswith("Bearer ")
     body = request_sent.data.decode("utf-8")
-    assert "wolof" in body and "résident" in body and "On parlait de Gorée." in body and "v=0" in body
+    # Profil inconnu → « Tout le Sénégal » (avant : résident).
+    assert "wolof" in body and "habitant, membre de la diaspora, commerçant ou voyageur" in body
+    assert "On parlait de Gorée." in body and "v=0" in body
 
 
 def test_realtime_call_rejects_invalid_sessions_and_reports_provider_failure(monkeypatch):
