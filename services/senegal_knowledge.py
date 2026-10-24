@@ -313,6 +313,42 @@ def _matched_dishes(data: dict, folded_query: str, limit: int = 4) -> list[dict]
     return found[:limit]
 
 
+# Question de visite qui ne nomme aucun lieu (« Que faire au Sénégal en une semaine ? ») : sans panorama, l'IA ne
+# recevait aucune fiche (relevé /stats-ia du 24 octobre 2026). Pas pour une démarche ou un souci (« Quels papiers pour
+# un séjour ? », « Que faire en cas d'accident ? »), qui ont leurs repères pratiques.
+_SIGHTSEEING = re.compile(
+    r"(?<![a-z])(?:(?:que|quoi) (?:visiter|voir)|a (?:voir|visiter)|incontournables?|a ne pas (?:manquer|rater)|"
+    r"things to do|what to see|must see|places to visit|sightseeing)(?![a-z])"
+)
+# Mots qui ne parlent de visite qu'avec le pays (« Mon séjour en prison », « visiter un appartement » : non).
+_TRIP_WORDS = re.compile(
+    r"(?<![a-z])(?:(?:que|quoi) faire au senegal|itinerair\w*|circuits?|vacances|sejours?|visiter|decouvrir|voyag\w*|"
+    r"je pars|partir|trip|travel\w*)(?![a-z])"
+)
+_COUNTRY = re.compile(r"(?<![a-z])senegal(?![a-z])")
+_NOT_SIGHTSEEING = re.compile(
+    r"(?<![a-z])(?:visas?|vaccin\w*|passeports?|papiers?|douanes?|assurances?|sim|esim|argent|euros?|cfa|fcfa|banques?|"
+    r"change|cas d|urgences?|accidents?|retraite)(?![a-z])"
+)
+
+
+def _panorama(data: dict) -> list[str]:
+    """Biens UNESCO et points forts de chaque région, tels que la base les donne."""
+    lines = ["PANORAMA DU SÉNÉGAL (question de voyage sans lieu précis : propose un choix adapté à la durée, à la saison "
+             "et aux envies, sans réduire le pays à Dakar) :"]
+    unesco = data.get("unesco_world_heritage") or []
+    if unesco:
+        lines.append("- Patrimoine mondial UNESCO : " + ", ".join(unesco) + ".")
+    by_region = []
+    for region in data.get("regions", []):
+        highlights = region.get("highlights") or (region.get("regional_dossier") or {}).get("key_places") or []
+        if highlights:
+            by_region.append(f"{region.get('name')} : {', '.join(highlights[:3])}")
+    if by_region:
+        lines.append("- À voir par région : " + " ; ".join(by_region) + ".")
+    return lines
+
+
 # Langues dont la base a des phrases sûres (voir format_senegal_knowledge) : une question sur elles a son propre sujet.
 _LANGUAGE_SUBJECT = re.compile(r"(?<![a-z])(?:wolof|pulaar|pular|fulfulde)(?![a-z])")
 
@@ -524,7 +560,15 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
                 )
 
     unesco = data.get("unesco_world_heritage", [])
-    if unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
+    folded_value = _fold(value)
+    sightseeing = _SIGHTSEEING.search(folded_value) or (_TRIP_WORDS.search(folded_value) and _COUNTRY.search(folded_value))
+    # Un lieu ou une région vraiment nommés (pas une fiche trouvée par un mot commun : « enfants » ramène le parc de
+    # Hann, relecture Codex de #520) : leurs fiches suffisent.
+    names = _place_names_pattern(data)
+    named = bool(located) or bool(names and names.search(folded_value))
+    if not named and sightseeing and not _NOT_SIGHTSEEING.search(folded_value):
+        lines.extend(_panorama(data))
+    elif unesco and any(token in value for token in ("unesco", "patrimoine", "goree", "gorée", "djoudj", "niokolo", "saloum", "bassari", "mégalith")):
         lines.append("PATRIMOINE MONDIAL UNESCO : " + ", ".join(unesco) + ".")
 
     if people and tokens:
