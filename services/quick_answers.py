@@ -347,8 +347,48 @@ def _dish_reply(dish: dict) -> str:
     return "\n".join(lines)
 
 
+# « Que peux-tu faire ? », « Qui es-tu ? » : rien dans le contexte de l'IA ne décrit le service, qui risquait d'inventer
+# des fonctions (relevé /stats-ia du 24 octobre 2026). Chaque page citée existe (tests/test_reponse_seule_presentation.py
+# l'ouvre). Teranga s'adresse à toute la population : Sénégalais au pays, diaspora, commerçants et voyageurs.
+_ABOUT = re.compile(
+    r"(?<![a-z])(?:qui es tu|tu es qui|qui etes vous|vous etes qui|"
+    r"(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire|tu (?:peux|sais) faire quoi|"
+    r"tu sers a quoi|a quoi tu sers|a quoi sert teranga|c est quoi teranga|qu est ce que teranga|"
+    r"presente toi|presentez vous|comment (?:tu peux|peux tu|pouvez vous) m aider)(?![a-z])"
+)
+_ABOUT_ALLOWED = _FILLER_WORDS | {
+    "es", "etes", "tu", "toi", "vous", "que", "qu", "quoi", "peux", "sais", "pouvez", "savez", "faire", "sers", "sert",
+    "teranga", "ai", "ia", "presente", "presentez", "comment", "m", "aider", "exactement", "concretement", "alors",
+    "donc", "et", "ici", "dis", "moi",
+}
+_ABOUT_REPLY = "\n".join([
+    "Je suis Teranga AI, l'assistant du Sénégal, pour tout le monde : les Sénégalais au pays, la diaspora, "
+    "les commerçants et les voyageurs.",
+    "Je réponds aux questions de tous les jours : démarches, santé, argent, transport, téléphone, emploi, études, "
+    "création d'entreprise, mais aussi culture, histoire, cuisine et lieux à visiter.",
+    "Vous pouvez aussi :",
+    "- me parler avec le micro et écouter la réponse ;",
+    "- convertir des euros en francs CFA ;",
+    "- trouver les numéros d'urgence : teranga-ai.fr/urgences",
+    "- voir les dates des fêtes : teranga-ai.fr/calendrier-fetes-senegal",
+    "- préparer un voyage jour par jour : teranga-ai.fr/trip-planner",
+    "- découvrir les lieux à visiter : teranga-ai.fr/lieux",
+    "Posez votre question en français, en anglais ou en wolof.",
+])
+
+
+def _asked_about_teranga(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    folded = _folded(message)
+    words = re.findall(r"[a-z0-9]+", folded)
+    return bool(words) and all(word in _ABOUT_ALLOWED for word in words) and bool(_ABOUT.search(" ".join(words)))
+
+
 def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond)."""
+    """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond).
+
+    « theme » : le seul thème de /stats-ia que la réponse couvre (services/coverage_log.py)."""
     raw = raw if isinstance(raw, dict) else {}
     language = str(payload.get("language") or "fr")
     message = str(payload.get("message") or "")
@@ -359,24 +399,26 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
     if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request")):
         return None
     if _asks_emergency_numbers(message):
-        return {"reply": _emergency_reply(language), "sources": list(_SOURCES), "image": None, "map": None}
+        return {"reply": _emergency_reply(language), "sources": list(_SOURCES), "image": None, "map": None, "theme": "urgences"}
     if language == "fr":
         line = _conversion_line(message)
         if line:
-            return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None}
+            return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None, "theme": "argent"}
         transfer = _transfer_amounts(message)
         if transfer:
-            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None}
+            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None, "theme": "argent"}
         if _asked_time(message):
             reply = _time_reply(_now_utc())
             if reply:
-                return {"reply": reply, "sources": [], "image": None, "map": None}
+                return {"reply": reply, "sources": [], "image": None, "map": None, "theme": "voyage"}
         if _asked_phone_code(message):
-            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None}
+            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None, "theme": "internet"}
+        if _asked_about_teranga(message):
+            return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None, "theme": "teranga_ai"}
         event = _asked_holiday(message)
         if event:
-            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None}
+            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
         dish = _asked_dish(message)
         if dish:
-            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None}
+            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None, "theme": "cuisine"}
     return None
