@@ -10,10 +10,13 @@ from collections.abc import Callable, Mapping, Sequence
 from .photo_search import term_position
 
 
-# Clé : requête principale, titres cherchés, nombre de photos, fournisseurs.
+# Clé : requête principale, titres cherchés, nombre de photos, page, fournisseurs.
 _TOPIC_IMAGE_CACHE: dict[tuple, tuple[float, list[dict]]] = {}
 _TOPIC_IMAGE_CACHE_TTL = 300.0
 _TOPIC_IMAGE_CACHE_MAX = 128
+# « Plus de photos » : trois suites au plus (32 photos), puis Teranga dit qu'il n'en a pas d'autres. La borne limite
+# aussi les recherches qu'un historique fabriqué pourrait déclencher (chaque page recalcule les précédentes, en cache).
+MAX_PHOTO_PAGE = 3
 
 
 def _cached_topic_images(key: tuple) -> list[dict] | None:
@@ -305,9 +308,27 @@ def fetch_topic_images(
     image_proxy_url: Callable[[object], str],
     logger,
     max_photos: int = 8,
+    page: int = 0,
 ) -> list[dict] | None:
-    if not should_fetch_images(message):
+    """Photos du sujet demandé. `page` : 0 pour la première galerie, 1 pour le premier « Plus de photos »…
+
+    Une page suivante cherche plus loin dans les mêmes sources et écarte les photos des pages précédentes (en cache) :
+    rien de nouveau donne None, jamais la même galerie.
+    """
+    if not should_fetch_images(message) or not 0 <= page <= MAX_PHOTO_PAGE:
         return None
+    shown: set[str] = set()
+    for earlier in range(page):
+        previous = fetch_topic_images(
+            message, knowledge, normalize=normalize, should_fetch_images=should_fetch_images,
+            topic_wikipedia_titles=topic_wikipedia_titles, knowledge_image_titles=knowledge_image_titles,
+            fetch_commons_images=fetch_commons_images, fetch_google_images=fetch_google_images,
+            fetch_article_images=fetch_article_images, fetch_city_image=fetch_city_image,
+            image_proxy_url=image_proxy_url, logger=logger, max_photos=max_photos, page=earlier,
+        )
+        shown.update(str(photo.get("url") or "") for photo in previous or [])
+    # Chaque page va chercher plus loin : 8 photos par source pour la première, 16 pour la deuxième…
+    pool = max_photos * (page + 1)
 
     def resolve(text):
         """(lieux précis de la base, sinon régions/sujets Wikipédia) cités dans `text`."""
@@ -332,7 +353,7 @@ def fetch_topic_images(
     titles = list(specific_titles or discovered_titles or [primary_title])
 
     photos: list[dict] = []
-    seen_urls: set[str] = set()
+    seen_urls: set[str] = set(shown)
 
     # Cache by the actual visual request (query and places searched) so different
     # requests never reuse another place's gallery.
@@ -340,6 +361,7 @@ def fetch_topic_images(
         normalize(primary_title),
         tuple(normalize(title) for title in titles[:4]),
         max_photos,
+        page,
         id(fetch_google_images),
         id(fetch_article_images),
         id(fetch_commons_images),
@@ -376,9 +398,9 @@ def fetch_topic_images(
     article_titles = [t for t in dict.fromkeys(article_titles) if t] if fetch_article_images else []
     jobs = []
     if fetch_google_images:
-        jobs.append(("google", primary_title, lambda: fetch_google_images(primary_title, limit=max_photos)))
+        jobs.append(("google", primary_title, lambda: fetch_google_images(primary_title, limit=pool)))
     for title in article_titles:
-        jobs.append(("article", title, lambda title=title: fetch_article_images(title, limit=max_photos)))
+        jobs.append(("article", title, lambda title=title: fetch_article_images(title, limit=pool)))
     results = _run_parallel(jobs, logger)
     add(results.get(("google", primary_title)), primary_title, proxied=False)
     for title in article_titles:
@@ -392,7 +414,7 @@ def fetch_topic_images(
     remaining = deadline - time.monotonic()
     if remaining < 1:
         return finish()
-    jobs = [("commons", t, lambda t=t: fetch_commons_images(t, limit=4)) for t in commons_titles]
+    jobs = [("commons", t, lambda t=t: fetch_commons_images(t, limit=4 * (page + 1))) for t in commons_titles]
     results = _run_parallel(jobs, logger, budget=min(PHOTO_SEARCH_BUDGET_SECONDS, remaining))
     for title in commons_titles:
         add(results.get(("commons", title)), title, proxied=True)
