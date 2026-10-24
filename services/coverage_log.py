@@ -307,11 +307,14 @@ _REGION_NAME = re.compile(
 # ce ne sont pas des questions, on ne les compte pas.
 _SMALL_TALK = re.compile(
     r"^(?:(?:bonjour|bonsoir|salut|hello|hi|hey|coucou|salam|aleikoum|aleykum|nanga def|maa ngi fi|merci|beaucoup|thanks?|thank you|"
-    r"je m appelle [a-z]+|moi c est [a-z]+|mon nom est [a-z]+|j ai une (?:petite )?question|une (?:petite )?question|"
+    r"j ai une (?:petite )?question|une (?:petite )?question|"
     r"(?:est ce que )?(?:tu peux|peux tu|pouvez vous|vous pouvez|tu pourrais|pourrais tu|pourriez vous) m aider|aide moi|aidez moi|"
     r"oui|non|ok|okay|d accord|super|parfait|cool|bravo|au revoir|a bientot|bye|ca va|bien|stp|svp|s il te plait|s il vous plait|"
     r"encore|continue|suite|plus|waaw|deedeet|jerejef|jere jef|tout|et toi|et vous)(?![a-z0-9]) ?)+$"
 )
+# Présentation en fin de message (« Bonjour, je m'appelle Awa ») : hors de l'expression répétée ci-dessus, où un
+# prénom quelconque ([a-z]+) ouvrirait un risque de retour arrière exponentiel sur un texte piégé (alerte CodeQL, #519).
+_INTRODUCTION = re.compile(r"(?:^| )(?:je m appelle|moi c est|mon nom est) [a-z]+$")
 _BOT_AGENT = re.compile(
     r"(?<![a-z])[a-z]*bot(?![a-z])|crawl|spider|slurp|scrap|curl|wget|python|httpx|aiohttp|go http client|java/|libwww|"
     r"headless|phantom|lighthouse|pingdom|uptime|monitor|facebookexternalhit|preview",
@@ -328,6 +331,9 @@ def looks_like_bot(user_agent: str) -> bool:
 def is_small_talk(message: str) -> bool:
     """Salutation, politesse ou ponctuation seule (« Merci beaucoup ! », « ok », « ??? »)."""
     plain = " ".join(re.sub(r"[^a-z0-9]+", " ", fold_text(message)).split())
+    introduction = _INTRODUCTION.search(plain)
+    if introduction:
+        plain = plain[:introduction.start()]
     return not plain or bool(_SMALL_TALK.match(plain))
 
 
