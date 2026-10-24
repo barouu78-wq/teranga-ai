@@ -270,9 +270,27 @@ def _gallery_follow_up(text: str, turns: list[dict]) -> tuple[str, int] | None:
             return None
         return f"photos : {previous}", int(should_fetch_images(previous))
     query, page = earlier
-    if own_subject and (detect_location(text) is None or detect_location(text) != detect_location(query)):
+    if own_subject and not _same_photo_subject(text, query):
         return None
     return query, page + 1
+
+
+def _same_photo_subject(text: str, query: str) -> bool:
+    """« Encore des photos de Gorée » ou « … de plage » continue-t-il la galerie de `query` ?
+
+    Un lieu reconnu des deux côtés : le même lieu. Sinon, sans lieu (« plage », « paysage ») : les mots du sujet de la
+    suite figurent déjà dans la demande de la galerie (relecture Codex de #525).
+    """
+    place, gallery_place = detect_location(text), detect_location(query)
+    if place or gallery_place:
+        return place == gallery_place
+    return _photo_subject_words(text) <= _photo_subject_words(query)
+
+
+def _photo_subject_words(text: str) -> set[str]:
+    """« Encore des photos de la plage » → {"plage"} : mots du sujet, sans accents ni pluriel."""
+    words = _MORE_PHOTOS_FILLER.sub(" ", fold_text(text)).split()
+    return {word.rstrip("s") for word in words if len(word) > 2 and word.isalpha()}
 
 
 def _yes_to_photo_offer(text: str, turns: list[dict]) -> str:

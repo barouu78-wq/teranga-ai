@@ -40,11 +40,29 @@ def test_encore_des_photos_du_meme_lieu_est_une_suite():
     assert photo_page("Encore des photos de Gorée", GOREE) == 1
 
 
-@pytest.mark.parametrize("demande", ["Plus de photos de Dakar", "Montre-moi des photos de Dakar",
-                                     "Montre-moi des photos d'autres plages"])
-def test_un_autre_sujet_repart_de_la_premiere_page(demande):
-    assert photo_request(demande, GOREE) == (True, demande)
-    assert photo_page(demande, GOREE) == 0
+PLAGE = [
+    {"role": "user", "content": "Montre-moi des photos de plage"},
+    {"role": "assistant", "content": "Voici quelques photos pour « plage »."},
+]
+
+
+@pytest.mark.parametrize("suite", ["Encore des photos de plage", "Plus de photos de plages", "D'autres photos de la plage"])
+def test_la_suite_d_un_sujet_sans_lieu_est_aussi_une_suite(suite):
+    """Relecture Codex de #525 : sans lieu reconnu (« plage »), la suite repartait de la première galerie."""
+    assert photo_request(suite, PLAGE) == (True, "Montre-moi des photos de plage")
+    assert photo_page(suite, PLAGE) == 1
+
+
+@pytest.mark.parametrize("demande,historique", [
+    ("Plus de photos de Dakar", GOREE),
+    ("Montre-moi des photos de Dakar", GOREE),
+    ("Montre-moi des photos d'autres plages", GOREE),
+    ("Plus de photos de Gorée", PLAGE),
+    ("Encore des photos de paysages", PLAGE),
+])
+def test_un_autre_sujet_repart_de_la_premiere_page(demande, historique):
+    assert photo_request(demande, historique) == (True, demande)
+    assert photo_page(demande, historique) == 0
 
 
 def test_une_premiere_demande_est_la_premiere_page():
