@@ -96,7 +96,7 @@ def test_vocabulary_is_closed_and_well_formed():
                 plain = keyword.rstrip("*")
                 assert plain == fold_text(plain), f"{theme.id}: « {keyword} » doit être sans accents ni majuscules"
         assert all(c.startswith("repere:") or c in {"cite", "lieux", "personnes", "histoire", "plats", "partenaires", "guide",
-                                                    "marche", "fetes", "meteo", "wolof", "pulaar", "profil", "capitale"}
+                                                    "marche", "fetes", "meteo", "wolof", "pulaar", "profil", "capitale", "panorama"}
                    for c in theme.covers), theme.id
 
 
