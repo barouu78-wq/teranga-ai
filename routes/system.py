@@ -175,7 +175,7 @@ def register_system_routes(app, deps):
                     "id": "/",
                     "name": "Teranga AI",
                     "short_name": "Teranga",
-                    "description": "Teranga AI, votre guide du Sénégal : histoire des lieux, météo, itinéraires, négociation au marché et vie pratique, en français, anglais et wolof.",
+                    "description": "Teranga AI, l’IA qui répond à vos questions sur le Sénégal : démarches, santé, argent, travail, études, culture et voyage, en français, anglais et wolof.",
                     "start_url": "/",
                     "scope": "/",
                     "display": "standalone",
