@@ -140,7 +140,7 @@ THEMES: tuple[Theme, ...] = (
            "quelle heure, time zone, trip, travel*, holiday*, sightseeing, agence de voyage, decouvrir, decouverte, "
            "valise*, bagage*, re:(?:que|quoi) faire au senegal, "
            "re:(?:je pars|je part|partir|je vais|aller|je viens|venir|voyager) (?:au|en) senegal",
-           "cite guide repere:saison repere:heure repere:visa"),
+           "cite guide panorama repere:saison repere:heure repere:visa"),
     # « profil » : ligne « Profil » de la base (superficie, régions, langues, voisins…) ; « capitale » : la ligne
     # « Repères nationaux », présente dans chaque contexte, donne la capitale (voir chat_signals).
     _theme("pays", "Le Sénégal en bref (capitale, superficie, symboles)",
@@ -287,6 +287,7 @@ _MARKERS = tuple(
         ("fetes", "PROCHAINES FÊTES ET ÉVÉNEMENTS"),
         ("partenaires", "ADRESSES PARTENAIRES DE TERANGA AI"),
         ("profil", "- Profil : superficie"),
+        ("panorama", "PANORAMA DU SÉNÉGAL"),
     )
 )
 # Ligne de la base présente dans chaque contexte : elle ne couvre que la question qui demande la capitale.

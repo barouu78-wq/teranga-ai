@@ -180,7 +180,10 @@ TOPICS = (
      r"\bchange (euro|dollar|cfa|fcfa)|\bchange (my |some |your )?(money|euros?|dollars?|cash|currency)\b|"
      r"exchange rate|currency exchange|money exchange|exchange money|"
      r"dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
-     r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit",
+     r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit|"
+     # « monnaie » : la monnaie du pays ou la petite monnaie. Pas « devise » seul : la devise nationale est
+     # « Un Peuple, Un But, Une Foi ».
+     r"\bmonnaie\b|\bcurrency\b",
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
       "Pour le dollar ou la livre, le taux varie : utiliser le taux du jour.",
       "Paiements : Wave et Orange Money (paiement mobile) sont partout, y compris chez les petits commerçants et "
@@ -305,8 +308,11 @@ TOPICS = (
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
       "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
+    # Un mois cité avec un voyage (« Je pars au Sénégal en décembre ») : pas « partir à la retraite en janvier ».
     ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
-     r"hivernage|pluie|pleut|rainy|\brain\b|chaleur|heat",
+     r"hivernage|pluie|pleut|rainy|\brain\b|chaleur|heat|"
+     r"\b(?:pars|part|partir|partons|voyag\w*|vacances|sejour\w*|visiter|visite)\b(?! a la retraite)[^|?]{0,60}"
+     r"\ben (?:janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\b",
      ("Saison sèche environ de novembre à mai (la plus confortable, fraîche le soir sur la côte) ; saison des pluies "
       "environ de juillet à octobre (plus tôt et plus longue en Casamance), pistes parfois difficiles. L'intérieur "
       "(Tambacounda, Kédougou, Matam) est très chaud de mars à juin. Prévisions officielles : ANACIM.",)),
