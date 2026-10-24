@@ -181,8 +181,8 @@ TOPICS = (
      r"exchange rate|currency exchange|money exchange|exchange money|"
      r"dollars?\b|\bpayer\b|paiement|\bpay\b|payment|\bwave\b|orange money|"
      r"mobile money|distributeur|\batm\b|carte bancaire|bank card|envoyer de l argent|transfert|send money|remit|"
-     # « monnaie » : la monnaie du pays ou la petite monnaie. Pas « devise » seul : la devise nationale est
-     # « Un Peuple, Un But, Une Foi ».
+     # « monnaie » : la monnaie du pays ou la petite monnaie. Pas « devise » seul, qui désigne aussi la devise
+     # nationale (une phrase, pas de l'argent).
      r"\bmonnaie\b|\bcurrency\b",
      ("Monnaie : franc CFA BCEAO (XOF), à parité fixe avec l'euro : 1 € = 655,957 FCFA (donc 100 € = 65 595,70 FCFA). "
       "Pour le dollar ou la livre, le taux varie : utiliser le taux du jour.",

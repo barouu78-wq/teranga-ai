@@ -48,7 +48,7 @@ def test_une_question_sur_la_monnaie_recoit_le_repere_argent(question):
 
 
 @pytest.mark.parametrize("question", [
-    "Quelle est la devise du Sénégal ?",  # la devise nationale (« Un Peuple, Un But, Une Foi »), pas l'argent
+    "Quelle est la devise du Sénégal ?",  # la devise nationale (une phrase), pas l'argent
     "Comment dit-on merci en wolof ?",
 ])
 def test_la_devise_nationale_n_est_pas_l_argent(question):
