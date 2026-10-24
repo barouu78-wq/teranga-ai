@@ -1,0 +1,81 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><style>
+/* « Question → vraie réponse de Teranga », style « Nuit dorée » : noir et or, écran du site en mode nuit. 18 s, 9:16.
+   Exemple : le plat national (vidéo du 24 octobre 2026). Pour un autre sujet, copier ce modèle et changer seulement les
+   textes des scènes 1, 2, 4 et 5 : chaque fait doit se lire dans la vraie réponse capturée (scripts/video/reponses.py,
+   capture nommée « reponse »). Scènes : 1 titre et lion (dès la première image), 2 deux cartes, 3 la vraie réponse,
+   4 les chiffres ou détails de la réponse, 5 l'adresse. */
+@font-face{font-family:Bri;src:url('{{FONTS}}bricolage-grotesque.woff2')}
+@font-face{font-family:Atk;src:url('{{FONTS}}atkinson-hyperlegible-700.woff2');font-weight:700}
+:root{--or:#e3a33b;--or2:#f6c86b;--noir:#08090a;--creme:#f7f3e8;--rouge:#ff4d4d;--vert:#00853f;--jaune:#fdef42}
+*{box-sizing:border-box;margin:0}html,body{width:540px;height:960px;overflow:hidden;background:var(--noir);font-family:Atk,sans-serif;font-weight:700}
+body::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(227,163,59,.07) 1px,transparent 1px) 0 0/36px 36px,linear-gradient(90deg,rgba(227,163,59,.07) 1px,transparent 1px) 0 0/36px 36px}
+.sc{position:absolute;inset:0;opacity:0;overflow:hidden}
+@keyframes sc{0%{opacity:0}6%{opacity:1}94%{opacity:1}100%{opacity:0}}
+@keyframes sc0{0%{opacity:1}94%{opacity:1}100%{opacity:0}}
+@keyframes scl{0%{opacity:0}8%{opacity:1}100%{opacity:1}}
+@keyframes up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+@keyframes gauche{from{opacity:0;transform:translateX(-300px)}to{opacity:1;transform:none}}
+@keyframes droite{from{opacity:0;transform:translateX(300px)}to{opacity:1;transform:none}}
+@keyframes zoom{from{transform:scale(.82)}to{transform:scale(1.04)}}
+@keyframes trait{from{width:0}to{width:360px}}
+@keyframes lueur{0%,100%{filter:drop-shadow(0 0 0 rgba(227,163,59,0))}50%{filter:drop-shadow(0 0 22px rgba(227,163,59,.7))}}
+.lion svg{width:100%;height:100%}
+.or{color:var(--or)}
+.ligne{position:absolute;left:90px;height:4px;background:var(--or);animation:trait .8s ease-out both}
+/* 1 — titre et lion visibles dès la première image */
+#s1{animation:sc0 3.6s linear both}
+#s1 .lion{position:absolute;left:195px;top:120px;width:150px;height:150px;animation:lueur 2s ease-in-out infinite}
+#s1 .k{position:absolute;left:40px;right:40px;top:320px;color:var(--creme);font-family:Bri;font-size:30px;text-align:center;letter-spacing:.12em}
+#s1 h1{position:absolute;left:30px;right:30px;top:380px;text-align:center;color:var(--creme);font-family:Bri;font-size:64px;line-height:1}
+#s1 .q{position:absolute;left:30px;right:30px;top:640px;text-align:center;color:var(--or2);font-family:Bri;font-size:40px;line-height:1.08;opacity:0;animation:up .6s ease-out both;animation-delay:.9s}
+/* 2 — envoyé / reçu (exemple) */
+#s2{animation:sc 4s linear both;animation-delay:3.4s}
+#s2 .ex{position:absolute;left:40px;top:120px;padding:6px 14px;border:2px solid var(--or);color:var(--or);font-family:Bri;font-size:22px;border-radius:6px}
+.carte{position:absolute;left:40px;right:40px;height:190px;border-radius:26px;padding:26px 30px}
+.carte small{display:block;font-size:24px;letter-spacing:.1em;text-transform:uppercase}
+.carte b{display:block;font-family:Bri;font-size:78px;line-height:1.1}
+#s2 .c1{top:210px;background:#15171a;border:2px solid #2a2d31;color:var(--creme);animation:gauche .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:3.6s}
+#s2 .c2 b{font-size:60px;white-space:nowrap}
+#s2 .c2{top:470px;background:var(--or);color:var(--noir);animation:droite .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:4.4s}
+#s2 .fleche{position:absolute;left:250px;top:405px;color:var(--or);font-size:56px;opacity:0;animation:up .4s ease-out both;animation-delay:4.1s}
+#s2 .q{position:absolute;left:0;right:0;top:730px;text-align:center;color:var(--creme);font-family:Bri;font-size:50px;opacity:0;animation:up .5s ease-out both;animation-delay:5.2s}
+/* 3 — la vraie réponse, écran en mode nuit */
+#s3{animation:sc 5.4s linear both;animation-delay:7.2s}
+#s3 .halo{position:absolute;left:70px;top:110px;width:400px;height:720px;border-radius:50%;background:radial-gradient(closest-side,rgba(227,163,59,.35),transparent)}
+.phone{width:300px;height:650px;border-radius:48px;background:#1b1d20;padding:11px;box-shadow:0 0 0 2px var(--or),0 30px 70px rgba(0,0,0,.7)}
+.phone .scr{position:relative;width:100%;height:100%;border-radius:38px;overflow:hidden;background:#000}
+.phone img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+#s3 .phone{position:absolute;left:120px;top:130px;animation:zoom 5.4s ease-out both;animation-delay:7.2s}
+#s3 .cap{position:absolute;left:0;right:0;top:810px;text-align:center;color:var(--creme);font-family:Bri;font-size:34px;opacity:0;animation:up .5s ease-out both;animation-delay:7.8s}
+#s3 .cap span{color:var(--or)}
+/* 4 — les chiffres */
+#s4{animation:sc 3.4s linear both;animation-delay:12.4s}
+#s4 .a{position:absolute;left:0;right:0;top:170px;text-align:center;color:#9aa0a6;font-size:28px;opacity:0;animation:up .4s ease-out both;animation-delay:12.6s}
+#s4 .b{position:absolute;left:0;right:0;top:215px;text-align:center;color:var(--creme);font-family:Bri;font-size:60px;opacity:0;animation:up .4s ease-out both;animation-delay:12.8s}
+#s4 .ligne{top:320px;animation-delay:13.1s}
+#s4 .c{position:absolute;left:0;right:0;top:360px;text-align:center;color:var(--rouge);font-family:Bri;font-size:34px;opacity:0;animation:up .4s ease-out both;animation-delay:13.3s}
+#s4 .d{position:absolute;left:0;right:0;top:410px;text-align:center;color:var(--or2);font-family:Bri;font-size:100px;letter-spacing:-.03em;opacity:0;animation:up .5s ease-out both;animation-delay:13.5s}
+#s4 .e{position:absolute;left:40px;right:40px;top:560px;text-align:center;color:var(--creme);font-size:30px;line-height:1.35;opacity:0;animation:up .4s ease-out both;animation-delay:13.9s}
+/* 5 — l'adresse */
+#s5{animation:scl 2.6s linear both;animation-delay:15.4s}
+#s5 .lion{position:absolute;left:190px;top:220px;width:160px;height:160px;opacity:0;animation:up .5s ease-out both;animation-delay:15.6s}
+#s5 .url{position:absolute;left:0;right:0;top:430px;text-align:center;font-family:Bri;font-size:62px;color:var(--or2);opacity:0;animation:up .5s ease-out both;animation-delay:15.9s}
+#s5 .ligne{top:530px;animation-delay:16.2s}
+#s5 .sub{position:absolute;left:40px;right:40px;top:570px;text-align:center;font-size:28px;line-height:1.35;color:var(--creme);opacity:0;animation:up .5s ease-out both;animation-delay:16.3s}
+.flag{position:absolute;left:0;right:0;bottom:0;height:10px;display:flex}.flag i{flex:1}.flag i:nth-child(1){background:var(--vert)}.flag i:nth-child(2){background:var(--jaune)}.flag i:nth-child(3){background:#e31b23}
+
+#s2 .c1 b{font-size:70px}
+#s2 .c2 b{font-size:70px}
+#s4 .a{top:140px;line-height:1.3}
+#s4 .b{top:225px}
+#s4 .ligne{top:325px}
+#s4 .c{color:var(--or2);top:360px}
+#s4 .d{top:405px;font-size:96px}
+#s4 .e{top:545px}
+</style></head><body>
+<section class="sc" id="s1"><div class="lion">{{LION}}</div><p class="k">CUISINE</p><h1>Le plat<br>national du<br><span class="or">Sénégal</span> ?</h1><p class="q">Tu connais<br>son nom ?</p><div class="flag"><i></i><i></i><i></i></div></section>
+<section class="sc" id="s2"><div class="carte c1"><small>Son nom</small><b>Ceebu jën</b></div><span class="fleche">↓</span><div class="carte c2"><small>Inscrit à l'UNESCO</small><b>en 2021</b></div><p class="q">Le plat national</p></section>
+<section class="sc" id="s3"><div class="halo"></div><div class="phone"><div class="scr"><img src="{{ECRANS}}reponse.jpg"></div></div><p class="cap">La vraie réponse de <span>Teranga</span></p></section>
+<section class="sc" id="s4"><p class="a">Le riz croustillant<br>du fond de la marmite</p><p class="b">s'appelle le xoon</p><div class="ligne"></div><p class="c">On le mange souvent</p><p class="d">à midi</p><p class="e">dans un grand plat<br><b class="or">partagé</b></p></section>
+<section class="sc" id="s5"><div class="lion">{{LION}}</div><p class="url">teranga-ai.fr</p><div class="ligne"></div><p class="sub">Pose ta question à Teranga :<br>cuisine, culture, vie pratique</p><div class="flag"><i></i><i></i><i></i></div></section>
+</body></html>
