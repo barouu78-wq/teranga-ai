@@ -9,7 +9,7 @@ Trois modèles existent dans `scripts/video/modeles/`, tous au format vertical 9
 
 | Modèle | Durée | Contenu |
 |---|---|---|
-| `presentation.html` | 25 s | lion, questions en français, anglais et wolof, voix, planificateur, repères vérifiés, teranga-ai.fr |
+| `presentation.html` | 25 s | logo, questions en français, anglais et wolof, voix, planificateur, repères vérifiés, teranga-ai.fr |
 | `clip-pub.html` | 19 s | style « pub d'application » : ruban doré, « Trop de questions ? », TERANGA vertical, téléphone en 3D avec les vrais écrans |
 | `reponse-nuit.html` | 18 s | style « Nuit dorée » (noir et or) : une question, la **vraie réponse prête** de Teranga en mode nuit, ses chiffres, l'adresse ; recette pas à pas dans le skill `video-reponse` |
 
@@ -33,8 +33,8 @@ Les modèles sont dessinés pour 540×960 (rendu ×2). L'option `--format 16x9` 
   (itinéraire, question) est marqué « Exemple ».
 - **Aucune réponse de l'IA inventée** : en local, sans clé, l'IA ne répond pas. Ne pas fabriquer de fausse réponse.
 - **Personnes** : aucune personne générée ; une vraie personne seulement sur une photo ou une vidéo fournie par le
-  propriétaire, avec l'accord de la personne. Le lion de Teranga remplace le personnage.
-- **Première image** : le titre et le lion sont visibles dès la première image (vignette des réseaux, lecteurs qui ne
+  propriétaire, avec l'accord de la personne. Le logo de Teranga (baobab doré, version 3.0) remplace le personnage.
+- **Première image** : le titre et le logo sont visibles dès la première image (vignette des réseaux, lecteurs qui ne
   démarrent pas seuls). Une première image vide a déjà été livrée une fois, le 17 octobre 2026.
 - **Son** : pas de musique ni de voix dans le MP4. Le propriétaire ajoute une musique libre de droits dans CapCut,
   Instagram ou TikTok.

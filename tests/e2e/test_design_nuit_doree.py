@@ -1,8 +1,8 @@
-"""Design « lion + baobab » vu dans un vrai navigateur, aux tailles de téléphone.
+"""Design de la version 3.0 (« Nuit dorée », logo « Baobab doré ») vu dans un vrai navigateur, aux tailles de téléphone.
 
 Vérifie :
 - la bannière s'affiche dans les deux thèmes ;
-- le lion et le baobab sont bien dessinés (le symbole SVG est résolu) ;
+- le logo et le baobab sont bien dessinés (le symbole SVG est résolu) ;
 - la zone de question reste dans le premier écran, au-dessus de la barre d'onglets, du petit Android (360 × 560)
   au grand iPhone, avec et sans fête ;
 - il n'y a pas de défilement horizontal ;
@@ -37,12 +37,12 @@ def drawn(page, selector):
     return page.locator(selector).first.bounding_box()
 
 
-@pytest.mark.parametrize("theme,sky", [("light", "rgb(248, 217, 138)"), ("dark", "rgb(14, 26, 43)")])
-def test_banner_lion_and_baobab_are_drawn_in_both_themes(page, base_url, theme, sky):
+@pytest.mark.parametrize("theme,sky", [("light", "rgb(247, 231, 191)"), ("dark", "rgb(7, 9, 12)")])
+def test_banner_logo_and_baobab_are_drawn_in_both_themes(page, base_url, theme, sky):
     open_home(page, base_url, theme)
     assert page.evaluate("document.body.dataset.theme") == theme
     assert sky in page.evaluate("getComputedStyle(document.querySelector('.scene-sky')).backgroundImage")
-    for selector in (".scene-tree:not(.scene-far) use", ".scene-lion use", ".brand .mark use"):
+    for selector in (".scene-tree:not(.scene-far) use", ".scene-logo use", ".brand .mark use"):
         box = drawn(page, selector)
         assert box and box["width"] > 20 and box["height"] > 20, selector
     assert page.evaluate("document.querySelector('.hero-scene').getAttribute('aria-hidden')") == "true"
@@ -61,7 +61,7 @@ def test_question_box_stays_in_the_first_screen(page, base_url, size, fete):
     assert page.errors == []
 
 
-def test_banner_hides_when_the_conversation_starts_and_the_answer_shows_the_lion(page, base_url):
+def test_banner_hides_when_the_conversation_starts_and_the_answer_shows_the_logo(page, base_url):
     page.route(f"{base_url}/chat", lambda route: route.fulfill(
         body=json.dumps({"d": "Réponse de Teranga."}) + "\n", content_type="application/x-ndjson"))
     open_home(page, base_url, "light")
@@ -70,5 +70,5 @@ def test_banner_hides_when_the_conversation_starts_and_the_answer_shows_the_lion
     page.get_by_text("Réponse de Teranga.").wait_for(timeout=5000)
     assert not page.is_visible(".hero-scene")
     avatar = drawn(page, ".assistant .avatar use")
-    assert avatar and avatar["width"] >= 20  # le lion dans la bulle de l'assistant
+    assert avatar and avatar["width"] >= 20  # le logo dans la bulle de l'assistant
     assert page.errors == []

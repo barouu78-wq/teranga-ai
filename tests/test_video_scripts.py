@@ -30,8 +30,8 @@ def test_les_scripts_se_compilent(script):
 def test_modele_sans_chemin_de_machine_et_reperes_connus(modele):
     texte = modele.read_text(encoding="utf-8")
     assert "/home/" not in texte and "/tmp/" not in texte
-    assert set(re.findall(r"\{\{(\w+)\}\}", texte)) <= {"LION", "FONTS", "ECRANS"}
-    assert "{{LION}}" in texte and "teranga-ai.fr" in texte
+    assert set(re.findall(r"\{\{(\w+)\}\}", texte)) <= {"LOGO", "FONTS", "ECRANS"}
+    assert "{{LOGO}}" in texte and "teranga-ai.fr" in texte
 
 
 def test_premiere_image_jamais_vide():

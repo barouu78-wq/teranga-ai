@@ -2,7 +2,7 @@
 /* « Question → vraie réponse de Teranga », style « Nuit dorée » : noir et or, écran du site en mode nuit. 18 s, 9:16.
    Exemple : le plat national (vidéo du 24 octobre 2026). Pour un autre sujet, copier ce modèle et changer seulement les
    textes des scènes 1, 2, 4 et 5 : chaque fait doit se lire dans la vraie réponse capturée (scripts/video/reponses.py,
-   capture nommée « reponse »). Scènes : 1 titre et lion (dès la première image), 2 deux cartes, 3 la vraie réponse,
+   capture nommée « reponse »). Scènes : 1 titre et logo (dès la première image), 2 deux cartes, 3 la vraie réponse,
    4 les chiffres ou détails de la réponse, 5 l'adresse. */
 @font-face{font-family:Bri;src:url('{{FONTS}}bricolage-grotesque.woff2')}
 @font-face{font-family:Atk;src:url('{{FONTS}}atkinson-hyperlegible-700.woff2');font-weight:700}
@@ -19,12 +19,12 @@ body::before{content:"";position:absolute;inset:0;background:linear-gradient(rgb
 @keyframes zoom{from{transform:scale(.82)}to{transform:scale(1.04)}}
 @keyframes trait{from{width:0}to{width:360px}}
 @keyframes lueur{0%,100%{filter:drop-shadow(0 0 0 rgba(227,163,59,0))}50%{filter:drop-shadow(0 0 22px rgba(227,163,59,.7))}}
-.lion svg{width:100%;height:100%}
+.logo svg{width:100%;height:100%}
 .or{color:var(--or)}
 .ligne{position:absolute;left:90px;height:4px;background:var(--or);animation:trait .8s ease-out both}
-/* 1 — titre et lion visibles dès la première image */
+/* 1 — titre et logo visibles dès la première image */
 #s1{animation:sc0 3.6s linear both}
-#s1 .lion{position:absolute;left:195px;top:120px;width:150px;height:150px;animation:lueur 2s ease-in-out infinite}
+#s1 .logo{position:absolute;left:195px;top:120px;width:150px;height:150px;animation:lueur 2s ease-in-out infinite}
 #s1 .k{position:absolute;left:40px;right:40px;top:320px;color:var(--creme);font-family:Bri;font-size:30px;text-align:center;letter-spacing:.12em}
 #s1 h1{position:absolute;left:30px;right:30px;top:380px;text-align:center;color:var(--creme);font-family:Bri;font-size:64px;line-height:1}
 #s1 .q{position:absolute;left:30px;right:30px;top:640px;text-align:center;color:var(--or2);font-family:Bri;font-size:40px;line-height:1.08;opacity:0;animation:up .6s ease-out both;animation-delay:.9s}
@@ -58,7 +58,7 @@ body::before{content:"";position:absolute;inset:0;background:linear-gradient(rgb
 #s4 .e{position:absolute;left:40px;right:40px;top:560px;text-align:center;color:var(--creme);font-size:30px;line-height:1.35;opacity:0;animation:up .4s ease-out both;animation-delay:13.9s}
 /* 5 — l'adresse */
 #s5{animation:scl 2.6s linear both;animation-delay:15.4s}
-#s5 .lion{position:absolute;left:190px;top:220px;width:160px;height:160px;opacity:0;animation:up .5s ease-out both;animation-delay:15.6s}
+#s5 .logo{position:absolute;left:190px;top:220px;width:160px;height:160px;opacity:0;animation:up .5s ease-out both;animation-delay:15.6s}
 #s5 .url{position:absolute;left:0;right:0;top:430px;text-align:center;font-family:Bri;font-size:62px;color:var(--or2);opacity:0;animation:up .5s ease-out both;animation-delay:15.9s}
 #s5 .ligne{top:530px;animation-delay:16.2s}
 #s5 .sub{position:absolute;left:40px;right:40px;top:570px;text-align:center;font-size:28px;line-height:1.35;color:var(--creme);opacity:0;animation:up .5s ease-out both;animation-delay:16.3s}
@@ -73,9 +73,9 @@ body::before{content:"";position:absolute;inset:0;background:linear-gradient(rgb
 #s4 .d{top:405px;font-size:96px}
 #s4 .e{top:545px}
 </style></head><body>
-<section class="sc" id="s1"><div class="lion">{{LION}}</div><p class="k">CUISINE</p><h1>Le plat<br>national du<br><span class="or">Sénégal</span> ?</h1><p class="q">Tu connais<br>son nom ?</p><div class="flag"><i></i><i></i><i></i></div></section>
+<section class="sc" id="s1"><div class="logo">{{LOGO}}</div><p class="k">CUISINE</p><h1>Le plat<br>national du<br><span class="or">Sénégal</span> ?</h1><p class="q">Tu connais<br>son nom ?</p><div class="flag"><i></i><i></i><i></i></div></section>
 <section class="sc" id="s2"><div class="carte c1"><small>Son nom</small><b>Ceebu jën</b></div><span class="fleche">↓</span><div class="carte c2"><small>Inscrit à l'UNESCO</small><b>en 2021</b></div><p class="q">Le plat national</p></section>
 <section class="sc" id="s3"><div class="halo"></div><div class="phone"><div class="scr"><img src="{{ECRANS}}reponse.jpg"></div></div><p class="cap">La vraie réponse de <span>Teranga</span></p></section>
 <section class="sc" id="s4"><p class="a">Le riz croustillant<br>du fond de la marmite</p><p class="b">s'appelle le xoon</p><div class="ligne"></div><p class="c">On le mange souvent</p><p class="d">à midi</p><p class="e">dans un grand plat<br><b class="or">partagé</b></p></section>
-<section class="sc" id="s5"><div class="lion">{{LION}}</div><p class="url">teranga-ai.fr</p><div class="ligne"></div><p class="sub">Pose ta question à Teranga :<br>cuisine, culture, vie pratique</p><div class="flag"><i></i><i></i><i></i></div></section>
+<section class="sc" id="s5"><div class="logo">{{LOGO}}</div><p class="url">teranga-ai.fr</p><div class="ligne"></div><p class="sub">Pose ta question à Teranga :<br>cuisine, culture, vie pratique</p><div class="flag"><i></i><i></i><i></i></div></section>
 </body></html>
