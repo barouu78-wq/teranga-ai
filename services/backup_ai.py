@@ -108,10 +108,18 @@ def claude_events(
     usage = {"input_tokens": 0, "output_tokens": 0}
     for _ in range(MAX_CONTINUATIONS + 1):
         with client.beta.messages.stream(messages=messages, **params) as stream:
-            for text in stream.text_stream:
-                if text:
-                    parts.append(text)
-                    yield SimpleNamespace(type="response.output_text.delta", delta=text)
+            for event in stream:
+                kind = getattr(event, "type", "")
+                if kind == "content_block_start":
+                    block = getattr(event, "content_block", None)
+                    if getattr(block, "type", "") == "server_tool_use" and getattr(block, "name", "") == "web_search":
+                        # Même nom que l'API Responses : la route affiche « Je cherche des informations à jour… ».
+                        yield SimpleNamespace(type="response.web_search_call.in_progress")
+                elif kind == "content_block_delta" and getattr(event.delta, "type", "") == "text_delta":
+                    text = event.delta.text
+                    if text:
+                        parts.append(text)
+                        yield SimpleNamespace(type="response.output_text.delta", delta=text)
             message = stream.get_final_message()
         stop_reason = getattr(message, "stop_reason", None)
         for name in usage:
