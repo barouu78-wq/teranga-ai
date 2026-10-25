@@ -4,13 +4,13 @@
 @font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
   --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
-  /* Jour : « Vert Sénégal ». */
-  --bg:#f7f3e8;--surface:#fffdf6;--surface-2:#ebe6d3;--ink:#1c2a20;--muted:#5f6450;
-  --line:rgba(15,74,46,.14);--line-strong:rgba(15,74,46,.26);
-  --accent:#0f6a43;--accent-ink:#ffffff;--accent-soft:rgba(15,106,67,.12);--link:#0b5c3a;
-  --gold:#8a520a;--gold-soft:rgba(217,164,65,.22);
-  --shadow-sm:0 1px 2px rgba(15,60,40,.06),0 2px 10px rgba(15,60,40,.06);--shadow:0 14px 40px rgba(15,60,40,.12);
-  --radius:18px;--radius-lg:26px;
+  /* Version 3.0, « Nuit dorée » : jour ivoire, noir et or (mêmes jetons que l'accueil). */
+  --bg:#fbf8f1;--surface:#ffffff;--surface-2:#f1ead8;--ink:#14110d;--muted:#5e574b;
+  --line:rgba(20,17,13,.10);--line-strong:rgba(20,17,13,.22);
+  --accent:#14110d;--accent-ink:#f5d58a;--accent-soft:rgba(20,17,13,.08);--link:#7a5300;
+  --gold:#8a6100;--gold-soft:rgba(212,160,23,.18);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(0,0,0,.06);--shadow:0 14px 40px rgba(0,0,0,.10);
+  --radius:16px;--radius-lg:22px;
   --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
   /* Alias pour les pages plus anciennes */
@@ -18,14 +18,14 @@
   color-scheme:only light; /* interdit l'assombrissement automatique de Chrome (tests/e2e/test_sombre_automatique.py) */
 }
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0e1512;--surface:#17201b;--surface-2:#1f2a24;--ink:#f3eee4;--muted:#b3b9ad;
-  --line:#26322b;--line-strong:#34423a;
-  --accent:#e3a33b;--accent-ink:#0e1512;--link:#e7bb63;--accent-soft:rgba(217,164,65,.16);--gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;
+  --bg:#0b0d10;--surface:#14171c;--surface-2:#1b1f26;--ink:#f5efe3;--muted:#a9a296;
+  --line:rgba(232,176,75,.18);--line-strong:rgba(232,176,75,.34);
+  --accent:#e8b04b;--accent-ink:#0b0d10;--link:#f1c46b;--accent-soft:rgba(232,176,75,.14);--gold:#e8b04b;--gold-soft:rgba(232,176,75,.12);--nav-gold:#e8b04b;--sen-gold:#e8b04b;
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0e1512;--surface:#17201b;--surface-2:#1f2a24;--ink:#f3eee4;--muted:#b3b9ad;
-  --line:#26322b;--line-strong:#34423a;
-  --accent:#e3a33b;--accent-ink:#0e1512;--link:#e7bb63;--accent-soft:rgba(217,164,65,.16);--gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;
+  --bg:#0b0d10;--surface:#14171c;--surface-2:#1b1f26;--ink:#f5efe3;--muted:#a9a296;
+  --line:rgba(232,176,75,.18);--line-strong:rgba(232,176,75,.34);
+  --accent:#e8b04b;--accent-ink:#0b0d10;--link:#f1c46b;--accent-soft:rgba(232,176,75,.14);--gold:#e8b04b;--gold-soft:rgba(232,176,75,.12);--nav-gold:#e8b04b;--sen-gold:#e8b04b;
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);color-scheme:dark}
 
 *,*::before,*::after{box-sizing:border-box}
@@ -44,7 +44,7 @@ img{max-width:100%}
 /* Zones tactiles de 44 px sans changer le dessin : la zone cliquable déborde de quelques pixels
    (tests/e2e/test_zones_tactiles.py). */
 .site-brand::after,.site-nav a::after,.cta::after{content:"";position:absolute;inset:-4px 0}
-.site-mark{flex:0 0 36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--sen-green)}
+.site-mark{flex:0 0 36px;height:36px;border-radius:50%;display:grid;place-items:center}
 .site-mark svg{width:32px;height:32px}
 .site-brand strong{font:700 18px/1 var(--font-display);white-space:nowrap}
 .site-brand em{font-style:normal;color:var(--gold)}
@@ -131,8 +131,8 @@ ul,ol{padding-left:20px}
 /* Pas de délai de 300 ms au toucher sur mobile. */
 a,button,select,summary,[role=button]{touch-action:manipulation}
 
-/* Nuit verte : même fond que l'accueil. */
-:root[data-theme="dark"] body{background:#0e1512}
+/* Nuit dorée : même fond que l'accueil. */
+:root[data-theme="dark"] body{background:#0b0d10}
 
 /* Ambiances régionales (pages lieux et régions). Le jour seulement change les
    couleurs de fond ; la bande décorée et l'accent valent jour et nuit. */

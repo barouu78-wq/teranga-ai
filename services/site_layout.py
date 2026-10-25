@@ -49,30 +49,18 @@ def social_meta(title: str, description: str, url: str, site_url: str, og_type: 
     )
 
 
-# Le lion du logo : même dessin que le symbole #sn-lion de templates/home.html (tests/test_design_lion_baobab.py).
-LION_SVG = (
-    '<path d="M50,21 Q52,14.9 68.6,9.7 Q68.6,21.8 63.8,23.9 Q68.2,19.2 85.4,21.2 Q80.5,32.2 75.3,32.2 Q81.2,29.6 96.1,38.5 Q87.1,46.6 82.3,44.5 Q88.8,44.5 98.9,58.7 Q87.4,62.4 83.8,58.6 Q89.7,61.2 93.1,78.2 Q81.1,76.9 79.4,72 Q83.7,76.8 80,93.8 Q69.5,87.7 70,82.5 Q72,88.6 61.6,102.6 Q54.5,92.8 57.1,88.3 Q56.4,94.7 41.2,103.2 Q38.7,91.4 42.9,88.3 Q39.7,93.8 22.4,95.5 Q24.9,83.7 30,82.5 Q24.8,86.3 8.3,80.7 Q15.4,71 20.6,72 Q14.2,73.3 1.4,61.6 Q11.9,55.5 16.2,58.6 Q9.9,57.2 3,41.2 Q15,40 17.7,44.5 Q12.5,40.7 12.6,23.3 Q24.1,27.1 24.7,32.2 Q21.5,26.7 28.8,10.8 Q37.7,19 36.2,23.9 Q35.5,17.5 48.6,6 Q53.4,17.1 50,21 Z" fill="#b8741a"/>'
-    '<path d="M57.2,26.9 Q60.2,22.1 76.1,22.1 Q73.1,32.2 69.4,33.5 Q74.3,30.6 88.4,38 Q81.1,45.5 77.2,44.9 Q82.9,44.7 91.9,57.8 Q81.9,61.1 78.8,58.7 Q83.9,61.1 85.8,77 Q75.4,75.2 73.7,71.7 Q77.2,76.2 71.5,91.1 Q63.1,84.7 63.3,80.8 Q64.2,86.4 52.2,96.9 Q47.8,87.4 49.8,84 Q48,89.4 32.5,93.2 Q33,82.7 36.3,80.6 Q32.2,84.5 16.8,80.7 Q22.1,71.6 26,71.3 Q20.6,72.9 8.6,62.3 Q17.6,56.8 21.2,58.3 Q15.6,57.2 10,42.2 Q20.5,41.5 23,44.5 Q18.6,40.9 20.5,25.1 Q30.1,29.3 31,33.1 Q28.7,27.9 37.8,14.8 Q44.3,23 43.3,26.8 Q43.7,21.1 57.9,13.7 Q59.9,24.1 57.2,26.9 Z" fill="#d99a2b"/>'
-    '<path d="M52.5,31.1 Q54.3,27.6 66.3,25 Q65.9,33 65.5,36.4 Q69,34.4 80.5,38.8 Q75.9,45.3 73.7,47.9 Q77.6,48.1 84.9,58 Q77.6,60.9 74.3,62 Q77.5,64.3 78.3,76.6 Q70.5,75.1 67.2,74.2 Q68.6,77.8 62.7,88.6 Q57,83.1 54.6,80.6 Q53.9,84.4 43,90.3 Q41.2,82.6 40.6,79.2 Q37.9,82 25.6,81.1 Q28.2,73.6 29.6,70.4 Q25.7,71.3 15.9,63.9 Q22.2,59 25,57.1 Q21.3,55.8 17,44.2 Q24.9,43.5 28.4,43.4 Q26,40.3 28.6,28.3 Q35.7,31.9 38.7,33.7 Q38.3,29.8 47,21.1 Q51,28 52.5,31.1 Z" fill="#ecbd55"/>'
-    '<circle cx="32" cy="34" r="7" fill="#f3d49a"/>'
-    '<circle cx="32" cy="34" r="3.4" fill="#36210f" opacity=".5"/>'
-    '<circle cx="68" cy="34" r="7" fill="#f3d49a"/>'
-    '<circle cx="68" cy="34" r="3.4" fill="#36210f" opacity=".5"/>'
-    '<path d="M50,29 C64,29 72,40 72,54 C72,66 63,75 56,81 Q50,85 44,81 C37,75 28,66 28,54 C28,40 36,29 50,29 Z" fill="#f3d49a"/>'
-    '<path d="M45.5,31 Q50,29.5 54.5,31 L55,57 Q50,59 45,57 Z" fill="#fbe9c2"/>'
-    '<path d="M33,45 L46,48.5 L45.5,50.5 L34,48 Z" fill="#36210f"/>'
-    '<path d="M67,45 L54,48.5 L54.5,50.5 L66,48 Z" fill="#36210f"/>'
-    '<path d="M35,50.5 Q40.5,48.5 46,52.5 Q40.5,55 35,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/>'
-    '<path d="M65,50.5 Q59.5,48.5 54,52.5 Q59.5,55 65,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/>'
-    '<circle cx="41.5" cy="51.6" r="1.7" fill="#36210f"/>'
-    '<circle cx="58.5" cy="51.6" r="1.7" fill="#36210f"/>'
-    '<ellipse cx="44.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/>'
-    '<ellipse cx="55.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/>'
-    '<path d="M44.5,59.5 L55.5,59.5 Q57.5,60.5 55.6,63 L51.2,67 Q50,68 48.8,67 L44.4,63 Q42.5,60.5 44.5,59.5 Z" fill="#36210f"/>'
-    '<path d="M50,67.5 L50,71 M50,71 Q47,74.5 43.5,72.5 M50,71 Q53,74.5 56.5,72.5" stroke="#36210f" stroke-width="1.6" fill="none" stroke-linecap="round"/>'
-    '<path d="M46,77.5 Q50,80 54,77.5" stroke="#36210f" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".45"/>'
+# Le logo (baobab doré, version 3.0) : même dessin que le symbole #sn-logo de templates/home.html
+# (tests/test_design_nuit_doree.py). Or uni, sans dégradé ni masque : aucun url() dans les dessins.
+LOGO_SVG = (
+    '<circle cx="50" cy="50" r="44" fill="#e8b04b"/>'
+    '<path d="M19.8 82 Q50 75 80.2 82 A44 44 0 0 1 19.8 82 Z" fill="#0b0d10"/>'
+    '<path d="M37 85 Q44 72 43 57 L57 57 Q56 72 63 85 Z" fill="#0b0d10"/>'
+    '<g fill="none" stroke="#0b0d10" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M46 58 L36 46 L28 42"/><path d="M36 46 L34 37"/>'
+    '<path d="M50 57 L50 37"/><path d="M50 45 L43 35"/><path d="M50 43 L57 33"/>'
+    '<path d="M54 58 L64 46 L72 42"/><path d="M64 46 L66 37"/></g>'
 )
-_MARK = f'<svg viewBox="0 5 100 100" aria-hidden="true">{LION_SVG}</svg>'
+_MARK = f'<svg viewBox="0 0 100 100" aria-hidden="true">{LOGO_SVG}</svg>'
 
 _NAV = {
     "fr": (("/explorer", "Explorer"), ("/lieux", "Lieux"), ("/trip-planner?lang=fr", "Planifier"), ("/regions-senegal", "Régions")),

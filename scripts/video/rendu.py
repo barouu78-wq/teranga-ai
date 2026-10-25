@@ -4,7 +4,7 @@ Usage :
     python scripts/video/rendu.py scripts/video/modeles/clip-pub.html sortie.mp4 --duree 19 --ecrans dossier_captures
 
 Le modèle peut contenir trois repères, remplacés au rendu :
-    {{LION}}    le lion de Teranga (services/site_layout.LION_SVG) ;
+    {{LOGO}}    le logo de Teranga, baobab doré (services/site_layout.LOGO_SVG) ;
     {{FONTS}}   le dossier des polices du site (static/fonts/) ;
     {{ECRANS}}  le dossier des captures faites par scripts/video/ecrans.py.
 
@@ -25,16 +25,16 @@ ROOT = Path(__file__).resolve().parents[2]
 FORMATS = {"9x16": (540, 960), "16x9": (960, 540)}  # taille CSS ; rendu en ×2
 
 
-def lion_svg() -> str:
+def logo_svg() -> str:
     sys.path.insert(0, str(ROOT))
-    from services.site_layout import LION_SVG
+    from services.site_layout import LOGO_SVG
 
-    return f'<svg viewBox="0 5 100 100" aria-hidden="true">{LION_SVG}</svg>'
+    return f'<svg viewBox="0 0 100 100" aria-hidden="true">{LOGO_SVG}</svg>'
 
 
 def prepare(modele: Path, ecrans: Path | None, dossier: Path) -> Path:
     texte = modele.read_text(encoding="utf-8")
-    texte = texte.replace("{{LION}}", lion_svg()).replace("{{FONTS}}", str(ROOT / "static" / "fonts") + "/")
+    texte = texte.replace("{{LOGO}}", logo_svg()).replace("{{FONTS}}", str(ROOT / "static" / "fonts") + "/")
     if "{{ECRANS}}" in texte:
         if not ecrans or not ecrans.is_dir():
             raise SystemExit("Ce modèle montre des écrans du site : lancez d'abord scripts/video/ecrans.py (--ecrans).")

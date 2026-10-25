@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f7f3e8" id="themeColor">
+<meta name="theme-color" content="#fbf8f1" id="themeColor">
 <meta name="description" content="Teranga AI, l’IA qui répond à toutes vos questions sur le Sénégal : démarches, santé, argent, travail, études, culture, voyage. En français, anglais et wolof.">
 <meta name="keywords" content="Teranga AI, IA Sénégal, assistant Sénégal, démarches Sénégal, santé Sénégal, emploi Sénégal, études Sénégal, vie pratique Sénégal, diaspora sénégalaise, Dakar, voyage Sénégal, culture sénégalaise, cuisine sénégalaise, wolof">
 <meta name="robots" content="index,follow">
@@ -558,25 +558,26 @@ async function speak(text,btn){
 @font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:600 700;font-display:swap;src:url("/static/fonts/bricolage-grotesque.woff2") format("woff2")}
 :root{
   --sen-green:#0f6a43;--sen-gold:#d9a441;--sen-red:#c93636;--nav-gold:#c97d12;
-  /* Jour : « Vert Sénégal » — vert du drapeau, or et crème (contrastes : tests/test_design_lion_baobab.py). */
-  --bg:#f7f3e8;--surface:#fffdf6;--surface-2:#ebe6d3;--ink:#1c2a20;--muted:#5f6450;
-  --line:rgba(15,74,46,.14);--line-strong:rgba(15,74,46,.26);
-  --accent:#0f6a43;--accent-ink:#ffffff;--accent-soft:rgba(15,106,67,.12);--link:#0b5c3a;
-  --gold:#8a520a;--gold-soft:rgba(217,164,65,.22);--title:#0b4a2e;
-  --card-travel:#e3efe2;--card-discover:#f4e8cc;
-  --shadow-sm:0 1px 2px rgba(15,60,40,.06),0 2px 10px rgba(15,60,40,.06);
-  --shadow:0 14px 40px rgba(15,60,40,.12);
-  --radius:18px;--radius-lg:26px;
+  /* Version 3.0, « Nuit dorée » (choix du propriétaire, 25 octobre 2026). Jour : ivoire, noir et or
+     (contrastes : tests/test_design_nuit_doree.py). Les couleurs du drapeau restent celles des bandes de fête. */
+  --bg:#fbf8f1;--surface:#ffffff;--surface-2:#f1ead8;--ink:#14110d;--muted:#5e574b;
+  --line:rgba(20,17,13,.10);--line-strong:rgba(20,17,13,.22);
+  --accent:#14110d;--accent-ink:#f5d58a;--accent-soft:rgba(20,17,13,.08);--link:#7a5300;
+  --gold:#8a6100;--gold-soft:rgba(212,160,23,.18);--title:#14110d;
+  --card-travel:#f4ecda;--card-discover:#f7f1e3;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(0,0,0,.06);
+  --shadow:0 14px 40px rgba(0,0,0,.10);
+  --radius:16px;--radius-lg:22px;
   --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
   --font-display:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 body[data-theme="dark"]{
-  /* Nuit : « Nuit verte » — noir teinté de vert et or. */
-  --bg:#0e1512;--surface:#17201b;--surface-2:#1f2a24;--ink:#f3eee4;--muted:#b3b9ad;
-  --line:#26322b;--line-strong:#34423a;
-  --accent:#e3a33b;--accent-ink:#0e1512;--accent-soft:rgba(217,164,65,.16);--link:#e7bb63;
-  --gold:#e7bb63;--gold-soft:rgba(231,187,99,.14);--nav-gold:#e7bb63;--sen-gold:#e7bb63;--title:#f6dfa8;
-  --card-travel:rgba(255,255,255,.04);--card-discover:rgba(255,255,255,.04);
+  /* Nuit : noir et or, comme les vidéos. */
+  --bg:#0b0d10;--surface:#14171c;--surface-2:#1b1f26;--ink:#f5efe3;--muted:#a9a296;
+  --line:rgba(232,176,75,.18);--line-strong:rgba(232,176,75,.34);
+  --accent:#e8b04b;--accent-ink:#0b0d10;--accent-soft:rgba(232,176,75,.14);--link:#f1c46b;
+  --gold:#e8b04b;--gold-soft:rgba(232,176,75,.12);--nav-gold:#e8b04b;--sen-gold:#e8b04b;--title:#f6dfa8;
+  --card-travel:rgba(232,176,75,.06);--card-discover:rgba(232,176,75,.06);
   --shadow-sm:0 1px 2px rgba(0,0,0,.35);--shadow:0 16px 44px rgba(0,0,0,.45);
 }
 *,*::before,*::after{box-sizing:border-box}
@@ -606,7 +607,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* En-tête */
 header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 20px 10px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.mark{flex:0 0 40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--sen-green);box-shadow:var(--shadow-sm)}
+.mark{flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center}
 .mark svg{width:36px;height:36px}
 .brand strong{display:block;font:700 19px/1.1 var(--font-display);letter-spacing:-.01em;color:var(--ink);white-space:nowrap}
 .brand em{font-style:normal;color:var(--gold)}
@@ -656,33 +657,33 @@ body:not(.has-chat) #resetBtn{display:none}
 .hero .spread{order:7}
 
 /* Bannière de l'accueil (décorative) : baobab au coucher du soleil, lune la nuit, bande du drapeau et médaillon
-   du lion, comme les deux symboles des armoiries du Sénégal. Dessins originaux, sans image externe. */
+   du logo (baobab doré, version 3.0). Dessins originaux, sans image externe. */
 .svg-defs{position:absolute;width:0;height:0;overflow:hidden}
 .hero-scene{position:relative;order:-1;margin-bottom:26px}
-.scene-sky{position:relative;height:150px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#f8d98a 0%,#f2a650 58%,#dc6a30 100%);box-shadow:var(--shadow-sm);color:#2a1c10}
+.scene-sky{position:relative;height:150px;border-radius:22px;overflow:hidden;background:linear-gradient(180deg,#f7e7bf 0%,#e8b04b 65%,#8a5a00 100%);box-shadow:var(--shadow-sm);color:#3b2a10}
 .scene-sun{position:absolute;left:62%;top:26px;width:70px;height:70px;border-radius:50%;background:#fff3c9;box-shadow:0 0 44px 12px rgba(255,236,170,.55)}
 .scene-tree{position:absolute;left:calc(68% - 75px);bottom:14px;width:150px;height:150px}
 .scene-ground{position:absolute;left:-8%;right:-8%;bottom:4px;height:26px;background:currentColor;border-radius:50% 50% 0 0/100% 100% 0 0}
 .scene-flag{position:absolute;left:0;right:0;bottom:0;height:6px;display:grid;grid-template-columns:repeat(3,1fr)}
 .scene-flag i:nth-child(1){background:#0f6a43}.scene-flag i:nth-child(2){background:#f0c63d}.scene-flag i:nth-child(3){background:#c93636}
-.scene-lion{position:absolute;left:14px;bottom:-34px;width:92px;height:92px;border-radius:50%;background:var(--sen-green);border:4px solid var(--bg);display:grid;place-items:center;box-shadow:var(--shadow-sm)}
-.scene-lion svg{width:80px;height:80px}
-body[data-theme="dark"] .scene-sky{background:linear-gradient(180deg,#0e1a2b 0%,#22304a 55%,#5a3940 100%);color:#070b12}
+.scene-logo{position:absolute;left:14px;bottom:-34px;width:92px;height:92px;border-radius:50%;background:var(--bg);border:4px solid var(--bg);display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.scene-logo svg{width:80px;height:80px}
+body[data-theme="dark"] .scene-sky{background:linear-gradient(180deg,#07090c 0%,#141a24 60%,#3b2a10 100%);color:#050607}
 body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box-shadow:0 0 30px 6px rgba(241,234,210,.25)}
 .scene-far{display:none}
 @media(min-width:760px){.scene-sky{height:190px}.scene-tree{width:190px;height:190px;left:calc(70% - 95px)}.scene-sun{left:66%;top:34px}
   .scene-tree.scene-far{display:block;width:120px;height:120px;left:calc(30% - 60px);bottom:20px;opacity:.7}} /* un second baobab au loin sur grand écran */
 @media(forced-colors:active){.hero-scene{display:none}}
 /* Téléphone : bannière compacte, pour que la zone de question reste dans le premier écran
-   (vérifié de 360 × 560 à 390 × 844, avec et sans fête : tests/e2e/test_design_lion_baobab.py). */
+   (vérifié de 360 × 560 à 390 × 844, avec et sans fête : tests/e2e/test_design_nuit_doree.py). */
 @media(max-width:720px){
   .hero-scene{margin-bottom:16px}
   .scene-sky{height:96px;border-radius:18px}
   .scene-sun{left:64%;top:14px;width:46px;height:46px}
   .scene-tree{left:calc(70% - 50px);bottom:9px;width:100px;height:100px}
   .scene-ground{height:18px}
-  .scene-lion{left:12px;bottom:-22px;width:64px;height:64px;border-width:3px}
-  .scene-lion svg{width:56px;height:56px}
+  .scene-logo{left:12px;bottom:-22px;width:64px;height:64px;border-width:3px}
+  .scene-logo svg{width:56px;height:56px}
   body[data-theme="dark"] .scene-sun{width:34px;height:34px}
 }
 /* Jour de fête sur un écran bas : la bande de la fête suffit. Écran très bas (téléphone couché) : pas de bannière. */
@@ -703,7 +704,7 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 .journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .journey-strip button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:18px 16px 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
-.journey-strip [data-journey="travel"]>span{background:rgba(15,106,67,.14)}
+.journey-strip [data-journey="travel"]>span{background:var(--gold-soft)}
 /* Boutons de suite (version 9) : sous la dernière réponse ; zones tactiles de 44 px. */
 .followups{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.followup{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1.25 var(--font);text-align:left;cursor:pointer}.followup:hover{border-color:var(--accent);color:var(--link)}
 .project-offer{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.project-offer-btn{padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer}.project-offer-btn:disabled{opacity:.6}.project-offer-more{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-weight:700;cursor:pointer}.project-offer-result{flex-basis:100%}.project-offer-result h3{margin:6px 0}.project-meta{color:var(--muted);margin:0 0 6px}
@@ -763,7 +764,7 @@ body.has-chat #messages{padding-top:4px}
 .msg.user{justify-content:flex-end}
 .msg.is-new{animation:rise .24s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.avatar{flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--sen-green);color:var(--accent);font-size:16px}
+.avatar{flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;color:var(--accent);font-size:16px}
 .avatar svg{width:28px;height:28px}
 .col{display:flex;flex-direction:column;gap:8px;min-width:0;max-width:min(720px,86%)}
 .msg.user .col{align-items:flex-end}
@@ -830,7 +831,7 @@ body:not(.has-chat) .meta{display:none}
 .voice-bar[data-phase="starting"] .voice-dot,.voice-bar[data-phase="transcribing"] .voice-dot,.voice-bar[data-phase="thinking"] .voice-dot{background:var(--sen-gold)}
 .voice-bar[data-phase="listening"] .voice-dot,.voice-bar[data-phase="hearing"] .voice-dot,.voice-bar[data-phase="error"] .voice-dot{background:var(--sen-red)}
 .voice-bar[data-phase="listening"] .voice-dot,.voice-bar[data-phase="hearing"] .voice-dot{animation:pulse 1.2s infinite}
-.voice-bar[data-phase="speaking"] .voice-dot{background:var(--sen-green)}
+.voice-bar[data-phase="speaking"] .voice-dot{background:var(--gold)}
 .voice-text{flex:1 1 140px;min-width:0;font-weight:700;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
 .voice-actions{display:flex;gap:8px;margin-left:auto}
 .voice-bar button{flex:0 0 auto;min-width:44px;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font:700 14px/1 var(--font);cursor:pointer}
@@ -925,7 +926,7 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .col{max-width:88%}
 }
 /* Écran très bas (≤ 600 px) : la rangée de profils défile sur une ligne, comme avant, pour garder la zone de question
-   dans le premier écran (tests/e2e/test_design_lion_baobab.py). */
+   dans le premier écran (tests/e2e/test_design_nuit_doree.py). */
 @media(max-width:680px) and (max-height:600px){
   .audience-mode{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
   .audience-mode::-webkit-scrollbar{display:none}
@@ -946,11 +947,10 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .tabbar button.on:after{background:Highlight}
 }
 body.has-chat .dock{background:var(--bg)}
-/* Design automatique : jour « Vert Sénégal », nuit « Nuit verte ». */
-body[data-theme="dark"]{background:#0e1512}
+/* Design automatique « Nuit dorée » : jour ivoire, nuit noir et or. */
+body[data-theme="dark"]{background:#0b0d10}
 #heroTitle{color:var(--title)}
-body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e7bb63);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand .mark{background:var(--sen-green)} /* le lion, sur le vert du drapeau dans les deux thèmes */
+body[data-theme="dark"] #heroTitle{background:linear-gradient(90deg,#fff3d6,#e8b04b);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero-signature{position:relative;min-height:14px}
 body:not([data-theme="dark"]) .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
   radial-gradient(circle at 12px 12px,#f2b632 5px,transparent 6px) 0 0/24px 24px,
@@ -1055,16 +1055,16 @@ body:not([data-fete]) .hero-signature{display:none}
 <script nonce="__CSP_NONCE__">
 // Thème appliqué avant le premier affichage (sinon éclair clair → sombre le soir).
 // Même règle que static/theme.js : auto = sombre de 18 h à 6 h.
-(function(){try{var m='auto';if(localStorage.getItem('teranga-theme-v')==='2'){var v=localStorage.getItem('teranga-theme');if(v==='light'||v==='dark')m=v;}var h=new Date().getHours(),d=m==='dark'||(m==='auto'&&(h>=18||h<6));document.body.setAttribute('data-theme',d?'dark':'light');var c=document.getElementById('themeColor');if(c)c.content=d?'#0e1512':'#f7f3e8';}catch(e){}})();
+(function(){try{var m='auto';if(localStorage.getItem('teranga-theme-v')==='2'){var v=localStorage.getItem('teranga-theme');if(v==='light'||v==='dark')m=v;}var h=new Date().getHours(),d=m==='dark'||(m==='auto'&&(h>=18||h<6));document.body.setAttribute('data-theme',d?'dark':'light');var c=document.getElementById('themeColor');if(c)c.content=d?'#0b0d10':'#fbf8f1';}catch(e){}})();
 </script>
 <a class="skip-link" id="skipLink" href="#stage">Aller au contenu</a>
-<svg class="svg-defs" aria-hidden="true" focusable="false"><symbol id="sn-lion" viewBox="0 5 100 100"><path d="M50,21 Q52,14.9 68.6,9.7 Q68.6,21.8 63.8,23.9 Q68.2,19.2 85.4,21.2 Q80.5,32.2 75.3,32.2 Q81.2,29.6 96.1,38.5 Q87.1,46.6 82.3,44.5 Q88.8,44.5 98.9,58.7 Q87.4,62.4 83.8,58.6 Q89.7,61.2 93.1,78.2 Q81.1,76.9 79.4,72 Q83.7,76.8 80,93.8 Q69.5,87.7 70,82.5 Q72,88.6 61.6,102.6 Q54.5,92.8 57.1,88.3 Q56.4,94.7 41.2,103.2 Q38.7,91.4 42.9,88.3 Q39.7,93.8 22.4,95.5 Q24.9,83.7 30,82.5 Q24.8,86.3 8.3,80.7 Q15.4,71 20.6,72 Q14.2,73.3 1.4,61.6 Q11.9,55.5 16.2,58.6 Q9.9,57.2 3,41.2 Q15,40 17.7,44.5 Q12.5,40.7 12.6,23.3 Q24.1,27.1 24.7,32.2 Q21.5,26.7 28.8,10.8 Q37.7,19 36.2,23.9 Q35.5,17.5 48.6,6 Q53.4,17.1 50,21 Z" fill="#b8741a"/><path d="M57.2,26.9 Q60.2,22.1 76.1,22.1 Q73.1,32.2 69.4,33.5 Q74.3,30.6 88.4,38 Q81.1,45.5 77.2,44.9 Q82.9,44.7 91.9,57.8 Q81.9,61.1 78.8,58.7 Q83.9,61.1 85.8,77 Q75.4,75.2 73.7,71.7 Q77.2,76.2 71.5,91.1 Q63.1,84.7 63.3,80.8 Q64.2,86.4 52.2,96.9 Q47.8,87.4 49.8,84 Q48,89.4 32.5,93.2 Q33,82.7 36.3,80.6 Q32.2,84.5 16.8,80.7 Q22.1,71.6 26,71.3 Q20.6,72.9 8.6,62.3 Q17.6,56.8 21.2,58.3 Q15.6,57.2 10,42.2 Q20.5,41.5 23,44.5 Q18.6,40.9 20.5,25.1 Q30.1,29.3 31,33.1 Q28.7,27.9 37.8,14.8 Q44.3,23 43.3,26.8 Q43.7,21.1 57.9,13.7 Q59.9,24.1 57.2,26.9 Z" fill="#d99a2b"/><path d="M52.5,31.1 Q54.3,27.6 66.3,25 Q65.9,33 65.5,36.4 Q69,34.4 80.5,38.8 Q75.9,45.3 73.7,47.9 Q77.6,48.1 84.9,58 Q77.6,60.9 74.3,62 Q77.5,64.3 78.3,76.6 Q70.5,75.1 67.2,74.2 Q68.6,77.8 62.7,88.6 Q57,83.1 54.6,80.6 Q53.9,84.4 43,90.3 Q41.2,82.6 40.6,79.2 Q37.9,82 25.6,81.1 Q28.2,73.6 29.6,70.4 Q25.7,71.3 15.9,63.9 Q22.2,59 25,57.1 Q21.3,55.8 17,44.2 Q24.9,43.5 28.4,43.4 Q26,40.3 28.6,28.3 Q35.7,31.9 38.7,33.7 Q38.3,29.8 47,21.1 Q51,28 52.5,31.1 Z" fill="#ecbd55"/><circle cx="32" cy="34" r="7" fill="#f3d49a"/><circle cx="32" cy="34" r="3.4" fill="#36210f" opacity=".5"/><circle cx="68" cy="34" r="7" fill="#f3d49a"/><circle cx="68" cy="34" r="3.4" fill="#36210f" opacity=".5"/><path d="M50,29 C64,29 72,40 72,54 C72,66 63,75 56,81 Q50,85 44,81 C37,75 28,66 28,54 C28,40 36,29 50,29 Z" fill="#f3d49a"/><path d="M45.5,31 Q50,29.5 54.5,31 L55,57 Q50,59 45,57 Z" fill="#fbe9c2"/><path d="M33,45 L46,48.5 L45.5,50.5 L34,48 Z" fill="#36210f"/><path d="M67,45 L54,48.5 L54.5,50.5 L66,48 Z" fill="#36210f"/><path d="M35,50.5 Q40.5,48.5 46,52.5 Q40.5,55 35,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/><path d="M65,50.5 Q59.5,48.5 54,52.5 Q59.5,55 65,50.5 Z" fill="#d18d1f" stroke="#36210f" stroke-width="1.3" stroke-linejoin="round"/><circle cx="41.5" cy="51.6" r="1.7" fill="#36210f"/><circle cx="58.5" cy="51.6" r="1.7" fill="#36210f"/><ellipse cx="44.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/><ellipse cx="55.5" cy="68" rx="7" ry="5.8" fill="#fbe9c2"/><path d="M44.5,59.5 L55.5,59.5 Q57.5,60.5 55.6,63 L51.2,67 Q50,68 48.8,67 L44.4,63 Q42.5,60.5 44.5,59.5 Z" fill="#36210f"/><path d="M50,67.5 L50,71 M50,71 Q47,74.5 43.5,72.5 M50,71 Q53,74.5 56.5,72.5" stroke="#36210f" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M46,77.5 Q50,80 54,77.5" stroke="#36210f" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".45"/></symbol><symbol id="sn-baobab" viewBox="0 0 100 100"><path d="M45,47 C39,38 30,34 17,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M31,35 C29,30 27,26 22,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M17,33 L11,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M47,45 C45,36 42,28 37,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M37,20 L33,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M40,25 L34,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,45 L50,22" stroke="currentColor" stroke-width="3.8" fill="none" stroke-linecap="round"/><path d="M50,22 L48,15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,27 L55,21" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M53,45 C55,36 58,28 63,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M63,20 L67,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M60,25 L66,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M55,47 C61,38 70,34 83,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M69,35 C71,30 73,26 78,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M83,33 L89,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M34,93 C30,78 33,60 41,46 L59,46 C67,60 70,78 66,93 Z" fill="currentColor"/></symbol></svg>
+<svg class="svg-defs" aria-hidden="true" focusable="false"><symbol id="sn-logo" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#e8b04b"/><path d="M19.8 82 Q50 75 80.2 82 A44 44 0 0 1 19.8 82 Z" fill="#0b0d10"/><path d="M37 85 Q44 72 43 57 L57 57 Q56 72 63 85 Z" fill="#0b0d10"/><g fill="none" stroke="#0b0d10" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><path d="M46 58 L36 46 L28 42"/><path d="M36 46 L34 37"/><path d="M50 57 L50 37"/><path d="M50 45 L43 35"/><path d="M50 43 L57 33"/><path d="M54 58 L64 46 L72 42"/><path d="M64 46 L66 37"/></g></symbol><symbol id="sn-baobab" viewBox="0 0 100 100"><path d="M45,47 C39,38 30,34 17,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M31,35 C29,30 27,26 22,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M17,33 L11,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M47,45 C45,36 42,28 37,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M37,20 L33,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M40,25 L34,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,45 L50,22" stroke="currentColor" stroke-width="3.8" fill="none" stroke-linecap="round"/><path d="M50,22 L48,15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M50,27 L55,21" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M53,45 C55,36 58,28 63,20" stroke="currentColor" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M63,20 L67,14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M60,25 L66,24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M55,47 C61,38 70,34 83,33" stroke="currentColor" stroke-width="5.5" fill="none" stroke-linecap="round"/><path d="M69,35 C71,30 73,26 78,22" stroke="currentColor" stroke-width="3.2" fill="none" stroke-linecap="round"/><path d="M83,33 L89,29" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M34,93 C30,78 33,60 41,46 L59,46 C67,60 70,78 66,93 Z" fill="currentColor"/></symbol></svg>
 <div class="sky" aria-hidden="true"><div class="sun"></div><div class="baobab"></div></div>
 <div class="app">
 <header>
   <div class="brand">
     <div class="mark" aria-hidden="true">
-      <svg viewBox="0 5 100 100"><use href="#sn-lion"/></svg>
+      <svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg>
     </div>
     <div>
       <strong translate="no">Teranga <em>AI</em></strong>
@@ -1090,7 +1090,7 @@ body:not([data-fete]) .hero-signature{display:none}
 </header>
 <main id="stage" tabindex="-1">
   <div id="hero" class="hero">
-    <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-lion"><svg viewBox="0 5 100 100"><use href="#sn-lion"/></svg></span></div>
+    <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-logo"><svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>

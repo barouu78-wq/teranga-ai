@@ -17,10 +17,10 @@
 @keyframes tag{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:none}}
 @keyframes tilt{from{transform:perspective(900px) rotateY(-28deg) rotateZ(6deg) scale(.9)}to{transform:perspective(900px) rotateY(-14deg) rotateZ(3deg) scale(1)}}
 @keyframes wob{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
-.lion svg{width:100%;height:100%}
+.logo svg{width:100%;height:100%}
 /* Scène 1 */
 #s1{animation:sc0 3.4s linear both}
-#s1 .lion{position:absolute;left:150px;top:300px;width:240px;height:240px}
+#s1 .logo{position:absolute;left:150px;top:300px;width:240px;height:240px}
 #s1 svg.rib{position:absolute;inset:0;width:540px;height:960px}
 .rib path.stroke{fill:none;stroke:var(--gold);stroke-width:34;stroke-linecap:round;stroke-dasharray:1600;animation:draw 2.2s ease-out both}
 .rib text{font-family:Bri,sans-serif;font-size:23px;fill:#0b0d0c;opacity:0;animation:fadeup .8s ease-out both;animation-delay:1.1s}
@@ -30,7 +30,7 @@
 #s2{background:var(--g);animation:sc 3.9s linear both;animation-delay:3.2s}
 #s2::before{content:"";position:absolute;left:0;right:0;top:0;height:120px;background:linear-gradient(var(--r),transparent)}
 #s2 h2{position:absolute;left:0;right:0;top:390px;text-align:center;font-family:Bri;font-size:58px;line-height:1.02;color:var(--cream);opacity:0;animation:fadeup .6s ease-out both;animation-delay:3.4s}
-#s2 .lion{position:absolute;left:220px;top:505px;width:100px;height:100px;animation:wob 1s ease-in-out infinite}
+#s2 .logo{position:absolute;left:220px;top:505px;width:100px;height:100px;animation:wob 1s ease-in-out infinite}
 .chip{position:absolute;padding:12px 18px;background:var(--cream);color:var(--blk);border-radius:999px;font-size:21px;box-shadow:0 8px 0 rgba(0,0,0,.25);opacity:0;animation:pop .5s cubic-bezier(.3,1.4,.6,1) both;white-space:nowrap}
 /* Scène 3 */
 #s3{background:var(--blk);animation:sc 3.6s linear both;animation-delay:7s}
@@ -53,7 +53,7 @@
 #s4 .cap{position:absolute;left:0;right:0;top:800px;text-align:center;color:var(--cream);font-family:Bri;font-size:34px;opacity:0;animation:fadeup .6s ease-out both;animation-delay:11.2s}
 /* Scène 5 */
 #s5{background:var(--g);animation:scl 3s linear both;animation-delay:16s}
-#s5 .lion{position:absolute;left:180px;top:250px;width:180px;height:180px;opacity:0;animation:fadeup .6s ease-out both;animation-delay:16.2s}
+#s5 .logo{position:absolute;left:180px;top:250px;width:180px;height:180px;opacity:0;animation:fadeup .6s ease-out both;animation-delay:16.2s}
 #s5 .url{position:absolute;left:0;right:0;top:470px;text-align:center;font-family:Bri;font-size:60px;color:var(--y);opacity:0;animation:fadeup .6s ease-out both;animation-delay:16.5s}
 #s5 .sub{position:absolute;left:40px;right:40px;top:570px;text-align:center;font-size:27px;line-height:1.35;color:var(--cream);opacity:0;animation:fadeup .6s ease-out both;animation-delay:16.9s}
 .flag{position:absolute;left:0;right:0;bottom:0;height:12px;display:flex}.flag i{flex:1}.flag i:nth-child(1){background:#00853f}.flag i:nth-child(2){background:var(--y)}.flag i:nth-child(3){background:var(--r)}
@@ -61,11 +61,11 @@
 <section class="sc" id="s1"><svg class="rib" viewBox="0 0 540 960"><path id="arc" class="stroke" d="M60,560 C40,330 200,190 330,240 C470,290 520,460 430,560 C360,640 250,600 250,520"/>
 <path id="arcT" d="M70,520 C70,330 210,215 330,262 C450,310 490,440 440,520" fill="none"/>
 <text dominant-baseline="middle"><textPath href="#arc" startOffset="6%">Au Sénégal, tant à découvrir…</textPath></text></svg>
-<div class="lion">{{LION}}</div><p class="t">Mais par où <em>commencer</em> ?</p></section>
-<section class="sc" id="s2"><h2>Trop de<br>questions ?</h2><div class="lion">{{LION}}</div><span class="chip" style="left:70px;top:180px;--r:-8deg;animation-delay:3.6s">Visa ?</span><span class="chip" style="left:250px;top:250px;--r:6deg;animation-delay:3.85s">Taxi depuis l'AIBD ?</span><span class="chip" style="left:40px;top:640px;--r:5deg;animation-delay:4.1s">Quelle carte SIM ?</span><span class="chip" style="left:240px;top:700px;--r:-6deg;animation-delay:4.35s">Que voir à Gorée ?</span><span class="chip" style="left:330px;top:150px;--r:9deg;animation-delay:4.6s">Urgence ?</span><span class="chip" style="left:60px;top:790px;--r:-3deg;animation-delay:4.85s">La Tabaski, c'est quand ?</span></section>
+<div class="logo">{{LOGO}}</div><p class="t">Mais par où <em>commencer</em> ?</p></section>
+<section class="sc" id="s2"><h2>Trop de<br>questions ?</h2><div class="logo">{{LOGO}}</div><span class="chip" style="left:70px;top:180px;--r:-8deg;animation-delay:3.6s">Visa ?</span><span class="chip" style="left:250px;top:250px;--r:6deg;animation-delay:3.85s">Taxi depuis l'AIBD ?</span><span class="chip" style="left:40px;top:640px;--r:5deg;animation-delay:4.1s">Quelle carte SIM ?</span><span class="chip" style="left:240px;top:700px;--r:-6deg;animation-delay:4.35s">Que voir à Gorée ?</span><span class="chip" style="left:330px;top:150px;--r:9deg;animation-delay:4.6s">Urgence ?</span><span class="chip" style="left:60px;top:790px;--r:-3deg;animation-delay:4.85s">La Tabaski, c'est quand ?</span></section>
 <section class="sc" id="s3"><div class="bloc"><span>TERANGA</span></div><div class="phone"><div class="scr"><img src="{{ECRANS}}accueil.jpg"></div></div>
 <p class="msg">Une seule app pour<br><em>tout savoir</em> sur le Sénégal</p></section>
 <section class="sc" id="s4"><div class="brush"></div><svg class="loop" viewBox="0 0 540 960"><path d="M500,120 C560,420 480,760 300,780 C120,800 90,640 160,600"/></svg>
 <div class="phone"><div class="scr"><img src="{{ECRANS}}voyage.jpg" style="animation-delay:10.5s"><img src="{{ECRANS}}lieux.jpg" style="animation-delay:11.9s"><img src="{{ECRANS}}fetes.jpg" style="animation-delay:13.3s"><img src="{{ECRANS}}urgences.jpg" style="animation-delay:14.7s;animation-name:shotlast"></div></div><span class="tag" style="top:150px;animation-delay:10.65s">Voyage</span><span class="tag" style="top:212px;animation-delay:12.05s">Lieux</span><span class="tag" style="top:274px;animation-delay:13.450000000000001s">Fêtes</span><span class="tag" style="top:336px;animation-delay:14.85s">Urgences</span><p class="cap">Voyage, lieux, fêtes, urgences</p></section>
-<section class="sc" id="s5"><div class="lion">{{LION}}</div><p class="url">teranga-ai.fr</p><p class="sub">Pose ta question en français,<br>en anglais ou en wolof</p><div class="flag"><i></i><i></i><i></i></div></section>
+<section class="sc" id="s5"><div class="logo">{{LOGO}}</div><p class="url">teranga-ai.fr</p><p class="sub">Pose ta question en français,<br>en anglais ou en wolof</p><div class="flag"><i></i><i></i><i></i></div></section>
 </body></html>

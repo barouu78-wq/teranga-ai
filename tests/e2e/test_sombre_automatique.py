@@ -17,7 +17,7 @@ import pytest
 from PIL import Image
 
 # Fonds attendus, en RVB (jetons --bg de templates/home.html et static/site.css).
-FOND_JOUR = (0xF7, 0xF3, 0xE8)
+FOND_JOUR = (0xFB, 0xF8, 0xF1)  # « Nuit dorée » le jour : #fbf8f1
 
 
 def open_page(page, base_url, path, theme, auto_dark):

@@ -45,7 +45,7 @@ carte se règle par la taille de police, pas par une coupure (« Commer-çants �
 python scripts/video/rendu.py ma-video.html sortie.mp4 --duree 18 --ecrans /chemin/captures
 for t in 0 2 5.5 9 14.5 17.5; do ffmpeg -loglevel error -y -ss $t -i sortie.mp4 -vframes 1 -vf scale=270:-1 img-$t.jpg; done
 ```
-Lire les images, surtout la **Première image** (titre et lion visibles) et la dernière (teranga-ai.fr).
+Lire les images, surtout la **Première image** (titre et logo visibles) et la dernière (teranga-ai.fr).
 
 ## 5. Livrer
 Le MP4 (18 s, 9:16, sans son) et un fichier de légendes prêtes à copier-coller, avec seulement des faits de la réponse.
@@ -53,5 +53,5 @@ Le propriétaire ajoute une musique libre de droits et publie. **Ne jamais publi
 
 ## Règles (celles de `faire-une-video` s'appliquent toutes)
 - **Aucune réponse de l'IA inventée** : seule une réponse prête capturée sur le site apparaît à l'écran.
-- Aucune personne générée ; le lion de Teranga représente le service.
+- Aucune personne générée ; le logo de Teranga (baobab doré) représente le service.
 - Pas de logo d'une autre marque, rien sur la politique, pas de pulaar (pas réintroduit sans décision du propriétaire).

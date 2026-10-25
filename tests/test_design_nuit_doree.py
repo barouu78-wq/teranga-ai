@@ -1,15 +1,16 @@
-"""Design « lion + baobab », couleurs « Vert Sénégal » (jour) et « Nuit verte » (choix du propriétaire, 12 octobre 2026).
+"""Design de la version 3.0 : « Nuit dorée » et logo « Baobab doré » (choix du propriétaire, 25 octobre 2026).
 
-Le lion et le baobab sont les deux symboles des armoiries du Sénégal. Les dessins sont originaux, en SVG dans la
-page (aucune image ni police venant d'un autre domaine). Le lion est dessiné une seule fois par page : symbole
-#sn-lion dans l'accueil, LION_SVG dans l'en-tête des pages secondaires ; ce test garde les deux identiques.
+Il remplace le design « lion + baobab », « Vert Sénégal » et « Nuit verte » du 12 octobre 2026. Jour : ivoire, noir et
+or ; nuit : noir et or, comme les vidéos. Les dessins sont originaux, en SVG dans la page (aucune image ni police venant
+d'un autre domaine). Le logo est dessiné une seule fois par page : symbole #sn-logo dans l'accueil, LOGO_SVG dans
+l'en-tête des pages secondaires ; ce test garde les deux identiques.
 """
 import re
 from pathlib import Path
 
 import pytest
 
-from services.site_layout import LION_SVG
+from services.site_layout import LOGO_SVG
 
 ROOT = Path(__file__).resolve().parent.parent
 HOME = (ROOT / "templates" / "home.html").read_text(encoding="utf-8")
@@ -42,29 +43,34 @@ def blocs_de_couleurs(texte):
             yield jetons
 
 
-def test_le_lion_est_le_meme_sur_l_accueil_et_les_autres_pages():
-    assert symbole("sn-lion") == LION_SVG
+def test_le_logo_est_le_meme_sur_l_accueil_et_les_autres_pages():
+    assert symbole("sn-logo") == LOGO_SVG
 
 
-def test_le_logo_et_l_avatar_de_l_accueil_utilisent_le_lion():
+def test_le_lion_est_remplace_partout_par_le_baobab_dore():
+    for nom, texte in (("templates/home.html", HOME), ("static/home.js", HOME_JS)):
+        assert "sn-lion" not in texte and "scene-lion" not in texte, nom
+
+
+def test_l_en_tete_et_l_avatar_de_l_accueil_utilisent_le_logo():
     entete = HOME.split('<div class="brand">', 1)[1].split("</div>", 1)[0]
-    assert '<use href="#sn-lion"/>' in entete
+    assert '<use href="#sn-logo"/>' in entete
     avatar = re.search(r"const AVATAR_SVG='([^']*)'", HOME_JS).group(1)
-    assert '<use href="#sn-lion"/>' in avatar
+    assert '<use href="#sn-logo"/>' in avatar
 
 
-def test_la_banniere_est_decorative_avec_baobab_drapeau_et_lion():
+def test_la_banniere_est_decorative_avec_baobab_drapeau_et_logo():
     banniere = '<div class="hero-scene"' + HOME.split('<div class="hero-scene"', 1)[1].split('<div class="hero-signature"', 1)[0]
     assert 'aria-hidden="true"' in banniere.split(">", 1)[0]
-    assert '<use href="#sn-baobab"/>' in banniere and '<use href="#sn-lion"/>' in banniere
+    assert '<use href="#sn-baobab"/>' in banniere and '<use href="#sn-logo"/>' in banniere
     assert banniere.count("<i></i>") == 3  # bande vert, or, rouge
     for rang, couleur in enumerate(("#0f6a43", "#f0c63d", "#c93636"), 1):
         assert f".scene-flag i:nth-child({rang}){{background:{couleur}}}" in HOME
 
 
-@pytest.mark.parametrize("dessin", ["sn-lion", "sn-baobab", "LION_SVG"])
+@pytest.mark.parametrize("dessin", ["sn-logo", "sn-baobab", "LOGO_SVG"])
 def test_les_dessins_ne_chargent_rien_de_l_exterieur(dessin):
-    texte = LION_SVG if dessin == "LION_SVG" else symbole(dessin)
+    texte = LOGO_SVG if dessin == "LOGO_SVG" else symbole(dessin)
     for interdit in ("http", "<script", "<image", "href=", "url(", "<foreignObject", "on"):
         if interdit == "on":
             assert not re.search(r"\son\w+=", texte), "attribut d'événement dans un dessin"
@@ -72,14 +78,14 @@ def test_les_dessins_ne_chargent_rien_de_l_exterieur(dessin):
             assert interdit not in texte, interdit
 
 
-def test_les_pages_secondaires_ont_le_lion_dans_l_en_tete():
+def test_les_pages_secondaires_ont_le_logo_dans_l_en_tete():
     from app import app
 
     page = app.test_client().get("/a-propos", environ_base={"REMOTE_ADDR": "203.0.113.71"})
     assert page.status_code == 200
     html = page.get_data(as_text=True)
     entete = html.split('<span class="site-mark">', 1)[1].split("</span>", 1)[0]
-    assert LION_SVG in entete and 'aria-hidden="true"' in entete
+    assert LOGO_SVG in entete and 'aria-hidden="true"' in entete
 
 
 @pytest.mark.parametrize("nom,texte", [("templates/home.html", HOME), ("static/site.css", SITE_CSS)])
@@ -100,11 +106,12 @@ def test_chaque_palette_reste_lisible(nom, texte):
 
 
 @pytest.mark.parametrize("nom,texte", [("templates/home.html", HOME), ("static/site.css", SITE_CSS)])
-def test_le_jour_est_vert_senegal_et_la_nuit_verte(nom, texte):
+def test_le_jour_est_ivoire_et_noir_et_la_nuit_noir_et_or(nom, texte):
     palettes = list(blocs_de_couleurs(texte))
-    jour = [p for p in palettes if p["bg"] == "#f7f3e8"]
-    nuit = [p for p in palettes if p["bg"] == "#0e1512"]
-    assert jour and all(p["accent"] == "#0f6a43" for p in jour), nom
-    assert nuit and all(p["accent"] == "#e3a33b" for p in nuit), nom
-    for ancienne in ("#111215", "#b5451b", "#fbf3e6", "#7a2c10", "122,44,16"):
+    jour = [p for p in palettes if p["bg"] == "#fbf8f1"]
+    nuit = [p for p in palettes if p["bg"] == "#0b0d10"]
+    assert jour and all(p["accent"] == "#14110d" for p in jour), nom
+    assert nuit and all(p["accent"] == "#e8b04b" for p in nuit), nom
+    # Anciennes palettes : « Vert Sénégal » et « Nuit verte » (v2), puis celles d'avant.
+    for ancienne in ("#f7f3e8", "#0e1512", "#e3a33b", "#111215", "#b5451b", "#fbf3e6", "#7a2c10", "122,44,16"):
         assert ancienne not in texte, f"ancienne palette encore présente : {ancienne}"

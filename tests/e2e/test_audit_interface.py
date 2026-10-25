@@ -9,7 +9,7 @@ Défauts trouvés le 13 octobre 2026, vérifiés ici dans un vrai navigateur :
 
 import pytest
 
-FONDS = {"light": "#f7f3e8", "dark": "#0e1512"}
+FONDS = {"light": "#fbf8f1", "dark": "#0b0d10"}
 
 
 def set_theme(page, theme):
