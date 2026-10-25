@@ -232,17 +232,24 @@ def starts_new_subject(message: str, *, own_subject: bool) -> bool:
     Fouta-Toro. Une relance (« Et à Podor ? », « Ça coûte combien à Saly ? »), un renvoi (« Précise l'histoire »)
     ou une retouche du plan (« Ajoute une journée au Djoudj ») garde le fil, comme un message sans sujet propre
     (« Combien de temps faut-il pour la visite ? » après Gorée)."""
-    if not own_subject:
+    if not own_subject or refers_to_thread(message):
         return False
+    return not _PLAN_EDIT.search(_normalize(message).replace("'", " "))
+
+
+def refers_to_thread(message: str) -> bool:
+    """Vrai si le message renvoie au tour précédent : relance courte (« Et pour un incendie ? »), mot de renvoi
+    (« Combien ça coûte ? ») ou renvoi au lieu du fil (« Comment y aller ? », « on mange quoi là-bas ? »).
+
+    Faux pour une question autonome (« Quel logiciel de comptabilité pour mon garage ? ») : elle ne reprend pas
+    le sujet du fil."""
     text = _normalize(message).replace("'", " ")
     words = re.findall(r"[a-z0-9]+", text)
     if len(words) <= 8 and (_FOLLOW_UP_OPENER.match(text) or any(word in _BACK_REFERENCES for word in words)):
-        return False
+        return True
     # Renvoi au lieu du fil (« faut-il un visa pour y aller ? », « on mange quoi là-bas ? ») : le fil reste, même
     # si la question nomme aussi un lieu (« combien de temps pour y aller depuis saly ? » garde le lac Rose et Saly).
-    if len(words) <= 12 and (_PLACE_BACK_REFERENCE.search(text) or _LA_ALONE.search(str(message or "").casefold())):
-        return False
-    return not _PLAN_EDIT.search(text)
+    return len(words) <= 12 and bool(_PLACE_BACK_REFERENCE.search(text) or _LA_ALONE.search(str(message or "").casefold()))
 
 
 # Renvois au lieu du tour précédent (texte sans accents, apostrophes en espaces). « y » compte, sauf dans
