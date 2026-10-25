@@ -24,10 +24,17 @@ ASKED = (
     ("convertir 250 euros", "250 € = 163 989,25 FCFA"),
     ("1 euro = combien de francs CFA", "1 € = 655,96 FCFA"),
     ("combien de FCFA pour 20 euros ?", "20 € = 13 119,14 FCFA"),
+    # Banc V3 (docs/audit-v3/03-benchmark-teranga.md) : l'impératif « convertis » et l'écriture « F CFA » partaient au modèle.
+    ("Convertis 50 000 FCFA en euros", "50 000 FCFA = 76,22 €"),
+    ("Convertis 100 euros en FCFA", "100 € = 65 595,70 FCFA"),
+    ("convertissez 20 euros en francs CFA", "20 € = 13 119,14 FCFA"),
+    ("10 000 F CFA en €", "10 000 FCFA = 15,24 €"),
+    ("Combien font 5 000 F CFA en euros ?", "5 000 FCFA = 7,62 €"),
 )
 # Une autre devise (taux variable), une situation, un contexte ou un calcul de commerçant : le modèle répond.
 NOT_ASKED = (
     "100 dollars en FCFA",
+    "Convertis 100 dollars en FCFA",
     "50 livres en FCFA",
     "Un hôtel à 50 000 FCFA la nuit, c'est cher ?",
     "100 euros en FCFA pour payer mon loyer à Dakar ?",

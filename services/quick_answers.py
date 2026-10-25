@@ -96,8 +96,9 @@ def _emergency_reply(language: str) -> str:
 # Conversion euro ↔ FCFA : une devise à parité fixe, des nombres et des mots qui ne changent pas la demande.
 _FIXED_CURRENCY_WORDS = {"euro", "euros", "eur", "fcfa", "cfa", "xof", "franc", "francs"}
 _CONVERSION_WORDS = _FIXED_CURRENCY_WORDS | {
-    "convertir", "conversion", "combien", "font", "fait", "vaut", "valent", "egal", "egale", "egalent",
-    "donne", "donnent", "mille", "million", "millions", "un", "une", "ca",
+    "convertir", "convertis", "convertit", "convertissez", "conversion", "combien", "font", "fait", "vaut", "valent",
+    "egal", "egale", "egalent", "donne", "donnent", "mille", "million", "millions", "un", "une", "ca",
+    "f",  # « 10 000 F CFA » : le F du franc CFA écrit à part
 } | _FILLER_WORDS
 # Un opérateur de calcul n'est pas un mot : sans ce garde-fou, « 100 euros en FCFA * 2 » perdait son « * 2 ».
 _OPERATORS = re.compile(r"[*/+×÷%^]|\d\s*-\s*\d|\s-\s")
