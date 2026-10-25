@@ -22,6 +22,7 @@ fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
+  searching:'Je cherche des informations à jour…',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
@@ -45,6 +46,7 @@ en:{
   sub:'Senegal assistant',ph:'Ask a question…',send:'Send',
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
   timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
+  searching:'Looking for up-to-date information…',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
@@ -1020,6 +1022,9 @@ async function ask(preset,fromVoice=false,isRetry=false){
   const dots=document.createElement('div');dots.className='typing';
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
+  // Recherche web lancée par le modèle (événement « st ») : une phrase sous les points, retirée avec eux.
+  let searching=null;
+  const dropSearching=()=>{if(searching){searching.remove();searching=null;}};
   const ctrl=new AbortController();inflight=ctrl;
   resetVoiceStreamTts();  // nouvelle réponse : la voix repart de zéro (rien du tour précédent, voix de nouveau permise)
   // Délai d'INACTIVITÉ : une longue réponse qui arrive encore n'est jamais coupée.
@@ -1052,6 +1057,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       if(!pending)return;
       live+=pending;pending='';
       if(!shown){
+        dropSearching();
         dots.replaceWith(wait.b);
         wait.row.classList.remove('thinking');
         wait.b.classList.add('live');
@@ -1069,6 +1075,13 @@ async function ask(preset,fromVoice=false,isRetry=false){
     // Un seul traitement des événements, pour les lignes complètes comme pour la dernière.
     const applyEvent=ev=>{
       if(ev.error)throw new Error(ev.error);
+      if(ev.st==='web'){
+        if(!shown&&!searching&&dots.parentNode){
+          searching=document.createElement('p');searching.className='typing-status';
+          searching.setAttribute('role','status');searching.textContent=T[lang].searching||T.fr.searching;
+          dots.after(searching);scrollStage();
+        }
+      }
       if(ev.d)queue(ev.d);
       if(ev.s)sources=ev.s;
       if(ev.img)image=ev.img;
@@ -1120,6 +1133,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       pending=reply;flush();
     }
     reply=cleanReply(reply);
+    dropSearching();
     if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
     else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
@@ -1153,6 +1167,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       :err.status===429
         ?T[lang].rateLimit
         :raw;
+    dropSearching();
     if(dots.parentNode)dots.replaceWith(wait.b);
     wait.row.classList.remove('thinking');
     node.nodeValue=msg;

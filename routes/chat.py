@@ -312,6 +312,7 @@ def register_chat_route(app, deps):
             model_started_at = time.perf_counter()
             first_output_logged = False
             yielded = False
+            searching_announced = False
             completed = False  # réponse terminée par le modèle (pas coupée, pas de secours)
             cut = False  # arrêtée par la limite de longueur : la mention « Réponse coupée » est ajoutée
             sources = []
@@ -333,6 +334,11 @@ def register_chat_route(app, deps):
                         failure = field(failed, "error", None)
                         message = field(failure, "message", None) or field(failure, "code", None) or "La réponse IA a échoué."
                         raise RuntimeError(f"OpenAI response.failed: {message}")
+                    if etype.startswith("response.web_search_call") and not yielded and not searching_announced:
+                        # Le modèle cherche vraiment sur le web : la page le dit au lieu de trois points muets
+                        # (jusqu'à 16 s avant le premier mot, journaux Render du 18 octobre 2026).
+                        searching_announced = True
+                        yield json.dumps({"st": "web"}) + "\n"
                     if "annotation" in etype or "web_search" in etype or "output_item" in etype or etype.endswith(".completed"):
                         extra = extract_sources(event)
                         if extra:
