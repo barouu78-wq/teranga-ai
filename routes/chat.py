@@ -72,7 +72,8 @@ def register_chat_route(app, deps):
                 logger.exception("chat_backup_ai")
         try:
             return knowledge_fallback(
-                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True
+                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True,
+                context=payload.get("contextual_query", ""),  # une suite de conversation garde le sujet du fil
             )
         except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
             logger.exception("chat_fallback")
