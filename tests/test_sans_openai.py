@@ -84,3 +84,17 @@ def test_le_visa_puis_une_precision(conversation):
 def test_une_question_inconnue_reste_honnete(conversation):
     texte = conversation("Quel est le meilleur logiciel de comptabilité pour mon garage ?")
     assert SANS_REPONSE in texte  # jamais d'invention
+
+
+def test_une_nouvelle_question_sans_renvoi_ne_reprend_pas_le_fil(conversation):
+    """Relecture Codex de #530 : la question ne renvoie pas au tour d'avant, Gorée ne doit pas répondre à sa place."""
+    assert "Île de Gorée" in conversation("Parle-moi de l'île de Gorée")
+    texte = conversation("Quel est le meilleur logiciel de comptabilité pour mon garage ?")
+    assert SANS_REPONSE in texte and "Île de Gorée" not in texte
+
+
+def test_la_suite_parle_du_dernier_lieu_du_fil(conversation):
+    conversation("Parle-moi de l'île de Gorée")
+    conversation("Et l'île de Saint-Louis ?")
+    suite = conversation("Comment y aller ?")
+    assert "Île de Saint-Louis" in suite and "Île de Gorée" not in suite

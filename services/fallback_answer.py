@@ -23,6 +23,7 @@ import datetime as _dt
 import re
 
 from services.events import _asked, french_date, upcoming_events
+from services.intelligence import refers_to_thread
 from services.places import mentioned_places
 from services.practical_facts import TOPICS, matching_topics
 from services.senegal_knowledge import _fold
@@ -270,13 +271,14 @@ def knowledge_fallback(
     """Réponse tirée de la base du site : lieu ou plat cité, fêtes, repères pratiques qui correspondent.
 
     `context` est la question enrichie du sujet du fil (payload « contextual_query ») : quand la question seule
-    ne donne rien (« Comment y aller ? » après Gorée, « Et pour un incendie ? » après les urgences), la réponse
-    vient du sujet de la conversation. Renvoie None quand rien ne correspond, sauf si `always` est vrai ou si la
-    question touche à une urgence : le message honnête de `no_ready_answer` est alors renvoyé. `today` fixe la
+    ne donne rien et qu'elle renvoie au fil (« Comment y aller ? » après Gorée, « Et pour un incendie ? » après les
+    urgences), la réponse vient du sujet de la conversation ; une question autonome ne le reprend pas (relecture
+    Codex de #530). Renvoie None quand rien ne correspond, sauf si `always` est vrai ou si la question touche à une
+    urgence : le message honnête de `no_ready_answer` est alors renvoyé. `today` fixe la
     date de référence du calendrier (tests)."""
     lang = "en" if lang == "en" else "fr"
     parts = _answer_parts(message, places, dishes, lang, today)
-    if not parts and context and fold_text(context) != fold_text(message):
+    if not parts and context and fold_text(context) != fold_text(message) and refers_to_thread(message):
         parts = _answer_parts(context, places, dishes, lang, today)
     if not parts:
         return no_ready_answer(message, lang) if always or _is_urgent(message) else None
