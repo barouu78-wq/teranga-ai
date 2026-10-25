@@ -214,9 +214,13 @@ def test_json_mode_complete_answer_is_untouched(provider):
 
 class FakeStream:
     def __init__(self, texts, stop_reason="end_turn"):
-        self.text_stream = iter(texts)
+        # Événements du SDK Anthropic (`for event in stream`) : un `content_block_delta` par morceau de texte.
+        self.events = [SimpleNamespace(type="content_block_delta", delta=SimpleNamespace(type="text_delta", text=t)) for t in texts]
         block = SimpleNamespace(type="text", text="".join(texts), citations=[])
         self.message = SimpleNamespace(stop_reason=stop_reason, content=[block])
+
+    def __iter__(self):
+        return iter(self.events)
 
     def __enter__(self):
         return self

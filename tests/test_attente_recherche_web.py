@@ -89,6 +89,67 @@ def test_sans_recherche_rien_n_est_annonce(provider):
     assert not any("st" in e for e in _events("Parle-moi du thiéboudienne et de son histoire"))
 
 
+class _FluxClaude:
+    """Flux du SDK Anthropic : événements `content_block_start` / `content_block_delta`, comme `client.beta.messages.stream`."""
+
+    def __init__(self, blocs, texte):
+        self.evenements = []
+        for bloc in blocs:
+            self.evenements.append(_event("content_block_start", content_block=bloc))
+        self.evenements.append(_event("content_block_start", content_block=SimpleNamespace(type="text", text="")))
+        self.evenements.append(_event("content_block_delta", delta=SimpleNamespace(type="text_delta", text=texte)))
+        self.message = SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text=texte, citations=[])])
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def __iter__(self):
+        return iter(self.evenements)
+
+    def get_final_message(self):
+        return self.message
+
+
+@pytest.fixture
+def claude_principal(monkeypatch):
+    """Claude en IA principale (AI_PRINCIPALE=claude), avec le vrai `claude_events` et un faux client Anthropic."""
+    import services.backup_ai as backup_ai
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setenv("AI_PRINCIPALE", "claude")
+    monkeypatch.setattr(app_module.client.responses, "create", lambda **kw: (_ for _ in ()).throw(AssertionError("OpenAI appelé")))
+
+    def install(blocs, texte):
+        monkeypatch.setattr(backup_ai, "_client", lambda: SimpleNamespace(
+            beta=SimpleNamespace(messages=SimpleNamespace(stream=lambda **params: _FluxClaude(blocs, texte)))))
+
+    return install
+
+
+def test_claude_annonce_aussi_sa_recherche_web(claude_principal):
+    """Choix du propriétaire (25 octobre 2026) : Claude Opus est l'IA principale ; la phrase d'attente doit rester."""
+    texte = "Selon les sources consultées, le TER circule normalement cette semaine."
+    recherche = SimpleNamespace(type="server_tool_use", name="web_search", id="srvtoolu_1", input={})
+    resultat = SimpleNamespace(type="web_search_tool_result", tool_use_id="srvtoolu_1", content=[])
+    claude_principal([recherche, resultat, recherche, resultat], texte)
+    events = _events("Quelles sont les dernières nouvelles sur le BRT de Dakar ?")
+    statuts = [i for i, e in enumerate(events) if "st" in e]
+    assert [events[i] for i in statuts] == [{"st": "web"}]
+    assert statuts[0] < next(i for i, e in enumerate(events) if "d" in e)
+    assert texte in "".join(e.get("d", "") for e in events)
+
+
+def test_claude_sans_recherche_n_annonce_rien(claude_principal):
+    texte = "Le thiéboudienne est le plat national du Sénégal."
+    claude_principal([], texte)
+    events = _events("Parle-moi du thiéboudienne et de ses origines")
+    assert not any("st" in e for e in events)
+    assert texte in "".join(e.get("d", "") for e in events)
+
+
 def test_la_page_affiche_la_phrase_d_attente_en_francais_et_en_anglais():
     assert "searching:'Je cherche des informations à jour…'" in HOME_JS
     assert "searching:'Looking for up-to-date information…'" in HOME_JS
