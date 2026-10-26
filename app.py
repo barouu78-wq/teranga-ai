@@ -54,6 +54,7 @@ from services.backup_ai import claude_is_primary, claude_model
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
 from services.external_research import search_context as external_search_context
 from services.rate_limit import BoundedStore, allowed_request as _allowed_request
+from services.inflight_limit import InFlightLimiter, InFlightLimitMiddleware
 from services.senegal_knowledge import load_senegal_knowledge, load_senegal_people, format_senegal_knowledge
 from services.validation import normalize, sanitize_text
 from services.text import clean_answer
@@ -269,6 +270,11 @@ class _HealthCheckHost:
 app.wsgi_app = _HealthCheckHost(app.wsgi_app)
 if TRUST_PROXY:
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# Les réponses longues sont limitées pendant toute leur durée, flux compris.
+# Redis coordonne les workers ; en production, une panne Redis refuse ces requêtes.
+INFLIGHT_LIMITER = InFlightLimiter(redis_client, per_ip=2, global_limit=8, lease_seconds=180, require_redis=RUNTIME_ENV == "production")
+app.wsgi_app = InFlightLimitMiddleware(app.wsgi_app, INFLIGHT_LIMITER)
 
 if not API_KEY:
     raise RuntimeError("OPENAI_API_KEY est introuvable. Vérifie ton fichier .env.")
