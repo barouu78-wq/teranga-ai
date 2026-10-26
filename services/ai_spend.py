@@ -25,10 +25,15 @@ OPENAI_RATES = {
     "gpt-5.6-sol": (4, 20),  # $4 / $20 par MTok
 }
 ANTHROPIC_RATES = {
-    "claude-haiku-4-5": (1, 5),
-    "claude-sonnet-4-6": (3, 15),
+    # Claude Opus 5.5 : tarifs publiés par Anthropic, 4 $ / 20 $ par MTok.
+    # https://www.anthropic.com/claude-opus-5-5
+    "claude-opus-5-5": (4, 20),
+    "claude-opus-5": (5, 25),
+    "claude-opus-4-8": (5, 25),
+    "claude-opus-4-7": (5, 25),
     "claude-opus-4-6": (5, 25),
-    "claude-opus-5": (15, 75),
+    "claude-sonnet-4-6": (3, 15),
+    "claude-haiku-4-5": (1, 5),
 }
 UNKNOWN_RATES = (60, 300)
 _SEARCH_CALL_MICRO_EUR = 10_000  # $0.01/appel, au taux prudent de 1 USD = 1 EUR
