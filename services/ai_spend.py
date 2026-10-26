@@ -288,7 +288,7 @@ def create_openai_response(client: Any, kwargs: dict[str, Any]):
         return client.responses.create(**kwargs)
     model = str(kwargs.get("model") or "")
     reservation = budget.reserve(
-        "openai", model, kwargs.get("input", kwargs),
+        "openai", model, kwargs,
         kwargs.get("max_output_tokens", 4000),
         web_search=any("web_search" in str(tool.get("type", "")) for tool in kwargs.get("tools", []) if isinstance(tool, dict)),
         search_calls=1,
