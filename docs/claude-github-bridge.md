@@ -116,8 +116,13 @@ commence par la commande lance le pont, donc consomme des crédits ou l'abonneme
   l'ont utilisé), donc rien à ajouter pour que le pont tourne. Reste à fixer, côté console Anthropic, une **limite de dépense
   mensuelle** pour cette clé : chaque run se facture.
 - **L'application GitHub Claude** installée sur le dépôt (elle l'est : `claude[bot]` a répondu) et GitHub Actions autorisé.
-- Optionnel, à tester lors d'un run avec écriture : `persist-credentials: false` à l'étape de checkout, pour que le jeton de
-  l'étape `pip install` ne reste pas dans la configuration git. Non appliqué ici faute de test réel.
+- `persist-credentials: false` est appliqué à l'étape de checkout (26 octobre 2026) : le jeton d'écriture du workflow ne reste
+  plus dans la configuration git pendant `pip install`. Vérifié dans le code de l'action au commit épinglé
+  (`src/modes/tag/index.ts`, `src/github/operations/git-config.ts`) : elle récupère la branche sans jeton (le dépôt est
+  public), puis retire tout jeton laissé par le checkout et écrit **son propre jeton d'écriture** dans l'adresse `origin`.
+  **Non vérifié par une exécution réelle** : le prochain `/claude` qui pousse une branche le confirmera.
+- Conséquence : pendant le travail de Claude, un jeton capable de pousser est toujours présent (celui de l'action). Seule la
+  protection de `main` empêche une poussée sur `main`.
 
 ## Limites connues
 

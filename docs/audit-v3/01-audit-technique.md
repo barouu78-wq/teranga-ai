@@ -113,7 +113,7 @@ Aucun P0. Aucun secret dans l'arbre, dans les 2 376 commits ni dans les 1 202 is
 
 | Gravité | Constat | Fichiers | Suite |
 |---|---|---|---|
-| P1-1 | `main` n'est pas protégée ; le pont Claude garde un jeton d'écriture (`persist-credentials: true`) et autorise `Write` + `pytest` : une consigne injectée dans un fil d'issue pourrait pousser du code sur `main`, que Render déploie | `.github/workflows/claude-bridge.yml:30-94` | Protéger `main` (réglage GitHub, **propriétaire**) ; `persist-credentials: false` (PR à faire) |
+| P1-1 | `main` n'est pas protégée ; le pont Claude autorise `Write` + `pytest` et l'action écrit son propre jeton d'écriture dans l'adresse `origin` (vérifié dans son code au commit épinglé) : une consigne injectée dans un fil d'issue pourrait pousser du code sur `main`, que Render déploie | `.github/workflows/claude-bridge.yml:30-94` | Protéger `main` (réglage GitHub, **propriétaire**) : c'est la seule vraie barrière. `persist-credentials: false` retire seulement le jeton du workflow pendant `pip install` (PR séparée) |
 | P1-2 | Un lien `/trip-planner#trip=…` ou `?context_place=` injectait du texte dans les **instructions** du modèle (risque d'escroquerie : « payer au numéro X ») | `services/chat_payload_service.py` | **Corrigé**, PR #541 |
 | P1-3 | 8 requêtes longues en parallèle (2 × 4 fils) bloquent tout le site ; mesuré en local : `/health` passe de 0,01 s à 6,7 s | `gunicorn.conf.py`, `routes/chat.py:434` | Limite de requêtes en cours par IP, plafond global (à concevoir) |
 | P1-4 | Aucun plafond global de dépense IA ; seulement des limites par IP | `app.py:288-305`, `services/backup_ai.py` | Compteur quotidien global dans Redis + budgets chez les fournisseurs (**propriétaire**) |
