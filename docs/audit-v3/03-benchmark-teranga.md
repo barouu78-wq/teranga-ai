@@ -77,7 +77,7 @@ Autres mesures sur les 100 questions :
 2. **Réponse prête attendue mais non servie : 5 cas, dont un seul vrai défaut.**
    - **Défaut** : « Convertis 50 000 FCFA en euros ». L'impératif « convertis » n'était pas reconnu. Mesuré aussi
      hors banc : « Convertis 100 euros en FCFA » et « 10 000 F CFA en € » ne l'étaient pas, alors que
-     « 50 000 FCFA en euros » l'est. Correction proposée dans une PR séparée (`ia/conversions-convertis`).
+     « 50 000 FCFA en euros » l'est. Correction proposée dans une PR séparée (#539).
    - **Choix déjà faits et testés** (`tests/test_reponse_seule_conversion.py`, décision de #503) :
      - le calcul de marge d'un commerçant va au modèle, avec le bloc de calcul vérifié ;
      - l'anglais va au modèle, parce que les nombres de la réponse prête sont au format français ;

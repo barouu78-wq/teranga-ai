@@ -20,7 +20,7 @@ Aucun objectif chiffré n'est déclaré atteint : chaque cible se mesure avant e
 
 | # | Amélioration | Pourquoi elle d'abord | Preuve | PR | Décision |
 |---|---|---|---|---|---|
-| 1 | **Sécurité** : un lien partagé ne peut plus donner de consignes à l'IA | Protège les utilisateurs d'une escroquerie (« payer au numéro X ») ; P1 de la revue de sécurité | Test reproduit puis corrigé | `secu/contexte-interface-en-donnees` | Go du propriétaire (change le contexte de l'IA) |
+| 1 | **Sécurité** : un lien partagé ne peut plus donner de consignes à l'IA | Protège les utilisateurs d'une escroquerie (« payer au numéro X ») ; P1 de la revue de sécurité | Test reproduit puis corrigé | #541 | Go du propriétaire (change le contexte de l'IA) |
 | 2 | **Exactitude du calcul** : « Convertis 50 000 FCFA en euros », « 10 000 F CFA en € » | Conversion euro ↔ FCFA = besoin n° 1 de la diaspora ; réponse exacte, immédiate, sans coût d'IA | Banc V3 : 3 formulations manquées, 5 tests rouges puis verts | #539 | Go du propriétaire (change la réponse) |
 | 3 | **Accessibilité** : glyphes muets pour les lecteurs d'écran, marque non traduite | Personnes malvoyantes ; aucun changement visible | Règles d'interface de Vercel ; test rouge puis vert | #538 | Fusion possible sans Go (invisible) |
 
