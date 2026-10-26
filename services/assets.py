@@ -91,7 +91,7 @@ def build_og_png() -> bytes:
     draw.text((80, 300), "Teranga AI", fill="#14110d", font=title_font)
     draw.text(
         (80, 400),
-        "L'assistant du Senegal  ·  FR  EN  WO",
+        "L’assistant du Sénégal  ·  FR  EN  WO",
         fill="#5e574b",
         font=sub_font,
     )
