@@ -67,6 +67,7 @@ from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
+from services.ai_spend import configure_spend_guard
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -244,6 +245,11 @@ if REDIS_URL:
         # on le signale sans jamais journaliser l'URL, qui contient le secret.
         app.logger.error("REDIS_URL invalide (%s) : limites en mémoire", type(exc).__name__)
         redis_client = None
+
+# Un seul budget de 5 EUR/jour pour les deux fournisseurs. En production, toute
+# panne Redis bloque les nouveaux appels IA au lieu de supprimer le plafond.
+configure_spend_guard(redis_client, enabled=True, require_redis=RUNTIME_ENV == "production")
+
 class _HealthCheckHost:
     """/health reste joignable par le contrôle de santé de l'hébergeur.
 
