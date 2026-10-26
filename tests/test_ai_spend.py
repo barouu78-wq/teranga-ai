@@ -59,12 +59,12 @@ def test_redis_reservation_is_atomic_under_concurrency():
     admitted = [r for r in reservations if r is not None]
     snapshot = budget.snapshot()
     assert admitted
-    assert snapshot["reserved"] <= 1_000_000
+    assert snapshot["reserved"] <= 300_000
     assert len(admitted) < 80
     for reservation in admitted:
         budget.settle(reservation, None)
     assert budget.snapshot()["reserved"] == 0
-    assert budget.snapshot()["used"] <= 1_000_000
+    assert budget.snapshot()["used"] <= 300_000
 
 
 def test_budget_combines_both_providers_in_same_redis_key():
