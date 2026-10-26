@@ -125,8 +125,10 @@ def test_parse_chat_payload_uses_compact_trip_context():
         payload, error = parse_chat_payload()
 
     assert error is None
-    assert "Contexte d’itinéraire fourni par l’interface" in payload["instructions"]
-    assert "Séjour Dakar et Gorée" in payload["instructions"]
+    # Audit V3 (sécurité, P1-2) : l'itinéraire est une donnée de l'entrée, plus une consigne.
+    assert "Séjour Dakar et Gorée" not in payload["instructions"]
+    assert "<donnees_interface_non_fiables>" in payload["input_text"]
+    assert "Itinéraire affiché :" in payload["input_text"] and "Séjour Dakar et Gorée" in payload["input_text"]
 
 
 def test_parse_chat_payload_limits_trip_context():
