@@ -7,7 +7,6 @@ Audit V3 (règles d'interface de Vercel, 25 octobre 2026) :
 Changement invisible à l'écran.
 """
 
-import re
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -57,11 +56,38 @@ def test_decorative_glyphs_are_hidden_from_screen_readers():
         assert attrs.get("aria-hidden") == "true", f"glyphe lu à voix haute : {text!r}"
 
 
+class _BrandText(HTMLParser):
+    """Relève chaque texte visible qui contient « Teranga AI », avec l'attribut translate de son élément."""
+
+    VOID = {"meta", "link", "br", "img", "input", "hr", "source", "use", "path", "circle", "rect"}
+
+    def __init__(self):
+        super().__init__()
+        self.stack = []  # (balise, translate)
+        self.found = []  # (texte, protégé)
+
+    def handle_starttag(self, tag, attrs):
+        if tag not in self.VOID:
+            self.stack.append((tag, dict(attrs).get("translate")))
+
+    def handle_endtag(self, tag):
+        # Une balise vide (« <path … /> ») ou inconnue de la pile ne ferme rien.
+        if tag in self.VOID or tag not in (t for t, _ in self.stack):
+            return
+        while self.stack:
+            if self.stack.pop()[0] == tag:
+                break
+
+    def handle_data(self, data):
+        tags = [t for t, _ in self.stack]
+        if "Teranga AI" not in data or "body" not in tags or {"script", "style", "title"} & set(tags):
+            return
+        self.found.append((data.strip(), any(value == "no" for _, value in self.stack)))
+
+
 def test_brand_in_page_text_is_not_translated():
-    body = HOME[HOME.find("<body"):]
-    visible = re.sub(r"<script.*?</script>|<style.*?</style>", "", body, flags=re.S)
-    # Chaque « Teranga AI » du texte (hors attributs) est dans un élément translate="no".
-    for match in re.finditer(r">([^<]*Teranga AI[^<]*)<", visible):
-        before = visible[: match.start() + 1]
-        opening = before[before.rfind("<"):]
-        assert 'translate="no"' in opening, f"marque traduisible : {match.group(1)[:60]!r}"
+    parser = _BrandText()
+    parser.feed(HOME)
+    assert parser.found, "aucun « Teranga AI » trouvé dans le texte de la page"
+    for text, protected in parser.found:
+        assert protected, f"marque traduisible : {text[:60]!r}"
