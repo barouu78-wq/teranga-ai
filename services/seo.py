@@ -497,11 +497,12 @@ SEO_PAGE_GUIDES = {
     "transport-senegal": [
         ("Depuis l'aéroport AIBD", "L'aéroport international Blaise Diagne est à Diass, à environ 45 km du centre de "
          "Dakar, relié par l'autoroute à péage. Options : taxi (prix fixé avant de monter), navettes, voiture avec "
-         "chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; son prolongement vers l'aéroport est prévu : "
-         'vérifiez s\'il est en service. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
+         "chauffeur réservée à l'avance. Le TER relie Dakar à l'aéroport via Diamniadio : la section Diamniadio–AIBD "
+         "est en service depuis le 28 septembre 2026 (APS). Horaires, gares et tarifs : vérifiez auprès de "
+         'l\'exploitant du TER. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
         ("Se déplacer à Dakar", "Les taxis n'ont pas de compteur : on fixe le prix avant de partir. Les applications "
          "comme Yango ou Heetch affichent un prix à l'avance. Le BRT (bus rapide sur voie réservée) relie le centre à "
-         "Guédiawaye, le TER dessert la banlieue jusqu'à Diamniadio, et les bus Dakar Dem Dikk couvrent la ville. "
+         "Guédiawaye, le TER dessert la banlieue, Diamniadio et l'aéroport AIBD, et les bus Dakar Dem Dikk couvrent la ville. "
          "Évitez les heures de pointe sur la corniche et l'autoroute."),
         ("Entre les villes", "Les « sept-places » (taxis-brousse) partent quand ils sont pleins, depuis la gare routière "
          "des Baux Maraîchers à Pikine pour Dakar ; ils sont rapides mais serrés. Les bus et cars sont moins chers et plus "

@@ -331,8 +331,9 @@ TOPICS = (
      r"car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
      ("AIBD (aéroport Blaise Diagne) : à Diass, environ 45 km du centre de Dakar par l'autoroute à péage.",
       "Taxis sans compteur : fixer le prix avant de monter ; applications Yango ou Heetch avec prix affiché.",
-      "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio (vérifier si le prolongement vers "
-      "l'aéroport est en service) ; bus Dakar Dem Dikk.",
+      "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio ↔ aéroport AIBD (section "
+      "Diamniadio–AIBD en service depuis le 28 septembre 2026 selon l'APS ; horaires, gares et tarifs à vérifier "
+      "auprès de l'exploitant du TER) ; bus Dakar Dem Dikk.",
       "Entre les villes : sept-places depuis la gare routière des Baux Maraîchers (Pikine), bus, ou voiture avec "
       "chauffeur. Casamance : avion vers Ziguinchor ou Cap Skirring, bateau de nuit Dakar–Ziguinchor (environ 15 h), "
       "ou route par la Gambie (pont de Farafenni).",
