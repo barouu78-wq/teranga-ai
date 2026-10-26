@@ -48,10 +48,10 @@ def int_or_str(value):
 
 def test_redis_reservation_is_atomic_under_concurrency():
     redis = AtomicFakeRedis()
-    budget = DailyAIBudget(redis, limit_micro_eur=1_000_000)
+    budget = DailyAIBudget(redis, limit_micro_eur=300_000)
     def attempt(_):
         try:
-            return budget.reserve("openai", "gpt-5.6-luna", "x" * 20, 1000)
+            return budget.reserve("openai", "gpt-5.6-luna", "x" * 20, 3000)
         except BudgetExceeded:
             return None
     with ThreadPoolExecutor(max_workers=40) as pool:
