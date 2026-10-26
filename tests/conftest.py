@@ -40,6 +40,16 @@ def _no_network(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _fresh_ai_budget():
+    """Le plafond d'appels IA du jour compte par processus en test : chaque test repart de zéro."""
+    module = sys.modules.get("app")
+    budget = getattr(module, "AI_BUDGET", None) if module else None
+    if budget is not None:
+        budget.reset()
+    yield
+
+
+@pytest.fixture(autouse=True)
 def _fresh_answer_cache():
     """Le cache de réponses ne doit jamais faire dépendre un test d'un autre."""
     module = sys.modules.get("app")

@@ -67,6 +67,7 @@ from services.request_identity import client_ip as _client_ip
 from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
+from services.ai_budget import AiBudget
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -594,6 +595,12 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
     )
 
 
+# Plafond global de requêtes vers l'IA par jour (chat, planificateur, voix) : borne la facture même quand
+# beaucoup d'adresses appellent en même temps (services/ai_budget.py, AI_PLAFOND_JOUR).
+AI_BUDGET = AiBudget(redis_client, logger=app.logger)
+# Routes de rate_guard qui appellent l'IA : elles comptent aussi dans le plafond du jour.
+AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info"})
+
 # Quotas des routes protégées par rate_guard : (par minute, par heure).
 GUARDED_LIMITS = {
     "trip_planner": (int(os.getenv("TRIP_RATE_LIMIT", "4")), int(os.getenv("TRIP_HOURLY_LIMIT", "20"))),
@@ -626,6 +633,8 @@ def rate_guard(bucket):
                     record_abuse(ip, bucket + "_rate", 2)
                     record_abuse(identity, bucket + "_identity_rate", 1)
                 return jsonify({"error": "Trop de demandes. Réessaie dans un instant."}), 429, {"Retry-After": retry}
+    if bucket in AI_BUDGET_BUCKETS and not AI_BUDGET.take():
+        return jsonify({"error": "L'IA a atteint sa limite du jour. Réessaie demain."}), 503, {"Retry-After": str(AI_BUDGET.retry_after())}
     return None
 
 
@@ -918,6 +927,7 @@ _CACHE_MODEL_BASE = MODEL + ":" + hashlib.sha256(
 from services.quick_answers import quick_answer as _quick_answer
 
 register_chat_route(app, {
+    "ai_budget": AI_BUDGET,
     "answer_cache": ANSWER_CACHE,
     "quick_answer": _quick_answer,
     # Le modèle et l'empreinte de la base font partie de la clé : toute mise à jour
@@ -966,9 +976,9 @@ register_chat_route(app, {
 if os.getenv("REALTIME_VOICE_ENABLED", "").strip() == "1":
     register_realtime_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "realtime_request_log": realtime_request_log, "realtime_hourly_log": realtime_hourly_log, "SAFE_LANG": SAFE_LANG, "sanitize_text": sanitize_text, "API_KEY": API_KEY, "REALTIME_RATE_LIMIT": int(os.getenv("REALTIME_RATE_LIMIT", "8")), "REALTIME_HOURLY_LIMIT": int(os.getenv("REALTIME_HOURLY_LIMIT", "24"))})
 
-register_stt_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "stt_request_log": stt_request_log, "stt_hourly_log": stt_hourly_log, "STT_RATE_LIMIT": STT_RATE_LIMIT, "STT_HOURLY_LIMIT": STT_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_MESSAGE_LENGTH": MAX_MESSAGE_LENGTH, "sanitize_text": sanitize_text, "public_error": public_error, "_field": _field, "client": client})
+register_stt_route(app, {"origin_allowed": origin_allowed, "valid_request_token": valid_request_token, "valid_token": valid_token, "CSRF_COOKIE": CSRF_COOKIE, "CSRF_HEADER": CSRF_HEADER, "CSRF_TTL": CSRF_TTL, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "stt_request_log": stt_request_log, "stt_hourly_log": stt_hourly_log, "STT_RATE_LIMIT": STT_RATE_LIMIT, "STT_HOURLY_LIMIT": STT_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_MESSAGE_LENGTH": MAX_MESSAGE_LENGTH, "sanitize_text": sanitize_text, "public_error": public_error, "_field": _field, "client": client, "ai_budget": AI_BUDGET})
 
-register_tts_route(app, {"require_json_post": require_json_post, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "tts_request_log": tts_request_log, "tts_hourly_log": tts_hourly_log, "TTS_RATE_LIMIT": TTS_RATE_LIMIT, "TTS_HOURLY_LIMIT": TTS_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_TTS_LENGTH": MAX_TTS_LENGTH, "sanitize_text": sanitize_text, "client": client})
+register_tts_route(app, {"require_json_post": require_json_post, "client_ip": client_ip, "abuse_key": abuse_key, "abuse_blocked": abuse_blocked, "allowed_request": allowed_request, "record_abuse": record_abuse, "tts_request_log": tts_request_log, "tts_hourly_log": tts_hourly_log, "TTS_RATE_LIMIT": TTS_RATE_LIMIT, "TTS_HOURLY_LIMIT": TTS_HOURLY_LIMIT, "SAFE_LANG": SAFE_LANG, "MAX_TTS_LENGTH": MAX_TTS_LENGTH, "sanitize_text": sanitize_text, "client": client, "ai_budget": AI_BUDGET})
 
 HOME_HTML = (Path(__file__).resolve().parent / "templates" / "home.html").read_text(encoding="utf-8")
 
