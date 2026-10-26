@@ -73,6 +73,13 @@ class Reservation:
     search_fee: int = 0
 
 
+def seconds_until_reset(now: float | None = None) -> int:
+    current = datetime.fromtimestamp(time.time() if now is None else now, timezone.utc)
+    tomorrow = current.date().toordinal() + 1
+    next_day = datetime.fromordinal(tomorrow).replace(tzinfo=timezone.utc)
+    return max(1, math.ceil((next_day - current).total_seconds()))
+
+
 def _utc_key(now: float | None = None) -> str:
     day = datetime.fromtimestamp(time.time() if now is None else now, timezone.utc).date().isoformat()
     return f"teranga:ai-spend:{day}"
