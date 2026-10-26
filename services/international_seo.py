@@ -346,12 +346,12 @@ TOPIC_DETAILS = {
     "dakar-airport-to-city": {
         "en": [
             ("Where the airport is", "Blaise Diagne International Airport (AIBD) is in Diass, about 45 km from central Dakar, linked by a toll motorway. Allow roughly 45 minutes to over an hour depending on traffic."),
-            ("Your options", "Airport taxis (agree the fare before getting in), shuttle buses, ride-hailing apps such as Yango or Heetch where available, or a pre-booked car with driver, often the simplest after a night flight. The TER train links Dakar to Diamniadio; check whether its airport extension is running."),
+            ("Your options", "Airport taxis (agree the fare before getting in), shuttle buses, ride-hailing apps such as Yango or Heetch where available, or a pre-booked car with driver, often the simplest after a night flight. The TER train links Dakar to the airport via Diamniadio: the Diamniadio–AIBD section has been running since 28 September 2026 (APS). Check timetables, stations and fares with the TER operator."),
             ("Arriving late", "Book your first night's transfer in advance, keep some CFA francs or a working mobile money account, and share your accommodation address with the driver before leaving."),
         ],
         "fr": [
             ("Où est l'aéroport", "L'aéroport Blaise Diagne (AIBD) est à Diass, à environ 45 km du centre de Dakar par l'autoroute à péage. Comptez de 45 minutes à plus d'une heure selon la circulation."),
-            ("Les options", "Taxi (prix fixé avant de monter), navettes, applications comme Yango ou Heetch, ou voiture avec chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; vérifiez si le prolongement vers l'aéroport est en service."),
+            ("Les options", "Taxi (prix fixé avant de monter), navettes, applications comme Yango ou Heetch, ou voiture avec chauffeur réservée à l'avance. Le TER relie Dakar à l'aéroport via Diamniadio : la section Diamniadio–AIBD est en service depuis le 28 septembre 2026 (APS). Horaires, gares et tarifs : vérifiez auprès de l'exploitant du TER."),
         ],
     },
     "senegal-visa": {
@@ -376,12 +376,12 @@ TOPIC_DETAILS = {
     },
     "senegal-transport": {
         "en": [
-            ("In Dakar", "Taxis have no meters: agree on the fare before you go, or use an app such as Yango or Heetch that shows the price upfront. The BRT rapid bus links the centre to Guédiawaye, and the TER train serves the suburbs as far as Diamniadio."),
+            ("In Dakar", "Taxis have no meters: agree on the fare before you go, or use an app such as Yango or Heetch that shows the price upfront. The BRT rapid bus links the centre to Guédiawaye, and the TER train serves the suburbs, Diamniadio and AIBD airport."),
             ("Between cities", "Shared 'sept-place' taxis leave when full from the Baux Maraîchers bus station in Pikine: fast but cramped. Buses are cheaper and slower. A car with driver is the easiest option for a multi-stop trip."),
             ("To Casamance", "Fly to Ziguinchor or Cap Skirring, take the overnight boat from Dakar to Ziguinchor (about 15 hours, book a cabin), or drive through The Gambia via the Farafenni bridge, with a border crossing."),
         ],
         "fr": [
-            ("À Dakar", "Les taxis n'ont pas de compteur : fixez le prix avant de partir, ou utilisez Yango ou Heetch. Le BRT relie le centre à Guédiawaye ; le TER dessert la banlieue jusqu'à Diamniadio."),
+            ("À Dakar", "Les taxis n'ont pas de compteur : fixez le prix avant de partir, ou utilisez Yango ou Heetch. Le BRT relie le centre à Guédiawaye ; le TER dessert la banlieue, Diamniadio et l'aéroport AIBD."),
             ("Entre les villes", "Les sept-places partent quand ils sont pleins depuis la gare des Baux Maraîchers à Pikine. Les bus sont moins chers et plus lents ; la voiture avec chauffeur est la plus simple pour un circuit."),
         ],
     },
