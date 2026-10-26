@@ -160,6 +160,29 @@ class DailyAIBudget:
                 state[token] = amount
         return Reservation(token, key, amount, provider, model, fee)
 
+    def reserve_fixed(self, provider: str, model: str, amount_micro_eur: int) -> Reservation:
+        """Réserve un coût prudent fixe pour les API audio sans usage tokenisé."""
+        amount = max(1, int(amount_micro_eur))
+        key = _utc_key(self.clock())
+        token = uuid.uuid4().hex
+        if self.redis is not None:
+            try:
+                admitted = int(self.redis.eval(_RESERVE_LUA, 1, key, amount, self.limit, token))
+            except Exception as exc:
+                raise BudgetUnavailable("Compteur de budget IA indisponible") from exc
+            if not admitted:
+                raise BudgetExceeded("Plafond quotidien IA de 5 EUR atteint")
+        elif self.require_redis:
+            raise BudgetUnavailable("Redis requis pour protéger le budget IA")
+        else:
+            with self._lock:
+                state = self._memory.setdefault(key, {"used": 0, "reserved": 0})
+                if state["used"] + state["reserved"] + amount > self.limit:
+                    raise BudgetExceeded("Plafond quotidien IA de 5 EUR atteint")
+                state["reserved"] += amount
+                state[token] = amount
+        return Reservation(token, key, amount, provider, model)
+
     def settle(self, reservation: Reservation, usage: Any = None) -> int:
         actual = actual_micro_eur(reservation.provider, reservation.model, usage, reservation.search_fee)
         # Si le fournisseur ne renvoie pas l'usage (timeout/flux interrompu),
