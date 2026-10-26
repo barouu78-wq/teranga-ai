@@ -69,8 +69,15 @@ def register_tts_route(app, deps):
         upstream = None
         try:
             from services.voice_quality import tts_instruction
+            from services.ai_spend import get_spend_guard
             trace.model = "gpt-4o-mini-tts"
             trace.begin("fournisseur")
+            budget = get_spend_guard()
+            reservation = budget.reserve_fixed("openai", trace.model, max(50_000, min(500_000, len(text) * 100))) if budget is not None else None
+            if budget is not None and reservation is not None:
+                # Le coût vocal dépend de la longueur audio et n'est pas exposé ici en jetons.
+                # Imputation prudente avant de commencer le flux, y compris si le client coupe.
+                budget.settle(reservation, None)
             upstream = client.with_options(max_retries=0).audio.speech.with_streaming_response.create(
                 model="gpt-4o-mini-tts",
                 voice=os.getenv("TTS_VOICE", "cedar"),
