@@ -7,6 +7,7 @@ import httpx
 from flask import Response, jsonify, request
 
 from services.latency import LatencyTrace
+from services.ai_spend import BudgetExceeded, BudgetUnavailable, seconds_until_reset
 
 # Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
 # une lecture a échoué après 130,8 s le 13 octobre 2026. 5 s pour se connecter, 30 s au plus sans recevoir d'octet
@@ -91,6 +92,17 @@ def register_tts_route(app, deps):
             first = next((chunk for chunk in chunks if chunk), b"")
             if not first:
                 raise RuntimeError("voix vide")
+        except BudgetExceeded:
+            trace.end("fournisseur")
+            if upstream is not None:
+                upstream.__exit__(None, None, None)
+            return jsonify({"error": "Plafond quotidien de dépense IA atteint. Réessaie demain."}), 429, {"Retry-After": str(seconds_until_reset())}
+        except BudgetUnavailable:
+            trace.end("fournisseur")
+            if upstream is not None:
+                upstream.__exit__(None, None, None)
+            app.logger.error("Budget IA indisponible : synthèse vocale refusée")
+            return jsonify({"error": "Service IA temporairement indisponible."}), 503, {"Retry-After": "60"}
         except Exception:
             trace.end("fournisseur")
             if upstream is not None:
