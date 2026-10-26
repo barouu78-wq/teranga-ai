@@ -248,7 +248,11 @@ if REDIS_URL:
 
 # Un seul budget de 5 EUR/jour pour les deux fournisseurs. En production, toute
 # panne Redis bloque les nouveaux appels IA au lieu de supprimer le plafond.
-configure_spend_guard(redis_client, enabled=True, require_redis=RUNTIME_ENV == "production")
+configure_spend_guard(
+    redis_client,
+    enabled=RUNTIME_ENV == "production" or env_bool("AI_DAILY_BUDGET_ENABLED", False),
+    require_redis=RUNTIME_ENV == "production",
+)
 
 class _HealthCheckHost:
     """/health reste joignable par le contrôle de santé de l'hébergeur.
