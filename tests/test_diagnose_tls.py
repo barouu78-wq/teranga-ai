@@ -59,9 +59,19 @@ def test_parse_s_client_reports_unreachable_servers_without_inventing_a_verdict(
 
 def test_describe_cert_flags_a_self_signed_default_proxy_certificate(self_signed_pem):
     info = d.describe_cert(self_signed_pem)
-    assert info["sujet"] == "CN = TRAEFIK DEFAULT CERT" and info["emetteur"] == info["sujet"]
+    assert info["sujet"] == "CN=TRAEFIK DEFAULT CERT" and info["emetteur"] == info["sujet"]
     assert info["auto_signe"] is True and info["certificat_par_defaut"] is True
     assert info["expire"] is False and info["fin"] and len(info["sha256"]) == 95  # 32 octets en hexadécimal séparés par ':'
+
+
+@pytest.mark.parametrize("ligne", ["CN = TRAEFIK DEFAULT CERT, O = Acme", "CN=TRAEFIK DEFAULT CERT, O=Acme"])
+def test_describe_cert_gives_the_same_names_whatever_the_openssl_version(ligne):
+    # OpenSSL 3.0 écrit « CN = X » ; les versions récentes (runner Ubuntu 26 de la CI) écrivent « CN=X ».
+    sortie = f"subject={ligne}\nissuer={ligne}\nnotAfter=Jan  1 00:00:00 2999 GMT\n"
+    run = lambda *a, **k: subprocess.CompletedProcess(a, 0, stdout=sortie, stderr="")  # noqa: E731
+    info = d.describe_cert("PEM", run)
+    assert info["sujet"] == info["emetteur"] == "CN=TRAEFIK DEFAULT CERT, O=Acme"
+    assert info["auto_signe"] is True and info["certificat_par_defaut"] is True
 
 
 def test_expiry_is_computed_from_the_certificate_end_date():

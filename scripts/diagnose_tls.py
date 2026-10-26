@@ -76,9 +76,9 @@ def describe_cert(pem, run=subprocess.run):
     for line in out.splitlines():
         line = line.strip()
         if line.startswith("subject="):
-            info["sujet"] = line.split("=", 1)[1].strip()
+            info["sujet"] = _dn(line.split("=", 1)[1])
         elif line.startswith("issuer="):
-            info["emetteur"] = line.split("=", 1)[1].strip()
+            info["emetteur"] = _dn(line.split("=", 1)[1])
         elif line.startswith("notBefore="):
             info["debut"] = line.split("=", 1)[1].strip()
         elif line.startswith("notAfter="):
@@ -91,6 +91,11 @@ def describe_cert(pem, run=subprocess.run):
     info["certificat_par_defaut"] = any(m in (info["sujet"] or "").lower() for m in DEFAULT_CERT_MARKERS)
     info["expire"] = _expired(info["fin"])
     return info
+
+
+def _dn(text):
+    """Nom distinctif écrit pareil quelle que soit la version d'OpenSSL (« CN = X » en 3.0, « CN=X » ensuite)."""
+    return re.sub(r"\s*=\s*", "=", text.strip())
 
 
 def _norm(dn):
