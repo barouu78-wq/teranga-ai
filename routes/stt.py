@@ -110,6 +110,13 @@ def register_stt_route(app, deps):
             base_prompt = transcription_prompt(language) + " Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO."
             kwargs["prompt"] = base_prompt + (f" Contexte récent de la conversation : {voice_context}" if voice_context else "")
             trace.model = kwargs["model"]
+            from services.ai_spend import get_spend_guard
+            budget = get_spend_guard()
+            reservation = budget.reserve_fixed("openai", kwargs["model"], 200_000) if budget is not None else None
+            if budget is not None and reservation is not None:
+                # Audio transcription has per-minute pricing rather than token usage;
+                # reserve a conservative amount before sending the uploaded audio.
+                budget.settle(reservation, None)
             with trace.stage("fournisseur"):
                 result = client.audio.transcriptions.create(**kwargs)
             text = _field(result, "text", "") or ""
