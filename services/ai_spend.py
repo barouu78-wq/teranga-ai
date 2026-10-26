@@ -16,14 +16,16 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
+from .model_params import DEFAULT_OPENAI_MODEL, DEFAULT_OPENAI_COMPLEX_MODEL
+
 DAILY_LIMIT_MICRO_EUR = 5_000_000
 # Prix par million de tokens, utilisés pour les réservations et le rapprochement.
 # OpenAI : https://developers.openai.com/api/docs/pricing
 # Les valeurs inconnues utilisent volontairement un tarif haut pour éviter de
 # sous-estimer un modèle nouvellement configuré. USD/EUR=1 est conservateur.
 OPENAI_RATES = {
-    "gpt-5.6-luna": (1, 6),   # prix en micro-euros par token : $0.20 / $1.20 par MTok
-    "gpt-5.6-sol": (4, 20),  # $4 / $20 par MTok
+    DEFAULT_OPENAI_MODEL: (1, 6),  # tarif arrondi vers le haut : $0.20 / $1.20 par MTok
+    DEFAULT_OPENAI_COMPLEX_MODEL: (4, 20),  # $4 / $20 par MTok
 }
 ANTHROPIC_RATES = {
     # Claude Opus 5.5 : tarifs publiés par Anthropic, 4 $ / 20 $ par MTok.
