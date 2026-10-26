@@ -3,4 +3,4 @@
 # Sans Playwright, les tests de tests/e2e sont IGNORÉS (skipped), ce qui n'est pas un succès :
 # lancer avec E2E_REQUIRED=1 pour qu'un navigateur manquant fasse échouer au lieu d'ignorer.
 -r requirements-dev.txt
-playwright>=1.47,<2
+playwright>=1.64.1,<2
