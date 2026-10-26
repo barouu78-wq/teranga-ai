@@ -113,10 +113,9 @@ def _rates(provider: str, model: str) -> tuple[int, int]:
 
 def estimate_micro_eur(provider: str, model: str, input_data: Any, max_output_tokens: int,
                         *, web_search: bool = False, search_calls: int = 1) -> tuple[int, int]:
-    input_chars = len(_serialize(input_data))
-    # En français/Wolof, la tokenisation varie : 1 token / 2 caractères et
-    # une marge de 25 % limitent le risque de sous-réservation.
-    input_tokens = math.ceil(input_chars / 2 * 1.25)
+    # Borne prudente : compter chaque octet UTF-8 comme un token, puis ajouter
+    # 25 % pour les formats et instructions internes ajoutés par le fournisseur.
+    input_tokens = math.ceil(len(_serialize(input_data).encode("utf-8")) * 1.25)
     output_tokens = max(1, int(max_output_tokens or 4000))
     in_rate, out_rate = _rates(provider, model)
     token_cost = input_tokens * in_rate + output_tokens * out_rate
