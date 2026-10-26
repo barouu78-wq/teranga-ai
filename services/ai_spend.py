@@ -18,6 +18,7 @@ from typing import Any
 
 DAILY_LIMIT_MICRO_EUR = 5_000_000
 # Prix par million de tokens, utilisés pour les réservations et le rapprochement.
+# OpenAI : https://developers.openai.com/api/docs/pricing
 # Les valeurs inconnues utilisent volontairement un tarif haut pour éviter de
 # sous-estimer un modèle nouvellement configuré. USD/EUR=1 est conservateur.
 OPENAI_RATES = {
