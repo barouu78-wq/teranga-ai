@@ -273,7 +273,7 @@ if TRUST_PROXY:
 
 # Les réponses longues sont limitées pendant toute leur durée, flux compris.
 # Redis coordonne les workers ; en production, une panne Redis refuse ces requêtes.
-INFLIGHT_LIMITER = InFlightLimiter(redis_client, per_ip=2, global_limit=8, lease_seconds=180)
+INFLIGHT_LIMITER = InFlightLimiter(redis_client, per_ip=2, global_limit=8, lease_seconds=180, require_redis=RUNTIME_ENV == "production")
 app.wsgi_app = InFlightLimitMiddleware(app.wsgi_app, INFLIGHT_LIMITER)
 
 if not API_KEY:
