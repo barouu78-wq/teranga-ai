@@ -9,6 +9,7 @@ from html import escape
 from flask import Response, jsonify, request, stream_with_context
 from datetime import date
 
+from services.ai_spend import create_openai_response
 from services.backup_ai import backup_complete, backup_enabled, claude_events, claude_is_primary, claude_response
 from services.http_security import origin_allowed
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
@@ -424,13 +425,13 @@ def _trip_models():
 
 
 def _create(client, **kwargs):
-    """responses.create avec délai borné et repli si le modèle est indisponible."""
+    """Responses API avec délai borné, budget atomique et repli si modèle indisponible."""
     # Pas de nouvelle tentative : 90 s × 2 dépasserait les 120 s de Gunicorn.
     api = client.with_options(timeout=OPENAI_TIMEOUT, max_retries=0) if hasattr(client, "with_options") else client
     last = None
     for model in _trip_models():
         try:
-            return api.responses.create(model=model, **kwargs)
+            return create_openai_response(api, {"model": model, **kwargs})
         except Exception as exc:  # noqa: BLE001 - repli uniquement sur « modèle indisponible »
             text = f"{type(exc).__name__} {exc}".lower()
             if "model" not in text or not any(m in text for m in _MODEL_ERROR_MARKERS):
