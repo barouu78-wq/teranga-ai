@@ -40,12 +40,13 @@ return 1
 
 class InFlightLimiter:
     def __init__(self, redis_client: Any = None, *, per_ip: int = 2, global_limit: int = 8,
-                 lease_seconds: int = 180, clock=time.time):
+                 lease_seconds: int = 180, clock=time.time, require_redis: bool = False):
         self.redis = redis_client
         self.per_ip = max(1, int(per_ip))
         self.global_limit = max(1, int(global_limit))
         self.lease_seconds = max(30, int(lease_seconds))
         self.clock = clock
+        self.require_redis = bool(require_redis)
         self._lock = threading.Lock()
         self._leases: dict[str, tuple[str, float]] = {}
 
@@ -64,6 +65,8 @@ class InFlightLimiter:
                 # Fail closed: a Redis outage must not silently remove the production cap.
                 return None, "unavailable"
             return (token, None) if code == 0 else (None, "ip" if code == 1 else "global")
+        if self.require_redis:
+            return None, "unavailable"
         with self._lock:
             now = self.clock()
             self._leases = {key: value for key, value in self._leases.items() if value[1] > now}
