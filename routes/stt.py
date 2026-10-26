@@ -7,6 +7,7 @@ import os
 from flask import jsonify, request
 
 from services.latency import LatencyTrace
+from services.ai_spend import BudgetExceeded, BudgetUnavailable, seconds_until_reset
 
 
 def audio_filename(raw: bytes, declared: str = "") -> str:
@@ -122,6 +123,11 @@ def register_stt_route(app, deps):
             text = _field(result, "text", "") or ""
             text = sanitize_text(text, MAX_MESSAGE_LENGTH).strip()
             return jsonify({"text": text})
+        except BudgetExceeded:
+            return jsonify({"error": "Plafond quotidien de dépense IA atteint. Réessaie demain."}), 429, {"Retry-After": str(seconds_until_reset())}
+        except BudgetUnavailable:
+            app.logger.error("Budget IA indisponible : transcription refusée")
+            return jsonify({"error": "Service IA temporairement indisponible."}), 503, {"Retry-After": "60"}
         except Exception as exc:
             app.logger.exception("Erreur /stt")
             return jsonify({"error": public_error(exc)}), 500
