@@ -37,7 +37,7 @@ Aucun P0 trouvé : ni sécurité, ni panne, ni erreur factuelle grave.
 | Sécurité P1-1 : `main` non protégée + pont Claude avec jeton d'écriture | Protéger `main` dans GitHub (PR obligatoire, tests et e2e exigés) : seule vraie barrière, car l'action Claude installe toujours son propre jeton d'écriture ; PR `persist-credentials: false` (protège seulement l'étape `pip install`) | **Propriétaire** (réglage) + PR | — |
 | Sécurité P1-2 : lien partagé injecté dans les consignes | Corrigé (§2) | PR | Go |
 | Sécurité P1-3 : 8 requêtes longues bloquent le site | Limite de requêtes en cours par IP et plafond global, réponse 429/503 rapide | PR | Conception courte |
-| Sécurité P1-4 : pas de plafond global de dépense IA | Compteur quotidien global (Redis) puis bascule sur la base vérifiée ; budgets et alertes chez OpenAI et Anthropic | PR + **propriétaire** | — |
+| Sécurité P1-4 : pas de plafond global de dépense IA | Compteur quotidien global (Redis, 500 appels par jour, choix du propriétaire) puis bascule sur la base vérifiée : PR `secu/plafond-ia-jour` ; budgets et alertes chez OpenAI et Anthropic | PR + **propriétaire** | — |
 | Exactitude : TER jusqu'à l'AIBD (en service depuis le 28 septembre 2026 selon l'APS) | Mettre à jour `services/seo.py` et `services/practical_facts.py` avec la source officielle | PR | **Autoriser `aps.sn`** dans le réseau de la session |
 | Calcul : conversions manquées | Corrigé (#539) | PR | Go |
 | Recherche web proposée sur des questions stables (22 sur 100) | Mesurer d'abord en production la part de recherches réellement faites et leur temps ; puis restreindre les déclencheurs aux sujets sans repère vérifié | Mesure puis PR | Trafic réel |

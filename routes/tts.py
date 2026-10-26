@@ -30,6 +30,7 @@ def register_tts_route(app, deps):
     MAX_TTS_LENGTH = deps["MAX_TTS_LENGTH"]
     sanitize_text = deps["sanitize_text"]
     client = deps["client"]
+    ai_budget = deps.get("ai_budget")  # plafond d'appels payants par jour (services/ai_budget.py)
 
     def speech_ready_text(text: str) -> str:
         # Liens Markdown d'abord (on garde le texte), puis les adresses nues.
@@ -64,6 +65,8 @@ def register_tts_route(app, deps):
             language = "fr"
         if not text:
             return jsonify({"error": "Texte manquant."}), 400
+        if ai_budget is not None and not ai_budget.take():
+            return jsonify({"error": "La voix a atteint sa limite du jour. Le texte reste disponible."}), 503, {"Retry-After": str(ai_budget.retry_after())}
         # Le son part vers le navigateur dès ses premiers octets (MP3, compressé) au lieu d'attendre toute la
         # génération en WAV (11 à 18 s mesurées sur Render) : le navigateur commence à lire pendant la suite.
         upstream = None
