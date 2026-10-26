@@ -208,7 +208,8 @@ def test_query_names_the_place_chosen_in_the_interface():
     with app.test_request_context("/chat", method="POST", json=body):
         payload, error = parse_chat_payload()
     assert error is None and payload["use_web"] is True
-    assert research_query(payload) == "Gorée c est ouvert ?"
+    # Audit V3 (sécurité, P1-2) : le lieu de l'interface est remplacé par le nom de la base, jamais le texte du client.
+    assert research_query(payload) == "Île de Gorée c est ouvert ?"
 
 
 def test_query_is_anchored_to_senegal_only_when_needed():

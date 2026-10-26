@@ -160,7 +160,11 @@ def _known_place_name(name: str, knowledge) -> str:
             known = str(item.get("name") or "") if isinstance(item, dict) else ""
             if known and fold_text(known).strip() == wanted:
                 return known
-    return ""
+    # Nom court (« Gorée » → « Île de Gorée ») : même règle que pour les questions, nom de la base en sortie.
+    from .places import mentioned_places
+
+    found = mentioned_places(name, knowledge.get("places") or [], limit=1)
+    return str(found[0].get("name") or "") if found else ""
 
 
 _STEP_LABELS = {
