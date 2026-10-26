@@ -113,7 +113,7 @@ def register_stt_route(app, deps):
             trace.model = kwargs["model"]
             from services.ai_spend import get_spend_guard
             budget = get_spend_guard()
-            reservation = budget.reserve_fixed("openai", kwargs["model"], 200_000) if budget is not None else None
+            reservation = budget.reserve_fixed("openai", kwargs["model"], 500_000) if budget is not None else None
             if budget is not None and reservation is not None:
                 # Audio transcription has per-minute pricing rather than token usage;
                 # reserve a conservative amount before sending the uploaded audio.
