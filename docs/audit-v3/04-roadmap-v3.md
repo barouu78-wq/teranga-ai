@@ -34,7 +34,7 @@ Aucun P0 trouvé : ni sécurité, ni panne, ni erreur factuelle grave.
 
 | Sujet | Action | Qui | Dépend de |
 |---|---|---|---|
-| Sécurité P1-1 : `main` non protégée + pont Claude avec jeton d'écriture | Protéger `main` dans GitHub (PR obligatoire, tests et e2e exigés) ; PR `persist-credentials: false` | **Propriétaire** (réglage) + PR | — |
+| Sécurité P1-1 : `main` non protégée + pont Claude avec jeton d'écriture | Protéger `main` dans GitHub (PR obligatoire, tests et e2e exigés) : seule vraie barrière, car l'action Claude installe toujours son propre jeton d'écriture ; PR `persist-credentials: false` (protège seulement l'étape `pip install`) | **Propriétaire** (réglage) + PR | — |
 | Sécurité P1-2 : lien partagé injecté dans les consignes | Corrigé (§2) | PR | Go |
 | Sécurité P1-3 : 8 requêtes longues bloquent le site | Limite de requêtes en cours par IP et plafond global, réponse 429/503 rapide | PR | Conception courte |
 | Sécurité P1-4 : pas de plafond global de dépense IA | Compteur quotidien global (Redis) puis bascule sur la base vérifiée ; budgets et alertes chez OpenAI et Anthropic | PR + **propriétaire** | — |
