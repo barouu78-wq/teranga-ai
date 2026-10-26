@@ -595,7 +595,7 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
     )
 
 
-# Plafond global d'appels payants par jour (chat, planificateur, voix) : borne la facture même quand
+# Plafond global de requêtes vers l'IA par jour (chat, planificateur, voix) : borne la facture même quand
 # beaucoup d'adresses appellent en même temps (services/ai_budget.py, AI_PLAFOND_JOUR).
 AI_BUDGET = AiBudget(redis_client, logger=app.logger)
 # Routes de rate_guard qui appellent l'IA : elles comptent aussi dans le plafond du jour.

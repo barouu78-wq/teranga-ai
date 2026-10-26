@@ -69,6 +69,14 @@ def test_without_redis_each_process_still_counts():
         assert [budget.take() for _ in range(3)] == [True, True, False]
 
 
+def test_redis_outage_keeps_the_count_already_used_today():
+    redis = _Redis()
+    budget = AiBudget(redis, limit=4, now=_Clock(JOUR))
+    assert [budget.take() for _ in range(3)] == [True, True, True]
+    redis.broken = True  # Redis tombe en panne après 3 appels : le processus repart de 3, pas de 0
+    assert [budget.take() for _ in range(2)] == [True, False]
+
+
 @pytest.fixture
 def plafond_atteint(monkeypatch):
     monkeypatch.setattr(app_module.AI_BUDGET, "limit", 0)

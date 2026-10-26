@@ -1,11 +1,15 @@
-"""Plafond global de dépense IA : un nombre d'appels payants par jour pour tout le site (audit V3, P1-4).
+"""Plafond global de dépense IA : un nombre de requêtes vers l'IA par jour pour tout le site (audit V3, P1-4).
 
 Les limites par adresse IP ne bornent pas la facture quand beaucoup d'adresses appellent en même temps.
 Au-delà du plafond et jusqu'à minuit (heure de Dakar, qui est l'heure UTC) : le chat répond avec la base
 vérifiée, la voix et le planificateur répondent 503. Réglage Render : AI_PLAFOND_JOUR (500 par défaut).
 
+On compte les requêtes, pas chaque appel : quand le premier fournisseur échoue, le secours (Claude ou
+OpenAI) fait un second appel pour la même requête, non compté. Au pire, 2 appels par requête.
+
 Le compteur vit dans Redis, partagé par tous les processus. Sans Redis, ou si Redis ne répond pas, chaque
-processus compte de son côté : le plafond réel est alors au plus « plafond × nombre de processus ».
+processus compte de son côté, en repartant du dernier total partagé qu'il a vu : le plafond réel est alors
+au plus « plafond × nombre de processus ».
 """
 
 from __future__ import annotations
@@ -76,6 +80,9 @@ class AiBudget:
             count = int(self.redis.incr(key))
             if count == 1:
                 self.redis.expire(key, KEY_TTL)
+            with self._lock:
+                # Dernier total partagé vu : si Redis tombe en panne plus tard, le compte local repart de là.
+                self._memory_day, self._memory_count = day, count
             return count
         except Exception:  # noqa: BLE001 - Redis en panne : le compteur local prend le relais
             if self.logger is not None:
