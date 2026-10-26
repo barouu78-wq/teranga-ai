@@ -7,6 +7,7 @@ import httpx
 from flask import Response, jsonify, request
 
 from services.latency import LatencyTrace
+from services.ai_spend import BudgetExceeded, BudgetUnavailable, seconds_until_reset
 
 # Délai propre à la voix. Sans lui, /tts héritait des 50 s du client OpenAI (app.py) avec une nouvelle tentative :
 # une lecture a échoué après 130,8 s le 13 octobre 2026. 5 s pour se connecter, 30 s au plus sans recevoir d'octet
@@ -69,8 +70,15 @@ def register_tts_route(app, deps):
         upstream = None
         try:
             from services.voice_quality import tts_instruction
+            from services.ai_spend import get_spend_guard
             trace.model = "gpt-4o-mini-tts"
             trace.begin("fournisseur")
+            budget = get_spend_guard()
+            reservation = budget.reserve_fixed("openai", trace.model, max(50_000, min(500_000, len(text) * 100))) if budget is not None else None
+            if budget is not None and reservation is not None:
+                # Le coût vocal dépend de la longueur audio et n'est pas exposé ici en jetons.
+                # Imputation prudente avant de commencer le flux, y compris si le client coupe.
+                budget.settle(reservation, None)
             upstream = client.with_options(max_retries=0).audio.speech.with_streaming_response.create(
                 model="gpt-4o-mini-tts",
                 voice=os.getenv("TTS_VOICE", "cedar"),
@@ -84,6 +92,17 @@ def register_tts_route(app, deps):
             first = next((chunk for chunk in chunks if chunk), b"")
             if not first:
                 raise RuntimeError("voix vide")
+        except BudgetExceeded:
+            trace.end("fournisseur")
+            if upstream is not None:
+                upstream.__exit__(None, None, None)
+            return jsonify({"error": "Plafond quotidien de dépense IA atteint. Réessaie demain."}), 429, {"Retry-After": str(seconds_until_reset())}
+        except BudgetUnavailable:
+            trace.end("fournisseur")
+            if upstream is not None:
+                upstream.__exit__(None, None, None)
+            app.logger.error("Budget IA indisponible : synthèse vocale refusée")
+            return jsonify({"error": "Service IA temporairement indisponible."}), 503, {"Retry-After": "60"}
         except Exception:
             trace.end("fournisseur")
             if upstream is not None:

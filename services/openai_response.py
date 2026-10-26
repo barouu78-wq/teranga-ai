@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from .ai_spend import create_openai_response
+
 
 def create_response(
     client: Any,
@@ -17,8 +19,13 @@ def create_response(
     fallback_models: tuple[str, ...] = (),
 ):
     kwargs = build_kwargs(payload, stream)
+
+    def call(call_kwargs):
+        # Réservation atomique avant chaque tentative, y compris le modèle de repli.
+        return create_openai_response(client, call_kwargs)
+
     try:
-        return client.responses.create(**kwargs)
+        return call(kwargs)
     except Exception as exc:
         text = f"{type(exc).__name__} {exc}".lower()
         model_error = "model" in text and any(
@@ -39,5 +46,5 @@ def create_response(
             fallback = dict(kwargs)
             fallback["model"] = fallback_model
             logger.warning("Modèle %s indisponible; tentative avec %s", model, fallback_model)
-            return client.responses.create(**fallback)
+            return call(fallback)
         raise

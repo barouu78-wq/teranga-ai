@@ -19,6 +19,12 @@ def register_realtime_route(app, deps):
     @app.post("/realtime-call")
     def realtime_call():
         """Create a browser WebRTC Realtime call without exposing the API key."""
+        # La session WebRTC est facturée directement par OpenAI après cette négociation ;
+        # ce processus ne voit ni sa durée ni son usage final. En production, on refuse
+        # donc de créer une session non mesurable plutôt que de contourner le plafond global.
+        from services.ai_spend import get_spend_guard
+        if get_spend_guard() is not None:
+            return jsonify({"error": "La voix en direct est temporairement indisponible pour protéger le plafond quotidien IA."}), 503, {"Retry-After": "3600"}
         if not origin_allowed():
             return jsonify({"error": "Origine non autorisée."}), 403
         if not valid_request_token(
