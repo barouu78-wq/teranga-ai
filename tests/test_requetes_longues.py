@@ -44,7 +44,8 @@ def test_default_limit_keeps_one_thread_for_pages(monkeypatch, threads, expected
 
 
 def test_long_routes_are_the_ai_routes():
-    assert LONG_PATHS == frozenset({"/chat", "/api/trip-planner", "/api/practical-info", "/tts", "/stt"})
+    # /realtime-call (voix en temps réel, si REALTIME_VOICE_ENABLED=1) attend jusqu'à 25 s : relecture Codex sur #548.
+    assert LONG_PATHS == frozenset({"/chat", "/api/trip-planner", "/api/practical-info", "/tts", "/stt", "/realtime-call"})
 
 
 def test_when_full_the_ai_answers_503_at_once_and_pages_still_work(monkeypatch):

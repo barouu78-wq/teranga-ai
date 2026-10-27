@@ -16,7 +16,8 @@ import threading
 
 from flask import g, jsonify, request
 
-LONG_PATHS = frozenset({"/chat", "/api/trip-planner", "/api/practical-info", "/tts", "/stt"})
+# /realtime-call n'existe que si REALTIME_VOICE_ENABLED=1 ; il attend la réponse d'OpenAI jusqu'à 25 s.
+LONG_PATHS = frozenset({"/chat", "/api/trip-planner", "/api/practical-info", "/tts", "/stt", "/realtime-call"})
 BUSY_MESSAGE = "Teranga est très demandé en ce moment. Réessaie dans quelques secondes."
 
 
