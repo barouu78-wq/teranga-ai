@@ -56,7 +56,7 @@ Aucun P0 trouvé : ni sécurité, ni panne, ni erreur factuelle grave.
 | `/explorer-image` à requêtes libres | Titres de la base seulement |
 | Liens de partage sans expiration | Expiration et neutralisation |
 | Actions GitHub non épinglées par commit ; dépendances de dev non figées | Épingler |
-| Script d'audience possible sur `/stats-*` | Exclure |
+| Script d'audience possible sur `/stats-*` | Exclu : PR `vie-privee/stats-sans-mesure-audience` |
 | Hygiène (`.gitignore` des clés Android, `# nosec` sans raison) | Compléter |
 | Réponses prêtes : salutation, anglais, wolof | À étudier après mesure du trafic réel (choix de #503 à revoir avec le propriétaire) |
 | Cache des photos en mémoire par processus | Cache partagé dans Redis (gain mesuré : environ 730 ms par photo reprise, 1 cas) |

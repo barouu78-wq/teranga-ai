@@ -35,9 +35,13 @@ def analytics_tag(config: dict[str, str] | None) -> str:
     return "<script " + " ".join(attributes) + "></script>"
 
 
-def inject_analytics(response, config: dict[str, str] | None):
-    """Insert the analytics tag before </head> of a buffered HTML response."""
-    if not config or response.direct_passthrough or response.is_streamed:
+# Pages privées du propriétaire (mot de passe STATS_TOKEN) : le script d'audience n'y voit ni l'adresse ni le contenu.
+PRIVATE_PREFIXES = ("/stats-",)
+
+
+def inject_analytics(response, config: dict[str, str] | None, path: str = ""):
+    """Insert the analytics tag before </head> of a buffered HTML response (never on private pages)."""
+    if not config or response.direct_passthrough or response.is_streamed or path.startswith(PRIVATE_PREFIXES):
         return response
     if response.status_code != 200 or response.mimetype != "text/html":
         return response
