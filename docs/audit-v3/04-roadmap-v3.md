@@ -51,7 +51,7 @@ Aucun P0 trouvé : ni sécurité, ni panne, ni erreur factuelle grave.
 |---|---|
 | Émojis comme icônes (🚀 🔎 🤝 📍 🎯 🌍) | Icônes dessinées au style Nuit dorée (**Go** : change l'écran) |
 | CSP `'unsafe-inline'` sur 40 pages | Nonce partout |
-| 6 routes POST hors `require_json_post` ; JSON imbriqué → 500 | Décorateur commun |
+| 6 routes POST hors `require_json_post` ; JSON imbriqué → 500 | 500 corrigé : `json_body` (400) sur les 3 routes concernées, PR `fix/json-imbrique-400`. Les autres routes ont leur propre contrôle (origine, jeton) |
 | Blocage par IP (CGNAT, IPv6) | IP + identité, regroupement /64 |
 | `/explorer-image` à requêtes libres | Titres de la base seulement |
 | Liens de partage sans expiration | Expiration et neutralisation |
