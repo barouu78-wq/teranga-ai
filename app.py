@@ -706,7 +706,7 @@ def compress_response(response):
 
 @app.after_request
 def add_security_headers(response):
-    response = inject_analytics(response, ANALYTICS)
+    response = inject_analytics(response, ANALYTICS, path=request.path)
     response = inject_posthog(response, POSTHOG)
     return _add_security_headers(
         response,

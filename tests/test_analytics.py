@@ -42,3 +42,22 @@ def test_csp_allows_only_configured_analytics_origin():
         assert "https://plausible.io" in script_src and "https://plausible.io" in connect_src
         default = add_security_headers(app.response_class("x"), path="/")
         assert "plausible" not in default.headers["Content-Security-Policy"]
+
+
+def test_private_stats_pages_never_load_the_audience_script(monkeypatch):
+    """Audit V3 (P2) : les pages privées /stats-* (mot de passe du propriétaire) ne chargent pas le script
+    d'audience, qui verrait leur adresse et leur contenu. Les pages publiques le gardent."""
+    import os
+
+    os.environ.setdefault("OPENAI_API_KEY", "test-key")
+    import app as app_module
+
+    monkeypatch.setattr(app_module, "ANALYTICS", analytics_config("https://plausible.io/js/script.js", "teranga-ai.fr"))
+    monkeypatch.setenv("STATS_TOKEN", "jeton-de-test-assez-long-1234")  # pages actives (404 sans jeton)
+    client = app_module.app.test_client()
+    home = client.get("/", base_url="https://teranga-ai.fr")
+    assert home.status_code == 200 and "plausible.io/js/script.js" in home.get_data(as_text=True)
+    for path in ("/stats-ia", "/stats-partenaires"):
+        page = client.get(path, base_url="https://teranga-ai.fr")
+        assert page.status_code == 200, (path, page.status_code)
+        assert "plausible.io/js/script.js" not in page.get_data(as_text=True), path
