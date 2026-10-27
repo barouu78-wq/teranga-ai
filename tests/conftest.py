@@ -46,6 +46,10 @@ def _fresh_ai_budget():
     budget = getattr(module, "AI_BUDGET", None) if module else None
     if budget is not None:
         budget.reset()
+    # Places de requêtes longues : une réponse en flux jamais lue par un test ne doit pas en priver le suivant.
+    slots = getattr(module, "LONG_SLOTS", None) if module else None
+    if slots is not None:
+        slots.reset()
     yield
 
 

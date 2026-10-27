@@ -68,6 +68,7 @@ from services.csrf import valid_request_token
 from services.model_params import build_model_kwargs
 from services.openai_response import create_response as _create_openai_response
 from services.ai_budget import AiBudget
+from services.long_requests import LongRequestSlots, default_limit as _long_request_limit, install_long_request_limit
 from services.images import (
     image_proxy_url,
     usable_wiki_image,
@@ -600,6 +601,10 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 AI_BUDGET = AiBudget(redis_client, logger=app.logger)
 # Routes de rate_guard qui appellent l'IA : elles comptent aussi dans le plafond du jour.
 AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info"})
+# Requêtes longues (chat, planificateur, voix) : au plus « fils - 1 » à la fois par processus, pour qu'un fil
+# reste libre pour les pages et /health ; au-delà, 503 immédiat (services/long_requests.py).
+LONG_SLOTS = LongRequestSlots(_long_request_limit())
+install_long_request_limit(app, LONG_SLOTS, app.logger)
 
 # Quotas des routes protégées par rate_guard : (par minute, par heure).
 GUARDED_LIMITS = {
