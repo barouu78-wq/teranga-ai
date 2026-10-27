@@ -10,7 +10,7 @@ from flask import Response, jsonify, request, stream_with_context
 from datetime import date
 
 from services.backup_ai import backup_complete, backup_enabled, claude_events, claude_is_primary, claude_response
-from services.http_security import origin_allowed
+from services.http_security import json_body, origin_allowed
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
 from services.language_quality import language_instruction
 from services.model_params import (
@@ -728,7 +728,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             blocked = rate_guard("practical_info")
             if blocked is not None:
                 return blocked
-        body = request.get_json(silent=True)
+        body = json_body(request)
         if not isinstance(body, dict):
             return jsonify({"error": "Requête invalide."}), 400
         lang = str(body.get("lang", "fr")).lower()[:2]
@@ -767,7 +767,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             configured_origins,
         ):
             return jsonify({"error": "Origine non autorisée."}), 403
-        body = request.get_json(silent=True)
+        body = json_body(request)
         if not isinstance(body, dict):
             return jsonify({"error": "Requête invalide."}), 400
         lang = str(body.get("lang", "fr")).lower()[:2]
