@@ -89,7 +89,7 @@ def _never_called(monkeypatch):
 def test_chat_answers_from_the_verified_base_without_calling_the_ai(plafond_atteint, monkeypatch):
     provider = _never_called(monkeypatch)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    response = post_chat("Parle-moi de l'île de Gorée")
+    response = post_chat("Parle-moi de l'île de Gorée en détail")
     events = [json.loads(line) for line in finish(response).decode().splitlines() if line.strip()]
     assert response.status_code == 200
     assert provider.calls == []
@@ -100,7 +100,7 @@ def test_chat_answers_from_the_verified_base_without_calling_the_ai(plafond_atte
 
 def test_chat_json_mode_also_uses_the_base(plafond_atteint, monkeypatch):
     provider = _never_called(monkeypatch)
-    response = post_chat("Parle-moi de l'île de Gorée", json_mode=True)
+    response = post_chat("Parle-moi de l'île de Gorée en détail", json_mode=True)
     body = json.loads(finish(response))
     assert response.status_code == 200 and provider.calls == []
     assert body["degraded"] is True and "Île de Gorée" in body["reply"]
@@ -129,6 +129,6 @@ def test_voice_and_planner_answer_503_with_a_clear_message(plafond_atteint, monk
 def test_below_the_limit_nothing_changes(monkeypatch):
     install_provider(monkeypatch, full_reply=None)
     assert app_module.AI_BUDGET.limit == daily_limit()
-    response = post_chat("Parle-moi de l'île de Gorée")
+    response = post_chat("Parle-moi de l'île de Gorée en détail")
     finish(response)
     assert response.status_code == 200
