@@ -206,6 +206,17 @@ def register_chat_route(app, deps):
         cached = ready or (answer_cache.get(key) if key else None)
         trace.cache = bool(cached)
         trace.ready = bool(ready)
+        def cached_media():
+            """Photos et carte de la réponse servie sans le modèle. Une fiche de lieu prête les cherche comme une réponse
+            de l'IA (recherche d'images et de carte, sans appel à l'IA) ; une réponse en cache garde les siennes."""
+            if ready and ready.get("place_id") and run_chat_enrichments:
+                try:
+                    return run_chat_enrichments(payload)
+                except Exception:  # noqa: BLE001 - la réponse reste utile sans photos
+                    logger.warning("ready_place_enrichment_failed")
+                    return None, None
+            return cached.get("image"), cached.get("map")
+
         if cached:
             logger.info("chat_cache_hit")
         elif ai_budget is not None and not ai_budget.take():
@@ -292,7 +303,8 @@ def register_chat_route(app, deps):
         if request.headers.get("X-Teranga-Mode", "").lower() == "json":
             try:
                 if cached:
-                    reply, sources, image, maps = cached["reply"], cached.get("sources") or [], cached.get("image"), cached.get("map")
+                    image, maps = cached_media()
+                    reply, sources = cached["reply"], cached.get("sources") or []
                 else:
                     with trace.stage("fournisseur"):
                         reply, sources, image, maps = complete_reply(payload)
@@ -325,7 +337,8 @@ def register_chat_route(app, deps):
                 for chunk in replay_chunks(reply):
                     trace.first_word()
                     yield json.dumps({"d": chunk}, ensure_ascii=False) + "\n"
-                for event in finishing_events(reply, cached.get("sources") or [], cached.get("image"), cached.get("map")):
+                image, maps = cached_media()
+                for event in finishing_events(reply, cached.get("sources") or [], image, maps):
                     yield json.dumps(event, ensure_ascii=False) + "\n"
                 trace.ok()
                 yield json.dumps({"done": True}) + "\n"

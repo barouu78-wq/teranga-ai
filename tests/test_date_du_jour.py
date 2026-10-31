@@ -118,13 +118,13 @@ def test_le_cache_ne_resert_pas_la_reponse_d_un_autre_jour(monkeypatch):
     client = app_module.app.test_client()
 
     _figer_horloge(monkeypatch, 2026, 10, 15, 23, 50, 0)
-    assert _poser(client, "Que visiter à Thiès ?", "203.0.113.171") == REPONSE
-    assert _poser(client, "que visiter à thiès", "203.0.113.172") == REPONSE
+    assert _poser(client, "Que visiter à Thiès en détail ?", "203.0.113.171") == REPONSE
+    assert _poser(client, "que visiter à thiès en détail", "203.0.113.172") == REPONSE
     assert len(appels) == 1, "le même jour, la seconde question doit venir du cache"
 
     # Minuit passé à Dakar : la réponse d'hier porte la date d'hier, elle ne doit pas être resservie.
     _figer_horloge(monkeypatch, 2026, 10, 16, 0, 10, 0)
-    assert _poser(client, "Que visiter à Thiès ?", "203.0.113.173") == REPONSE
+    assert _poser(client, "Que visiter à Thiès en détail ?", "203.0.113.173") == REPONSE
     assert len(appels) == 2
     assert "Date du jour : jeudi 15 octobre 2026 (heure de Dakar)." in appels[0]
     assert "Date du jour : vendredi 16 octobre 2026 (heure de Dakar)." in appels[1]

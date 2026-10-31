@@ -48,6 +48,8 @@ from services.calculators import (
     montants_du_texte,
 )
 from services.events import _ALIASES, _asked, french_date, upcoming_events
+from services.fallback_answer import _place_text
+from services.places import mentioned_places
 from services.senegal_knowledge import load_senegal_knowledge
 from services.text import fold_text
 
@@ -348,6 +350,56 @@ def _dish_reply(dish: dict) -> str:
     return "\n".join(lines)
 
 
+# Lieu de la base (Teranga plus indépendant, choix du propriétaire du 31 octobre 2026) : « C'est quoi le Lac Rose ? »,
+# « Que voir à Saint-Louis ? », « Parle-moi de Gorée ». Seule la demande de ce qu'est un lieu est servie, avec les textes
+# de sa fiche tels quels ; transport, prix, horaires, hébergement, dates et itinéraires restent au modèle (aucun de ces
+# mots n'est accepté). Un seul lieu reconnu, sinon le modèle répond.
+_PLACE_ASK = re.compile(
+    r"(?<![a-z])(?:c est quoi|qu est ce que|parle moi|parlez moi|presente moi|presentez moi|raconte moi|racontez moi|"
+    r"histoire|que voir|quoi voir|que visiter|que faire|quoi faire|visiter|decouvrir)(?![a-z])"
+)
+_PLACE_WORDS = _FILLER_WORDS | {
+    "quoi", "qu", "que", "parle", "parlez", "presente", "presentez", "raconte", "racontez", "moi", "histoire",
+    "voir", "visiter", "faire", "decouvrir", "un", "une", "sur", "aux", "ile",
+}
+
+
+def _place_name_words(place: dict) -> set:
+    """Mots du nom et des alias d'un lieu (« lac », « rose », « retba »…)."""
+    words = set()
+    for name in [*str(place.get("name", "")).split("/"), *(place.get("aliases") or [])]:
+        words.update(re.findall(r"[a-z0-9]+", _folded(name)))
+    return words
+
+
+def _asked_place(message: str) -> dict | None:
+    """Le seul lieu de la base dont la question demande ce qu'il est, ou None.
+
+    Chaque mot doit être une demande (« c'est quoi », « que voir »…), un mot de liaison ou un mot du nom de CE lieu :
+    « Que visiter à Thiès en famille ? » reste au modèle, qui sait adapter la réponse."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = re.findall(r"[a-z0-9]+", _folded(message))
+    if not words or not _PLACE_ASK.search(" ".join(words)):
+        return None
+    places = load_senegal_knowledge().get("places", [])
+    found = mentioned_places(message, places, limit=2)
+    if len(found) != 1:
+        return None
+    place = next((p for p in places if isinstance(p, dict) and p.get("id") == found[0]["id"]), None)
+    if place is None or any(word not in _PLACE_WORDS and word not in _place_name_words(place) for word in words):
+        return None
+    return place
+
+
+def _place_reply(place: dict) -> str:
+    return "\n".join([
+        _place_text(place),
+        "Horaires et tarifs : à vérifier avant de partir.",
+        f"La fiche du lieu, avec photos et carte : teranga-ai.fr/lieux/{place['id']}",
+    ])
+
+
 # « Que peux-tu faire ? », « Qui es-tu ? » : rien dans le contexte de l'IA ne décrit le service, qui risquait d'inventer
 # des fonctions (relevé /stats-ia du 24 octobre 2026). Chaque page citée existe (tests/test_reponse_seule_presentation.py
 # l'ouvre). Teranga s'adresse à toute la population : Sénégalais au pays, diaspora, commerçants et voyageurs.
@@ -422,4 +474,8 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         dish = _asked_dish(message)
         if dish:
             return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None, "theme": "cuisine"}
+        place = _asked_place(message)
+        if place:
+            return {"reply": _place_reply(place), "sources": [], "image": None, "map": None, "theme": "voyage",
+                    "place_id": place["id"]}
     return None
