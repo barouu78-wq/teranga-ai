@@ -40,7 +40,7 @@ NOT_ASKED = (
     "100 euros en FCFA pour payer mon loyer à Dakar ?",
     "J'achète à 1 000 FCFA et je vends à 1 500 FCFA, quelle marge ?",
     "Comment envoyer 100 euros au Sénégal ?",
-    "Que visiter à Dakar ?",
+    "Que visiter à Dakar en deux jours ?",
     "euros",
     # Relecture de #503 : un opérateur de calcul n'est pas un mot, il ne doit pas disparaître de la question.
     "100 euros en FCFA * 2",
