@@ -58,7 +58,9 @@ propriétaire sans visage reconnaissable)
 - Les messages pour les **groupes de la diaspora** : « une seule fois par groupe, si les règles du groupe le permettent ».
 - Les **vidéos** du brouillon : une ligne chacune, et l'offre de les fabriquer avec `video-reponse` (vrais écrans,
   réponse réellement capturée) ; elles coûtent du crédit, donc on demande avant.
-- Terminer par la mesure : « Lundi, compte les questions posées sur le site » (`/stats-ia`), comparée à la semaine d'avant.
+- Terminer par la mesure : le nombre de questions au chat des **7 derniers jours**, comparé aux 7 jours d'avant. L'agent
+  `analyste` le compte dans les journaux Render (lignes `latence route=chat`). `/stats-ia` montre un total **glissant sur
+  30 jours** (`CoverageLog.summary()`) : ne jamais le présenter comme le chiffre de la semaine.
 - Ne pas recopier les sources dans le kit : elles restent dans le brouillon et dans ta réponse si on te les demande.
 
 ## 5. Ce que le skill ne fait jamais
