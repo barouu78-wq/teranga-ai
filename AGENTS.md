@@ -63,6 +63,7 @@ un contrôle qui n'a pas tourné.
 | `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
 | `faire-une-video` | vidéo courte (Reels, TikTok, présentation) avec les vrais écrans du site (`scripts/video/`) |
 | `video-reponse` | vidéo « question → vraie réponse de Teranga » (style Nuit dorée) avec une réponse prête capturée (`scripts/video/reponses.py`) |
+| `kit-de-la-semaine` | chaque lundi, ou « quoi poster ? » : brouillons marketing → textes prêts à copier, par jour et par réseau, faits et liens vérifiés |
 | `conseil-hebdo` | chaque lundi, ou « où en est le projet » : réunion de l'entreprise d'agents (`docs/EQUIPE-AGENTS.md`) |
 | `deboguer-methodiquement` | test rouge, bug, alerte : trouver la cause avant de corriger |
 | `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |
