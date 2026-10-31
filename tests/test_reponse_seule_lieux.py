@@ -84,13 +84,18 @@ def test_chat_serves_the_card_without_calling_the_ai(monkeypatch):
     assert not any("error" in event for event in events)
 
 
-def test_the_ready_card_keeps_the_photos_and_map_of_the_place(monkeypatch):
-    """Comme une réponse de l'IA : la recherche d'images et de carte (sans IA) accompagne la fiche prête."""
-    import app as app_module
-    from latence_harness import finish, install_provider, post_chat
+@pytest.mark.parametrize("place_id", sorted({place_id for _, place_id, _ in ASKED}))
+def test_the_linked_place_page_has_the_map_and_photos_it_promises(place_id):
+    """La réponse renvoie à « la fiche du lieu, avec photos et carte » : la page existe et a les deux sections.
+    Le chat, lui, n'ajoute pas de photos à ces questions, comme une réponse de l'IA (relecture Codex sur #554) :
+    le plan de l'agent ne cherche des images que pour une demande de photos."""
+    import os
 
-    install_provider(monkeypatch, error="l'IA ne doit pas être appelée pour une fiche de lieu")
-    photo = [{"url": "https://teranga-ai.fr/static/exemple.jpg", "search_query": "Lac Rose Sénégal"}]
-    monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_enrichments", lambda payload: (photo, None))
-    body = json.loads(finish(post_chat("C'est quoi le Lac Rose ?", json_mode=True)))
-    assert body["image"] == photo and "Lac Rose" in body["reply"]
+    os.environ.setdefault("OPENAI_API_KEY", "test-key")
+    import app as app_module
+
+    page = app_module.app.test_client().get(f"/lieux/{place_id}", base_url="https://teranga-ai.fr")
+    html = page.get_data(as_text=True)
+    assert page.status_code == 200, place_id
+    assert "<h2>Carte</h2>" in html and "openstreetmap.org/export/embed.html" in html, place_id
+    assert "<h2>Photos</h2>" in html and 'id="gallery"' in html, place_id
