@@ -23,7 +23,9 @@ vérifié (services/events.py), avec son statut : une fête lunaire non confirm�
 Une question courte qui demande ce qu'est un plat, un en-cas, un dessert ou une boisson de la base (« C'est quoi le
 yassa ? ») reçoit sa description, telle quelle, de data/senegal_knowledge.json.
 
-Toute autre formulation (une situation, un lieu, une précision) va au modèle.
+Une question courte qui demande ce qu'est un lieu de la base (« Que voir à Saint-Louis ? ») reçoit sa fiche, et une
+question sur une des 14 régions (« Que faire à Dakar ? », « C'est quoi la région de Thiès ? ») son dossier, tels quels.
+Toute autre formulation (une situation, une date, un trajet, une précision) va au modèle.
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ from services.events import _ALIASES, _asked, french_date, upcoming_events
 from services.fallback_answer import _place_text
 from services.places import mentioned_places
 from services.senegal_knowledge import load_senegal_knowledge
+from services.seo import region_slug
 from services.text import fold_text
 
 MAX_CHARS = 80
@@ -400,6 +403,60 @@ def _place_reply(place: dict) -> str:
     ])
 
 
+# Région de la base (V4, étape 2, Go du propriétaire du 31 octobre 2026) : « Que faire à Dakar ? », « C'est quoi la
+# région de Thiès ? ». Mêmes demandes que pour un lieu, sauf l'histoire : le dossier d'une région n'a pas de texte
+# d'histoire. Une ville homonyme (« Que voir à Thiès ? ») garde la fiche du lieu, servie avant.
+_REGION_ASK = re.compile(
+    r"(?<![a-z])(?:c est quoi|qu est ce que|parle moi|parlez moi|presente moi|presentez moi|"
+    r"que voir|quoi voir|que visiter|que faire|quoi faire|visiter|decouvrir)(?![a-z])"
+)
+_REGION_WORDS = (_PLACE_WORDS - {"histoire", "raconte", "racontez", "ile"}) | {"region", "dans"}
+
+
+@lru_cache(maxsize=1)
+def _region_index() -> tuple[tuple[re.Pattern, dict], ...]:
+    """(motif du nom, région) pour chaque région dont le dossier a tous les textes de la réponse."""
+    entries = []
+    for region in load_senegal_knowledge().get("regions", []):
+        dossier = region.get("regional_dossier") if isinstance(region, dict) else None
+        if not dossier or not all(dossier.get(key) for key in ("identity", "geography")):
+            continue
+        name = " ".join(re.findall(r"[a-z0-9]+", _folded(region.get("name"))))
+        if name and region.get("id") and region.get("highlights"):
+            entries.append((re.compile(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])"), region))
+    return tuple(entries)
+
+
+def _asked_region(message: str) -> dict | None:
+    """La seule région de la base dont la question demande ce qu'elle est, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = re.findall(r"[a-z0-9]+", _folded(message))
+    text = " ".join(words)
+    if not words or not _REGION_ASK.search(text):
+        return None
+    found = [region for pattern, region in _region_index() if pattern.search(text)]
+    if len(found) != 1:
+        return None
+    name_words = set(re.findall(r"[a-z0-9]+", _folded(found[0]["name"])))
+    return None if any(word not in _REGION_WORDS and word not in name_words for word in words) else found[0]
+
+
+def _region_reply(region: dict) -> str:
+    dossier = region["regional_dossier"]
+    title = f"Région de {region['name']}"
+    if dossier.get("capital_regionale"):
+        title += f" (capitale régionale : {dossier['capital_regionale']})"
+    lines = [title, dossier["identity"], dossier["geography"], "À ne pas manquer : " + ", ".join(region["highlights"]) + "."]
+    foods = region.get("foods") or dossier.get("foods")
+    if foods:
+        lines.append("À goûter : " + ", ".join(foods) + ".")
+    # Le champ « practical » du dossier est une consigne pour l'IA (« doivent être datées… »), pas un conseil au lecteur.
+    lines.append("Horaires, tarifs, accès et transports : à vérifier avant de partir.")
+    lines.append(f"Le guide de la région, avec ses lieux à visiter : teranga-ai.fr/regions/{region_slug(region['name'])}")
+    return "\n".join(lines)
+
+
 # « Que peux-tu faire ? », « Qui es-tu ? » : rien dans le contexte de l'IA ne décrit le service, qui risquait d'inventer
 # des fonctions (relevé /stats-ia du 24 octobre 2026). Chaque page citée existe (tests/test_reponse_seule_presentation.py
 # l'ouvre). Teranga s'adresse à toute la population : Sénégalais au pays, diaspora, commerçants et voyageurs.
@@ -478,4 +535,8 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         if place:
             return {"reply": _place_reply(place), "sources": [], "image": None, "map": None, "theme": "voyage",
                     "place_id": place["id"]}
+        region = _asked_region(message)
+        if region:
+            return {"reply": _region_reply(region), "sources": [], "image": None, "map": None, "theme": "voyage",
+                    "region_id": region["id"]}
     return None

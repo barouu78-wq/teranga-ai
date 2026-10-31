@@ -34,7 +34,7 @@ NOT_ASKED = [
     "Que visiter à Dakar en deux jours ?",           # itinéraire
     "C'est quoi le Lac Rose et comment y aller ?",   # deux demandes
     "Que faire en Casamance ?",                      # aucun lieu de la base de ce nom
-    "Que faire à Dakar ?",                           # aucun lieu de la base de ce nom
+    # « Que faire à Dakar ? » : aucun lieu de ce nom, mais la région reçoit son guide (test_reponse_seule_regions.py).
     "Gorée ou Saint-Louis, lequel visiter ?",        # comparaison de deux lieux
     "C'est quoi le meilleur restaurant de Dakar ?",  # pas un lieu de la base
 ]

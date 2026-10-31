@@ -36,7 +36,7 @@ NOT_ASKED = (
     "Quel est le numéro de SOS Médecins ?",
     "Numéro de la gendarmerie de Mbour",
     "numéro de téléphone de l'hôtel Terrou-Bi",
-    "Que visiter à Dakar ?",
+    "Que visiter à Dakar en deux jours ?",
     "La police est-elle fiable au Sénégal ?",
     "numéro de la police municipale de Thiès pour une plainte",
 )

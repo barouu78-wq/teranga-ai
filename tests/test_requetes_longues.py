@@ -53,13 +53,13 @@ def test_when_full_the_ai_answers_503_at_once_and_pages_still_work(monkeypatch):
     slots = app_module.LONG_SLOTS
     held = [slots.try_acquire() for _ in range(slots.limit)]
     assert all(held)
-    response = post_chat("Que voir à Dakar ?")
+    response = post_chat("Que voir à Dakar en détail ?")
     assert response.status_code == 503
     assert "très demandé" in response.get_json()["error"] and response.headers["Retry-After"]
     assert app_module.app.test_client().get("/health", base_url=B).status_code == 200
     for release in held:
         release()
-    response = post_chat("Que voir à Dakar ?")
+    response = post_chat("Que voir à Dakar en détail ?")
     finish(response)
     assert response.status_code == 200
 
@@ -67,7 +67,7 @@ def test_when_full_the_ai_answers_503_at_once_and_pages_still_work(monkeypatch):
 def test_a_streamed_answer_holds_its_place_until_it_ends(monkeypatch):
     install_provider(monkeypatch, events=[delta("Bonjour"), completed("Bonjour")])
     slots = app_module.LONG_SLOTS
-    response = post_chat("Que voir à Dakar ?")
+    response = post_chat("Que voir à Dakar en détail ?")
     assert slots.busy == 1  # le flux n'est pas encore lu : la place reste prise
     body = finish(response)
     assert "Bonjour" in "".join(json.loads(line).get("d", "") for line in body.decode().splitlines() if line.strip())
@@ -76,7 +76,7 @@ def test_a_streamed_answer_holds_its_place_until_it_ends(monkeypatch):
 
 def test_json_answers_and_refusals_give_their_place_back(monkeypatch):
     install_provider(monkeypatch, events=[delta("Bonjour"), completed("Bonjour")])
-    finish(post_chat("Que voir à Dakar ?", json_mode=True))
+    finish(post_chat("Que voir à Dakar en détail ?", json_mode=True))
     assert app_module.LONG_SLOTS.busy == 0
     refused = app_module.app.test_client().post("/chat", json={"message": "x"}, base_url=B)  # sans jeton CSRF
     assert refused.status_code in (400, 403) and app_module.LONG_SLOTS.busy == 0
