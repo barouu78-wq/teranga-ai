@@ -66,6 +66,7 @@ _TITLES = {
     "protection": ("Santé et protection sociale", "Health cover and social protection"),
     "etudes": ("Études et bourses", "Studies and grants"),
     "langue": ("Langues", "Languages"),
+    "joj": ("JOJ Dakar 2026", "Dakar 2026 Youth Olympic Games"),
 }
 _DEFAULT_TITLE = ("Repères pratiques", "Practical facts")
 _EVENTS_TITLE = ("Prochaines fêtes et événements", "Upcoming holidays and events")

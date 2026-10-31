@@ -65,6 +65,20 @@ def test_games_questions_get_the_verified_venues(question):
     assert "n'est pas un site officiel" in context
 
 
+def test_the_fallback_names_the_games_in_both_languages():
+    """IA indisponible : la réponse de la base garde les repères vérifiés, sous un titre dans la langue du visiteur
+    (relecture Codex sur #556). Comme pour tous les sujets, les repères eux-mêmes restent en français."""
+    from services.fallback_answer import knowledge_fallback
+    from services.senegal_knowledge import load_senegal_knowledge
+
+    data = load_senegal_knowledge()
+    today = dt.date(2026, 11, 2)
+    english = knowledge_fallback("Where are the Youth Olympic Games?", data["places"], data["dishes"], "en", today=today)
+    french = knowledge_fallback("Où ont lieu les JOJ ?", data["places"], data["dishes"], "fr", today=today)
+    assert "Dakar 2026 Youth Olympic Games" in english and "Diamniadio" in english
+    assert "JOJ Dakar 2026" in french and "Diamniadio" in french
+
+
 @pytest.mark.parametrize("question", [
     "Cours de yoga à Dakar",
     "Le match de l'Olympique de Marseille",
