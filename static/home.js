@@ -364,9 +364,13 @@ const THEME_LABELS={
   en:{auto:'Theme: automatic (day/night)',light:'Theme: light',dark:'Theme: dark'}
 };
 const FETE_TEXT={
-  fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !'},
-  en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!'}
+  fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !',
+      joj:'JOJ Dakar 2026, du 31 octobre au 13 novembre : le guide pratique'},
+  en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!',
+      joj:'Dakar 2026 Youth Olympic Games, 31 Oct – 13 Nov: practical guide (in French)'}
 };
+// Un événement avec sa page : le bandeau devient un lien (JOJ Dakar 2026).
+const FETE_LINK={joj:'/joj-dakar-2026'};
 function applyTheme(){
   const api=window.terangaTheme;
   const mode=api?api.readMode():(storageGet('teranga-theme','')||'auto');
@@ -383,8 +387,13 @@ function applyTheme(){
 function applyFete(){
   const name=window.terangaTheme?window.terangaTheme.fete():'';
   const text=name&&((FETE_TEXT[lang]||FETE_TEXT.fr)[name]);
-  if(text){document.body.dataset.fete=name;$('feteBanner').textContent=text;}
-  else{delete document.body.dataset.fete;$('feteBanner').textContent='';}
+  const banner=$('feteBanner');
+  if(text){
+    document.body.dataset.fete=name;
+    if(FETE_LINK[name]){const link=document.createElement('a');link.href=FETE_LINK[name];link.textContent=text;banner.replaceChildren(link);}
+    else banner.textContent=text;
+  }
+  else{delete document.body.dataset.fete;banner.textContent='';}
 }
 function sharePayload(){
   const url=location.origin+'/';

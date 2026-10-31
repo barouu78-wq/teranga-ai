@@ -988,6 +988,24 @@ body[data-fete="tabaski"] .hero-signature{background:
   repeating-linear-gradient(135deg,#0f6a43 0 12px,#15834f 12px 24px)}
 body[data-fete="tabaski"] .hero-signature::after{content:"🐑"}
 body[data-fete="tabaski"] .fete-banner{background:#0f6a43;color:#fff6dc}
+/* JOJ Dakar 2026 : la scène du haut fait la fête (ciel de fête, confettis vert, jaune, rouge du drapeau, « JOJ 2026 »),
+   de jour comme de nuit. Aucun emblème olympique (anneaux, logo, mascotte : marques du CIO). Le bandeau est un lien. */
+body[data-fete="joj"] .scene-sky{background:
+  radial-gradient(circle,#0f6a43 0 3px,transparent 4px) 6px 10px/46px 38px,
+  radial-gradient(circle,#c93636 0 3px,transparent 4px) 28px 24px/52px 44px,
+  radial-gradient(circle,#f0c63d 0 2.5px,transparent 3.5px) 16px 4px/34px 30px,
+  linear-gradient(180deg,#fff1c9 0%,#f6c35a 55%,#d9822b 100%)}
+body[data-theme="dark"][data-fete="joj"] .scene-sky{background:
+  radial-gradient(circle,#2fbf7a 0 2.5px,transparent 3.5px) 6px 10px/46px 38px,
+  radial-gradient(circle,#ff6b5e 0 2.5px,transparent 3.5px) 28px 24px/52px 44px,
+  radial-gradient(circle,#f6d36b 0 2px,transparent 3px) 16px 4px/34px 30px,
+  linear-gradient(180deg,#0b1a33 0%,#16294a 60%,#3b2a10 100%)}
+body[data-fete="joj"] .scene-sky::before{content:"JOJ 2026";position:absolute;left:18px;top:14px;z-index:1;
+  font:800 30px/1 system-ui,sans-serif;letter-spacing:.06em;color:#0f6a43;text-shadow:0 2px 0 #fff6dc}
+body[data-theme="dark"][data-fete="joj"] .scene-sky::before{color:#f6d36b;text-shadow:0 2px 0 #0b1a33}
+@media(max-width:720px){body[data-fete="joj"] .scene-sky::before{left:14px;top:10px;font-size:22px}}
+body[data-fete="joj"] .fete-banner{padding:0;background:#0f6a43;color:#fff6dc}
+body[data-fete="joj"] .fete-banner a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;color:inherit;text-decoration:underline;text-underline-offset:3px}
 /* Grand Magal de Touba : vert de Touba, blanc et la grande mosquée. */
 body[data-fete="magal"] .hero-signature{background:
   radial-gradient(circle at 12px 12px,rgba(255,255,255,.85) 2px,transparent 3px) 0 0/24px 24px,

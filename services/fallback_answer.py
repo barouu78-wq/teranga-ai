@@ -224,7 +224,8 @@ def _events_text(message: str, lang: str, today: _dt.date | None) -> str:
     if not chosen and _AID.search(folded):
         chosen = [event for event in upcoming if "Korité" in event["name"] or "Tabaski" in event["name"]]
     if not chosen and _GENERIC_EVENTS.search(folded) and not _PRIVATE_PARTY.search(folded):
-        chosen = upcoming
+        # « Les prochains jours fériés ? » : les fêtes seulement ; un événement sportif (JOJ) n'en est pas une.
+        chosen = [event for event in upcoming if event["kind"] != "sport"]
     if not chosen:
         return ""
     return _section(_EVENTS_TITLE[1 if lang == "en" else 0], [_event_line(event, lang) for event in chosen[:MAX_EVENTS]])
