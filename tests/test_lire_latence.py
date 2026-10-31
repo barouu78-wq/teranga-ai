@@ -162,7 +162,7 @@ def test_real_lines_written_by_the_application_go_through_the_script(monkeypatch
     handler = h.capture_lines()
     try:
         h.install_provider(monkeypatch, events=[h.delta("Bonjour " * 12), h.completed("Bonjour " * 12)])
-        for question in ("Parle-moi de la culture sérère.", "Que faire à Dakar ?", "Que faire à Thiès en famille ?"):
+        for question in ("Parle-moi de la culture sérère.", "Que faire à Dakar en détail ?", "Que faire à Thiès en famille ?"):
             h.finish(h.post_chat(question))
         h.finish(h.post_chat("Parle-moi de la culture sérère."))  # même question : cache
         h.post_tts("Bonjour", monkeypatch=monkeypatch).close()
