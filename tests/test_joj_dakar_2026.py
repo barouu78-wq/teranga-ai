@@ -61,7 +61,7 @@ def test_when_are_the_games_gets_a_ready_answer(monkeypatch, question):
 def test_games_questions_get_the_verified_venues(question):
     assert "joj" in matching_topics(question), question
     context = practical_context(question)
-    assert "Diamniadio" in context and "Saly" in context and "olympics.com" in context
+    assert "Diamniadio" in context and "Saly" in context and "site officiel olympics.com (rubrique Dakar 2026)" in context
     assert "n'est pas un site officiel" in context
 
 
