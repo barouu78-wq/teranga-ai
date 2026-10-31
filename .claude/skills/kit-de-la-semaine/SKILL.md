@@ -12,7 +12,7 @@ passage de l'un à l'autre **sans rien publier** et sans ajouter un seul fait no
 ## 1. Trouver le brouillon de la semaine
 Le fichier vit d'abord sur la branche de la PR brouillon de l'agent `communication`, pas sur `main` :
 ```bash
-git fetch -q origin main
+git fetch -q --prune origin   # toutes les branches : celle du brouillon de la semaine est souvent nouvelle
 git branch -r | grep -E "communication/|marketing/" | sort | tail -3   # la semaine la plus récente
 git show origin/communication/2026-S44:docs/communication/2026-S44.md > <scratchpad>/S44.md
 ```
