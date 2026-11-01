@@ -78,8 +78,15 @@ class AiBudget:
         key = KEY_PREFIX + day
         try:
             count = int(self.redis.incr(key))
-            if count == 1:
-                self.redis.expire(key, KEY_TTL)
+            if count % 100 == 1:
+                # Durée de vie posée au premier appel du jour, puis reposée tous les 100 appels : un EXPIRE refusé
+                # une fois ne laisse pas la clé sans fin, et une requête déjà comptée par Redis ne compte pas en
+                # double en local (audit de sécurité du 1er novembre 2026).
+                try:
+                    self.redis.expire(key, KEY_TTL)
+                except Exception:  # noqa: BLE001 - le compte de Redis reste valable
+                    if self.logger is not None:
+                        self.logger.warning("ia_plafond_expire_echec")
             with self._lock:
                 # Dernier total partagé vu : si Redis tombe en panne plus tard, le compte local repart de là.
                 self._memory_day, self._memory_count = day, count

@@ -22,8 +22,8 @@ jobs:
     name: Audit SEO local
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
           cache: pip
@@ -35,7 +35,7 @@ jobs:
         run: python scripts/audit_seo.py --json > seo-audit-report.json
       - name: Publier le rapport SEO
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rapport-seo
           path: seo-audit-report.json
@@ -54,7 +54,7 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Tester les pages publiques et diagnostiquer TLS
@@ -163,7 +163,7 @@ jobs:
           PY
       - name: Publier le diagnostic public même en cas d'échec
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: rapport-public-https-performance
           path: rapport-public.json
@@ -179,7 +179,7 @@ jobs:
           { echo "### Diagnostic TLS par adresse"; echo '```'; cat diagnostic-tls.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Publier le diagnostic TLS par adresse
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: diagnostic-tls-par-adresse
           path: |

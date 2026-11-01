@@ -77,6 +77,30 @@ def test_redis_outage_keeps_the_count_already_used_today():
     assert [budget.take() for _ in range(2)] == [True, False]
 
 
+def test_a_failed_expire_does_not_count_twice_and_is_retried():
+    """Audit de sécurité du 1er novembre 2026 (constat 6) : si EXPIRE échoue après un INCR réussi, la requête
+    comptait aussi en local (deux fois) et la clé du jour restait sans durée de vie."""
+
+    class _ExpireFails(_Redis):
+        def __init__(self):
+            super().__init__()
+            self.expire_calls = 0
+
+        def expire(self, key, seconds):
+            self.expire_calls += 1
+            if self.expire_calls == 1:
+                raise ConnectionError("EXPIRE refusé (simulé)")
+            super().expire(key, seconds)
+
+    redis = _ExpireFails()
+    budget = AiBudget(redis, limit=2, now=_Clock(JOUR))
+    assert [budget.take() for _ in range(3)] == [True, True, False]  # 3 requêtes, comptées une seule fois chacune
+    assert budget._memory_count == 3  # le compteur local suit Redis, sans double comptage
+    for _ in range(100):  # la durée de vie est reposée plus tard, sans appel de plus à chaque requête
+        budget.take()
+    assert redis.ttl and redis.expire_calls == 2
+
+
 @pytest.fixture
 def plafond_atteint(monkeypatch):
     monkeypatch.setattr(app_module.AI_BUDGET, "limit", 0)
