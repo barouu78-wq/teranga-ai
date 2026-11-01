@@ -544,7 +544,9 @@ def fetch_topic_images(message, page=0):
 def client_ip():
     # ProxyFix valide déjà le proxy de confiance et normalise remote_addr.
     # Ne pas relire X-Forwarded-For directement : il peut être falsifié par un client.
-    return _client_ip(request.remote_addr)
+    # Derrière Cloudflare, remote_addr est celle de Cloudflare : CF-Connecting-IP donne le visiteur, lu seulement
+    # quand la requête vient d'une adresse de Cloudflare (services/request_identity.py).
+    return _client_ip(request.remote_addr, request.headers.get("CF-Connecting-IP"))
 
 
 def client_identity():
