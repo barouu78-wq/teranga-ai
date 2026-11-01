@@ -145,6 +145,29 @@ def test_youth_olympic_games_banner_leads_to_the_guide(page, base_url, hour):
     assert page.errors == []
 
 
+@pytest.mark.parametrize("hour", [11, 21])
+@pytest.mark.parametrize("size", [(390, 664), (360, 560)])
+def test_games_band_replaces_the_scene_on_a_low_phone_screen(page, base_url, hour, size):
+    """iPhone avec les barres de Safari (capture du propriétaire du 1er novembre 2026) : la scène est cachée les jours
+    de fête pour garder la question dans le premier écran ; la bande « JOJ 2026 » la remplace, de jour comme de nuit."""
+    import datetime
+
+    page.set_viewport_size({"width": size[0], "height": size[1]})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
+    page.goto(base_url + "/")
+    band = page.evaluate("""() => {
+      const el = document.querySelector('.hero-signature'), input = document.getElementById('heroInput');
+      return {bg: getComputedStyle(el).backgroundImage, height: el.getBoundingClientRect().height,
+              title: getComputedStyle(el, '::after').content, scene: document.querySelector('.hero-scene').getBoundingClientRect().height,
+              input: input.getBoundingClientRect().bottom, stage: document.getElementById('stage').getBoundingClientRect().bottom};
+    }""")
+    assert band["scene"] == 0 and band["height"] >= 40, band
+    assert "radial-gradient" in band["bg"] and "JOJ 2026" in band["title"], band
+    assert band["input"] <= band["stage"], band  # la question reste dans le premier écran
+    assert page.locator("#feteBanner a").bounding_box()["height"] >= 44
+    assert page.errors == []
+
+
 def test_no_games_banner_after_the_closing_day(page, base_url):
     import datetime
 
