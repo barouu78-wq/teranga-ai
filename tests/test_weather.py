@@ -5,7 +5,27 @@ from datetime import datetime, timezone
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
+import pytest
+
 from services import weather
+
+
+@pytest.fixture(autouse=True)
+def _appels_isoles():
+    """Un appel Open-Meteo lent lancé par un test ne sert jamais au test suivant.
+
+    Plusieurs tests relâchent leur appel lent à la fin ; s'il n'est pas encore terminé, ``_refresh`` le réutilise
+    au test suivant au lieu de lancer le nouvel appel (échec vu en CI sur la PR #567 : « trop vieux » recevait la
+    prévision du test « minuit »). On attend donc la fin des appels en cours, puis on vide le cache.
+    """
+    yield
+    for appel in list(weather._PENDING.values()):
+        try:
+            appel.result(timeout=3)
+        except Exception:  # seul compte qu'il soit terminé (un appel « en panne » lève une erreur)
+            pass
+    weather._PENDING.clear()
+    weather._CACHE.clear()
 
 SAMPLE = {
     "current": {"time": "2026-10-05T14:00", "temperature_2m": 31.2, "apparent_temperature": 35.0,
