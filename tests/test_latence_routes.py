@@ -78,8 +78,8 @@ def test_json_mode_has_no_first_word_and_counts_the_whole_provider_call(monkeypa
 
 def test_a_provider_failure_answered_from_the_knowledge_base_is_a_secours(monkeypatch, lines):
     h.install_provider(monkeypatch, error="fournisseur en panne")
-    finish(post_chat("Que visiter à Gorée ?"))
-    finish(post_chat("Que visiter à Saly ?", json_mode=True))
+    finish(post_chat("Que visiter à Gorée en famille ?"))
+    finish(post_chat("Que visiter à Saly en famille ?", json_mode=True))
     streamed, json_mode = (h.fields(line) for line in lines)
     assert streamed["statut"] == "secours" and number(streamed["premier_mot_ms"]) > 0 and streamed["modele"] in MODELS
     assert json_mode["statut"] == "secours" and json_mode["mode"] == "json"

@@ -75,6 +75,7 @@ PROBES = [
  ("fr","Comment aller en Casamance depuis Dakar ?",["bateau de nuit Dakar–Ziguinchor"]),
  ("fr","C'est quoi un sept-places ?",["sept-places depuis la gare routière"]),
  ("fr","Prendre le TER à Dakar",["TER Dakar ↔ Diamniadio"]),
+ ("fr","Le TER va-t-il jusqu'à l'aéroport AIBD ?",["TER Dakar ↔ Diamniadio ↔ aéroport AIBD","en service depuis le 28 septembre 2026"]),
  ("fr","Comment aller à Saint-Louis depuis Dakar ?",["Saint-Louis"]),
  # lieux
  ("fr","Que voir à Kédougou ?",["Kédougou"]),

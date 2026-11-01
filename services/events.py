@@ -20,6 +20,11 @@ EVENTS = (
      "Des millions de pèlerins : routes vers Touba très chargées, hébergement souvent chez l'habitant. Tenue couverte et respect des consignes de la ville sainte."),
     (_dt.date(2026, 8, 25), None, "Gamou (Maouloud)", "Tivaouane, Ndiassane, Médina Baye", "religious", True,
      "Nuit de prières et de chants à Tivaouane ; jour férié. Prévoir des trajets longs vers Tivaouane la veille."),
+    # JOJ : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    (_dt.date(2026, 10, 31), _dt.date(2026, 11, 13), "Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026",
+     "Dakar, Diamniadio et Saly", "sport", True,
+     "Premiers Jeux Olympiques de la Jeunesse organisés en Afrique. Programme du jour et billets sur le site officiel "
+     "olympics.com ; guide pratique : teranga-ai.fr/joj-dakar-2026. Prévoyez de la marge pour vos trajets."),
     (_dt.date(2026, 11, 1), None, "Toussaint", "Tout le pays", "holiday", True,
      "Jour férié : administrations et banques fermées."),
     (_dt.date(2026, 12, 25), None, "Noël", "Tout le pays", "holiday", True,
@@ -50,7 +55,8 @@ EVENTS = (
      "Nuit de prières et de chants à Tivaouane ; jour férié. Prévoir des trajets longs vers Tivaouane la veille."),
 )
 
-TYPE_LABELS = {"religious": "Fête religieuse", "national": "Fête nationale", "holiday": "Jour férié", "festival": "Festival"}
+TYPE_LABELS = {"religious": "Fête religieuse", "national": "Fête nationale", "holiday": "Jour férié", "festival": "Festival",
+               "sport": "Événement sportif"}
 _MONTHS = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre")
 
 
@@ -86,6 +92,7 @@ _ALIASES = {
     "Toussaint": ("toussaint",),
     "Ascension": ("ascension",),
     "Assomption": ("assomption", "assumption"),
+    "JOJ": ("joj", "jeux olympiques", "olympiques de la jeunesse", "youth olympic"),
 }
 
 
