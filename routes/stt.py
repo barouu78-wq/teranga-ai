@@ -54,6 +54,7 @@ def register_stt_route(app, deps):
     public_error = deps["public_error"]
     _field = deps["_field"]
     client = deps["client"]
+    ai_budget = deps.get("ai_budget")  # plafond d'appels payants par jour (services/ai_budget.py)
 
     def stt_body(trace):
         """Transcribe a short voice turn for hands-free conversation (`trace` : durée du fournisseur, services/latency.py)."""
@@ -94,6 +95,8 @@ def register_stt_route(app, deps):
         language = str(request.form.get("language", "fr")).lower()[:8]
         if language not in SAFE_LANG:
             language = "fr"
+        if ai_budget is not None and not ai_budget.take():
+            return jsonify({"error": "La dictée vocale a atteint sa limite du jour. Écris ta question."}), 503, {"Retry-After": str(ai_budget.retry_after())}
         try:
             audio_file = io.BytesIO(raw)
             audio_file.name = audio_filename(raw)

@@ -9,6 +9,8 @@ from html import escape
 import re
 from urllib.parse import urlparse
 
+from services.analytics import PRIVATE_PREFIXES
+
 
 def posthog_config(project_key: object, api_host: object, asset_host: object) -> dict[str, str] | None:
     key = str(project_key or "").strip()
@@ -42,9 +44,9 @@ def posthog_tag(config: dict[str, str] | None) -> str:
     )
 
 
-def inject_posthog(response, config: dict[str, str] | None):
-    """Inject only our local consent controller into buffered HTML pages."""
-    if not config or response.direct_passthrough or response.is_streamed:
+def inject_posthog(response, config: dict[str, str] | None, path: str = ""):
+    """Inject only our local consent controller into buffered HTML pages (never on private pages)."""
+    if not config or response.direct_passthrough or response.is_streamed or path.startswith(PRIVATE_PREFIXES):
         return response
     if response.status_code != 200 or response.mimetype != "text/html":
         return response
