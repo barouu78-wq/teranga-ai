@@ -65,3 +65,33 @@ def test_aucun_script_ni_crochet_de_superpowers():
     reglages = ROOT / ".claude" / "settings.json"
     if reglages.exists():
         assert "superpowers" not in reglages.read_text(encoding="utf-8").lower()
+
+
+# Compétences reprises de GitHub le 1er novembre 2026 (choix du propriétaire, « A ») : hallmark (design, Nutlope/hallmark)
+# et ponytail (code minimal, DietrichGebert/ponytail), toutes deux sous licence MIT. Texte seulement : ni script, ni
+# image, ni génération d'images payante (Together AI) ; les règles d'AGENTS.md priment.
+REPRISES = {
+    "LICENCE-hallmark.txt": ("Nutlope/hallmark", ("hallmark",)),
+    "LICENCE-ponytail.txt": ("DietrichGebert/ponytail", ("ponytail", "ponytail-review", "ponytail-audit", "ponytail-debt")),
+}
+
+
+@pytest.mark.parametrize("fichier", sorted(REPRISES))
+def test_chaque_reprise_garde_sa_licence_mit(fichier):
+    depot, noms = REPRISES[fichier]
+    licence = (SKILLS / fichier).read_text(encoding="utf-8")
+    assert "MIT License" in licence and "Copyright (c)" in licence
+    assert "The above copyright notice and this permission notice shall be included" in licence
+    assert f"https://github.com/{depot}" in licence and re.search(r"commit [0-9a-f]{40}", licence)
+    for nom in noms:
+        assert nom in NOMS and f"- {nom}" in licence
+        assert fichier in (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")
+
+
+def test_les_reprises_sont_du_texte_seulement():
+    for _, noms in REPRISES.values():
+        for nom in noms:
+            fichiers = [p for p in (SKILLS / nom).rglob("*") if p.is_file()]
+            assert fichiers and all(p.suffix in {".md", ".json"} for p in fichiers), (nom, fichiers)
+    hallmark = (SKILLS / "hallmark" / "SKILL.md").read_text(encoding="utf-8")
+    assert "AGENTS.md" in hallmark  # les règles du projet priment (polices, scripts, CSP, faits)
