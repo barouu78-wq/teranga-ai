@@ -81,6 +81,31 @@ def test_reset_hard_est_bloque(commande):
     assert raison and "reset --hard" in raison
 
 
+# Remarques de Codex sur la PR #567 : une option avec valeur devant la commande (sudo -u root…) ou une variable dans la
+# branche visée ne doivent pas cacher la commande bloquée.
+@pytest.mark.parametrize("commande", [
+    "sudo -u root rm -rf /",
+    "sudo -u bot git push origin main",
+    "sudo -u git rm -rf /",
+    "timeout -s KILL 30 git push origin main",
+    "env -u LANG git push origin main",
+    "sudo -u bot bash -c 'git push origin main'",
+    "DEST=main; git push origin HEAD:$DEST",
+    "export DEST=main && git push origin HEAD:${DEST}",
+    'git push origin "$BRANCHE_INCONNUE"',
+    "git push origin ${B:-main}",
+    "git push origin $(echo main)",
+    "X=/; rm -rf $X",
+])
+def test_options_et_variables_ne_cachent_pas_la_commande(commande):
+    assert motif(commande, "/tmp")
+
+
+def test_une_variable_connue_vers_une_branche_de_travail_passe():
+    assert motif('B=outils/x; git push -u origin "$B"', "/tmp") is None
+    assert motif("sudo -u bot git status", "/tmp") is None
+
+
 @pytest.mark.parametrize("commande,cwd", [
     ("rm -rf /", PROJET),
     ("rm -rf /*", PROJET),

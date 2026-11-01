@@ -24,13 +24,19 @@ PROTEGEE = "main"
 OUTILS_GITHUB = {"mcp__github__push_files", "mcp__github__create_or_update_file", "mcp__github__delete_file"}
 PREFIXES = {"sudo", "env", "command", "builtin", "exec", "nohup", "nice", "time", "timeout"}
 COQUILLES = {"bash", "sh", "zsh", "dash"}
+SURVEILLES = {"git", "rm", "eval"} | COQUILLES
 HEREDOC = re.compile(r"(?<!<)<<-?(?!<)\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 AFFECTATION = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+VARIABLE = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))")
+BRANCHE_COURANTE = re.compile(r"\$\(\s*git\s+(?:branch\s+--show-current|rev-parse\s+--abbrev-ref\s+HEAD"
+                              r"|symbolic-ref\s+--short\s+HEAD)\s*\)")
 OPTIONS_GIT_AVEC_VALEUR = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env", "--super-prefix"}
 OPTIONS_PUSH_AVEC_VALEUR = {"--repo", "--push-option", "--receive-pack", "--exec"}
 
 SUR_MAIN = ("cette commande pousserait sur main. Pousse ta branche de travail (git push -u origin <branche>) et ouvre "
             "une PR : main ne change que par la fusion d'une PR aux contrôles verts.")
+INCONNUE = ("la branche visée dépend d'une variable ou d'une commande ($…) que le garde-fou ne peut pas lire : ce "
+            "pourrait être main. Écris le nom de la branche en clair.")
 TOUT = "git push --all, --mirror ou --branches pousserait aussi main. Pousse seulement ta branche de travail."
 GITHUB = ("cet outil GitHub écrirait directement sur main (branche « main » ou absente). Crée une branche de travail "
           "et ouvre une PR.")
@@ -42,19 +48,25 @@ RM = "rm -r viserait {} (racine, dossier personnel, projet ou .git). Supprime un
 
 
 class _Lieu:
-    """Dossier courant de la commande (suit les « cd »), avec le projet et le dossier personnel."""
+    """Dossier courant de la commande (suit les « cd ») et variables posées par la commande (DEST=main; …)."""
 
     def __init__(self, dossier, projet, maison):
         self.dossier = os.path.normpath(dossier)
         self.projet = os.path.normpath(projet)
         self.maison = os.path.normpath(maison)
+        self.variables = {"HOME": self.maison, "CLAUDE_PROJECT_DIR": self.projet}
+
+    def developpe(self, texte):
+        """Remplace $NOM et ${NOM} connus ; une variable inconnue reste telle quelle (avec son $)."""
+        def valeur(trouve):
+            nom = trouve.group(1) or trouve.group(2)
+            return self.variables.get(nom, os.environ.get(nom, trouve.group(0)))
+        return VARIABLE.sub(valeur, texte)
 
     def chemin(self, texte, base=None):
-        for variable, valeur in (("~", self.maison), ("$HOME", self.maison), ("${HOME}", self.maison),
-                                 ("$CLAUDE_PROJECT_DIR", self.projet), ("${CLAUDE_PROJECT_DIR}", self.projet)):
-            if texte == variable or texte.startswith(variable + "/"):
-                texte = valeur + texte[len(variable):]
-                break
+        texte = self.developpe(texte)
+        if texte == "~" or texte.startswith("~/"):
+            texte = self.maison + texte[1:]
         return os.path.normpath(os.path.join(base or self.dossier, texte))
 
 
@@ -89,6 +101,7 @@ def _sans_heredoc(texte):
 
 def _commande(texte, lieu):
     texte = _sans_heredoc(texte.replace("\\\n", " ")).replace("\n", " ; ").replace("`", " ; ")
+    texte = BRANCHE_COURANTE.sub("HEAD", texte)  # "$(git branch --show-current)" : la branche courante
     try:
         lexeur = shlex.shlex(texte, posix=True, punctuation_chars=True)
         lexeur.whitespace_split = True
@@ -124,19 +137,26 @@ def _segments(mots):
 
 
 def _segment(mots, lieu):
+    if mots[0] == "export":
+        mots = mots[1:]
     i = 0
-    while i < len(mots):
-        if AFFECTATION.match(mots[i]):
-            i += 1
-        elif os.path.basename(mots[i]) in PREFIXES:
-            i += 1
-            while i < len(mots) and (mots[i].startswith("-") or mots[i][:1].isdigit()):
-                i += 1
-        else:
-            break
-    if i >= len(mots):
+    while i < len(mots) and AFFECTATION.match(mots[i]):
+        i += 1
+    if i >= len(mots):  # « DEST=main » seul : la variable vaut pour la suite de la commande
+        for mot in mots:
+            nom, _, valeur = mot.partition("=")
+            lieu.variables[nom] = lieu.developpe(valeur)
         return None
     nom, args = os.path.basename(mots[i]), mots[i + 1:]
+    if nom in PREFIXES:
+        # sudo -u root rm…, timeout -s KILL 30 git… : les options et leurs valeurs varient ; chaque commande
+        # surveillée qui suit est examinée.
+        for k, mot in enumerate(args):
+            if os.path.basename(mot) in SURVEILLES:
+                raison = _segment(args[k:], lieu)
+                if raison:
+                    return raison
+        return None
     if nom in ("cd", "pushd"):
         if not args:
             lieu.dossier = lieu.maison
@@ -170,11 +190,11 @@ def _git(args, lieu):
     if args[i] == "reset":
         return RESET if "--hard" in args[i + 1:] else None
     if args[i] == "push":
-        return _push(args[i + 1:], dossier)
+        return _push(args[i + 1:], dossier, lieu)
     return None
 
 
-def _push(args, dossier):
+def _push(args, dossier, lieu):
     positions, force, tout, i = [], False, False, 0
     while i < len(args):
         mot = args[i]
@@ -199,10 +219,13 @@ def _push(args, dossier):
         return TOUT
     # Le premier mot est le dépôt distant ; sans branche nommée, git pousse la branche courante.
     for refspec in positions[1:] or ["HEAD"]:
+        refspec = lieu.developpe(refspec)
+        if "$" in refspec:  # variable inconnue, ${B:-main}, $(…) : la cible ne se lit pas
+            return INCONNUE
         force = force or refspec.startswith("+")
         source, deux_points, cible = refspec.lstrip("+").partition(":")
         cible = cible if deux_points else source
-        if cible in ("HEAD", "@") or cible.startswith("$"):  # "$(git branch --show-current)", $BRANCHE…
+        if cible in ("HEAD", "@"):
             cible = _branche(dossier)
         if _court(cible) == PROTEGEE:
             return SUR_MAIN
