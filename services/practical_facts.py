@@ -40,6 +40,21 @@ from services.text import fold_text
 # (vie-publique.sn), Agence de la CMU (décret 2015-21). CSS et IPRES : CLEISS et presse 2025-2026 (étude d'une
 # fusion demandée en juin 2025, système d'information commun fin 2025). Campusen : calendrier 2026 (senego.com,
 # lesoleil.sn), orientation.campusen.sn. Alerte de la Direction des bourses : février 2026 (presse).
+# Vérification de fraîcheur du 01/11/2026 (pages ouvertes ce jour-là) :
+# - Fièvre jaune (sujet « sante ») : sources contradictoires, on ne tranche pas. Communiqué du ministère de l'Intégration
+#   africaine, des Affaires étrangères et des Sénégalais de l'Extérieur (« la présentation d'un carnet de vaccination
+#   n'est pas obligatoire pour accéder au territoire sénégalais »), relayé par lesoleil.sn (9 mars 2026) et par le
+#   gouvernement du Ghana (isd.gov.gh, 7 avril 2026) ; le communiqué lui-même n'a pas été trouvé en ligne. En face :
+#   gov.uk/foreign-travel-advice/senegal/entry-requirements (mise à jour du 19/10/2026), travel.gc.ca/destinations/senegal
+#   (15/10/2026) et pasteur.fr (fiche Sénégal) exigent encore le certificat à l'arrivée d'un pays à risque.
+# - Visa et passeport (sujet « visa ») : gov.uk (« without a visa for up to 3 months », passeport valable 6 mois après
+#   l'arrivée) et travel.gc.ca (pas de visa pour moins de 90 jours, passeport valable 6 mois après le départ).
+# - Carte d'identité (sujet « papiers ») : loi n° 2016-09 du 14 mars 2016, art. 3 (« valable pour une période de dix
+#   (10) ans »), texte publié sur extranet.who.int ; projet de loi n° 21/2026 (rapport de commission, vie-publique.sn,
+#   réunion du 23 septembre 2026) ; renvoi en commission le 29 septembre 2026 (lesoleil.sn).
+# - SAMU (sujet « urgences ») : sources contradictoires, repère inchangé. Le plan stratégique 2013-2017 du SAMU
+#   national (informationsanitaire.sec.gouv.sn) donne le numéro gratuit 1515 ; travel.gc.ca (15/10/2026) et gov.uk
+#   (15/10/2026) indiquent « 15 ». Police 17 et pompiers 18 : confirmés par ces deux pages.
 # Sources du sujet « premiers_secours » (relevées en octobre 2026 par recherche web ; les sites officiels n'ont pas
 # pu être ouverts en direct depuis l'environnement de travail, les textes ont été relus dans les extraits renvoyés
 # par la recherche : ne sont gardés que des repères retrouvés dans plusieurs sources, sans dose ni nom de médicament).
@@ -78,7 +93,11 @@ TOPICS = (
       "l'équivalent du pays du voyageur).")),
     ("sante", r"vaccin|fievre jaune|paludisme|palu\b|malaria|moustique|pharmac|medicament|eau du robinet|"
      r"boire l eau|tap water|\bsante\b|health|de garde",
-     ("Fièvre jaune : vaccin recommandé ; certificat exigé si l'on arrive d'un pays où la maladie circule.",
+     ("Fièvre jaune : vaccin recommandé. Certificat à l'entrée : les sources officielles se contredisent. Selon un "
+      "communiqué du ministère sénégalais des Affaires étrangères (mars 2026), le carnet de vaccination n'est pas "
+      "obligatoire pour entrer au Sénégal ; les conseils aux voyageurs du Royaume-Uni et du Canada (octobre 2026) "
+      "l'exigent encore si l'on arrive d'un pays où la maladie circule ou si l'on y a transité. À vérifier auprès "
+      "de l'ambassade du Sénégal et de la compagnie aérienne ; garder le certificat sur soi si on l'a.",
       "Paludisme : présent dans tout le pays, surtout en saison des pluies ; protection anti-moustiques et avis "
       "d'un médecin avant le départ pour un traitement préventif.",
       "Eau : préférer l'eau en bouteille ou filtrée pour un voyageur.",
@@ -306,8 +325,9 @@ TOPICS = (
      r"\bpapiers? (pour|afin de) (voyager|venir|entrer|aller|partir)|(voyager|venir|entrer|arriver) (au|en) senegal.{0,80}\bpapiers?\b|"
      r"documents? de voyage|travel documents?|entry requirements?",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
-      "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
-      "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
+      "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valable au "
+      "moins 6 mois (exigence indiquée par les conseils aux voyageurs du Royaume-Uni, après la date d'arrivée, et du "
+      "Canada, après la date de départ). Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
     # Un mois cité avec un vrai voyage (« Je pars au Sénégal en décembre », « vacances en août ») : pas « partir à la
     # retraite en janvier », ni « rendre visite à ma mère en janvier » (relecture Codex de #520).
     ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
@@ -383,7 +403,10 @@ TOPICS = (
       "2016 a été annoncé à partir du 25 septembre 2026, dans les centres d'enrôlement au Sénégal et à l'étranger. "
       "Pièces annoncées : l'ancienne carte (avec copie) et un extrait de naissance avec sa copie littérale ; retrait "
       "avec le récépissé de dépôt et l'ancienne carte. Pour une première demande ou un cas particulier, demander la "
-      "liste à jour au centre d'enrôlement ou à la Direction de l'automatisation des fichiers (DAF).",
+      "liste à jour au centre d'enrôlement ou à la Direction de l'automatisation des fichiers (DAF). Un projet de loi "
+      "n° 21/2026 permettrait de proroger à titre exceptionnel la validité des cartes : adopté en commission le 23 "
+      "septembre 2026, puis renvoyé en commission le 29 septembre 2026, aucun vote en séance n'a été trouvé lors de la "
+      "vérification du 1er novembre 2026. Prorogation et dates : à vérifier auprès de la DAF.",
       "Passeport : demande en personne (empreintes). Au Sénégal, dépôt auprès des services de police habilités ; à "
       "l'étranger, à l'ambassade ou au consulat du Sénégal, où le délai est souvent plus long car le dossier est traité "
       "à Dakar. Une carte d'identité biométrique valide est en général demandée ; en cas de perte ou de vol, déclarer "
