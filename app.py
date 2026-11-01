@@ -88,6 +88,15 @@ from services.images import (
 load_dotenv()
 
 RUNTIME_ENV = os.getenv("TERANGA_ENV", "development").strip().lower()
+# Render pose RENDER=true sur chaque service (https://render.com/docs/environment-variables). Hors mode production,
+# les protections ci-dessous (SECRET_KEY, TRUSTED_HOSTS, redirection des hôtes alias) se coupaient sans prévenir
+# (audit de sécurité du 1er novembre 2026) : sur Render, le site refuse de démarrer, et Render garde en ligne la
+# version précédente.
+if os.getenv("RENDER", "").strip().lower() == "true" and RUNTIME_ENV != "production":
+    raise RuntimeError(
+        "TERANGA_ENV=production est obligatoire sur Render (valeur actuelle : %r). Sans lui, les protections de "
+        "production sont coupées. Le régler dans Render > Environment, puis relancer le déploiement." % RUNTIME_ENV
+    )
 if RUNTIME_ENV == "production":
     _configured_secret = os.getenv("SECRET_KEY", "").strip()
     if len(_configured_secret) < 32:
