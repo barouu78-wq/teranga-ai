@@ -121,6 +121,39 @@ def test_festive_touch_on_independence_day(page, base_url):
     assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
+@pytest.mark.parametrize("hour", [11, 21])
+def test_youth_olympic_games_banner_leads_to_the_guide(page, base_url, hour):
+    """JOJ Dakar 2026 (31 octobre – 13 novembre) : la scène du haut fait la fête (confettis aux couleurs du drapeau,
+    « JOJ 2026 », sans emblème olympique) et le bandeau mène au guide /joj-dakar-2026 ; zone tactile d'au moins
+    44 px, de jour comme de nuit, sur téléphone."""
+    import datetime
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete") == "joj"
+    link = page.locator("#feteBanner a")
+    assert link.get_attribute("href") == "/joj-dakar-2026" and "JOJ" in link.text_content()
+    assert link.is_visible() and link.bounding_box()["height"] >= 44
+    decor = page.evaluate("""() => {
+      const sky = document.querySelector('.scene-sky');
+      return {bg: getComputedStyle(sky).backgroundImage, title: getComputedStyle(sky, '::before').content,
+              visible: sky.getBoundingClientRect().height > 0};
+    }""")
+    assert decor["visible"] and "radial-gradient" in decor["bg"] and "JOJ 2026" in decor["title"]
+    assert page.evaluate("document.documentElement.scrollWidth") <= 390  # aucun défilement horizontal
+    assert page.errors == []
+
+
+def test_no_games_banner_after_the_closing_day(page, base_url):
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2026, 11, 14, 11, 0))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete || ''") == ""
+    assert not page.is_visible("#feteBanner")
+
+
 @pytest.mark.parametrize("fete,symbol,hour", [("korite", "☪", 11), ("tabaski", "🐑", 21), ("magal", "🕌", 11)])
 def test_religious_festivals_have_their_own_decor_day_and_night(page, base_url, fete, symbol, hour):
     import datetime
