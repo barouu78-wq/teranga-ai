@@ -58,10 +58,12 @@ jobs:
 
       # The Claude action expects a Git repository in the workspace root.
       # Actions tierces épinglées par commit (v6, v6, v1 au 10 octobre 2026) : Dependabot propose les mises à jour.
+      # Sans jeton gardé : pip install ne voit pas le jeton d'écriture du workflow. L'action Claude récupère la
+      # branche (dépôt public) puis installe son propre jeton (src/github/operations/git-config.ts au commit épinglé).
       - name: Check out repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Set up Python

@@ -92,8 +92,8 @@ def test_truncated_or_fallback_answers_are_not_cached(monkeypatch):
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", cut_stream)
     ask = _ask_factory(app_module)
-    ask("Que visiter à Dakar ?")
-    ask("que visiter à dakar")
+    ask("Que visiter à Dakar en détail ?")
+    ask("que visiter à dakar en détail")
     assert len(calls) == 2  # rien n'a été mis en cache : le modèle est rappelé
 
 
@@ -122,8 +122,8 @@ def test_second_identical_question_is_served_from_cache(monkeypatch):
         events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line]
         return "".join(e.get("d", "") for e in events), events
 
-    first, _ = ask("Que visiter à Dakar ?")
-    second, events = ask("que visiter à dakar")
+    first, _ = ask("Que visiter à Dakar en détail ?")
+    second, events = ask("que visiter à dakar en détail")
     assert first == second == REPLY
     assert len(calls) == 1
     assert events[-1] == {"done": True} and any("share" in e for e in events)
@@ -202,8 +202,8 @@ def test_first_question_from_the_site_is_served_from_cache(monkeypatch):
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", fake_stream)
     ask = _site_client(app_module, "203.0.113.151")
-    first, _ = ask("Que visiter à Dakar ?")
-    second, events = ask("que visiter à dakar")
+    first, _ = ask("Que visiter à Dakar en détail ?")
+    second, events = ask("que visiter à dakar en détail")
     assert first == second == REPLY
     assert len(calls) == 1  # le second visiteur n'a coûté aucun appel au modèle
     assert events[-1] == {"done": True}
@@ -242,8 +242,8 @@ def test_truncated_json_answer_is_not_cached(monkeypatch):
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", cut_reply)
     ask = _site_client(app_module, "203.0.113.153")
-    assert ask("Que visiter à Dakar ?", json_mode=True)["reply"].endswith("et le")
-    ask("que visiter à dakar", json_mode=True)
+    assert ask("Que visiter à Dakar en détail ?", json_mode=True)["reply"].endswith("et le")
+    ask("que visiter à dakar en détail", json_mode=True)
     assert len(calls) == 2
 
 
@@ -258,8 +258,8 @@ def test_complete_json_answer_is_cached(monkeypatch):
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", full_reply)
     ask = _site_client(app_module, "203.0.113.154")
-    first = ask("Que visiter à Dakar ?", json_mode=True)
-    second = ask("que visiter à dakar", json_mode=True)
+    first = ask("Que visiter à Dakar en détail ?", json_mode=True)
+    second = ask("que visiter à dakar en détail", json_mode=True)
     assert first["reply"] == second["reply"] == REPLY
     assert len(calls) == 1
 

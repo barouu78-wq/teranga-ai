@@ -7,7 +7,8 @@
   // Dates des fêtes religieuses : estimations (calendrier lunaire), à ajuster
   // selon l'annonce officielle. Format : [mois, jour] de début, durée en jours.
   var FETES={
-    2026:{korite:[3,20,2],tabaski:[5,27,2],magal:[8,2,2]},
+    // joj : JOJ Dakar 2026, du 31 octobre au 13 novembre inclus (14 jours).
+    2026:{korite:[3,20,2],tabaski:[5,27,2],magal:[8,2,2],joj:[10,31,14]},
     2027:{korite:[3,10,2],tabaski:[5,17,2],magal:[7,23,2]}
   };
   // Les anciennes versions enregistraient « light » ou « dark » au moindre

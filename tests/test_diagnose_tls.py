@@ -59,7 +59,8 @@ def test_parse_s_client_reports_unreachable_servers_without_inventing_a_verdict(
 
 def test_describe_cert_flags_a_self_signed_default_proxy_certificate(self_signed_pem):
     info = d.describe_cert(self_signed_pem)
-    assert info["sujet"] == "CN = TRAEFIK DEFAULT CERT" and info["emetteur"] == info["sujet"]
+    # OpenSSL 3.0 écrit « CN = … », les versions plus récentes « CN=… » : on compare le nom, pas les espaces.
+    assert d._norm(info["sujet"]) == d._norm("CN = TRAEFIK DEFAULT CERT") and info["emetteur"] == info["sujet"]
     assert info["auto_signe"] is True and info["certificat_par_defaut"] is True
     assert info["expire"] is False and info["fin"] and len(info["sha256"]) == 95  # 32 octets en hexadécimal séparés par ':'
 

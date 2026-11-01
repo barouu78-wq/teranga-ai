@@ -331,12 +331,25 @@ TOPICS = (
      r"car rental|transport|se deplacer|get around|aller a|comment aller|how to get",
      ("AIBD (aéroport Blaise Diagne) : à Diass, environ 45 km du centre de Dakar par l'autoroute à péage.",
       "Taxis sans compteur : fixer le prix avant de monter ; applications Yango ou Heetch avec prix affiché.",
-      "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio (vérifier si le prolongement vers "
-      "l'aéroport est en service) ; bus Dakar Dem Dikk.",
+      "Dakar : BRT (bus rapide) centre ↔ Guédiawaye ; TER Dakar ↔ Diamniadio ↔ aéroport AIBD (section "
+      "Diamniadio–AIBD en service depuis le 28 septembre 2026 selon l'APS ; horaires, gares et tarifs à vérifier "
+      "auprès de l'exploitant du TER) ; bus Dakar Dem Dikk.",
       "Entre les villes : sept-places depuis la gare routière des Baux Maraîchers (Pikine), bus, ou voiture avec "
       "chauffeur. Casamance : avion vers Ziguinchor ou Cap Skirring, bateau de nuit Dakar–Ziguinchor (environ 15 h), "
       "ou route par la Gambie (pont de Farafenni).",
       "Gorée : chaloupe depuis la gare maritime de Dakar, environ 20 minutes.")),
+    # JOJ Dakar 2026 : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    # « Olympique » seul ne déclenche pas (l'Olympique de Marseille) ; « Dakar 2026 » seulement accolé.
+    ("joj", r"\bjoj\b|jeux olympiques|olympiques? de la jeunesse|youth olympic|\bdakar 2026\b",
+     ("Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026 : du 31 octobre au 13 novembre 2026, premiers JOJ organisés en "
+      "Afrique, sur trois sites : Dakar, Diamniadio et Saly.",
+      "Dakar : la Corniche Ouest accueille les festivités et les animations pour les jeunes ; natation à la piscine "
+      "olympique de la Tour de l'Œuf, athlétisme au stade Iba Mar Diop.",
+      "Diamniadio : village olympique ; cérémonie d'ouverture au stade Abdoulaye Wade ; sports en salle (judo, escrime, "
+      "gymnastique, tennis de table…) au Dakar Arena et au centre des expositions. Depuis Dakar, le TER va à Diamniadio.",
+      "Saly (Petite Côte) : sports de plage et nautiques sur la plage, comme le beach-volley, la voile et le triathlon.",
+      "Programme du jour, billets et conditions d'accès : site officiel olympics.com (rubrique Dakar 2026) ; aucun prix ni "
+      "horaire à inventer. Teranga AI n'est pas un site officiel des JOJ ; guide : teranga-ai.fr/joj-dakar-2026.")),
     # Pas un « terrain de foot » ni « island » (qui contient « land »).
     ("foncier", r"terrain(?! (de|d) (foot|football|basket|basketball|sport|tennis|golf|jeux?|camping|rugby|handball|volley))|"
      r"parcelle|titre foncier|acheter (une |un )?(maison|appartement|terrain)|construire (une |ma |sa |notre )?maison|"
