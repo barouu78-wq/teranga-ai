@@ -69,8 +69,16 @@ un contrôle qui n'a pas tourné.
 | `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |
 | `verifier-avant-d-annoncer` | avant de dire « fini », « vert » ou « en ligne » : la preuve fraîche |
 | `recevoir-une-relecture` | relecture ou commentaire sur une PR : vérifier chaque remarque avant d'agir |
+| `hallmark` | nouvelle page, ou « /hallmark audit <page> » : design qui n'a pas l'air généré (règles « Floor », audit) |
+| `ponytail` | toute tâche de code : le plus petit changement complet, réponse lisible en une fois |
+| `ponytail-review` | relire une PR ou un changement, chaque remarque expliquée simplement |
+| `ponytail-audit` | audit de tout le dépôt (bugs, failles, charge, code inutile), sans rien changer |
+| `ponytail-debt` | liste des raccourcis notés `shortcut:` dans le code |
 
-Les quatre derniers sont adaptés de Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`).
+`deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
+Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
+génération d'images) et les quatre `ponytail` sont repris de GitHub sous licence MIT (`.claude/skills/LICENCE-hallmark.txt`,
+`.claude/skills/LICENCE-ponytail.txt`) ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
