@@ -600,6 +600,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* Fond : un simple halo doré, sans éléments décoratifs flottants. */
 .sky{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 420px at 85% -140px,var(--gold-soft),transparent 70%)}
+/* Mode sombre moins « vide » (retour du propriétaire du 1er novembre 2026) : un halo doré plus présent et une lueur
+   verte du Sénégal à gauche, sans changer les couleurs du texte ni des boutons. */
+body[data-theme="dark"] .sky{background:radial-gradient(900px 460px at 85% -120px,rgba(232,176,75,.2),transparent 70%),
+  radial-gradient(640px 520px at -12% 38%,rgba(31,148,97,.16),transparent 70%)}
 .sun,.baobab{display:none}
 
 .app{position:relative;z-index:1;height:var(--vvh,100%);min-height:0;display:flex;flex-direction:column;max-width:1120px;margin:0 auto}
@@ -1004,17 +1008,60 @@ body[data-fete="joj"] .scene-sky::before{content:"JOJ 2026";position:absolute;le
   font:800 30px/1 system-ui,sans-serif;letter-spacing:.06em;color:#0f6a43;text-shadow:0 2px 0 #fff6dc}
 body[data-theme="dark"][data-fete="joj"] .scene-sky::before{color:#f6d36b;text-shadow:0 2px 0 #0b1a33}
 @media(max-width:720px){body[data-fete="joj"] .scene-sky::before{left:14px;top:10px;font-size:22px}}
-body[data-fete="joj"] .fete-banner{padding:0;background:#0f6a43;color:#fff6dc}
-body[data-fete="joj"] .fete-banner a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;color:inherit;text-decoration:underline;text-underline-offset:3px}
-/* Écran bas (téléphone avec les barres du navigateur) : la scène est cachée les jours de fête pour garder la question
-   dans le premier écran ; comme pour la Korité, une bande de fête la remplace : confettis et « JOJ 2026 ». */
+/* Carte JOJ (retour du propriétaire du 1er novembre 2026 sur l'accueil JOJ : « ça fait un peu sombre et vide »).
+   Elle remplace le drapeau seul et le petit bandeau ; sur téléphone, elle remplace aussi la scène. Vert du Sénégal,
+   confettis vert, jaune, rouge, le jour des Jeux et les trois sites ; toute la carte mène au guide. */
+.joj-card{display:none}
+body[data-fete="joj"] .hero-signature,body[data-fete="joj"] .fete-banner{display:none}
+body[data-fete="joj"] .joj-card{order:0;position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+  max-width:640px;overflow:hidden;padding:18px 20px 22px;border-radius:22px;color:#fff6dc;text-decoration:none;
+  background:radial-gradient(120% 160% at 100% 0%,#1f9461 0%,#0f6a43 48%,#0a4d31 100%);
+  /* Ombre vers le bas seulement : elle ne doit pas teinter la marge de la page (test_sombre_automatique). */
+  box-shadow:0 16px 22px -16px rgba(15,106,67,.7),inset 0 0 0 1px rgba(255,246,220,.14)}
+/* Les confettis restent dans le coin en haut à droite et s'effacent vers le texte (lisibilité). */
+body[data-fete="joj"] .joj-card::before{content:"";position:absolute;inset:0 0 0 56%;pointer-events:none;background:
+  radial-gradient(circle,#f0c63d 0 3px,transparent 4px) 6px 10px/46px 38px,
+  radial-gradient(circle,#ff6b5e 0 3px,transparent 4px) 28px 24px/52px 44px,
+  radial-gradient(circle,#b8f0cf 0 2.5px,transparent 3.5px) 16px 4px/34px 30px;
+  -webkit-mask:radial-gradient(120% 110% at 100% 0%,#000 30%,transparent 78%);mask:radial-gradient(120% 110% at 100% 0%,#000 30%,transparent 78%)}
+body[data-fete="joj"] .joj-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;
+  background:linear-gradient(90deg,#2fa36b 0 33.3%,#f0c63d 33.3% 66.6%,#e0533f 66.6%)}
+/* Au-dessus des confettis, même quand .joj-top est « display:contents » (carte compacte). */
+.joj-kicker,.joj-day,.joj-title,.joj-where,.joj-cta{position:relative}
+.joj-kicker,.joj-where{text-shadow:0 1px 3px rgba(6,40,25,.9)}
+.joj-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.joj-kicker{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#cfe9d9}
+.joj-day{flex:none;padding:4px 10px;border-radius:999px;background:#f0c63d;color:#14110d;font-size:12px;font-weight:800;white-space:nowrap}
+.joj-day:empty{display:none}
+.joj-title{font:700 clamp(34px,8vw,44px)/1 var(--font-display);letter-spacing:-.02em;color:#f6d36b;text-shadow:0 2px 0 rgba(10,77,49,.6)}
+.joj-where{font-size:14.5px;color:#e8f3ec}
+.joj-cta{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:8px;padding:0 18px;border-radius:999px;
+  background:#fff6dc;color:#0a4d31;font-weight:800;font-size:15px;box-shadow:0 6px 16px -8px rgba(0,0,0,.5)}
+.joj-cta svg{width:18px;height:18px}
+body[data-fete="joj"] .joj-card:hover .joj-cta{background:#f6d36b}
+body[data-fete="joj"] .joj-card:focus-visible{outline:3px solid var(--link);outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){.joj-cta{transition:background .15s ease}}
+@media(forced-colors:active){body[data-fete="joj"] .joj-card{border:2px solid CanvasText}}
+/* Ordinateur : la scène de fête reste ; la carte tient sur une ligne en dessous, pour garder le titre visible. */
+@media(min-width:721px){
+  body[data-fete="joj"] .joj-card{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 16px;max-width:none;padding:14px 16px 20px 22px}
+  body[data-fete="joj"] .joj-kicker{display:none}
+  body[data-fete="joj"] .joj-title{order:1;font-size:30px}
+  body[data-fete="joj"] .joj-top{order:2}
+  body[data-fete="joj"] .joj-where{order:3}
+  body[data-fete="joj"] .joj-cta{order:4;margin:0 0 0 auto}
+}
+/* Téléphone : la carte remplace la scène (même fête, plus de place pour la question). */
+@media(max-width:720px){body[data-fete="joj"] .hero-scene{display:none}}
+/* Écran bas (téléphone avec les barres du navigateur) : une seule ligne, « Dakar 2026 », le jour, une flèche. */
 @media(max-width:720px) and (max-height:700px){
-  body[data-fete="joj"] .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
-    radial-gradient(circle,#f0c63d 0 2.5px,transparent 3.5px) 6px 8px/34px 22px,
-    radial-gradient(circle,#ff6b5e 0 2.5px,transparent 3.5px) 20px 16px/42px 26px,
-    linear-gradient(90deg,#0b4a2e,#0f6a43 50%,#0b4a2e)}
-  body[data-fete="joj"] .hero-signature::after{content:"JOJ 2026";position:absolute;right:20px;top:50%;transform:translateY(-50%);
-    font:800 22px/1 system-ui,sans-serif;letter-spacing:.06em;color:#f6d36b;text-shadow:0 2px 0 #0b1a33}
+  body[data-fete="joj"] .joj-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px;max-width:none;
+    padding:8px 8px 12px 16px;border-radius:18px}
+  body[data-fete="joj"] .joj-top{display:contents}
+  body[data-fete="joj"] .joj-kicker,body[data-fete="joj"] .joj-where,body[data-fete="joj"] #jojCta{display:none}
+  body[data-fete="joj"] .joj-title{order:1;font-size:26px}
+  body[data-fete="joj"] .joj-day{order:2;justify-self:start}
+  body[data-fete="joj"] .joj-cta{order:3;justify-content:center;width:44px;margin:0;padding:0}
 }
 /* Grand Magal de Touba : vert de Touba, blanc et la grande mosquée. */
 body[data-fete="magal"] .hero-signature{background:
@@ -1120,6 +1167,7 @@ body:not([data-fete]) .hero-signature{display:none}
   <div id="hero" class="hero">
     <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-logo"><svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
+    <a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
     <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.</p>

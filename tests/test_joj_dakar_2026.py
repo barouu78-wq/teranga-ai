@@ -103,6 +103,20 @@ def test_the_guide_page_is_served_with_the_official_link_and_the_notice():
     assert "https://teranga-ai.fr/joj-dakar-2026" in sitemap
 
 
+def test_the_guide_page_has_its_festive_header_and_key_facts():
+    """Retour du propriétaire du 1er novembre 2026 (« sombre et vide ») : la page du guide a un en-tête de fête et
+    trois repères en tête (dates, sites, première en Afrique), tirés des mêmes faits officiels. Les autres pages
+    gardent leur présentation."""
+    client = _app()
+    html = client.get("/joj-dakar-2026", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert '<article class="page-joj">' in html
+    assert 'class="joj-facts"' in html
+    for fact in ("31 oct. → 13 nov.", "14 jours", "Dakar, Diamniadio, Saly", "en Afrique"):
+        assert fact in html, fact
+    other = client.get("/visiter-dakar", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert "page-joj" not in other and "joj-facts" not in other
+
+
 def test_no_price_or_time_is_given_on_the_page():
     import re
 
