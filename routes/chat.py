@@ -50,6 +50,18 @@ def register_chat_route(app, deps):
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
     quick_answer = deps.get("quick_answer")  # réponses prêtes sans le modèle (services/quick_answers.py)
     coverage_log = deps.get("coverage_log")  # compteurs anonymes par thème (services/coverage_log.py)
+    ai_budget = deps.get("ai_budget")  # plafond d'appels payants par jour (services/ai_budget.py)
+
+    def knowledge_reply(payload):
+        """Réponse de la base vérifiée, sans aucun appel payant ; None seulement si elle-même échoue."""
+        try:
+            return knowledge_fallback(
+                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True,
+                context=payload.get("contextual_query", ""),  # une suite de conversation garde le sujet du fil
+            )
+        except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
+            logger.exception("chat_fallback")
+            return None
 
     def fallback_for(payload):
         """Réponse de secours quand l'IA est en panne : Claude s'il est configuré (et
@@ -70,14 +82,7 @@ def register_chat_route(app, deps):
                     return clean_answer(reply)
             except Exception:  # noqa: BLE001 - on passe au secours suivant
                 logger.exception("chat_backup_ai")
-        try:
-            return knowledge_fallback(
-                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True,
-                context=payload.get("contextual_query", ""),  # une suite de conversation garde le sujet du fil
-            )
-        except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
-            logger.exception("chat_fallback")
-            return None
+        return knowledge_reply(payload)
 
     def places_with_booking(message, language):
         """Fiches citées ; la première porte ses liens « Réserver » (affiliés) s'ils sont configurés."""
@@ -203,6 +208,25 @@ def register_chat_route(app, deps):
         trace.ready = bool(ready)
         if cached:
             logger.info("chat_cache_hit")
+        elif ai_budget is not None and not ai_budget.take():
+            # Plafond d'appels payants du jour atteint : la base vérifiée répond, sans IA ni recherche web.
+            trace.status = "secours"
+            language = payload.get("language", "fr")
+            reply = knowledge_reply(payload)
+            if not reply:
+                return jsonify({"error": public_error(RuntimeError("plafond"), language)}), 503, {"Retry-After": str(ai_budget.retry_after())}
+            places = places_with_booking(payload.get("message", ""), language)
+            if request.headers.get("X-Teranga-Mode", "").lower() == "json":
+                return jsonify({"reply": reply, "degraded": True, "places": places})
+
+            def generate_capped():
+                first_word()
+                yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                if places:
+                    yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
+                yield json.dumps({"degraded": True, "done": True}) + "\n"
+
+            return Response(stream_with_context(generate_capped()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
         # La recherche externe n'est déclenchée qu'en cas de cache manquant.
         # En cas d'indisponibilité, le chat conserve son comportement habituel.

@@ -209,7 +209,7 @@ SEO_PAGES = {
         ],
         # visiter-dakar et assistant-ia-dakar n'étaient liées par aucune page : elles ne sont
         # plus atteignables que par le plan du site tant qu'elles ne figurent pas ici.
-        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-dakar", "Visiter Dakar"), ("assistant-ia-dakar", "Assistant IA Dakar"), ("senegal", "Guide du Sénégal")]
+        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-dakar", "Visiter Dakar"), ("assistant-ia-dakar", "Assistant IA Dakar"), ("senegal", "Guide du Sénégal"), ("joj-dakar-2026", "JOJ Dakar 2026")]
     },
     "pour-les-entreprises": {
         "title": "Teranga AI pour les entreprises au Sénégal et en France",
@@ -328,6 +328,26 @@ SEO_PAGES = {
             ("Peut-on préparer son trajet avec Teranga AI ?", "Oui. Indiquez votre heure d'arrivée et votre destination finale pour obtenir des repères à vérifier avant le départ.")
         ],
         "related": [("transport-dakar", "Transport Dakar"), ("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar")]
+    },
+    # JOJ Dakar 2026 : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    # Aucun logo, anneau ni mascotte (marques du CIO) ; aucun prix ni horaire : le programme est sur le site officiel.
+    "joj-dakar-2026": {
+        "title": "JOJ Dakar 2026 : dates, sites et guide pratique | Teranga AI",
+        "description": "JOJ Dakar 2026, du 31 octobre au 13 novembre : les sites de Dakar, Diamniadio et Saly, comment s'y rendre et où trouver le programme officiel.",
+        "h1": "JOJ Dakar 2026 : le guide pratique",
+        "intro": "Les Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026 ont lieu du 31 octobre au 13 novembre 2026. Ce sont les premiers Jeux Olympiques de la Jeunesse organisés en Afrique, sur trois sites : Dakar, Diamniadio et Saly.",
+        "sections": [
+            ("Dakar", "La Corniche Ouest accueille les festivités et les animations pour les jeunes. La natation se dispute à la piscine olympique de la Tour de l'Œuf, l'athlétisme au stade Iba Mar Diop."),
+            ("Diamniadio", "Diamniadio accueille le village olympique et la cérémonie d'ouverture, au stade Abdoulaye Wade. Les sports en salle (judo, escrime, gymnastique, tennis de table…) ont lieu au Dakar Arena et au centre des expositions. Depuis Dakar, le TER va jusqu'à Diamniadio."),
+            ("Saly", "Sur la Petite Côte, la plage de Saly accueille les sports de plage et les sports nautiques, comme le beach-volley, la voile et le triathlon."),
+            ("Programme et billets", "Le programme du jour, les billets et les conditions d'accès sont sur le <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">site officiel des JOJ Dakar 2026</a>. Teranga AI ne vend pas de billets." % "https://www.olympics.com/en/dakar-2026"),
+            ("Vos trajets avec Teranga AI", "Demandez à Teranga AI comment rejoindre un site depuis votre quartier ou l'aéroport AIBD, et que visiter entre deux épreuves. Prévoyez de la marge pour vos trajets."),
+        ],
+        "faq": [
+            ("Quand ont lieu les JOJ Dakar 2026 ?", "Du 31 octobre au 13 novembre 2026, à Dakar, Diamniadio et Saly."),
+            ("Teranga AI est-il le site officiel des JOJ ?", "Non. Teranga AI n'est pas un site officiel des JOJ : il n'est lié ni au Comité international olympique ni au comité d'organisation. Le programme et les billets sont sur le site officiel."),
+        ],
+        "related": [("transport-dakar", "Transport Dakar"), ("aibd-dakar", "AIBD → Dakar"), ("visiter-dakar", "Visiter Dakar"), ("calendrier-fetes-senegal", "Calendrier des fêtes")]
     },
     "visiter-dakar": {
         "title": "Visiter Dakar : que voir et que faire | Teranga AI",
@@ -497,11 +517,12 @@ SEO_PAGE_GUIDES = {
     "transport-senegal": [
         ("Depuis l'aéroport AIBD", "L'aéroport international Blaise Diagne est à Diass, à environ 45 km du centre de "
          "Dakar, relié par l'autoroute à péage. Options : taxi (prix fixé avant de monter), navettes, voiture avec "
-         "chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; son prolongement vers l'aéroport est prévu : "
-         'vérifiez s\'il est en service. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
+         "chauffeur réservée à l'avance. Le TER relie Dakar à l'aéroport via Diamniadio : la section Diamniadio–AIBD "
+         "est en service depuis le 28 septembre 2026 (APS). Horaires, gares et tarifs : vérifiez auprès de "
+         'l\'exploitant du TER. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
         ("Se déplacer à Dakar", "Les taxis n'ont pas de compteur : on fixe le prix avant de partir. Les applications "
          "comme Yango ou Heetch affichent un prix à l'avance. Le BRT (bus rapide sur voie réservée) relie le centre à "
-         "Guédiawaye, le TER dessert la banlieue jusqu'à Diamniadio, et les bus Dakar Dem Dikk couvrent la ville. "
+         "Guédiawaye, le TER dessert la banlieue, Diamniadio et l'aéroport AIBD, et les bus Dakar Dem Dikk couvrent la ville. "
          "Évitez les heures de pointe sur la corniche et l'autoroute."),
         ("Entre les villes", "Les « sept-places » (taxis-brousse) partent quand ils sont pleins, depuis la gare routière "
          "des Baux Maraîchers à Pikine pour Dakar ; ils sont rapides mais serrés. Les bus et cars sont moins chers et plus "
@@ -681,6 +702,12 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         related_html = '<span class="related-label">Voir aussi :</span>%s<a href="/explorer">Explorer</a><a href="/lieux">Lieux</a>' % related
     if slug in PARTNER_SLUGS:
         source_link = ""
+    elif slug == "joj-dakar-2026":
+        source_link = (
+            '<p class="source">Source : <a href="https://www.olympics.com/en/dakar-2026" target="_blank" '
+            'rel="noopener noreferrer">site officiel des JOJ Dakar 2026</a>, relevé le 31 octobre 2026. '
+            "Teranga AI n'est pas un site officiel des JOJ.</p>"
+        )
     elif slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '

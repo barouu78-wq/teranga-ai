@@ -63,6 +63,7 @@ un contrôle qui n'a pas tourné.
 | `carte-du-code` | carte du code (graphify, local, sans IA) avant de toucher un endroit mal connu ; jamais `graphify install` |
 | `faire-une-video` | vidéo courte (Reels, TikTok, présentation) avec les vrais écrans du site (`scripts/video/`) |
 | `video-reponse` | vidéo « question → vraie réponse de Teranga » (style Nuit dorée) avec une réponse prête capturée (`scripts/video/reponses.py`) |
+| `kit-de-la-semaine` | chaque lundi, ou « quoi poster ? » : brouillons marketing → textes prêts à copier, par jour et par réseau, faits et liens vérifiés |
 | `conseil-hebdo` | chaque lundi, ou « où en est le projet » : réunion de l'entreprise d'agents (`docs/EQUIPE-AGENTS.md`) |
 | `deboguer-methodiquement` | test rouge, bug, alerte : trouver la cause avant de corriger |
 | `tester-d-abord` | nouvelle fonction ou correction : le test d'abord, vu rouge, puis vert |
@@ -97,5 +98,6 @@ Obligatoires : `OPENAI_API_KEY`, `SECRET_KEY` (≥ 32 caractères en production)
 Utiles : `REDIS_URL`, `SITE_URL`, `CONTACT_EMAIL`, `PARTNER_WHATSAPP`, `STATS_TOKEN`,
 `GOOGLE_SITE_VERIFICATION`, `GETYOURGUIDE_PARTNER_ID`, `BOOKING_AID`, `TAXI_PARTNER_URL`,
 `ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`.
+Plafond de dépense IA : `AI_PLAFOND_JOUR` (requêtes vers l'IA par jour pour tout le site : chat, planificateur, voix ; défaut 500 ; au-delà, la base vérifiée répond jusqu'à minuit ; un secours après une panne du fournisseur peut faire un second appel pour la même requête).
 Modèles OpenAI (vide ou invalide = défaut ; lus par `services/model_params.py`) : `OPENAI_MODEL` (défaut `gpt-5.6-luna`), `OPENAI_COMPLEX_MODEL` (défaut `gpt-5.6-sol`), `OPENAI_TRIP_MODEL` (planificateur, sans défaut).
 Les tests n'ont besoin d'aucune vraie clé (`OPENAI_API_KEY=test-key` suffit).

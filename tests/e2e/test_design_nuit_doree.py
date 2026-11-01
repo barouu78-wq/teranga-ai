@@ -25,7 +25,12 @@ MEASURE = """() => {
 
 
 def open_home(page, base_url, theme, size=(390, 844), query=""):
+    import datetime
+
     page.set_viewport_size({"width": size[0], "height": size[1]})
+    # Un jour sans fête : sinon, le jour d'une fête (JOJ du 31 octobre au 13 novembre 2026…), le cas « sans fête »
+    # en aurait une. Les fêtes se testent avec ?fete=…
+    page.clock.install(time=datetime.datetime(2026, 10, 5, 11, 0))
     page.add_init_script(
         "try{localStorage.setItem('teranga-theme-v','2');localStorage.setItem('teranga-theme','%s')}catch(e){}" % theme)
     page.goto(base_url + "/" + query)
@@ -49,7 +54,7 @@ def test_banner_logo_and_baobab_are_drawn_in_both_themes(page, base_url, theme, 
     assert page.errors == []
 
 
-@pytest.mark.parametrize("fete", ["", "korite"])
+@pytest.mark.parametrize("fete", ["", "korite", "joj"])
 @pytest.mark.parametrize("size", SCREENS)
 def test_question_box_stays_in_the_first_screen(page, base_url, size, fete):
     open_home(page, base_url, "light", size, f"?fete={fete}" if fete else "")
