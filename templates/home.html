@@ -1006,6 +1006,16 @@ body[data-theme="dark"][data-fete="joj"] .scene-sky::before{color:#f6d36b;text-s
 @media(max-width:720px){body[data-fete="joj"] .scene-sky::before{left:14px;top:10px;font-size:22px}}
 body[data-fete="joj"] .fete-banner{padding:0;background:#0f6a43;color:#fff6dc}
 body[data-fete="joj"] .fete-banner a{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;color:inherit;text-decoration:underline;text-underline-offset:3px}
+/* Écran bas (téléphone avec les barres du navigateur) : la scène est cachée les jours de fête pour garder la question
+   dans le premier écran ; comme pour la Korité, une bande de fête la remplace : confettis et « JOJ 2026 ». */
+@media(max-width:720px) and (max-height:700px){
+  body[data-fete="joj"] .hero-signature{height:44px;margin:0 -20px;padding:0 20px;background:
+    radial-gradient(circle,#f0c63d 0 2.5px,transparent 3.5px) 6px 8px/34px 22px,
+    radial-gradient(circle,#ff6b5e 0 2.5px,transparent 3.5px) 20px 16px/42px 26px,
+    linear-gradient(90deg,#0b4a2e,#0f6a43 50%,#0b4a2e)}
+  body[data-fete="joj"] .hero-signature::after{content:"JOJ 2026";position:absolute;right:20px;top:50%;transform:translateY(-50%);
+    font:800 22px/1 system-ui,sans-serif;letter-spacing:.06em;color:#f6d36b;text-shadow:0 2px 0 #0b1a33}
+}
 /* Grand Magal de Touba : vert de Touba, blanc et la grande mosquée. */
 body[data-fete="magal"] .hero-signature{background:
   radial-gradient(circle at 12px 12px,rgba(255,255,255,.85) 2px,transparent 3px) 0 0/24px 24px,

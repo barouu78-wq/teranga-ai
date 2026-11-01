@@ -365,9 +365,9 @@ const THEME_LABELS={
 };
 const FETE_TEXT={
   fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !',
-      joj:'JOJ Dakar 2026, du 31 octobre au 13 novembre : le guide pratique'},
+      joj:'JOJ Dakar 2026 : le guide pratique'},
   en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!',
-      joj:'Dakar 2026 Youth Olympic Games, 31 Oct – 13 Nov: practical guide (in French)'}
+      joj:'Dakar 2026 Youth Olympics: guide (in French)'}
 };
 // Un événement avec sa page : le bandeau devient un lien (JOJ Dakar 2026).
 const FETE_LINK={joj:'/joj-dakar-2026'};

@@ -3,5 +3,5 @@ pytest>=9.1.1
 pytest-cov>=7.1.0
 # Contrôles lancés par le CI et exigés avant chaque PR (voir AGENTS.md) : sans eux, `ruff` et `bandit`
 # sont « command not found » dans un environnement neuf (constaté dans le pont Claude, 9 octobre 2026).
-ruff>=0.6
+ruff>=0.17.2
 bandit>=1.9.4
