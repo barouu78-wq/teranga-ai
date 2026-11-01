@@ -14,6 +14,11 @@ from .test_clicks import PLAN, _fill_planner, ask, stream
 PROFILES = ["general", "tourist", "resident", "diaspora", "merchant"]  # « Tout le Sénégal » par défaut
 
 
+# Les profils arrivent en glissant (animations, PR #566) : les tailles se mesurent une fois les animations finies.
+ANIMATIONS_FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+  .every((a) => a.playState === 'finished')"""
+
+
 def _chat_recorder(page, base_url, answer="Réponse du profil."):
     bodies = []
 
@@ -113,6 +118,7 @@ def test_profile_buttons_are_comfortable_to_tap_on_a_phone(page, base_url):
     """Sur téléphone, chaque profil doit rester visible, atteignable et assez grand (deux lignes depuis le 5e profil)."""
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(base_url + "/")
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)  # mesures sur la mise en page finale, pas pendant l'arrivée
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")  # la page ne défile pas de côté
     for audience in PROFILES:
         button = page.locator(f'.audience-btn[data-audience="{audience}"]')
