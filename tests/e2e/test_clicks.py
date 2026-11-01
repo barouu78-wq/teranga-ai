@@ -121,60 +121,98 @@ def test_festive_touch_on_independence_day(page, base_url):
     assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
+JOJ_CARD = """() => {
+  const card = document.getElementById('jojCard'), cta = card.querySelector('.joj-cta'), input = document.getElementById('heroInput');
+  const box = card.getBoundingClientRect();
+  return {href: card.getAttribute('href'), label: card.getAttribute('aria-label') || '', text: card.textContent,
+          day: document.getElementById('jojDay').textContent, bg: getComputedStyle(card).backgroundImage,
+          height: box.height, cta: cta.getBoundingClientRect().height, ctaWidth: cta.getBoundingClientRect().width,
+          scene: document.querySelector('.hero-scene').getBoundingClientRect().height,
+          flag: document.querySelector('.hero-signature').getBoundingClientRect().height,
+          banner: document.getElementById('feteBanner').getBoundingClientRect().height,
+          input: input.getBoundingClientRect().bottom, stage: document.getElementById('stage').getBoundingClientRect().bottom,
+          scrollWidth: document.documentElement.scrollWidth};
+}"""
+
+
 @pytest.mark.parametrize("hour", [11, 21])
-def test_youth_olympic_games_banner_leads_to_the_guide(page, base_url, hour):
-    """JOJ Dakar 2026 (31 octobre – 13 novembre) : la scène du haut fait la fête (confettis aux couleurs du drapeau,
-    « JOJ 2026 », sans emblème olympique) et le bandeau mène au guide /joj-dakar-2026 ; zone tactile d'au moins
-    44 px, de jour comme de nuit, sur téléphone."""
+def test_youth_olympic_games_card_leads_to_the_guide(page, base_url, hour):
+    """JOJ Dakar 2026 (31 octobre – 13 novembre). Retour du propriétaire du 1er novembre 2026 sur l'accueil JOJ
+    (« ça fait un peu sombre et vide ») : sur téléphone, une carte de fête (vert du Sénégal, confettis, sans emblème
+    olympique) remplace la scène, le drapeau seul et le petit bandeau. Elle dit quel jour des Jeux on est, nomme les
+    trois sites et mène au guide /joj-dakar-2026 ; zone tactile d'au moins 44 px, de jour comme de nuit."""
     import datetime
 
     page.set_viewport_size({"width": 390, "height": 844})
     page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
     page.goto(base_url + "/")
     assert page.evaluate("document.body.dataset.fete") == "joj"
-    link = page.locator("#feteBanner a")
-    assert link.get_attribute("href") == "/joj-dakar-2026" and "JOJ" in link.text_content()
-    assert link.is_visible() and link.bounding_box()["height"] >= 44
-    decor = page.evaluate("""() => {
-      const sky = document.querySelector('.scene-sky');
-      return {bg: getComputedStyle(sky).backgroundImage, title: getComputedStyle(sky, '::before').content,
-              visible: sky.getBoundingClientRect().height > 0};
-    }""")
-    assert decor["visible"] and "radial-gradient" in decor["bg"] and "JOJ 2026" in decor["title"]
-    assert page.evaluate("document.documentElement.scrollWidth") <= 390  # aucun défilement horizontal
+    card = page.evaluate(JOJ_CARD)
+    assert card["href"] == "/joj-dakar-2026" and "JOJ" in card["label"], card
+    assert "Dakar 2026" in card["text"] and "Diamniadio" in card["text"] and "Saly" in card["text"], card
+    assert card["day"] == "Jour 3 sur 14", card  # 2 novembre : troisième jour des Jeux
+    assert "radial-gradient" in card["bg"] and card["cta"] >= 44, card
+    assert card["scene"] == 0 and card["flag"] == 0 and card["banner"] == 0, card  # plus de drapeau seul ni de bandeau
+    assert card["input"] <= card["stage"], card  # la question reste dans le premier écran
+    assert card["scrollWidth"] <= 390, card  # aucun défilement horizontal
+    page.click("#jojCard")
+    page.wait_for_url("**/joj-dakar-2026")
     assert page.errors == []
 
 
 @pytest.mark.parametrize("hour", [11, 21])
 @pytest.mark.parametrize("size", [(390, 664), (360, 560)])
-def test_games_band_replaces_the_scene_on_a_low_phone_screen(page, base_url, hour, size):
-    """iPhone avec les barres de Safari (capture du propriétaire du 1er novembre 2026) : la scène est cachée les jours
-    de fête pour garder la question dans le premier écran ; la bande « JOJ 2026 » la remplace, de jour comme de nuit."""
+def test_games_card_stays_compact_on_a_low_phone_screen(page, base_url, hour, size):
+    """iPhone avec les barres de Safari (captures du propriétaire du 1er novembre 2026) : la carte JOJ tient sur une
+    ligne (« Dakar 2026 », le jour, une flèche vers le guide) pour garder la question dans le premier écran."""
     import datetime
 
     page.set_viewport_size({"width": size[0], "height": size[1]})
     page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
     page.goto(base_url + "/")
-    band = page.evaluate("""() => {
-      const el = document.querySelector('.hero-signature'), input = document.getElementById('heroInput');
-      return {bg: getComputedStyle(el).backgroundImage, height: el.getBoundingClientRect().height,
-              title: getComputedStyle(el, '::after').content, scene: document.querySelector('.hero-scene').getBoundingClientRect().height,
-              input: input.getBoundingClientRect().bottom, stage: document.getElementById('stage').getBoundingClientRect().bottom};
-    }""")
-    assert band["scene"] == 0 and band["height"] >= 40, band
-    assert "radial-gradient" in band["bg"] and "JOJ 2026" in band["title"], band
-    assert band["input"] <= band["stage"], band  # la question reste dans le premier écran
-    assert page.locator("#feteBanner a").bounding_box()["height"] >= 44
+    card = page.evaluate(JOJ_CARD)
+    assert card["scene"] == 0 and 44 <= card["height"] <= 80, card
+    assert card["cta"] >= 44 and card["ctaWidth"] >= 44, card
+    assert card["input"] <= card["stage"], card  # la question reste dans le premier écran
+    assert card["scrollWidth"] <= size[0], card
     assert page.errors == []
 
 
-def test_no_games_banner_after_the_closing_day(page, base_url):
+def test_games_card_speaks_english(page, base_url):
+    import datetime
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.clock.install(time=datetime.datetime(2026, 11, 13, 11, 0))
+    page.goto(base_url + "/")
+    page.click("[data-lang='en']")
+    card = page.evaluate(JOJ_CARD)
+    assert card["day"] == "Day 14 of 14" and "Youth Olympic Games" in card["text"], card
+    assert page.errors == []
+
+
+def test_on_a_computer_the_festive_scene_stays_with_the_card(page, base_url):
+    import datetime
+
+    page.set_viewport_size({"width": 1280, "height": 800})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, 21, 0))
+    page.goto(base_url + "/")
+    decor = page.evaluate("""() => {
+      const sky = document.querySelector('.scene-sky');
+      return {bg: getComputedStyle(sky).backgroundImage, title: getComputedStyle(sky, '::before').content,
+              visible: sky.getBoundingClientRect().height > 0};
+    }""")
+    assert decor["visible"] and "radial-gradient" in decor["bg"] and "JOJ 2026" in decor["title"], decor
+    assert page.is_visible("#jojCard")
+    assert page.errors == []
+
+
+def test_no_games_card_after_the_closing_day(page, base_url):
     import datetime
 
     page.clock.install(time=datetime.datetime(2026, 11, 14, 11, 0))
     page.goto(base_url + "/")
     assert page.evaluate("document.body.dataset.fete || ''") == ""
-    assert not page.is_visible("#feteBanner")
+    assert not page.is_visible("#feteBanner") and not page.is_visible("#jojCard")
 
 
 @pytest.mark.parametrize("fete,symbol,hour", [("korite", "☪", 11), ("tabaski", "🐑", 21), ("magal", "🕌", 11)])

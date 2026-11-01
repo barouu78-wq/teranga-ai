@@ -61,8 +61,9 @@ def test_question_box_stays_in_the_first_screen(page, base_url, size, fete):
     m = page.evaluate(MEASURE)
     assert m["input"] <= m["stage"], m  # visible sans faire défiler, au-dessus de la barre d'onglets
     assert m["scrollWidth"] <= m["clientWidth"], m  # pas de défilement horizontal
-    # Jour de fête sur un écran bas : la bande de la fête remplace la bannière.
-    assert m["scene"] == (not fete or size[1] > 700), m
+    # Jour de fête sur un écran bas : la bande de la fête remplace la bannière. Pendant les JOJ, la carte JOJ la
+    # remplace sur tous les téléphones (retour du propriétaire du 1er novembre 2026 : « sombre et vide »).
+    assert m["scene"] == (not fete or (size[1] > 700 and fete != "joj")), m
     assert page.errors == []
 
 

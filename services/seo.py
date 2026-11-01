@@ -679,6 +679,17 @@ def _seo_extra_html(slug, places=None, dishes=None):
     return "".join(parts)
 
 
+# Guide JOJ : trois repères en tête de page, tirés des mêmes faits officiels que la page (olympics.com, relevé du
+# 31 octobre 2026) : du 31 octobre au 13 novembre 2026 (14 jours), trois sites, premiers JOJ organisés en Afrique.
+JOJ_FACTS_HTML = (
+    '<ul class="joj-facts">'
+    "<li><b>31 oct. → 13 nov.</b><span>2026, 14 jours</span></li>"
+    "<li><b>3 sites</b><span>Dakar, Diamniadio, Saly</span></li>"
+    "<li><b>Une première</b><span>en Afrique</span></li>"
+    "</ul>\n"
+)
+
+
 def render_seo_page(slug, site_url, places=None, dishes=None):
     page = SEO_PAGES.get(slug)
     if not page:
@@ -767,11 +778,11 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
 </head>
 <body>%(header)s<main>
 <div class=\"related\">%(related)s<button id=\"share-page\" class=\"share-page\" type=\"button\">Partager</button></div><script src=\"%(share_js)s\" defer></script>
-<article>
+<article%(article_class)s>
 <div class=\"kicker\">Sénégal · Teranga AI</div>
 <h1>%(h1)s</h1>
 <p class=\"intro\">%(intro)s</p>
-%(sections)s
+%(lead)s%(sections)s
 %(faq)s
 %(cta)s
 %(source)s
@@ -787,6 +798,8 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],
+        "article_class": ' class="page-joj"' if slug == "joj-dakar-2026" else "",
+        "lead": JOJ_FACTS_HTML if slug == "joj-dakar-2026" else "",
         "sections": sections + _seo_extra_html(slug, places, dishes),
         "faq": faq_html,
         "source": source_link,
