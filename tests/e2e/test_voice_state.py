@@ -15,6 +15,11 @@ PHONE = {"width": 390, "height": 844}
 LISTENING = re.compile("écoute")
 
 
+# Le micro s'enfonce sous le doigt (animations, PR #566) : sa taille se mesure une fois l'effet fini.
+ANIMATIONS_FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+  .every((a) => a.playState === 'finished')"""
+
+
 def long_voice(bench, ms=4000):
     bench.tts_handler = lambda route, n: route.fulfill(body=wav_bytes(ms), content_type="audio/wav")
 
@@ -95,6 +100,7 @@ def test_touch_targets_of_the_voice_controls_are_44px(page, base_url):
     bench = VoiceBench(page, base_url).open()
     page.click("#heroMic")
     expect(page.locator("#voiceStop")).to_be_visible()
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)  # le micro revenu à sa taille après l'appui
     for selector in ["#voiceStop", "#heroMic"]:
         box = page.locator(selector).bounding_box()
         assert box["width"] >= 44 and box["height"] >= 44, (selector, box)

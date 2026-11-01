@@ -1053,6 +1053,49 @@ body[data-fete="joj"] .joj-card:focus-visible{outline:3px solid var(--link);outl
 }
 /* Téléphone : la carte remplace la scène (même fête, plus de place pour la question). */
 @media(max-width:720px){body[data-fete="joj"] .hero-scene{display:none}}
+/* Animations (demande du propriétaire du 1er novembre 2026 : « rajoute des animations, faut rien retirer »).
+   Tout s'ajoute à l'existant, seulement si le visiteur n'a pas demandé moins d'animations ; chaque bloc finit visible,
+   à sa place. La zone de question apparaît en fondu, sans bouger : elle doit rester dans le premier écran. */
+.joj-confetti{display:none}
+@keyframes t-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes t-fade{from{opacity:0}to{opacity:1}}
+@keyframes t-pop{0%{opacity:0;transform:scale(.6)}60%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:none}}
+@keyframes t-fall{0%{opacity:0;transform:translateY(-24px) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translateY(190px) rotate(220deg)}}
+@keyframes t-right{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes t-ring{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.7)}}
+@media (prefers-reduced-motion:no-preference){
+  body[data-fete="joj"] .joj-card,.hero-greet,#heroTitle,#heroText,.audience-btn,.hero-discover,.plan-cta,.fx-widget{animation:t-up .55s cubic-bezier(.2,.7,.2,1) both}
+  .hero-greet{animation-delay:.1s}#heroTitle{animation-delay:.16s}#heroText{animation-delay:.22s}
+  .audience-btn:nth-child(1){animation-delay:.26s}.audience-btn:nth-child(2){animation-delay:.3s}.audience-btn:nth-child(3){animation-delay:.34s}
+  .audience-btn:nth-child(4){animation-delay:.38s}.audience-btn:nth-child(5){animation-delay:.42s}
+  .hero-ask{animation:t-fade .5s ease .3s both}
+  .hero-discover{animation-delay:.46s}.plan-cta{animation-delay:.52s}.fx-widget{animation-delay:.58s}
+  /* Carte JOJ : le badge du jour apparaît, cinq confettis tombent une seule fois. */
+  body[data-fete="joj"] .joj-day{animation:t-pop .5s cubic-bezier(.3,.8,.3,1.2) .55s both}
+  body[data-fete="joj"] .joj-confetti{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  /* Les confettis passent derrière le texte et le bouton (relecture Gitar de la PR #566). */
+  .joj-kicker,.joj-day,.joj-title,.joj-where,.joj-cta{z-index:1}
+  .joj-confetti i{position:absolute;top:0;width:7px;height:7px;border-radius:2px;animation:t-fall 2.4s ease-in both}
+  .joj-confetti i:nth-child(1){left:62%;background:#f0c63d;animation-delay:.45s}
+  .joj-confetti i:nth-child(2){left:74%;background:#ff6b5e;border-radius:50%;animation-delay:.65s}
+  .joj-confetti i:nth-child(3){left:85%;width:8px;height:5px;background:#b8f0cf;animation-delay:.55s}
+  .joj-confetti i:nth-child(4){left:69%;width:6px;height:6px;background:#fff6dc;border-radius:50%;animation-delay:.9s}
+  .joj-confetti i:nth-child(5){left:93%;background:#f0c63d;animation-delay:1.05s}
+  .joj-card .joj-cta svg{transition:translate .2s ease}.joj-card:hover .joj-cta svg{translate:3px 0}
+  /* La question glisse depuis la droite (les réponses gardent leur arrivée par le bas). */
+  .msg.user.is-new{animation:t-right .3s cubic-bezier(.2,.7,.2,1) both}
+  /* Les boutons s'enfoncent sous le doigt ; la flèche d'envoi avance au survol ; l'icône du thème tourne. */
+  .audience-btn,#heroSend,#heroMic,#send,#mic,.tabbar a,.tabbar button,.hero-chips button,.chips button{transition:scale .12s ease}
+  .audience-btn:active,#heroSend:active,#heroMic:active,#send:active,#mic:active,.tabbar a:active,.tabbar button:active,.hero-chips button:active,.chips button:active{scale:.95}
+  #heroSend svg{transition:translate .2s ease}#heroSend:hover svg{translate:3px 0}
+  #themeBtn svg{transition:rotate .45s cubic-bezier(.3,.8,.3,1.1)}
+  #themeBtn[data-mode="light"] svg{rotate:90deg}#themeBtn[data-mode="dark"] svg{rotate:180deg}
+  /* Micro qui écoute : une onde s'ajoute à la pulsation existante. */
+  #mic{position:relative}
+  #mic.listen::after,body.voice-active #mic::after{content:"";position:absolute;inset:-3px;border-radius:inherit;border:2px solid var(--sen-red);animation:t-ring 1.4s ease-out infinite;pointer-events:none}
+  /* Passage d'une page à l'autre en fondu (navigateurs récents ; sans effet ailleurs). */
+  @view-transition{navigation:auto}
+}
 /* Écran bas (téléphone avec les barres du navigateur) : une seule ligne, « Dakar 2026 », le jour, une flèche. */
 @media(max-width:720px) and (max-height:700px){
   body[data-fete="joj"] .joj-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px;max-width:none;
@@ -1167,7 +1210,7 @@ body:not([data-fete]) .hero-signature{display:none}
   <div id="hero" class="hero">
     <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-logo"><svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
-    <a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+    <a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="joj-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></a>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
     <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.</p>

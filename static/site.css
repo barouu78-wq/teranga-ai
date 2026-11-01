@@ -195,3 +195,12 @@ article.page-joj section:nth-of-type(-n+3){margin:12px 0 0;padding:16px 18px;bor
 article.page-joj section:nth-of-type(2){border-left-color:#e0a82e}
 article.page-joj section:nth-of-type(3){border-left-color:#d9473a}
 article.page-joj section:nth-of-type(4){margin-top:14px}
+
+/* Animations (demande du propriétaire du 1er novembre 2026 : « rajoute des animations, faut rien retirer ») : la page
+   arrive en douceur et le passage d'une page à l'autre se fait en fondu (navigateurs récents). Rien si le visiteur a
+   demandé moins d'animations. */
+@keyframes t-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  main>article{animation:t-up .5s cubic-bezier(.2,.7,.2,1) both}
+  @view-transition{navigation:auto}
+}

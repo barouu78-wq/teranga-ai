@@ -121,6 +121,11 @@ def test_festive_touch_on_independence_day(page, base_url):
     assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
+# Les mesures se font sur la mise en page finale : pendant l'animation d'entrée (PR #566), un déplacement en cours
+# donne des tailles comme 43,99999 px au lieu de 44 (CI du 1er novembre 2026). On attend la fin des animations.
+ANIMATIONS_FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+  .every((a) => a.playState === 'finished')"""
+
 JOJ_CARD = """() => {
   const card = document.getElementById('jojCard'), cta = card.querySelector('.joj-cta'), input = document.getElementById('heroInput');
   const box = card.getBoundingClientRect();
@@ -147,6 +152,7 @@ def test_youth_olympic_games_card_leads_to_the_guide(page, base_url, hour):
     page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
     page.goto(base_url + "/")
     assert page.evaluate("document.body.dataset.fete") == "joj"
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)
     card = page.evaluate(JOJ_CARD)
     assert card["href"] == "/joj-dakar-2026" and "JOJ" in card["label"], card
     assert "Dakar 2026" in card["text"] and "Diamniadio" in card["text"] and "Saly" in card["text"], card
@@ -170,6 +176,7 @@ def test_games_card_stays_compact_on_a_low_phone_screen(page, base_url, hour, si
     page.set_viewport_size({"width": size[0], "height": size[1]})
     page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
     page.goto(base_url + "/")
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)
     card = page.evaluate(JOJ_CARD)
     assert card["scene"] == 0 and 44 <= card["height"] <= 80, card
     assert card["cta"] >= 44 and card["ctaWidth"] >= 44, card
