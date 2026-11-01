@@ -35,7 +35,7 @@ jobs:
         run: python scripts/audit_seo.py --json > seo-audit-report.json
       - name: Publier le rapport SEO
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rapport-seo
           path: seo-audit-report.json
@@ -163,7 +163,7 @@ jobs:
           PY
       - name: Publier le diagnostic public même en cas d'échec
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rapport-public-https-performance
           path: rapport-public.json
@@ -179,7 +179,7 @@ jobs:
           { echo "### Diagnostic TLS par adresse"; echo '```'; cat diagnostic-tls.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Publier le diagnostic TLS par adresse
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: diagnostic-tls-par-adresse
           path: |
