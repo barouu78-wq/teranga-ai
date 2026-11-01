@@ -1,6 +1,7 @@
 Compétences reprises de https://github.com/Nutlope/hallmark, commit 4f6a46c6dc325d40ab268c93e25c7b96676ebccd, le 1er novembre 2026 (choix du propriétaire).
-Seul le texte des compétences est repris (fichiers .md et .json). Changements : description traduite en français (ponytail),
-note d'adaptation à Teranga AI en tête de chaque SKILL.md ; pour hallmark, scripts, images et génération d'images non repris.
+Seul le texte de la compétence est repris (SKILL.md et references/, fichiers .md et .json). Changements : note d'adaptation à
+Teranga AI en tête de SKILL.md, passages qui appelaient les scripts réécrits ; scripts (scripts/*.mjs), images des thèmes et
+génération d'images (Together AI) non repris.
 
 Compétences concernées :
 - hallmark

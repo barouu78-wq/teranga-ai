@@ -1,6 +1,6 @@
 Compétences reprises de https://github.com/DietrichGebert/ponytail, commit 96608e078b2d5ea607c5c3b8b5a54d1c1fba6846, le 1er novembre 2026 (choix du propriétaire).
-Seul le texte des compétences est repris (fichiers .md et .json). Changements : description traduite en français (ponytail),
-note d'adaptation à Teranga AI en tête de chaque SKILL.md ; pour hallmark, scripts, images et génération d'images non repris.
+Seul le texte des compétences est repris (SKILL.md). Changements : descriptions traduites en français sur une ligne,
+note de provenance en tête de chaque SKILL.md.
 
 Compétences concernées :
 - ponytail
