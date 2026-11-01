@@ -34,6 +34,12 @@ def test_home_blocks_arrive_with_an_animation_and_nothing_is_removed(page, base_
     assert page.evaluate(ANIMATIONS, ["#heroAsk"]) == ["t-fade"]
     assert page.evaluate(ANIMATIONS, ["#jojDay"]) == ["t-pop"]
     assert page.evaluate("getComputedStyle(document.querySelector('.joj-confetti')).display") == "block"
+    # Les confettis tombent derrière le texte et le bouton du guide, jamais par-dessus.
+    dessus = page.evaluate("""() => {
+      const z = (s) => Number(getComputedStyle(document.querySelector(s)).zIndex) || 0;
+      return ['#jojDay', '.joj-title', '.joj-cta'].every((s) => z(s) > z('.joj-confetti'));
+    }""")
+    assert dessus
     page.wait_for_function(FINIES, timeout=5000)
     # #heroText et .journey-strip sont cachés sur téléphone par la mise en page (pas par l'animation).
     for selecteur in [s for s in ARRIVEES if s != "#heroText"] + ["#heroAsk", "#heroInput", "#jojCta"]:

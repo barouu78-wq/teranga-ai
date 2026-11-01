@@ -1072,7 +1072,9 @@ body[data-fete="joj"] .joj-card:focus-visible{outline:3px solid var(--link);outl
   .hero-discover{animation-delay:.46s}.plan-cta{animation-delay:.52s}.fx-widget{animation-delay:.58s}
   /* Carte JOJ : le badge du jour apparaît, cinq confettis tombent une seule fois. */
   body[data-fete="joj"] .joj-day{animation:t-pop .5s cubic-bezier(.3,.8,.3,1.2) .55s both}
-  body[data-fete="joj"] .joj-confetti{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  body[data-fete="joj"] .joj-confetti{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  /* Les confettis passent derrière le texte et le bouton (relecture Gitar de la PR #566). */
+  .joj-kicker,.joj-day,.joj-title,.joj-where,.joj-cta{z-index:1}
   .joj-confetti i{position:absolute;top:0;width:7px;height:7px;border-radius:2px;animation:t-fall 2.4s ease-in both}
   .joj-confetti i:nth-child(1){left:62%;background:#f0c63d;animation-delay:.45s}
   .joj-confetti i:nth-child(2){left:74%;background:#ff6b5e;border-radius:50%;animation-delay:.65s}
