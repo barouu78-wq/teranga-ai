@@ -67,7 +67,7 @@ _SUR = (r"\b(?:pays|endroit|quartier|ville|zone|lieu|plage|dakar|senegal|casaman
 
 # (identifiant, déclencheurs sur la question sans accents, repères)
 TOPICS = (
-    ("urgences", r"urgen|police|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
+    ("urgences", r"urgen|police(?! (?:d|de) (?:ecriture|caracteres?|assurances?)\b)|pompier|samu|ambulance|secours|accident|agress|\bvole\b|\bvolee?s?\b|perdu|danger|"
      + _SUR + r"|securi(?!te (sociale|familiale|alimentaire))|\bsafe\b|"
      r"safety|emergenc|fievre|malade|blesse|hopital|hospital|medecin|doctor",
      ("Numéros d'urgence gratuits depuis tous les téléphones, même sans crédit : Police 17, Sapeurs-pompiers 18, "
@@ -286,7 +286,7 @@ TOPICS = (
       "réponse satisfaisante, un courrier à la BCEAO, régulateur de la monnaie électronique. L'ARTP, régulateur des "
       "télécoms, reçoit les réclamations sur le service téléphonique et internet. Coordonnées et délais changent : à "
       "vérifier sur les sites des opérateurs, de la BCEAO et de l'ARTP.")),
-    ("sim",r"\bsim\b|\besim\b|carte sim|operateur|internet|\bdata\b|forfait|wifi|telephone portable|phone plan",
+    ("sim",r"\bsim\b|\besim\b|carte sim|(?<!tour )operateur|(?<!sur )(?<!site )internet|\bdata\b|forfait(?! (?:safari|hotel|sejour|voyage|excursion|visite|tout compris)\b)|wifi|telephone portable|phone plan",
      ("Opérateurs : Orange, Yas (ex-Free, nouveau nom annoncé en novembre 2024) et Expresso. Carte SIM en boutique, "
       "en kiosque ou à l'aéroport, avec un passeport "
       "(enregistrement obligatoire). Forfaits internet rechargeables par code ou mobile money. Indicatif : +221.",)),
@@ -310,8 +310,8 @@ TOPICS = (
       "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
     # Un mois cité avec un vrai voyage (« Je pars au Sénégal en décembre », « vacances en août ») : pas « partir à la
     # retraite en janvier », ni « rendre visite à ma mère en janvier » (relecture Codex de #520).
-    ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
-     r"hivernage|pluie|pleut|rainy|\brain\b|chaleur|heat|"
+    ("saison", r"(?<!as)saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
+     r"hivernage|pluie|pleut|rainy|\brain\b|chaleur(?! humaine)|\bheat(?:wave)?\b|"
      r"\b(?:voyag\w*|vacances|sejour\w*|(?:pars|part|partir|partons|aller|venir|viens|rentrer|rentre|visiter) "
      r"(?:au |en |le )?senegal)\b[^|?]{0,60}"
      r"\ben (?:janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre|octobre|novembre|decembre)\b",
@@ -424,7 +424,7 @@ TOPICS = (
       "COUD. Études à l'étranger : portail boursesetrangeres.campusen.sn, pour les Sénégalais déjà inscrits dans un "
       "établissement à l'étranger. Attention aux faux programmes de bourses (alerte de la Direction des bourses en "
       "février 2026).")),
-    ("langue", r"quelles? langues?|langue officielle|languages?\b|speak|parle t on|on parle|parle t il",
+    ("langue", r"quelles? langues?|langue officielle|languages?\b|speak|(?<!quoi )parle t on|(?<!quoi )on parle|parle t il",
      ("Langues : le français est la langue officielle ; le wolof est la langue la plus parlée ; on parle aussi pulaar, "
       "sérère, diola, mandingue, soninké… L'anglais est peu répandu hors des lieux touristiques.",)),
 )

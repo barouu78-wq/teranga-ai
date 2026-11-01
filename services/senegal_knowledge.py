@@ -449,7 +449,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
         )
 
         folded_value = _fold(value)
-        if re.search(r"urgence|police|pompier|samu|ambulance|secours|accident|hopital|malade|(?<![a-z])vol(?:e|ee|es|ees|er|eur|eurs)(?![a-z])", folded_value):
+        if re.search(r"urgence|police(?! (?:d[ '’]|de )(?:ecriture|caracteres?|assurances?)\b)|pompier|samu|ambulance|secours|accident|hopital|malade|(?<![a-z])vol(?:e|ee|es|ees|er|eur|eurs)(?![a-z])", folded_value):
             numbers = "; ".join(f"{n.get('service')} {n.get('number')} ({n.get('scope')})" for n in profile.get("emergency_numbers", []))
             if numbers:
                 lines.append(f"- Numéros d'urgence au Sénégal : {numbers}.")

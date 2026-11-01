@@ -182,6 +182,12 @@ NOISE=[  # (question, textes qui NE doivent PAS apparaître)
  ("fr","Le surf à Ngor : la wave est-elle bonne en novembre ?",["Code secret : il est personnel"]),
  ("fr","Mon opérateur Orange a-t-il du réseau à Kédougou ?",["Code secret : il est personnel","Faux SMS et faux liens"]),
  ("fr","Parle-moi de Gorée",["REPÈRES PRATIQUES"]),
+ # mots courants qui contiennent un déclencheur : cuisine, théâtre, logo, assurance, vente en ligne
+ ("fr","Comment assaisonner le thiéboudienne ?",["REPÈRES PRATIQUES"]),
+ ("fr","Que voir au théâtre Daniel Sorano ?",["REPÈRES PRATIQUES"]),
+ ("fr","Quelle police d'écriture pour le logo de ma boutique ?",["Police 17"]),
+ ("fr","Ma police d'assurance auto marche-t-elle au Sénégal ?",["Police 17"]),
+ ("fr","Comment vendre sur internet depuis Dakar ?",["Carte SIM en boutique"]),
  ("fr","Raconte-moi l'histoire de Saint-Louis",["REPÈRES PRATIQUES"]),
  ("fr","Qu'est-ce que le thiéboudienne ?",["REPÈRES PRATIQUES"]),
  ("fr","Une question sur le Sénégal : qui était Senghor ?",["Police 17"]),

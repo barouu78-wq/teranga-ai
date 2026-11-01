@@ -346,3 +346,39 @@ def test_first_aid_words_are_listed_with_and_without_accents_in_the_web_policy()
     for accented, plain in (("fièvre", "fievre"), ("répulsif", "repulsif"), ("déshydratation", "deshydratation"),
                             ("diarrhée", "diarrhee"), ("piqûre", "piqure"), ("brûlure", "brulure")):
         assert f'"{accented}"' in source and f'"{plain}"' in source, (accented, plain)
+
+
+def test_no_false_triggers_on_everyday_words_that_contain_a_trigger():
+    # « asSAISONner », « tHEATre », « police d'écriture », « vendre sur internet », « tour-opérateur »,
+    # « forfait safari », « de quoi on parle », « chaleur humaine » : aucun ne parle du sujet déclenché.
+    absents = {
+        "Comment assaisonner le thiéboudienne ?": "saison",
+        "Que voir au théâtre Daniel Sorano ?": "saison",
+        "La chaleur humaine des Sénégalais, c'est vrai ?": "saison",
+        "Quelle police d'écriture pour le logo de ma boutique ?": "urgences",
+        "Ma police d'assurance auto marche-t-elle au Sénégal ?": "urgences",
+        "Quelle police de caractères pour mes affiches ?": "urgences",
+        "Comment vendre sur internet depuis Dakar ?": "sim",
+        "Je veux créer un site internet pour ma boutique": "sim",
+        "Je cherche un tour-opérateur pour la Casamance": "sim",
+        "Le forfait safari à Bandia vaut le coup ?": "sim",
+        "De quoi on parle quand on dit teranga ?": "langue",
+    }
+    for question, sujet in absents.items():
+        assert sujet not in matching_topics(question, limit=9), question
+
+
+def test_real_questions_still_trigger_after_the_false_trigger_fixes():
+    presents = {
+        "Quelle saison pour voir les flamants roses ?": "saison",
+        "Il fait quelle chaleur en avril à Dakar ?": "saison",
+        "Heat in Dakar in May?": "saison",
+        "Il faut appeler la police, on m'a volé mon sac": "urgences",
+        "Comment avoir internet sur mon téléphone à Dakar ?": "sim",
+        "Quel opérateur choisir pour une carte SIM ?": "sim",
+        "Quel forfait internet prendre pour deux semaines ?": "sim",
+        "On parle quelle langue à Ziguinchor ?": "langue",
+        "Comment vendre sur internet depuis Dakar ?": "vente",
+    }
+    for question, sujet in presents.items():
+        assert sujet in matching_topics(question, limit=9), question
