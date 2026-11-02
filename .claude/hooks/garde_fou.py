@@ -12,6 +12,7 @@ script lui-même n'arrête pas l'agent (Claude Code l'affiche seulement). Biblio
 et plus), pour tourner partout où tourne Claude Code. Tests : tests/test_garde_fou.py.
 """
 
+import copy
 import json
 import os
 import re
@@ -75,6 +76,13 @@ class _Lieu:
             return self.variables.get(nom, os.environ.get(nom, trouve.group(0)))
         return VARIABLE.sub(valeur, texte)
 
+    def enfant(self, dossier=None):
+        """Copie pour un sous-shell ($(…), bash -c, heredoc lu par bash) : ses cd et ses variables n'en ressortent pas."""
+        copie = copy.copy(self)
+        copie.variables = dict(self.variables)
+        copie.dossier = dossier or self.dossier
+        return copie
+
     def chemin(self, texte, base=None):
         texte = self.developpe(texte)
         if texte == "~" or texte.startswith("~/"):
@@ -134,7 +142,7 @@ def _heredocs(texte):
         if ouvert[1]:
             a_examiner.append(corps)
         elif ouvert[2]:
-            a_examiner.extend(_substitutions(corps))
+            a_examiner.extend(interieur for _, _, interieur in _substitutions(corps))
 
     for ligne in texte.split("\n"):
         if ouvert is not None:
@@ -157,7 +165,8 @@ def _heredocs(texte):
 
 
 def _substitutions(texte):
-    """Commandes lancées par $(…) et `…`, sans guillemets ou entre guillemets doubles (pas entre apostrophes)."""
+    """Les $(…) et `…` lancés (sans guillemets ou entre guillemets doubles, pas entre apostrophes) :
+    (début, fin, commande) pour chacun, fin incluse."""
     etats, _ = _guillemets(texte)
     trouvees, i = [], 0
     while i < len(texte):
@@ -174,7 +183,7 @@ def _substitutions(texte):
         else:
             i += 1
             continue
-        trouvees.append(texte[debut:fin])
+        trouvees.append((i, fin, texte[debut:fin]))
         i = fin + 1
     return trouvees
 
@@ -182,26 +191,42 @@ def _substitutions(texte):
 def _commande(texte, lieu):
     texte, a_examiner = _heredocs(texte.replace("\\\n", " "))
     texte = BRANCHE_COURANTE.sub("HEAD", texte)  # "$(git branch --show-current)" : la branche courante
-    for interieur in a_examiner + _substitutions(texte):  # chaque bout plus court : la récursion s'arrête
-        raison = _commande(interieur, lieu)
-        if raison:
-            return raison
-    texte = texte.replace("\n", " ; ").replace("`", " ; ")
+    # Chaque $(…) est mis de côté et remplacé par une valeur illisible : son cd ne doit pas compter pour la suite.
+    for debut, fin, interieur in reversed(_substitutions(texte)):
+        a_examiner.append(interieur)
+        texte = texte[:debut] + "${_SOUS_COMMANDE_}" + texte[fin + 1:]
     try:
-        lexeur = shlex.shlex(texte, posix=True, punctuation_chars=True)
+        lexeur = shlex.shlex(texte.replace("\n", " ; "), posix=True, punctuation_chars=True)
         lexeur.whitespace_split = True
         mots = list(lexeur)
     except ValueError:  # guillemet non fermé : le shell refuserait aussi ; découpage simple
-        mots = texte.split()
+        mots = texte.replace("\n", " ; ").split()
+    dossiers, sous_shells = [lieu.dossier], []
     for segment in _segments(mots):
-        raison = _segment(segment, lieu)
-        if raison:
-            return raison
+        if segment == "(":  # ( cd x && … ) : ce qui change dedans ne ressort pas
+            sous_shells.append((lieu.dossier, dict(lieu.variables)))
+        elif segment == ")":
+            if sous_shells:
+                lieu.dossier, lieu.variables = sous_shells.pop()
+        else:
+            raison = _segment(segment, lieu)
+            if raison:
+                return raison
+        if lieu.dossier not in dossiers:
+            dossiers.append(lieu.dossier)
+    # $(…), `…` et heredocs lus par un shell tournent dans un sous-shell, après les cd qui les précèdent : chacun est
+    # examiné dans une copie du lieu, pour chaque dossier où passe la commande. Chaque bout est plus court : la
+    # récursion s'arrête.
+    for interieur in a_examiner:
+        for dossier in dossiers:
+            raison = _commande(interieur, lieu.enfant(dossier))
+            if raison:
+                return raison
     return None
 
 
 def _segments(mots):
-    """Découpe aux ; && || | & ( ) et saute les redirections (> f, 2>&1, << EOF)."""
+    """Découpe aux ; && || | & et saute les redirections (> f, 2>&1, << EOF). Rend « ( » et « ) » à part."""
     segment, sauter = [], False
     for mot in mots:
         if sauter:
@@ -215,6 +240,7 @@ def _segments(mots):
                 if segment:
                     yield segment
                 segment = []
+                yield from (c for c in mot if c in "()")
         else:
             segment.append(mot)
     if segment:
@@ -254,7 +280,7 @@ def _segment(mots, lieu):
     if nom in COQUILLES:
         for k, mot in enumerate(args[:-1]):
             if re.fullmatch(r"-[A-Za-z]*c[A-Za-z]*", mot):
-                return _commande(args[k + 1], lieu)
+                return _commande(args[k + 1], lieu.enfant())  # bash -c : un sous-shell
         return None
     if nom == "eval":
         return _commande(" ".join(args), lieu)

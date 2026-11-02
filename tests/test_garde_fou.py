@@ -122,6 +122,22 @@ def test_substitutions_heredocs_et_variables_executes_sont_examines(commande):
     assert motif(commande, "/tmp")
 
 
+# Remarque de Gitar après 7f33c6f : $(…), bash -c et bash <<EOF tournent dans un sous-shell (un cd n'en ressort pas),
+# et ils tournent à leur place dans la commande (après le cd qui les précède).
+@pytest.mark.parametrize("commande,cwd", [
+    ('echo "$(cd /tmp && pwd)"; rm -rf ./*', PROJET),
+    ("X=$(cd /tmp); rm -rf ./*", PROJET),
+    ('bash -c "cd /tmp"; rm -rf ./*', PROJET),
+    ("bash <<EOF\ncd /tmp\nEOF\nrm -rf ./*", PROJET),
+    ('cd /srv/teranga && echo "$(rm -rf .)"', "/tmp"),
+    ("cd /srv/teranga && bash <<EOF\nrm -rf .\nEOF", "/tmp"),
+    ("(cd /tmp); rm -rf ./*", PROJET),
+    ("(cd /srv/teranga && rm -rf .)", "/tmp"),
+])
+def test_un_sous_shell_garde_son_dossier_et_tourne_a_sa_place(commande, cwd):
+    assert motif(commande, cwd)
+
+
 @pytest.mark.parametrize("commande", [
     "env GIT_TRACE=1 git rm -r --cached .",
     "time git rm -r --cached .",
@@ -210,6 +226,7 @@ def _depot(dossier, branche):
 @pytest.mark.parametrize("commande", [
     "git push", "git push origin", "git push -u origin HEAD", "git push origin @", "git push 2>&1",
     'git push -u origin "$(git branch --show-current)"', "git push origin $(git rev-parse --abbrev-ref HEAD)",
+    'echo "$(cd /tmp)"; git push',
 ])
 def test_pousser_sans_branche_nommee_depuis_main_est_bloque(tmp_path, commande):
     depot = _depot(tmp_path / "depot", "main")
