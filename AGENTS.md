@@ -92,6 +92,11 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 - **Sécurité.** Ne jamais affaiblir le CSRF (`require_json_post`), les limites de débit, la CSP
   (`services/http_headers.py`) ni les hôtes de confiance. Pas de script ou de police venant d'un
   autre domaine : tout est servi par le site (`static/fonts/`).
+- **Garde-fou des agents.** Avant chaque commande de Claude Code, `.claude/hooks/garde_fou.py` (déclaré
+  dans `.claude/settings.json`) bloque : pousser sur `main`, une poussée forcée (`--force-with-lease`
+  reste permis), `git reset --hard`, `rm -r` sur la racine, le dossier personnel ou le projet, et
+  l'écriture directe sur `main` par les outils GitHub. Ne jamais le retirer ni le contourner : un
+  blocage à tort se corrige dans le script, avec un test (`tests/test_garde_fou.py`).
 - **Secrets.** Ne jamais écrire, demander ni afficher une clé (OpenAI, Anthropic, Redis, Google,
   `SECRET_KEY`, `STATS_TOKEN`) ni les fichiers de signature Android. Elles vivent uniquement
   dans les variables d'environnement de Render.
