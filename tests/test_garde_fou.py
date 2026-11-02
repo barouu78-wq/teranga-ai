@@ -138,6 +138,33 @@ def test_un_sous_shell_garde_son_dossier_et_tourne_a_sa_place(commande, cwd):
     assert motif(commande, cwd)
 
 
+# Remarque de Gitar après 451b813 : après un cd illisible ($(…), $INCONNUE, cd -), le dossier est inconnu ; il peut
+# être le projet. rm -r de ce dossier entier (., *, .., .git) et git push vers la branche courante sont bloqués.
+@pytest.mark.parametrize("commande", [
+    'cd "$(git rev-parse --show-toplevel)" && rm -rf ./*',
+    'cd "$REPO_INCONNU" && rm -rf .',
+    "cd - && rm -rf *",
+    'cd "$(mktemp -d)" && rm -rf ..',
+    'cd "$REPO_INCONNU" && git push',
+    'git -C "$REPO_INCONNU" push -u origin HEAD',
+    'cd "$REPO_INCONNU" && echo "$(rm -rf .)"',
+    '(cd "$REPO_INCONNU" && rm -rf .git)',
+])
+def test_apres_un_cd_illisible_le_dossier_est_inconnu(commande):
+    assert motif(commande, PROJET + "/static")
+
+
+@pytest.mark.parametrize("commande", [
+    'cd "$(mktemp -d)" && rm -rf build',
+    'cd "$REPO_INCONNU" && cd /tmp && rm -rf ./*',
+    'cd "$REPO_INCONNU" && git push -u origin outils/x',
+    'cd "$REPO_INCONNU" && git status',
+    '(cd "$REPO_INCONNU"); rm -rf build',
+])
+def test_un_dossier_inconnu_ne_bloque_que_ce_qui_peut_viser_le_projet(commande):
+    assert motif(commande, PROJET + "/static") is None
+
+
 @pytest.mark.parametrize("commande", [
     "env GIT_TRACE=1 git rm -r --cached .",
     "time git rm -r --cached .",

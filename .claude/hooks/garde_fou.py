@@ -56,6 +56,10 @@ FORCE = ("poussée forcée (--force, -f ou +branche) : elle écrase l'historique
 RESET = ("git reset --hard efface le travail non enregistré. Utilise git stash, ou git checkout -B <branche> "
          "origin/main pour repartir de main.")
 RM = "rm -r viserait {} (racine, dossier personnel, projet ou .git). Supprime un sous-dossier précis."
+DOSSIER_INCONNU = ("la branche courante se lit dans un dossier que le garde-fou ne connaît pas (cd vers $…, cd -) : ce "
+                   "pourrait être main. Nomme la branche en clair : git push -u origin <branche>.")
+RM_DOSSIER = ("rm -r sur « {} » dans un dossier que le garde-fou ne connaît pas (cd vers $…, cd -) : ce pourrait être "
+              "le projet. Écris le chemin en clair.")
 RM_VARIABLE = ("rm -r sur « {} » : ce chemin dépend d'une variable que le garde-fou ne peut pas lire ; vide, elle "
                "pourrait viser la racine. Écris le chemin en clair.")
 
@@ -68,6 +72,7 @@ class _Lieu:
         self.projet = os.path.normpath(projet)
         self.maison = os.path.normpath(maison)
         self.variables = {"HOME": self.maison, "CLAUDE_PROJECT_DIR": self.projet}
+        self.inconnu = False  # après cd "$(…)", cd $INCONNUE ou cd - : on ne sait plus quel est le dossier
 
     def developpe(self, texte):
         """Remplace $NOM et ${NOM} connus ; une variable inconnue reste telle quelle (avec son $)."""
@@ -76,12 +81,21 @@ class _Lieu:
             return self.variables.get(nom, os.environ.get(nom, trouve.group(0)))
         return VARIABLE.sub(valeur, texte)
 
-    def enfant(self, dossier=None):
+    def enfant(self, dossier=None, inconnu=None):
         """Copie pour un sous-shell ($(…), bash -c, heredoc lu par bash) : ses cd et ses variables n'en ressortent pas."""
         copie = copy.copy(self)
         copie.variables = dict(self.variables)
         copie.dossier = dossier or self.dossier
+        copie.inconnu = self.inconnu if inconnu is None else inconnu
         return copie
+
+    def aller(self, cible, base=None):
+        """Dossier et état « inconnu » après cd cible (depuis base) : illisible si un $ reste ou si c'est « - »."""
+        texte = self.developpe(cible)
+        if cible == "-" or "$" in texte:
+            return base or self.dossier, True
+        absolu = texte.startswith(("/", "~"))
+        return self.chemin(texte, base), self.inconnu and not absolu
 
     def chemin(self, texte, base=None):
         texte = self.developpe(texte)
@@ -201,25 +215,25 @@ def _commande(texte, lieu):
         mots = list(lexeur)
     except ValueError:  # guillemet non fermé : le shell refuserait aussi ; découpage simple
         mots = texte.replace("\n", " ; ").split()
-    dossiers, sous_shells = [lieu.dossier], []
+    dossiers, sous_shells = [(lieu.dossier, lieu.inconnu)], []
     for segment in _segments(mots):
         if segment == "(":  # ( cd x && … ) : ce qui change dedans ne ressort pas
-            sous_shells.append((lieu.dossier, dict(lieu.variables)))
+            sous_shells.append((lieu.dossier, lieu.inconnu, dict(lieu.variables)))
         elif segment == ")":
             if sous_shells:
-                lieu.dossier, lieu.variables = sous_shells.pop()
+                lieu.dossier, lieu.inconnu, lieu.variables = sous_shells.pop()
         else:
             raison = _segment(segment, lieu)
             if raison:
                 return raison
-        if lieu.dossier not in dossiers:
-            dossiers.append(lieu.dossier)
+        if (lieu.dossier, lieu.inconnu) not in dossiers:
+            dossiers.append((lieu.dossier, lieu.inconnu))
     # $(…), `…` et heredocs lus par un shell tournent dans un sous-shell, après les cd qui les précèdent : chacun est
     # examiné dans une copie du lieu, pour chaque dossier où passe la commande. Chaque bout est plus court : la
     # récursion s'arrête.
     for interieur in a_examiner:
-        for dossier in dossiers:
-            raison = _commande(interieur, lieu.enfant(dossier))
+        for dossier, inconnu in dossiers:
+            raison = _commande(interieur, lieu.enfant(dossier, inconnu))
             if raison:
                 return raison
     return None
@@ -272,10 +286,8 @@ def _segment(mots, lieu):
         k += a_sauter
         return _segment(args[k:], lieu) if k < len(args) else None
     if nom in ("cd", "pushd"):
-        if not args:
-            lieu.dossier = lieu.maison
-        elif args[0] != "-":
-            lieu.dossier = lieu.chemin(args[0])
+        cibles = [mot for mot in args if not (mot.startswith("-") and mot != "-")]  # cd -P x : x
+        lieu.dossier, lieu.inconnu = lieu.aller(cibles[0] if cibles else "~")
         return None
     if nom in COQUILLES:
         for k, mot in enumerate(args[:-1]):
@@ -302,11 +314,11 @@ def _prend_une_valeur(option, valeurs):
 
 
 def _git(args, lieu):
-    dossier, i = lieu.dossier, 0
+    dossier, inconnu, i = lieu.dossier, lieu.inconnu, 0
     while i < len(args) and args[i].startswith("-"):
         if args[i] in OPTIONS_GIT_AVEC_VALEUR and i + 1 < len(args):
             if args[i] == "-C":
-                dossier = lieu.chemin(args[i + 1], dossier)
+                dossier, inconnu = lieu.enfant(dossier, inconnu).aller(args[i + 1])
             i += 1
         i += 1
     if i >= len(args):
@@ -314,11 +326,11 @@ def _git(args, lieu):
     if args[i] == "reset":
         return RESET if "--hard" in args[i + 1:] else None
     if args[i] == "push":
-        return _push(args[i + 1:], dossier, lieu)
+        return _push(args[i + 1:], dossier, lieu, inconnu)
     return None
 
 
-def _push(args, dossier, lieu):
+def _push(args, dossier, lieu, inconnu=False):
     positions, force, tout, i = [], False, False, 0
     while i < len(args):
         mot = args[i]
@@ -350,6 +362,8 @@ def _push(args, dossier, lieu):
         source, deux_points, cible = refspec.lstrip("+").partition(":")
         cible = cible if deux_points else source
         if cible in ("HEAD", "@"):
+            if inconnu:
+                return DOSSIER_INCONNU
             cible = _branche(dossier)
         if _court(cible) == PROTEGEE:
             return SUR_MAIN
@@ -385,6 +399,10 @@ def _rm(args, lieu):
             return RM_VARIABLE.format(cible)
         if cible == "*" or cible.endswith("/*"):
             cible = cible[:-1] or "."  # « rm -rf dossier/* » vide le dossier lui-même
+        relatif = os.path.normpath(lieu.developpe(cible))
+        if lieu.inconnu and not relatif.startswith(("/", "~")) and (
+                relatif in (".", ".git") or all(partie == ".." for partie in relatif.split("/"))):
+            return RM_DOSSIER.format(cible)  # le dossier inconnu lui-même, ou au-dessus : peut-être le projet
         chemin = lieu.chemin(cible)
         dessous = chemin.rstrip("/") + "/"
         if chemin == os.path.join(lieu.projet, ".git") or any(
