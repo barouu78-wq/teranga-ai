@@ -22,10 +22,20 @@ import sys
 
 PROTEGEE = "main"
 OUTILS_GITHUB = {"mcp__github__push_files", "mcp__github__create_or_update_file", "mcp__github__delete_file"}
-PREFIXES = {"sudo", "env", "command", "builtin", "exec", "nohup", "nice", "time", "timeout"}
+# Commandes qui en lancent une autre : options suivies d'une valeur, puis nombre de mots à sauter (la durée de timeout).
+PREFIXES = {
+    "sudo": ({"-u", "-g", "-C", "-D", "-h", "-p", "-r", "-t", "-U", "-T", "--user", "--group", "--chdir", "--host",
+              "--prompt", "--role", "--type", "--other-user", "--command-timeout", "--close-from"}, 0),
+    "env": ({"-u", "-C", "-S", "--unset", "--chdir", "--split-string"}, 0),
+    "timeout": ({"-s", "-k", "--signal", "--kill-after"}, 1),
+    "nice": ({"-n", "--adjustment"}, 0),
+    "time": ({"-f", "-o", "--format", "--output"}, 0),
+    "exec": ({"-a"}, 0),
+    "command": (set(), 0), "builtin": (set(), 0), "nohup": (set(), 0),
+}
 COQUILLES = {"bash", "sh", "zsh", "dash"}
-SURVEILLES = {"git", "rm", "eval"} | COQUILLES
 HEREDOC = re.compile(r"(?<!<)<<-?(?!<)\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+LECTEUR = re.compile(r"(?:^|[\s;&|(])(?:bash|sh|zsh|dash|eval)(?=[\s;&|)]|$)")  # bash <<EOF, … | sh
 AFFECTATION = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 VARIABLE = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))")
 BRANCHE_COURANTE = re.compile(r"\$\(\s*git\s+(?:branch\s+--show-current|rev-parse\s+--abbrev-ref\s+HEAD"
@@ -45,6 +55,8 @@ FORCE = ("poussée forcée (--force, -f ou +branche) : elle écrase l'historique
 RESET = ("git reset --hard efface le travail non enregistré. Utilise git stash, ou git checkout -B <branche> "
          "origin/main pour repartir de main.")
 RM = "rm -r viserait {} (racine, dossier personnel, projet ou .git). Supprime un sous-dossier précis."
+RM_VARIABLE = ("rm -r sur « {} » : ce chemin dépend d'une variable que le garde-fou ne peut pas lire ; vide, elle "
+               "pourrait viser la racine. Écris le chemin en clair.")
 
 
 class _Lieu:
@@ -84,24 +96,97 @@ def _court(ref):
     return ref[len("refs/heads/"):] if ref.startswith("refs/heads/") else ref
 
 
-def _sans_heredoc(texte):
-    """Retire le corps des « << EOF » : c'est du texte (message, fichier), pas des commandes."""
-    gardees, fin = [], None
+def _guillemets(texte, guillemet=""):
+    """Pour chaque caractère, le guillemet ouvert à cet endroit ("", "'" ou '"') ; et celui encore ouvert à la fin."""
+    etats, i = [], 0
+    while i < len(texte):
+        c = texte[i]
+        if guillemet == "'":
+            etats.append("'")
+            guillemet = "" if c == "'" else "'"
+        elif guillemet == '"':
+            etats.append('"')
+            if c == '"':
+                guillemet = ""
+            elif c == "\\" and i + 1 < len(texte):
+                etats.append('"')
+                i += 1
+        elif c in "'\"":
+            etats.append(c)
+            guillemet = c
+        else:
+            etats.append("")
+            if c == "\\" and i + 1 < len(texte):
+                etats.append("")
+                i += 1
+        i += 1
+    return etats, guillemet
+
+
+def _heredocs(texte):
+    """Retire le corps des « << EOF », hors guillemets. Ce corps est du texte (message, fichier), sauf quand un
+    shell le lit (bash <<EOF, … | sh) : il est alors rendu comme commandes à examiner. Sans apostrophes autour de
+    EOF, ses $(…) sont lancés : ils sont rendus aussi."""
+    gardees, a_examiner, ouvert, guillemet = [], [], None, ""
+
+    def fermer(ouvert):
+        corps = "\n".join(ouvert[3])
+        if ouvert[1]:
+            a_examiner.append(corps)
+        elif ouvert[2]:
+            a_examiner.extend(_substitutions(corps))
+
     for ligne in texte.split("\n"):
-        if fin is not None:
-            if ligne.strip() == fin:
-                fin = None
+        if ouvert is not None:
+            if ligne.strip() == ouvert[0]:
+                fermer(ouvert)
+                ouvert = None
+            else:
+                ouvert[3].append(ligne)
             continue
         gardees.append(ligne)
-        trouve = HEREDOC.search(ligne)
-        if trouve:
-            fin = trouve.group(2)
-    return "\n".join(gardees)
+        etats, suite = _guillemets(ligne, guillemet)
+        for trouve in HEREDOC.finditer(ligne):
+            if not etats[trouve.start()]:
+                ouvert = (trouve.group(2), bool(LECTEUR.search(ligne)), not trouve.group(1), [])
+                break
+        guillemet = suite
+    if ouvert is not None:  # heredoc jamais fermé : le shell le lit jusqu'au bout
+        fermer(ouvert)
+    return "\n".join(gardees), a_examiner
+
+
+def _substitutions(texte):
+    """Commandes lancées par $(…) et `…`, sans guillemets ou entre guillemets doubles (pas entre apostrophes)."""
+    etats, _ = _guillemets(texte)
+    trouvees, i = [], 0
+    while i < len(texte):
+        if etats[i] != "'" and texte.startswith("$(", i) and not texte.startswith("$((", i):
+            debut, profondeur, fin = i + 2, 1, len(texte)
+            for j in range(debut, len(texte)):
+                profondeur += {"(": 1, ")": -1}.get(texte[j], 0)
+                if profondeur == 0:
+                    fin = j
+                    break
+        elif etats[i] != "'" and texte[i] == "`":
+            debut, fin = i + 1, texte.find("`", i + 1)
+            fin = len(texte) if fin < 0 else fin
+        else:
+            i += 1
+            continue
+        trouvees.append(texte[debut:fin])
+        i = fin + 1
+    return trouvees
 
 
 def _commande(texte, lieu):
-    texte = _sans_heredoc(texte.replace("\\\n", " ")).replace("\n", " ; ").replace("`", " ; ")
+    texte, a_examiner = _heredocs(texte.replace("\\\n", " "))
     texte = BRANCHE_COURANTE.sub("HEAD", texte)  # "$(git branch --show-current)" : la branche courante
+    for interieur in a_examiner + _substitutions(texte):  # chaque bout plus court : la récursion s'arrête
+        raison = _commande(interieur, lieu)
+        if raison:
+            return raison
+    texte = texte.replace("\n", " ; ").replace("`", " ; ")
     try:
         lexeur = shlex.shlex(texte, posix=True, punctuation_chars=True)
         lexeur.whitespace_split = True
@@ -148,15 +233,18 @@ def _segment(mots, lieu):
             lieu.variables[nom] = lieu.developpe(valeur)
         return None
     nom, args = os.path.basename(mots[i]), mots[i + 1:]
-    if nom in PREFIXES:
-        # sudo -u root rm…, timeout -s KILL 30 git… : les options et leurs valeurs varient ; chaque commande
-        # surveillée qui suit est examinée.
-        for k, mot in enumerate(args):
-            if os.path.basename(mot) in SURVEILLES:
-                raison = _segment(args[k:], lieu)
-                if raison:
-                    return raison
-        return None
+    if nom in PREFIXES:  # sudo -u root rm…, env A=1 git…, timeout -s KILL 30 git… : la vraie commande suit
+        valeurs, a_sauter = PREFIXES[nom]
+        k = 0
+        while k < len(args) and args[k].startswith("-") and args[k] != "-":
+            if args[k] == "--":
+                k += 1
+                break
+            k += 2 if _prend_une_valeur(args[k], valeurs) else 1
+        while k < len(args) and AFFECTATION.match(args[k]):
+            k += 1
+        k += a_sauter
+        return _segment(args[k:], lieu) if k < len(args) else None
     if nom in ("cd", "pushd"):
         if not args:
             lieu.dossier = lieu.maison
@@ -175,6 +263,16 @@ def _segment(mots, lieu):
     if nom == "rm":
         return _rm(args, lieu)
     return None
+
+
+def _prend_une_valeur(option, valeurs):
+    """-u root, -Eu root, --user root : la valeur est le mot suivant ; -uroot et --user=root la portent déjà."""
+    if option.startswith("--"):
+        return "=" not in option and option in valeurs
+    for k, lettre in enumerate(option[1:]):
+        if "-" + lettre in valeurs:
+            return k == len(option) - 2  # dernière lettre : la valeur suit ; sinon elle est collée
+    return False
 
 
 def _git(args, lieu):
@@ -257,6 +355,8 @@ def _rm(args, lieu):
     if not recursif:
         return None
     for cible in cibles:
+        if "$" in lieu.developpe(cible):  # $VIDE/*, ${D:-/} : une variable vide ou inconnue peut viser /
+            return RM_VARIABLE.format(cible)
         if cible == "*" or cible.endswith("/*"):
             cible = cible[:-1] or "."  # « rm -rf dossier/* » vide le dossier lui-même
         chemin = lieu.chemin(cible)

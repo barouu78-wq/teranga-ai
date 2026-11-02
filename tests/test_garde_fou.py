@@ -101,6 +101,39 @@ def test_options_et_variables_ne_cachent_pas_la_commande(commande):
     assert motif(commande, "/tmp")
 
 
+# Remarques de Gitar sur la PR #567 : une substitution entre guillemets et un heredoc lu par un shell sont exécutés.
+@pytest.mark.parametrize("commande", [
+    'echo "$(git push origin main)"',
+    'OUT="$(git push origin main 2>&1)"',
+    'echo "$(echo $(git push origin main))"',
+    'echo "`git push origin main`"',
+    'echo "x $(rm -rf /) y"',
+    "bash <<EOF\ngit push origin main\nEOF",
+    "sh <<'FIN'\nrm -rf /\nFIN",
+    "cat <<EOF | bash\ngit reset --hard\nEOF",
+    'echo "a <<EOF"\ngit push origin main',
+    "cat > f.txt <<EOF\n$(git push origin main)\nEOF",
+    "rm -rf $VIDE/*",
+    'rm -rf "${D:-/}"',
+    "sudo -Eu root rm -rf /",
+    "sudo -uroot git push origin main",
+])
+def test_substitutions_heredocs_et_variables_executes_sont_examines(commande):
+    assert motif(commande, "/tmp")
+
+
+@pytest.mark.parametrize("commande", [
+    "env GIT_TRACE=1 git rm -r --cached .",
+    "time git rm -r --cached .",
+    "S=/tmp/essai; rm -rf \"$S/build\"",
+    "python3 - <<'PY'\nprint('git push origin main')\nPY",
+    "git commit -m 'Ne lance jamais $(git push origin main)'",
+    "sudo -Eu bot git status",
+])
+def test_ce_qui_n_est_pas_lance_passe(commande):
+    assert motif(commande) is None
+
+
 def test_une_variable_connue_vers_une_branche_de_travail_passe():
     assert motif('B=outils/x; git push -u origin "$B"', "/tmp") is None
     assert motif("sudo -u bot git status", "/tmp") is None
