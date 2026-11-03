@@ -52,6 +52,26 @@ def test_when_are_the_games_gets_a_ready_answer(monkeypatch, question):
     assert "31 octobre 2026" in ready["reply"] and "13 novembre 2026" in ready["reply"]
 
 
+# Remarque du 3 novembre 2026 : pendant les Jeux, la réponse disait « (aujourd'hui) », comme si tout se jouait ce jour-là.
+@pytest.mark.parametrize("jour,attendu", [
+    (dt.date(2026, 10, 30), "(demain)"),
+    (dt.date(2026, 10, 31), "(commence aujourd'hui)"),
+    (dt.date(2026, 11, 4), "(en cours)"),
+    (dt.date(2026, 11, 13), "(en cours, dernier jour aujourd'hui)"),
+])
+def test_the_ready_answer_says_where_we_are_in_the_games(monkeypatch, jour, attendu):
+    monkeypatch.setattr(quick_answers, "_today", lambda: jour)
+    ready = quick_answer({"message": "C'est quand les JOJ ?", "language": "fr"}, {})
+    assert attendu in ready["reply"], ready["reply"]
+    assert "(aujourd'hui)" not in ready["reply"]
+
+
+def test_a_one_day_holiday_still_says_today(monkeypatch):
+    monkeypatch.setattr(quick_answers, "_today", lambda: dt.date(2026, 12, 25))
+    ready = quick_answer({"message": "C'est quand Noël ?", "language": "fr"}, {})
+    assert ready is not None and "(aujourd'hui)" in ready["reply"], ready
+
+
 @pytest.mark.parametrize("question", [
     "Où ont lieu les JOJ ?",
     "Quels sports aux Jeux olympiques de la jeunesse à Saly ?",
