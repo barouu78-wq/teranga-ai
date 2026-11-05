@@ -294,6 +294,10 @@ let lang=['fr','en','wo','ff'].includes(urlParams.get('lang'))?urlParams.get('la
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+// Conversation neuve à chaque visite (demande du propriétaire, 5 nov. 2026) : gardée seulement dans l'onglet
+// (sessionStorage) et 30 minutes après la dernière activité ; plus rien dans le téléphone (localStorage).
+const CHAT_IDLE_MS=30*60*1000;
+let lastActivity=Date.now();
 // Logo Teranga (même dessin que l'en-tête) à la place de l'émoji 🌴.
 const AVATAR_SVG='<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#sn-logo"/></svg>'; // logo (baobab doré) dessiné une fois dans home.html (#sn-logo)
 function cleanReply(text){
@@ -944,13 +948,20 @@ $('tabbar').addEventListener('click',e=>{
   if(!btn)return;
   showHero();stage.scrollTop=0;
 });
-function reset(){
-  if(history.length&&!confirm(T[lang].resetAsk))return;
+function clearConversation(){
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
   SS.removeItem('teranga-history');
   LS.removeItem('teranga-history');
 }
+function reset(){
+  if(history.length&&!confirm(T[lang].resetAsk))return;
+  clearConversation();
+}
+// Onglet retrouvé après 30 minutes sans activité : nouvelle conversation, sans demander confirmation.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&history.length&&!inflight&&Date.now()-lastActivity>=CHAT_IDLE_MS)clearConversation();
+});
 let resumeVoiceTimer=0;
 function answerExtras(item){
   const extras={};
@@ -967,6 +978,7 @@ function answerExtras(item){
   }catch(_){return {}}
 }
 function persist(){
+  lastActivity=Date.now();
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
     try{
@@ -980,15 +992,18 @@ function persist(){
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
       SS.setItem('teranga-history',payload);
-      LS.setItem('teranga-history',payload);
     }catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=SS.getItem('teranga-history')||LS.getItem('teranga-history');
+    LS.removeItem('teranga-history');  // ancienne version : conversation gardée sans limite dans le téléphone
+    const raw=SS.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
+    const age=Date.now()-Number(data.updatedAt||0);
+    if(!(age>=0&&age<CHAT_IDLE_MS)){SS.removeItem('teranga-history');return;}  // nouvelle visite : chat vide
+    lastActivity=Number(data.updatedAt);
     // ?lang=… (widget partenaire, pages anglaises) prime sur la langue de la conversation enregistrée.
     if(data.lang&&T[data.lang]&&!T[urlParams.get('lang')])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
