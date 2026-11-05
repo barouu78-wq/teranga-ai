@@ -908,7 +908,10 @@ def test_home_bounds_persisted_chat_history():
 
     assert "slice(0,1200)" in html
     assert "version:2" in html
-    assert "LS.setItem('teranga-history'" in html
+    # Conversation neuve à chaque visite (5 nov. 2026) : gardée dans l'onglet seulement, 30 minutes au plus.
+    assert "SS.setItem('teranga-history'" in html
+    assert "LS.setItem('teranga-history'" not in html
+    assert "CHAT_IDLE_MS=30*60*1000" in html
     assert "safeHistory" in html
 
 
