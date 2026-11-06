@@ -12,6 +12,7 @@ from urllib.parse import quote
 from flask import Response, abort, jsonify, redirect, request
 
 from services.click_stats import ClickStats
+from services.coverage_log import looks_like_bot
 from services.partner_requests import KINDS, PartnerRequests
 
 from services.monetization import affiliate_config, affiliate_target, clean_query
@@ -111,7 +112,9 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 
 
 KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi",
-               "widget": "Widget (visiteurs envoyés)"}
+               "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux"}
+# Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
+VISIT_SOURCES = frozenset({"tiktok", "instagram", "whatsapp", "facebook", "youtube"})
 # Lignes par mois (liens /go et partenaires du widget) au-delà desquelles un nouveau partenaire est compté « autre ».
 WIDGET_MAX_FIELDS = 500
 
@@ -149,10 +152,10 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
                 for kind, source, n in month["rows"][:50]
             )
             table = (
-                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
+                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Nombre</th></tr></thead><tbody>{rows}</tbody></table>"
                 if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
             )
-            blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s)</h2><p>{kinds}</p>{table}</section>")
+            blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s) ou visite(s)</h2><p>{kinds}</p>{table}</section>")
         body = (
             "<h1>Statistiques partenaires</h1>"
             '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'
@@ -204,6 +207,21 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         # Comme pour /go : quelques visites par minute et par visiteur, pour qu'un script ne gonfle pas les chiffres.
         if partner and (rate_guard is None or rate_guard("widget_count") is None):
             stats.record("widget", partner, max_fields=WIDGET_MAX_FIELDS)
+        return None
+
+    @app.before_request
+    def count_social_visit():
+        # Visiteur arrivé par le lien marqué d'une publication (?utm_source=tiktok…) : compté par réseau, sans donnée
+        # personnelle ni outil extérieur. Les aperçus de liens (robots de WhatsApp, Facebook…) ne comptent pas.
+        if request.method != "GET" or request.args.get("utm_medium") == "widget":
+            return None
+        source = str(request.args.get("utm_source", "")).strip().lower()
+        agent = request.headers.get("User-Agent", "")
+        # Le robot d'aperçu de WhatsApp s'annonce « WhatsApp/2.x » (sans « bot ») : ce n'est pas un visiteur.
+        if source not in VISIT_SOURCES or looks_like_bot(agent) or agent.strip().lower().startswith("whatsapp/"):
+            return None
+        if rate_guard is None or rate_guard("visit_count") is None:
+            stats.record("visite", source)
         return None
 
     @app.get("/go/<kind>")
