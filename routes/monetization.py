@@ -152,7 +152,7 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
                 for kind, source, n in month["rows"][:50]
             )
             table = (
-                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
+                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Nombre</th></tr></thead><tbody>{rows}</tbody></table>"
                 if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
             )
             blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s) ou visite(s)</h2><p>{kinds}</p>{table}</section>")
@@ -216,7 +216,9 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         if request.method != "GET" or request.args.get("utm_medium") == "widget":
             return None
         source = str(request.args.get("utm_source", "")).strip().lower()
-        if source not in VISIT_SOURCES or looks_like_bot(request.headers.get("User-Agent", "")):
+        agent = request.headers.get("User-Agent", "")
+        # Le robot d'aperçu de WhatsApp s'annonce « WhatsApp/2.x » (sans « bot ») : ce n'est pas un visiteur.
+        if source not in VISIT_SOURCES or looks_like_bot(agent) or agent.strip().lower().startswith("whatsapp/"):
             return None
         if rate_guard is None or rate_guard("visit_count") is None:
             stats.record("visite", source)

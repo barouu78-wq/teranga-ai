@@ -6,6 +6,7 @@ ne comptent pas, et un script ne peut pas gonfler les chiffres. Les chiffres son
 """
 
 import os
+import re
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
@@ -25,6 +26,12 @@ def _stats(client, ip):
                        environ_base={"REMOTE_ADDR": ip}).get_data(as_text=True)
 
 
+def _compte(page, reseau):
+    """Visites comptées pour ce réseau ce mois-ci (0 sans ligne) : le compteur est partagé par toute la suite."""
+    trouve = re.search(rf"<td>Visites venues des réseaux</td><td>{reseau}</td><td>(\d+)</td>", page)
+    return int(trouve.group(1)) if trouve else 0
+
+
 def _visite(client, chemin, ip, agent=IPHONE):
     return client.get(chemin, base_url=B, headers={"User-Agent": agent}, environ_base={"REMOTE_ADDR": ip})
 
@@ -32,12 +39,13 @@ def _visite(client, chemin, ip, agent=IPHONE):
 def test_les_visites_venues_d_un_reseau_sont_comptees_par_reseau(monkeypatch):
     monkeypatch.setenv("STATS_TOKEN", CLE)
     client = _client()
+    avant = _stats(client, "203.0.113.83")
     assert _visite(client, "/?utm_source=tiktok", "203.0.113.81").status_code == 200
     assert _visite(client, "/joj-dakar-2026?utm_source=tiktok&utm_campaign=s45", "203.0.113.82").status_code == 200
     assert _visite(client, "/?utm_source=WhatsApp", "203.0.113.83").status_code == 200
-    page = _stats(client, "203.0.113.83")
-    assert "<td>Visites venues des réseaux</td><td>tiktok</td><td>2</td>" in page
-    assert "<td>Visites venues des réseaux</td><td>whatsapp</td><td>1</td>" in page
+    apres = _stats(client, "203.0.113.83")
+    assert _compte(apres, "tiktok") - _compte(avant, "tiktok") == 2
+    assert _compte(apres, "whatsapp") - _compte(avant, "whatsapp") == 1
 
 
 def test_un_reseau_inconnu_ou_une_visite_sans_lien_marque_ne_compte_pas(monkeypatch):
@@ -54,18 +62,40 @@ def test_un_reseau_inconnu_ou_une_visite_sans_lien_marque_ne_compte_pas(monkeypa
 def test_les_apercus_de_liens_des_robots_ne_comptent_pas(monkeypatch):
     monkeypatch.setenv("STATS_TOKEN", CLE)
     client = _client()
-    # Aperçu de lien (WhatsApp, Facebook) ou robot : pas un visiteur.
+    # Aperçu de lien (Facebook, Instagram) ou robot : pas un visiteur. Aucun autre test ne compte « instagram ».
     _visite(client, "/?utm_source=instagram", "203.0.113.85", agent="facebookexternalhit/1.1")
     _visite(client, "/?utm_source=instagram", "203.0.113.85", agent="")
-    assert "<td>instagram</td>" not in _stats(client, "203.0.113.85")
+    assert _compte(_stats(client, "203.0.113.85"), "instagram") == 0
+
+
+def test_l_apercu_de_lien_de_whatsapp_ne_compte_pas(monkeypatch):
+    """Relectures Codex et Gitar de #577 : WhatsApp fabrique l'aperçu avec l'agent « WhatsApp/2.x », sans « bot »."""
+    monkeypatch.setenv("STATS_TOKEN", CLE)
+    client = _client()
+    avant = _compte(_stats(client, "203.0.113.87"), "whatsapp")
+    _visite(client, "/?utm_source=whatsapp", "203.0.113.87", agent="WhatsApp/2.23.20.0 A")
+    _visite(client, "/?utm_source=whatsapp", "203.0.113.87", agent="WhatsApp/2.24.8.78 i")
+    assert _compte(_stats(client, "203.0.113.87"), "whatsapp") == avant
+    _visite(client, "/?utm_source=whatsapp", "203.0.113.88")  # la vraie visite, dans le navigateur du téléphone
+    assert _compte(_stats(client, "203.0.113.88"), "whatsapp") == avant + 1
+
+
+def test_la_colonne_des_chiffres_ne_dit_plus_clics(monkeypatch):
+    monkeypatch.setenv("STATS_TOKEN", CLE)
+    client = _client()
+    _visite(client, "/?utm_source=facebook", "203.0.113.89")
+    page = _stats(client, "203.0.113.89")
+    assert "<th>Lien</th><th>Origine</th><th>Nombre</th>" in page
+    assert "<th>Clics</th>" not in page
 
 
 def test_un_script_ne_peut_pas_gonfler_les_visites(monkeypatch):
     monkeypatch.setenv("STATS_TOKEN", CLE)
     client = _client()
+    avant = _compte(_stats(client, "203.0.113.86"), "youtube")
     for _ in range(10):
         assert _visite(client, "/?utm_source=youtube", "203.0.113.86").status_code == 200
-    assert "<td>youtube</td><td>6</td>" in _stats(client, "203.0.113.86")
+    assert _compte(_stats(client, "203.0.113.86"), "youtube") - avant == 6
 
 
 def test_les_liens_a_utiliser_sont_ecrits_pour_le_proprietaire():
