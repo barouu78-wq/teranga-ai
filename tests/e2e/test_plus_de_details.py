@@ -101,3 +101,19 @@ def test_le_bouton_revient_apres_un_rechargement(page, base_url):
     # Après la réponse détaillée, pas de bouton : ni sous elle, ni sous l'ancienne réponse.
     assert page.get_by_role("button", name="Plus de détails").count() == 0
     assert page.errors == []
+
+
+def test_changer_de_langue_avant_le_rechargement_ne_remet_pas_le_bouton(page, base_url):
+    """Relecture Gitar de #576 : « Plus de détails » demandé en français, puis page rechargée en anglais."""
+    _chat_qui_repond(page, base_url, ["Réponse courte.", "Suite détaillée."])
+    page.goto(base_url + "/")
+    ask(page, "Que voir à Gorée ?")
+    page.get_by_text("Réponse courte.").wait_for(timeout=5000)
+    page.get_by_role("button", name="Plus de détails").click()
+    page.get_by_text("Suite détaillée.").wait_for(timeout=5000)
+    page.wait_for_timeout(400)  # enregistrement différé de la conversation
+    page.goto(base_url + "/?lang=en")
+    page.get_by_text("Suite détaillée.").wait_for(timeout=5000)
+    page.wait_for_timeout(200)
+    assert page.get_by_role("button", name="More details").count() == 0
+    assert page.errors == []
