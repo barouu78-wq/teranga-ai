@@ -571,6 +571,17 @@ def test_visual_requests_trigger_web_search_first():
     assert should_use_web("À quoi ressemble ce lieu ?") is True
 
 
+def test_system_prompt_donne_l_essentiel_puis_les_details_sur_demande():
+    """V5 « réponses courtes » : l'essentiel en 5 à 8 lignes, même pour un guide ; le détail seulement sur demande
+    (bouton « Plus de détails » du chat, qui envoie cette question)."""
+    import app as app_module
+    prompt = app_module.SYSTEM_PROMPT
+    assert "5 à 8 lignes au plus" in prompt
+    assert "même pour une démarche ou un guide" in prompt
+    assert "Quand l'utilisateur demande plus de détails" in prompt
+    assert "vise environ 2 à 5 phrases" not in prompt
+
+
 def test_visual_system_rule_requires_web_before_requesting_user_photo():
     import app as app_module
     assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT

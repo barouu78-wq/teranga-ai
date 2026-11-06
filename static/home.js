@@ -576,7 +576,18 @@ function followupLabel(item){
   if(at&&FOLLOWUP_EN[at[1]])return FOLLOWUP_EN[at[1]]+' in '+at[2];
   return FOLLOWUP_EN[item]||'';
 }
-function clearFollowups(){document.querySelectorAll('.followups').forEach(row=>row.remove());}
+function clearFollowups(){document.querySelectorAll('.followups,.more-details').forEach(row=>row.remove());}
+// « Plus de détails » (V5) : l'IA donne d'abord l'essentiel ; ce bouton envoie la question comme si on l'avait tapée.
+// Wolof : libellé français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+function moreDetailsLabel(){return lang==='en'?'More details':'Plus de détails';}
+// Les deux libellés : la langue peut changer entre la question et un rechargement.
+function isMoreDetails(text){return text==='Plus de détails'||text==='More details';}
+function addMoreDetails(col){
+  const btn=document.createElement('button');btn.type='button';btn.className='more-details';btn.textContent=moreDetailsLabel();
+  btn.onclick=()=>ask(moreDetailsLabel());
+  const bubble=col.querySelector('.bubble');  // juste sous la réponse, avant les boutons Écouter, Copier…
+  if(bubble)bubble.after(btn);else col.appendChild(btn);
+}
 function addFollowups(col,ux){
   clearFollowups();
   if(!ux||ux.show_followups!==true||!Array.isArray(ux.followups))return;
@@ -1016,6 +1027,7 @@ function restore(){
       history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
+      let lastCol=null;
       history.forEach(item=>{
         const row=document.createElement('div');
         row.className='msg '+item.role;
@@ -1032,9 +1044,13 @@ function restore(){
           addMap(col,item.map);
           addSources(col,item.sources);
         }
+        lastCol=col;
         row.appendChild(col);
         frag.appendChild(row);
       });
+      // « Plus de détails » revient sous la dernière réponse (pas si elle répond déjà à « Plus de détails »).
+      const last=history[history.length-1],asked=history[history.length-2];
+      if(lastCol&&last&&last.role==='assistant'&&!(asked&&isMoreDetails(asked.content)))addMoreDetails(lastCol);
       messages.appendChild(frag);
       stage.scrollTop=stage.scrollHeight;
     }
@@ -1184,6 +1200,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addPlaceLinks(wait.col,places);
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
     if(reply)addFollowups(wait.col,ux);
+    if(reply&&!isMoreDetails(text))addMoreDetails(wait.col);  // pas sous la réponse détaillée elle-même
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);

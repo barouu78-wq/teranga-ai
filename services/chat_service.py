@@ -82,7 +82,8 @@ def build_chat_service(
     def claude_kwargs(payload):
         return {
             "system": payload.get("instructions", ""),
-            "max_tokens": 4000,
+            # Réponses courtes (V5) : l'essentiel en 5 à 8 lignes ; « Plus de détails » développe dans cette limite.
+            "max_tokens": 1500,
             "timeout": 60.0,
             "web": bool(payload.get("use_web")),
         }
