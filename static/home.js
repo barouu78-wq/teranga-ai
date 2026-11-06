@@ -1025,6 +1025,7 @@ function restore(){
       history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
+      let lastCol=null;
       history.forEach(item=>{
         const row=document.createElement('div');
         row.className='msg '+item.role;
@@ -1041,9 +1042,13 @@ function restore(){
           addMap(col,item.map);
           addSources(col,item.sources);
         }
+        lastCol=col;
         row.appendChild(col);
         frag.appendChild(row);
       });
+      // « Plus de détails » revient sous la dernière réponse (pas si elle répond déjà à « Plus de détails »).
+      const last=history[history.length-1],asked=history[history.length-2];
+      if(lastCol&&last&&last.role==='assistant'&&!(asked&&asked.content===moreDetailsLabel()))addMoreDetails(lastCol);
       messages.appendChild(frag);
       stage.scrollTop=stage.scrollHeight;
     }

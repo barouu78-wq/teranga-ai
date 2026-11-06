@@ -78,3 +78,26 @@ def test_en_anglais_le_bouton_dit_more_details(page, base_url):
     page.get_by_text("Long answer.").wait_for(timeout=5000)
     assert corps[1]["message"] == "More details"
     assert page.errors == []
+
+
+def test_le_bouton_revient_apres_un_rechargement(page, base_url):
+    """Relecture Codex de #576 : la conversation gardée pendant la visite revient au rechargement, son bouton aussi."""
+    corps = _chat_qui_repond(page, base_url, ["Réponse avant rechargement.", "Suite détaillée."])
+    page.goto(base_url + "/")
+    ask(page, "Que voir à Gorée ?")
+    page.get_by_text("Réponse avant rechargement.").wait_for(timeout=5000)
+    page.wait_for_timeout(400)  # enregistrement différé de la conversation
+    page.reload()
+    page.get_by_text("Réponse avant rechargement.").wait_for(timeout=5000)
+    bouton = page.locator(".msg.assistant").last.get_by_role("button", name="Plus de détails")
+    bouton.wait_for(timeout=5000)
+    bouton.click()
+    page.get_by_text("Suite détaillée.").wait_for(timeout=5000)
+    assert corps[-1]["message"] == "Plus de détails"
+    page.wait_for_timeout(400)
+    page.reload()
+    page.get_by_text("Suite détaillée.").wait_for(timeout=5000)
+    page.wait_for_timeout(200)
+    # Après la réponse détaillée, pas de bouton : ni sous elle, ni sous l'ancienne réponse.
+    assert page.get_by_role("button", name="Plus de détails").count() == 0
+    assert page.errors == []
