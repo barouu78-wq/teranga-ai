@@ -629,6 +629,7 @@ GUARDED_LIMITS = {
     "stats_login": (5, 20),
     "affiliate_count": (6, 60),
     "widget_count": (6, 60),
+    "visit_count": (6, 60),
     "partner_request": (3, 10),
 }
 
