@@ -78,6 +78,21 @@ def test_un_theme_ouvre_trois_questions_frequentes_et_en_pose_une(page, base_url
     assert page.errors == []
 
 
+def test_chaque_theme_en_francais_et_en_anglais_a_trois_questions_dont_la_sienne(page, base_url):
+    for chemin in ("/", "/?lang=en"):
+        _accueil(page, base_url, chemin=chemin)
+        themes = page.locator("#heroChips button")
+        assert themes.count() == 10, chemin
+        for i in range(10):
+            theme = themes.nth(i)
+            theme.click()
+            questions = page.locator("#themeQsList button")
+            assert questions.count() == 3, (chemin, theme.inner_text())
+            assert questions.first.inner_text() == theme.get_attribute("data-q"), (chemin, theme.inner_text())
+            theme.click()  # referme avant le thème suivant
+    assert page.errors == []
+
+
 def test_un_autre_theme_remplace_le_panneau_et_le_meme_le_referme(page, base_url):
     _accueil(page, base_url)
     page.locator("#heroChips button", has_text="Papiers").click()
