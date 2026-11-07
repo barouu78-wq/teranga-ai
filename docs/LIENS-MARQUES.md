@@ -20,7 +20,9 @@ Pour une page précise, la marque se met de la même façon : `https://teranga-a
 
 - **À faire une fois :** remplacer le lien de la bio TikTok et Instagram par le lien marqué ci-dessus.
 - Seuls ces cinq réseaux sont comptés ; une autre valeur est ignorée (pas de ligne inventée).
-- Les aperçus de liens (le petit encadré que WhatsApp ou Facebook fabriquent) viennent de robots : ils ne comptent pas.
+- Seules les visites faites dans un vrai navigateur comptent (Safari, Chrome, Firefox, ou le navigateur intégré de
+  TikTok et Instagram). Les aperçus de liens (le petit encadré que WhatsApp ou Facebook fabriquent) et les outils
+  automatiques ne comptent pas.
 - Un même visiteur ne peut pas gonfler les chiffres : au plus 6 visites comptées par minute et 60 par heure.
 - Le lien sans marque (`https://teranga-ai.fr`) marche toujours, mais sa visite n'est attribuée à aucun réseau.
 - Sur TikTok, le lien écrit dans la légende d'une vidéo n'est en général pas cliquable : c'est le lien de la bio qui compte.

@@ -102,3 +102,25 @@ def test_les_liens_a_utiliser_sont_ecrits_pour_le_proprietaire():
     texte = open(os.path.join(os.path.dirname(__file__), "..", "docs", "LIENS-MARQUES.md"), encoding="utf-8").read()
     for reseau in ("tiktok", "instagram", "whatsapp", "facebook", "youtube"):
         assert f"https://teranga-ai.fr/?utm_source={reseau}" in texte
+
+
+def test_seul_un_vrai_navigateur_compte(monkeypatch):
+    """Mesure du 6 novembre : à 12 h 52 UTC, trois visites dans la même seconde (une par lien marqué), agent
+    « Mozilla/5.0 (compatible) » : un outil automatique, compté à tort. Seuls Safari, Chrome, Firefox et les
+    navigateurs intégrés des applications (TikTok, Instagram…, tous WebKit ou Gecko) comptent désormais."""
+    monkeypatch.setenv("STATS_TOKEN", CLE)
+    client = _client()
+    avant = _compte(_stats(client, "203.0.113.90"), "tiktok")
+    _visite(client, "/?utm_source=tiktok", "203.0.113.90", agent="Mozilla/5.0 (compatible)")
+    _visite(client, "/?utm_source=tiktok", "203.0.113.90", agent="Mozilla/5.0")
+    _visite(client, "/?utm_source=tiktok", "203.0.113.90", agent="okhttp/4.12.0")
+    assert _compte(_stats(client, "203.0.113.90"), "tiktok") == avant
+    navigateurs = [
+        # Navigateur intégré de TikTok sur iPhone, Chrome sur Android, Firefox sur ordinateur.
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 musical_ly_37.0.0",
+        "Mozilla/5.0 (Linux; Android 14; SM-A145F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
+    ]
+    for n, agent in enumerate(navigateurs):
+        _visite(client, "/?utm_source=tiktok", f"203.0.113.{91 + n}", agent=agent)
+    assert _compte(_stats(client, "203.0.113.93"), "tiktok") == avant + 3

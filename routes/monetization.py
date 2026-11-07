@@ -217,8 +217,11 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
             return None
         source = str(request.args.get("utm_source", "")).strip().lower()
         agent = request.headers.get("User-Agent", "")
-        # Le robot d'aperçu de WhatsApp s'annonce « WhatsApp/2.x » (sans « bot ») : ce n'est pas un visiteur.
-        if source not in VISIT_SOURCES or looks_like_bot(agent) or agent.strip().lower().startswith("whatsapp/"):
+        # Seul un vrai navigateur compte : Safari, Chrome, Firefox et les navigateurs intégrés de TikTok ou Instagram
+        # s'annoncent tous WebKit ou Gecko. L'aperçu WhatsApp (« WhatsApp/2.x ») ou un outil (« Mozilla/5.0
+        # (compatible) », vu le 6 novembre) ne le font pas ; les robots qui imitent un navigateur restent écartés.
+        navigateur = "AppleWebKit/" in agent or "Gecko/" in agent
+        if source not in VISIT_SOURCES or not navigateur or looks_like_bot(agent):
             return None
         if rate_guard is None or rate_guard("visit_count") is None:
             stats.record("visite", source)
