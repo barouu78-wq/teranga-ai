@@ -25,6 +25,8 @@ yassa ? ») reçoit sa description, telle quelle, de data/senegal_knowledge.json
 
 Une question courte qui demande ce qu'est un lieu de la base (« Que voir à Saint-Louis ? ») reçoit sa fiche, et une
 question sur une des 14 régions (« Que faire à Dakar ? », « C'est quoi la région de Thiès ? ») son dossier, tels quels.
+Une question courte sur Woyofal (« Pourquoi trois codes ? », « Comment acheter du crédit Woyofal ? ») ou sur les prises
+électriques (« Quel voltage au Sénégal ? ») reçoit le repère vérifié de services/practical_facts.py, tel quel.
 Toute autre formulation (une situation, une date, un trajet, une précision) va au modèle.
 """
 
@@ -52,6 +54,7 @@ from services.calculators import (
 from services.events import _ALIASES, _asked, french_date, upcoming_events
 from services.fallback_answer import _place_text
 from services.places import mentioned_places
+from services.practical_facts import TOPICS as _PRACTICAL_TOPICS
 from services.senegal_knowledge import load_senegal_knowledge
 from services.seo import region_slug
 from services.text import fold_text
@@ -460,6 +463,37 @@ def _region_reply(region: dict) -> str:
 # « Que peux-tu faire ? », « Qui es-tu ? » : rien dans le contexte de l'IA ne décrit le service, qui risquait d'inventer
 # des fonctions (relevé /stats-ia du 24 octobre 2026). Chaque page citée existe (tests/test_reponse_seule_presentation.py
 # l'ouvre). Teranga s'adresse à toute la population : Sénégalais au pays, diaspora, commerçants et voyageurs.
+# Woyofal et prises électriques (V5) : le repère vérifié de services/practical_facts.py, tel quel (le texte que l'IA
+# reçoit aussi, sources dans ce fichier). Seulement pour une question courte faite de ces mots-là : une situation
+# (« mon compteur affiche une erreur »), un montant ou une autre précision vont au modèle.
+_TOPIC_ASKS = (
+    ("factures", {"woyofal"}, {
+        "woyofal", "senelec", "code", "codes", "trois", "3", "credit", "recharge", "recharger", "acheter", "achat",
+        "compteur", "electricite", "prepaye", "prepayee", "comment", "pourquoi", "ou", "quoi", "on", "un", "une", "mon",
+        "ma", "faire", "marche", "fonctionne"}),
+    ("electricite", {"prise", "prises", "voltage", "tension", "adaptateur", "adaptateurs"}, {
+        "prise", "prises", "electrique", "electriques", "voltage", "tension", "adaptateur", "adaptateurs", "type",
+        "types", "courant", "faut", "un", "une"}),
+)
+_TOPIC_LINKS = {"factures": "Toutes les démarches : teranga-ai.fr/demarches-senegal"}
+
+
+def _asked_practical_topic(message: str) -> str | None:
+    """« factures » (Woyofal) ou « electricite » (prises) si la question ne demande que ça, sinon None."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    for name, required, allowed in _TOPIC_ASKS:
+        if words & required and words <= allowed | _FILLER_WORDS:
+            return name
+    return None
+
+
+def _practical_reply(name: str) -> str:
+    facts = next(facts for topic, _, facts in _PRACTICAL_TOPICS if topic == name)
+    return "\n".join([*facts, *([_TOPIC_LINKS[name]] if name in _TOPIC_LINKS else [])])
+
+
 _ABOUT = re.compile(
     r"(?<![a-z])(?:qui es tu|tu es qui|qui etes vous|vous etes qui|"
     r"(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire|tu (?:peux|sais) faire quoi|"
@@ -525,6 +559,9 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
             return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None, "theme": "internet"}
         if _asked_about_teranga(message):
             return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None, "theme": "teranga_ai"}
+        topic = _asked_practical_topic(message)
+        if topic:
+            return {"reply": _practical_reply(topic), "sources": [], "image": None, "map": None, "theme": "electricite"}
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
