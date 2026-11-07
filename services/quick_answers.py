@@ -578,8 +578,36 @@ _LINE_ASKS = (
     ("arnaques", ("Si l'on est victime",), (_ARNAQUE_WORDS, {"faire", "plainte"}), {
         "on", "m", "sur", "wave", "orange", "money", "yas", "free", "mobile", "que", "faire", "je", "me", "suis", "fait",
         "j", "ai", "ete", "une", "porter", "plainte", "comment", "quoi"} | _ARNAQUE_WORDS),
+    # Deuxième lot : protection sociale, études, entreprise, vente (questions fréquentes de l'accueil V5).
+    ("protection", ("Santé : la couverture maladie universelle",), ({"cmu", "universelle"},), {
+        "cmu", "couverture", "maladie", "universelle", "quoi", "qu", "comment", "ca", "marche", "fonctionne", "que"}),
+    ("protection", ("Bourse de sécurité familiale",), ({"bourse"}, {"securite"}, {"familiale"}), {
+        "bourse", "securite", "familiale", "bsf", "quoi", "comment", "obtenir", "avoir", "une"}),
+    ("etudes", ("Bourses",), ({"bourse", "bourses"}, {"etudes", "etude", "etudier", "etudiant", "etudiants",
+                                                     "universite", "etranger"}), {
+        "bourse", "bourses", "etudes", "etude", "etudier", "etudiant", "etudiants", "universite", "etranger", "etat",
+        "comment", "obtenir", "avoir", "demander", "demande", "une", "un", "on", "peut", "l"}),
+    # « Inscription au bac » n'est pas l'orientation après le bac : il faut l'université, Campusen ou un ISEP.
+    ("etudes", ("Après le bac",), ({"universite", "universites", "campusen", "isep"},), {
+        "universite", "universites", "campusen", "isep", "comment", "s", "inscrire", "inscription", "apres", "bac",
+        "publique", "publiques", "orientation", "faire", "mon", "ma", "une", "on", "quand", "ca", "marche",
+        "fonctionne"}),
+    ("entreprise", ("Créer une activité",), ({"entreprise", "societe", "activite", "sarl", "suarl", "gie", "ninea",
+                                              "rccm"},
+                                             {"creer", "creation", "immatriculer", "immatriculation", "ouvrir",
+                                              "ninea", "rccm"}), {
+        "entreprise", "societe", "activite", "sarl", "suarl", "gie", "ninea", "rccm", "creer", "creation",
+        "immatriculer", "immatriculation", "ouvrir", "comment", "mon", "ma", "une", "un", "quoi", "faut", "quelles",
+        "demarches", "formalites", "petite", "on", "peut", "je"}),
+    ("vente", ("Vendre sur WhatsApp",), ({"whatsapp"}, {"vendre", "vente", "ventes", "clients", "catalogue"}), {
+        "whatsapp", "business", "vendre", "vente", "ventes", "clients", "client", "catalogue", "comment", "sur",
+        "utiliser", "mes", "mon", "ma", "produits", "bien", "plus"}),
+    ("vente", ("Fixer un prix",), ({"marge", "prix"}, {"calculer", "calcul", "fixer", "definir", "mettre"}), {
+        "marge", "prix", "calculer", "calcul", "fixer", "definir", "mettre", "comment", "ma", "mon", "mes", "sur", "un",
+        "produit", "produits", "vente", "bon"}),
 )
-_LINE_THEMES = {"sante": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences"}
+_LINE_THEMES = {"sante": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences",
+                "protection": "protection_sociale", "etudes": "etudes", "entreprise": "entreprise", "vente": "commerce"}
 
 
 def _asked_practical_line(message: str) -> tuple[str, str] | None:

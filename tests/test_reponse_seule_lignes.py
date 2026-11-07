@@ -60,6 +60,22 @@ def _reponse(message, language="fr", raw=None):
     ("J'ai reçu un SMS d'amende avec un lien, arnaque ?", "arnaques", ("Faux SMS",), "urgences"),
     ("On m'a arnaqué sur Wave, que faire ?", "arnaques", ("Si l'on est victime",), "urgences"),
     ("Je suis victime d'une arnaque, que faire ?", "arnaques", ("Si l'on est victime",), "urgences"),
+    # Deuxième lot (« Go » du 7 novembre 2026, soir) : protection sociale, études, entreprise, vente.
+    ("C'est quoi la CMU ?", "protection", ("Santé : la couverture maladie universelle",), "protection_sociale"),
+    ("CMU Sénégal, comment ça marche ?", "protection", ("Santé : la couverture maladie universelle",),
+     "protection_sociale"),
+    ("C'est quoi la bourse de sécurité familiale ?", "protection", ("Bourse de sécurité familiale",),
+     "protection_sociale"),
+    ("Comment obtenir une bourse d'études ?", "etudes", ("Bourses",), "etudes"),
+    ("Bourse pour étudier à l'étranger ?", "etudes", ("Bourses",), "etudes"),
+    ("Comment s'inscrire à l'université au Sénégal ?", "etudes", ("Après le bac",), "etudes"),
+    ("Campusen, comment ça marche ?", "etudes", ("Après le bac",), "etudes"),
+    ("Comment créer mon entreprise au Sénégal ?", "entreprise", ("Créer une activité",), "entreprise"),
+    ("C'est quoi le NINEA ?", "entreprise", ("Créer une activité",), "entreprise"),
+    ("Comment vendre sur WhatsApp ?", "vente", ("Vendre sur WhatsApp",), "commerce"),
+    ("Comment utiliser WhatsApp Business pour vendre ?", "vente", ("Vendre sur WhatsApp",), "commerce"),
+    ("Comment calculer ma marge sur un produit ?", "vente", ("Fixer un prix",), "commerce"),
+    ("Comment fixer le prix de mes produits ?", "vente", ("Fixer un prix",), "commerce"),
 ])
 def test_la_question_recoit_la_ligne_verifiee(message, sujet, debuts, theme):
     answer = _reponse(message)
@@ -88,6 +104,19 @@ def test_la_question_recoit_la_ligne_verifiee(message, sujet, debuts, theme):
     "Nouveau numéro de téléphone",
     "J'ai été arnaqué par un faux policier, que faire ?",
     "Comment éviter les arnaques au Sénégal ?",
+    # Deuxième lot
+    "La CMU rembourse-t-elle les médicaments ?",
+    "Comment avoir la CMU pour ma mère ?",
+    "Montant de la bourse d'études en master ?",
+    "Comment s'inscrire au bac en candidat libre ?",
+    "Inscription à l'université Cheikh Anta Diop en master",
+    "Orientation professionnelle après la 3e",
+    "Créer une entreprise en France depuis Dakar",
+    "Comment installer WhatsApp sur mon téléphone ?",
+    "WhatsApp ne marche plus",
+    "Prix du riz à Dakar",
+    "Calculer ma marge : achat 1000, vente 1500",
+    "Calculer le prix d'un billet d'avion",
 ])
 def test_une_situation_ou_un_detail_va_au_modele(message):
     assert _reponse(message) is None, message
