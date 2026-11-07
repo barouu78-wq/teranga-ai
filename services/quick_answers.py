@@ -499,8 +499,12 @@ def _asked_practical_topic(message: str) -> str | None:
     demande que ça, sinon None."""
     if len(message) > MAX_CHARS:
         return None
-    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    tokens = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    words = set(tokens)
     for name, required, allowed in _TOPIC_ASKS:
+        # « Quand partir de Dakar ? » : un départ, pas la meilleure saison pour venir (relecture Gitar de #582).
+        if name == "saison" and re.search(r"\bpartir (?:de|d|du|des)\b", " ".join(tokens)):
+            continue
         if words & required and words <= allowed | _FILLER_WORDS:
             return name
     return None

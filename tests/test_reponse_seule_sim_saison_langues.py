@@ -50,6 +50,9 @@ def test_la_question_recoit_le_repere_verifie(message, sujet, theme):
     "Combien coûte un forfait internet Orange ?",
     "Quel opérateur a le meilleur réseau à Kédougou ?",
     "Quand partir de Dakar pour Saint-Louis ?",
+    # Relecture Gitar de #582 : « partir de / du… » est un départ, pas la meilleure saison pour venir.
+    "Quand partir de Dakar ?",
+    "Quand partir du Sénégal ?",
     "Saison de la mangue au Sénégal ?",
     "Il pleut demain à Dakar ?",
     "Apprends-moi la langue wolof",
