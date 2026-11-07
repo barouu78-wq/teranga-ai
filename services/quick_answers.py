@@ -25,8 +25,10 @@ yassa ? ») reçoit sa description, telle quelle, de data/senegal_knowledge.json
 
 Une question courte qui demande ce qu'est un lieu de la base (« Que voir à Saint-Louis ? ») reçoit sa fiche, et une
 question sur une des 14 régions (« Que faire à Dakar ? », « C'est quoi la région de Thiès ? ») son dossier, tels quels.
-Une question courte sur Woyofal (« Pourquoi trois codes ? », « Comment acheter du crédit Woyofal ? ») ou sur les prises
-électriques (« Quel voltage au Sénégal ? ») reçoit le repère vérifié de services/practical_facts.py, tel quel.
+Une question courte sur Woyofal (« Pourquoi trois codes ? », « Comment acheter du crédit Woyofal ? »), les prises
+électriques (« Quel voltage au Sénégal ? »), la carte SIM (« Quel opérateur ? »), la meilleure saison (« Quand partir au
+Sénégal ? ») ou les langues (« Quelle langue parle-t-on ? ») reçoit le repère vérifié de services/practical_facts.py,
+tel quel.
 Toute autre formulation (une situation, une date, un trajet, une précision) va au modèle.
 """
 
@@ -475,12 +477,26 @@ _TOPIC_ASKS = (
     ("electricite", {"prise", "prises", "voltage", "electrique", "electriques", "adaptateur", "adaptateurs"}, {
         "prise", "prises", "electrique", "electriques", "voltage", "tension", "adaptateur", "adaptateurs", "type",
         "types", "courant", "faut", "un", "une"}),
+    # Carte SIM et opérateurs, meilleure saison, langues parlées : repères durables, sans prix ni horaire.
+    ("sim", {"sim", "esim", "puce", "operateur", "operateurs"}, {
+        "sim", "esim", "puce", "puces", "carte", "cartes", "operateur", "operateurs", "telephonique", "telephoniques",
+        "mobile", "acheter", "achat", "avoir", "trouver", "prendre", "ou", "comment", "un", "une", "on", "peut", "je",
+        "telephone"}),
+    ("saison", {"saison", "saisons", "periode", "climat", "partir"}, {
+        "saison", "saisons", "periode", "climat", "partir", "venir", "aller", "visiter", "voyager", "quand",
+        "meilleure", "meilleur", "pluies", "pluie", "seche", "hivernage", "un", "une", "y", "on", "faut"}),
+    ("langue", {"langue", "langues"}, {
+        "langue", "langues", "parle", "parlent", "parlee", "parlees", "parler", "officielle", "officielles", "on", "t",
+        "y", "principale", "principales"}),
 )
+_TOPIC_THEMES = {"factures": "electricite", "electricite": "electricite", "sim": "internet", "saison": "meteo",
+                 "langue": "langue"}
 _TOPIC_LINKS = {"factures": "Toutes les démarches : teranga-ai.fr/demarches-senegal"}
 
 
 def _asked_practical_topic(message: str) -> str | None:
-    """« factures » (Woyofal) ou « electricite » (prises) si la question ne demande que ça, sinon None."""
+    """Le sujet de practical_facts (« factures », « electricite », « sim », « saison », « langue ») si la question ne
+    demande que ça, sinon None."""
     if len(message) > MAX_CHARS:
         return None
     words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
@@ -562,7 +578,8 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
             return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None, "theme": "teranga_ai"}
         topic = _asked_practical_topic(message)
         if topic:
-            return {"reply": _practical_reply(topic), "sources": [], "image": None, "map": None, "theme": "electricite"}
+            return {"reply": _practical_reply(topic), "sources": [], "image": None, "map": None,
+                    "theme": _TOPIC_THEMES[topic]}
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
