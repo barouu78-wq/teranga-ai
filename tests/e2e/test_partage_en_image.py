@@ -106,3 +106,21 @@ def test_en_anglais(page, base_url):
     page.get_by_role("button", name="Share as image").click()
     page.get_by_role("dialog", name="Share as image").get_by_role("button", name="Save image").wait_for(timeout=5000)
     assert page.errors == []
+
+
+def test_un_mot_trop_long_est_coupe_dans_la_largeur(page, base_url):
+    """Relecture Gitar de #580 : un lien sans espace plus large que le panneau débordait de l'image (et le « … » aussi
+    quand la réponse était coupée sur ce mot)."""
+    _reponse(page, base_url)
+    largeurs = page.evaluate("""async () => {
+      await document.fonts.load('400 46px "Atkinson Hyperlegible"');
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.font = '400 46px "Atkinson Hyperlegible",system-ui,sans-serif';
+      const lien = 'https://www.service-public.sn/demarches/' + 'etat-civil-acte-de-naissance-'.repeat(4);
+      const mesure = (r) => r.lines.map((l) => ctx.measureText(l).width);
+      return {entier: mesure(shareImgLines(ctx, 'Voir ' + lien + ' pour la suite.', 840, 20)),
+              coupe: mesure(shareImgLines(ctx, 'Voir ' + lien + ' ' + lien, 840, 2))};
+    }""")
+    assert len(largeurs["entier"]) >= 3
+    assert max(largeurs["entier"]) <= 840, largeurs
+    assert max(largeurs["coupe"]) <= 840, largeurs

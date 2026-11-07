@@ -626,7 +626,14 @@ function shareImgLines(ctx,text,maxW,maxLines){
   const lines=[];
   for(const p of String(text||'').split(/\n+/)){
     let line='';
-    for(const w of p.replace(/\s+/g,' ').trim().split(' ').filter(Boolean)){
+    for(let w of p.replace(/\s+/g,' ').trim().split(' ').filter(Boolean)){
+      // Mot plus large que la ligne (un lien) : coupé en morceaux qui tiennent (relecture Gitar de #580).
+      while(w.length>1&&ctx.measureText(w).width>maxW){
+        let n=w.length-1;
+        while(n>1&&ctx.measureText(w.slice(0,n)).width>maxW)n--;
+        if(line){lines.push(line);line='';}
+        lines.push(w.slice(0,n));w=w.slice(n);
+      }
       const test=line?line+' '+w:w;
       if(line&&ctx.measureText(test).width>maxW){lines.push(line);line=w;}else line=test;
     }
@@ -635,7 +642,7 @@ function shareImgLines(ctx,text,maxW,maxLines){
   if(lines.length<=maxLines)return {lines,cut:false};
   const kept=lines.slice(0,maxLines);
   let last=kept[maxLines-1];
-  while(last.includes(' ')&&ctx.measureText(last+' …').width>maxW)last=last.slice(0,last.lastIndexOf(' '));
+  while(last&&ctx.measureText(last+' …').width>maxW)last=last.includes(' ')?last.slice(0,last.lastIndexOf(' ')):last.slice(0,-1);
   kept[maxLines-1]=last+' …';
   return {lines:kept,cut:true};
 }
