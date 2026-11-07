@@ -531,6 +531,69 @@ def _practical_reply(name: str) -> str:
     return "\n".join([*facts, *([_TOPIC_LINKS[name]] if name in _TOPIC_LINKS else [])])
 
 
+# Une ligne précise d'un repère (V5) : « Où trouver une pharmacie de garde ? » reçoit la ligne « Pharmacie de garde »
+# du sujet « sante », telle quelle, pas tout le repère. (sujet, débuts des lignes servies dans cet ordre, groupes de mots
+# qui doivent tous apparaître, mots permis en plus des mots de liaison). tests/test_reponse_seule_lignes.py vérifie que
+# chaque début désigne une seule ligne de services/practical_facts.py.
+_ARNAQUE_WORDS = {"arnaque", "arnaques", "arnaquer", "arnaquee", "escroque", "escroquee", "escroquerie", "victime"}
+_LINE_ASKS = (
+    ("sante", ("Pharmacie de garde",), ({"pharmacie", "pharmacies"}, {"garde", "ouverte", "ouvertes", "nuit", "dimanche"}), {
+        "pharmacie", "pharmacies", "garde", "ouverte", "ouvertes", "nuit", "dimanche", "ou", "trouver", "une", "comment",
+        "on"}),
+    ("sante", ("Paludisme",), ({"paludisme", "palu"},), {
+        "paludisme", "palu", "comment", "se", "proteger", "protection", "eviter", "y", "t", "risque", "contre",
+        "moustique", "moustiques", "prevenir"}),
+    ("sante", ("Eau",), ({"eau"}, {"robinet", "boire", "potable"}), {
+        "eau", "robinet", "boire", "potable", "peut", "on", "elle", "puis", "je"}),
+    ("sante", ("Fièvre jaune",), ({"fievre"}, {"jaune"}), {
+        "fievre", "jaune", "vaccin", "vaccination", "faut", "obligatoire", "certificat", "contre", "un"}),
+    ("papiers", ("Carte d'identité",), ({"identite"},), {
+        "carte", "identite", "cni", "biometrique", "nationale", "refaire", "renouveler", "renouvellement", "faire",
+        "obtenir", "demander", "demande", "comment", "ma", "mon", "une", "pieces", "papiers", "documents", "faut", "que"}),
+    # Un verbe de demande est exigé : « Faut-il un passeport pour le Sénégal ? » parle d'entrer au pays.
+    ("papiers", ("Passeport",), ({"passeport"}, {"faire", "refaire", "renouveler", "renouvellement", "obtenir",
+                                                 "demander", "demande", "pieces", "documents"}), {
+        "passeport", "faire", "refaire", "renouveler", "renouvellement", "obtenir", "demander", "demande", "pieces",
+        "documents", "comment", "un", "mon", "senegalais", "que", "faut"}),
+    ("papiers", ("État civil", "En ligne"), ({"naissance"},), {
+        "acte", "actes", "extrait", "extraits", "naissance", "copie", "litterale", "integrale", "comment", "obtenir",
+        "demander", "demande", "faire", "avoir", "un", "une", "mon", "ma", "ou", "depuis", "etranger"}),
+    ("papiers", ("Casier judiciaire", "En ligne"), ({"casier"},), {
+        "casier", "judiciaire", "bulletin", "n", "3", "extrait", "comment", "demander", "demande", "obtenir", "faire",
+        "avoir", "un", "mon", "ou", "ligne"}),
+    # Pas « changer » ni « oublié » : la ligne ne dit pas comment faire.
+    ("mobile_money", ("Code secret",), ({"code", "codes"}, {"secret", "pin"}), {
+        "code", "codes", "secret", "pin", "comment", "proteger", "securiser", "mon", "ma", "wave", "orange", "money",
+        "free", "yas", "mobile", "donner", "faut", "on", "peut", "qui", "ou"}),
+    ("mobile_money", ("Envoi par erreur",), ({"erreur"}, {"argent", "envoi", "envoye", "envoyer", "transfert", "recu",
+                                                         "depot"}), {
+        "erreur", "argent", "envoi", "envoye", "envoyer", "transfert", "recu", "depot", "par", "j", "ai", "on", "m",
+        "que", "faire", "comment", "un", "sur", "mon", "wave", "orange", "money", "quelqu"}),
+    ("arnaques", ("Faux proche",), ({"nouveau"}, {"numero"}, {"voici"} | _ARNAQUE_WORDS), {
+        "voici", "mon", "nouveau", "numero", "ce", "une", "telephone", "casse", "quelqu", "un", "m", "ecrit", "dit",
+        "que", "faire", "on"} | _ARNAQUE_WORDS),
+    ("arnaques", ("Faux SMS",), ({"sms", "message"}, {"amende", "amendes"}), {
+        "sms", "message", "amende", "amendes", "un", "une", "j", "ai", "recu", "vrai", "faux", "ce", "lien", "avec",
+        "payer", "que", "faire"} | _ARNAQUE_WORDS),
+    ("arnaques", ("Si l'on est victime",), (_ARNAQUE_WORDS, {"faire", "plainte"}), {
+        "on", "m", "sur", "wave", "orange", "money", "yas", "free", "mobile", "que", "faire", "je", "me", "suis", "fait",
+        "j", "ai", "ete", "une", "porter", "plainte", "comment", "quoi"} | _ARNAQUE_WORDS),
+)
+_LINE_THEMES = {"sante": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences"}
+
+
+def _asked_practical_line(message: str) -> tuple[str, str] | None:
+    """(sujet, lignes de repère) qui répondent à une question courte ne demandant que ça, sinon None."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    for topic, starts, groups, allowed in _LINE_ASKS:
+        if all(words & group for group in groups) and words <= allowed | _FILLER_WORDS:
+            facts = next(facts for name, _, facts in _PRACTICAL_TOPICS if name == topic)
+            return topic, "\n".join(next(f for f in facts if f.startswith(start)) for start in starts)
+    return None
+
+
 _ABOUT = re.compile(
     r"(?<![a-z])(?:qui es tu|tu es qui|qui etes vous|vous etes qui|"
     r"(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire|tu (?:peux|sais) faire quoi|"
@@ -600,6 +663,9 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         if topic:
             return {"reply": _practical_reply(topic), "sources": [], "image": None, "map": None,
                     "theme": _TOPIC_THEMES[topic]}
+        served = _asked_practical_line(message)
+        if served:
+            return {"reply": served[1], "sources": [], "image": None, "map": None, "theme": _LINE_THEMES[served[0]]}
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
