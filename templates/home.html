@@ -710,6 +710,29 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
 .journey-strip [data-journey="travel"]>span{background:var(--gold-soft)}
 /* Boutons de suite (version 9) : sous la dernière réponse ; zones tactiles de 44 px. */
+/* Sous la réponse : « Plus de détails » et « Partager en image » (V5), boutons de 44 px. */
+.answer-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.share-img-btn{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font:700 14px/1.25 var(--font);cursor:pointer}
+.share-img-btn:focus-visible,.share-img button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+/* Fenêtre « Partager en image » : aperçu au format statut, choix du fond, partage ou enregistrement. */
+.share-img{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(16,10,4,.55);backdrop-filter:blur(4px)}
+.share-img[hidden]{display:none}
+.share-img-panel{width:min(420px,100%);max-height:calc(var(--vvh,100vh) - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.share-img-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.share-img-head h2{margin:0;font:700 20px/1.2 var(--font-display)}
+.share-img-close{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:12px;background:transparent;color:var(--ink);cursor:pointer}
+.share-img-close svg{width:22px;height:22px}
+.share-img-frame{display:flex;justify-content:center;padding:12px;border-radius:18px;background:var(--surface-2);border:1px solid var(--line)}
+.share-img-frame img{display:block;width:auto;height:min(46vh,420px);aspect-ratio:9/16;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);background:var(--bg)}
+.share-img-bgs{display:flex;flex-wrap:wrap;gap:8px}
+.share-img-bgs button{min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 14px/1 var(--font);cursor:pointer}
+.share-img-bgs button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.share-img-dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong)}
+.share-img-go,.share-img-save{min-height:52px;border-radius:16px;font:700 16px/1.2 var(--font);cursor:pointer}
+.share-img-go{border:0;background:var(--accent);color:var(--accent-ink)}
+.share-img-save{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.share-img-go:disabled,.share-img-save:disabled{opacity:.5;cursor:default}
+.share-img-note{margin:0;font-size:13px;color:var(--muted)}
 .more-details{align-self:flex-start;min-height:44px;padding:8px 16px;border-radius:999px;border:1px dashed var(--line-strong);background:transparent;color:var(--ink);font:700 14px/1.25 var(--font);cursor:pointer}.more-details:hover{border-color:var(--accent);color:var(--link)}
 .followups{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.followup{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1.25 var(--font);text-align:left;cursor:pointer}.followup:hover{border-color:var(--accent);color:var(--link)}
 .project-offer{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.project-offer-btn{padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer}.project-offer-btn:disabled{opacity:.6}.project-offer-more{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-weight:700;cursor:pointer}.project-offer-result{flex-basis:100%}.project-offer-result h3{margin:6px 0}.project-meta{color:var(--muted);margin:0 0 6px}
