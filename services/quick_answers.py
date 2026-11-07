@@ -515,6 +515,9 @@ def _asked_practical_topic(message: str) -> str | None:
         # « Quand partir de Dakar ? » : un départ, pas la meilleure saison pour venir (relecture Gitar de #582).
         if name == "saison" and re.search(r"\bpartir (?:de|d|du|des)\b", " ".join(tokens)):
             continue
+        # « Envoyer de l'argent du Sénégal » : le sens inverse du repère « vers le Sénégal » (relecture Gitar de #584).
+        if name == "envoi_argent" and re.search(r"\b(?:du|de|d|depuis) (?:senegal|dakar)\b", " ".join(tokens)):
+            continue
         # « Quand partir au Sénégal ? » oui ; « Partir au Sénégal » seul n'est pas une question de saison (Codex, #582).
         groups = required if isinstance(required, tuple) else (required,)
         asked = all(words & group for group in groups) or (name == "saison" and {"quand", "partir"} <= words)

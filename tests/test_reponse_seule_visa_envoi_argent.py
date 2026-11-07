@@ -64,6 +64,10 @@ def test_la_question_recoit_le_repere_verifie(message, sujet, theme):
     "Comment envoyer un colis au Sénégal ?",
     "Transfert aéroport Dakar ?",
     "Comment envoyer de l'argent du Sénégal vers la France ?",
+    # Relecture Gitar de #584 : le départ du Sénégal est le sens inverse du repère « vers le Sénégal ».
+    "Comment envoyer de l'argent du Sénégal ?",
+    "Transfert d'argent de Dakar",
+    "Envoyer de l'argent depuis le Sénégal",
 ])
 def test_une_situation_ou_un_autre_sujet_va_au_modele(message):
     assert _reponse(message) is None, message
