@@ -28,7 +28,7 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -52,7 +52,7 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
@@ -263,6 +263,55 @@ const AUDIENCE_ICONS={
  diaspora:['route','home','exchange','invest'],
  merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
+// Thèmes rapides de « Tout le Sénégal » (V5) : trois questions fréquentes par thème, la première est celle que le
+// thème posait avant. Français et anglais seulement : en wolof, le thème pose directement sa question (pas de
+// traduction inventée).
+const THEME_QS={
+fr:{
+ 'Papiers':["Comment refaire ma carte d'identité ?","Comment obtenir un acte de naissance depuis l'étranger ?","Comment demander un casier judiciaire ?"],
+ 'Santé':["Où trouver une pharmacie de garde ?","Comment se protéger du paludisme ?","C'est quoi la CMU ?"],
+ 'Argent':["Combien font 100 euros en FCFA ?","J'ai reçu de l'argent par erreur, que faire ?","Comment comparer deux transferts d'argent ?"],
+ 'Voyage':["Que faire au Sénégal en une semaine ?","Faut-il un visa pour le Sénégal ?","Quelle est la meilleure saison pour visiter le Sénégal ?"],
+ 'Arnaques':["On m'a arnaqué sur Wave, que faire ?","« Voici mon nouveau numéro » : est-ce une arnaque ?","Comment protéger mon code secret Wave ou Orange Money ?"],
+ 'Électricité':["Comment acheter du crédit Woyofal ?","Woyofal : pourquoi trois codes ?","Quelles prises électriques au Sénégal ?"],
+ 'Études':["Comment obtenir une bourse d'études ?","Comment s'inscrire à l'université au Sénégal ?","Comment faire reconnaître un diplôme obtenu à l'étranger ?"],
+ 'Entreprise':["Comment créer mon entreprise au Sénégal ?","Comment vendre sur WhatsApp ?","Comment calculer ma marge sur un produit ?"],
+ 'Fêtes':["C'est quand la Tabaski ?","C'est quand la Korité ?","Quels sont les jours fériés au Sénégal ?"],
+ 'Wolof':["Apprends-moi les salutations en wolof.","Comment dire merci en wolof ?","Apprends-moi à compter de 1 à 10 en wolof."]
+},
+en:{
+ 'Paperwork':["How do I renew my Senegalese ID card?","How do I get a birth certificate from abroad?","How do I request a criminal record extract?"],
+ 'Health':["Where can I find an on-duty pharmacy?","How do I protect myself from malaria?","What is the CMU health coverage?"],
+ 'Money':["How much is 100 euros in CFA francs?","I received money by mistake, what should I do?","How do I compare two money transfers?"],
+ 'Travel':["What can I do in Senegal in one week?","Do I need a visa for Senegal?","When is the best time to visit Senegal?"],
+ 'Scams':["I was scammed on Wave, what should I do?","“This is my new number”: is it a scam?","How do I protect my Wave or Orange Money PIN?"],
+ 'Electricity':["How do I buy Woyofal electricity credit?","Woyofal: why three codes?","What power plugs are used in Senegal?"],
+ 'Studies':["How can I get a study grant?","How do I enrol at a university in Senegal?","How do I get a foreign diploma recognised?"],
+ 'Business':["How do I start a business in Senegal?","How do I sell on WhatsApp?","How do I calculate my margin on a product?"],
+ 'Holidays':["When is Tabaski?","When is Korité?","What are the public holidays in Senegal?"],
+ 'Wolof':["Teach me greetings in Wolof.","How do I say thank you in Wolof?","Teach me to count from 1 to 10 in Wolof."]
+}
+};
+const THEME_QS_ARROW='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function closeThemeQs(){
+  const panel=$('themeQs');if(panel)panel.hidden=true;
+  document.querySelectorAll('#heroChips [aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));
+}
+function toggleThemeQs(chip){
+  const wasOpen=chip.getAttribute('aria-expanded')==='true';
+  closeThemeQs();
+  const qs=(THEME_QS[lang]||{})[chip.dataset.topic];
+  if(wasOpen||!qs)return;
+  const t=T[lang];
+  $('themeQsTitle').textContent=(t.topicQs||T.fr.topicQs).replace('{t}',chip.dataset.topic);
+  $('themeQsList').replaceChildren(...qs.map(q=>{const b=document.createElement('button');b.type='button';b.dataset.q=q;
+    const span=document.createElement('span');span.textContent=q;b.append(span);b.insertAdjacentHTML('beforeend',THEME_QS_ARROW);return b;}));
+  chip.setAttribute('aria-expanded','true');
+  $('themeQs').hidden=false;
+  // Sous les thèmes, le panneau peut tomber sous la barre d'onglets : il remonte juste assez pour être lu.
+  const calme=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('themeQs').scrollIntoView({block:'nearest',behavior:calme?'auto':'smooth'});
+}
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
   const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes vos questions'];
@@ -285,7 +334,14 @@ function renderAudience(){
   });
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
   const heroChips=$('heroChips');
-  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;return b;}));
+  // Thèmes rapides (V5) : jusqu'à dix ; ceux de « Tout le Sénégal » ouvrent leurs questions fréquentes.
+  const topicQs=audience==='general'?THEME_QS[lang]:null;
+  if(heroChips)heroChips.replaceChildren(...cards.slice(0,10).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
+    if(topicQs&&topicQs[c.t]){b.dataset.topic=c.t;b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','themeQs');}
+    return b;}));
+  closeThemeQs();
+  $('audienceLabel').textContent=t.whoTitle||T.fr.whoTitle;
+  $('topicsTitle').textContent=t.topicsTitle||T.fr.topicsTitle;
 }
 
 // ?lang=… (widget partenaire, pages en anglais) prime sur la langue mémorisée.
@@ -1489,7 +1545,8 @@ $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 // Design v2 : champ de question en haut de l'accueil (téléphone). Il passe la question
 // au même circuit que la barre du bas (ask), puis la conversation prend le relais.
-$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
+$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.topic)toggleThemeQs(b);else ask(b.dataset.q);});
+$('themeQsList')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
 $('heroAsk')?.addEventListener('submit',e=>{
   e.preventDefault();
   const q=$('heroInput').value.trim();

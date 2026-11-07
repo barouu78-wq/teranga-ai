@@ -558,7 +558,9 @@ def test_mobile_home_suggestion_chip_asks_the_question(page, base_url):
     page.set_viewport_size({"width": 390, "height": 844})
     page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": "Réponse à la suggestion."}), content_type="application/x-ndjson"))
     page.goto(base_url + "/")
+    # Accueil V5 : le thème ouvre ses questions fréquentes, la première est la question qu'il posait avant.
     page.locator("#heroChips button").first.click()
+    page.locator("#themeQsList button").first.click()
     page.get_by_text("Réponse à la suggestion.").wait_for(timeout=5000)
     assert page.errors == []
 
