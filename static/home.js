@@ -582,11 +582,208 @@ function clearFollowups(){document.querySelectorAll('.followups,.more-details').
 function moreDetailsLabel(){return lang==='en'?'More details':'Plus de détails';}
 // Les deux libellés : la langue peut changer entre la question et un rechargement.
 function isMoreDetails(text){return text==='Plus de détails'||text==='More details';}
+// Dernière vraie question (pas « Plus de détails ») : celle qu'on met sur l'image partagée.
+function lastRealQuestion(){for(let i=history.length-1;i>=0;i--){const m=history[i];if(m&&m.role==='user'&&!isMoreDetails(m.content))return m.content;}return '';}
 function addMoreDetails(col){
   const btn=document.createElement('button');btn.type='button';btn.className='more-details';btn.textContent=moreDetailsLabel();
   btn.onclick=()=>ask(moreDetailsLabel());
+  answerRow(col).prepend(btn);
+}
+// Ligne sous la réponse : « Plus de détails » puis « Partager en image » (boutons de 44 px).
+function answerRow(col){
+  let row=col.querySelector(':scope > .answer-row');
+  if(row)return row;
+  row=document.createElement('div');row.className='answer-row';
   const bubble=col.querySelector('.bubble');  // juste sous la réponse, avant les boutons Écouter, Copier…
-  if(bubble)bubble.after(btn);else col.appendChild(btn);
+  if(bubble)bubble.after(row);else col.appendChild(row);
+  return row;
+}
+// Partager une réponse en image (V5) : image 1080 × 1920 au format statut (WhatsApp, TikTok, Instagram), dessinée dans
+// le téléphone avec la question, la réponse et teranga-ai.fr. Rien n'est envoyé au serveur, aucune bibliothèque.
+// Wolof : textes français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+const SHARE_IMG_TXT={
+  fr:{button:'Partager en image',share:'Partager',save:"Enregistrer l'image",close:'Fermer',bg:'Fond',nuit:'Nuit dorée',vert:'Vert',sable:'Sable',
+    question:'QUESTION',source:'Réponse de Teranga AI, assistant IA',ask:'Pose ta question sur le Sénégal',more:'La suite sur teranga-ai.fr',
+    note:"L'adresse teranga-ai.fr est sur l'image.",preview:"Aperçu de l'image à partager",text:'Pose ta question sur le Sénégal : https://teranga-ai.fr'},
+  en:{button:'Share as image',share:'Share',save:'Save image',close:'Close',bg:'Background',nuit:'Golden night',vert:'Green',sable:'Sand',
+    question:'QUESTION',source:'Answer from Teranga AI, an AI assistant',ask:'Ask your question about Senegal',more:'Read more on teranga-ai.fr',
+    note:'The teranga-ai.fr address is on the image.',preview:'Preview of the image to share',text:'Ask your question about Senegal: https://teranga-ai.fr'}
+};
+function shareImgTxt(){return SHARE_IMG_TXT[lang]||SHARE_IMG_TXT.fr;}
+const SHARE_IMG_FONDS={
+  nuit:{bg:'#0b0d10',panel:'#14171c',ink:'#f5efe3',title:'#f6dfa8',gold:'#e8b04b',muted:'#a9a296',line:'rgba(232,176,75,.28)',pill:'#e8b04b',pillInk:'#0b0d10'},
+  vert:{bg:'#0f6a43',panel:'#0b5636',ink:'#fff6dc',title:'#f5d58a',gold:'#f5d58a',muted:'rgba(255,246,220,.82)',line:'rgba(245,213,138,.36)',pill:'#f5d58a',pillInk:'#0b3d27'},
+  sable:{bg:'#fbf8f1',panel:'#f1ead8',ink:'#14110d',title:'#14110d',gold:'#8a6100',muted:'#5e574b',line:'rgba(20,17,13,.16)',pill:'#14110d',pillInk:'#f5d58a'}
+};
+let shareImg=null,shareImgFond='nuit';
+function addShareImage(col,question,answer){
+  const btn=document.createElement('button');btn.type='button';btn.className='share-img-btn';btn.textContent=shareImgTxt().button;
+  btn.onclick=()=>openShareImg(question,answer,btn);
+  answerRow(col).appendChild(btn);
+}
+// Lignes d'un texte dans une largeur donnée ; au-delà de maxLines, la dernière ligne finit par « … ».
+function shareImgLines(ctx,text,maxW,maxLines){
+  const lines=[];
+  for(const p of String(text||'').split(/\n+/)){
+    let line='';
+    for(const w of p.replace(/\s+/g,' ').trim().split(' ').filter(Boolean)){
+      const test=line?line+' '+w:w;
+      if(line&&ctx.measureText(test).width>maxW){lines.push(line);line=w;}else line=test;
+    }
+    if(line)lines.push(line);
+  }
+  if(lines.length<=maxLines)return {lines,cut:false};
+  const kept=lines.slice(0,maxLines);
+  let last=kept[maxLines-1];
+  while(last.includes(' ')&&ctx.measureText(last+' …').width>maxW)last=last.slice(0,last.lastIndexOf(' '));
+  kept[maxLines-1]=last+' …';
+  return {lines:kept,cut:true};
+}
+function shareImgRound(ctx,x,y,w,h,r){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);}
+// Logo : les mêmes tracés que le baobab doré du site (#sn-logo dans home.html).
+function shareImgLogo(ctx,x,y,size){
+  ctx.save();ctx.translate(x,y);ctx.scale(size/100,size/100);
+  ctx.fillStyle='#e8b04b';ctx.beginPath();ctx.arc(50,50,44,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0b0d10';
+  ctx.fill(new Path2D('M19.8 82 Q50 75 80.2 82 A44 44 0 0 1 19.8 82 Z'));
+  ctx.fill(new Path2D('M37 85 Q44 72 43 57 L57 57 Q56 72 63 85 Z'));
+  ctx.strokeStyle='#0b0d10';ctx.lineWidth=5.5;ctx.lineCap='round';ctx.lineJoin='round';
+  ['M46 58 L36 46 L28 42','M36 46 L34 37','M50 57 L50 37','M50 45 L43 35','M50 43 L57 33','M54 58 L64 46 L72 42','M64 46 L66 37'].forEach(d=>ctx.stroke(new Path2D(d)));
+  ctx.restore();
+}
+async function drawShareImage(question,answer,fond){
+  const W=1080,H=1920,P=90,c=SHARE_IMG_FONDS[fond]||SHARE_IMG_FONDS.nuit,t=shareImgTxt();
+  const display='"Bricolage Grotesque",system-ui,sans-serif',body='"Atkinson Hyperlegible",system-ui,sans-serif';
+  try{await Promise.all(['700 64px '+display,'600 58px '+display,'400 46px '+body,'700 34px '+body].map(f=>document.fonts.load(f)));}catch(_){}
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle=c.bg;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=c.line;ctx.lineWidth=3;
+  for(const r of [330,220]){ctx.beginPath();ctx.arc(W-30,30,r,0,Math.PI*2);ctx.stroke();}
+  shareImgLogo(ctx,P,96,110);
+  ctx.font='700 64px '+display;ctx.fillStyle=c.title;ctx.fillText('Teranga ',P+140,172);
+  ctx.fillStyle=c.gold;ctx.fillText('AI',P+140+ctx.measureText('Teranga ').width,172);
+  // Mesure d'abord (question, puis réponse dans la place qui reste), dessin ensuite : le bloc est centré entre le
+  // logo et le pied, un peu plus haut que le milieu.
+  const top=280,bottom=1500,footer=1560,pad=50,lh=66,x0=P-20,pw=W-2*P+40,inner=pw-2*pad,more=70;
+  const q=String(question||'').trim();
+  ctx.font='600 58px '+display;
+  const ql=q?shareImgLines(ctx,lang==='en'?'“'+q+'”':'« '+q+' »',W-2*P,4).lines:[];
+  const qh=q?60+ql.length*72+50:0;
+  ctx.font='400 46px '+body;
+  const room=bottom-top-qh-2*pad;
+  let a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor(room/lh)));
+  if(a.cut)a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor((room-more)/lh)));
+  const ph=2*pad+a.lines.length*lh+(a.cut?more:0);
+  let y=top+Math.max(0,Math.round((bottom-top-qh-ph)*0.42));
+  if(q){
+    ctx.font='700 34px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.question,P,y+34);y+=60;
+    ctx.font='600 58px '+display;ctx.fillStyle=c.ink;
+    for(const l of ql){y+=72;ctx.fillText(l,P,y);}
+    y+=50;
+  }
+  // La réponse, dans un panneau ; coupée proprement si elle ne tient pas.
+  ctx.fillStyle=c.panel;shareImgRound(ctx,x0,y,pw,ph,40);ctx.fill();
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.stroke();
+  ctx.font='400 46px '+body;ctx.fillStyle=c.ink;let ty=y+pad;
+  for(const l of a.lines){ctx.fillText(l,x0+pad,ty+48);ty+=lh;}
+  if(a.cut){ctx.font='700 38px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.more,x0+pad,ty+52);}
+  // Pied : d'où vient la réponse et l'adresse du site.
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(P,footer);ctx.lineTo(W-P,footer);ctx.stroke();
+  ctx.font='400 32px '+body;ctx.fillStyle=c.muted;ctx.fillText(t.source,P,footer+64);
+  ctx.font='400 38px '+body;ctx.fillText(t.ask,P,footer+150);
+  ctx.font='700 78px '+display;ctx.fillStyle=c.ink;ctx.fillText('teranga-ai.fr',P,footer+245);
+  const s=130,px=W-P-s,py=footer+130;
+  ctx.fillStyle=c.pill;shareImgRound(ctx,px,py,s,s,34);ctx.fill();
+  ctx.strokeStyle=c.pillInk;ctx.lineWidth=9;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(px+38,py+s/2);ctx.lineTo(px+s-38,py+s/2);ctx.moveTo(px+s/2+6,py+36);ctx.lineTo(px+s-38,py+s/2);ctx.lineTo(px+s/2+6,py+s-36);ctx.stroke();
+  return new Promise(ok=>canvas.toBlob(ok,'image/png'));
+}
+function shareImgDialog(){
+  let d=$('shareImgDialog');
+  if(d)return d;
+  d=document.createElement('div');d.id='shareImgDialog';d.className='share-img';d.hidden=true;
+  d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','shareImgTitle');
+  // Gabarit fixe (aucun texte venu de l'utilisateur ou de l'IA) ; les libellés sont posés en textContent.
+  d.innerHTML='<div class="share-img-panel"><div class="share-img-head"><h2 id="shareImgTitle"></h2>'
+    +'<button type="button" class="share-img-close" id="shareImgClose"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>'
+    +'<div class="share-img-frame"><img id="shareImgPreview" alt=""></div>'
+    +'<div class="share-img-bgs" role="group" id="shareImgBgs"></div>'
+    +'<button type="button" class="share-img-go" id="shareImgShare"></button>'
+    +'<button type="button" class="share-img-save" id="shareImgSave"></button>'
+    +'<p class="share-img-note" id="shareImgNote"></p></div>';
+  document.body.appendChild(d);
+  for(const fond of Object.keys(SHARE_IMG_FONDS)){
+    const b=document.createElement('button');b.type='button';b.dataset.fond=fond;
+    const dot=document.createElement('span');dot.className='share-img-dot';dot.style.background=SHARE_IMG_FONDS[fond].bg;
+    b.append(dot,document.createElement('span'));
+    b.onclick=()=>{shareImgFond=fond;if(shareImg){shareImg.fond=fond;renderShareImg();}shareImgLabels();};
+    $('shareImgBgs').appendChild(b);
+  }
+  $('shareImgClose').onclick=closeShareImg;
+  $('shareImgShare').onclick=shareImgShare;
+  $('shareImgSave').onclick=shareImgSave;
+  $('shareImgPreview').addEventListener('load',()=>{const img=$('shareImgPreview');img.dataset.fond=img.dataset.pending||'';});
+  d.addEventListener('click',e=>{if(e.target===d)closeShareImg();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!d.hidden){e.preventDefault();closeShareImg();}});
+  d.addEventListener('keydown',e=>{
+    if(e.key!=='Tab')return;  // le focus reste dans la fenêtre
+    const items=[...d.querySelectorAll('button:not([disabled])')];
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+  return d;
+}
+function shareImgLabels(){
+  const t=shareImgTxt();
+  $('shareImgTitle').textContent=t.button;
+  $('shareImgClose').setAttribute('aria-label',t.close);
+  $('shareImgPreview').alt=t.preview;
+  $('shareImgBgs').setAttribute('aria-label',t.bg);
+  $('shareImgBgs').querySelectorAll('button').forEach(b=>{b.lastChild.textContent=t[b.dataset.fond];b.setAttribute('aria-pressed',b.dataset.fond===shareImgFond?'true':'false');});
+  $('shareImgShare').textContent=t.share;$('shareImgSave').textContent=t.save;$('shareImgNote').textContent=t.note;
+}
+async function renderShareImg(){
+  const s=shareImg;if(!s)return;
+  const fond=s.fond;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=true;
+  const blob=await drawShareImage(s.question,s.answer,fond);
+  if(!blob||shareImg!==s||s.fond!==fond)return;  // fenêtre fermée ou autre fond choisi entre-temps
+  if(s.url)URL.revokeObjectURL(s.url);
+  s.blob=blob;s.url=URL.createObjectURL(blob);
+  const img=$('shareImgPreview');img.dataset.pending=fond;img.src=s.url;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=false;
+}
+function openShareImg(question,answer,opener){
+  const d=shareImgDialog();
+  shareImg={question:String(question||'').slice(0,300),answer:String(answer||''),fond:shareImgFond,opener};
+  shareImgLabels();
+  d.hidden=false;document.body.classList.add('share-img-open');
+  $('shareImgClose').focus();  // « Partager » reste désactivé tant que l'image se dessine
+  renderShareImg();
+}
+function closeShareImg(){
+  const d=$('shareImgDialog');if(!d||d.hidden)return;
+  d.hidden=true;document.body.classList.remove('share-img-open');
+  const s=shareImg;shareImg=null;
+  if(s&&s.url)URL.revokeObjectURL(s.url);
+  $('shareImgPreview').removeAttribute('src');delete $('shareImgPreview').dataset.fond;
+  if(s&&s.opener&&s.opener.isConnected)s.opener.focus();
+}
+async function shareImgShare(){
+  const s=shareImg;if(!s||!s.blob)return;
+  const file=new File([s.blob],'teranga-ai.png',{type:'image/png'});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Teranga AI',text:shareImgTxt().text});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}  // partage annulé : rien d'autre
+  shareImgSave();  // pas de partage de fichier (ordinateur) : l'image est enregistrée
+}
+function shareImgSave(){
+  const s=shareImg;if(!s||!s.url)return;
+  const a=document.createElement('a');a.href=s.url;a.download='teranga-ai.png';
+  document.body.appendChild(a);a.click();a.remove();
 }
 function addFollowups(col,ux){
   clearFollowups();
@@ -1027,7 +1224,7 @@ function restore(){
       history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
-      let lastCol=null;
+      let lastCol=null,lastAsked='';
       history.forEach(item=>{
         const row=document.createElement('div');
         row.className='msg '+item.role;
@@ -1038,8 +1235,10 @@ function restore(){
         const b=document.createElement('div');b.className='bubble';
         b.textContent=cleanReply(item.content||'');
         col.appendChild(b);
+        if(item.role==='user'&&!isMoreDetails(item.content))lastAsked=item.content;
         if(item.role==='assistant'){
           addActs(col,item.content||'',null,item.share||'');
+          addShareImage(col,lastAsked,item.content||'');
           addCityImage(col,item.image);
           addMap(col,item.map);
           addSources(col,item.sources);
@@ -1201,6 +1400,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
     if(reply)addFollowups(wait.col,ux);
     if(reply&&!isMoreDetails(text))addMoreDetails(wait.col);  // pas sous la réponse détaillée elle-même
+    if(reply)addShareImage(wait.col,isMoreDetails(text)?lastRealQuestion():text,reply);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
