@@ -829,6 +829,8 @@ body:not(.has-chat) .meta{display:none}
 #voiceToggle{min-height:44px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer}
 #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #voiceToggle{white-space:nowrap}
+#voiceToggle svg{display:none;width:22px;height:22px}
+#voiceToggle[aria-pressed="true"] .voice-off,#voiceToggle[aria-pressed="false"] .voice-on{display:none}
 /* Barre d'état vocale : le texte dit l'étape (la couleur n'est qu'un renfort). */
 .voice-bar{flex:0 0 auto;width:calc(100% - 24px);max-width:820px;margin:0 auto 6px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 6px 6px 14px;border-radius:16px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow-sm);position:relative;z-index:3}
 .voice-bar[hidden],.voice-bar button[hidden]{display:none}
@@ -922,6 +924,16 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fx-widget{max-width:none}
   .dock{padding:6px 12px 8px}
+  /* Place pour lire (V5) : pendant le chat, la barre du bas tient sur une ligne. La rangée de thèmes et « Réponse en
+     direct » partent (les suites restent sous chaque réponse) ; « Voix IA auto » devient une icône à côté de la
+     saisie, son texte reste lu par les lecteurs d'écran (tests/e2e/test_place_pour_lire.py). */
+  body.has-chat .dock{display:flex;align-items:flex-end;gap:6px}
+  body.has-chat .chips,body.has-chat #hint{display:none}
+  body.has-chat .composer{flex:1;min-width:0;margin:0}
+  body.has-chat .meta{flex:0 0 auto;margin:0 0 7px;padding:0}
+  body.has-chat #voiceToggle{width:44px;height:44px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink)}
+  body.has-chat #voiceToggle svg{display:block}
+  body.has-chat #voiceToggleText{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   #send{padding:0 14px;font-size:14px}
   .tabbar{display:grid!important}
   .tabbar{grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px)}
@@ -1304,7 +1316,7 @@ body:not([data-fete]) .hero-signature{display:none}
   <div class="meta">
     <span id="hint" role="status" aria-live="polite">Réponse en direct</span>
     <span id="count">0 / 2000</span>
-    <button id="voiceToggle" type="button" title="La voix de Teranga AI est générée par IA">Voix IA auto off</button>
+    <button id="voiceToggle" type="button" title="La voix de Teranga AI est générée par IA" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path class="voice-on" d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="voice-off" d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span id="voiceToggleText">Voix IA auto off</span></button>
   </div>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Navigation">

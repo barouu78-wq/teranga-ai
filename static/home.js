@@ -761,7 +761,7 @@ function setLang(next){
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
-  $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
+  setVoiceToggle(autoVoice);
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
   if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
@@ -1737,11 +1737,16 @@ async function startVoiceCapture(){
     }
   }
 }
+// Bouton « Voix IA auto » : le texte (lu par les lecteurs d'écran, caché derrière l'icône sur téléphone) et aria-pressed.
+function setVoiceToggle(on){
+  $('voiceToggleText').textContent=on?T[lang].vOn:T[lang].vOff;
+  $('voiceToggle').setAttribute('aria-pressed',on?'true':'false');
+}
 function beginVoiceMode(){
   voiceConversation=true;autoVoice=true;
   LS.setItem('teranga-voice','1');
   document.body.classList.add('voice-active');
-  $('voiceToggle').textContent=T[lang].vOn;
+  setVoiceToggle(true);
   voiceNotice=null;voiceMisses=0;
   ensureVoiceTicker();
 }
@@ -1754,7 +1759,7 @@ function endVoiceMode(){
   stopVoiceCapture();stopVoiceMonitor();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
-  $('voiceToggle').textContent=T[lang].vOff;
+  setVoiceToggle(false);
   renderVoiceState();
 }
 // Arrêt complet, quelle que soit l'étape : plus d'écoute, plus de voix, plus de réponse en attente.
