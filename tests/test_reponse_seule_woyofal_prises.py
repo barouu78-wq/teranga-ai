@@ -67,7 +67,9 @@ def test_les_prises_electriques_recoivent_le_repere_verifie(message):
     "Combien de kWh pour 5000 FCFA de Woyofal ?",
     "Prise de sang à Dakar ?",
     "Prise en charge par la CMU ?",
-    "Faut-il un visa pour le Sénégal ?",
+    # « Faut-il un … » ne suffit pas à déclencher l'électricité (le visa a sa propre réponse prête depuis la PR
+    # « visa et envoi d'argent » : tests/test_reponse_seule_visa_envoi_argent.py).
+    "Faut-il un vaccin pour le Sénégal ?",
     # Relecture Gitar de #581 : « tension » seul parle souvent de politique ou de tension artérielle.
     "Tension à Dakar ?",
     "La tension au Sénégal ?",

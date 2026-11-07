@@ -489,15 +489,24 @@ _TOPIC_ASKS = (
     ("langue", {"langue", "langues"}, {
         "langue", "langues", "parle", "parlent", "parlee", "parlees", "parler", "officielle", "officielles", "on", "t",
         "y", "principale", "principales"}),
+    # Visa d'entrée et envoi d'argent vers le Sénégal (questions fréquentes de l'accueil V5) : sans nationalité, autre
+    # pays, situation ni montant. Pour l'envoi, « argent » et un verbe d'envoi sont exigés ensemble (tuple de groupes) :
+    # « Transfert aéroport » ou « envoyer un colis » vont au modèle.
+    ("visa", {"visa", "visas"}, {
+        "visa", "visas", "faut", "un", "besoin", "ai", "je", "on", "t", "y", "aller", "venir", "visiter", "voyager",
+        "entrer", "entree", "passeport", "et", "necessaire", "obligatoire"}),
+    ("envoi_argent", ({"argent"}, {"envoyer", "envoi", "transfert", "transferts", "transferer", "comparer"}), {
+        "argent", "envoyer", "envoi", "transfert", "transferts", "transferer", "comparer", "deux", "comment", "vers",
+        "ma", "mon", "famille", "un", "une", "on", "peut", "je", "meilleur", "meilleure", "moyen", "faire", "quoi"}),
 )
 _TOPIC_THEMES = {"factures": "electricite", "electricite": "electricite", "sim": "internet", "saison": "meteo",
-                 "langue": "langue"}
+                 "langue": "langue", "visa": "visa", "envoi_argent": "argent"}
 _TOPIC_LINKS = {"factures": "Toutes les démarches : teranga-ai.fr/demarches-senegal"}
 
 
 def _asked_practical_topic(message: str) -> str | None:
-    """Le sujet de practical_facts (« factures », « electricite », « sim », « saison », « langue ») si la question ne
-    demande que ça, sinon None."""
+    """Le sujet de practical_facts (« factures », « electricite », « sim », « saison », « langue », « visa »,
+    « envoi_argent ») si la question ne demande que ça, sinon None."""
     if len(message) > MAX_CHARS:
         return None
     tokens = re.findall(r"[a-z0-9]+", fold_text(message).lower())
@@ -506,8 +515,12 @@ def _asked_practical_topic(message: str) -> str | None:
         # « Quand partir de Dakar ? » : un départ, pas la meilleure saison pour venir (relecture Gitar de #582).
         if name == "saison" and re.search(r"\bpartir (?:de|d|du|des)\b", " ".join(tokens)):
             continue
+        # « Envoyer de l'argent du Sénégal » : le sens inverse du repère « vers le Sénégal » (relecture Gitar de #584).
+        if name == "envoi_argent" and re.search(r"\b(?:du|de|d|depuis) (?:senegal|dakar)\b", " ".join(tokens)):
+            continue
         # « Quand partir au Sénégal ? » oui ; « Partir au Sénégal » seul n'est pas une question de saison (Codex, #582).
-        asked = words & required or (name == "saison" and {"quand", "partir"} <= words)
+        groups = required if isinstance(required, tuple) else (required,)
+        asked = all(words & group for group in groups) or (name == "saison" and {"quand", "partir"} <= words)
         if asked and words <= allowed | _FILLER_WORDS:
             return name
     return None
