@@ -53,6 +53,8 @@ def test_la_question_recoit_le_repere_verifie(message, sujet, theme):
     # Relecture Gitar de #582 : « partir de / du… » est un départ, pas la meilleure saison pour venir.
     "Quand partir de Dakar ?",
     "Quand partir du Sénégal ?",
+    # Relecture Codex de #582 : « partir » sans « quand » ni mot de saison n'est pas une question de saison.
+    "Partir au Sénégal",
     "Saison de la mangue au Sénégal ?",
     "Il pleut demain à Dakar ?",
     "Apprends-moi la langue wolof",

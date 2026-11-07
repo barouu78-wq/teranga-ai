@@ -482,7 +482,8 @@ _TOPIC_ASKS = (
         "sim", "esim", "puce", "puces", "carte", "cartes", "operateur", "operateurs", "telephonique", "telephoniques",
         "mobile", "acheter", "achat", "avoir", "trouver", "prendre", "ou", "comment", "un", "une", "on", "peut", "je",
         "telephone"}),
-    ("saison", {"saison", "saisons", "periode", "climat", "partir"}, {
+    # « partir » ne compte qu'avec « quand » (voir _asked_practical_topic).
+    ("saison", {"saison", "saisons", "periode", "climat"}, {
         "saison", "saisons", "periode", "climat", "partir", "venir", "aller", "visiter", "voyager", "quand",
         "meilleure", "meilleur", "pluies", "pluie", "seche", "hivernage", "un", "une", "y", "on", "faut"}),
     ("langue", {"langue", "langues"}, {
@@ -505,7 +506,9 @@ def _asked_practical_topic(message: str) -> str | None:
         # « Quand partir de Dakar ? » : un départ, pas la meilleure saison pour venir (relecture Gitar de #582).
         if name == "saison" and re.search(r"\bpartir (?:de|d|du|des)\b", " ".join(tokens)):
             continue
-        if words & required and words <= allowed | _FILLER_WORDS:
+        # « Quand partir au Sénégal ? » oui ; « Partir au Sénégal » seul n'est pas une question de saison (Codex, #582).
+        asked = words & required or (name == "saison" and {"quand", "partir"} <= words)
+        if asked and words <= allowed | _FILLER_WORDS:
             return name
     return None
 
