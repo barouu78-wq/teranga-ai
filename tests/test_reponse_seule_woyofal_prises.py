@@ -68,6 +68,9 @@ def test_les_prises_electriques_recoivent_le_repere_verifie(message):
     "Prise de sang à Dakar ?",
     "Prise en charge par la CMU ?",
     "Faut-il un visa pour le Sénégal ?",
+    # Relecture Gitar de #581 : « tension » seul parle souvent de politique ou de tension artérielle.
+    "Tension à Dakar ?",
+    "La tension au Sénégal ?",
     "Mon chargeur de téléphone marche avec les prises du Sénégal ?",
 ])
 def test_une_situation_ou_un_autre_sujet_va_au_modele(message):

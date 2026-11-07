@@ -471,7 +471,8 @@ _TOPIC_ASKS = (
         "woyofal", "senelec", "code", "codes", "trois", "3", "credit", "recharge", "recharger", "acheter", "achat",
         "compteur", "electricite", "prepaye", "prepayee", "comment", "pourquoi", "ou", "quoi", "on", "un", "une", "mon",
         "ma", "faire", "marche", "fonctionne"}),
-    ("electricite", {"prise", "prises", "voltage", "tension", "adaptateur", "adaptateurs"}, {
+    # « tension » seul ne suffit pas (politique, tension artérielle) : il faut aussi « électrique », « prise »…
+    ("electricite", {"prise", "prises", "voltage", "electrique", "electriques", "adaptateur", "adaptateurs"}, {
         "prise", "prises", "electrique", "electriques", "voltage", "tension", "adaptateur", "adaptateurs", "type",
         "types", "courant", "faut", "un", "une"}),
 )
