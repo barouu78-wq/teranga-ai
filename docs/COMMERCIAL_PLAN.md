@@ -64,7 +64,7 @@ Suivre chaque mois :
 - clics vers l'assistant ;
 - demandes partenaires ;
 - mentions médias ;
-- backlinks réellement publiés ;
+- backlinks réellement publiés (cibles et suivi : `docs/LIENS-ENTRANTS.md`) ;
 - conversions issues des campagnes.
 
 ## 7. Prochaines étapes
