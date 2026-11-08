@@ -53,7 +53,7 @@ from services.calculators import (
     format_pourcent,
     montants_du_texte,
 )
-from services.events import _ALIASES, _asked, french_date, upcoming_events
+from services.events import _ALIASES, TYPE_LABELS, _asked, french_date, upcoming_events
 from services.fallback_answer import _place_text
 from services.places import mentioned_places
 from services.practical_facts import TOPICS as _PRACTICAL_TOPICS
@@ -305,6 +305,42 @@ def _holiday_reply(event: dict) -> str:
         lines.append("Date estimée : les fêtes musulmanes suivent le calendrier lunaire, et la date exacte est fixée "
                      "quelques jours avant, à l'observation du croissant de lune.")
     lines += [event["tips"], "Toutes les fêtes de l'année : teranga-ai.fr/calendrier-fetes-senegal"]
+    return "\n".join(lines)
+
+
+# « Quels sont les jours fériés ? » (V5) : les prochaines dates du calendrier vérifié, avec son étiquette (jour férié,
+# fête nationale, fête religieuse) et « date estimée » pour une fête lunaire non confirmée. Rien n'est ajouté au
+# calendrier. Festivals et sport ne sont pas fériés. Sans date précise ni année : « demain », « le 4 avril » ou
+# « 2025 » vont au modèle (tests/test_reponse_seule_jours_feries.py).
+_FERIE_WORDS = {"ferie", "feries", "feriee", "feriees"}
+_HOLIDAYS_ALLOWED = _FERIE_WORDS | {
+    "jour", "jours", "fete", "fetes", "calendrier", "prochain", "prochains", "prochaine", "prochaines", "liste",
+    "officiels", "y", "t", "on",
+}
+_HOLIDAY_KINDS = ("holiday", "national", "religious")
+_HOLIDAY_LIST_SIZE = 6
+
+
+def _asked_holidays(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    asked = words & _FERIE_WORDS or ("fetes" in words and words & {"prochaines", "calendrier", "liste"})
+    return bool(asked) and words <= _HOLIDAYS_ALLOWED | _FILLER_WORDS
+
+
+def _holidays_reply() -> str | None:
+    events = [e for e in upcoming_events(_today()) if e["kind"] in _HOLIDAY_KINDS][:_HOLIDAY_LIST_SIZE]
+    if not events:
+        return None  # après la dernière date du calendrier : le modèle répond
+    lines = ["Prochaines fêtes et jours fériés au Sénégal :"]
+    for event in events:
+        label = TYPE_LABELS[event["kind"]].lower() + ("" if event["confirmed"] else ", date estimée")
+        lines.append(f"- {event['name']} : {french_date(event['start'])} ({label})")
+    if not all(event["confirmed"] for event in events):
+        lines.append("Les fêtes musulmanes suivent le calendrier lunaire : leur date exacte est fixée quelques jours "
+                     "avant, à l'observation du croissant de lune.")
+    lines.append("Toutes les fêtes de l'année : teranga-ai.fr/calendrier-fetes-senegal")
     return "\n".join(lines)
 
 
@@ -697,6 +733,10 @@ def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[st
         event = _asked_holiday(message)
         if event:
             return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
+        if _asked_holidays(message):
+            reply = _holidays_reply()
+            if reply:
+                return {"reply": reply, "sources": [], "image": None, "map": None, "theme": "fetes"}
         dish = _asked_dish(message)
         if dish:
             return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None, "theme": "cuisine"}
