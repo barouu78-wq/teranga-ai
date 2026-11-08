@@ -49,6 +49,14 @@ def test_une_question_voisine_n_ajoute_pas_le_sujet(question):
     assert "diplomes" not in matching_topics(question)
 
 
+def test_le_critere_reprend_le_libelle_officiel():
+    """Relecture Codex de #588 : la procédure vise les diplômes « non pris en compte dans les statuts particuliers »,
+    une reformulation changerait le critère."""
+    texte = practical_context("Comment faire reconnaître un diplôme obtenu à l'étranger ?")
+    assert "non pris en compte dans les statuts particuliers" in texte
+    assert "non prévus par les statuts" not in texte
+
+
 def test_le_repere_ne_donne_ni_frais_ni_delai_ni_adresse():
     """Aucune source officielle lue ne les donne : ils restent « à vérifier »."""
     texte = practical_context("Comment faire reconnaître un diplôme obtenu à l'étranger ?")

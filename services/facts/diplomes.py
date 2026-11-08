@@ -27,7 +27,7 @@ TOPICS = (
       "ou un ordre professionnel : le dossier est examiné par la Commission technique de reconnaissance, de "
       "classement et d'équivalence des diplômes de l'enseignement supérieur (CRCE), selon le décret n° 2015-582 "
       "modifié par le décret n° 2021-1790. Sont concernés les diplômes obtenus après au moins six mois d'études ou "
-      "de formation et non prévus par les statuts de la fonction publique.",
+      "de formation et non pris en compte dans les statuts particuliers.",
       "Pièces à fournir (procédure officielle publiée en 2025) : lettre au ministre chargé de la Fonction publique "
       "(« demande de reconnaissance, de classement et d'équivalence ») ; copie légalisée du diplôme ou de "
       "l'attestation de réussite ; copies légalisées du bac et des diplômes obtenus entre le bac et ce diplôme, avec "
