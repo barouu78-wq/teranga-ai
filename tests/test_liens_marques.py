@@ -124,3 +124,23 @@ def test_seul_un_vrai_navigateur_compte(monkeypatch):
     for n, agent in enumerate(navigateurs):
         _visite(client, "/?utm_source=tiktok", f"203.0.113.{91 + n}", agent=agent)
     assert _compte(_stats(client, "203.0.113.93"), "tiktok") == avant + 3
+
+
+INSTAGRAM_ANDROID = ("Mozilla/5.0 (Linux; Android 15; SM-G998B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, "
+                     "like Gecko) Version/4.0 Chrome/156.0.8078.52 Mobile Safari/537.36 Instagram 453.0.0.57.79 Android")
+
+
+def test_le_lien_du_profil_instagram_marque_ig_compte_comme_instagram(monkeypatch):
+    """Journaux du 1er novembre 2026, 21 h 23 UTC : Instagram ajoute lui-même « utm_source=ig » au lien du profil
+    (« utm_content=link_in_bio »). Cette visite comptait pour rien ; elle compte maintenant comme Instagram."""
+    monkeypatch.setenv("STATS_TOKEN", CLE)
+    client = _client()
+    avant = _stats(client, "203.0.113.94")
+    chemin = "/?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZXh0bgNhZW0CMTEAcGRvZgJzcnRj"
+    assert _visite(client, chemin, "203.0.113.94", agent=INSTAGRAM_ANDROID).status_code == 200
+    # Lien déjà marqué « instagram » auquel Instagram ajouterait sa propre marque : une seule visite, pour Instagram.
+    assert _visite(client, "/?utm_source=instagram&utm_source=ig", "203.0.113.95",
+                   agent=INSTAGRAM_ANDROID).status_code == 200
+    apres = _stats(client, "203.0.113.94")
+    assert _compte(apres, "instagram") - _compte(avant, "instagram") == 2
+    assert _compte(apres, "ig") == 0  # pas de ligne « ig » à part
