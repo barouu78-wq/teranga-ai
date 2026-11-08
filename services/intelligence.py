@@ -622,6 +622,18 @@ def build_agent_plan(context: dict[str, Any], intent_context: dict[str, Any]) ->
     }
 
 
+# Suggestions avec un lieu (« Prix à Dakar ») : seulement une ville ou une île, écrite avec majuscule et accents.
+# « Que faire ensuite ? à senegal » ou « Options à casamance » étaient mal formés. Sans lieu, la suggestion reste une
+# relance courte du fil, qui garde le lieu de la question précédente.
+_NOT_A_TOWN = {"Delta du Saloum", "Ferlo", "Djoudj", "Niokolo-Koba", "Pays Bassari", "Haute-Casamance",
+               "Moyenne-Casamance", "Cap Skirring"}
+_FOLLOWUP_TOWNS = {
+    _normalize(name): name
+    for name in (*REGION_ALIASES, *(place for places in REGION_HIGHLIGHTS.values() for place in places))
+    if name not in _NOT_A_TOWN
+}
+
+
 def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
     """Return compact conversation UX hints so the client can adapt without extra buttons."""
     intent = str(intent_context.get("intent") or "general_information")
@@ -639,10 +651,14 @@ def build_ux_hints(intent_context: dict[str, Any], context: dict[str, Any]) -> d
         "photos": ("Plus de photos", "Localiser", "Que voir ?"),
     }
     followups.extend(labels.get(intent, ("Préciser ma demande", "Comparer", "Que faire ensuite ?")))
-    if place and intent != "photos":
+    town = _FOLLOWUP_TOWNS.get(_normalize(place))
+    if town and intent != "photos":
         # « Préciser ma demande » remet le curseur dans la zone de saisie (static/home.js) : jamais de lieu ajouté.
+        # Une suggestion en question (« Que faire ensuite ? ») non plus.
         followups = [
-            f"{item} à {place}" if item not in {"Comparer", "Préciser ma demande"} and " à " not in item else item
+            f"{item} à {town}"
+            if item not in {"Comparer", "Préciser ma demande"} and " à " not in item and not item.endswith("?")
+            else item
             for item in followups
         ]
     mode = "action" if intent in {"trip_planning", "transport", "restaurant", "project", "career", "education", "finance"} else "answer"
