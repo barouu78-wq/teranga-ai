@@ -638,12 +638,21 @@ _LINE_ASKS = (
     ("vente", ("Vendre sur WhatsApp",), ({"whatsapp"}, {"vendre", "vente", "ventes", "clients", "catalogue"}), {
         "whatsapp", "business", "vendre", "vente", "ventes", "clients", "client", "catalogue", "comment", "sur",
         "utiliser", "mes", "mon", "ma", "produits", "bien", "plus"}),
+    # « Comment faire reconnaître un diplôme obtenu à l'étranger ? » : l'organisme et les pièces. Une situation
+    # (« refusée ») ou un diplôme précis (« mon doctorat privé ») vont au modèle, qui a aussi la ligne ANAQ-Sup.
+    ("diplomes", ("Reconnaissance d'un diplôme", "Pièces à fournir"), ({"diplome", "diplomes"},
+                                                                    {"reconnaitre", "reconnaissance", "equivalence",
+                                                                     "equivalences", "homologuer", "homologation"}), {
+        "diplome", "diplomes", "reconnaitre", "reconnaissance", "equivalence", "equivalences", "homologuer",
+        "homologation", "comment", "faire", "un", "une", "mon", "obtenu", "etranger", "l", "demande", "demander",
+        "obtenir", "quelles", "pieces", "dossier", "pour"}),
     ("vente", ("Fixer un prix",), ({"marge", "prix"}, {"calculer", "calcul", "fixer", "definir", "mettre"}), {
         "marge", "prix", "calculer", "calcul", "fixer", "definir", "mettre", "comment", "ma", "mon", "mes", "sur", "un",
         "produit", "produits", "vente", "bon"}),
 )
 _LINE_THEMES = {"sante": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences",
-                "protection": "protection_sociale", "etudes": "etudes", "entreprise": "entreprise", "vente": "commerce"}
+                "protection": "protection_sociale", "etudes": "etudes", "entreprise": "entreprise", "vente": "commerce",
+                "diplomes": "etudes"}
 
 
 def _asked_practical_line(message: str) -> tuple[str, str] | None:
