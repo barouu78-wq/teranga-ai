@@ -115,6 +115,9 @@ KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activit
                "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux"}
 # Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
 VISIT_SOURCES = frozenset({"tiktok", "instagram", "whatsapp", "facebook", "youtube"})
+# Marques que les réseaux ajoutent eux-mêmes : Instagram met « utm_source=ig » sur le lien du profil (journaux du
+# 1er novembre 2026). Elles comptent pour leur réseau, sans ligne à part.
+VISIT_SOURCE_ALIASES = {"ig": "instagram"}
 # Lignes par mois (liens /go et partenaires du widget) au-delà desquelles un nouveau partenaire est compté « autre ».
 WIDGET_MAX_FIELDS = 500
 
@@ -216,6 +219,7 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         if request.method != "GET" or request.args.get("utm_medium") == "widget":
             return None
         source = str(request.args.get("utm_source", "")).strip().lower()
+        source = VISIT_SOURCE_ALIASES.get(source, source)
         agent = request.headers.get("User-Agent", "")
         # Seul un vrai navigateur compte : Safari, Chrome, Firefox et les navigateurs intégrés de TikTok ou Instagram
         # s'annoncent tous WebKit ou Gecko. L'aperçu WhatsApp (« WhatsApp/2.x ») ou un outil (« Mozilla/5.0
