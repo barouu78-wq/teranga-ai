@@ -115,7 +115,7 @@ THEMES: tuple[Theme, ...] = (
            "etude*, etudier, etudiant*, universite*, fac, ucad, campusen, bac, bachelier*, bfem, licence, master, "
            "doctorat, bourse*, ecole*, college*, lycee*, creche*, scolarite, formation*, diplome*, inscription*, "
            "orientation, enseignant*, professeur*, coud, isep, student*, school, university",
-           "repere:etudes"),
+           "repere:etudes repere:diplomes"),
     _theme("entreprise", "Créer une entreprise",
            "entreprise*, creer une societe, ouvrir une societe, creation de societe, startup*, start up, ninea, rccm, apix, "
            "immatriculation, statut juridique, sarl, suarl, gie, auto entrepreneur, entrepreneur*, entreprendre, "
@@ -270,7 +270,8 @@ _PRACTICAL_THEME = {
     "urgences": "urgences", "arnaques": "urgences", "sante": "sante", "argent": "argent", "mobile_money": "argent", "sim": "internet", "electricite": "electricite",
     "heure": "voyage", "visa": "visa", "saison": "meteo", "entreprise": "entreprise", "transport": "transport",
     "foncier": "logement", "envoi_argent": "argent", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
-    "protection": "protection_sociale", "etudes": "etudes", "langue": "langue", "frontieres": "pays_voisins",
+    "protection": "protection_sociale", "etudes": "etudes", "diplomes": "etudes", "langue": "langue",
+    "frontieres": "pays_voisins",
 }
 
 # Titres que services/senegal_knowledge.py, events.py et monetization.py mettent en début de ligne dans le contexte

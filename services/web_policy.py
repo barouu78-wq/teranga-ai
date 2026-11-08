@@ -182,6 +182,8 @@ def should_use_web(message, context=""):
         "carte d'identité", "carte d'identite", "carte d identite", "carte nationale", "extrait de naissance", "acte de naissance",
         "casier judiciaire", "jugement supplétif", "jugement suppletif", "woyofal", "senelec", "campusen",
         "couverture maladie", "ipres", "securite sociale", "sécurité sociale",
+        "equivalence de diplome", "équivalence de diplôme", "reconnaissance de diplome", "reconnaissance de diplôme",
+        "diplome reconnu", "diplôme reconnu", "anaq-sup", "anaq sup",
         # Arnaques et mobile money : les alertes, les opérateurs et les procédures de plainte changent souvent.
         "arnaque", "arnaques", "arnaquer", "arnaqueur", "arnaqueurs", "escroc", "escrocs", "escroquerie", "escroqueries",
         "fraude", "fraudes", "frauduleux", "frauduleuse", "scam", "scams", "phishing", "hameçonnage", "hameconnage",
