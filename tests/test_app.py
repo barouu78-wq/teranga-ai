@@ -1054,9 +1054,11 @@ def test_robots_blocks_api_and_proxy_endpoints():
 
 
 def test_indexnow_workflow_targets_canonical_domain():
+    # Le domaine est passé du workflow au script qu'il lance (tests/test_indexnow_submit.py).
     workflow = (ROOT / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
-    assert "onrender.com" not in workflow
-    assert '"host": "teranga-ai.fr"' in workflow
+    script = (ROOT / "scripts" / "indexnow_submit.py").read_text(encoding="utf-8")
+    assert "onrender.com" not in workflow + script
+    assert '"host": "teranga-ai.fr"' in script
 
 
 def test_every_seo_page_in_sitemap_is_served():
