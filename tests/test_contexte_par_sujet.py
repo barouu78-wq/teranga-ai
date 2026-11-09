@@ -164,12 +164,13 @@ def test_une_relance_garde_le_lieu_du_fil(previous, message, kept):
 
 # « Et pour manger ? » après la météo : une relance de restauration sur le lieu de la météo.
 
-@pytest.mark.parametrize("weather_question,place", [
-    ("Quel temps fait-il à Dakar ?", "dakar"),
-    ("meteo saint louis demain", "saint-louis"),
-    ("il pleut a ziguinchor ?", "ziguinchor"),
+# Suggestion écrite avec majuscule et accents (tests/test_suggestions_lieu.py).
+@pytest.mark.parametrize("weather_question,place,town", [
+    ("Quel temps fait-il à Dakar ?", "dakar", "Dakar"),
+    ("meteo saint louis demain", "saint-louis", "Saint-Louis"),
+    ("il pleut a ziguinchor ?", "ziguinchor", "Ziguinchor"),
 ])
-def test_et_pour_manger_apres_la_meteo_est_une_relance_de_restauration(weather_question, place):
+def test_et_pour_manger_apres_la_meteo_est_une_relance_de_restauration(weather_question, place, town):
     payload = site(weather_question, "Et pour manger ?")
     intent_context = payload["intent_context"]
     assert intent_context["intent"] == "restaurant"
@@ -178,7 +179,7 @@ def test_et_pour_manger_apres_la_meteo_est_une_relance_de_restauration(weather_q
     assert "weather" not in payload["context"]["intents"]
     assert "Intentions détectées : food." in payload["instructions"]
     assert "DOMAINE PERTINENT (food)" in payload["instructions"]
-    assert intent_context["ux_hints"]["followups"][0] == f"Options à {place}"
+    assert intent_context["ux_hints"]["followups"][0] == f"Options à {town}"
 
 
 def test_et_demain_apres_la_meteo_reste_une_meteo():

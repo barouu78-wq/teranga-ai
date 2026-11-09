@@ -42,6 +42,10 @@ done
 Un lien qui ne répond pas 200 est remplacé par `teranga-ai.fr`. Le propriétaire ouvre quand même chaque lien avant
 d'envoyer (le site en ligne peut avoir un déploiement de retard).
 
+Chaque lien porte la marque du réseau où le texte sera publié (`docs/LIENS-MARQUES.md`) :
+`teranga-ai.fr/?utm_source=tiktok` pour TikTok, `?utm_source=whatsapp` pour WhatsApp, etc. (ajouter
+`&utm_source=…` après un `?` déjà présent). C'est ce qui permet de savoir d'où viennent les visiteurs.
+
 ## 4. Écrire le kit (dans la conversation, en français, tutoiement)
 Le propriétaire lit sur son téléphone : un bloc de code par texte, pour le bouton « copier ». Gabarit :
 

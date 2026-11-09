@@ -30,10 +30,22 @@ def _chat_recorder(page, base_url, answer="Réponse du profil."):
     return bodies
 
 
+# Thèmes rapides affichés par profil (accueil V5, 7 novembre 2026 : jusqu'à dix au lieu de quatre).
+CHIPS = {"general": 10, "tourist": 10, "resident": 4, "diaspora": 4, "merchant": 7}
+
+
 def _first_suggestion(page):
     chip = page.locator("#heroChips button").first
     chip.wait_for(timeout=3000)
     return chip.get_attribute("data-q")
+
+
+def _ask_first_suggestion(page):
+    """Un thème de « Tout le Sénégal » ouvre d'abord ses questions fréquentes (V5) ; la première est sa question."""
+    chip = page.locator("#heroChips button").first
+    chip.click()
+    if chip.get_attribute("data-topic"):
+        page.locator("#themeQsList button").first.click()
 
 
 @pytest.mark.parametrize("audience", PROFILES)
@@ -42,7 +54,7 @@ def test_each_profile_sends_its_audience_and_its_suggestion_to_the_chat(page, ba
     page.goto(base_url + "/")
     page.locator(f'.audience-btn[data-audience="{audience}"]').click()
     question = _first_suggestion(page)
-    page.locator("#heroChips button").first.click()
+    _ask_first_suggestion(page)
     page.get_by_text("Réponse du profil.").wait_for(timeout=5000)
     assert len(bodies) == 1
     assert bodies[0]["audience"] == audience
@@ -58,7 +70,7 @@ def test_the_profiles_do_not_share_the_same_suggestions(page, base_url):
         page.locator(f'.audience-btn[data-audience="{audience}"]').click()
         _first_suggestion(page)
         seen[audience] = tuple(b.get_attribute("data-q") for b in page.locator("#heroChips button").all())
-        assert len(seen[audience]) == 4, audience
+        assert len(seen[audience]) == CHIPS[audience], audience
     assert len(set(seen.values())) == len(PROFILES), seen
     # Aucune suggestion n'est reprise telle quelle d'un profil à l'autre en tête de liste.
     assert len({questions[0] for questions in seen.values()}) == len(PROFILES)
@@ -88,7 +100,7 @@ def test_an_unknown_saved_profile_falls_back_to_general(page, base_url, saved):
     page.add_init_script(f"try{{localStorage.setItem('teranga-audience',{json.dumps(saved)})}}catch(_){{}}")
     page.goto(base_url + "/")
     assert page.locator('.audience-btn[data-audience="general"]').get_attribute("aria-pressed") == "true"
-    assert len(page.locator("#heroChips button").all()) == 4
+    assert len(page.locator("#heroChips button").all()) == CHIPS["general"]
     ask(page, "Bonjour")
     page.get_by_text("Réponse du profil.").wait_for(timeout=5000)
     assert bodies[0]["audience"] == "general"
