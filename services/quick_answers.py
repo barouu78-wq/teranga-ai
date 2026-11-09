@@ -296,6 +296,10 @@ def _holiday_reply(event: dict) -> str:
     when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
     days = event["days_left"]
     soon = "aujourd'hui" if days <= 0 else ("demain" if days == 1 else f"dans {days} jours")
+    if event["end"] and days == 0:
+        soon = "commence aujourd'hui"
+    elif event["end"] and days < 0:  # sur plusieurs jours, déjà commencé (les JOJ) : pas « aujourd'hui » seul
+        soon = "en cours, dernier jour aujourd'hui" if event["end"] == _today() else "en cours"
     lines = [f"{event['name']} : {when} ({soon})."]
     if event["place"] != "Tout le pays":
         lines.append(f"Lieu : {event['place']}.")
