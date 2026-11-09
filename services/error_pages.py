@@ -69,6 +69,10 @@ def redirect_target(path: str, exists) -> str:
     clean = "/" + re.sub(r"/{2,}", "/", path or "").strip("/")
     # Le point, la virgule ou la parenthèse qui suivaient l'adresse dans le texte copié (jamais la « / » racine).
     clean = clean.rstrip(".,;:)")
+    # iOS demande l'icône à plusieurs tailles (« -240x240 », « -180x180 »…), parfois « -precomposed » :
+    # une seule icône sert pour toutes (404 vus dans les journaux du 2 au 8 novembre 2026).
+    if re.fullmatch(r"/apple-touch-icon(?:-\d{2,3}x\d{2,3})?(?:-precomposed)?\.png", clean.lower()):
+        clean = "/apple-touch-icon.png"
     for candidate in (clean, clean.lower()):
         candidate = ALIASES.get(candidate, candidate)
         if candidate != path and candidate.startswith("/") and not candidate.startswith("//") and exists(candidate):
