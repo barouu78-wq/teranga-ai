@@ -710,6 +710,30 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
 .journey-strip [data-journey="travel"]>span{background:var(--gold-soft)}
 /* Boutons de suite (version 9) : sous la dernière réponse ; zones tactiles de 44 px. */
+/* Sous la réponse : « Plus de détails » et « Partager en image » (V5), boutons de 44 px. */
+.answer-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.share-img-btn{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font:700 14px/1.25 var(--font);cursor:pointer}
+.share-img-btn:focus-visible,.share-img button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+/* Fenêtre « Partager en image » : aperçu au format statut, choix du fond, partage ou enregistrement. */
+.share-img{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(16,10,4,.55);backdrop-filter:blur(4px)}
+.share-img[hidden]{display:none}
+.share-img-panel{width:min(420px,100%);max-height:calc(var(--vvh,100vh) - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:var(--radius-lg);background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.share-img-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.share-img-head h2{margin:0;font:700 20px/1.2 var(--font-display)}
+.share-img-close{width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:12px;background:transparent;color:var(--ink);cursor:pointer}
+.share-img-close svg{width:22px;height:22px}
+.share-img-frame{display:flex;justify-content:center;padding:12px;border-radius:18px;background:var(--surface-2);border:1px solid var(--line)}
+.share-img-frame img{display:block;width:auto;height:min(46vh,420px);aspect-ratio:9/16;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.35);background:var(--bg)}
+.share-img-bgs{display:flex;flex-wrap:wrap;gap:8px}
+.share-img-bgs button{min-height:44px;padding:0 14px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:700 14px/1 var(--font);cursor:pointer}
+.share-img-bgs button[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.share-img-dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong)}
+.share-img-go,.share-img-save{min-height:52px;border-radius:16px;font:700 16px/1.2 var(--font);cursor:pointer}
+.share-img-go{border:0;background:var(--accent);color:var(--accent-ink)}
+.share-img-save{border:1px solid var(--line-strong);background:var(--surface);color:var(--ink)}
+.share-img-go:disabled,.share-img-save:disabled{opacity:.5;cursor:default}
+.share-img-note{margin:0;font-size:13px;color:var(--muted)}
+.more-details{align-self:flex-start;min-height:44px;padding:8px 16px;border-radius:999px;border:1px dashed var(--line-strong);background:transparent;color:var(--ink);font:700 14px/1.25 var(--font);cursor:pointer}.more-details:hover{border-color:var(--accent);color:var(--link)}
 .followups{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.followup{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:600 14px/1.25 var(--font);text-align:left;cursor:pointer}.followup:hover{border-color:var(--accent);color:var(--link)}
 .project-offer{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.project-offer-btn{padding:10px 14px;border-radius:12px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:800;cursor:pointer}.project-offer-btn:disabled{opacity:.6}.project-offer-more{padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:transparent;color:inherit;font-weight:700;cursor:pointer}.project-offer-result{flex-basis:100%}.project-offer-result h3{margin:6px 0}.project-meta{color:var(--muted);margin:0 0 6px}
 .journey-strip [data-journey="discover"]>span{background:rgba(201,54,54,.12)}
@@ -828,6 +852,8 @@ body:not(.has-chat) .meta{display:none}
 #voiceToggle{min-height:44px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:12px;cursor:pointer}
 #hint{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #voiceToggle{white-space:nowrap}
+#voiceToggle svg{display:none;width:22px;height:22px}
+#voiceToggle[aria-pressed="true"] .voice-off,#voiceToggle[aria-pressed="false"] .voice-on{display:none}
 /* Barre d'état vocale : le texte dit l'étape (la couleur n'est qu'un renfort). */
 .voice-bar{flex:0 0 auto;width:calc(100% - 24px);max-width:820px;margin:0 auto 6px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 6px 6px 14px;border-radius:16px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow-sm);position:relative;z-index:3}
 .voice-bar[hidden],.voice-bar button[hidden]{display:none}
@@ -921,6 +947,16 @@ body.assistant-speaking .assistant:last-child .avatar,body.realtime-voice .avata
   .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fx-widget{max-width:none}
   .dock{padding:6px 12px 8px}
+  /* Place pour lire (V5) : pendant le chat, la barre du bas tient sur une ligne. La rangée de thèmes et « Réponse en
+     direct » partent (les suites restent sous chaque réponse) ; « Voix IA auto » devient une icône à côté de la
+     saisie, son texte reste lu par les lecteurs d'écran (tests/e2e/test_place_pour_lire.py). */
+  body.has-chat .dock{display:flex;align-items:flex-end;gap:6px}
+  body.has-chat .chips,body.has-chat #hint{display:none}
+  body.has-chat .composer{flex:1;min-width:0;margin:0}
+  body.has-chat .meta{flex:0 0 auto;margin:0 0 7px;padding:0}
+  body.has-chat #voiceToggle{width:44px;height:44px;padding:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink)}
+  body.has-chat #voiceToggle svg{display:block}
+  body.has-chat #voiceToggleText{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   #send{padding:0 14px;font-size:14px}
   .tabbar{display:grid!important}
   .tabbar{grid-template-columns:repeat(4,1fr);gap:4px;padding:8px 8px calc(6px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px)}
@@ -1096,8 +1132,9 @@ body[data-fete="joj"] .joj-card:focus-visible{outline:3px solid var(--link);outl
   /* Passage d'une page à l'autre en fondu (navigateurs récents ; sans effet ailleurs). */
   @view-transition{navigation:auto}
 }
-/* Écran bas (téléphone avec les barres du navigateur) : une seule ligne, « Dakar 2026 », le jour, une flèche. */
-@media(max-width:720px) and (max-height:700px){
+/* Téléphone : une seule ligne, « Dakar 2026 », le jour, une flèche (d'abord pour les écrans bas ; sur tous les
+   téléphones depuis l'accueil V5, où la carte passe sous les thèmes rapides). */
+@media(max-width:720px){
   body[data-fete="joj"] .joj-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;column-gap:10px;max-width:none;
     padding:8px 8px 12px 16px;border-radius:18px}
   body[data-fete="joj"] .joj-top{display:contents}
@@ -1118,8 +1155,9 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 .hero-greet{order:1;margin:0 0 -12px;color:var(--muted);font-size:15px}
 #heroTitle{order:2}
 #heroText{order:3}
-#audienceMode{order:4}
-.hero-ask{order:5;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface)}
+/* V5 « un écran plus simple » (Go accueil du 7 novembre 2026) : la question d'abord, puis « Je suis… » et les profils,
+   puis « Thèmes rapides » et leurs questions fréquentes, puis la carte des JOJ (tests/e2e/test_accueil_v5.py). */
+.hero-ask{order:4;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border-radius:18px;border:1px solid var(--line-strong);background:var(--surface)}
 .hero-ask input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;color:var(--ink);font-size:16px;outline:none}
 .hero-ask:focus-within{border-color:var(--accent);outline:2px solid var(--link);outline-offset:2px}
 #heroMic,#heroSend{flex:0 0 44px;height:44px;display:grid;place-items:center;border-radius:12px;border:0;cursor:pointer}
@@ -1128,10 +1166,24 @@ body[data-fete="magal"] .fete-banner{background:#0a4d31;color:#fff}
 #heroMic svg,#heroSend svg,#mic svg{width:20px;height:20px}
 #heroMic:focus-visible,#heroSend:focus-visible{outline:2px solid var(--link);outline-offset:2px}
 body.voice-active #heroMic{background:var(--sen-red);color:#fff}
-.hero-chips{order:6;display:flex;flex-wrap:wrap;gap:8px}
+.hero-label{margin:0 0 -8px;font:700 13px/1.3 var(--font);color:var(--muted)}
+#audienceLabel{order:5}
+#audienceMode{order:6}
+#topicsTitle{order:7}
+.hero-chips{order:8;display:flex;flex-wrap:wrap;gap:8px}
 .hero-chips button{min-height:44px;padding:10px 14px;border-radius:999px;border:1px solid var(--line-strong);background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
 .hero-chips button:hover{border-color:var(--accent)}
-.hero-discover{order:7;display:flex;flex-direction:column;gap:10px}
+.hero-chips button[aria-expanded="true"]{background:var(--gold-soft);border-color:var(--gold);font-weight:700}
+.theme-qs{order:9;display:flex;flex-direction:column;gap:8px;max-width:720px;padding:12px;border-radius:18px;border:1px solid var(--line);background:var(--surface-2)}
+.theme-qs[hidden]{display:none}
+.theme-qs-title{margin:0 2px;font-size:14px;font-weight:700;color:var(--ink)}
+.theme-qs-list{display:flex;flex-direction:column;gap:8px}
+.theme-qs-list button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:400 15px/1.35 var(--font);text-align:left;cursor:pointer}
+.theme-qs-list button:hover{border-color:var(--accent)}
+.theme-qs-list button:focus-visible,.hero-chips button:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.theme-qs-list svg{flex:0 0 18px;width:18px;height:18px}
+body[data-fete="joj"] .joj-card{order:10}
+.hero-discover{order:11;display:flex;flex-direction:column;gap:10px}
 .hero-discover-head{display:flex;justify-content:space-between;align-items:baseline}
 .hero-discover-head h2{margin:0;font:700 19px/1.2 var(--font-display)}
 .hero-discover-head a{position:relative;font-weight:700;font-size:14px;text-decoration:none;color:var(--link)}
@@ -1142,15 +1194,15 @@ body.voice-active #heroMic{background:var(--sen-red);color:#fff}
 .place-tile-img{display:block;height:96px;background-size:cover!important;background-position:center!important}
 .place-tile strong{padding:10px 12px 0;font-size:15px}
 .place-tile small{padding:2px 12px 10px;color:var(--muted);font-size:13px}
-.plan-cta{order:8;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg);text-decoration:none}
+.plan-cta{order:12;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg);text-decoration:none}
 .plan-cta span{display:flex;flex-direction:column;gap:2px}
 .plan-cta strong{font-size:16px}
 .plan-cta small{font-size:13px;opacity:.75}
 .plan-cta svg{flex:0 0 22px;width:22px;height:22px}
-#fxWidget{order:9}
-#journeyStrip{order:10}
-#cards{order:11}
-.hero .spread{order:12}
+#fxWidget{order:13}
+#journeyStrip{order:14}
+#cards{order:15}
+.hero .spread{order:16}
 .audience-btn>span,.audience-btn small{display:none}
 .audience-btn{min-height:44px;font-weight:700}
 .audience-btn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -1210,10 +1262,16 @@ body:not([data-fete]) .hero-signature{display:none}
   <div id="hero" class="hero">
     <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-logo"><svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
-    <a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="joj-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></a>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
     <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
     <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.</p>
+<form class="hero-ask" id="heroAsk" autocomplete="off">
+  <label class="sr-only" for="heroInput">Votre question</label>
+  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment refaire ma carte d’identité ?" enterkeyhint="send">
+  <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</form>
+<p class="hero-label" id="audienceLabel">Je suis…</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
   <button type="button" class="audience-btn on" data-audience="general" aria-pressed="true"><span aria-hidden="true">✦</span><b id="audienceGeneral">Tout le Sénégal</b><small id="audienceGeneralHint">Toutes vos questions</small></button>
   <button type="button" class="audience-btn" data-audience="tourist" aria-pressed="false"><span aria-hidden="true">✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
@@ -1221,13 +1279,10 @@ body:not([data-fete]) .hero-signature{display:none}
   <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span aria-hidden="true">↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span aria-hidden="true">◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
 </div>
-<form class="hero-ask" id="heroAsk" autocomplete="off">
-  <label class="sr-only" for="heroInput">Votre question</label>
-  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment refaire ma carte d’identité ?" enterkeyhint="send">
-  <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-  <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-</form>
+<h2 class="hero-label" id="topicsTitle">Thèmes rapides</h2>
 <div class="hero-chips" id="heroChips"></div>
+<div class="theme-qs" id="themeQs" hidden><p class="theme-qs-title" id="themeQsTitle"></p><div class="theme-qs-list" id="themeQsList"></div></div>
+<a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="joj-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></a>
 <section class="hero-discover" aria-labelledby="discoverTitle">
   <div class="hero-discover-head"><h2 id="discoverTitle">À découvrir</h2><a href="/lieux" id="allPlaces">Tous les lieux</a></div>
   <div class="hero-discover-grid">
@@ -1303,7 +1358,7 @@ body:not([data-fete]) .hero-signature{display:none}
   <div class="meta">
     <span id="hint" role="status" aria-live="polite">Réponse en direct</span>
     <span id="count">0 / 2000</span>
-    <button id="voiceToggle" type="button" title="La voix de Teranga AI est générée par IA">Voix IA auto off</button>
+    <button id="voiceToggle" type="button" title="La voix de Teranga AI est générée par IA" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path class="voice-on" d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="voice-off" d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span id="voiceToggleText">Voix IA auto off</span></button>
   </div>
 </div>
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
