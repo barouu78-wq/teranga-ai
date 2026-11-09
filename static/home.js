@@ -28,7 +28,7 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -52,7 +52,7 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
@@ -263,6 +263,55 @@ const AUDIENCE_ICONS={
  diaspora:['route','home','exchange','invest'],
  merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
+// Thèmes rapides de « Tout le Sénégal » (V5) : trois questions fréquentes par thème, la première est celle que le
+// thème posait avant. Français et anglais seulement : en wolof, le thème pose directement sa question (pas de
+// traduction inventée).
+const THEME_QS={
+fr:{
+ 'Papiers':["Comment refaire ma carte d'identité ?","Comment obtenir un acte de naissance depuis l'étranger ?","Comment demander un casier judiciaire ?"],
+ 'Santé':["Où trouver une pharmacie de garde ?","Comment se protéger du paludisme ?","C'est quoi la CMU ?"],
+ 'Argent':["Combien font 100 euros en FCFA ?","J'ai reçu de l'argent par erreur, que faire ?","Comment comparer deux transferts d'argent ?"],
+ 'Voyage':["Que faire au Sénégal en une semaine ?","Faut-il un visa pour le Sénégal ?","Quelle est la meilleure saison pour visiter le Sénégal ?"],
+ 'Arnaques':["On m'a arnaqué sur Wave, que faire ?","« Voici mon nouveau numéro » : est-ce une arnaque ?","Comment protéger mon code secret Wave ou Orange Money ?"],
+ 'Électricité':["Comment acheter du crédit Woyofal ?","Woyofal : pourquoi trois codes ?","Quelles prises électriques au Sénégal ?"],
+ 'Études':["Comment obtenir une bourse d'études ?","Comment s'inscrire à l'université au Sénégal ?","Comment faire reconnaître un diplôme obtenu à l'étranger ?"],
+ 'Entreprise':["Comment créer mon entreprise au Sénégal ?","Comment vendre sur WhatsApp ?","Comment calculer ma marge sur un produit ?"],
+ 'Fêtes':["C'est quand la Tabaski ?","C'est quand la Korité ?","Quels sont les jours fériés au Sénégal ?"],
+ 'Wolof':["Apprends-moi les salutations en wolof.","Comment dire merci en wolof ?","Apprends-moi à compter de 1 à 10 en wolof."]
+},
+en:{
+ 'Paperwork':["How do I renew my Senegalese ID card?","How do I get a birth certificate from abroad?","How do I request a criminal record extract?"],
+ 'Health':["Where can I find an on-duty pharmacy?","How do I protect myself from malaria?","What is the CMU health coverage?"],
+ 'Money':["How much is 100 euros in CFA francs?","I received money by mistake, what should I do?","How do I compare two money transfers?"],
+ 'Travel':["What can I do in Senegal in one week?","Do I need a visa for Senegal?","When is the best time to visit Senegal?"],
+ 'Scams':["I was scammed on Wave, what should I do?","“This is my new number”: is it a scam?","How do I protect my Wave or Orange Money PIN?"],
+ 'Electricity':["How do I buy Woyofal electricity credit?","Woyofal: why three codes?","What power plugs are used in Senegal?"],
+ 'Studies':["How can I get a study grant?","How do I enrol at a university in Senegal?","How do I get a foreign diploma recognised?"],
+ 'Business':["How do I start a business in Senegal?","How do I sell on WhatsApp?","How do I calculate my margin on a product?"],
+ 'Holidays':["When is Tabaski?","When is Korité?","What are the public holidays in Senegal?"],
+ 'Wolof':["Teach me greetings in Wolof.","How do I say thank you in Wolof?","Teach me to count from 1 to 10 in Wolof."]
+}
+};
+const THEME_QS_ARROW='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function closeThemeQs(){
+  const panel=$('themeQs');if(panel)panel.hidden=true;
+  document.querySelectorAll('#heroChips [aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));
+}
+function toggleThemeQs(chip){
+  const wasOpen=chip.getAttribute('aria-expanded')==='true';
+  closeThemeQs();
+  const qs=(THEME_QS[lang]||{})[chip.dataset.topic];
+  if(wasOpen||!qs)return;
+  const t=T[lang];
+  $('themeQsTitle').textContent=(t.topicQs||T.fr.topicQs).replace('{t}',chip.dataset.topic);
+  $('themeQsList').replaceChildren(...qs.map(q=>{const b=document.createElement('button');b.type='button';b.dataset.q=q;
+    const span=document.createElement('span');span.textContent=q;b.append(span);b.insertAdjacentHTML('beforeend',THEME_QS_ARROW);return b;}));
+  chip.setAttribute('aria-expanded','true');
+  $('themeQs').hidden=false;
+  // Sous les thèmes, le panneau peut tomber sous la barre d'onglets : il remonte juste assez pour être lu.
+  const calme=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('themeQs').scrollIntoView({block:'nearest',behavior:calme?'auto':'smooth'});
+}
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
   const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes vos questions'];
@@ -285,7 +334,14 @@ function renderAudience(){
   });
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
   const heroChips=$('heroChips');
-  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;return b;}));
+  // Thèmes rapides (V5) : jusqu'à dix ; ceux de « Tout le Sénégal » ouvrent leurs questions fréquentes.
+  const topicQs=audience==='general'?THEME_QS[lang]:null;
+  if(heroChips)heroChips.replaceChildren(...cards.slice(0,10).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
+    if(topicQs&&topicQs[c.t]){b.dataset.topic=c.t;b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','themeQs');}
+    return b;}));
+  closeThemeQs();
+  $('audienceLabel').textContent=t.whoTitle||T.fr.whoTitle;
+  $('topicsTitle').textContent=t.topicsTitle||T.fr.topicsTitle;
 }
 
 // ?lang=… (widget partenaire, pages en anglais) prime sur la langue mémorisée.
@@ -294,6 +350,10 @@ let lang=['fr','en','wo','ff'].includes(urlParams.get('lang'))?urlParams.get('la
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+// Conversation neuve à chaque visite (demande du propriétaire, 5 nov. 2026) : gardée seulement dans l'onglet
+// (sessionStorage) et 30 minutes après la dernière activité ; plus rien dans le téléphone (localStorage).
+const CHAT_IDLE_MS=30*60*1000;
+let lastActivity=Date.now();
 // Logo Teranga (même dessin que l'en-tête) à la place de l'émoji 🌴.
 const AVATAR_SVG='<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#sn-logo"/></svg>'; // logo (baobab doré) dessiné une fois dans home.html (#sn-logo)
 function cleanReply(text){
@@ -572,7 +632,222 @@ function followupLabel(item){
   if(at&&FOLLOWUP_EN[at[1]])return FOLLOWUP_EN[at[1]]+' in '+at[2];
   return FOLLOWUP_EN[item]||'';
 }
-function clearFollowups(){document.querySelectorAll('.followups').forEach(row=>row.remove());}
+function clearFollowups(){document.querySelectorAll('.followups,.more-details').forEach(row=>row.remove());}
+// « Plus de détails » (V5) : l'IA donne d'abord l'essentiel ; ce bouton envoie la question comme si on l'avait tapée.
+// Wolof : libellé français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+function moreDetailsLabel(){return lang==='en'?'More details':'Plus de détails';}
+// Les deux libellés : la langue peut changer entre la question et un rechargement.
+function isMoreDetails(text){return text==='Plus de détails'||text==='More details';}
+// Dernière vraie question (pas « Plus de détails ») : celle qu'on met sur l'image partagée.
+function lastRealQuestion(){for(let i=history.length-1;i>=0;i--){const m=history[i];if(m&&m.role==='user'&&!isMoreDetails(m.content))return m.content;}return '';}
+function addMoreDetails(col){
+  const btn=document.createElement('button');btn.type='button';btn.className='more-details';btn.textContent=moreDetailsLabel();
+  btn.onclick=()=>ask(moreDetailsLabel());
+  answerRow(col).prepend(btn);
+}
+// Ligne sous la réponse : « Plus de détails » puis « Partager en image » (boutons de 44 px).
+function answerRow(col){
+  let row=col.querySelector(':scope > .answer-row');
+  if(row)return row;
+  row=document.createElement('div');row.className='answer-row';
+  const bubble=col.querySelector('.bubble');  // juste sous la réponse, avant les boutons Écouter, Copier…
+  if(bubble)bubble.after(row);else col.appendChild(row);
+  return row;
+}
+// Partager une réponse en image (V5) : image 1080 × 1920 au format statut (WhatsApp, TikTok, Instagram), dessinée dans
+// le téléphone avec la question, la réponse et teranga-ai.fr. Rien n'est envoyé au serveur, aucune bibliothèque.
+// Wolof : textes français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+const SHARE_IMG_TXT={
+  fr:{button:'Partager en image',share:'Partager',save:"Enregistrer l'image",close:'Fermer',bg:'Fond',nuit:'Nuit dorée',vert:'Vert',sable:'Sable',
+    question:'QUESTION',source:'Réponse de Teranga AI, assistant IA',ask:'Pose ta question sur le Sénégal',more:'La suite sur teranga-ai.fr',
+    note:"L'adresse teranga-ai.fr est sur l'image.",preview:"Aperçu de l'image à partager",text:'Pose ta question sur le Sénégal : https://teranga-ai.fr'},
+  en:{button:'Share as image',share:'Share',save:'Save image',close:'Close',bg:'Background',nuit:'Golden night',vert:'Green',sable:'Sand',
+    question:'QUESTION',source:'Answer from Teranga AI, an AI assistant',ask:'Ask your question about Senegal',more:'Read more on teranga-ai.fr',
+    note:'The teranga-ai.fr address is on the image.',preview:'Preview of the image to share',text:'Ask your question about Senegal: https://teranga-ai.fr'}
+};
+function shareImgTxt(){return SHARE_IMG_TXT[lang]||SHARE_IMG_TXT.fr;}
+const SHARE_IMG_FONDS={
+  nuit:{bg:'#0b0d10',panel:'#14171c',ink:'#f5efe3',title:'#f6dfa8',gold:'#e8b04b',muted:'#a9a296',line:'rgba(232,176,75,.28)',pill:'#e8b04b',pillInk:'#0b0d10'},
+  vert:{bg:'#0f6a43',panel:'#0b5636',ink:'#fff6dc',title:'#f5d58a',gold:'#f5d58a',muted:'rgba(255,246,220,.82)',line:'rgba(245,213,138,.36)',pill:'#f5d58a',pillInk:'#0b3d27'},
+  sable:{bg:'#fbf8f1',panel:'#f1ead8',ink:'#14110d',title:'#14110d',gold:'#8a6100',muted:'#5e574b',line:'rgba(20,17,13,.16)',pill:'#14110d',pillInk:'#f5d58a'}
+};
+let shareImg=null,shareImgFond='nuit';
+function addShareImage(col,question,answer){
+  const btn=document.createElement('button');btn.type='button';btn.className='share-img-btn';btn.textContent=shareImgTxt().button;
+  btn.onclick=()=>openShareImg(question,answer,btn);
+  answerRow(col).appendChild(btn);
+}
+// Lignes d'un texte dans une largeur donnée ; au-delà de maxLines, la dernière ligne finit par « … ».
+function shareImgLines(ctx,text,maxW,maxLines){
+  const lines=[];
+  for(const p of String(text||'').split(/\n+/)){
+    let line='';
+    for(let w of p.replace(/\s+/g,' ').trim().split(' ').filter(Boolean)){
+      // Mot plus large que la ligne (un lien) : coupé en morceaux qui tiennent (relecture Gitar de #580).
+      while(w.length>1&&ctx.measureText(w).width>maxW){
+        let n=w.length-1;
+        while(n>1&&ctx.measureText(w.slice(0,n)).width>maxW)n--;
+        if(line){lines.push(line);line='';}
+        lines.push(w.slice(0,n));w=w.slice(n);
+      }
+      const test=line?line+' '+w:w;
+      if(line&&ctx.measureText(test).width>maxW){lines.push(line);line=w;}else line=test;
+    }
+    if(line)lines.push(line);
+  }
+  if(lines.length<=maxLines)return {lines,cut:false};
+  const kept=lines.slice(0,maxLines);
+  let last=kept[maxLines-1];
+  while(last&&ctx.measureText(last+' …').width>maxW)last=last.includes(' ')?last.slice(0,last.lastIndexOf(' ')):last.slice(0,-1);
+  kept[maxLines-1]=last+' …';
+  return {lines:kept,cut:true};
+}
+function shareImgRound(ctx,x,y,w,h,r){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);}
+// Logo : les mêmes tracés que le baobab doré du site (#sn-logo dans home.html).
+function shareImgLogo(ctx,x,y,size){
+  ctx.save();ctx.translate(x,y);ctx.scale(size/100,size/100);
+  ctx.fillStyle='#e8b04b';ctx.beginPath();ctx.arc(50,50,44,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0b0d10';
+  ctx.fill(new Path2D('M19.8 82 Q50 75 80.2 82 A44 44 0 0 1 19.8 82 Z'));
+  ctx.fill(new Path2D('M37 85 Q44 72 43 57 L57 57 Q56 72 63 85 Z'));
+  ctx.strokeStyle='#0b0d10';ctx.lineWidth=5.5;ctx.lineCap='round';ctx.lineJoin='round';
+  ['M46 58 L36 46 L28 42','M36 46 L34 37','M50 57 L50 37','M50 45 L43 35','M50 43 L57 33','M54 58 L64 46 L72 42','M64 46 L66 37'].forEach(d=>ctx.stroke(new Path2D(d)));
+  ctx.restore();
+}
+async function drawShareImage(question,answer,fond){
+  const W=1080,H=1920,P=90,c=SHARE_IMG_FONDS[fond]||SHARE_IMG_FONDS.nuit,t=shareImgTxt();
+  const display='"Bricolage Grotesque",system-ui,sans-serif',body='"Atkinson Hyperlegible",system-ui,sans-serif';
+  try{await Promise.all(['700 64px '+display,'600 58px '+display,'400 46px '+body,'700 34px '+body].map(f=>document.fonts.load(f)));}catch(_){}
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle=c.bg;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=c.line;ctx.lineWidth=3;
+  for(const r of [330,220]){ctx.beginPath();ctx.arc(W-30,30,r,0,Math.PI*2);ctx.stroke();}
+  shareImgLogo(ctx,P,96,110);
+  ctx.font='700 64px '+display;ctx.fillStyle=c.title;ctx.fillText('Teranga ',P+140,172);
+  ctx.fillStyle=c.gold;ctx.fillText('AI',P+140+ctx.measureText('Teranga ').width,172);
+  // Mesure d'abord (question, puis réponse dans la place qui reste), dessin ensuite : le bloc est centré entre le
+  // logo et le pied, un peu plus haut que le milieu.
+  const top=280,bottom=1500,footer=1560,pad=50,lh=66,x0=P-20,pw=W-2*P+40,inner=pw-2*pad,more=70;
+  const q=String(question||'').trim();
+  ctx.font='600 58px '+display;
+  const ql=q?shareImgLines(ctx,lang==='en'?'“'+q+'”':'« '+q+' »',W-2*P,4).lines:[];
+  const qh=q?60+ql.length*72+50:0;
+  ctx.font='400 46px '+body;
+  const room=bottom-top-qh-2*pad;
+  let a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor(room/lh)));
+  if(a.cut)a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor((room-more)/lh)));
+  const ph=2*pad+a.lines.length*lh+(a.cut?more:0);
+  let y=top+Math.max(0,Math.round((bottom-top-qh-ph)*0.42));
+  if(q){
+    ctx.font='700 34px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.question,P,y+34);y+=60;
+    ctx.font='600 58px '+display;ctx.fillStyle=c.ink;
+    for(const l of ql){y+=72;ctx.fillText(l,P,y);}
+    y+=50;
+  }
+  // La réponse, dans un panneau ; coupée proprement si elle ne tient pas.
+  ctx.fillStyle=c.panel;shareImgRound(ctx,x0,y,pw,ph,40);ctx.fill();
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.stroke();
+  ctx.font='400 46px '+body;ctx.fillStyle=c.ink;let ty=y+pad;
+  for(const l of a.lines){ctx.fillText(l,x0+pad,ty+48);ty+=lh;}
+  if(a.cut){ctx.font='700 38px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.more,x0+pad,ty+52);}
+  // Pied : d'où vient la réponse et l'adresse du site.
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(P,footer);ctx.lineTo(W-P,footer);ctx.stroke();
+  ctx.font='400 32px '+body;ctx.fillStyle=c.muted;ctx.fillText(t.source,P,footer+64);
+  ctx.font='400 38px '+body;ctx.fillText(t.ask,P,footer+150);
+  ctx.font='700 78px '+display;ctx.fillStyle=c.ink;ctx.fillText('teranga-ai.fr',P,footer+245);
+  const s=130,px=W-P-s,py=footer+130;
+  ctx.fillStyle=c.pill;shareImgRound(ctx,px,py,s,s,34);ctx.fill();
+  ctx.strokeStyle=c.pillInk;ctx.lineWidth=9;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(px+38,py+s/2);ctx.lineTo(px+s-38,py+s/2);ctx.moveTo(px+s/2+6,py+36);ctx.lineTo(px+s-38,py+s/2);ctx.lineTo(px+s/2+6,py+s-36);ctx.stroke();
+  return new Promise(ok=>canvas.toBlob(ok,'image/png'));
+}
+function shareImgDialog(){
+  let d=$('shareImgDialog');
+  if(d)return d;
+  d=document.createElement('div');d.id='shareImgDialog';d.className='share-img';d.hidden=true;
+  d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','shareImgTitle');
+  // Gabarit fixe (aucun texte venu de l'utilisateur ou de l'IA) ; les libellés sont posés en textContent.
+  d.innerHTML='<div class="share-img-panel"><div class="share-img-head"><h2 id="shareImgTitle"></h2>'
+    +'<button type="button" class="share-img-close" id="shareImgClose"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>'
+    +'<div class="share-img-frame"><img id="shareImgPreview" alt=""></div>'
+    +'<div class="share-img-bgs" role="group" id="shareImgBgs"></div>'
+    +'<button type="button" class="share-img-go" id="shareImgShare"></button>'
+    +'<button type="button" class="share-img-save" id="shareImgSave"></button>'
+    +'<p class="share-img-note" id="shareImgNote"></p></div>';
+  document.body.appendChild(d);
+  for(const fond of Object.keys(SHARE_IMG_FONDS)){
+    const b=document.createElement('button');b.type='button';b.dataset.fond=fond;
+    const dot=document.createElement('span');dot.className='share-img-dot';dot.style.background=SHARE_IMG_FONDS[fond].bg;
+    b.append(dot,document.createElement('span'));
+    b.onclick=()=>{shareImgFond=fond;if(shareImg){shareImg.fond=fond;renderShareImg();}shareImgLabels();};
+    $('shareImgBgs').appendChild(b);
+  }
+  $('shareImgClose').onclick=closeShareImg;
+  $('shareImgShare').onclick=shareImgShare;
+  $('shareImgSave').onclick=shareImgSave;
+  $('shareImgPreview').addEventListener('load',()=>{const img=$('shareImgPreview');img.dataset.fond=img.dataset.pending||'';});
+  d.addEventListener('click',e=>{if(e.target===d)closeShareImg();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!d.hidden){e.preventDefault();closeShareImg();}});
+  d.addEventListener('keydown',e=>{
+    if(e.key!=='Tab')return;  // le focus reste dans la fenêtre
+    const items=[...d.querySelectorAll('button:not([disabled])')];
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+  return d;
+}
+function shareImgLabels(){
+  const t=shareImgTxt();
+  $('shareImgTitle').textContent=t.button;
+  $('shareImgClose').setAttribute('aria-label',t.close);
+  $('shareImgPreview').alt=t.preview;
+  $('shareImgBgs').setAttribute('aria-label',t.bg);
+  $('shareImgBgs').querySelectorAll('button').forEach(b=>{b.lastChild.textContent=t[b.dataset.fond];b.setAttribute('aria-pressed',b.dataset.fond===shareImgFond?'true':'false');});
+  $('shareImgShare').textContent=t.share;$('shareImgSave').textContent=t.save;$('shareImgNote').textContent=t.note;
+}
+async function renderShareImg(){
+  const s=shareImg;if(!s)return;
+  const fond=s.fond;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=true;
+  const blob=await drawShareImage(s.question,s.answer,fond);
+  if(!blob||shareImg!==s||s.fond!==fond)return;  // fenêtre fermée ou autre fond choisi entre-temps
+  if(s.url)URL.revokeObjectURL(s.url);
+  s.blob=blob;s.url=URL.createObjectURL(blob);
+  const img=$('shareImgPreview');img.dataset.pending=fond;img.src=s.url;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=false;
+}
+function openShareImg(question,answer,opener){
+  const d=shareImgDialog();
+  shareImg={question:String(question||'').slice(0,300),answer:String(answer||''),fond:shareImgFond,opener};
+  shareImgLabels();
+  d.hidden=false;document.body.classList.add('share-img-open');
+  $('shareImgClose').focus();  // « Partager » reste désactivé tant que l'image se dessine
+  renderShareImg();
+}
+function closeShareImg(){
+  const d=$('shareImgDialog');if(!d||d.hidden)return;
+  d.hidden=true;document.body.classList.remove('share-img-open');
+  const s=shareImg;shareImg=null;
+  if(s&&s.url)URL.revokeObjectURL(s.url);
+  $('shareImgPreview').removeAttribute('src');delete $('shareImgPreview').dataset.fond;
+  if(s&&s.opener&&s.opener.isConnected)s.opener.focus();
+}
+async function shareImgShare(){
+  const s=shareImg;if(!s||!s.blob)return;
+  const file=new File([s.blob],'teranga-ai.png',{type:'image/png'});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Teranga AI',text:shareImgTxt().text});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}  // partage annulé : rien d'autre
+  shareImgSave();  // pas de partage de fichier (ordinateur) : l'image est enregistrée
+}
+function shareImgSave(){
+  const s=shareImg;if(!s||!s.url)return;
+  const a=document.createElement('a');a.href=s.url;a.download='teranga-ai.png';
+  document.body.appendChild(a);a.click();a.remove();
+}
 function addFollowups(col,ux){
   clearFollowups();
   if(!ux||ux.show_followups!==true||!Array.isArray(ux.followups))return;
@@ -746,7 +1021,7 @@ function setLang(next){
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
   $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
-  $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
+  setVoiceToggle(autoVoice);
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
   if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
@@ -944,13 +1219,20 @@ $('tabbar').addEventListener('click',e=>{
   if(!btn)return;
   showHero();stage.scrollTop=0;
 });
-function reset(){
-  if(history.length&&!confirm(T[lang].resetAsk))return;
+function clearConversation(){
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
   SS.removeItem('teranga-history');
   LS.removeItem('teranga-history');
 }
+function reset(){
+  if(history.length&&!confirm(T[lang].resetAsk))return;
+  clearConversation();
+}
+// Onglet retrouvé après 30 minutes sans activité : nouvelle conversation, sans demander confirmation.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&history.length&&!inflight&&Date.now()-lastActivity>=CHAT_IDLE_MS)clearConversation();
+});
 let resumeVoiceTimer=0;
 function answerExtras(item){
   const extras={};
@@ -967,6 +1249,7 @@ function answerExtras(item){
   }catch(_){return {}}
 }
 function persist(){
+  lastActivity=Date.now();
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
     try{
@@ -980,15 +1263,18 @@ function persist(){
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
       SS.setItem('teranga-history',payload);
-      LS.setItem('teranga-history',payload);
     }catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=SS.getItem('teranga-history')||LS.getItem('teranga-history');
+    LS.removeItem('teranga-history');  // ancienne version : conversation gardée sans limite dans le téléphone
+    const raw=SS.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
+    const age=Date.now()-Number(data.updatedAt||0);
+    if(!(age>=0&&age<CHAT_IDLE_MS)){SS.removeItem('teranga-history');return;}  // nouvelle visite : chat vide
+    lastActivity=Number(data.updatedAt);
     // ?lang=… (widget partenaire, pages anglaises) prime sur la langue de la conversation enregistrée.
     if(data.lang&&T[data.lang]&&!T[urlParams.get('lang')])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
@@ -1001,6 +1287,7 @@ function restore(){
       history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
+      let lastCol=null,lastAsked='';
       history.forEach(item=>{
         const row=document.createElement('div');
         row.className='msg '+item.role;
@@ -1011,15 +1298,21 @@ function restore(){
         const b=document.createElement('div');b.className='bubble';
         b.textContent=cleanReply(item.content||'');
         col.appendChild(b);
+        if(item.role==='user'&&!isMoreDetails(item.content))lastAsked=item.content;
         if(item.role==='assistant'){
           addActs(col,item.content||'',null,item.share||'');
+          addShareImage(col,lastAsked,item.content||'');
           addCityImage(col,item.image);
           addMap(col,item.map);
           addSources(col,item.sources);
         }
+        lastCol=col;
         row.appendChild(col);
         frag.appendChild(row);
       });
+      // « Plus de détails » revient sous la dernière réponse (pas si elle répond déjà à « Plus de détails »).
+      const last=history[history.length-1],asked=history[history.length-2];
+      if(lastCol&&last&&last.role==='assistant'&&!(asked&&isMoreDetails(asked.content)))addMoreDetails(lastCol);
       messages.appendChild(frag);
       stage.scrollTop=stage.scrollHeight;
     }
@@ -1169,6 +1462,8 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addPlaceLinks(wait.col,places);
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
     if(reply)addFollowups(wait.col,ux);
+    if(reply&&!isMoreDetails(text))addMoreDetails(wait.col);  // pas sous la réponse détaillée elle-même
+    if(reply)addShareImage(wait.col,isMoreDetails(text)?lastRealQuestion():text,reply);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
@@ -1250,7 +1545,8 @@ $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 // Design v2 : champ de question en haut de l'accueil (téléphone). Il passe la question
 // au même circuit que la barre du bas (ask), puis la conversation prend le relais.
-$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
+$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.topic)toggleThemeQs(b);else ask(b.dataset.q);});
+$('themeQsList')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
 $('heroAsk')?.addEventListener('submit',e=>{
   e.preventDefault();
   const q=$('heroInput').value.trim();
@@ -1705,11 +2001,16 @@ async function startVoiceCapture(){
     }
   }
 }
+// Bouton « Voix IA auto » : le texte (lu par les lecteurs d'écran, caché derrière l'icône sur téléphone) et aria-pressed.
+function setVoiceToggle(on){
+  $('voiceToggleText').textContent=on?T[lang].vOn:T[lang].vOff;
+  $('voiceToggle').setAttribute('aria-pressed',on?'true':'false');
+}
 function beginVoiceMode(){
   voiceConversation=true;autoVoice=true;
   LS.setItem('teranga-voice','1');
   document.body.classList.add('voice-active');
-  $('voiceToggle').textContent=T[lang].vOn;
+  setVoiceToggle(true);
   voiceNotice=null;voiceMisses=0;
   ensureVoiceTicker();
 }
@@ -1722,7 +2023,7 @@ function endVoiceMode(){
   stopVoiceCapture();stopVoiceMonitor();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
-  $('voiceToggle').textContent=T[lang].vOff;
+  setVoiceToggle(false);
   renderVoiceState();
 }
 // Arrêt complet, quelle que soit l'étape : plus d'écoute, plus de voix, plus de réponse en attente.

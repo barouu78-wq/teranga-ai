@@ -41,8 +41,10 @@ def test_home_blocks_arrive_with_an_animation_and_nothing_is_removed(page, base_
     }""")
     assert dessus
     page.wait_for_function(FINIES, timeout=5000)
-    # #heroText et .journey-strip sont cachés sur téléphone par la mise en page (pas par l'animation).
-    for selecteur in [s for s in ARRIVEES if s != "#heroText"] + ["#heroAsk", "#heroInput", "#jojCta"]:
+    # #heroText et .journey-strip sont cachés sur téléphone par la mise en page (pas par l'animation). Depuis l'accueil
+    # V5, la carte JOJ tient sur une ligne sur tous les téléphones : son texte « Le guide pratique » (#jojCta) est
+    # caché par la mise en page, la flèche vers le guide (.joj-cta) reste.
+    for selecteur in [s for s in ARRIVEES if s != "#heroText"] + ["#heroAsk", "#heroInput", ".joj-cta"]:
         assert page.is_visible(selecteur), selecteur
         assert page.evaluate("(s) => getComputedStyle(document.querySelector(s)).opacity", selecteur) == "1", selecteur
     assert page.evaluate("document.documentElement.scrollWidth") <= 390  # aucun défilement horizontal

@@ -424,3 +424,16 @@ def test_the_continue_request_reaches_the_provider_with_the_end_of_the_answer(pr
     text = text_of(events_of(post("continue", history=history)))
     assert text == "Étape 60 : arrivée à Saint-Louis."
     assert LONG_ANSWER[-100:] in seen["input"] and "SUITE D'UNE RÉPONSE COUPÉE" in seen["instructions"]
+
+
+def test_claude_principal_garde_une_limite_de_reponse_courte(monkeypatch):
+    """V5 « réponses courtes » : Claude principal écrit au plus 1500 jetons (4000 avant). L'essentiel tient en
+    5 à 8 lignes ; « Plus de détails » (une seconde question) développe sans dépasser cette limite."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setenv("AI_PRINCIPALE", "claude")
+    vus = []
+    claude = FakeClaude(FakeStream(["Réponse courte."], stop_reason="end_turn"))
+    claude.beta = SimpleNamespace(messages=SimpleNamespace(stream=lambda **params: vus.append(params) or claude.stream))
+    monkeypatch.setattr(backup_ai, "_client", lambda: claude)
+    assert text_of(events_of(post("Question pour Claude principal, réponse courte 13"))) == "Réponse courte."
+    assert [params["max_tokens"] for params in vus] == [1500]

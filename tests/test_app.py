@@ -571,6 +571,17 @@ def test_visual_requests_trigger_web_search_first():
     assert should_use_web("À quoi ressemble ce lieu ?") is True
 
 
+def test_system_prompt_donne_l_essentiel_puis_les_details_sur_demande():
+    """V5 « réponses courtes » : l'essentiel en 5 à 8 lignes, même pour un guide ; le détail seulement sur demande
+    (bouton « Plus de détails » du chat, qui envoie cette question)."""
+    import app as app_module
+    prompt = app_module.SYSTEM_PROMPT
+    assert "5 à 8 lignes au plus" in prompt
+    assert "même pour une démarche ou un guide" in prompt
+    assert "Quand l'utilisateur demande plus de détails" in prompt
+    assert "vise environ 2 à 5 phrases" not in prompt
+
+
 def test_visual_system_rule_requires_web_before_requesting_user_photo():
     import app as app_module
     assert "tente d'abord une recherche web" in app_module.SYSTEM_PROMPT
@@ -908,7 +919,10 @@ def test_home_bounds_persisted_chat_history():
 
     assert "slice(0,1200)" in html
     assert "version:2" in html
-    assert "LS.setItem('teranga-history'" in html
+    # Conversation neuve à chaque visite (5 nov. 2026) : gardée dans l'onglet seulement, 30 minutes au plus.
+    assert "SS.setItem('teranga-history'" in html
+    assert "LS.setItem('teranga-history'" not in html
+    assert "CHAT_IDLE_MS=30*60*1000" in html
     assert "safeHistory" in html
 
 
@@ -1040,9 +1054,11 @@ def test_robots_blocks_api_and_proxy_endpoints():
 
 
 def test_indexnow_workflow_targets_canonical_domain():
+    # Le domaine est passé du workflow au script qu'il lance (tests/test_indexnow_submit.py).
     workflow = (ROOT / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
-    assert "onrender.com" not in workflow
-    assert '"host": "teranga-ai.fr"' in workflow
+    script = (ROOT / "scripts" / "indexnow_submit.py").read_text(encoding="utf-8")
+    assert "onrender.com" not in workflow + script
+    assert '"host": "teranga-ai.fr"' in script
 
 
 def test_every_seo_page_in_sitemap_is_served():
