@@ -112,5 +112,6 @@ Utiles : `REDIS_URL`, `SITE_URL`, `CONTACT_EMAIL`, `PARTNER_WHATSAPP`, `STATS_TO
 `GOOGLE_SITE_VERIFICATION`, `GETYOURGUIDE_PARTNER_ID`, `BOOKING_AID`, `TAXI_PARTNER_URL`,
 `ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`.
 Plafond de dépense IA : `AI_PLAFOND_JOUR` (requêtes vers l'IA par jour pour tout le site : chat, planificateur, voix ; défaut 500 ; au-delà, la base vérifiée répond jusqu'à minuit ; un secours après une panne du fournisseur peut faire un second appel pour la même requête).
+**En production, Claude est l'IA principale** (`AI_PRINCIPALE=claude`, modèle `claude-sonnet-5-5` vu dans les journaux du 2 au 8 novembre 2026 ; choix confirmé par le propriétaire le 9 novembre 2026) : OpenAI sert de secours.
 Modèles OpenAI (vide ou invalide = défaut ; lus par `services/model_params.py`) : `OPENAI_MODEL` (défaut `gpt-5.6-luna`), `OPENAI_COMPLEX_MODEL` (défaut `gpt-5.6-sol`), `OPENAI_TRIP_MODEL` (planificateur, sans défaut).
 Les tests n'ont besoin d'aucune vraie clé (`OPENAI_API_KEY=test-key` suffit).

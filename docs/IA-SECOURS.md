@@ -31,6 +31,9 @@ Sur Render, ajoute (ou modifie) la variable :
 
 Pour revenir en arrière, remets `openai` : effet en une minute, sans redéploiement de code.
 
+**Réglage actuel de la production** : `AI_PRINCIPALE=claude`. Les journaux du 2 au 8 novembre 2026 montrent
+`modele=claude-sonnet-5-5` sur les réponses du chat ; le propriétaire a confirmé ce choix le 9 novembre 2026.
+
 Optionnel : `ANTHROPIC_MODEL` choisit le modèle Claude. Par défaut `claude-opus-5-5` (le plus
 capable) ; `claude-sonnet-5-5` coûte moins cher et répond un peu plus vite.
 
