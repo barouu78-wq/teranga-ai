@@ -88,10 +88,12 @@ def _suggestions_fr():
 
 
 def test_les_suggestions_couvrent_la_vie_de_tous_les_jours_et_pas_seulement_le_voyage():
+    # Quatre thèmes depuis le 10 novembre 2026 (« Faut déjà réduire tout ça », propriétaire) : dix avant, dont
+    # « Papiers » et « Études ». Trois des quatre restent hors voyage.
     suggestions = _suggestions_fr()
-    assert len(suggestions) >= 8
+    assert len(suggestions) == 4
     libelles = " ".join(label for label, _ in suggestions)
-    for sujet in ("Papiers", "Santé", "Argent", "Études", "Voyage"):
+    for sujet in ("Voyage", "Argent", "Santé", "Arnaques"):
         assert sujet in libelles
 
 

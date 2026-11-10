@@ -203,12 +203,12 @@ setInterval(loadFx,10*60*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
 const AUDIENCE={
 fr:{
- general:[['Papiers',"Comment refaire ma carte d'identité ?"],['Santé',"Où trouver une pharmacie de garde ?"],['Argent',"Combien font 100 euros en FCFA ?"],['Voyage',"Que faire au Sénégal en une semaine ?"],['Arnaques',"On m'a arnaqué sur Wave, que faire ?"],['Électricité',"Comment acheter du crédit Woyofal ?"],['Études',"Comment obtenir une bourse d'études ?"],['Entreprise',"Comment créer mon entreprise au Sénégal ?"],['Fêtes',"C'est quand la Tabaski ?"],['Wolof',"Apprends-moi les salutations en wolof."]],
+ general:[['Voyage',"Que faire au Sénégal en une semaine ?"],['Argent',"Combien font 100 euros en FCFA ?"],['Santé',"Où trouver une pharmacie de garde ?"],['Arnaques',"On m'a arnaqué sur Wave, que faire ?"]],
  tourist:[['Visite guidée',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Négocier au marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
  merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
 },
 en:{
- general:[['Paperwork',"How do I renew my Senegalese ID card?"],['Health',"Where can I find an on-duty pharmacy?"],['Money',"How much is 100 euros in CFA francs?"],['Travel',"What can I do in Senegal in one week?"],['Scams',"I was scammed on Wave, what should I do?"],['Electricity',"How do I buy Woyofal electricity credit?"],['Studies',"How can I get a study grant?"],['Business',"How do I start a business in Senegal?"],['Holidays',"When is Tabaski?"],['Wolof',"Teach me greetings in Wolof."]],
+ general:[['Travel',"What can I do in Senegal in one week?"],['Money',"How much is 100 euros in CFA francs?"],['Health',"Where can I find an on-duty pharmacy?"],['Scams',"I was scammed on Wave, what should I do?"]],
  tourist:[['Guided tour','Be my guide: tell me the history of Gorée and what to see there.'],['Market bargaining','How do I bargain at Sandaga market? Give me the method and useful Wolof phrases.'],['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
  merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
 },
@@ -263,33 +263,25 @@ const AUDIENCE_ICONS={
  diaspora:['route','home','exchange','invest'],
  merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
+// « Tout le Sénégal » en français et en anglais : quatre thèmes depuis le 10 novembre 2026, réordonnés. L'icône suit le
+// thème (relecture Codex de #597) ; les listes en wolof et en pulaar gardent l'ordre de AUDIENCE_ICONS.general.
+const GENERAL_ICONS={Voyage:'route',Travel:'route',Argent:'exchange',Money:'exchange',Santé:'people',Health:'people',
+  Arnaques:'safety',Scams:'safety'};
 // Thèmes rapides de « Tout le Sénégal » (V5) : trois questions fréquentes par thème, la première est celle que le
 // thème posait avant. Français et anglais seulement : en wolof, le thème pose directement sa question (pas de
 // traduction inventée).
 const THEME_QS={
 fr:{
- 'Papiers':["Comment refaire ma carte d'identité ?","Comment obtenir un acte de naissance depuis l'étranger ?","Comment demander un casier judiciaire ?"],
  'Santé':["Où trouver une pharmacie de garde ?","Comment se protéger du paludisme ?","C'est quoi la CMU ?"],
  'Argent':["Combien font 100 euros en FCFA ?","J'ai reçu de l'argent par erreur, que faire ?","Comment comparer deux transferts d'argent ?"],
  'Voyage':["Que faire au Sénégal en une semaine ?","Faut-il un visa pour le Sénégal ?","Quelle est la meilleure saison pour visiter le Sénégal ?"],
- 'Arnaques':["On m'a arnaqué sur Wave, que faire ?","« Voici mon nouveau numéro » : est-ce une arnaque ?","Comment protéger mon code secret Wave ou Orange Money ?"],
- 'Électricité':["Comment acheter du crédit Woyofal ?","Woyofal : pourquoi trois codes ?","Quelles prises électriques au Sénégal ?"],
- 'Études':["Comment obtenir une bourse d'études ?","Comment s'inscrire à l'université au Sénégal ?","Comment faire reconnaître un diplôme obtenu à l'étranger ?"],
- 'Entreprise':["Comment créer mon entreprise au Sénégal ?","Comment vendre sur WhatsApp ?","Comment calculer ma marge sur un produit ?"],
- 'Fêtes':["C'est quand la Tabaski ?","C'est quand la Korité ?","Quels sont les jours fériés au Sénégal ?"],
- 'Wolof':["Apprends-moi les salutations en wolof.","Comment dire merci en wolof ?","Apprends-moi à compter de 1 à 10 en wolof."]
+ 'Arnaques':["On m'a arnaqué sur Wave, que faire ?","« Voici mon nouveau numéro » : est-ce une arnaque ?","Comment protéger mon code secret Wave ou Orange Money ?"]
 },
 en:{
- 'Paperwork':["How do I renew my Senegalese ID card?","How do I get a birth certificate from abroad?","How do I request a criminal record extract?"],
  'Health':["Where can I find an on-duty pharmacy?","How do I protect myself from malaria?","What is the CMU health coverage?"],
  'Money':["How much is 100 euros in CFA francs?","I received money by mistake, what should I do?","How do I compare two money transfers?"],
  'Travel':["What can I do in Senegal in one week?","Do I need a visa for Senegal?","When is the best time to visit Senegal?"],
- 'Scams':["I was scammed on Wave, what should I do?","“This is my new number”: is it a scam?","How do I protect my Wave or Orange Money PIN?"],
- 'Electricity':["How do I buy Woyofal electricity credit?","Woyofal: why three codes?","What power plugs are used in Senegal?"],
- 'Studies':["How can I get a study grant?","How do I enrol at a university in Senegal?","How do I get a foreign diploma recognised?"],
- 'Business':["How do I start a business in Senegal?","How do I sell on WhatsApp?","How do I calculate my margin on a product?"],
- 'Holidays':["When is Tabaski?","When is Korité?","What are the public holidays in Senegal?"],
- 'Wolof':["Teach me greetings in Wolof.","How do I say thank you in Wolof?","Teach me to count from 1 to 10 in Wolof."]
+ 'Scams':["I was scammed on Wave, what should I do?","“This is my new number”: is it a scam?","How do I protect my Wave or Orange Money PIN?"]
 }
 };
 const THEME_QS_ARROW='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -324,7 +316,7 @@ function renderAudience(){
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
   const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
   const icons=AUDIENCE_ICONS[audience]||[];
-  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:icons[i]}));
+  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:(audience==='general'&&GENERAL_ICONS[t])||icons[i]}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
     const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
@@ -336,7 +328,7 @@ function renderAudience(){
   const heroChips=$('heroChips');
   // Thèmes rapides (V5) : jusqu'à dix ; ceux de « Tout le Sénégal » ouvrent leurs questions fréquentes.
   const topicQs=audience==='general'?THEME_QS[lang]:null;
-  if(heroChips)heroChips.replaceChildren(...cards.slice(0,10).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
+  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
     if(topicQs&&topicQs[c.t]){b.dataset.topic=c.t;b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','themeQs');}
     return b;}));
   closeThemeQs();
