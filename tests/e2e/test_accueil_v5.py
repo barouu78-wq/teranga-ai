@@ -149,3 +149,24 @@ def test_pendant_les_jeux_la_carte_passe_sous_les_themes_sur_une_ligne(page, bas
     assert 44 <= carte["height"] <= 80, carte
     assert _boite(page, "#heroAsk")["bottom"] <= _boite(page, "#stage")["bottom"]
     assert page.errors == []
+
+
+def test_sur_ordinateur_chaque_theme_garde_son_icone(page, base_url):
+    """Relecture Codex de #597 : les icônes des cartes suivaient la position du thème (ancien ordre de dix) ; une fois
+    les thèmes réordonnés, « Voyage » prenait l'icône des papiers. L'icône suit maintenant le thème lui-même."""
+    attendu = {"Voyage": "route", "Argent": "exchange", "Santé": "people", "Arnaques": "safety",
+               "Travel": "route", "Money": "exchange", "Health": "people", "Scams": "safety"}
+    page.set_viewport_size({"width": 1280, "height": 900})
+    for chemin in ("/", "/?lang=en"):
+        page.goto(base_url + chemin)
+        page.locator("#cards .card").first.wait_for(timeout=5000)
+        # Le navigateur réécrit le SVG : on compare au SVG de chaque icône passé par le même analyseur.
+        icones = page.evaluate("""() => { const norm = (svg) => { const d = document.createElement('div');
+            d.innerHTML = svg; return d.innerHTML; };
+            return [...document.querySelectorAll('#cards .card')].map(c => ({ t: c.querySelector('b').textContent,
+              ok: Object.entries(CARD_ICONS).filter(([, svg]) => norm(svg) === c.querySelector('.ico').innerHTML)
+                .map(([k]) => k) })); }""")
+        assert [i["t"] for i in icones] == [t for t in attendu if (t in ("Voyage", "Argent", "Santé", "Arnaques")) == (chemin == "/")]
+        for i in icones:
+            assert attendu[i["t"]] in i["ok"], (chemin, i)
+    assert page.errors == []

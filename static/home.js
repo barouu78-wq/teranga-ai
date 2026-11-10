@@ -263,6 +263,10 @@ const AUDIENCE_ICONS={
  diaspora:['route','home','exchange','invest'],
  merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
+// « Tout le Sénégal » en français et en anglais : quatre thèmes depuis le 10 novembre 2026, réordonnés. L'icône suit le
+// thème (relecture Codex de #597) ; les listes en wolof et en pulaar gardent l'ordre de AUDIENCE_ICONS.general.
+const GENERAL_ICONS={Voyage:'route',Travel:'route',Argent:'exchange',Money:'exchange',Santé:'people',Health:'people',
+  Arnaques:'safety',Scams:'safety'};
 // Thèmes rapides de « Tout le Sénégal » (V5) : trois questions fréquentes par thème, la première est celle que le
 // thème posait avant. Français et anglais seulement : en wolof, le thème pose directement sa question (pas de
 // traduction inventée).
@@ -312,7 +316,7 @@ function renderAudience(){
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
   const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
   const icons=AUDIENCE_ICONS[audience]||[];
-  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:icons[i]}));
+  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:(audience==='general'&&GENERAL_ICONS[t])||icons[i]}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
     const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
