@@ -30,8 +30,8 @@ def _chat_recorder(page, base_url, answer="Réponse du profil."):
     return bodies
 
 
-# Thèmes rapides affichés par profil (accueil V5, 7 novembre 2026 : jusqu'à dix au lieu de quatre).
-CHIPS = {"general": 10, "tourist": 10, "resident": 4, "diaspora": 4, "merchant": 7}
+# Thèmes rapides affichés par profil : quatre au plus depuis le 10 novembre 2026 (dix avant, « Faut déjà réduire tout ça »).
+CHIPS = {"general": 4, "tourist": 4, "resident": 4, "diaspora": 4, "merchant": 4}
 
 
 def _first_suggestion(page):
