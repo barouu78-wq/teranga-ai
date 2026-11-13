@@ -115,6 +115,16 @@ def test_chaque_passage_de_find_skills_qui_cite_npx_skills_rappelle_la_regle():
     corps = texte.split("# Find Skills", 1)[1]
     sections = re.split(r"\n#{2,3} ", corps)
     citees = [section for section in sections if "npx skills" in section]
-    assert len(citees) >= 4
+    assert citees  # depuis la relecture Codex, seule la section qui présente le programme le cite encore
     for section in citees:
         assert "Projet Teranga AI" in section, section.splitlines()[0]
+
+
+def test_find_skills_ne_contient_plus_de_commande_d_installation():
+    """Relecture Codex de #599 : les commandes `npx skills add … -g -y`, `find` et `init` sont retirées des étapes ; le
+    programme n'est plus que décrit, dans la section qui le présente."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    corps = texte.split("# Find Skills", 1)[1]
+    etapes = corps.split("## How to Help Users Find Skills", 1)[1]
+    assert "npx skills" not in etapes
+    assert "-g -y" not in texte.split("# Find Skills", 1)[1]

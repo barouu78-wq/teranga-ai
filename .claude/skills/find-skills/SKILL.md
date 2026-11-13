@@ -64,21 +64,16 @@ For example, top skills for web development include:
 
 ### Step 3: Search for Skills
 
-> **Projet Teranga AI : ne pas lancer `npx skills find`.** Chercher en lecture : https://skills.sh, ou les dépôts
-> GitHub des collections connues (`vercel-labs/agent-skills`, `anthropics/skills`), lus sans rien exécuter. Les
-> commandes ci-dessous sont le texte d'origine, pour information.
+> **Projet Teranga AI : ne pas lancer le programme de recherche** (règle en tête). Chercher en lecture : https://skills.sh, ou les dépôts
+> GitHub des collections connues (`vercel-labs/agent-skills`, `anthropics/skills`), lus sans rien exécuter.
 
-If the leaderboard doesn't cover the user's need, run the find command:
-
-```bash
-npx skills find [query] [--owner <owner>]
-```
+If the leaderboard doesn't cover the user's need, search by keywords (adapté : recherche en lecture, sans programme).
 
 For example:
 
-- User asks "how do I make my React app faster?" → `npx skills find react performance`
-- User asks "can you help me with PR reviews?" → `npx skills find pr review`
-- User asks "I need to create a changelog" → `npx skills find changelog`
+- User asks "how do I make my React app faster?" → search « react performance »
+- User asks "can you help me with PR reviews?" → search « pr review »
+- User asks "I need to create a changelog" → search « changelog »
 
 ### Step 4: Verify Quality Before Recommending
 
@@ -97,7 +92,7 @@ When you find relevant skills, present them to the user with:
 
 1. The skill name and what it does
 2. The install count and source
-3. The install command they can run
+3. How it would be added here (a PR, with the owner's approval)
 4. A link to learn more at skills.sh
 
 Example response:
@@ -107,8 +102,7 @@ I found a skill that might help! The "react-best-practices" skill provides
 React and Next.js performance optimization guidelines from Vercel Engineering.
 (185K installs)
 
-To install it:
-npx skills add vercel-labs/agent-skills@react-best-practices
+Je peux l'ajouter au projet par une PR (texte seulement), si vous êtes d'accord.
 
 Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices
 ```
@@ -117,15 +111,7 @@ Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices
 
 > **Projet Teranga AI : ne jamais lancer cette commande, ni installer quoi que ce soit pour le propriétaire.** Avec
 > son accord, ajouter le skill par une PR (texte seulement, licence, ligne dans `AGENTS.md`), comme `find-skills`
-> lui-même. Le texte d'origine ci-dessous est là pour information, à ne pas exécuter.
-
-If the user wants to proceed, you can install the skill for them:
-
-```bash
-npx skills add <owner/repo@skill> -g -y
-```
-
-The `-g` flag installs globally (user-level) and `-y` skips confirmation prompts.
+> lui-même. (Le texte d'origine donnait ici une commande d'installation globale sans confirmation : retirée.)
 
 ## Common Skill Categories
 
@@ -149,14 +135,14 @@ When searching, consider these common categories:
 
 ## When No Skills Are Found
 
-> **Projet Teranga AI : jamais `npx skills init`.** Un nouveau skill s'écrit à la main dans
+> **Projet Teranga AI : jamais le programme pour créer un skill.** Un nouveau skill s'écrit à la main dans
 > `.claude/skills/<nom>/SKILL.md` (sur le modèle des skills du projet), par une PR.
 
 If no relevant skills exist:
 
 1. Acknowledge that no existing skill was found
 2. Offer to help with the task directly using your general capabilities
-3. Suggest the user could create their own skill with `npx skills init`
+3. Suggest the user could create their own skill (a SKILL.md written by hand, through a PR)
 
 Example:
 
@@ -164,6 +150,5 @@ Example:
 I searched for skills related to "xyz" but didn't find any matches.
 I can still help you with this task directly! Would you like me to proceed?
 
-If this is something you do often, you could create your own skill:
-npx skills init my-xyz-skill
+If this is something you do often, I can write a skill for it in the project (through a PR).
 ```

@@ -2,7 +2,8 @@ Compétence reprise de https://github.com/vercel-labs/skills, commit b716f9dc2ba
 (demande du propriétaire : « installe ce skill »). Seul le texte de la compétence est repris (SKILL.md) : le programme
 `npx skills` n'est ni installé ni lancé. Changements : description traduite en français sur une ligne, note de
 provenance et règle du projet en tête du SKILL.md, rappel de cette règle dans chaque section qui cite
-`npx skills` (relecture Gitar de #599).
+`npx skills` (relecture Gitar de #599), et commandes `npx skills find`, `add … -g -y` et `init` retirées des
+étapes : remplacées par la recherche en lecture et l'ajout par une PR (relecture Codex de #599).
 
 Compétence concernée :
 - find-skills
