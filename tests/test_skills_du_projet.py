@@ -73,6 +73,9 @@ def test_aucun_script_ni_crochet_de_superpowers():
 REPRISES = {
     "LICENCE-hallmark.txt": ("Nutlope/hallmark", ("hallmark",)),
     "LICENCE-ponytail.txt": ("DietrichGebert/ponytail", ("ponytail", "ponytail-review", "ponytail-audit", "ponytail-debt")),
+    # 13 novembre 2026 (« installe ce skill », propriétaire) : find-skills de vercel-labs/skills, texte seulement ; le
+    # programme `npx skills` n'est ni installé ni lancé.
+    "LICENCE-vercel-skills.txt": ("vercel-labs/skills", ("find-skills",)),
 }
 
 
@@ -95,3 +98,33 @@ def test_les_reprises_sont_du_texte_seulement():
             assert fichiers and all(p.suffix in {".md", ".json"} for p in fichiers), (nom, fichiers)
     hallmark = (SKILLS / "hallmark" / "SKILL.md").read_text(encoding="utf-8")
     assert "AGENTS.md" in hallmark  # les règles du projet priment (polices, scripts, CSP, faits)
+
+
+def test_find_skills_n_installe_rien_sans_accord_du_proprietaire():
+    """Le texte d'origine conseille `npx skills add … -g -y` (installation globale sans confirmation) : dans ce projet,
+    un skill trouvé se lit d'abord et ne s'ajoute qu'avec l'accord du propriétaire, comme celui-ci."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    regle = texte.split("# Find Skills", 1)[0]
+    assert "accord du propriétaire" in regle and "-y" in regle and "AGENTS.md" in regle
+
+
+def test_chaque_passage_de_find_skills_qui_cite_npx_skills_rappelle_la_regle():
+    """Relecture Gitar de #599 : la règle en tête ne suffit pas, les étapes d'origine (« run the find command », « npx
+    skills add … -g -y ») restaient des ordres. Chaque section qui cite `npx skills` porte la note du projet."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    corps = texte.split("# Find Skills", 1)[1]
+    sections = re.split(r"\n#{2,3} ", corps)
+    citees = [section for section in sections if "npx skills" in section]
+    assert citees  # depuis la relecture Codex, seule la section qui présente le programme le cite encore
+    for section in citees:
+        assert "Projet Teranga AI" in section, section.splitlines()[0]
+
+
+def test_find_skills_ne_contient_plus_de_commande_d_installation():
+    """Relecture Codex de #599 : les commandes `npx skills add … -g -y`, `find` et `init` sont retirées des étapes ; le
+    programme n'est plus que décrit, dans la section qui le présente."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    corps = texte.split("# Find Skills", 1)[1]
+    etapes = corps.split("## How to Help Users Find Skills", 1)[1]
+    assert "npx skills" not in etapes
+    assert "-g -y" not in texte.split("# Find Skills", 1)[1]
