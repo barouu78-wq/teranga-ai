@@ -19,7 +19,7 @@ from services.adsense import adsense_config, inject_adsense  # noqa: E402
 CLIENT = "ca-pub-1234567890123456"
 SLOT = "9876543210"
 GUIDES = ["/visiter-goree", "/lieux/goree", "/regions/thies", "/fr/senegal-visa", "/explorer",
-          "/calendrier-fetes-senegal"]
+          "/calendrier-fetes-senegal", "/lieux"]
 SANS_PUB = ["/", "/urgences", "/confidentialite", "/privacy", "/trip-planner", "/offres-partenaires", "/partage",
             "/une-page-qui-n-existe-pas"]
 
@@ -92,11 +92,27 @@ def test_la_csp_stricte_de_google_couvre_tous_nos_scripts(ads, path):
     nonce = re.search(r"'nonce-([^']+)'", script_src).group(1)
     assert "'strict-dynamic'" in script_src and "'unsafe-inline'" not in script_src
     assert "frame-src https:" in csp and "object-src 'none'" in csp
-    for tag in re.findall(r"<script\b[^>]*>", body):
+    for tag in re.findall(r"<script\b[^>]*>", body, re.IGNORECASE):
         if "application/ld+json" not in tag:
             assert f'nonce="{nonce}"' in tag, tag
     # Le nonce change à chaque visite : la page n'est plus gardée en cache public.
     assert "public" not in response.headers["Cache-Control"]
+
+
+def test_aucune_page_avec_annonce_ne_garde_de_script_dans_un_attribut(ads):
+    """Relecture Gitar de #598 : la CSP stricte bloque onsubmit=, onclick=… et les liens « javascript: ». Sur /lieux,
+    Entrée rechargeait la page. Toutes les pages du plan du site qui portent une annonce sont vérifiées."""
+    sitemap = get("/sitemap.xml").get_data(as_text=True)
+    paths = {"/explorer", "/lieux"} | set(re.findall(r"<loc>https://teranga-ai\.fr([^<]*)</loc>", sitemap))
+    with_ad = 0
+    for path in sorted(paths):
+        body = get(path).get_data(as_text=True)
+        if 'class="adsbygoogle"' not in body:
+            continue
+        with_ad += 1
+        assert not re.search(r"\son[a-z]+\s*=", body, re.IGNORECASE), path
+        assert "javascript:" not in body.lower(), path
+    assert with_ad > 100
 
 
 @pytest.mark.parametrize("path", SANS_PUB)

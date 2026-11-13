@@ -22,6 +22,8 @@
     blocks.forEach(function (b) { b.hidden = !b.querySelector("a.card:not([hidden])"); });
     n.textContent = q.value || type ? shown + (shown > 1 ? " lieux" : " lieu") : "";
   }
+  // Entrée ne recharge pas la page (et pas d'onsubmit dans le HTML : la CSP stricte des pages avec annonce le bloque).
+  if (q.form) q.form.addEventListener("submit", function (e) { e.preventDefault(); });
   q.addEventListener("input", run);
   t.addEventListener("change", run);
 })();

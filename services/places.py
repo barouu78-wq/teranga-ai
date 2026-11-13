@@ -292,7 +292,7 @@ def render_places_index(places, site_url: str) -> str:
     options = "".join(f'<option value="{escape(t)}">{escape(TYPE_LABELS[t])}</option>' for t in types)
     # Recherche instantanée : sans JavaScript, la page reste une liste complète.
     search = (
-        '<form class="place-search" role="search" onsubmit="return false">'
+        '<form class="place-search" role="search">'
         '<label>Rechercher un lieu <input type="search" id="place-q" placeholder="Gorée, plage, Casamance…" autocomplete="off"></label>'
         f'<label>Type <select id="place-type"><option value="">Tous</option>{options}</select></label>'
         '<p class="muted" id="place-count" aria-live="polite"></p></form>'
