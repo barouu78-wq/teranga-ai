@@ -73,6 +73,9 @@ def test_aucun_script_ni_crochet_de_superpowers():
 REPRISES = {
     "LICENCE-hallmark.txt": ("Nutlope/hallmark", ("hallmark",)),
     "LICENCE-ponytail.txt": ("DietrichGebert/ponytail", ("ponytail", "ponytail-review", "ponytail-audit", "ponytail-debt")),
+    # 13 novembre 2026 (« installe ce skill », propriétaire) : find-skills de vercel-labs/skills, texte seulement ; le
+    # programme `npx skills` n'est ni installé ni lancé.
+    "LICENCE-vercel-skills.txt": ("vercel-labs/skills", ("find-skills",)),
 }
 
 
@@ -95,3 +98,11 @@ def test_les_reprises_sont_du_texte_seulement():
             assert fichiers and all(p.suffix in {".md", ".json"} for p in fichiers), (nom, fichiers)
     hallmark = (SKILLS / "hallmark" / "SKILL.md").read_text(encoding="utf-8")
     assert "AGENTS.md" in hallmark  # les règles du projet priment (polices, scripts, CSP, faits)
+
+
+def test_find_skills_n_installe_rien_sans_accord_du_proprietaire():
+    """Le texte d'origine conseille `npx skills add … -g -y` (installation globale sans confirmation) : dans ce projet,
+    un skill trouvé se lit d'abord et ne s'ajoute qu'avec l'accord du propriétaire, comme celui-ci."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    regle = texte.split("# Find Skills", 1)[0]
+    assert "accord du propriétaire" in regle and "-y" in regle and "AGENTS.md" in regle

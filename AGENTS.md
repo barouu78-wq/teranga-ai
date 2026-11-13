@@ -75,11 +75,13 @@ un contrôle qui n'a pas tourné.
 | `ponytail-review` | relire une PR ou un changement, chaque remarque expliquée simplement |
 | `ponytail-audit` | audit de tout le dépôt (bugs, failles, charge, code inutile), sans rien changer |
 | `ponytail-debt` | liste des raccourcis notés `shortcut:` dans le code |
+| `find-skills` | « y a-t-il un skill pour… » : chercher et proposer un skill existant (skills.sh) ; rien ne s'installe sans lecture et accord du propriétaire |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
 génération d'images) et les quatre `ponytail` sont repris de GitHub sous licence MIT (`.claude/skills/LICENCE-hallmark.txt`,
-`.claude/skills/LICENCE-ponytail.txt`) ; les règles de ce fichier priment sur les leurs.
+`.claude/skills/LICENCE-ponytail.txt`), et `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
+seulement) ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
