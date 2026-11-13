@@ -142,3 +142,5 @@ def test_revue_interface_ne_telecharge_pas_ses_regles():
     adaptations = texte.split("## Règles", 1)[0]
     for mot in ("« »", "44 px", "React", "AGENTS.md"):
         assert mot in adaptations, mot
+    # Relecture Codex de #600 : un <button> ou un <a> natif gère déjà le clavier ; pas d'onKeyDown redondant.
+    assert "onKeyDown" in adaptations and "natifs" in adaptations

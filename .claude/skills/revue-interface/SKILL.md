@@ -23,6 +23,9 @@ license: MIT
   boutons-icônes, pas d'émoji comme icône d'interface, page lisible à 390 px de large.
 - **Aucune ressource d'un autre domaine** : pas de `preconnect` vers un CDN ni de police externe, tout est servi par
   le site (`static/fonts/`). La seule exception est l'annonce Google des pages de guide (`services/adsense.py`).
+- **Clavier** : les éléments natifs (`<button>`, `<a href>`, `<input>`, `<select>`) gèrent déjà le clavier. La règle
+  « keyboard handlers (`onKeyDown`/`onKeyUp`) » ne vaut que pour un contrôle personnalisé non natif, qu'il vaut mieux
+  remplacer par un vrai bouton ; ne pas ajouter de gestionnaire clavier redondant.
 - **Langue** : choisie par le visiteur (boutons de langue) ; ne pas ajouter de détection par adresse IP.
 - **Où regarder** : `templates/home.html`, `static/home.js`, `static/site.css`, `services/site_layout.py`, les pages de
   `services/seo.py` et `services/places.py`, `routes/`.
