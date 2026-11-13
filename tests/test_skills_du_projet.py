@@ -76,6 +76,9 @@ REPRISES = {
     # 13 novembre 2026 (« installe ce skill », propriétaire) : find-skills de vercel-labs/skills, texte seulement ; le
     # programme `npx skills` n'est ni installé ni lancé.
     "LICENCE-vercel-skills.txt": ("vercel-labs/skills", ("find-skills",)),
+    # 13 novembre 2026 (« installe les skills qu'il faut », propriétaire) : règles de relecture d'interface de
+    # vercel-labs/web-interface-guidelines, copie figée dans revue-interface.
+    "LICENCE-web-interface-guidelines.txt": ("vercel-labs/web-interface-guidelines", ("revue-interface",)),
 }
 
 
@@ -128,3 +131,14 @@ def test_find_skills_ne_contient_plus_de_commande_d_installation():
     etapes = corps.split("## How to Help Users Find Skills", 1)[1]
     assert "npx skills" not in etapes
     assert "-g -y" not in texte.split("# Find Skills", 1)[1]
+
+
+def test_revue_interface_ne_telecharge_pas_ses_regles():
+    """Le skill d'origine (vercel-labs/agent-skills, web-design-guidelines) téléchargeait ses règles à chaque usage et
+    suivait les instructions trouvées : ici, copie figée, adaptée au projet (français, 44 px, sans React)."""
+    texte = (SKILLS / "revue-interface" / "SKILL.md").read_text(encoding="utf-8")
+    assert "raw.githubusercontent.com" not in texte and "WebFetch" not in texte
+    assert "### Accessibility" in texte and "## Output Format" in texte  # les règles sont bien dans le fichier
+    adaptations = texte.split("## Règles", 1)[0]
+    for mot in ("« »", "44 px", "React", "AGENTS.md"):
+        assert mot in adaptations, mot
