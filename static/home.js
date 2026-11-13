@@ -28,9 +28,9 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
-  heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.',
+  heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes tes questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
   cards:[
@@ -306,7 +306,7 @@ function toggleThemeQs(chip){
 }
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
-  const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes vos questions'];
+  const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes tes questions'];
   $('audienceGeneral').textContent=generalLabels[0];$('audienceGeneralHint').textContent=generalLabels[1];
   const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
   $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
@@ -583,7 +583,7 @@ function addProjectOffer(col,idea){
   if(!idea)return;
   const box=document.createElement('div');box.className='project-offer';
   const btn=document.createElement('button');btn.type='button';btn.className='project-offer-btn';
-  const idle=lang==='en'?'🚀 Build my project plan':'🚀 Construire mon plan';
+  const idle=lang==='en'?'Build my project plan':'Construire mon plan';
   btn.textContent=idle;
   const more=document.createElement('button');more.type='button';more.className='project-offer-more';
   more.textContent=lang==='en'?'Add budget, city…':'Préciser budget, ville…';
@@ -862,7 +862,7 @@ function addFollowups(col,ux){
   col.appendChild(row);
 }
 function renderInlineProject(container,p){
-  const h=document.createElement('h3');h.textContent='🚀 '+(p.name||(lang==='en'?'Your project':'Ton projet'));
+  const h=document.createElement('h3');h.textContent=(p.name||(lang==='en'?'Your project':'Ton projet'));
   const meta=document.createElement('p');meta.className='project-meta';
   meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');
   const next=document.createElement('p');const strong=document.createElement('strong');
@@ -874,8 +874,8 @@ function renderInlineProject(container,p){
   renderProjectProgress(container,p);
   const links=document.createElement('div');links.className='place-links';
   const q='?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');
-  const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'🔎 Opportunities':'🔎 Opportunités';
-  const partner=document.createElement('a');partner.href='/partners'+q;partner.textContent=lang==='en'?'🤝 Partners':'🤝 Partenaires';
+  const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'Opportunities':'Opportunités';
+  const partner=document.createElement('a');partner.href='/partners'+q;partner.textContent=lang==='en'?'Partners':'Partenaires';
   links.append(opp,partner);container.appendChild(links);
 }
 // Lien vers la fiche /lieux des lieux cités dans la question.
@@ -885,7 +885,7 @@ function addPlaceLinks(col,places){
   const box=document.createElement('div');box.className='place-links';
   list.forEach(p=>{
     const a=document.createElement('a');a.href='/lieux/'+p.id;
-    a.textContent=(lang==='en'?'📍 Place guide: ':'📍 Fiche : ')+String(p.name||'');
+    a.textContent=(lang==='en'?'Place guide: ':'Fiche : ')+String(p.name||'');
     box.appendChild(a);
     // Liens « Réserver » (partenaires affiliés) : uniquement nos redirections /go/.
     (Array.isArray(p.book)?p.book:[]).slice(0,2).forEach(b=>{
@@ -1156,7 +1156,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     if(!res.ok)throw new Error(data.error||T[lang].err);
     const p=data.project||{};
     result.innerHTML='';
-    const h=document.createElement('h3');h.textContent='🚀 '+(p.name||'Ton projet');result.appendChild(h);
+    const h=document.createElement('h3');h.textContent=(p.name||'Ton projet');result.appendChild(h);
     const meta=document.createElement('p');meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');result.appendChild(meta);
     const next=document.createElement('p');next.innerHTML='<strong>Prochaine action :</strong> ';const nextText=document.createTextNode(p.next_action||'Valider ton idée sur le terrain.');next.appendChild(nextText);result.appendChild(next);
     const list=document.createElement('ol');list.className='project-steps';
@@ -1165,7 +1165,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     renderProjectProgress(result,p);
     renderProjectTracking(result,p);
     const matchBox=document.createElement('div');matchBox.className='project-progress';
-    matchBox.innerHTML='<div class="project-progress-title">🎯 Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
+    matchBox.innerHTML='<div class="project-progress-title">Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
     result.appendChild(matchBox);
     try{
       let matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));
@@ -1173,7 +1173,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
       const matchData=await matchRes.json().catch(()=>({}));
       if(matchRes.ok&&matchData.matches){
         const m=matchData.matches;
-        matchBox.innerHTML='<div class="project-progress-title">🎯 Opportunités & partenaires</div>';
+        matchBox.innerHTML='<div class="project-progress-title">Opportunités & partenaires</div>';
         const summary=document.createElement('p');
         summary.textContent=(m.counts?.opportunities||0)+' opportunité(s) · '+(m.counts?.partners||0)+' partenaire(s) correspondant à ton projet.';
         matchBox.appendChild(summary);
@@ -1183,8 +1183,8 @@ $('projectForm')?.addEventListener('submit',async e=>{
           matchBox.appendChild(ul);
         }
         const links=document.createElement('div');links.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
-        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='🔎 Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
-        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='🤝 Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
         links.append(opp,partner);matchBox.appendChild(links);
       }
     }catch(_){}

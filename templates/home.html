@@ -708,6 +708,7 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 .journey-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .journey-strip button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;padding:18px 16px 16px;border-radius:var(--radius);border:1px solid var(--line);background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 .journey-strip button>span{display:grid;place-items:center;width:44px;height:44px;margin-bottom:8px;border-radius:14px;font-size:22px;background:var(--surface-2)}
+.journey-strip button>span svg{width:22px;height:22px}
 .journey-strip [data-journey="travel"]>span{background:var(--gold-soft)}
 /* Boutons de suite (version 9) : sous la dernière réponse ; zones tactiles de 44 px. */
 /* Sous la réponse : « Plus de détails » et « Partager en image » (V5), boutons de 44 px. */
@@ -1263,20 +1264,20 @@ body:not([data-fete]) .hero-signature{display:none}
     <div class="hero-scene" aria-hidden="true"><div class="scene-sky"><span class="scene-sun"></span><svg class="scene-tree scene-far" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><svg class="scene-tree" viewBox="0 0 100 100"><use href="#sn-baobab"/></svg><span class="scene-ground"></span><span class="scene-flag"><i></i><i></i><i></i></span></div><span class="scene-logo"><svg viewBox="0 0 100 100"><use href="#sn-logo"/></svg></span></div>
     <div class="hero-signature" aria-hidden="true"><span class="hero-flag"><i></i><i></i><i></i><b>★</b></span></div><p class="fete-banner" id="feteBanner"></p>
     <p class="hero-greet" id="heroGreet">Salaam aleekum</p>
-    <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
-    <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes vos questions sur le Sénégal.</p>
+    <h1 id="heroTitle">Une question sur le Sénégal ?</h1>
+    <p id="heroText">Vie quotidienne, papiers, santé, argent, culture, voyage — toutes tes questions sur le Sénégal.</p>
 <form class="hero-ask" id="heroAsk" autocomplete="off">
-  <label class="sr-only" for="heroInput">Votre question</label>
-  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment refaire ma carte d’identité ?" enterkeyhint="send">
+  <label class="sr-only" for="heroInput">Ta question</label>
+  <input id="heroInput" type="text" maxlength="2000" placeholder="Ex. Comment refaire ma carte d’identité ?" enterkeyhint="send">
   <button id="heroMic" type="button" title="Parler" aria-label="Parler"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
   <button id="heroSend" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 </form>
 <p class="hero-label" id="audienceLabel">Je suis…</p>
     <div class="audience-mode" id="audienceMode" role="group" aria-label="Profil d'utilisation">
-  <button type="button" class="audience-btn on" data-audience="general" aria-pressed="true"><span aria-hidden="true">✦</span><b id="audienceGeneral">Tout le Sénégal</b><small id="audienceGeneralHint">Toutes vos questions</small></button>
-  <button type="button" class="audience-btn" data-audience="tourist" aria-pressed="false"><span aria-hidden="true">✈</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
+  <button type="button" class="audience-btn on" data-audience="general" aria-pressed="true"><span aria-hidden="true">✦</span><b id="audienceGeneral">Tout le Sénégal</b><small id="audienceGeneralHint">Toutes tes questions</small></button>
+  <button type="button" class="audience-btn" data-audience="tourist" aria-pressed="false"><span aria-hidden="true">✈︎</span><b id="audienceTourist">Touriste</b><small id="audienceTouristHint">Voyager facilement</small></button>
   <button type="button" class="audience-btn" data-audience="resident" aria-pressed="false"><span aria-hidden="true">⌂</span><b id="audienceResident">Résident</b><small id="audienceResidentHint">Vivre au Sénégal</small></button>
-  <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span aria-hidden="true">↔</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
+  <button type="button" class="audience-btn" data-audience="diaspora" aria-pressed="false"><span aria-hidden="true">↔︎</span><b id="audienceDiaspora">Diaspora</b><small id="audienceDiasporaHint">Préparer et gérer à distance</small></button>
   <button type="button" class="audience-btn" data-audience="merchant" aria-pressed="false"><span aria-hidden="true">◆</span><b id="audienceMerchant">Commerçant</b><small id="audienceMerchantHint">Vendre et travailler</small></button>
 </div>
 <h2 class="hero-label" id="topicsTitle">Thèmes rapides</h2>
@@ -1298,7 +1299,7 @@ body:not([data-fete]) .hero-signature{display:none}
   </div>
   <div class="fx-result"><span id="fxResult">65 595,70 FCFA</span><small>FCFA BCEAO</small></div>
   <div class="fx-note" id="fxNote">Taux de référence indicatif. Le montant réellement obtenu peut varier selon l'établissement et les frais.</div>
-</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours principaux"><button type="button" data-journey="travel"><span aria-hidden="true">🌍</span><b id="journeyTravel">Voyager au Sénégal</b><small id="journeyTravelHint">Explorer et planifier</small></button><button type="button" data-journey="discover"><span aria-hidden="true">🇸🇳</span><b id="journeyDiscover">Découvrir le Sénégal</b><small id="journeyDiscoverHint">Culture, histoire, gastronomie</small></button><button type="button" data-journey="chat"><span aria-hidden="true">✦</span><b id="journeyChat">Assistant Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
+</section><div class="journey-strip" id="journeyStrip" aria-label="Parcours principaux"><button type="button" data-journey="travel"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="6" cy="18" r="2.2" stroke="currentColor" stroke-width="1.7"/><path d="M18 9.5s3-3.1 3-5.2a3 3 0 0 0-6 0c0 2.1 3 5.2 3 5.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.2 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><b id="journeyTravel">Voyager au Sénégal</b><small id="journeyTravelHint">Explorer et planifier</small></button><button type="button" data-journey="discover"><span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><b id="journeyDiscover">Découvrir le Sénégal</b><small id="journeyDiscoverHint">Culture, histoire, gastronomie</small></button><button type="button" data-journey="chat"><span aria-hidden="true">✦</span><b id="journeyChat">Assistant Teranga</b><small id="journeyChatHint">Poser une question</small></button></div><div class="cards" id="cards"></div>
     <div class="spread">
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
@@ -1307,11 +1308,11 @@ body:not([data-fete]) .hero-signature{display:none}
   </div>
   <section class="seo">
     <h2>Assistant Sénégal</h2>
-    <p><span translate="no">Teranga AI</span> aide habitants, diaspora, commerçants et voyageurs : démarches, santé, argent, travail, études, géographie des 14 régions, culture, où manger à Dakar, météo, transport, visa. L’interface parle français, anglais et wolof.</p>
+    <p><span translate="no">Teranga AI</span> aide habitants, diaspora, commerçants et voyageurs : démarches, santé, argent, travail, études, géographie des 14 régions, culture, où manger à Dakar, météo, transport, visa. L’interface parle français, anglais et wolof.</p>
   </section>
   <section class="guide-section" aria-labelledby="guidesTitle">
     <h2 id="guidesTitle">Guides du Sénégal</h2>
-    <p>Des repères pratiques avant de poser votre question à <span translate="no">Teranga AI</span>.</p>
+    <p>Des repères pratiques avant de poser ta question à <span translate="no">Teranga AI</span>.</p>
     <div class="guide-links">
       <a href="/dakar">Dakar</a> <a href="/assistant-senegal">Assistant Sénégal</a>
       <a href="/senegal">Découvrir le Sénégal</a>
@@ -1372,7 +1373,7 @@ body:not([data-fete]) .hero-signature{display:none}
 <div class="project-modal" id="projectModal" aria-hidden="true">
   <section class="project-panel" role="dialog" aria-modal="true" aria-labelledby="projectTitle">
     <div class="project-head">
-      <div><h2 id="projectTitle">🚀 Mon projet</h2><p>Une idée suffit. Teranga construit le premier plan avec toi.</p></div>
+      <div><h2 id="projectTitle">Mon projet</h2><p>Une idée suffit. Teranga construit le premier plan avec toi.</p></div>
       <button class="project-close" id="projectClose" type="button" aria-label="Fermer">×</button>
     </div>
     <form id="projectForm">
@@ -1383,26 +1384,26 @@ body:not([data-fete]) .hero-signature{display:none}
           <small class="project-helper">Décris-la comme tu la dirais à un ami. Teranga s’occupe du reste.</small>
         </div>
         <div class="project-field full">
-          <label for="projectCity">Où veux-tu commencer ? <span>(facultatif)</span></label>
+          <label for="projectCity">Où veux-tu commencer ? <span>(facultatif)</span></label>
           <input id="projectCity" maxlength="80" placeholder="Ex. Thiès, Dakar, Saint-Louis…">
         </div>
       </div>
       <details class="project-more">
         <summary>Ajouter des détails (facultatif)</summary>
         <div class="project-grid project-grid-more">
-          <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="Ex. 50 000"></div>
+          <div class="project-field"><label for="projectBudget">Budget de départ (FCFA)</label><input id="projectBudget" inputmode="numeric" maxlength="15" placeholder="Ex. 50 000"></div>
           <div class="project-field"><label for="projectCategory">Domaine</label><select id="projectCategory"><option value="">Laisser Teranga choisir</option><option value="business">Business</option><option value="agriculture">Agriculture</option><option value="digital">Digital</option><option value="creative">Créatif</option><option value="food">Alimentation</option><option value="craft">Artisanat</option><option value="commerce">Commerce</option><option value="tourism">Tourisme</option><option value="environment">Environnement</option><option value="ai">IA</option></select></div>
           <div class="project-field"><label for="projectSkills">Tes compétences</label><input id="projectSkills" maxlength="200" placeholder="Cuisine, vente…"></div>
           <div class="project-field"><label for="projectTime">Temps disponible</label><input id="projectTime" maxlength="100" placeholder="Week-end"></div>
-          <div class="project-field full"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="Ex. 100 000"></div>
+          <div class="project-field full"><label for="projectGoal">Objectif financier (FCFA)</label><input id="projectGoal" inputmode="numeric" maxlength="15" placeholder="Ex. 100 000"></div>
         </div>
       </details>
-      <div class="project-actions"><button id="projectSubmit" type="submit">🚀 Générer mon projet</button></div>
+      <div class="project-actions"><button id="projectSubmit" type="submit">Générer mon projet</button></div>
       <div class="project-error" id="projectError" role="alert"></div>
     </form>
     <div class="project-result" id="projectResult" hidden></div>
-    <div class="project-actions project-result-actions" id="projectResultActions" hidden><button id="projectNew" type="button">✨ Nouvelle idée</button></div>
-    <div class="project-actions project-links" style="gap:8px;flex-wrap:wrap"><a href="/opportunities" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🔎 Radar jeunesse</a><a href="/partners" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">🤝 Trouver un partenaire</a></div>
+    <div class="project-actions project-result-actions" id="projectResultActions" hidden><button id="projectNew" type="button">Nouvelle idée</button></div>
+    <div class="project-actions project-links" style="gap:8px;flex-wrap:wrap"><a href="/opportunities" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">Radar jeunesse</a><a href="/partners" style="display:inline-block;text-decoration:none;padding:10px 12px;border-radius:10px;border:1px solid var(--line);font-weight:800;color:inherit">Trouver un partenaire</a></div>
   </section>
 </div>
 <script src="__THEME_JS__"></script>
