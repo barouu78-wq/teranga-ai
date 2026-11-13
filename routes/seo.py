@@ -5,8 +5,9 @@ Route registration is kept separate from application orchestration.
 
 from html import escape
 
-from flask import Response, abort
+from flask import Response, abort, current_app
 
+from services.adsense import ads_txt
 from services.international_seo import localized_sitemap_urls
 from services.seo import SEO_PAGES, REGION_SEO_NAMES, render_region_page, region_slug, render_seo_page
 
@@ -77,6 +78,14 @@ def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
             "Les horaires, prix, formalités, météo et disponibilités doivent être vérifiés auprès de sources récentes ou officielles.\n"
         )
         return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=86400"})
+
+    @app.get("/ads.txt")
+    def ads_txt_file():
+        # Déclare le compte Google AdSense du site (Google le demande) ; introuvable tant que la publicité est éteinte.
+        body = ads_txt(current_app.config.get("ADSENSE"))
+        if not body:
+            abort(404)
+        return Response(body, mimetype="text/plain", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/robots.txt")
     def robots():

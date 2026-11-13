@@ -42,6 +42,7 @@ un contrôle qui n'a pas tourné.
 | `services/practical_facts.py` | Repères pratiques **vérifiés** (urgences, argent, visa, SIM, foncier…) injectés selon la question |
 | `services/events.py` | Calendrier des fêtes (dates lunaires marquées « estimée ») |
 | `services/trip_planner.py` + `static/trip-planner.js` | Planificateur de voyage (flux avec signes de vie toutes les 10 s) |
+| `services/adsense.py` | Annonce Google en fin de page de guide et `/ads.txt`, éteintes par défaut (`docs/PUBLICITE.md`) |
 | `services/backup_ai.py` | Claude (Anthropic) : secours, ou IA principale si `AI_PRINCIPALE=claude` |
 | `templates/home.html` + `static/home.js` | Accueil et chat (design v2) |
 | `static/site.css` | Feuille des pages secondaires (mêmes jetons de couleur que l'accueil) |
@@ -91,7 +92,9 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
   `practical_facts` doivent éviter les faux positifs (« sur », « prise » dans « entreprise », « vol »).
 - **Sécurité.** Ne jamais affaiblir le CSRF (`require_json_post`), les limites de débit, la CSP
   (`services/http_headers.py`) ni les hôtes de confiance. Pas de script ou de police venant d'un
-  autre domaine : tout est servi par le site (`static/fonts/`).
+  autre domaine : tout est servi par le site (`static/fonts/`). Seule exception, décidée par le propriétaire le 13 novembre 2026 :
+  l'annonce Google AdSense (`services/adsense.py`), seulement sur les pages de guide qui la portent, avec la CSP
+  stricte demandée par Google (nonce + `'strict-dynamic'`) ; jamais sur l'accueil, le chat ni les urgences.
 - **Garde-fou des agents.** Avant chaque commande de Claude Code, `.claude/hooks/garde_fou.py` (déclaré
   dans `.claude/settings.json`) bloque : pousser sur `main`, une poussée forcée (`--force-with-lease`
   reste permis), `git reset --hard`, `rm -r` sur la racine, le dossier personnel ou le projet, et
@@ -110,7 +113,8 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 Obligatoires : `OPENAI_API_KEY`, `SECRET_KEY` (≥ 32 caractères en production), `TERANGA_ENV=production`.
 Utiles : `REDIS_URL`, `SITE_URL`, `CONTACT_EMAIL`, `PARTNER_WHATSAPP`, `STATS_TOKEN`,
 `GOOGLE_SITE_VERIFICATION`, `GETYOURGUIDE_PARTNER_ID`, `BOOKING_AID`, `TAXI_PARTNER_URL`,
-`ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`.
+`ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`,
+`ADSENSE_CLIENT` (compte Google AdSense, publie `/ads.txt`), `ADSENSE_SLOT` (bloc d'annonces : affiche les annonces).
 Plafond de dépense IA : `AI_PLAFOND_JOUR` (requêtes vers l'IA par jour pour tout le site : chat, planificateur, voix ; défaut 500 ; au-delà, la base vérifiée répond jusqu'à minuit ; un secours après une panne du fournisseur peut faire un second appel pour la même requête).
 **En production, Claude est l'IA principale** (`AI_PRINCIPALE=claude`, modèle `claude-sonnet-5-5` vu dans les journaux du 2 au 8 novembre 2026 ; choix confirmé par le propriétaire le 9 novembre 2026) : OpenAI sert de secours.
 Modèles OpenAI (vide ou invalide = défaut ; lus par `services/model_params.py`) : `OPENAI_MODEL` (défaut `gpt-5.6-luna`), `OPENAI_COMPLEX_MODEL` (défaut `gpt-5.6-sol`), `OPENAI_TRIP_MODEL` (planificateur, sans défaut).
