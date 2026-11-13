@@ -31,6 +31,9 @@ Use this skill when the user:
 
 ## What is the Skills CLI?
 
+> **Projet Teranga AI : décrit pour comprendre, jamais lancé ici** (règle en tête). Ce programme télécharge et
+> exécute du code.
+
 The Skills CLI (`npx skills`) is the package manager for the open agent skills ecosystem. Skills are modular packages that extend agent capabilities with specialized knowledge, workflows, and tools.
 
 **Key commands:**
@@ -61,6 +64,10 @@ For example, top skills for web development include:
 
 ### Step 3: Search for Skills
 
+> **Projet Teranga AI : ne pas lancer `npx skills find`.** Chercher en lecture : https://skills.sh, ou les dépôts
+> GitHub des collections connues (`vercel-labs/agent-skills`, `anthropics/skills`), lus sans rien exécuter. Les
+> commandes ci-dessous sont le texte d'origine, pour information.
+
 If the leaderboard doesn't cover the user's need, run the find command:
 
 ```bash
@@ -83,6 +90,9 @@ For example:
 
 ### Step 5: Present Options to the User
 
+> **Projet Teranga AI : ne pas donner de commande d'installation au propriétaire.** Lui proposer plutôt l'ajout
+> par une PR (texte seulement, licence, ligne dans `AGENTS.md`), après lecture du skill.
+
 When you find relevant skills, present them to the user with:
 
 1. The skill name and what it does
@@ -104,6 +114,10 @@ Learn more: https://skills.sh/vercel-labs/agent-skills/react-best-practices
 ```
 
 ### Step 6: Offer to Install
+
+> **Projet Teranga AI : ne jamais lancer cette commande, ni installer quoi que ce soit pour le propriétaire.** Avec
+> son accord, ajouter le skill par une PR (texte seulement, licence, ligne dans `AGENTS.md`), comme `find-skills`
+> lui-même. Le texte d'origine ci-dessous est là pour information, à ne pas exécuter.
 
 If the user wants to proceed, you can install the skill for them:
 
@@ -134,6 +148,9 @@ When searching, consider these common categories:
 3. **Check popular sources**: Many skills come from `vercel-labs/agent-skills` or `ComposioHQ/awesome-claude-skills`
 
 ## When No Skills Are Found
+
+> **Projet Teranga AI : jamais `npx skills init`.** Un nouveau skill s'écrit à la main dans
+> `.claude/skills/<nom>/SKILL.md` (sur le modèle des skills du projet), par une PR.
 
 If no relevant skills exist:
 

@@ -1,7 +1,8 @@
 Compétence reprise de https://github.com/vercel-labs/skills, commit b716f9dc2ba36b6aa8f0080615e5a3a6caeac63b, le 13 novembre 2026
 (demande du propriétaire : « installe ce skill »). Seul le texte de la compétence est repris (SKILL.md) : le programme
 `npx skills` n'est ni installé ni lancé. Changements : description traduite en français sur une ligne, note de
-provenance et règle du projet en tête du SKILL.md.
+provenance et règle du projet en tête du SKILL.md, rappel de cette règle dans chaque section qui cite
+`npx skills` (relecture Gitar de #599).
 
 Compétence concernée :
 - find-skills

@@ -106,3 +106,15 @@ def test_find_skills_n_installe_rien_sans_accord_du_proprietaire():
     texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
     regle = texte.split("# Find Skills", 1)[0]
     assert "accord du propriétaire" in regle and "-y" in regle and "AGENTS.md" in regle
+
+
+def test_chaque_passage_de_find_skills_qui_cite_npx_skills_rappelle_la_regle():
+    """Relecture Gitar de #599 : la règle en tête ne suffit pas, les étapes d'origine (« run the find command », « npx
+    skills add … -g -y ») restaient des ordres. Chaque section qui cite `npx skills` porte la note du projet."""
+    texte = (SKILLS / "find-skills" / "SKILL.md").read_text(encoding="utf-8")
+    corps = texte.split("# Find Skills", 1)[1]
+    sections = re.split(r"\n#{2,3} ", corps)
+    citees = [section for section in sections if "npx skills" in section]
+    assert len(citees) >= 4
+    for section in citees:
+        assert "Projet Teranga AI" in section, section.splitlines()[0]
