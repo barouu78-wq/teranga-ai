@@ -76,12 +76,14 @@ un contrôle qui n'a pas tourné.
 | `ponytail-audit` | audit de tout le dépôt (bugs, failles, charge, code inutile), sans rien changer |
 | `ponytail-debt` | liste des raccourcis notés `shortcut:` dans le code |
 | `find-skills` | « y a-t-il un skill pour… » : chercher et proposer un skill existant (skills.sh) ; rien ne s'installe sans lecture et accord du propriétaire |
+| `revue-interface` | « vérifie l'accessibilité », après un changement visible : relire une page (accessibilité, focus, formulaires, mobile, thème sombre) avec des règles figées, adaptées au français |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
 génération d'images) et les quatre `ponytail` sont repris de GitHub sous licence MIT (`.claude/skills/LICENCE-hallmark.txt`,
-`.claude/skills/LICENCE-ponytail.txt`), et `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
-seulement) ; les règles de ce fichier priment sur les leurs.
+`.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
+seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
+`.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée) ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
