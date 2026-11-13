@@ -9,7 +9,7 @@ import os
 import re
 from html import escape
 
-from flask import Response, jsonify, request
+from flask import Response, current_app, jsonify, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
@@ -32,6 +32,8 @@ _PRIVACY = {
             ("Signalements", "Si vous signalez une réponse, la question et la réponse concernées sont enregistrées dans nos journaux pour améliorer l'assistant."),
             ("Vos droits", "Il n'y a pas de compte : nous ne conservons pas de profil vous concernant. Pour toute question ou demande liée à vos données, contactez-nous{contact}."),
         ],
+        "ads": ("Publicité", "Quand elle est activée, une annonce Google AdSense s'affiche en bas de certaines pages de guide, jamais dans le chat. Google et ses partenaires peuvent utiliser des cookies pour diffuser et mesurer ces annonces, y compris selon vos visites sur d'autres sites. En Europe, votre consentement est demandé d'abord, par un message de Google ; sans votre accord, Google ne montre que des annonces non personnalisées ou limitées. Pour en savoir plus et faire vos choix : {partner_sites}."),
+        "partner_sites": "comment Google utilise les données des sites partenaires",
         "updated": "Dernière mise à jour",
     },
     "en": {
@@ -50,17 +52,25 @@ _PRIVACY = {
             ("Reports", "If you report an answer, the question and answer are recorded in our logs to improve the assistant."),
             ("Your rights", "There are no accounts: we keep no profile about you. For any question or request about your data, contact us{contact}."),
         ],
+        "ads": ("Advertising", "When enabled, a Google AdSense ad appears at the bottom of some guide pages, never in the chat. Google and its partners may use cookies to serve and measure these ads, including based on your visits to other sites. In Europe your consent is asked first, through a Google message; without it, Google only shows non-personalised or limited ads. To learn more and make your choices: {partner_sites}."),
+        "partner_sites": "how Google uses information from sites that use its services",
         "updated": "Last updated",
     },
 }
 
 
-def render_privacy(lang: str, contact_email: str = "") -> str:
+def render_privacy(lang: str, contact_email: str = "", ads: bool = False) -> str:
     copy = _PRIVACY[lang]
+    entries = list(copy["sections"])
+    if ads:
+        # Annonces Google allumées (services/adsense.py) : juste après la mesure d'audience.
+        entries.insert(6, copy["ads"])
+    partner_sites = (f'<a href="https://policies.google.com/technologies/partner-sites" rel="noopener">'
+                     f'{escape(copy["partner_sites"])}</a>')
     contact = f' : <a href="mailto:{escape(contact_email)}">{escape(contact_email)}</a>' if contact_email else (" via la fiche de l'application sur Google Play" if lang == "fr" else " via the app's Google Play listing")
     sections = "".join(
-        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact)}</p></section>"
-        for title, text in copy["sections"]
+        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact).replace('{partner_sites}', partner_sites)}</p></section>"
+        for title, text in entries
     )
     return f"""<!doctype html>
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -107,11 +117,11 @@ def register_legal_routes(app, deps):
 
     @app.get("/confidentialite")
     def privacy_fr():
-        return Response(render_privacy("fr", os.getenv("CONTACT_EMAIL", "").strip()), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+        return Response(render_privacy("fr", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/privacy")
     def privacy_en():
-        return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip()), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+        return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/.well-known/assetlinks.json")
     def android_asset_links():

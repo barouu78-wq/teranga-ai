@@ -25,10 +25,20 @@ def add_security_headers(
     forwarded_proto: str = "",
     extra_script_origins: tuple[str, ...] = (),
     versioned: bool = False,
+    ads: bool = False,
 ):
     script_src = f"'self' 'nonce-{nonce}'" if nonce else "'self' 'unsafe-inline'"
     # Origines optionnelles (mesure d'audience) : autorisées pour le script et ses envois.
     extra = "".join(" " + origin for origin in extra_script_origins if origin)
+    frames = "https://www.google.com https://maps.google.com https://www.openstreetmap.org"
+    children = "https://www.google.com https://maps.google.com"
+    connect = "'self'" + extra
+    if ads and nonce:
+        # Page avec une annonce Google (services/adsense.py) : Google ne prend en charge que la CSP stricte, ses
+        # domaines changent. Seuls les scripts portant le nonce s'exécutent, et ce qu'ils chargent eux-mêmes.
+        script_src, extra = f"'nonce-{nonce}' 'strict-dynamic'", ""
+        frames = children = "https:"
+        connect = "'self' https:"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -47,10 +57,10 @@ def add_security_headers(
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https://upload.wikimedia.org "
         "https://thumb.wikimedia.org https://commons.wikimedia.org https:; "
-        "connect-src 'self'" + extra + "; "
+        f"connect-src {connect}; "
         "media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; "
-        "frame-src https://www.google.com https://maps.google.com https://www.openstreetmap.org; "
-        "child-src https://www.google.com https://maps.google.com; "
+        f"frame-src {frames}; "
+        f"child-src {children}; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
     if path == "/widget.js":

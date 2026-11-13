@@ -57,6 +57,11 @@ img{max-width:100%}
 @media(max-width:760px){.site-nav a:not(.site-cta){display:none}}
 
 /* Pied de page commun */
+/* Annonce Google en fin de page de guide (services/adsense.py) ; cachée si Google n'a rien à montrer. */
+.ad-slot{margin:32px 0 0;padding-top:20px;border-top:1px solid var(--line)}
+.ad-label{margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ad-slot .adsbygoogle{display:block}
+.ad-slot:has(ins[data-ad-status="unfilled"]){display:none}
 .site-footer{width:min(1120px,calc(100% - 32px));margin:40px auto 0;padding:20px 0 calc(28px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;color:var(--muted);font-size:13px}
 .site-footer nav{display:flex;flex-wrap:wrap;gap:0 14px}
 .site-footer a{position:relative;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;min-height:44px}
