@@ -2,9 +2,10 @@
 
 Allumées seulement si ADSENSE_CLIENT (« ca-pub- » suivi de 16 chiffres) et ADSENSE_SLOT (numéro du bloc
 d'annonces créé dans AdSense) sont définis sur Render. Une seule annonce par page, marquée « Publicité », à la fin
-des pages de guide (maquette validée par le propriétaire le 13 novembre 2026) ; jamais sur l'accueil (chat), le
-planificateur, les urgences, la confidentialité, les pages partenaires, les réponses partagées ni les pages
-privées.
+des pages de guide (maquette validée par le propriétaire le 13 novembre 2026). Liste des pages autorisées, pas
+d'exclusions (relecture Codex de #598) : jamais sur l'accueil (chat), le planificateur, les urgences, la
+confidentialité, les pages de l'entreprise et des partenaires, le Radar jeunesse, les réponses partagées, les pages
+privées, ni sur une page ajoutée plus tard sans être un guide.
 
 Google ne prend en charge qu'une CSP « stricte » (nonce + 'strict-dynamic') : ses domaines changent. Cette CSP ne
 s'applique qu'aux pages qui portent une annonce (services/http_headers.py, ads=True), et seuls nos propres
@@ -24,13 +25,11 @@ _SLOT = re.compile(r"\d{6,20}")
 GOOGLE_ADS_TXT_ID = "f08c47fec0942fa0"
 SCRIPT_URL = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="
 
-# Pages sans annonce : l'outil (chat, planificateur), les urgences, les pages légales et commerciales, les réponses
-# partagées (contenu des visiteurs), la page hors connexion.
-EXCLUDED_PATHS = frozenset({
-    "/", "/trip-planner", "/urgences", "/confidentialite", "/privacy", "/offres-partenaires", "/partenaires",
-    "/partners", "/pour-les-entreprises", "/media-kit", "/presse", "/a-propos", "/partage", "/offline",
-})
-EXCLUDED_PREFIXES = ("/stats-", "/go/", "/api/")
+# Pages de guide qui peuvent porter une annonce : les fiches et l'index des lieux, les régions, les guides traduits,
+# l'explorateur, le calendrier des fêtes, et les pages-guides de services/seo.py sauf celles de l'entreprise.
+GUIDE_PATHS = frozenset({"/lieux", "/explorer", "/calendrier-fetes-senegal"})
+GUIDE_PREFIXES = ("/lieux/", "/regions/", "/fr/", "/en/", "/es/", "/de/", "/it/")
+_NOT_GUIDES = frozenset({"a-propos", "presse", "media-kit", "pour-les-entreprises", "partenaires"})
 _LABELS = {"fr": "Publicité", "en": "Advertisement", "es": "Publicidad", "de": "Anzeige", "it": "Pubblicità"}
 _SCRIPT_TAG = re.compile(r"<script\b([^>]*)>", re.IGNORECASE)
 
@@ -53,7 +52,12 @@ def ads_txt(config: dict[str, str] | None) -> str:
 
 
 def page_takes_ad(path: str) -> bool:
-    return path not in EXCLUDED_PATHS and not path.startswith(EXCLUDED_PREFIXES)
+    if path in GUIDE_PATHS or path.startswith(GUIDE_PREFIXES):
+        return True
+    from services.seo import SEO_PAGES
+
+    slug = path[1:]
+    return path.startswith("/") and slug in SEO_PAGES and slug not in _NOT_GUIDES
 
 
 def _add_nonce(body: str, nonce: str, inline_allowed: bool, trusted_origins: tuple[str, ...]) -> str:

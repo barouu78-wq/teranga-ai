@@ -8,8 +8,10 @@ définies sur Render.
 
 - **Une seule annonce par page**, marquée « Publicité », tout en bas des pages de guide (lieux, régions, guides,
   calendrier…), après le contenu.
-- **Jamais d'annonce** sur l'accueil et le chat, le planificateur, les urgences, la confidentialité, les pages
-  partenaires et presse, les réponses partagées, ni sur les pages privées.
+- **Seules les pages de guide** peuvent en avoir, grâce à une liste dans `services/adsense.py` (197 pages sur 206
+  du plan du site en novembre 2026). **Jamais d'annonce** sur l'accueil et le chat, le planificateur, les urgences,
+  la confidentialité, les pages de l'entreprise, des partenaires et de la presse, le Radar jeunesse, les réponses
+  partagées, les pages privées, ni sur une nouvelle page tant qu'elle n'est pas ajoutée à cette liste.
 - Si Google n'a rien à montrer, l'emplacement disparaît.
 - La page Confidentialité ajoute alors un paragraphe « Publicité » (cookies de Google, consentement en Europe).
 
