@@ -209,3 +209,32 @@ article.page-joj section:nth-of-type(4){margin-top:14px}
   main>article{animation:t-up .5s cubic-bezier(.2,.7,.2,1) both}
   @view-transition{navigation:auto}
 }
+
+/* Teranga Hôtes : page d'une maison d'hôtes (/hote/<nom>, services/hotes.py). Téléphone d'abord, zones ≥ 44 px. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body.hote main{width:min(640px,calc(100% - 32px))}
+.hote-top{display:flex;align-items:center;justify-content:space-between;gap:12px;width:min(640px,calc(100% - 32px));margin:0 auto;padding:14px 0}
+.hote-brand{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:var(--ink);text-decoration:none}
+.hote-demo{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--sen-red);background:rgba(201,54,54,.10);border:1px solid rgba(201,54,54,.28);padding:4px 10px;border-radius:999px;text-align:center}
+.hote-lieu{margin:0 0 4px;color:var(--muted);font-size:14px}
+.hote-hero h1{margin:2px 0 6px}
+.hote-accroche{margin:0;color:var(--muted)}
+.hote-ask{display:flex;align-items:center;gap:8px;margin:18px 0 10px;padding:6px 6px 6px 14px;background:var(--surface);border:1.5px solid var(--accent);border-radius:18px;box-shadow:var(--shadow-sm)}
+.hote-ask:focus-within{outline:2px solid var(--link);outline-offset:2px}
+.hote-ask input{flex:1;min-width:0;min-height:44px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;outline:none}
+.hote-ask button{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.hote-ask button svg{width:22px;height:22px}
+.hote-chips{display:flex;flex-wrap:wrap;gap:8px}
+.hote-chip{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none}
+.hote-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hote-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;min-width:0}
+.hote-card.full{grid-column:1/-1}
+.hote-card small{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.hote-card strong{display:block;margin:4px 0 2px;font-size:16px;overflow-wrap:anywhere}
+.hote-card em{font-style:normal;font-size:13px;color:var(--muted)}
+.hote-ico{display:block;width:22px;height:22px;margin-bottom:6px;color:var(--gold)}
+.hote-src,.hote-note{font-size:13px;color:var(--muted)}
+.hote-contact{display:flex;align-items:center;justify-content:center;min-height:48px;margin:16px 0 0;border-radius:14px;background:var(--sen-green);color:#fff;font-weight:700;text-decoration:none}
+.hote-links{display:flex;flex-wrap:wrap;gap:8px}
+.hote-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:var(--surface-2);color:var(--ink);font-weight:700;text-decoration:none}
+.hote-note{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}

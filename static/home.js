@@ -1345,7 +1345,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[], ux=null;
   try{
   // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,hote:SS.getItem('teranga-hote')||'',context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
     // Coupure réseau avant toute réponse (redémarrage du serveur, réseau mobile) :
     // un seul nouvel essai automatique, 2 s plus tard.
     let res;
@@ -2123,9 +2123,15 @@ $('voiceToggle').onclick=()=>{
 };
 loadFx();
 themeInit();restore();setLang(lang);try{const prefill=SS.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();SS.removeItem('teranga-chat-prefill');}}catch(_){}
+// Teranga Hôtes (/hote/<nom>) : la maison suit la conversation (ses informations vont dans le contexte de l'IA).
+const urlHote=(urlParams.get('hote')||'').trim();
+if(/^[a-z0-9-]{2,40}$/.test(urlHote)){try{SS.setItem('teranga-hote',urlHote);}catch(_){}}
 // ?q=… (fiches lieux, réponses partagées, widget) : question pré-remplie, jamais envoyée sans l'utilisateur.
 const urlQuestion=(urlParams.get('q')||'').trim().slice(0,500);
 if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Event('input'));input.focus();}setupMic();
 // Téléphone avant la conversation : la barre du bas est cachée, la question pré-remplie
 // (?q=, « revoir mon séjour ») va dans le champ du haut, visible.
 (function(){const hi=$('heroInput');if(hi&&input.value&&!input.offsetParent&&hi.offsetParent){hi.value=input.value;input.value='';hi.focus();}})();
+// Seule exception : la question écrite ou choisie par le visiteur sur la page d'une maison d'hôtes part tout de
+// suite ; l'adresse est nettoyée pour qu'un rechargement ne la renvoie pas.
+if(urlQuestion&&/^[a-z0-9-]{2,40}$/.test(urlHote)){input.value='';const hi=$('heroInput');if(hi)hi.value='';try{history.replaceState(null,'',location.pathname);}catch(_){}ask(urlQuestion);}
