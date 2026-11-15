@@ -30,12 +30,14 @@ où manger, les numéros d'urgence, l'argent. L'hôte répond une par une sur Wh
 
 ## Dans la version 1
 
-- Une page par hébergeur, faite pour le téléphone (390 px), en français et en anglais.
+- Une page par hébergeur, faite pour le téléphone (390 px), en français. L'assistant répond déjà dans la
+  langue du voyageur ; la page en anglais viendra dans une version suivante.
 - Les informations de l'hôte en blocs courts, chacun marqué « Information de l'établissement ».
 - L'assistant de Teranga, avec les informations de l'hôte ajoutées à son contexte. Ce que l'hôte n'a pas donné,
   l'assistant ne l'invente pas : il renvoie vers l'accueil.
 - Un QR code à imprimer.
-- Des compteurs anonymes des questions, par sujet, lisibles par l'hôte sur une page privée.
+- Des compteurs anonymes des questions, par sujet : **version 1.1**, dans une seconde PR (ils s'ajoutent aux
+  compteurs existants de `services/coverage_log.py`).
 - Une **page de démonstration** pour montrer le produit aux 7 hébergeurs. Elle est clairement marquée
   « Exemple — établissement fictif ».
 
@@ -66,10 +68,35 @@ s'il paie.
 3. À une question que l'hôte n'a pas renseignée, l'assistant répond qu'il faut demander à l'accueil, sans rien
    inventer.
 4. Le QR code mène à la bonne page.
-5. Les compteurs comptent les questions par sujet, sans jamais garder le texte de la question.
+5. (Version 1.1) Les compteurs comptent les questions par sujet, sans jamais garder le texte de la question.
 6. Tous les contrôles du dépôt sont verts (pytest, e2e, ruff, bandit).
 
 ## Indicateur de réussite
 
 Le nombre d'hébergeurs payants : 3 avant fin février 2027. En second, le nombre de questions posées chaque semaine
 sur les pages des hébergeurs.
+
+## Ajouter un hébergeur (après son accord écrit)
+
+1. Copier `data/hotes/exemple.json` en `data/hotes/<nom>.json` (minuscules, chiffres et tirets). Le nom du fichier
+   est l'adresse : `teranga-ai.fr/hote/<nom>`.
+2. Remplir **seulement** ce que l'hôte a envoyé :
+   - `nom`, `ville`, `region`, une `accroche` courte ;
+   - les blocs `infos` (`titre`, `valeur`, `detail`, et une `icone` parmi `heure`, `repas`, `route`, `wifi`,
+     `boussole`, `maison`, `info`) ;
+   - au plus 4 `questions` fréquentes ;
+   - le `whatsapp` de l'accueil, en chiffres avec l'indicatif.
+3. Mettre `"demo": false`, `accord_ecrit` (date de l'accord écrit) et `fourni_le` (date des informations).
+   Sans accord écrit, la fiche est refusée au démarrage et par le CI.
+4. Ne jamais mettre de mot de passe ni de code Wi-Fi. Une fiche qui contient « mot de passe » est refusée
+   automatiquement ; pour le reste, c'est à relire.
+5. Ouvrir une PR. Une fois fusionnée, envoyer à l'hôte le lien de sa page et le QR code
+   (`teranga-ai.fr/hote/<nom>/qr.svg`, à imprimer).
+
+## Comment l'assistant connaît la maison
+
+La boîte « Pose ta question » et les suggestions de la page ouvrent le chat de Teranga avec `?hote=<nom>`. Le chat
+garde la maison pendant la visite et l'envoie avec chaque question. Le serveur ajoute alors les informations de la
+maison au contexte de l'IA, avec la règle « ce qui manque se demande à l'accueil ». La question écrite ou choisie
+sur la page part tout de suite. Ailleurs sur le site, une question passée dans l'adresse reste seulement
+pré-remplie.

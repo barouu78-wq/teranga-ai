@@ -87,8 +87,14 @@ def test_la_question_part_vers_le_chat_avec_la_maison_meme_sans_javascript():
 
 
 def test_page_inconnue_ou_adresse_bizarre_donne_404():
-    for chemin in ("/hote/inconnue", "/hote/..%2Fapp", "/hote/EXEMPLE"):
+    for chemin in ("/hote/inconnue", "/hote/..%2Fapp", "/hote/exemple%0A"):
         assert get(chemin).status_code == 404
+
+
+def test_une_adresse_en_majuscules_mene_a_la_page():
+    # Règle du site pour toute adresse (services/error_pages.py) : la même page en minuscules.
+    reponse = get("/hote/EXEMPLE")
+    assert reponse.status_code == 301 and reponse.headers["Location"].endswith("/hote/exemple")
 
 
 def test_les_pages_d_hebergeurs_ne_sont_pas_dans_le_plan_du_site():

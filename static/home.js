@@ -2134,4 +2134,4 @@ if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Ev
 (function(){const hi=$('heroInput');if(hi&&input.value&&!input.offsetParent&&hi.offsetParent){hi.value=input.value;input.value='';hi.focus();}})();
 // Seule exception : la question écrite ou choisie par le visiteur sur la page d'une maison d'hôtes part tout de
 // suite ; l'adresse est nettoyée pour qu'un rechargement ne la renvoie pas.
-if(urlQuestion&&/^[a-z0-9-]{2,40}$/.test(urlHote)){input.value='';const hi=$('heroInput');if(hi)hi.value='';try{history.replaceState(null,'',location.pathname);}catch(_){}ask(urlQuestion);}
+if(urlQuestion&&/^[a-z0-9-]{2,40}$/.test(urlHote)){input.value='';const hi=$('heroInput');if(hi)hi.value='';try{window.history.replaceState(null,'',location.pathname);}catch(_){}  /* « history » est la conversation */ask(urlQuestion);}
