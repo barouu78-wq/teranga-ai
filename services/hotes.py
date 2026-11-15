@@ -25,7 +25,11 @@ from services.site_layout import HEAD_ASSETS, site_footer
 SLUG = re.compile(r"[a-z0-9-]{2,40}")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _WHATSAPP = re.compile(r"\+?\d{8,15}")
-_SECRET = re.compile(r"mot de passe|password|\bmdp\b", re.I)
+# Secrets : mot de passe, ou un code donné après un libellé (« Code Wi-Fi : … », « clé : … », « WiFi: … »).
+_SECRET = re.compile(r"mot de passe|password|\bmdp\b|\b(?:code|cl[ée])\b[^.:=\n]{0,20}[:=]|\b(?:wi-?fi|ssid|wpa2?)\s*[:=]",
+                     re.I)
+_WIFI = re.compile(r"wi-?fi", re.I)
+_CODE = re.compile(r"\b(?=\w*\d)\w{6,}\b")  # dans un bloc Wi-Fi, un mot de 6 signes ou plus avec un chiffre
 MOIS = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre",
         "novembre", "décembre")
 
@@ -55,7 +59,7 @@ def _texte(valeur, champ: str, maxi: int, mini: int = 1) -> str:
     if not isinstance(valeur, str) or not mini <= len(valeur.strip()) <= maxi:
         raise HoteInvalide(f"{champ} : texte de {mini} à {maxi} caractères attendu")
     if _SECRET.search(valeur):
-        raise HoteInvalide(f"{champ} : pas de mot de passe sur une page publique")
+        raise HoteInvalide(f"{champ} : pas de mot de passe ni de code sur une page publique")
     return valeur.strip()
 
 
@@ -95,6 +99,9 @@ def valider_hote(data: dict) -> dict:
                 "valeur": _texte(info.get("valeur"), "valeur", 120)}
         if info.get("detail"):
             bloc["detail"] = _texte(info["detail"], "detail", 120)
+        if (icone == "wifi" or _WIFI.search(bloc["titre"])) and any(
+                _CODE.search(bloc.get(champ, "")) for champ in ("valeur", "detail")):
+            raise HoteInvalide("Wi-Fi : pas de code sur une page publique (écrire « Code à l’accueil »)")
         propres.append(bloc)
     questions = data.get("questions", [])
     if not isinstance(questions, list) or len(questions) > 4:

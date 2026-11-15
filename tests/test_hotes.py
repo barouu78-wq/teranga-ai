@@ -58,10 +58,21 @@ def test_un_etablissement_reel_exige_son_accord_ecrit():
 @pytest.mark.parametrize("changement", [
     {"slug": "Exemple"}, {"slug": "../x"}, {"fourni_le": "15/11/2026"}, {"infos": []},
     {"whatsapp": "+221 77 000"}, {"infos": [{"titre": "Wi-Fi", "valeur": "Mot de passe : teranga2026"}]},
+    # Un code écrit sous une autre forme reste un secret (relecture Codex de la PR #602).
+    {"infos": [{"titre": "Wi-Fi", "valeur": "Code Wi-Fi : teranga2026"}]},
+    {"infos": [{"titre": "Portail", "valeur": "Code d’accès : 4512"}]},
+    {"accroche": "WiFi: baobab-dore"},
+    {"infos": [{"icone": "wifi", "titre": "Internet", "valeur": "teranga2026"}]},
+    {"infos": [{"titre": "Wi-Fi", "valeur": "Gratuit", "detail": "Réseau Maison, clé 12345678"}]},
 ])
 def test_une_fiche_mal_remplie_est_refusee(changement):
     with pytest.raises(HoteInvalide):
         valider_hote(fiche(**changement))
+
+
+@pytest.mark.parametrize("valeur", ["Code à l’accueil", "Gratuit dans les chambres, 24h/24", "Fibre, 2 réseaux"])
+def test_un_bloc_wifi_sans_code_est_accepte(valeur):
+    valider_hote(fiche(infos=[{"icone": "wifi", "titre": "Wi-Fi", "valeur": valeur}]))
 
 
 # --- Page ---------------------------------------------------------------------------------------------------------------

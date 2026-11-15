@@ -88,8 +88,9 @@ sur les pages des hébergeurs.
    - le `whatsapp` de l'accueil, en chiffres avec l'indicatif.
 3. Mettre `"demo": false`, `accord_ecrit` (date de l'accord écrit) et `fourni_le` (date des informations).
    Sans accord écrit, la fiche est refusée au démarrage et par le CI.
-4. Ne jamais mettre de mot de passe ni de code Wi-Fi. Une fiche qui contient « mot de passe » est refusée
-   automatiquement ; pour le reste, c'est à relire.
+4. Ne jamais mettre de mot de passe ni de code (Wi-Fi, portail). Une fiche est refusée automatiquement si elle
+   contient « mot de passe », un code après un libellé (« Code Wi-Fi : … », « clé : … », « WiFi: … ») ou, dans un
+   bloc Wi-Fi, un mot qui ressemble à un code (6 signes ou plus avec un chiffre) ; pour le reste, c'est à relire.
 5. Ouvrir une PR. Une fois fusionnée, envoyer à l'hôte le lien de sa page et le QR code
    (`teranga-ai.fr/hote/<nom>/qr.svg`, à imprimer).
 
