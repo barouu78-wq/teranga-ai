@@ -43,6 +43,7 @@ un contrôle qui n'a pas tourné.
 | `services/events.py` | Calendrier des fêtes (dates lunaires marquées « estimée ») |
 | `services/trip_planner.py` + `static/trip-planner.js` | Planificateur de voyage (flux avec signes de vie toutes les 10 s) |
 | `services/hotes.py` + `routes/hotes.py` | Teranga Hôtes : page `/hote/<nom>` d'une maison d'hôtes, ses infos dans le contexte de l'IA, QR code (`data/hotes/`, `docs/produit/teranga-hotes.md`) |
+| `services/fichiers.py` | Fichier joint au chat (photo, PDF, Word ≤ 2 Mo) : vérifié, lu par Claude (le texte d'un Word par toutes les IA), jamais gardé ni mis en cache |
 | `services/adsense.py` | Annonce Google en fin de page de guide et `/ads.txt`, éteintes par défaut (`docs/PUBLICITE.md`) |
 | `services/backup_ai.py` | Claude (Anthropic) : secours, ou IA principale si `AI_PRINCIPALE=claude` |
 | `templates/home.html` + `static/home.js` | Accueil et chat (design v2) |

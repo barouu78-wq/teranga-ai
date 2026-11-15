@@ -13,14 +13,15 @@ from flask import Response, current_app, jsonify, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
-_UPDATED = "8 octobre 2026"
+_UPDATED = "15 novembre 2026"
 
 _PRIVACY = {
     "fr": {
         "title": "Politique de confidentialité",
         "intro": "Teranga AI est un assistant sur le Sénégal, utilisable sans compte. Cette page explique quelles données sont traitées, pourquoi, et combien de temps.",
         "sections": [
-            ("Ce que vous écrivez ou dites", "Vos questions (et, si vous utilisez la voix, l'enregistrement de votre voix) sont envoyées à notre fournisseur d'intelligence artificielle, OpenAI, uniquement pour produire la réponse. Nous ne les utilisons pas pour vous identifier ni pour de la publicité. N'écrivez pas d'informations sensibles (santé, papiers d'identité, coordonnées bancaires)."),
+            ("Ce que vous écrivez ou dites", "Vos questions (et, si vous utilisez la voix, l'enregistrement de votre voix) sont envoyées à nos fournisseurs d'intelligence artificielle, Anthropic (Claude) et OpenAI, uniquement pour produire la réponse. Nous ne les utilisons pas pour vous identifier ni pour de la publicité. N'écrivez pas d'informations sensibles (santé, papiers d'identité, coordonnées bancaires)."),
+            ("Fichiers envoyés au chat", "Si vous joignez une photo, un PDF ou un fichier Word à une question, il est envoyé à nos fournisseurs d'intelligence artificielle (Anthropic pour une photo ou un PDF ; Anthropic ou OpenAI pour le texte d'un fichier Word), uniquement pour produire la réponse. Teranga AI ne l'enregistre pas : ni sur ses serveurs, ni dans ses journaux, ni dans l'historique, où seul le nom du fichier s'affiche. N'envoyez pas de pièce d'identité, de carte bancaire ni de mot de passe."),
             ("Historique de conversation", "L'historique est conservé dans votre appareil (stockage du navigateur ou de l'application), pas sur nos serveurs. Le bouton « Nouveau » l'efface ; vider les données du navigateur ou désinstaller l'application aussi."),
             ("Cookies techniques", "Un identifiant aléatoire (sans nom ni e-mail) et un jeton de sécurité servent à limiter les abus et à protéger les formulaires. Ils ne servent pas à la publicité."),
             ("Adresse IP et journaux", "Votre adresse IP est utilisée temporairement pour limiter le nombre de requêtes et bloquer les abus. Les journaux techniques du serveur sont conservés peu de temps pour corriger les erreurs."),
@@ -40,7 +41,8 @@ _PRIVACY = {
         "title": "Privacy policy",
         "intro": "Teranga AI is an assistant about Senegal that works without an account. This page explains what data is processed, why, and for how long.",
         "sections": [
-            ("What you type or say", "Your questions (and, if you use voice, your voice recording) are sent to our AI provider, OpenAI, only to produce the answer. We do not use them to identify you or for advertising. Do not share sensitive information (health, ID documents, bank details)."),
+            ("What you type or say", "Your questions (and, if you use voice, your voice recording) are sent to our AI providers, Anthropic (Claude) and OpenAI, only to produce the answer. We do not use them to identify you or for advertising. Do not share sensitive information (health, ID documents, bank details)."),
+            ("Files you send", "If you attach a photo, a PDF or a Word file to a question, it is sent to our AI providers (Anthropic for a photo or a PDF; Anthropic or OpenAI for the text of a Word file) only to produce the answer. Teranga AI does not store it: not on its servers, not in its logs, not in the history, where only the file name is shown. Do not send ID documents, bank cards or passwords."),
             ("Conversation history", "History is stored on your device (browser or app storage), not on our servers. The “New” button clears it; so does clearing browser data or uninstalling the app."),
             ("Technical cookies", "A random identifier (no name or email) and a security token are used to limit abuse and protect forms. They are not used for advertising."),
             ("IP address and logs", "Your IP address is used temporarily to rate-limit requests and block abuse. Server logs are kept briefly to fix errors."),
@@ -64,7 +66,7 @@ def render_privacy(lang: str, contact_email: str = "", ads: bool = False) -> str
     entries = list(copy["sections"])
     if ads:
         # Annonces Google allumées (services/adsense.py) : juste après la mesure d'audience.
-        entries.insert(6, copy["ads"])
+        entries.insert(7, copy["ads"])
     partner_sites = (f'<a href="https://policies.google.com/technologies/partner-sites" rel="noopener">'
                      f'{escape(copy["partner_sites"])}</a>')
     contact = f' : <a href="mailto:{escape(contact_email)}">{escape(contact_email)}</a>' if contact_email else (" via la fiche de l'application sur Google Play" if lang == "fr" else " via the app's Google Play listing")
