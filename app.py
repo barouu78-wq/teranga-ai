@@ -740,6 +740,8 @@ def add_security_headers(response):
     origins = tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else [])))
     nonce = getattr(request, "_csp_nonce", "")
     response, ad_nonce = inject_adsense(response, app.config.get("ADSENSE"), path=request.path, nonce=nonce, trusted_origins=origins)
+    version = request.args.get("v", "")
+    current = _is_current_asset(request.path, version)
     return _add_security_headers(
         response,
         path=request.path,
@@ -747,7 +749,8 @@ def add_security_headers(response):
         is_secure=request.is_secure,
         forwarded_proto=request.headers.get("X-Forwarded-Proto", ""),
         extra_script_origins=origins,
-        versioned=_is_current_asset(request.path, request.args.get("v", "")),
+        versioned=current,
+        stale_version=bool(version) and not current,
         ads=bool(ad_nonce),
     )
 
