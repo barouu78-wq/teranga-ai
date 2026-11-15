@@ -8,8 +8,6 @@ interprété comme du HTML.
 import json
 import re
 
-from playwright.sync_api import expect
-
 CV = {
     "nom": "Awa Ndiaye", "titre": "Comptable", "ville": "Dakar", "telephone": "", "email": "",
     "profil": "Comptable avec trois ans d'expérience.",
@@ -169,6 +167,9 @@ def test_un_cv_un_peu_long_tient_sur_une_page_a4(page, base_url):
     echelle = page.evaluate("window.__echelle")
     assert echelle and 0.8 <= float(echelle) < 1
     # window.print est simulé : on attend la fin du mode impression, puis on le remet à la main pour le PDF.
+    # Import ici : le job pytest du CI n'installe pas Playwright, il doit pouvoir lire ce fichier et l'ignorer.
+    from playwright.sync_api import expect
+
     expect(page.locator("body")).not_to_have_class(re.compile("imprime-cv"))
     page.emulate_media(media="print")
     page.evaluate("document.body.classList.add('imprime-cv')")
