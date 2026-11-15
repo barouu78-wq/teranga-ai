@@ -12,7 +12,7 @@ from services.fichiers import FichierInvalide, message_erreur
 NO_STORE = {"Cache-Control": "no-store"}
 
 
-def register_cv_routes(app, site_url, *, require_json_post, rate_guard, logger):
+def register_cv_routes(app, site_url, *, require_json_post, rate_guard, ai_budget, logger):
     @app.get("/cv")
     def cv_page():
         return Response(page_cv(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=600"})
@@ -20,7 +20,7 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, logger):
     @app.post("/api/cv")
     @require_json_post
     def cv_api():
-        refus = rate_guard("cv")  # quotas par minute et par heure, et plafond d'IA du jour (AI_BUDGET_BUCKETS)
+        refus = rate_guard("cv")  # quotas par minute et par heure
         if refus:
             return refus
         if not backup_enabled():
@@ -32,6 +32,10 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, logger):
             return jsonify({"error": message_erreur(exc.code)}), 400, NO_STORE
         except DemandeInvalide as exc:
             return jsonify({"error": ERREURS_DEMANDE[exc.code]}), 400, NO_STORE
+        # Plafond d'IA du jour (partagé par le chat, le planificateur et la voix) : pris seulement pour une demande
+        # valide, juste avant d'appeler Claude (relecture Codex de #606).
+        if not ai_budget.take():
+            return jsonify({"error": "L'IA a atteint sa limite du jour. Réessaie demain."}), 503, {**NO_STORE, "Retry-After": str(ai_budget.retry_after())}
         try:
             final = claude_response(prompt, system=CONSIGNE_CV, max_tokens=4000, timeout=60.0, attachment=bloc)
             cv = lire_reponse(getattr(final, "output_text", "") or "")

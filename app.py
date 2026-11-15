@@ -623,7 +623,7 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 # beaucoup d'adresses appellent en même temps (services/ai_budget.py, AI_PLAFOND_JOUR).
 AI_BUDGET = AiBudget(redis_client, logger=app.logger)
 # Routes de rate_guard qui appellent l'IA : elles comptent aussi dans le plafond du jour.
-AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info", "cv"})
+AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info"})
 # Requêtes longues (chat, planificateur, voix) : au plus « fils - 1 » à la fois par processus, pour qu'un fil
 # reste libre pour les pages et /health ; au-delà, 503 immédiat (services/long_requests.py).
 LONG_SLOTS = LongRequestSlots(_long_request_limit())
@@ -705,7 +705,7 @@ def require_json_post(fn):
     return wrapper
 
 
-register_cv_routes(app, SITE_URL, require_json_post=require_json_post, rate_guard=rate_guard, logger=app.logger)
+register_cv_routes(app, SITE_URL, require_json_post=require_json_post, rate_guard=rate_guard, ai_budget=AI_BUDGET, logger=app.logger)
 
 
 @app.after_request

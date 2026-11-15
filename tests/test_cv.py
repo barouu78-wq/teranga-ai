@@ -186,6 +186,26 @@ def test_le_contenu_du_cv_n_est_jamais_ecrit_dans_les_journaux(claude, caplog):
     assert "Fatou" not in caplog.text and "77 000" not in caplog.text
 
 
-def test_la_route_est_limitee_et_compte_dans_le_plafond_ia():
-    assert "cv" in app_module.GUARDED_LIMITS and "cv" in app_module.AI_BUDGET_BUCKETS
-    assert "/api/cv" in LONG_PATHS
+def test_la_route_est_limitee_et_une_requete_longue():
+    assert "cv" in app_module.GUARDED_LIMITS and "/api/cv" in LONG_PATHS
+    # Le plafond d'IA n'est pas pris par rate_guard (avant toute vérification) : la route le prend elle-même.
+    assert "cv" not in app_module.AI_BUDGET_BUCKETS
+
+
+def test_seule_une_demande_valide_consomme_le_plafond_ia(claude, monkeypatch):
+    """Relecture Codex de #606 (P1) : une demande vide ou refusée, même avec un jeton CSRF valide, ne doit pas user le
+    plafond d'IA du jour, partagé par le chat, le planificateur et la voix."""
+    prises = []
+    monkeypatch.setattr(app_module.AI_BUDGET, "take", lambda: prises.append(1) or True)
+    assert post({"poste": "Comptable"}, "203.0.113.111").status_code == 400
+    mauvais = {"fichier": {"nom": "x.html", "type": "text/html", "donnees": b64(b"<p>")}}
+    assert post(mauvais, "203.0.113.112").status_code == 400
+    assert prises == [] and claude.appels == []
+    assert post({"parcours": "BTS comptabilité en 2023, stage."}, "203.0.113.113").status_code == 200
+    assert prises == [1]
+
+
+def test_plafond_ia_atteint_le_cv_n_est_pas_cree(claude, monkeypatch):
+    monkeypatch.setattr(app_module.AI_BUDGET, "take", lambda: False)
+    reponse = post({"parcours": "BTS comptabilité en 2023, stage."}, "203.0.113.114")
+    assert reponse.status_code == 503 and claude.appels == []
