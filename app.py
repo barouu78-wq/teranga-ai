@@ -43,6 +43,7 @@ from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
 from routes.hotes import register_hotes_routes
+from routes.cv import register_cv_routes
 from services.hotes import charger_hotes, contexte_hote, SLUG as HOTE_SLUG
 from services.discover import discover_pool
 from services.international_seo import register_localized_routes
@@ -622,7 +623,7 @@ def allowed_request(ip, log, limit, window, bucket="chat"):
 # beaucoup d'adresses appellent en même temps (services/ai_budget.py, AI_PLAFOND_JOUR).
 AI_BUDGET = AiBudget(redis_client, logger=app.logger)
 # Routes de rate_guard qui appellent l'IA : elles comptent aussi dans le plafond du jour.
-AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info"})
+AI_BUDGET_BUCKETS = frozenset({"trip_planner", "practical_info", "cv"})
 # Requêtes longues (chat, planificateur, voix) : au plus « fils - 1 » à la fois par processus, pour qu'un fil
 # reste libre pour les pages et /health ; au-delà, 503 immédiat (services/long_requests.py).
 LONG_SLOTS = LongRequestSlots(_long_request_limit())
@@ -642,6 +643,8 @@ GUARDED_LIMITS = {
     "widget_count": (6, 60),
     "visit_count": (6, 60),
     "partner_request": (3, 10),
+    # Mon CV (Teranga Emploi) : un appel à Claude par CV, avec parfois un PDF de plusieurs pages.
+    "cv": (int(os.getenv("CV_RATE_LIMIT", "3")), int(os.getenv("CV_HOURLY_LIMIT", "12"))),
 }
 
 
@@ -700,6 +703,9 @@ def require_json_post(fn):
             return jsonify({"error": "Requête invalide."}), 400
         return fn(*args, **kwargs)
     return wrapper
+
+
+register_cv_routes(app, SITE_URL, require_json_post=require_json_post, rate_guard=rate_guard, logger=app.logger)
 
 
 @app.after_request

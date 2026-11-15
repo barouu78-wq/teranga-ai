@@ -239,3 +239,116 @@ body.hote main{width:min(640px,calc(100% - 32px))}
 .hote-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;background:var(--surface-2);color:var(--ink);font-weight:700;text-decoration:none}
 .hote-note{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
 body.hote main h2{margin-top:26px}
+
+/* Mon CV (Teranga Emploi, /cv) : formulaire sur téléphone, CV sur fond papier dans les trois modèles, PDF par
+   l'impression du navigateur (seul le CV, ou seule la lettre, est imprimé). */
+.cv-main{width:min(760px,calc(100% - 32px));margin:0 auto}
+.cv-hero h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin:18px 0 8px}
+.cv-hero{padding:0;border-top:0}
+.cv-hero p{color:var(--muted);margin:0 0 18px}
+.cv-form{display:grid;gap:16px}
+.cv-choix{border:0;margin:0;padding:0;display:grid;gap:10px}
+.cv-choix legend{font-weight:700;margin-bottom:8px}
+.cv-option{display:flex;gap:12px;align-items:flex-start;min-height:44px;padding:14px;border-radius:16px;border:1px solid var(--line-strong);background:var(--surface);cursor:pointer}
+.cv-option input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent)}
+.cv-option strong{display:block}
+.cv-option small{display:block;color:var(--muted)}
+.cv-option:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.cv-champ{display:grid;gap:6px}
+.cv-champ label{font-weight:700}
+.cv-champ label small{font-weight:400;color:var(--muted)}
+.cv-champ input[type=text],.cv-champ textarea{width:100%;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit}
+.cv-etiquette{font-weight:700}
+.cv-fichier{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.cv-choisir{display:inline-flex;align-items:center;justify-content:center;justify-self:start}
+.cv-fichier:focus-visible+.cv-choisir{outline:2px solid var(--link);outline-offset:2px}
+.cv-aide,.cv-note{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+.cv-erreur{margin:0;color:var(--ink);font-weight:700}
+.cv-erreur:empty{display:none}
+.cv-bouton{min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.cv-principal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cv-bouton:disabled{opacity:.7;cursor:progress}
+.cv-resultat{display:grid;gap:14px;margin-top:8px;padding:0;border-top:0}
+.cv-resultat h2{margin:18px 0 0}
+.cv-resultat h3{margin:8px 0 6px;font-size:17px}
+.cv-alerte{margin:0;padding:12px 14px;border-radius:14px;border:1px solid #c9473d;background:rgba(201,71,61,.10);font-weight:700}
+.cv-modeles{display:flex;gap:8px;flex-wrap:wrap}
+.cv-modele{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.cv-modele[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cv-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cv-liste ul{margin:0;padding-left:20px}
+.cv-liste li{margin:4px 0}
+/* La feuille reste « papier » dans les deux thèmes : c'est ce qui sera imprimé. Trois zones (en-tête, corps,
+   côté) que chaque modèle place à sa façon ; deux colonnes dès que la feuille est assez large, et toujours en A4. */
+.cv-feuille,.cv-lettre{background:#fff;color:#22201c;border:1px solid #ddd;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);font:14px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-wrap:anywhere}
+.cv-lettre{padding:24px 22px}
+.cv-feuille{display:grid;grid-template-areas:"tete" "corps" "cote";overflow:hidden;container-type:inline-size;padding:0}
+.cv-feuille [data-champ],.cv-lettre [data-champ]{outline-offset:2px;border-radius:4px}
+.cv-feuille [data-champ]:focus,.cv-lettre [data-champ]:focus{outline:2px dashed #b07a10}
+.cv-tete{grid-area:tete;display:flex;gap:14px;align-items:center;padding:22px 22px 16px}
+.cv-corps{grid-area:corps;padding:4px 22px 18px}
+.cv-cote{grid-area:cote;padding:4px 22px 22px}
+.cv-mono{flex:0 0 58px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font:700 22px/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:.02em}
+.cv-mono:empty{display:none}
+.cv-ident{min-width:0}
+.cv-nom{margin:0;font:700 26px/1.08 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.01em}
+.cv-titre{margin:4px 0 0;font-weight:700;font-size:15px;letter-spacing:.02em}
+.cv-contact{display:flex;flex-wrap:wrap;gap:2px 12px;margin:6px 0 0;padding:0;list-style:none;font-size:12.5px;opacity:.85}
+.cv-feuille .cv-section{margin-top:14px;padding:0;border-top:0}
+.cv-rubrique{margin:0 0 8px;font:700 12px/1.2 "Atkinson Hyperlegible",system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase}
+.cv-frise{display:grid;gap:10px}
+.cv-bloc{position:relative}
+.cv-quand{margin:0;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.7}
+.cv-poste{margin:1px 0 0;font-weight:700;font-size:15px}
+.cv-texte{margin:0}
+.cv-taches{margin:4px 0 0;padding-left:18px}
+.cv-taches li{margin:2px 0}
+.cv-tags{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.cv-tags li{padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.cv-lettre-texte{white-space:pre-wrap}
+/* Sobre : classique et net, filets fins, vert profond. */
+.cv-feuille.sobre .cv-tete{border-bottom:2px solid #0f6a43;margin:0 22px;padding:22px 0 14px}
+.cv-feuille.sobre .cv-mono{display:none}
+.cv-feuille.sobre .cv-titre,.cv-feuille.sobre .cv-rubrique{color:#0f6a43}
+.cv-feuille.sobre .cv-rubrique{border-bottom:1px solid #e3e3e3;padding-bottom:4px}
+.cv-feuille.sobre .cv-tags li{background:#eef5f1;color:#0f6a43}
+/* Moderne : colonne sombre et or, médaillon aux initiales, frise dorée. */
+.cv-feuille.moderne .cv-tete{background:#14110d;color:#f5efe3}
+.cv-feuille.moderne .cv-mono{background:#e8b04b;color:#14110d}
+.cv-feuille.moderne .cv-nom{color:#f5d58a}
+.cv-feuille.moderne .cv-cote{background:#1d1a15;color:#f5efe3;padding-top:16px}
+.cv-feuille.moderne .cv-cote .cv-rubrique{color:#e8b04b}
+.cv-feuille.moderne .cv-cote .cv-tags li{background:rgba(232,176,75,.16);color:#f5d58a}
+.cv-feuille.moderne .cv-corps .cv-rubrique{color:#7a5300}
+.cv-feuille.moderne .cv-frise{border-left:2px solid #e8b04b;padding-left:14px}
+.cv-feuille.moderne .cv-bloc::before{content:"";position:absolute;left:-20px;top:4px;width:10px;height:10px;border-radius:50%;background:#e8b04b;box-shadow:0 0 0 3px #fff}
+/* Teranga : bandeau vert, jaune, rouge ; colonne claire ; étoile verte de la frise. */
+.cv-feuille.teranga .cv-tete{position:relative;padding-top:30px;background:linear-gradient(180deg,#f3faf6,#fff)}
+.cv-feuille.teranga .cv-tete::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(90deg,#00853f 0 33.3%,#fdef42 33.3% 66.6%,#e31b23 66.6%)}
+.cv-feuille.teranga .cv-mono{background:#00853f;color:#fdef42}
+.cv-feuille.teranga .cv-nom{color:#0b3d24}
+.cv-feuille.teranga .cv-titre,.cv-feuille.teranga .cv-rubrique{color:#00853f}
+.cv-feuille.teranga .cv-rubrique{display:flex;align-items:center;gap:8px}
+.cv-feuille.teranga .cv-rubrique::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,#fdef42,transparent)}
+.cv-feuille.teranga .cv-cote{background:#f3faf6;padding-top:16px}
+.cv-feuille.teranga .cv-tags li{background:#fff7d1;color:#5c4a00}
+.cv-feuille.teranga .cv-frise{border-left:2px solid #cfe8da;padding-left:14px}
+.cv-feuille.teranga .cv-bloc::before{content:"★";position:absolute;left:-23px;top:-1px;font-size:13px;color:#00853f;background:#fff;line-height:1.2}
+/* Deux colonnes quand la feuille est large (ordinateur, A4) : Moderne à gauche, Teranga à droite. */
+@container (min-width:560px){
+  .cv-feuille.moderne{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
+  .cv-feuille.teranga{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
+  .cv-feuille.moderne .cv-corps,.cv-feuille.teranga .cv-corps{padding-top:18px}
+}
+@media print{
+  @page{size:A4;margin:14mm}
+  body.imprime-cv *,body.imprime-lettre *{visibility:hidden}
+  body.imprime-cv #cvFeuille,body.imprime-cv #cvFeuille *,body.imprime-lettre #cvLettre,body.imprime-lettre #cvLettre *{visibility:visible}
+  html:has(body.imprime-cv),html:has(body.imprime-lettre),body.imprime-cv,body.imprime-lettre{background:#fff!important}
+  body.imprime-cv #cvFeuille,body.imprime-lettre #cvLettre{position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none;border-radius:0}
+  .cv-feuille [data-champ]:focus{outline:0}
+  body.imprime-cv #cvFeuille{display:grid;grid-template-columns:none}
+  body.imprime-cv #cvFeuille.moderne{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
+  body.imprime-cv #cvFeuille.teranga{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
+  body.imprime-cv #cvFeuille *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
