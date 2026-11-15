@@ -143,6 +143,7 @@ def page_cv(site_url: str) -> str:
     """Page /cv (téléphone d'abord). Le formulaire est rempli et envoyé par /static/cv.js ; le CV créé s'affiche dessous."""
     return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,address=no">
 <title>Mon CV · Teranga AI</title>
 <meta name="description" content="Crée un CV clair et soigné pour l’emploi au Sénégal, à partir de ton CV ou de ton parcours, et une lettre de motivation. Teranga n’invente rien.">
 <link rel="canonical" href="{escape(site_url.rstrip("/"))}/cv">
@@ -174,11 +175,17 @@ def page_cv(site_url: str) -> str:
 <h2 id="cvResultatTitre">Ton CV est prêt</h2>
 <p class="cv-alerte" id="cvAlerte" hidden></p>
 <div class="cv-modeles" role="group" aria-label="Modèle du CV">
-<button type="button" class="cv-modele" data-modele="sobre" aria-pressed="true">Sobre</button>
-<button type="button" class="cv-modele" data-modele="moderne" aria-pressed="false">Moderne</button>
-<button type="button" class="cv-modele" data-modele="teranga" aria-pressed="false">Teranga</button>
+<button type="button" class="cv-modele" data-modele="sobre" aria-pressed="true"><span class="cv-pastille" aria-hidden="true"></span>Sobre</button>
+<button type="button" class="cv-modele" data-modele="moderne" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Moderne</button>
+<button type="button" class="cv-modele" data-modele="teranga" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Teranga</button>
+<button type="button" class="cv-modele" data-modele="classique" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Classique</button>
+<button type="button" class="cv-modele" data-modele="minimal" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Minimal</button>
+<button type="button" class="cv-modele" data-modele="creatif" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Créatif</button>
+<button type="button" class="cv-modele" data-modele="ocean" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Océan</button>
+<button type="button" class="cv-modele" data-modele="baobab" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Baobab</button>
+<button type="button" class="cv-modele" data-modele="elegant" aria-pressed="false"><span class="cv-pastille" aria-hidden="true"></span>Élégant</button>
 </div>
-<p class="cv-aide">Sobre&nbsp;: le plus sûr pour une candidature sur un site d’emploi, car certains logiciels de tri lisent mal les colonnes. Moderne et Teranga&nbsp;: pour un envoi par e-mail, sur papier ou en main propre.</p>
+<p class="cv-aide">Sobre, Classique ou Minimal&nbsp;: les plus sûrs pour une candidature sur un site d’emploi, car certains logiciels de tri lisent mal les colonnes et les bandeaux de couleur. Les autres&nbsp;: pour un envoi par e-mail, sur papier ou en main propre.</p>
 <article id="cvFeuille" class="cv-feuille sobre" aria-label="Aperçu du CV"></article>
 <p class="cv-aide">Tu peux corriger le texte directement dans l’aperçu avant de l’enregistrer.</p>
 <div class="cv-actions"><button type="button" class="cv-bouton cv-principal" id="cvPdf">Télécharger en PDF</button>

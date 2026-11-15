@@ -268,13 +268,24 @@ body.hote main h2{margin-top:26px}
 .cv-bouton{min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .cv-principal{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .cv-bouton:disabled{opacity:.7;cursor:progress}
-.cv-resultat{display:grid;gap:14px;margin-top:8px;padding:0;border-top:0}
+.cv-resultat{display:grid;gap:14px;margin-top:8px;padding:0;border-top:0;container-type:inline-size}
 .cv-resultat h2{margin:18px 0 0}
 .cv-resultat h3{margin:8px 0 6px;font-size:17px}
 .cv-alerte{margin:0;padding:12px 14px;border-radius:14px;border:1px solid #c9473d;background:rgba(201,71,61,.10);font-weight:700}
 .cv-modeles{display:flex;gap:8px;flex-wrap:wrap}
 .cv-modele{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .cv-modele[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.cv-modele{display:inline-flex;align-items:center;gap:8px}
+.cv-pastille{flex:0 0 14px;width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.25)}
+[data-modele="sobre"] .cv-pastille{background:#0f6a43}
+[data-modele="moderne"] .cv-pastille{background:linear-gradient(135deg,#14110d 50%,#e8b04b 50%)}
+[data-modele="teranga"] .cv-pastille{background:linear-gradient(90deg,#00853f 0 33%,#fdef42 33% 66%,#e31b23 66%)}
+[data-modele="classique"] .cv-pastille{background:#fff;box-shadow:inset 0 0 0 3px #22201c}
+[data-modele="minimal"] .cv-pastille{background:linear-gradient(135deg,#fff 50%,#22201c 50%)}
+[data-modele="creatif"] .cv-pastille{background:linear-gradient(135deg,#5b2a86,#e05a47)}
+[data-modele="ocean"] .cv-pastille{background:linear-gradient(135deg,#0b4f7a 50%,#8fd3f4 50%)}
+[data-modele="baobab"] .cv-pastille{background:linear-gradient(135deg,#a2462b 50%,#f4ead7 50%)}
+[data-modele="elegant"] .cv-pastille{background:linear-gradient(135deg,#1d2b4f 50%,#c9a24d 50%)}
 .cv-actions{display:flex;gap:10px;flex-wrap:wrap}
 .cv-liste ul{margin:0;padding-left:20px}
 .cv-liste li{margin:4px 0}
@@ -282,7 +293,7 @@ body.hote main h2{margin-top:26px}
    côté) que chaque modèle place à sa façon ; deux colonnes dès que la feuille est assez large, et toujours en A4. */
 .cv-feuille,.cv-lettre{background:#fff;color:#22201c;border:1px solid #ddd;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);font:14px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-wrap:anywhere}
 .cv-lettre{padding:24px 22px}
-.cv-feuille{display:grid;grid-template-areas:"tete" "corps" "cote";overflow:hidden;container-type:inline-size;padding:0}
+.cv-feuille{display:grid;grid-template-areas:"tete" "corps" "cote";overflow:hidden;padding:0}
 .cv-feuille [data-champ],.cv-lettre [data-champ]{outline-offset:2px;border-radius:4px}
 .cv-feuille [data-champ]:focus,.cv-lettre [data-champ]:focus{outline:2px dashed #b07a10}
 .cv-tete{grid-area:tete;display:flex;gap:14px;align-items:center;padding:22px 22px 16px}
@@ -334,11 +345,63 @@ body.hote main h2{margin-top:26px}
 .cv-feuille.teranga .cv-tags li{background:#fff7d1;color:#5c4a00}
 .cv-feuille.teranga .cv-frise{border-left:2px solid #cfe8da;padding-left:14px}
 .cv-feuille.teranga .cv-bloc::before{content:"★";position:absolute;left:-23px;top:-1px;font-size:13px;color:#00853f;background:#fff;line-height:1.2}
-/* Deux colonnes quand la feuille est large (ordinateur, A4) : Moderne à gauche, Teranga à droite. */
+/* Classique : en-tête centré, titres à empattements (polices du téléphone), filets doubles. */
+.cv-feuille.classique .cv-tete{flex-direction:column;text-align:center;border-bottom:3px double #22201c;margin:0 22px;padding:24px 0 14px}
+.cv-feuille.classique .cv-mono{display:none}
+.cv-feuille.classique .cv-nom{font-family:Georgia,"Times New Roman",serif;letter-spacing:.02em}
+.cv-feuille.classique .cv-contact{justify-content:center}
+.cv-feuille.classique .cv-titre{color:#555;font-style:italic;font-weight:400}
+.cv-feuille.classique .cv-rubrique{font:700 16px/1.2 Georgia,"Times New Roman",serif;text-transform:none;letter-spacing:.02em;color:#22201c;border-bottom:1px solid #22201c;padding-bottom:3px}
+.cv-feuille.classique .cv-tags li{background:none;border:1px solid #bbb;color:#22201c;font-weight:400}
+/* Minimal : noir et blanc, beaucoup d'air. */
+.cv-feuille.minimal .cv-tete{padding:32px 28px 20px}
+.cv-feuille.minimal .cv-mono{display:none}
+.cv-feuille.minimal .cv-nom{font-weight:600;font-size:30px;letter-spacing:-.02em}
+.cv-feuille.minimal .cv-titre{font-weight:400;color:#666;text-transform:uppercase;letter-spacing:.18em;font-size:12px}
+.cv-feuille.minimal .cv-corps,.cv-feuille.minimal .cv-cote{padding-left:28px;padding-right:28px}
+.cv-feuille.minimal .cv-rubrique{color:#888;letter-spacing:.22em;font-size:11px}
+.cv-feuille.minimal .cv-tags li{background:#f2f2f2;color:#22201c;border-radius:4px;font-weight:400}
+/* Créatif : bandeau en dégradé violet et corail, grand médaillon. */
+.cv-feuille.creatif .cv-tete{background:linear-gradient(120deg,#5b2a86,#e05a47);color:#fff;padding:26px 22px}
+.cv-feuille.creatif .cv-mono{background:#fff;color:#5b2a86;flex-basis:64px;width:64px;height:64px}
+.cv-feuille.creatif .cv-nom{color:#fff}
+.cv-feuille.creatif .cv-titre{color:#ffe1d6}
+.cv-feuille.creatif .cv-rubrique{color:#5b2a86}
+.cv-feuille.creatif .cv-rubrique::before{content:"";display:inline-block;width:18px;height:4px;border-radius:2px;background:#e05a47;margin-right:8px;vertical-align:middle}
+.cv-feuille.creatif .cv-tags li{background:#f3e9fb;color:#5b2a86}
+/* Océan : bandeau bleu, colonne bleu clair, losanges dans la frise. */
+.cv-feuille.ocean .cv-tete{background:#0b4f7a;color:#fff}
+.cv-feuille.ocean .cv-mono{background:#8fd3f4;color:#0b4f7a}
+.cv-feuille.ocean .cv-nom{color:#fff}
+.cv-feuille.ocean .cv-titre{color:#8fd3f4}
+.cv-feuille.ocean .cv-rubrique{color:#0b4f7a;border-bottom:2px solid #8fd3f4;padding-bottom:3px}
+.cv-feuille.ocean .cv-cote{background:#eaf6fc;padding-top:16px}
+.cv-feuille.ocean .cv-tags li{background:#fff;color:#0b4f7a;border:1px solid #b9e2f5}
+.cv-feuille.ocean .cv-frise{border-left:2px solid #b9e2f5;padding-left:14px}
+.cv-feuille.ocean .cv-bloc::before{content:"";position:absolute;left:-20px;top:4px;width:10px;height:10px;background:#0b4f7a;transform:rotate(45deg)}
+/* Baobab : tons terre, colonne sable. */
+.cv-feuille.baobab .cv-tete{border-bottom:4px solid #a2462b}
+.cv-feuille.baobab .cv-mono{background:#a2462b;color:#f4ead7;border-radius:14px}
+.cv-feuille.baobab .cv-nom{color:#4a2a1a}
+.cv-feuille.baobab .cv-titre,.cv-feuille.baobab .cv-rubrique{color:#a2462b}
+.cv-feuille.baobab .cv-cote{background:#f4ead7;padding-top:16px}
+.cv-feuille.baobab .cv-tags li{background:#fff;color:#7a3a20;border:1px solid #e3cfae}
+.cv-feuille.baobab .cv-frise{border-left:3px dotted #d6b98d;padding-left:14px}
+/* Élégant : colonne bleu nuit, médaillon cerclé d'or, nom à empattements. */
+.cv-feuille.elegant .cv-tete{background:#1d2b4f;color:#f3efe6}
+.cv-feuille.elegant .cv-mono{background:none;border:2px solid #c9a24d;color:#c9a24d}
+.cv-feuille.elegant .cv-nom{color:#f3efe6;font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:.04em}
+.cv-feuille.elegant .cv-titre{color:#c9a24d;text-transform:uppercase;letter-spacing:.18em;font-size:12px}
+.cv-feuille.elegant .cv-cote{background:#1d2b4f;color:#f3efe6;padding-top:16px}
+.cv-feuille.elegant .cv-cote .cv-rubrique{color:#c9a24d}
+.cv-feuille.elegant .cv-cote .cv-tags li{background:rgba(201,162,77,.18);color:#f3efe6}
+.cv-feuille.elegant .cv-corps .cv-rubrique{color:#1d2b4f;border-bottom:1px solid #c9a24d;padding-bottom:3px}
+/* Deux colonnes quand la feuille est large (ordinateur, A4) : colonne à gauche pour Moderne, Baobab et Élégant,
+   à droite pour Teranga et Océan. */
 @container (min-width:560px){
-  .cv-feuille.moderne{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
-  .cv-feuille.teranga{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
-  .cv-feuille.moderne .cv-corps,.cv-feuille.teranga .cv-corps{padding-top:18px}
+  .cv-feuille.moderne,.cv-feuille.baobab,.cv-feuille.elegant{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
+  .cv-feuille.teranga,.cv-feuille.ocean{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
+  .cv-feuille.moderne .cv-corps,.cv-feuille.teranga .cv-corps,.cv-feuille.ocean .cv-corps,.cv-feuille.baobab .cv-corps,.cv-feuille.elegant .cv-corps{padding-top:18px}
 }
 @media print{
   @page{size:A4;margin:14mm}
@@ -348,7 +411,7 @@ body.hote main h2{margin-top:26px}
   body.imprime-cv #cvFeuille,body.imprime-lettre #cvLettre{position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none;border-radius:0}
   .cv-feuille [data-champ]:focus{outline:0}
   body.imprime-cv #cvFeuille{display:grid;grid-template-columns:none}
-  body.imprime-cv #cvFeuille.moderne{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
-  body.imprime-cv #cvFeuille.teranga{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
+  body.imprime-cv #cvFeuille.moderne,body.imprime-cv #cvFeuille.baobab,body.imprime-cv #cvFeuille.elegant{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
+  body.imprime-cv #cvFeuille.teranga,body.imprime-cv #cvFeuille.ocean{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
   body.imprime-cv #cvFeuille *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }

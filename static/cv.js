@@ -6,7 +6,7 @@
   const $=id=>document.getElementById(id);
   const CLE='teranga-cv',MAX=2*1024*1024;
   const DOCX='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-  const MODELES=['sobre','moderne','teranga'];
+  const MODELES=['sobre','moderne','teranga','classique','minimal','creatif','ocean','baobab','elegant'];
   const ERREUR='Le CV n’a pas pu être créé. Réessaie dans un moment.';
   let piece=null,cv=null,modele='sobre';
 
