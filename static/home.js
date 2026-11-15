@@ -1327,7 +1327,7 @@ const PIECE_TEXT={
     photo:'Photo',pdf:'PDF',word:'Word',ko:'KB',mo:'MB'}
 };
 const PIECE_ICON='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 16.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-let piece=null,lastPiece=null;
+let piece=null;
 function pieceText(){return PIECE_TEXT[lang]||PIECE_TEXT.fr;}
 function sendLabel(text){const l=send.querySelector('.send-label');if(l)l.textContent=text;else send.textContent=text;}
 function pieceLabels(){
@@ -1388,8 +1388,9 @@ function addPieceLine(bubble,nom){
   line.insertAdjacentHTML('afterbegin',PIECE_ICON);line.appendChild(document.createTextNode(nom));
   bubble.appendChild(line);
 }
-async function ask(preset,fromVoice=false,isRetry=false){
-  const sending=isRetry?lastPiece:piece;
+async function ask(preset,fromVoice=false,isRetry=false,retryPiece=null){
+  // Un renvoi (« Réessayer ») reprend le fichier de SA question, jamais celui d'une question envoyée depuis.
+  const sending=isRetry?retryPiece:piece;
   let text=(preset||input.value).trim();
   if(!text&&sending)text=pieceText().ask;  // un fichier seul : « Explique-moi ce document. »
   if(!text||send.disabled)return;
@@ -1403,7 +1404,6 @@ async function ask(preset,fromVoice=false,isRetry=false){
     if(sending)addPieceLine(sent.b,sending.nom);
     history.push({role:'user',content:text});
     persist();
-    lastPiece=sending;
     if(sending){piece=null;renderPiece();}
   }
   input.value='';input.style.height='';$('count').textContent='0 / 2000';
@@ -1578,7 +1578,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
       retry.onclick=()=>{
         if(wait.row.parentNode)wait.row.remove();
-        ask(text,fromVoice,true);
+        ask(text,fromVoice,true,sending);
       };
       wait.col.appendChild(retry);
       if(err.status===429){

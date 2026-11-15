@@ -79,3 +79,32 @@ def test_un_fichier_refuse_ou_retire_ne_part_pas(page, base_url):
     page.press("#heroInput", "Enter")
     page.get_by_text("Réponse 1.").wait_for()
     assert "fichier" not in envois[-1]
+
+
+def test_reessayer_une_ancienne_question_renvoie_son_propre_fichier(page, base_url):
+    # Relecture Codex de la PR #604 : après une erreur, une autre question part ; l'ancien « Réessayer » doit
+    # renvoyer l'ancienne question avec SON fichier, pas celui (ou l'absence) de la question suivante.
+    envois = []
+
+    def repondre(route):
+        envois.append(json.loads(route.request.post_data or "{}"))
+        if len(envois) == 1:
+            route.fulfill(status=503, body=json.dumps({"error": "Service indisponible."}), content_type="application/json")
+        else:
+            route.fulfill(body=json.dumps({"d": f"Réponse {len(envois)}."}) + "\n", content_type="application/x-ndjson")
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/chat", repondre)
+    page.goto(base_url + "/")
+    page.set_input_files("#pieceInput", files=[{"name": "a.pdf", "mimeType": "application/pdf", "buffer": PDF}])
+    page.fill("#heroInput", "Question A")
+    page.press("#heroInput", "Enter")
+    reessayer = page.get_by_role("button", name="Réessayer")
+    reessayer.wait_for()
+    page.fill("#input", "Question B")
+    page.get_by_role("button", name="Envoyer").click()
+    page.get_by_text("Réponse 2.").wait_for()
+    assert "fichier" not in envois[-1]
+    reessayer.click()
+    page.get_by_text("Réponse 3.").wait_for()
+    assert envois[-1]["message"] == "Question A" and envois[-1]["fichier"]["nom"] == "a.pdf"
