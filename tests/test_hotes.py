@@ -143,3 +143,14 @@ def test_le_chat_de_l_accueil_transmet_la_maison():
     js = (ROOT / "static" / "home.js").read_text(encoding="utf-8")
     assert "hote:SS.getItem('teranga-hote')||''" in js
     assert "/^[a-z0-9-]{2,40}$/" in js  # seule une valeur au bon format est gardée
+
+
+def test_une_question_de_maison_n_est_jamais_mise_en_cache():
+    # Sans cette règle, la réponse « avec la maison » serait resservie à tout le monde, et une réponse générale
+    # déjà en cache serait servie sur la page de la maison, sans ses informations.
+    from services.answer_cache import cache_key
+
+    payload = payload_avec(DEMO)
+    assert cache_key(payload, {"message": payload["message"], "hote": DEMO}, model="m") is None
+    sans_maison = payload_avec("")
+    assert cache_key(sans_maison, {"message": sans_maison["message"]}, model="m") is not None

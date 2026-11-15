@@ -59,7 +59,8 @@ def cache_key(payload: dict[str, Any], raw: dict[str, Any] | None, *, model: str
     raw = raw if isinstance(raw, dict) else {}
     if _has_earlier_turns(raw.get("history"), payload.get("message", "")):
         return None
-    if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request")):
+    # « hote » : question posée depuis la page d'une maison d'hôtes, avec ses informations (Teranga Hôtes).
+    if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request", "hote")):
         return None
     if raw.get("action_confirmed") or raw.get("action_request_id"):
         return None
