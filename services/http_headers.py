@@ -25,6 +25,7 @@ def add_security_headers(
     forwarded_proto: str = "",
     extra_script_origins: tuple[str, ...] = (),
     versioned: bool = False,
+    stale_version: bool = False,
     ads: bool = False,
 ):
     script_src = f"'self' 'nonce-{nonce}'" if nonce else "'self' 'unsafe-inline'"
@@ -79,6 +80,10 @@ def add_security_headers(
         # L'URL change à chaque modification du fichier (?v=<empreinte>) :
         # le navigateur peut le garder un an sans jamais redemander.
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif path.startswith("/static/") and stale_version:
+        # ?v= ne correspond pas au fichier servi : pendant un déploiement, l'ancien serveur reçoit
+        # la nouvelle adresse et sert l'ancien fichier. Le navigateur doit revérifier à chaque fois.
+        response.headers["Cache-Control"] = "no-cache"
     elif path.startswith("/static/"):
         response.headers["Cache-Control"] = "public, max-age=3600"
     elif declared.startswith("public") and not nonce and "Set-Cookie" not in response.headers:

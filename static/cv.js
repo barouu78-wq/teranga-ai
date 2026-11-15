@@ -1,4 +1,5 @@
-// Mon CV (Teranga Emploi) : envoie le CV ou le parcours à /api/cv, affiche le CV rendu dans un des trois modèles,
+// Mon CV (Teranga Emploi) : envoie le CV ou le parcours à /api/cv, affiche le CV rendu dans un des neuf modèles
+// (MODELES suit les boutons de services/cv.py),
 // le laisse corriger, et l'enregistre en PDF par l'impression du navigateur. Le CV créé reste dans ce navigateur
 // (localStorage) : le serveur ne garde rien. Tout le texte venu de l'IA passe par textContent, jamais par innerHTML.
 (function(){
