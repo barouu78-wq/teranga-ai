@@ -53,7 +53,8 @@ from services.maps import lookup_map, should_fetch_map
 from services.trip_planner import register_trip_planner
 from services.intelligence import build_intent_context, build_planner_data, infer_senegal_context, should_use_planner
 from services.backup_ai import claude_is_primary, claude_model
-from services.fichiers import FichierInvalide, bloc_claude, consigne_fichier, lire_fichier, texte_word_pour_la_question
+from services.fichiers import (FichierInvalide, bloc_claude, consigne_fichier, lire_fichier, message_erreur,
+                               texte_word_pour_la_question)
 from services.web_policy import preferred_domains, reasoning_effort, search_context_size, should_use_web
 from services.external_research import search_context as external_search_context
 from services.rate_limit import BoundedStore, allowed_request as _allowed_request
@@ -856,7 +857,7 @@ def parse_chat_payload():
         try:
             lu = lire_fichier(piece)
         except FichierInvalide as exc:
-            return None, (jsonify({"error": str(exc)}), 400)
+            return None, (jsonify({"error": message_erreur(exc.code)}), 400)
         payload["fichier_nom"] = lu["nom"]
         payload["instructions"] += "\n\n" + consigne_fichier(lu)
         if lu["genre"] == "word":

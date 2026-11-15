@@ -34,8 +34,29 @@ FICHIER_ILLISIBLE = {
 }
 
 
+# Messages montrés au visiteur, choisis par code : jamais le texte d'une exception (alerte CodeQL de la PR #604).
+ERREURS = {
+    "illisible": "Fichier illisible. Choisis une photo, un PDF ou un fichier Word.",
+    "type": "Type de fichier non accepté : envoie une photo, un PDF ou un fichier Word (.docx).",
+    "taille": "Fichier vide ou trop lourd : 2 Mo au plus.",
+    "signature": "Ce fichier ne correspond pas à son type. Envoie une photo, un PDF ou un fichier Word.",
+    "pages": f"Ce PDF est trop long : {MAX_PAGES_PDF} pages au plus. Envoie seulement les pages utiles.",
+    "word_illisible": "Ce fichier Word est illisible. Enregistre-le de nouveau en .docx ou en PDF.",
+    "word_long": "Ce fichier Word est trop long. Envoie seulement les pages utiles.",
+    "word_vide": "Ce fichier Word ne contient pas de texte.",
+}
+
+
 class FichierInvalide(ValueError):
-    """Fichier refusé ; le message est montré tel quel à l'utilisateur."""
+    """Fichier refusé ; `code` est une clé de ERREURS (le message montré au visiteur)."""
+
+    def __init__(self, code: str):
+        super().__init__(code)
+        self.code = code if code in ERREURS else "illisible"
+
+
+def message_erreur(code: str) -> str:
+    return ERREURS.get(code, ERREURS["illisible"])
 
 
 def _signature_ok(data: bytes, media_type: str) -> bool:
@@ -56,9 +77,9 @@ def _texte_word(data: bytes) -> str:
             with archive.open("word/document.xml") as flux:
                 xml = flux.read(MAX_XML_WORD + 1)
     except (KeyError, zipfile.BadZipFile, zipfile.LargeZipFile, OSError, EOFError, RuntimeError, ValueError) as exc:
-        raise FichierInvalide("Ce fichier Word est illisible. Enregistre-le de nouveau en .docx ou en PDF.") from exc
+        raise FichierInvalide("word_illisible") from exc
     if len(xml) > MAX_XML_WORD:
-        raise FichierInvalide("Ce fichier Word est trop long. Envoie seulement les pages utiles.")
+        raise FichierInvalide("word_long")
     lignes = []
     for paragraphe in _PARAGRAPHE.split(xml.decode("utf-8", "replace")):
         ligne = "".join(m.group(1) if m.group(1) is not None else " " for m in _MORCEAU.finditer(paragraphe))
@@ -67,7 +88,7 @@ def _texte_word(data: bytes) -> str:
             lignes.append(ligne)
     texte = "\n".join(lignes)
     if not texte:
-        raise FichierInvalide("Ce fichier Word ne contient pas de texte.")
+        raise FichierInvalide("word_vide")
     if len(texte) > MAX_TEXTE_WORD:
         texte = texte[:MAX_TEXTE_WORD] + "\n[… texte coupé : seul le début du document a été lu]"
     return texte
@@ -76,24 +97,24 @@ def _texte_word(data: bytes) -> str:
 def lire_fichier(brut) -> dict:
     """Vérifie le fichier envoyé par le chat ; renvoie {nom, genre, media_type, donnees | texte}."""
     if not isinstance(brut, dict):
-        raise FichierInvalide("Fichier illisible. Choisis une photo, un PDF ou un fichier Word.")
+        raise FichierInvalide("illisible")
     media_type = brut.get("type")
     if media_type not in GENRES:
-        raise FichierInvalide("Type de fichier non accepté : envoie une photo, un PDF ou un fichier Word (.docx).")
+        raise FichierInvalide("type")
     donnees = brut.get("donnees")
     if not isinstance(donnees, str) or not donnees or len(donnees) > (MAX_OCTETS // 3 + 1) * 4:
-        raise FichierInvalide("Fichier vide ou trop lourd : 2 Mo au plus.")
+        raise FichierInvalide("taille")
     try:
         data = base64.b64decode(donnees, validate=True)
     except (binascii.Error, ValueError) as exc:
-        raise FichierInvalide("Fichier illisible. Choisis-le de nouveau.") from exc
+        raise FichierInvalide("illisible") from exc
     if not data or len(data) > MAX_OCTETS:
-        raise FichierInvalide("Fichier vide ou trop lourd : 2 Mo au plus.")
+        raise FichierInvalide("taille")
     if not _signature_ok(data, media_type):
-        raise FichierInvalide("Ce fichier ne correspond pas à son type. Envoie une photo, un PDF ou un fichier Word.")
+        raise FichierInvalide("signature")
     genre = GENRES[media_type]
     if genre == "pdf" and len(_PAGE.findall(data)) > MAX_PAGES_PDF:
-        raise FichierInvalide(f"Ce PDF est trop long : {MAX_PAGES_PDF} pages au plus. Envoie seulement les pages utiles.")
+        raise FichierInvalide("pages")
     nom = _NOM_INTERDIT.sub("", str(brut.get("nom") or "")).strip(" .")[-80:] or "fichier"
     lu = {"nom": nom, "genre": genre, "media_type": media_type}
     if genre == "word":

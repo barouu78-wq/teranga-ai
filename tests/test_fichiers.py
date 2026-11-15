@@ -19,7 +19,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 import app as app_module  # noqa: E402
 import services.chat_service as chat_service_module  # noqa: E402
 from services.backup_ai import claude_events  # noqa: E402
-from services.fichiers import MAX_OCTETS, FichierInvalide, lire_fichier  # noqa: E402
+from services.fichiers import ERREURS, MAX_OCTETS, FichierInvalide, lire_fichier  # noqa: E402
 
 B = "https://teranga-ai.fr"
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -83,7 +83,8 @@ def test_le_texte_d_un_fichier_word_est_extrait():
 def test_un_fichier_refuse_leve_une_erreur_claire(brut):
     with pytest.raises(FichierInvalide) as erreur:
         lire_fichier(brut)
-    assert str(erreur.value)  # message montré à l'utilisateur
+    # Un code, traduit en message fixe : jamais le texte d'une exception renvoyé au visiteur (alerte CodeQL, PR #604).
+    assert erreur.value.code in ERREURS
 
 
 def test_le_nom_du_fichier_est_nettoye():
@@ -131,7 +132,7 @@ def test_sans_fichier_rien_ne_change():
 def test_un_fichier_refuse_donne_une_erreur_400_lisible():
     _, erreur = payload_avec({"nom": "x.exe", "type": "application/x-msdownload", "donnees": b64(b"MZ")})
     reponse, statut = erreur
-    assert statut == 400 and "fichier" in reponse.get_json()["error"].lower()
+    assert statut == 400 and reponse.get_json()["error"] == ERREURS["type"]
 
 
 # --- Appel de Claude ----------------------------------------------------------------------------------------------------
