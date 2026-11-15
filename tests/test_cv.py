@@ -209,3 +209,24 @@ def test_plafond_ia_atteint_le_cv_n_est_pas_cree(claude, monkeypatch):
     monkeypatch.setattr(app_module.AI_BUDGET, "take", lambda: False)
     reponse = post({"parcours": "BTS comptabilité en 2023, stage."}, "203.0.113.114")
     assert reponse.status_code == 503 and claude.appels == []
+
+
+# --- Modèles (« Trois modèles c'est très court », propriétaire, 15 novembre 2026) --------------------------------------
+
+MODELES = ("sobre", "moderne", "teranga", "classique", "minimal", "creatif", "ocean", "baobab", "elegant")
+
+
+def test_neuf_modeles_proposes_chacun_avec_son_style():
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    js = (app_module.BASE_DIR / "static" / "cv.js").read_text(encoding="utf-8")
+    css = (app_module.BASE_DIR / "static" / "site.css").read_text(encoding="utf-8")
+    for nom in MODELES:
+        assert f'data-modele="{nom}"' in html, nom
+        assert f"'{nom}'" in js, nom  # accepté par la page (et retrouvé après rechargement)
+        assert f".cv-feuille.{nom} " in css, nom  # un style propre
+
+
+def test_l_iphone_ne_transforme_pas_le_telephone_et_l_e_mail_en_liens():
+    # Capture du propriétaire (15 novembre 2026) : Safari soulignait le numéro et l'e-mail du CV comme des liens.
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    assert '<meta name="format-detection" content="telephone=no,email=no,address=no">' in html

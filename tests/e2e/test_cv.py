@@ -88,3 +88,22 @@ def test_sans_cv_ni_parcours_rien_ne_part(page, base_url):
     page.get_by_role("button", name="Créer mon CV").click()
     page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
     assert envois == []
+
+
+def test_les_modeles_a_colonne_passent_sur_deux_colonnes_sur_grand_ecran(page, base_url):
+    # La largeur se lit sur le bloc qui contient la feuille : une requête de conteneur ne s'applique jamais à
+    # l'élément conteneur lui-même (défaut vu le 15 novembre 2026, colonnes seulement en PDF).
+    envois = []
+    ouvrir(page, base_url, envois)
+    page.set_viewport_size({"width": 1100, "height": 900})
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    colonnes = "getComputedStyle(document.getElementById('cvFeuille')).gridTemplateColumns.split(' ').length"
+    for nom, attendu in (("Moderne", 2), ("Océan", 2), ("Élégant", 2), ("Sobre", 1), ("Créatif", 1)):
+        page.get_by_role("button", name=nom, exact=True).click()
+        assert page.evaluate(colonnes) == attendu, nom
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.get_by_role("button", name="Moderne", exact=True).click()
+    assert page.evaluate(colonnes) == 1
