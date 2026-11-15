@@ -42,6 +42,8 @@ from services.dakar_date import dakar_today, today_line
 from services.practical_facts import practical_context
 from services.calculators import calculation_block
 from routes.system import register_system_routes
+from routes.hotes import register_hotes_routes
+from services.hotes import charger_hotes, contexte_hote, SLUG as HOTE_SLUG
 from services.discover import discover_pool
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
@@ -214,6 +216,9 @@ register_layout_globals(app)
 register_seo_routes(app, SITE_URL, places=SENEGAL_KNOWLEDGE.get("places", []), regions=SENEGAL_KNOWLEDGE.get("regions", []), dishes=SENEGAL_KNOWLEDGE.get("dishes", []))
 register_place_routes(app, SENEGAL_KNOWLEDGE, SITE_URL, partners=PARTNERS)
 register_share_routes(app, SITE_URL)
+# Teranga Hôtes : une page par maison d'hôtes (data/hotes/), et ses informations dans le contexte de l'IA.
+HOTES = charger_hotes(BASE_DIR / "data" / "hotes")
+register_hotes_routes(app, HOTES, SITE_URL)
 
 
 def _route_exists(path: str) -> bool:
@@ -828,6 +833,11 @@ def parse_chat_payload():
         calcul = calculation_block(payload.get("message", ""))
         if calcul:
             payload["instructions"] += "\n\n" + calcul
+        # Question posée depuis la page d'une maison d'hôtes : ses informations (données par l'hôte) en contexte.
+        hote = raw.get("hote")
+        if isinstance(hote, str) and HOTE_SLUG.fullmatch(hote) and hote in HOTES:
+            payload["instructions"] += "\n\n" + contexte_hote(HOTES[hote], payload.get("language", "fr"))
+            payload["hote"] = hote
         partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
         if partner_block:
             payload["instructions"] += "\n\n" + partner_block

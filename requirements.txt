@@ -16,6 +16,8 @@ python-dotenv==1.2.4
 # Base officielle des fuseaux horaires (zoneinfo) : heure de Dakar et heure d'été française (services/quick_answers.py),
 # présente même si le système n'a pas la sienne.
 tzdata==2026.6
+# QR code des pages d'hébergeurs (Teranga Hôtes, services/hotes.py) : pur Python, sans dépendance.
+segno==1.6.6
 
 # Leurs dépendances, figées aussi : le CI teste exactement ce qui tourne en ligne
 annotated-types==0.8.0

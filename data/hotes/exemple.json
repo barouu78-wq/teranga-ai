@@ -1,0 +1,20 @@
+{
+  "slug": "exemple",
+  "nom": "Maison Exemple",
+  "ville": "Ziguinchor",
+  "region": "Casamance",
+  "demo": true,
+  "accord_ecrit": "",
+  "fourni_le": "2026-11-15",
+  "accroche": "Tout ce qu’il faut pour ton séjour, et un assistant pour tes questions, jour et nuit.",
+  "infos": [
+    {"icone": "heure", "titre": "Arrivée", "valeur": "dès 14 h", "detail": "Départ avant 11 h"},
+    {"icone": "repas", "titre": "Petit-déjeuner", "valeur": "7 h 30 – 10 h", "detail": "Sur la terrasse"},
+    {"icone": "route", "titre": "Transfert aéroport", "valeur": "Sur demande", "detail": "À réserver la veille"},
+    {"icone": "wifi", "titre": "Wi-Fi", "valeur": "Code à l’accueil", "detail": "Jamais sur la page"},
+    {"icone": "boussole", "titre": "Excursions proposées", "valeur": "Île de Carabane, île aux Oiseaux", "detail": "À réserver à l’accueil"}
+  ],
+  "questions": ["Comment venir depuis l’aéroport ?", "Où manger ce soir ?", "Numéros d’urgence"],
+  "whatsapp": "",
+  "indexer": false
+}
