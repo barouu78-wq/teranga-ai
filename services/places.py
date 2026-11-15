@@ -245,10 +245,14 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         f"<script{nonce_attr}>(async()=>{{const box=document.getElementById('gallery');if(!box)return;"
         "try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)+'&title='+encodeURIComponent(box.dataset.title||''),(window.AbortSignal&&AbortSignal.timeout)?{signal:AbortSignal.timeout(15000)}:{}).then(r=>r.json());"
         "const list=(d.images||[]).slice(0,4);if(!list.length){box.closest('section').remove();return}"
-        "const hero=document.getElementById('placeHero');if(hero){const h=document.createElement('img');h.decoding='async';h.alt=list[0].alt||box.dataset.title||'';"
-        "h.src=list[0].display_url||('/image-proxy?url='+encodeURIComponent(list[0].url));hero.appendChild(h);hero.hidden=false}"
-        "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt=x.alt||'';"
-        "img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url));box.appendChild(img)});"
+        # Relais d'images refusé (429 après la page Explorer, vu le 15 novembre 2026) : photo chargée directement chez
+        # Wikimedia, comme sur l'Explorer et l'accueil ; si ça échoue aussi, elle disparaît au lieu de rester cassée.
+        "const pose=(img,x,echec)=>{img.decoding='async';img.onerror=()=>{if(!img.dataset.direct&&x.url){img.dataset.direct='1';img.src=x.url}"
+        "else{img.remove();echec()}};img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url))};"
+        "const hero=document.getElementById('placeHero');if(hero){const h=document.createElement('img');h.alt=list[0].alt||box.dataset.title||'';"
+        "pose(h,list[0],()=>{hero.hidden=true});hero.appendChild(h);hero.hidden=false}"
+        "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.alt=x.alt||'';"
+        "pose(img,x,()=>{if(!box.querySelector('img'))box.closest('section').remove()});box.appendChild(img)});"
         "document.getElementById('gallery-credit').textContent='Photos : '+(list[0].credit||'Wikimedia Commons')}"
         "catch(_){box.closest('section').remove()}})();</script>"
     )
