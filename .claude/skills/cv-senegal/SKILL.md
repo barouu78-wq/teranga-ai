@@ -78,8 +78,11 @@ personne a dit.
 
 ## Confidentialité
 
-Un CV contient des données personnelles. Sur le site, il reste sur le téléphone de la personne : Teranga ne le garde pas
-(`services/fichiers.py`). Dans une conversation, ne pas recopier plus de données personnelles que nécessaire.
+Un CV contient des données personnelles. Sur le site, un CV joint au chat est envoyé au fournisseur d'IA (Anthropic pour
+une photo ou un PDF ; Anthropic ou OpenAI pour le texte d'un Word) seulement pour produire la réponse, et Teranga
+ne le garde pas : ni sur ses serveurs, ni dans ses journaux (`services/fichiers.py`, page de confidentialité). Ne jamais écrire
+qu'il « reste sur le téléphone » : seul un CV mis en page et enregistré par la personne reste sur son téléphone. Dans une
+conversation, ne pas recopier plus de données personnelles que nécessaire.
 
 ## Avant de rendre le CV
 

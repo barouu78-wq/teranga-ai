@@ -156,6 +156,10 @@ def test_cv_senegal_n_invente_rien():
     texte = (SKILLS / "cv-senegal" / "SKILL.md").read_text(encoding="utf-8")
     for mot in ("Jamais", "diplôme", "chiffre", "compétence", "AGENTS.md", "lettre de motivation", "téléphone"):
         assert mot in texte, mot
+    # Relecture Codex de #605 : un CV joint au chat part chez le fournisseur d'IA ; le skill ne doit pas laisser croire
+    # qu'il reste sur le téléphone.
+    confidentialite = texte.split("## Confidentialité", 1)[1].split("\n## ", 1)[0]
+    assert "fournisseur d'IA" in confidentialite and "ne le garde pas" in confidentialite
 
 
 def test_offres_emploi_fixe_les_regles_des_sources():
