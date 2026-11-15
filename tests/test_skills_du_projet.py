@@ -79,6 +79,10 @@ REPRISES = {
     # 13 novembre 2026 (« installe les skills qu'il faut », propriétaire) : règles de relecture d'interface de
     # vercel-labs/web-interface-guidelines, copie figée dans revue-interface.
     "LICENCE-web-interface-guidelines.txt": ("vercel-labs/web-interface-guidelines", ("revue-interface",)),
+    # 15 novembre 2026 (« Go » du propriétaire pour les skills emploi) : resume-tailor de Paramchoudhary/ResumeSkills,
+    # traduit et adapté au Sénégal dans cv-senegal. tailored-resume-generator (ComposioHQ) a été écarté : son exemple
+    # invente des chiffres que le candidat n'a jamais donnés.
+    "LICENCE-resumeskills.txt": ("Paramchoudhary/ResumeSkills", ("cv-senegal",)),
 }
 
 
@@ -144,3 +148,24 @@ def test_revue_interface_ne_telecharge_pas_ses_regles():
         assert mot in adaptations, mot
     # Relecture Codex de #600 : un <button> ou un <a> natif gère déjà le clavier ; pas d'onKeyDown redondant.
     assert "onKeyDown" in adaptations and "natifs" in adaptations
+
+
+def test_cv_senegal_n_invente_rien():
+    """Un CV adapté met en valeur ce que la personne a vraiment fait : ni diplôme, ni expérience, ni compétence, ni
+    chiffre ajoutés (règle « exactitude » d'AGENTS.md)."""
+    texte = (SKILLS / "cv-senegal" / "SKILL.md").read_text(encoding="utf-8")
+    for mot in ("Jamais", "diplôme", "chiffre", "compétence", "AGENTS.md", "lettre de motivation", "téléphone"):
+        assert mot in texte, mot
+    # Relecture Codex de #605 : un CV joint au chat part chez le fournisseur d'IA ; le skill ne doit pas laisser croire
+    # qu'il reste sur le téléphone.
+    confidentialite = texte.split("## Confidentialité", 1)[1].split("\n## ", 1)[0]
+    assert "fournisseur d'IA" in confidentialite and "ne le garde pas" in confidentialite
+
+
+def test_offres_emploi_fixe_les_regles_des_sources():
+    """Offres d'emploi lues sur des sites sénégalais (vérification du 15 novembre 2026) : aucune source sans accord
+    écrit, robots.txt respecté, lien vers l'annonce d'origine, offres expirées ou hors Sénégal retirées, arnaques."""
+    texte = (SKILLS / "offres-emploi" / "SKILL.md").read_text(encoding="utf-8")
+    for regle in ("accord écrit", "robots.txt", "annonce d'origine", "expirée", "hors du Sénégal", "Ne paie jamais",
+                  "EmploiDakar", "AGENTS.md"):
+        assert regle in texte, regle
