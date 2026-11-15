@@ -11,6 +11,7 @@ from services.external_research import attach_external_data
 from services.fallback_answer import knowledge_fallback
 from services.latency import PAYLOAD_KEY, LatencyTrace
 from services.backup_ai import backup_complete, backup_enabled, claude_is_primary
+from services.fichiers import FICHIER_ILLISIBLE
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
@@ -68,6 +69,9 @@ def register_chat_route(app, deps):
         qu'il n'est pas déjà l'IA principale), sinon la base de connaissances. Quand la base ne connaît pas
         la question, le message honnête « je préfère ne rien inventer » (avec les pages utiles du site) :
         une panne ne finit donc jamais en erreur sèche. None seulement si le secours lui-même échoue."""
+        if (payload.get("fichier") or {}).get("bloc"):
+            # Photo ou PDF que Claude n'a pas pu lire : le dire, plutôt qu'une réponse qui n'aurait pas vu le fichier.
+            return FICHIER_ILLISIBLE.get(payload.get("language", "fr"), FICHIER_ILLISIBLE["fr"])
         if backup_enabled() and not claude_is_primary():
             try:
                 reply = backup_complete(
@@ -127,7 +131,9 @@ def register_chat_route(app, deps):
 
         # Réponse prête (numéros d'urgence vérifiés, conversion euro ↔ FCFA) : servie comme une réponse en
         # cache, sans le modèle ni la recherche web, avant toute ancienne réponse du modèle en cache.
-        ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None else None
+        # Avec un fichier joint, la réponse dépend du fichier : ni réponse prête ni cache (dans un sens ou dans l'autre).
+        has_file = bool(payload.get("fichier_nom"))
+        ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None and not has_file else None
         if ready:
             payload["use_web"] = False
             # Journal des lacunes : une réponse prête est vérifiée ; elle couvre son thème, et seulement lui.
@@ -202,7 +208,7 @@ def register_chat_route(app, deps):
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
-        key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
+        key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None and not has_file else None
         cached = ready or (answer_cache.get(key) if key else None)
         trace.cache = bool(cached)
         trace.ready = bool(ready)

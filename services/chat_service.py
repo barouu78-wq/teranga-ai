@@ -4,7 +4,7 @@ import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 
-from .backup_ai import claude_events, claude_is_primary, claude_model, claude_response
+from .backup_ai import backup_enabled, claude_events, claude_is_primary, claude_model, claude_response
 from .latency import note_model
 from .model_params import clean_model_name, openai_complex_model, openai_model
 from .orchestrator import build_agent_plan, run_enrichments
@@ -80,13 +80,20 @@ def build_chat_service(
         )
 
     def claude_kwargs(payload):
-        return {
+        kwargs = {
             "system": payload.get("instructions", ""),
             # Réponses courtes (V5) : l'essentiel en 5 à 8 lignes ; « Plus de détails » développe dans cette limite.
             "max_tokens": 1500,
             "timeout": 60.0,
             "web": bool(payload.get("use_web")),
         }
+        if piece_pour_claude(payload):
+            kwargs["attachment"] = piece_pour_claude(payload)
+        return kwargs
+
+    def piece_pour_claude(payload):
+        """Bloc d'une photo ou d'un PDF joint : seul Claude le lit ici (un Word est déjà du texte dans la question)."""
+        return (payload.get("fichier") or {}).get("bloc")
 
     def claude_stream(payload):
         """Flux Claude ; si Claude échoue avant d'écrire, OpenAI prend le relais."""
@@ -97,14 +104,16 @@ def build_chat_service(
                     wrote = True
                 yield event
         except Exception:
-            if wrote:
-                raise
+            if wrote or piece_pour_claude(payload):
+                raise  # une photo ou un PDF n'est jamais envoyé sans lui à une autre IA, qui répondrait sans l'avoir vu
             if hasattr(logger, "exception"):
                 logger.exception("chat_claude_primary_failed")
             yield from openai_response(payload, True)
 
     def create_response(payload, stream):
-        if claude_is_primary():
+        if piece_pour_claude(payload) and not backup_enabled():
+            raise RuntimeError("fichier joint sans Claude configuré")
+        if claude_is_primary() or piece_pour_claude(payload):
             note_model(payload, claude_model())  # pour la ligne de latence ; openai_response le remplace si OpenAI prend le relais
             if hasattr(logger, "info"):
                 logger.info("chat_ai_provider claude")
@@ -113,6 +122,8 @@ def build_chat_service(
             try:
                 return claude_response(payload.get("input_text") or payload.get("message", ""), **claude_kwargs(payload))
             except Exception:
+                if piece_pour_claude(payload):
+                    raise
                 if hasattr(logger, "exception"):
                     logger.exception("chat_claude_primary_failed")
         return openai_response(payload, stream)

@@ -82,6 +82,7 @@ def claude_events(
     web: bool = False,
     effort: str = "low",
     client: Any = None,
+    attachment: dict | None = None,
 ) -> Iterator[SimpleNamespace]:
     """Flux Claude au format des événements OpenAI Responses.
 
@@ -89,7 +90,9 @@ def claude_events(
     passe alors au secours.
     """
     client = client or _client()
-    messages: list[dict] = [{"role": "user", "content": str(prompt)}]
+    # Fichier joint (services/fichiers.py) : son bloc `image` ou `document` passe avant le texte de la question.
+    content: Any = [attachment, {"type": "text", "text": str(prompt)}] if attachment else str(prompt)
+    messages: list[dict] = [{"role": "user", "content": content}]
     params: dict[str, Any] = {
         "model": claude_model(),
         "max_tokens": int(max_tokens),

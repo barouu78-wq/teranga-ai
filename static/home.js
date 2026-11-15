@@ -1012,7 +1012,7 @@ function setLang(next){
   if(document.body.dataset.themeMode){applyTheme();applyFete();}
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
-  $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
+  $('sub').textContent=t.sub;input.placeholder=t.ph;sendLabel(t.send);pieceLabels();
   setVoiceToggle(autoVoice);
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
@@ -1310,8 +1310,89 @@ function restore(){
     }
   }catch(e){}
 }
-async function ask(preset,fromVoice=false,isRetry=false){
-  const text=(preset||input.value).trim();
+// Fichier joint (« Go fichiers » du propriétaire, 15 novembre 2026) : une photo (réduite ici), un PDF ou un Word de
+// 2 Mo au plus part avec la question suivante, puis il est oublié : seul son nom reste dans la bulle. Le serveur
+// revérifie tout (services/fichiers.py).
+const PIECE_MAX=2*1024*1024,PIECE_DOCX='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const PIECE_TEXT={
+  fr:{add:'Joindre un fichier (photo, PDF ou Word)',title:'Joindre un fichier',remove:'Retirer le fichier',
+    note:'Lu par l’IA pour te répondre, jamais gardé par Teranga. Évite carte d’identité, carte bancaire et mots de passe.',
+    type:'Ce type de fichier n’est pas accepté : photo, PDF ou Word (.docx).',size:'Fichier trop lourd : 2 Mo au plus.',
+    read:'Fichier illisible. Choisis-le de nouveau.',ask:'Explique-moi ce document.',added:'Fichier ajouté : ',
+    photo:'Photo',pdf:'PDF',word:'Word',ko:'Ko',mo:'Mo'},
+  en:{add:'Attach a file (photo, PDF or Word)',title:'Attach a file',remove:'Remove the file',
+    note:'Read by the AI to answer you, never kept by Teranga. Avoid ID cards, bank cards and passwords.',
+    type:'This file type is not accepted: photo, PDF or Word (.docx).',size:'File too large: 2 MB at most.',
+    read:'Unreadable file. Please choose it again.',ask:'Explain this document to me.',added:'File added: ',
+    photo:'Photo',pdf:'PDF',word:'Word',ko:'KB',mo:'MB'}
+};
+const PIECE_ICON='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 16.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+let piece=null;
+function pieceText(){return PIECE_TEXT[lang]||PIECE_TEXT.fr;}
+function sendLabel(text){const l=send.querySelector('.send-label');if(l)l.textContent=text;else send.textContent=text;}
+function pieceLabels(){
+  const t=pieceText();
+  for(const id of ['joindre','heroJoindre']){const b=$(id);if(b){b.setAttribute('aria-label',t.add);b.title=t.title;}}
+  if(piece)renderPiece();
+}
+function pieceSize(n,t){return n<1048576?Math.max(1,Math.round(n/1024))+' '+t.ko:(n/1048576).toFixed(1).replace('.',lang==='en'?'.':',')+' '+t.mo;}
+function readAsBase64(blob){
+  return new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>ko(new Error('read'));r.readAsDataURL(blob);});
+}
+async function photoJpeg(file){
+  // 1 568 px au plus (la taille que l'IA lit), fond blanc pour les PNG transparents, JPEG de qualité 0,85.
+  const bmp=await createImageBitmap(file);
+  const k=Math.min(1,1568/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(bmp.width*k));c.height=Math.max(1,Math.round(bmp.height*k));
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(bmp,0,0,c.width,c.height);
+  if(bmp.close)bmp.close();
+  const blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.85));
+  if(!blob)throw new Error('read');
+  return blob;
+}
+async function readPiece(file){
+  const nom=String(file.name||'fichier').slice(-80);
+  let type=file.type||'',blob=file;
+  if(!type&&/\.docx$/i.test(nom))type=PIECE_DOCX;
+  if(!type&&/\.pdf$/i.test(nom))type='application/pdf';
+  if(/^image\//.test(type)){
+    // Une photo de l'iPhone (HEIC) est convertie ici quand le navigateur sait la lire.
+    try{blob=await photoJpeg(file);type='image/jpeg';}
+    catch(_){if(!/^image\/(jpeg|png|webp)$/.test(type))throw new Error('type');}
+  }else if(type!=='application/pdf'&&type!==PIECE_DOCX)throw new Error('type');
+  if(blob.size>PIECE_MAX)throw new Error('size');
+  const genre=type===PIECE_DOCX?'word':(type==='application/pdf'?'pdf':'photo');
+  return {nom,type,genre,taille:blob.size,donnees:await readAsBase64(blob)};
+}
+function renderPiece(error){
+  const t=pieceText();
+  for(const id of ['piece','heroPiece']){
+    const zone=$(id);if(!zone)continue;
+    zone.replaceChildren();
+    zone.hidden=!piece&&!error;
+    if(error){const p=document.createElement('p');p.className='piece-err';p.textContent=error;zone.appendChild(p);continue;}
+    if(!piece)continue;
+    const row=document.createElement('div');row.className='piece';
+    row.insertAdjacentHTML('afterbegin',PIECE_ICON);
+    const name=document.createElement('span');name.textContent=piece.nom;
+    const small=document.createElement('small');small.textContent=t[piece.genre]+' · '+pieceSize(piece.taille,t);name.appendChild(small);
+    const rm=document.createElement('button');rm.type='button';rm.title=t.remove;rm.setAttribute('aria-label',t.remove+' '+piece.nom);
+    rm.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    rm.onclick=()=>{piece=null;renderPiece();$('pieceStatus').textContent='';const back=hero&&!hero.hidden&&$('heroJoindre')&&$('heroJoindre').offsetParent?$('heroJoindre'):$('joindre');back.focus();};
+    const note=document.createElement('p');note.className='piece-note';note.textContent=t.note;
+    row.append(name,rm);zone.append(row,note);
+  }
+}
+function addPieceLine(bubble,nom){
+  const line=document.createElement('span');line.className='msg-piece';
+  line.insertAdjacentHTML('afterbegin',PIECE_ICON);line.appendChild(document.createTextNode(nom));
+  bubble.appendChild(line);
+}
+async function ask(preset,fromVoice=false,isRetry=false,retryPiece=null){
+  // Un renvoi (« Réessayer ») reprend le fichier de SA question, jamais celui d'une question envoyée depuis.
+  const sending=isRetry?retryPiece:piece;
+  let text=(preset||input.value).trim();
+  if(!text&&sending)text=pieceText().ask;  // un fichier seul : « Explique-moi ce document. »
   if(!text||send.disabled)return;
   // Une seule question à la fois : un clic pendant une réponse ne lance pas
   // une seconde requête (qui dérèglerait le bouton Envoyer/Arrêter).
@@ -1319,12 +1400,14 @@ async function ask(preset,fromVoice=false,isRetry=false){
   hideHero();
   clearFollowups();  // nouvelle question : les suggestions de la réponse précédente ne servent plus
   if(!isRetry){
-    addMsg('user',text,{animate:true});
+    const sent=addMsg('user',text,{animate:true});
+    if(sending)addPieceLine(sent.b,sending.nom);
     history.push({role:'user',content:text});
     persist();
+    if(sending){piece=null;renderPiece();}
   }
   input.value='';input.style.height='';$('count').textContent='0 / 2000';
-  send.disabled=false;send.textContent=T[lang].stop;
+  send.disabled=false;sendLabel(T[lang].stop);
   send.dataset.mode='stop';
   const wait=addMsg('assistant','',{animate:true});
   wait.row.classList.add('thinking');
@@ -1345,7 +1428,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[], ux=null;
   try{
   // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,hote:SS.getItem('teranga-hote')||'',context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,hote:SS.getItem('teranga-hote')||'',fichier:sending?{nom:sending.nom,type:sending.type,donnees:sending.donnees}:undefined,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
     // Coupure réseau avant toute réponse (redémarrage du serveur, réseau mobile) :
     // un seul nouvel essai automatique, 2 s plus tard.
     let res;
@@ -1495,7 +1578,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
       retry.onclick=()=>{
         if(wait.row.parentNode)wait.row.remove();
-        ask(text,fromVoice,true);
+        ask(text,fromVoice,true,sending);
       };
       wait.col.appendChild(retry);
       if(err.status===429){
@@ -1525,7 +1608,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
     inflight=null;
     send.dataset.mode='';
     send.disabled=false;
-    send.textContent=T[lang].send;
+    sendLabel(T[lang].send);
     if(voiceConversation&&autoVoice&&!voiceSpeaking&&!voiceSTTBusy){
       voiceWaitingForAnswer=false;
       setTimeout(startVoiceCapture,140);
@@ -1542,13 +1625,31 @@ $('themeQsList')?.addEventListener('click',e=>{const b=e.target.closest('button'
 $('heroAsk')?.addEventListener('submit',e=>{
   e.preventDefault();
   const q=$('heroInput').value.trim();
-  if(!q){$('heroInput').focus();return;}
+  if(!q&&!piece){$('heroInput').focus();return;}
   // Une réponse est en cours : on garde la question dans le champ plutôt que de la perdre.
   if(inflight||send.disabled)return;
   $('heroInput').value='';
   ask(q);
 });
 $('heroMic')?.addEventListener('click',()=>mic.click());
+$('joindre').onclick=()=>$('pieceInput').click();
+$('heroJoindre')?.addEventListener('click',()=>$('pieceInput').click());
+$('pieceInput').onchange=async e=>{
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';  // le même fichier pourra être choisi de nouveau
+  if(!file)return;
+  const t=pieceText();
+  try{
+    piece=await readPiece(file);
+    renderPiece();
+    $('pieceStatus').textContent=t.added+piece.nom;
+  }catch(err){
+    piece=null;
+    const message=t[err&&err.message]||t.read;
+    renderPiece(message);
+    $('pieceStatus').textContent=message;
+  }
+};
 // Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage. Vignette de 500 px :
 // la carte fait 170 px, la vignette de 1 280 px de la fiche pesait jusqu'à 537 Ko.
 document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
