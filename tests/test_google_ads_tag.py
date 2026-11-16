@@ -43,6 +43,8 @@ def test_consent_script_loads_nothing_before_explicit_accept():
     assert 'readConsent() !== "accepted"' in load_tag
     assert "googletagmanager.com/gtag/js" in load_tag
     assert '"consent", "default", DENIED' in load_tag
+    # Stockage local bloqué : l'accord reste en mémoire pour charger la balise quand même.
+    assert "memoryConsent = value" in js and "if (memoryConsent) return memoryConsent" in js
     assert 'data-choice="reject"' in js and 'data-choice="accept"' in js
 
 
@@ -62,7 +64,7 @@ def test_site_loads_controller_and_opens_csp_only_when_enabled(monkeypatch):
     assert "data-ads-consent" in body and "Google Ads" in body
     csp = response.headers["Content-Security-Policy"]
     script_src = next(part for part in csp.split(";") if part.strip().startswith("script-src"))
-    assert "https://www.googletagmanager.com" in script_src
+    assert "https://www.googletagmanager.com" in script_src.split()[1:]
 
     off = _client(monkeypatch, "")
     response = off.get("/confidentialite")
