@@ -47,3 +47,17 @@ public, puisque le nonce change à chaque visite.
   d'AdSense que des annonces AdSense sont permises dans une TWA.
 - **Ce que ça rapporte** dépend du nombre de visiteurs. Avec le trafic de novembre 2026 (une dizaine de visites
   par semaine), ce sera presque rien au début.
+
+## Balise Google Ads (mesurer nos propres campagnes)
+
+À ne pas confondre avec AdSense (annonces affichées *sur* le site) : la balise Google Ads mesure ce que font les
+visiteurs venus de *nos* annonces Google Ads (compte 309-359-3837, campagne « Teranga AI - Search - Diaspora FR »).
+
+1. Sur Render, ajouter la variable `GOOGLE_ADS_TAG_ID` = `AW-18578242897`. Le site redémarre.
+2. Un bandeau « Cookies publicitaires » (Refuser / Accepter, même taille) s'affiche à la première visite. Rien
+   n'est envoyé à Google tant que le visiteur n'a pas cliqué « Accepter ». La page `/confidentialite` explique la
+   balise et porte un bouton « Modifier mon choix ».
+3. Dans Google Ads, « Tester la connexion » sur la page de la balise : accepter le bandeau d'abord, sinon Google ne
+   voit rien.
+
+Pour tout arrêter : supprimer `GOOGLE_ADS_TAG_ID` sur Render.
