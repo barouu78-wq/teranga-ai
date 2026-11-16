@@ -12,10 +12,15 @@
     ? {title:"Advertising cookies",body:"With your consent, Google Ads cookies measure what visitors coming from our ads do on the site. Nothing is loaded if you refuse.",accept:"Accept",reject:"Refuse"}
     : {title:"Cookies publicitaires",body:"Avec votre accord, des cookies Google Ads mesurent ce que font sur le site les visiteurs venus de nos annonces. Rien n’est chargé si vous refusez.",accept:"Accepter",reject:"Refuser"};
 
+  // Choix gardé aussi en mémoire : si le navigateur bloque le stockage local, « Accepter » charge quand même la
+  // balise pour cette page (relecture Codex de #614).
+  let memoryConsent = null;
   const readConsent = () => {
+    if (memoryConsent) return memoryConsent;
     try { return window.localStorage.getItem(CONSENT_KEY); } catch (_) { return null; }
   };
   const writeConsent = value => {
+    memoryConsent = value;
     try { window.localStorage.setItem(CONSENT_KEY, value); } catch (_) {}
   };
   const GRANTED = {ad_storage:"granted",ad_user_data:"granted",ad_personalization:"granted",analytics_storage:"denied"};
