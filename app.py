@@ -526,9 +526,10 @@ from services.image_topics import knowledge_image_titles as _knowledge_image_tit
 from services.http_headers import add_security_headers as _add_security_headers
 from services.identity_cookie import should_set_identity_cookie
 from services.observability import build_request_log
-from services.analytics import analytics_config, inject_analytics
+from services.analytics import PRIVATE_PREFIXES, analytics_config, inject_analytics
 from services.posthog_consent import posthog_config, inject_posthog
 from services.adsense import adsense_config, inject_adsense
+from services.google_ads_tag import google_ads_config, inject_google_ads
 from services.compression import gzip_response
 
 # Mesure d'audience optionnelle (Plausible, Umami…) : désactivée sans ANALYTICS_SCRIPT_URL.
@@ -536,6 +537,8 @@ ANALYTICS = analytics_config(os.getenv("ANALYTICS_SCRIPT_URL"), os.getenv("ANALY
 POSTHOG = posthog_config(os.getenv("POSTHOG_PROJECT_KEY"), os.getenv("POSTHOG_API_HOST"), os.getenv("POSTHOG_ASSET_HOST"))
 # Annonces Google en fin de page de guide : éteintes sans ADSENSE_CLIENT et ADSENSE_SLOT (services/adsense.py).
 app.config["ADSENSE"] = adsense_config(os.getenv("ADSENSE_CLIENT"), os.getenv("ADSENSE_SLOT"))
+# Balise Google Ads (conversions des campagnes) : éteinte sans GOOGLE_ADS_TAG_ID, chargée après accord du visiteur.
+app.config["GOOGLE_ADS"] = google_ads_config(os.getenv("GOOGLE_ADS_TAG_ID"))
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)
@@ -737,7 +740,10 @@ def compress_response(response):
 def add_security_headers(response):
     response = inject_analytics(response, ANALYTICS, path=request.path)
     response = inject_posthog(response, POSTHOG, path=request.path)
-    origins = tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else [])))
+    google_ads = app.config.get("GOOGLE_ADS")
+    response = inject_google_ads(response, google_ads, path=request.path)
+    google_ads_origins = list(google_ads["origins"]) if google_ads and not request.path.startswith(PRIVATE_PREFIXES) else []
+    origins = tuple(dict.fromkeys(([ANALYTICS["origin"]] if ANALYTICS else []) + ([POSTHOG["asset_origin"], POSTHOG["api_origin"]] if POSTHOG else []) + google_ads_origins))
     nonce = getattr(request, "_csp_nonce", "")
     response, ad_nonce = inject_adsense(response, app.config.get("ADSENSE"), path=request.path, nonce=nonce, trusted_origins=origins)
     version = request.args.get("v", "")

@@ -13,7 +13,7 @@ from flask import Response, current_app, jsonify, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
-_UPDATED = "15 novembre 2026"
+_UPDATED = "16 novembre 2026"
 
 _PRIVACY = {
     "fr": {
@@ -34,6 +34,8 @@ _PRIVACY = {
             ("Vos droits", "Il n'y a pas de compte : nous ne conservons pas de profil vous concernant. Pour toute question ou demande liée à vos données, contactez-nous{contact}."),
         ],
         "ads": ("Publicité", "Quand elle est activée, une annonce Google AdSense s'affiche en bas de certaines pages de guide, jamais dans le chat. Google et ses partenaires peuvent utiliser des cookies pour diffuser et mesurer ces annonces, y compris selon vos visites sur d'autres sites. En Europe, votre consentement est demandé d'abord, par un message de Google ; sans votre accord, Google ne montre que des annonces non personnalisées ou limitées. Pour en savoir plus et faire vos choix : {partner_sites}."),
+        "google_ads": ("Mesure des annonces Google Ads", "Quand elle est activée, une balise Google Ads mesure ce que font sur le site les visiteurs arrivés par nos annonces (par exemple, une page consultée), pour savoir quelles annonces sont utiles. Elle dépose des cookies Google et n'est chargée qu'après votre accord, donné dans le bandeau « Cookies publicitaires » ; sans accord, rien n'est envoyé à Google. Vous pouvez changer d'avis à tout moment{ads_choice}."),
+        "ads_choice": "Modifier mon choix",
         "partner_sites": "comment Google utilise les données des sites partenaires",
         "updated": "Dernière mise à jour",
     },
@@ -55,23 +57,30 @@ _PRIVACY = {
             ("Your rights", "There are no accounts: we keep no profile about you. For any question or request about your data, contact us{contact}."),
         ],
         "ads": ("Advertising", "When enabled, a Google AdSense ad appears at the bottom of some guide pages, never in the chat. Google and its partners may use cookies to serve and measure these ads, including based on your visits to other sites. In Europe your consent is asked first, through a Google message; without it, Google only shows non-personalised or limited ads. To learn more and make your choices: {partner_sites}."),
+        "google_ads": ("Google Ads measurement", "When enabled, a Google Ads tag measures what visitors who arrived through our ads do on the site (for example, a page viewed), to learn which ads are useful. It sets Google cookies and is only loaded after your consent, given in the “Advertising cookies” banner; without consent, nothing is sent to Google. You can change your mind at any time{ads_choice}."),
+        "ads_choice": "Change my choice",
         "partner_sites": "how Google uses information from sites that use its services",
         "updated": "Last updated",
     },
 }
 
 
-def render_privacy(lang: str, contact_email: str = "", ads: bool = False) -> str:
+def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google_ads: bool = False) -> str:
     copy = _PRIVACY[lang]
     entries = list(copy["sections"])
     if ads:
         # Annonces Google allumées (services/adsense.py) : juste après la mesure d'audience.
         entries.insert(7, copy["ads"])
+    if google_ads:
+        # Balise Google Ads allumée (services/google_ads_tag.py) : le bouton rouvre le bandeau de consentement.
+        entries.insert(8 if ads else 7, copy["google_ads"])
+    ads_choice = (f' : <button type="button" class="btn" data-ads-consent hidden>{escape(copy["ads_choice"])}</button>'
+                  if google_ads else "")
     partner_sites = (f'<a href="https://policies.google.com/technologies/partner-sites" rel="noopener">'
                      f'{escape(copy["partner_sites"])}</a>')
     contact = f' : <a href="mailto:{escape(contact_email)}">{escape(contact_email)}</a>' if contact_email else (" via la fiche de l'application sur Google Play" if lang == "fr" else " via the app's Google Play listing")
     sections = "".join(
-        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact).replace('{partner_sites}', partner_sites)}</p></section>"
+        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact).replace('{partner_sites}', partner_sites).replace('{ads_choice}', ads_choice)}</p></section>"
         for title, text in entries
     )
     return f"""<!doctype html>
@@ -119,11 +128,11 @@ def register_legal_routes(app, deps):
 
     @app.get("/confidentialite")
     def privacy_fr():
-        return Response(render_privacy("fr", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+        return Response(render_privacy("fr", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot")), google_ads=bool(current_app.config.get("GOOGLE_ADS"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/privacy")
     def privacy_en():
-        return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+        return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot")), google_ads=bool(current_app.config.get("GOOGLE_ADS"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
 
     @app.get("/.well-known/assetlinks.json")
     def android_asset_links():
