@@ -406,6 +406,8 @@ body.hote main h2{margin-top:26px}
 @media print{
   @page{size:A4;margin:14mm}
   body.imprime-cv *,body.imprime-lettre *{visibility:hidden}
+  /* Le reste de la page, même invisible, ajoutait des pages blanches : seuls le CV (ou la lettre) et ses parents restent. */
+  body.imprime-cv *:not(:has(#cvFeuille),#cvFeuille,#cvFeuille *),body.imprime-lettre *:not(:has(#cvLettre),#cvLettre,#cvLettre *){display:none}
   body.imprime-cv #cvFeuille,body.imprime-cv #cvFeuille *,body.imprime-lettre #cvLettre,body.imprime-lettre #cvLettre *{visibility:visible}
   html:has(body.imprime-cv),html:has(body.imprime-lettre),body.imprime-cv,body.imprime-lettre{background:#fff!important}
   body.imprime-cv #cvFeuille,body.imprime-lettre #cvLettre{position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none;border-radius:0}
@@ -414,4 +416,8 @@ body.hote main h2{margin-top:26px}
   body.imprime-cv #cvFeuille.moderne,body.imprime-cv #cvFeuille.baobab,body.imprime-cv #cvFeuille.elegant{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
   body.imprime-cv #cvFeuille.teranga,body.imprime-cv #cvFeuille.ocean{grid-template-columns:1fr 32%;grid-template-areas:"tete tete" "corps cote"}
   body.imprime-cv #cvFeuille *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* Réduit juste assez pour une page (cv.js) ; dans les modèles à colonne, la colonne va jusqu'en bas de la page A4. */
+  body.imprime-cv #cvFeuille{zoom:var(--cv-echelle,1)}
+  body.imprime-cv #cvFeuille:is(.moderne,.baobab,.elegant,.teranga,.ocean){min-height:calc(266mm / var(--cv-echelle,1));grid-template-rows:auto 1fr}
+  body.imprime-cv #cvFeuille .cv-bloc,body.imprime-cv #cvFeuille li{break-inside:avoid}
 }

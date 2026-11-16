@@ -31,6 +31,8 @@ Jeune sans expérience : mets en avant la formation, les stages, le bénévolat,
 
 Écris en français, en phrases courtes, avec des verbes d'action, sans « je » dans le CV. Commence chaque tâche par ce que la personne a fait, jamais par « Responsable de », « Aidé à » ou « Participé à ». Évite les mots creux (passionné, dynamique, motivé, polyvalent, « esprit d'équipe », « force de proposition ») : remplace-les par un fait donné par la personne, ou retire-les. Pas d'émoji. Le profil fait deux à quatre lignes et nomme le poste visé. Les expériences vont de la plus utile pour ce poste à la moins utile ; garde leurs dates, au même format partout (les années seules si c'est tout ce que la personne a donné).
 
+Compétences : intitulés courts, un outil ou un savoir-faire par ligne (« Excel : tableaux et formules », « Accueil et conseil client »), jamais une phrase.
+
 Une tâche sans chiffre reste sans chiffre. Si un chiffre la rendrait plus forte, ajoute dans "a_verifier" la question à poser à la personne (« Combien de clients servais-tu par jour ? »), sans jamais deviner la réponse.
 
 La lettre de motivation a quatre paragraphes courts : une accroche liée au poste de l'offre (jamais « Je vous écris pour… ») ; ce que la personne apporte, avec deux exemples tirés de son parcours ; pourquoi cet employeur, seulement avec ce que dit l'offre (rien d'inventé sur l'entreprise) ; la demande d'entretien.
@@ -41,7 +43,7 @@ Laisse vide ("" ou []) ce que la personne n'a pas donné. "lettre" seulement si 
 
 # Champs gardés, et longueur maximale de chaque texte : ce que l'IA rend est nettoyé avant d'aller à la page.
 _TEXTES = {"nom": 80, "titre": 120, "ville": 80, "telephone": 40, "email": 120, "profil": 700, "lettre": 4000, "alerte": 300}
-_LISTES = {"competences": (15, 60), "langues": (6, 60), "a_verifier": (8, 200), "manque": (8, 200)}
+_LISTES = {"competences": (15, 90), "langues": (6, 60), "a_verifier": (8, 200), "manque": (8, 200)}
 
 
 ERREURS_DEMANDE = {
@@ -64,7 +66,16 @@ class CvIllisible(ValueError):
 
 
 def _texte(valeur, maxi: int) -> str:
-    return " ".join(valeur.split())[:maxi] if isinstance(valeur, str) else ""
+    """Espaces normalisés ; trop long, coupé au dernier mot entier (jamais « communicatio »)."""
+    if not isinstance(valeur, str):
+        return ""
+    texte = " ".join(valeur.split())
+    if len(texte) <= maxi:
+        return texte
+    coupe = texte[:maxi]
+    if texte[maxi] != " " and " " in coupe:
+        coupe = coupe.rsplit(" ", 1)[0]
+    return coupe.rstrip(" ,;:–-")
 
 
 def _paragraphes(valeur, maxi: int) -> str:

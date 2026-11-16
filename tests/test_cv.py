@@ -20,6 +20,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 import app as app_module  # noqa: E402
 import routes.cv as cv_routes  # noqa: E402
 from services.cv import CONSIGNE_CV, CvIllisible, construire_demande, lire_reponse  # noqa: E402
+import services.cv as cv_module  # noqa: E402
 from services.long_requests import LONG_PATHS  # noqa: E402
 
 B = "https://teranga-ai.fr"
@@ -138,6 +139,21 @@ def test_la_reponse_est_lue_et_nettoyee():
     cv = lire_reponse("Voici :\n```json\n" + json.dumps(brut) + "\n```")
     assert cv["nom"] == "Awa" and "inconnu" not in cv and len(cv["competences"]) <= 15
     assert cv["experiences"][0]["taches"] == ["Saisie des factures"]
+
+
+def test_un_texte_trop_long_n_est_jamais_coupe_au_milieu_d_un_mot():
+    # Vu le 15 novembre 2026 sur le PDF du propriétaire : « …courriers, r » et « …communicatio » (coupés à 60 caractères).
+    longue = "Word : rédaction et mise en forme de documents, courriers, rapports et comptes rendus de réunion"
+    cv = lire_reponse(json.dumps(dict(REPONSE, competences=[longue, "Photoshop : conception graphique et supports de communication"])))
+    assert cv["competences"][1] == "Photoshop : conception graphique et supports de communication"
+    coupee = cv["competences"][0]
+    assert longue.startswith(coupee) and longue[len(coupee)] == " " and not coupee.endswith((",", ";", ":"))
+    tache = cv_module._texte("Assurait " + "l'approvisionnement " * 20, 60)
+    assert len(tache) <= 60 and tache.split()[-1] == "l'approvisionnement"
+
+
+def test_la_consigne_demande_des_competences_courtes():
+    assert "Compétences : intitulés courts" in CONSIGNE_CV
 
 
 @pytest.mark.parametrize("texte", ["", "pas de JSON ici", "[1, 2]", '{"nom": 5, "experiences": "x"}'])

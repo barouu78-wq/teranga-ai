@@ -177,9 +177,33 @@
     finally{bouton.disabled=false;bouton.textContent='Créer mon CV';bouton.removeAttribute('aria-busy');}
   }
 
+  // Réduction qui fait tenir le CV sur une page A4 (largeur et hauteur utiles avec les marges de 14 mm de @page) :
+  // mesurée sur une copie hors écran, à la largeur imprimée, sans descendre sous 0,8 (texte encore lisible). Plus long : deux pages.
+  const A4_LARGEUR=688,A4_HAUTEUR=1000;
+  function echelleUnePage(){
+    const boite=document.createElement('div');
+    boite.className='cv-resultat';
+    boite.setAttribute('aria-hidden','true');
+    boite.style.cssText='position:absolute;left:-10000px;top:0;width:'+A4_LARGEUR+'px;margin:0;visibility:hidden';
+    const copie=$('cvFeuille').cloneNode(true);
+    copie.removeAttribute('id');
+    boite.appendChild(copie);
+    document.body.appendChild(boite);
+    let echelle=1;
+    while(echelle>0.8&&boite.getBoundingClientRect().height>A4_HAUTEUR){
+      echelle=Math.round((echelle-0.05)*100)/100;
+      copie.style.zoom=echelle;
+    }
+    const tient=boite.getBoundingClientRect().height<=A4_HAUTEUR;
+    boite.remove();
+    return tient?echelle:1;
+  }
+
   function imprimer(classe){
+    const feuille=$('cvFeuille');
+    if(classe==='imprime-cv')feuille.style.setProperty('--cv-echelle',String(echelleUnePage()));
     document.body.classList.add(classe);
-    const fin=()=>{document.body.classList.remove(classe);window.removeEventListener('afterprint',fin);};
+    const fin=()=>{document.body.classList.remove(classe);feuille.style.removeProperty('--cv-echelle');window.removeEventListener('afterprint',fin);};
     window.addEventListener('afterprint',fin);
     window.print();
     setTimeout(fin,1000);  // navigateurs sans « afterprint »
