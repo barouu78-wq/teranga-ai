@@ -64,7 +64,8 @@ def test_site_loads_controller_and_opens_csp_only_when_enabled(monkeypatch):
     assert "data-ads-consent" in body and "Google Ads" in body
     csp = response.headers["Content-Security-Policy"]
     script_src = next(part for part in csp.split(";") if part.strip().startswith("script-src"))
-    assert "https://www.googletagmanager.com" in script_src.split()[1:]
+    # Comparaison exacte des jetons de la directive (pas une recherche de sous-chaîne, CodeQL).
+    assert set(GOOGLE_ADS_ORIGINS) <= set(script_src.split()[1:])
 
     off = _client(monkeypatch, "")
     response = off.get("/confidentialite")
