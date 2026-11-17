@@ -13,7 +13,7 @@ import re
 from html import escape
 
 from services.fichiers import bloc_claude, lire_fichier, texte_word_pour_la_question
-from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header
+from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header, social_meta
 
 MAX_POSTE = 120
 MAX_TEXTE = 6000  # récit du parcours, offre d'emploi
@@ -150,14 +150,28 @@ def lire_reponse(texte: str) -> dict:
     return cv
 
 
+# Titre et description pour Google (17 novembre 2026) : les mots que tapent les jeunes, « CV », « gratuit », « Sénégal ».
+TITRE_CV = "CV gratuit pour l’emploi au Sénégal · Teranga AI"
+DESCRIPTION_CV = ("Crée gratuitement un CV clair pour l’emploi au Sénégal, à partir de ton CV ou de ton parcours, avec une "
+                  "lettre de motivation. Teranga n’invente rien.")
+
+
 def page_cv(site_url: str) -> str:
     """Page /cv (téléphone d'abord). Le formulaire est rempli et envoyé par /static/cv.js ; le CV créé s'affiche dessous."""
+    url = site_url.rstrip("/") + "/cv"
+    donnees = json.dumps({
+        "@context": "https://schema.org", "@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url,
+        "description": DESCRIPTION_CV, "applicationCategory": "BusinessApplication", "inLanguage": "fr",
+        "isAccessibleForFree": True,
+    }, ensure_ascii=False).replace("</", "<\\/")
     return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
-<title>Mon CV · Teranga AI</title>
-<meta name="description" content="Crée un CV clair et soigné pour l’emploi au Sénégal, à partir de ton CV ou de ton parcours, et une lettre de motivation. Teranga n’invente rien.">
-<link rel="canonical" href="{escape(site_url.rstrip("/"))}/cv">
+<title>{escape(TITRE_CV)}</title>
+<meta name="description" content="{escape(DESCRIPTION_CV)}">
+<link rel="canonical" href="{escape(url)}">
+{social_meta(TITRE_CV, DESCRIPTION_CV, url, site_url)}
+<script type="application/ld+json">{donnees}</script>
 {HEAD_ASSETS}</head><body class="cv-page">
 {site_header("/cv")}
 <main class="cv-main">
