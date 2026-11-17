@@ -246,3 +246,16 @@ def test_l_iphone_ne_transforme_pas_le_telephone_et_l_e_mail_en_liens():
     # Capture du propriétaire (15 novembre 2026) : Safari soulignait le numéro et l'e-mail du CV comme des liens.
     html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
     assert '<meta name="format-detection" content="telephone=no,email=no,address=no">' in html
+
+
+def test_mon_cv_est_dans_le_plan_du_site_avec_les_mots_que_les_jeunes_cherchent():
+    # 17 novembre 2026 : /cv manquait au plan du site envoyé à Google, et son titre (« Mon CV · Teranga AI ») ne
+    # contenait ni « gratuit » ni « Sénégal ». Les règles communes des pages du plan (titre, description, canonique,
+    # aperçu de partage, JSON-LD) sont vérifiées par tests/test_seo_quality.py.
+    client = app_module.app.test_client()
+    plan = client.get("/sitemap.xml", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert "<loc>https://teranga-ai.fr/cv</loc>" in plan
+    page = client.get("/cv", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    titre = page.split("<title>", 1)[1].split("</title>", 1)[0]
+    assert "CV" in titre and "gratuit" in titre and "Sénégal" in titre
+    assert 'property="og:title"' in page and '"@type": "WebApplication"' in page
