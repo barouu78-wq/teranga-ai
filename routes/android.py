@@ -60,7 +60,7 @@ def render_download_page(site_url: str, play_public: bool = False) -> str:
         "Aide-nous avec ton compte Gmail, ça prend une minute :</p><ol>"
         f'<li><a class="cta primary" href="{escape(TESTERS_GROUP_URL)}" target="_blank" rel="noopener noreferrer">1. Rejoindre le groupe des testeurs</a></li>'
         f'<li><a class="cta" href="{escape(TESTING_OPT_IN_URL)}" target="_blank" rel="noopener noreferrer">2. Accepter le test et installer l\'appli</a></li>'
-        "</ol><p class=\"muted\">Garde l'appli installée au moins 14 jours et dis-nous ce qui ne va pas : c'est tout.</p></section>"
+        "</ol><p class=\"muted\">Reste inscrit au test (ne te désinscris pas) et garde l'appli installée au moins 14 jours d'affilée, puis dis-nous ce qui ne va pas.</p></section>"
     )
     ld = {
         "@context": "https://schema.org",
