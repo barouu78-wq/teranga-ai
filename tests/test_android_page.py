@@ -1,0 +1,30 @@
+import os
+
+os.environ.setdefault("OPENAI_API_KEY", "test-key")
+
+
+def test_download_page_offers_the_apk_and_announces_google_play(monkeypatch):
+    from app import app
+    from routes.android import APK_URL, PLAY_URL
+
+    monkeypatch.delenv("ANDROID_PLAY_PUBLIC", raising=False)
+    response = app.test_client().get("/telecharger")
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert f'href="{APK_URL}"' in html and "Télécharger l&#x27;APK" in html
+    assert "Bientôt sur Google Play" in html and PLAY_URL not in html
+
+
+def test_google_play_button_appears_once_the_app_is_public(monkeypatch):
+    from app import app
+    from routes.android import PLAY_URL
+
+    monkeypatch.setenv("ANDROID_PLAY_PUBLIC", "1")
+    html = app.test_client().get("/telecharger").get_data(as_text=True)
+    assert f'href="{PLAY_URL}"' in html and "Bientôt" not in html
+
+
+def test_download_page_is_in_the_sitemap():
+    from app import app
+
+    assert "/telecharger</loc>" in app.test_client().get("/sitemap.xml").get_data(as_text=True)
