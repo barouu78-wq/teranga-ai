@@ -40,3 +40,10 @@ def test_testers_section_links_the_group_and_the_play_opt_in(monkeypatch):
     assert html.index(TESTERS_GROUP_URL) < html.index(TESTING_OPT_IN_URL)
     monkeypatch.setenv("ANDROID_PLAY_PUBLIC", "1")
     assert "Deviens testeur" not in app.test_client().get("/telecharger").get_data(as_text=True)
+
+
+def test_home_page_links_to_the_android_download_page():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+    assert 'id="planCta" href="/telecharger"' in html
