@@ -1025,7 +1025,7 @@ function setLang(next){
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
   // Carte mise en avant : l'appli Android (téléchargement et test fermé Google Play).
   // Dans l'appli elle-même (TWA ou écran d'accueil), elle redevient « Planifier mon voyage ».
-  if($('planCtaTitle')){var inApp=matchMedia('(display-mode: standalone)').matches||document.referrer.indexOf('android-app://')===0;$('planCta').href=inApp?'/trip-planner':'/telecharger';$('planCtaTitle').textContent=inApp?(t.planTitle||t.journeyTravel):(t.appTitle||'Télécharger l’appli Android');$('planCtaHint').textContent=inApp?(t.planHint||t.journeyTravelHint):(t.appHint||'APK ou Google Play · deviens testeur');}
+  if($('planCtaTitle')){var inApp=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||document.referrer.indexOf('android-app://')===0;$('planCta').href=inApp?'/trip-planner':'/telecharger';$('planCtaTitle').textContent=inApp?(t.planTitle||t.journeyTravel):(t.appTitle||'Télécharger l’appli Android');$('planCtaHint').textContent=inApp?(t.planHint||t.journeyTravelHint):(t.appHint||'APK ou Google Play · deviens testeur');}
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   const tabs=document.querySelectorAll('#tabbar [data-tab]');
