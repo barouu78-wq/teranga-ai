@@ -20,6 +20,9 @@ from services.site_layout import HEAD_ASSETS, site_footer, site_header, social_m
 ANDROID_PACKAGE = "fr.teranga_ai"
 APK_URL = "https://github.com/barouu78-wq/teranga-ai/releases/latest/download/teranga-ai.apk"
 PLAY_URL = f"https://play.google.com/store/apps/details?id={ANDROID_PACKAGE}"
+# Test fermé Google Play : les testeurs sont les membres de ce Groupe Google (ouvert à tous).
+TESTERS_GROUP_URL = "https://groups.google.com/g/testeurs-teranga-ai"
+TESTING_OPT_IN_URL = f"https://play.google.com/apps/testing/{ANDROID_PACKAGE}"
 
 TITLE = "Télécharger l'appli Teranga AI pour Android | Teranga AI"
 DESCRIPTION = (
@@ -48,9 +51,17 @@ def render_download_page(site_url: str, play_public: bool = False) -> str:
         )
     else:
         play = (
-            '<p><span class="cta" aria-disabled="true">Bientôt sur Google Play</span></p>'
+            '<p><span class="cta" aria-disabled="true" style="background:transparent;color:inherit;opacity:.7">Bientôt sur Google Play</span></p>'
             '<p class="muted">Disponible après la validation de Google.</p>'
         )
+    testers = "" if play_public else (
+        '<section class="ctaBox"><h2>Deviens testeur de l\'appli</h2>'
+        "<p>Google demande que l'appli soit testée avant sa sortie sur le Play Store. "
+        "Aide-nous avec ton compte Gmail, ça prend une minute :</p><ol>"
+        f'<li><a class="cta primary" href="{escape(TESTERS_GROUP_URL)}" target="_blank" rel="noopener noreferrer">1. Rejoindre le groupe des testeurs</a></li>'
+        f'<li><a class="cta" href="{escape(TESTING_OPT_IN_URL)}" target="_blank" rel="noopener noreferrer">2. Accepter le test et installer l\'appli</a></li>'
+        "</ol><p class=\"muted\">Reste inscrit au test (ne te désinscris pas) et garde l'appli installée au moins 14 jours d'affilée, puis dis-nous ce qui ne va pas.</p></section>"
+    )
     ld = {
         "@context": "https://schema.org",
         "@type": "MobileApplication",
@@ -77,6 +88,7 @@ def render_download_page(site_url: str, play_public: bool = False) -> str:
 <p class="muted">Android 7 ou plus récent, environ 1 Mo. Signé par Google Play : les mises à jour du Play Store s'installent par-dessus.</p></div>
 <div class="card"><h2>Google Play</h2>{play}</div>
 </div>
+{testers}
 <section><h2>Installer l'APK en 3 étapes</h2><ol>{steps}</ol></section>
 <section><h2>Sur iPhone</h2>
 <p>Ouvre <a href="/">teranga-ai.fr</a> dans Safari, appuie sur Partager, puis « Sur l'écran d'accueil ».</p></section>

@@ -28,3 +28,15 @@ def test_download_page_is_in_the_sitemap():
     from app import app
 
     assert "/telecharger</loc>" in app.test_client().get("/sitemap.xml").get_data(as_text=True)
+
+
+def test_testers_section_links_the_group_and_the_play_opt_in(monkeypatch):
+    from app import app
+    from routes.android import TESTERS_GROUP_URL, TESTING_OPT_IN_URL
+
+    monkeypatch.delenv("ANDROID_PLAY_PUBLIC", raising=False)
+    html = app.test_client().get("/telecharger").get_data(as_text=True)
+    assert "Deviens testeur" in html
+    assert html.index(TESTERS_GROUP_URL) < html.index(TESTING_OPT_IN_URL)
+    monkeypatch.setenv("ANDROID_PLAY_PUBLIC", "1")
+    assert "Deviens testeur" not in app.test_client().get("/telecharger").get_data(as_text=True)
