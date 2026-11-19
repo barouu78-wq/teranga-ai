@@ -83,6 +83,9 @@ REPRISES = {
     # traduit et adapté au Sénégal dans cv-senegal. tailored-resume-generator (ComposioHQ) a été écarté : son exemple
     # invente des chiffres que le candidat n'a jamais donnés.
     "LICENCE-resumeskills.txt": ("Paramchoudhary/ResumeSkills", ("cv-senegal",)),
+    # 19 novembre 2026 (« installe ce skill », propriétaire) : reverse-engineer-anything de morluto/rea, texte seulement ;
+    # ni le serveur MCP REA ni le paquet npm rea-agents ne sont installés.
+    "LICENCE-rea.txt": ("morluto/rea", ("reverse-engineer-anything",)),
 }
 
 
@@ -169,3 +172,15 @@ def test_offres_emploi_fixe_les_regles_des_sources():
     for regle in ("accord écrit", "robots.txt", "annonce d'origine", "expirée", "hors du Sénégal", "Ne paie jamais",
                   "EmploiDakar", "AGENTS.md"):
         assert regle in texte, regle
+
+
+def test_reverse_engineer_anything_n_installe_rien_et_reste_sur_nos_applis():
+    """REA conseille `npx -y rea-agents@latest` et `rea setup` : dans ce projet, rien ne s'installe ni ne se lance sans
+    l'accord du propriétaire, et seules ses propres applis sont analysées (pas de copie de l'appli d'un autre)."""
+    texte = (SKILLS / "reverse-engineer-anything" / "SKILL.md").read_text(encoding="utf-8")
+    regle = texte.split("# REA", 1)[0]
+    for mot in ("accord écrit du propriétaire", "npx rea-agents", "rea setup", "fr.teranga_ai", "recopier", "AGENTS.md"):
+        assert mot in regle, mot
+    corps = texte.split("# REA", 1)[1]
+    avant_npx = corps.split("npx -y rea-agents", 1)[0]
+    assert "Projet Teranga AI" in avant_npx.rsplit("##", 1)[1]  # la section qui cite la commande rappelle la règle
