@@ -287,6 +287,9 @@ body.hote main h2{margin-top:26px}
 [data-modele="baobab"] .cv-pastille{background:linear-gradient(135deg,#a2462b 50%,#f4ead7 50%)}
 [data-modele="elegant"] .cv-pastille{background:linear-gradient(135deg,#1d2b4f 50%,#c9a24d 50%)}
 .cv-actions{display:flex;gap:10px;flex-wrap:wrap}
+a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.cv-partage{margin:16px 0;padding:14px 16px;border:1px solid var(--line-strong);border-radius:14px}
+.cv-partage p{margin:0 0 10px}
 .cv-liste ul{margin:0;padding-left:20px}
 .cv-liste li{margin:4px 0}
 /* La feuille reste « papier » dans les deux thèmes : c'est ce qui sera imprimé. Trois zones (en-tête, corps,

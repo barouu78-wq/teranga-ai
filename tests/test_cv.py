@@ -9,6 +9,7 @@ téléphone (stockage du navigateur).
 import base64
 import io
 import json
+import re
 import os
 import zipfile
 from types import SimpleNamespace
@@ -259,3 +260,21 @@ def test_mon_cv_est_dans_le_plan_du_site_avec_les_mots_que_les_jeunes_cherchent(
     titre = page.split("<title>", 1)[1].split("</title>", 1)[0]
     assert "CV" in titre and "gratuit" in titre and "Sénégal" in titre
     assert 'property="og:title"' in page and '"@type": "WebApplication"' in page
+
+
+def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_du_cv():
+    """Bouche-à-oreille : le message partagé ne contient que l'adresse de /cv (marquée ?ref=wa pour compter les arrivées)."""
+    from urllib.parse import parse_qs, unquote, urlparse
+
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    resultat = html[html.index('id="cvResultat"'):]
+    lien = re.search(r'<a [^>]*id="cvPartager"[^>]*>', resultat)
+    assert lien, "le bouton de partage doit être dans la section « Ton CV est prêt »"
+    balise = lien.group(0)
+    href = re.search(r'href="([^"]+)"', balise).group(1).replace("&amp;", "&")
+    adresse = urlparse(href)
+    assert (adresse.scheme, adresse.netloc) == ("https", "wa.me")
+    texte = unquote(parse_qs(adresse.query)["text"][0])
+    assert texte.endswith("https://teranga-ai.fr/cv?ref=wa") and "gratuit" in texte
+    assert 'target="_blank"' in balise and 'rel="noopener noreferrer"' in balise
+    assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]

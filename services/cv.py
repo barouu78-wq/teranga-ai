@@ -11,6 +11,7 @@ import json
 import re
 
 from html import escape
+from urllib.parse import quote
 
 from services.fichiers import bloc_claude, lire_fichier, texte_word_pour_la_question
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header, social_meta
@@ -154,11 +155,14 @@ def lire_reponse(texte: str) -> dict:
 TITRE_CV = "CV gratuit pour l’emploi au Sénégal · Teranga AI"
 DESCRIPTION_CV = ("Crée gratuitement un CV clair pour l’emploi au Sénégal, à partir de ton CV ou de ton parcours, avec une "
                   "lettre de motivation. Teranga n’invente rien.")
+# Bouche-à-oreille : seulement l'adresse de /cv, jamais le contenu du CV (?ref=wa compte les arrivées dans les journaux).
+PARTAGE_CV = "Je viens de faire mon CV gratuitement avec Teranga AI. Fais le tien ici : "
 
 
 def page_cv(site_url: str) -> str:
     """Page /cv (téléphone d'abord). Le formulaire est rempli et envoyé par /static/cv.js ; le CV créé s'affiche dessous."""
     url = site_url.rstrip("/") + "/cv"
+    partage = "https://wa.me/?text=" + quote(PARTAGE_CV + url + "?ref=wa", safe="")
     donnees = json.dumps({
         "@context": "https://schema.org", "@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url,
         "description": DESCRIPTION_CV, "applicationCategory": "BusinessApplication", "inLanguage": "fr",
@@ -215,6 +219,8 @@ def page_cv(site_url: str) -> str:
 <p class="cv-aide">Tu peux corriger le texte directement dans l’aperçu avant de l’enregistrer.</p>
 <div class="cv-actions"><button type="button" class="cv-bouton cv-principal" id="cvPdf">Télécharger en PDF</button>
 <button type="button" class="cv-bouton" id="cvRecommencer">Recommencer</button></div>
+<div class="cv-partage"><p>Un ami cherche aussi du travail&nbsp;? Envoie-lui Teranga&nbsp;: c’est gratuit.</p>
+<a class="cv-bouton" id="cvPartager" href="{escape(partage)}" target="_blank" rel="noopener noreferrer">Envoyer à un ami sur WhatsApp</a></div>
 <div id="cvVerifier" class="cv-liste" hidden><h3>À vérifier</h3><ul></ul></div>
 <div id="cvManque" class="cv-liste" hidden><h3>Ce que l’offre demande et que ton CV ne montre pas</h3><ul></ul></div>
 <div id="cvLettreBloc" hidden><h3>Lettre de motivation</h3><article id="cvLettre" class="cv-lettre" aria-label="Lettre de motivation"></article>
