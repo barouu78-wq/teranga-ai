@@ -28,7 +28,7 @@ fr:{
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',appTitle:'Télécharger l’appli Android',appHint:'APK ou Google Play · deviens testeur',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',appTitle:'Télécharger l’appli Android',appHint:'APK ou Google Play · deviens testeur',cvTitle:'Faire mon CV gratuit',cvHint:'Pour l’emploi au Sénégal · prêt en PDF',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes tes questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -52,7 +52,7 @@ en:{
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',appTitle:'Get the Android app',appHint:'APK or Google Play · become a tester',
+  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',appTitle:'Get the Android app',appHint:'APK or Google Play · become a tester',cvTitle:'Free CV builder (in French)',cvHint:'For jobs in Senegal · ready as a PDF',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
@@ -1026,6 +1026,7 @@ function setLang(next){
   // Carte mise en avant : l'appli Android (téléchargement et test fermé Google Play).
   // Dans l'appli elle-même (TWA ou écran d'accueil), elle redevient « Planifier mon voyage ».
   if($('planCtaTitle')){var inApp=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||document.referrer.indexOf('android-app://')===0;$('planCta').href=inApp?'/trip-planner':'/telecharger';$('planCtaTitle').textContent=inApp?(t.planTitle||t.journeyTravel):(t.appTitle||'Télécharger l’appli Android');$('planCtaHint').textContent=inApp?(t.planHint||t.journeyTravelHint):(t.appHint||'APK ou Google Play · deviens testeur');}
+  if($('cvCtaTitle')){$('cvCtaTitle').textContent=t.cvTitle||T.fr.cvTitle;$('cvCtaHint').textContent=t.cvHint||T.fr.cvHint;}
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   const tabs=document.querySelectorAll('#tabbar [data-tab]');

@@ -47,3 +47,10 @@ def test_home_page_links_to_the_android_download_page():
 
     html = app.test_client().get("/").get_data(as_text=True)
     assert 'id="planCta" href="/telecharger"' in html
+
+
+def test_home_links_to_the_cv_builder():
+    from app import app
+
+    html = app.test_client().get("/").get_data(as_text=True)
+    assert 'id="cvCta" href="/cv"' in html and "Faire mon CV gratuit" in html
