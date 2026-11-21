@@ -9,6 +9,7 @@ téléphone (stockage du navigateur).
 import base64
 import io
 import json
+import re
 import os
 import zipfile
 from types import SimpleNamespace
@@ -268,3 +269,21 @@ def test_la_licence_des_icones_lucide_est_livree_avec_le_site():
     licence = (racine / "static" / "LICENCE-lucide.txt").read_text(encoding="utf-8")
     assert "ISC License" in licence and "Lucide Icons and Contributors" in licence
     assert "Lucide" in (racine / "static" / "cv.js").read_text(encoding="utf-8")
+
+
+def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_du_cv():
+    """Bouche-à-oreille : le message partagé ne contient que l'adresse de /cv (marquée ?ref=wa pour compter les arrivées)."""
+    from urllib.parse import parse_qs, unquote, urlparse
+
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    resultat = html[html.index('id="cvResultat"'):]
+    lien = re.search(r'<a [^>]*id="cvPartager"[^>]*>', resultat)
+    assert lien, "le bouton de partage doit être dans la section « Ton CV est prêt »"
+    balise = lien.group(0)
+    href = re.search(r'href="([^"]+)"', balise).group(1).replace("&amp;", "&")
+    adresse = urlparse(href)
+    assert (adresse.scheme, adresse.netloc) == ("https", "wa.me")
+    texte = unquote(parse_qs(adresse.query)["text"][0])
+    assert texte.endswith("https://teranga-ai.fr/cv?ref=wa") and "gratuit" in texte
+    assert 'target="_blank"' in balise and 'rel="noopener noreferrer"' in balise
+    assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
