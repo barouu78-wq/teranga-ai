@@ -54,3 +54,13 @@ def test_home_links_to_the_cv_builder():
 
     html = app.test_client().get("/").get_data(as_text=True)
     assert 'id="cvCta" href="/cv"' in html and "Faire mon CV gratuit" in html
+
+
+def test_job_guide_button_leads_to_the_cv_builder():
+    from app import app
+
+    client = app.test_client()
+    emploi = client.get("/emploi-senegal").get_data(as_text=True)
+    assert '<a class="cta primary" href="/cv">Faire mon CV gratuit</a>' in emploi
+    # Les autres pages guides gardent leur bouton vers l'assistant.
+    assert 'href="/cv">Faire mon CV gratuit' not in client.get("/formation-senegal").get_data(as_text=True)

@@ -630,6 +630,9 @@ DIASPORA_QUESTIONS = (
 PARTNER_SLUGS = {"partenaires", "pour-les-entreprises", "media-kit", "presse"}
 DEFAULT_CTA = ('<div class="ctaBox"><strong>Une question précise ?</strong><p>Réponse courte, photo et carte quand le lieu '
                'est connu.</p><a class="cta primary" href="/">Ouvrir Teranga AI</a></div>')
+# Page Emploi (plan du 21 novembre 2026, tout sur le CV) : le bouton mène à l'outil de CV.
+CV_CTA = ('<div class="ctaBox"><strong>Votre CV, gratuit</strong><p>Envoyez votre CV ou racontez votre parcours : Teranga '
+          'en fait un CV clair, prêt en PDF, sans rien inventer.</p><a class="cta primary" href="/cv">Faire mon CV gratuit</a></div>')
 PARTNER_CTA = ('<div class="ctaBox"><strong>Devenir partenaire</strong><p>Présentez votre activité en une minute : nous '
                'vous recontactons par téléphone, WhatsApp ou e-mail.</p><div class="actions">'
                '<a class="cta primary" href="/offres-partenaires#demande">Demander un partenariat</a>'
@@ -794,7 +797,7 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         "site": site_url,
         "ld": ld_json,
         "related": related_html,
-        "cta": PARTNER_CTA if slug in PARTNER_SLUGS else DEFAULT_CTA,
+        "cta": PARTNER_CTA if slug in PARTNER_SLUGS else CV_CTA if slug == "emploi-senegal" else DEFAULT_CTA,
         "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],
