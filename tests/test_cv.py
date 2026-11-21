@@ -262,6 +262,15 @@ def test_mon_cv_est_dans_le_plan_du_site_avec_les_mots_que_les_jeunes_cherchent(
     assert 'property="og:title"' in page and '"@type": "WebApplication"' in page
 
 
+def test_la_licence_des_icones_lucide_est_livree_avec_le_site():
+    from pathlib import Path
+
+    racine = Path(__file__).resolve().parents[1]
+    licence = (racine / "static" / "LICENCE-lucide.txt").read_text(encoding="utf-8")
+    assert "ISC License" in licence and "Lucide Icons and Contributors" in licence
+    assert "Lucide" in (racine / "static" / "cv.js").read_text(encoding="utf-8")
+
+
 def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_du_cv():
     """Bouche-à-oreille : le message partagé ne contient que l'adresse de /cv (marquée ?ref=wa pour compter les arrivées)."""
     from urllib.parse import parse_qs, unquote, urlparse

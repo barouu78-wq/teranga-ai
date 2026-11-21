@@ -204,3 +204,29 @@ def test_un_cv_court_n_est_pas_reduit(page, base_url):
     page.get_by_role("heading", name="Ton CV est prêt").wait_for()
     page.get_by_role("button", name="Télécharger en PDF").click()
     assert page.evaluate("window.__echelle") in ("", "1")
+
+
+def test_les_contacts_et_les_rubriques_portent_une_icone_decorative(page, base_url):
+    # « Go icônes » du 18 novembre 2026 : icônes Lucide (licence ISC) dans l'en-tête et devant chaque rubrique,
+    # dessinées par cv.js (aucun fichier ni script d'un autre site), ignorées par les lecteurs d'écran.
+    page.route(f"{base_url}/api/cv", lambda r: r.fulfill(
+        body=json.dumps({"cv": dict(CV, telephone="77 000 00 00", email="awa@exemple.sn")}), content_type="application/json"))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/cv")
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    feuille = page.locator("#cvFeuille")
+    contacts = feuille.locator(".cv-contact li")
+    assert contacts.count() == 3
+    for i, icone in enumerate(("ville", "telephone", "email")):
+        assert contacts.nth(i).locator(f"svg.cv-ico[data-icone='{icone}'][aria-hidden='true']").count() == 1
+    rubriques = feuille.locator(".cv-rubrique")
+    assert rubriques.count() >= 4
+    for i in range(rubriques.count()):
+        assert rubriques.nth(i).locator("svg.cv-ico[aria-hidden='true']").count() == 1, rubriques.nth(i).inner_text()
+    # Le texte reste lisible et copiable tel quel : l'icône n'ajoute aucun caractère.
+    assert contacts.nth(1).inner_text().strip() == "77 000 00 00"
+    page.get_by_role("button", name="Élégant", exact=True).click()
+    assert feuille.locator(".cv-rubrique svg.cv-ico").count() == rubriques.count()
