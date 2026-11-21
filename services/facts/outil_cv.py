@@ -7,12 +7,13 @@ interdit d'ajouter diplôme, expérience ou compétence. Ce n'est pas un fait ex
 en direct (services/web_policy.py).
 
 Déclencheurs : « cv » seul est aussi la puissance d'une voiture (« 7 CV », « 110 cv », « CV fiscaux ») ; un nombre juste
-avant ou « fiscaux » juste après l'écartent. « résumé » (anglais « resume ») veut dire autre chose en français : écarté.
+avant ou « fiscaux » juste après l'écartent. « curriculum » seul est aussi le programme scolaire (relecture Codex) :
+seul « curriculum vitae » compte. « résumé » (anglais « resume ») veut dire autre chose en français : écarté.
 """
 
 TOPICS = (
     ("outil_cv",
-     r"\bcurriculum\b|\blettres? de motivation\b|\bcover letters?\b|(?<!\d)(?<!\d )\bcvs?\b(?! fiscaux)",
+     r"\bcurriculum vitae\b|\blettres? de motivation\b|\bcover letters?\b|(?<!\d)(?<!\d )\bcvs?\b(?! fiscaux)",
      ("Outil gratuit « Mon CV » de Teranga AI (page en français) : https://teranga-ai.fr/cv. On y envoie son ancien "
       "CV (PDF, Word ou photo, 2 Mo au plus) ou on raconte son parcours, on indique le poste visé et, si on veut, le "
       "texte d'une offre d'emploi. Teranga crée un CV clair, au choix parmi 9 modèles, à enregistrer en PDF, et une "

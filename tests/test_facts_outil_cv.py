@@ -44,6 +44,8 @@ def test_une_demande_de_cv_recoit_le_lien_de_l_outil(question):
         "Quel est le salaire minimum au Sénégal ?",
         "Je veux un résumé de l'histoire de Gorée",
         "Lettre de réclamation à la Senelec",
+        "Comment fonctionne le curriculum scolaire au Sénégal ?",
+        "Le nouveau curriculum de l'école primaire",
     ],
 )
 def test_une_question_voisine_n_ajoute_pas_l_outil(question):
