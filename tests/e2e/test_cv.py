@@ -230,3 +230,30 @@ def test_les_contacts_et_les_rubriques_portent_une_icone_decorative(page, base_u
     assert contacts.nth(1).inner_text().strip() == "77 000 00 00"
     page.get_by_role("button", name="Élégant", exact=True).click()
     assert feuille.locator(".cv-rubrique svg.cv-ico").count() == rubriques.count()
+
+
+def test_l_exemple_de_cv_fini_mene_au_formulaire_et_s_efface_quand_mon_cv_est_pret(page, base_url):
+    from playwright.sync_api import expect
+
+    envois = []
+    ouvrir(page, base_url, envois)
+    exemple = page.locator("#cvExemple")
+    assert exemple.get_by_text("personne fictive").is_visible()
+    feuille = page.locator("#cvExempleFeuille")
+    feuille.get_by_text("Assistante comptable").wait_for()
+    # Même rendu que le vrai CV (icônes comprises), mais rien à modifier : ce n'est pas le CV de la personne.
+    assert feuille.locator("svg.cv-ico").count() >= 5
+    assert feuille.locator("[contenteditable]").count() == 0
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    page.get_by_role("link", name="Faire le mien").click()
+    expect(page.locator("#cvForm")).to_be_in_viewport()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert exemple.is_hidden()
+    page.reload()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert exemple.is_hidden()
+    page.get_by_role("button", name="Recommencer").click()
+    assert exemple.is_visible()

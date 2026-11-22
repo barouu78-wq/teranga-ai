@@ -181,6 +181,12 @@ def page_cv(site_url: str) -> str:
 <main class="cv-main">
 <section class="cv-hero"><h1>Ton CV, prêt pour l’emploi au Sénégal</h1>
 <p>Un CV clair et soigné en quelques minutes. Teranga met en valeur ce que tu as vraiment fait&nbsp;: il n’invente rien.</p></section>
+<section class="cv-exemple" id="cvExemple" aria-labelledby="cvExempleTitre">
+<h2 id="cvExempleTitre">Exemple de CV fait avec Teranga</h2>
+<div class="cv-exemple-cadre"><article id="cvExempleFeuille" class="cv-feuille teranga" aria-label="Exemple de CV"></article></div>
+<p class="cv-aide">Awa est une personne fictive. Ton CV reprend seulement ce que tu donnes, dans le modèle de ton choix.</p>
+<a class="cv-bouton cv-principal" href="#cvForm">Faire le mien</a>
+</section>
 <form id="cvForm" class="cv-form" novalidate>
 <fieldset class="cv-choix"><legend>Ton point de départ</legend>
 <label class="cv-option"><input type="radio" name="depart" value="fichier" checked><span><strong>J’ai déjà un CV</strong><small>PDF, Word ou photo, 2 Mo au plus.</small></span></label>

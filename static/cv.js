@@ -57,7 +57,7 @@
     if(e.contentEditable!=='plaintext-only')e.contentEditable='true';
     return e;
   }
-  function champ(tag,cls,valeur,chemin){return modifiable(el(tag,cls,valeur||''),chemin);}
+  function champModifiable(tag,cls,valeur,chemin){return modifiable(el(tag,cls,valeur||''),chemin);}
   // Icônes Lucide v1.75.0 (https://lucide.dev, licence ISC : static/LICENCE-lucide.txt), recopiées ici : aucun fichier
   // ni script d'un autre site. Décoratives (aria-hidden), elles prennent la couleur du texte de chaque modèle.
   const ICONES={
@@ -84,13 +84,27 @@
     s.appendChild(h);feuille.appendChild(s);return s;
   }
 
+  // Exemple du haut de page : une personne fictive (dite comme telle sur la page), jamais le CV de quelqu'un.
+  const EXEMPLE={
+    nom:'Awa Ndiaye',titre:'Assistante comptable',ville:'Dakar',telephone:'77 000 00 00',email:'awa.ndiaye@exemple.sn',
+    profil:'Titulaire d’un BTS comptabilité et gestion. Deux stages en cabinet : saisie, rapprochements bancaires et classement des pièces. Utilise Sage et Excel.',
+    experiences:[
+      {poste:'Stagiaire comptable',employeur:'Cabinet comptable',lieu:'Dakar',dates:'Mars – août 2025',
+       taches:['Saisie des factures fournisseurs dans Sage','Préparation des rapprochements bancaires du mois','Classement et archivage des pièces comptables']},
+      {poste:'Vendeuse (job d’été)',employeur:'Boutique de quartier',lieu:'Dakar',dates:'Été 2023',taches:['Tenue de la caisse','Accueil et conseil des clients']}],
+    formations:[{diplome:'BTS Comptabilité et gestion',etablissement:'Institut de formation',dates:'2025'},
+                {diplome:'Baccalauréat G',etablissement:'Lycée',dates:'2022'}],
+    competences:['Sage','Excel : tableaux et formules','Saisie comptable','Rapprochement bancaire'],
+    langues:['Français','Wolof','Anglais (notions)'],
+  };
   function initiales(nom){
     return String(nom||'').split(/\s+/).filter(Boolean).slice(0,2).map(m=>m[0].toUpperCase()).join('');
   }
   // Trois zones : en-tête, corps (profil, expérience, formation) et côté (compétences, langues). Chaque modèle les
   // place à sa façon (CSS) : une colonne pour Sobre, deux colonnes sur la feuille A4 pour Moderne et Teranga.
-  function rendre(){
-    const f=$('cvFeuille');
+  // dessiner() sert au vrai CV (modifiable) et à l'exemple du haut de page (lecture seule).
+  function dessiner(f,cv,modele,modifier){
+    const champ=(tag,cls,valeur,chemin)=>modifier?champModifiable(tag,cls,valeur,chemin):el(tag,cls,valeur||'');
     f.replaceChildren();
     f.className='cv-feuille '+modele;
     const tete=el('header','cv-tete'),corps=el('div','cv-corps'),cote=el('div','cv-cote');
@@ -139,12 +153,15 @@
     if(cv.langues&&cv.langues.length)section(cote,'Langues','langues').appendChild(champ('p','cv-texte',cv.langues.join(', '),'langues.texte'));
     f.append(tete,corps);
     if(cote.childNodes.length)f.appendChild(cote);
+  }
+  function rendre(){
+    dessiner($('cvFeuille'),cv,modele,true);
     liste('cvVerifier',cv.a_verifier);
     liste('cvManque',cv.manque);
     const alerte=$('cvAlerte');alerte.textContent=cv.alerte||'';alerte.hidden=!cv.alerte;
     const lettre=$('cvLettre');lettre.replaceChildren();
     $('cvLettreBloc').hidden=!cv.lettre;
-    if(cv.lettre)lettre.appendChild(champ('div','cv-lettre-texte',cv.lettre,'lettre'));
+    if(cv.lettre)lettre.appendChild(champModifiable('div','cv-lettre-texte',cv.lettre,'lettre'));
     document.querySelectorAll('.cv-modele').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modele===modele)));
   }
   function liste(id,valeurs){
@@ -169,7 +186,7 @@
   }
 
   function afficher(){
-    $('cvForm').hidden=true;
+    $('cvForm').hidden=true;$('cvExemple').hidden=true;
     $('cvResultat').hidden=false;
     rendre();
     const titre=$('cvResultatTitre');titre.tabIndex=-1;titre.focus();
@@ -260,11 +277,12 @@
   $('cvLettrePdf').addEventListener('click',()=>imprimer('imprime-lettre'));
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
-    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvForm').reset();
+    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvForm').reset();
     $('cvBlocFichier').hidden=false;$('cvBlocParcours').hidden=true;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });
 
+  dessiner($('cvExempleFeuille'),EXEMPLE,'teranga',false);
   // Un CV déjà créé sur ce téléphone revient tel quel.
   const garde=relire();
   if(garde){cv=garde.cv;modele=MODELES.includes(garde.modele)?garde.modele:'sobre';afficher();}
