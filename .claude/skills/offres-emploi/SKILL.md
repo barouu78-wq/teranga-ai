@@ -9,6 +9,15 @@ Décision du propriétaire du 15 novembre 2026 : Teranga Emploi s'appuie sur les
 sénégalais, pour aider les jeunes à trouver du travail. Les règles d'`AGENTS.md` priment, d'abord « Exactitude avant
 tout ». Pour le CV et la lettre de motivation, voir le skill `cv-senegal`.
 
+## Décision du 22 novembre 2026 : des liens, pas d'offres recopiées
+
+Le propriétaire : « on met juste leur lien », l'offre s'ouvre sur le site qui la publie. La page `/offres-emploi`
+(`services/offres_emploi.py`) renvoie vers la page d'offres de sites vérifiés à la main, sans lire ni recopier leurs
+offres : ce simple lien ne demande pas d'accord. Règles qui restent : aucun site présenté comme partenaire, le lien
+respecte les conditions d'utilisation du site (Emploi Dakar : page d'accueil seulement, liens profonds interdits),
+chaque site est rouvert avant d'être ajouté (offres récentes, rien de payant pour postuler), retrait sur simple
+demande. Afficher les offres une par une sur Teranga reste soumis aux règles ci-dessous.
+
 ## Règles
 
 1. **Aucune source affichée sans accord écrit du site.** La date de l'accord est notée avec la source (comme

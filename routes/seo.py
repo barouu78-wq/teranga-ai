@@ -124,6 +124,7 @@ def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
             f"<url><loc>{site_url}/telecharger</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>"
             f"<url><loc>{site_url}/calendrier-fetes-senegal</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
             f"<url><loc>{site_url}/cv</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>"
+            f"<url><loc>{site_url}/offres-emploi</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>"
             + "".join(
                 f"<url><loc>{site_url}/{slug}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
                 for slug in SEO_PAGES
