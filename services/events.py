@@ -64,11 +64,30 @@ def french_date(day: _dt.date) -> str:
     return f"{day.day} {_MONTHS[day.month - 1]} {day.year}"
 
 
+def today_in_dakar() -> _dt.date:
+    """Date du jour à Dakar : heure universelle toute l'année (pas d'heure d'été), quel que soit le serveur."""
+    return _dt.datetime.now(_dt.timezone.utc).date()
+
+
+_DATE, _DATETIME = _dt.date, _dt.datetime  # gardés : un test peut remplacer _dt pour simuler l'horloge
+
+
+def _is_day(value: object) -> bool:
+    return isinstance(value, _DATE) and not isinstance(value, _DATETIME)
+
+
+def _valid_dates(start: object, end: object) -> bool:
+    """Une ligne mal saisie (date absente ou en texte, fin avant le début) n'est jamais affichée."""
+    return _is_day(start) and (end is None or (_is_day(end) and end >= start))
+
+
 def upcoming_events(today: _dt.date | None = None, limit: int | None = None) -> list[dict]:
-    """Événements en cours ou à venir, du plus proche au plus lointain."""
-    today = today or _dt.date.today()
+    """Événements en cours ou à venir, du plus proche au plus lointain. Un événement terminé (sa date de fin, ou
+    son unique jour, est passée) est retiré ; une ligne aux dates invalides aussi."""
+    today = today or today_in_dakar()
     items = []
-    for start, end, name, place, kind, confirmed, tips in sorted(EVENTS, key=lambda e: e[0]):
+    for start, end, name, place, kind, confirmed, tips in sorted(
+            (e for e in EVENTS if _valid_dates(e[0], e[1])), key=lambda e: e[0]):
         if (end or start) < today:
             continue
         items.append({
@@ -126,3 +145,12 @@ def events_context(today: _dt.date | None = None, query: str = "") -> str:
         status = "confirmée" if event["confirmed"] else "estimée, à confirmer"
         lines.append(f"- {event['name']} ({event['place']}) : {when} [{status}]. {event['tips']}")
     return "\n".join(lines)
+
+
+def event_is_over(name_prefix: str, today: _dt.date | None = None) -> bool:
+    """L'événement dont le nom commence ainsi est-il terminé ? Faux s'il est introuvable ou mal daté."""
+    today = today or today_in_dakar()
+    for start, end, name, *_rest in EVENTS:
+        if str(name).startswith(name_prefix) and _valid_dates(start, end):
+            return (end or start) < today
+    return False
