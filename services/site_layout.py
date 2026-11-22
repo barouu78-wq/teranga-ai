@@ -70,8 +70,8 @@ _CTA = {"fr": "Poser une question", "en": "Ask Teranga AI"}
 # Lien « Aller au contenu » (règles d'interface de Vercel) : il saute l'en-tête et la navigation.
 _SKIP = {"fr": "Aller au contenu", "en": "Skip to content"}
 _FOOTER = {
-    "fr": (("/cv", "Mon CV"), ("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/calendrier-fetes-senegal", "Fêtes"), ("/urgences", "Urgences"), ("/telecharger", "Appli Android"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/confidentialite", "Confidentialité")),
-    "en": (("/cv", "CV builder (in French)"), ("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/calendrier-fetes-senegal", "Festivals"), ("/urgences", "Emergency"), ("/telecharger", "Android app (in French)"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/privacy", "Privacy")),
+    "fr": (("/cv", "Mon CV"), ("/a-propos", "À propos"), ("/pour-les-entreprises", "Entreprises"), ("/offres-partenaires", "Devenir partenaire"), ("/calendrier-fetes-senegal", "Fêtes"), ("/urgences", "Urgences"), ("/telecharger", "Appli Android"), ("/presse", "Presse"), ("/media-kit", "Kit média"), ("/avis", "Donner mon avis"), ("/confidentialite", "Confidentialité")),
+    "en": (("/cv", "CV builder (in French)"), ("/a-propos", "About"), ("/pour-les-entreprises", "Business"), ("/offres-partenaires", "Become a partner"), ("/calendrier-fetes-senegal", "Festivals"), ("/urgences", "Emergency"), ("/telecharger", "Android app (in French)"), ("/presse", "Press"), ("/media-kit", "Media kit"), ("/avis", "Feedback (in French)"), ("/privacy", "Privacy")),
 }
 
 

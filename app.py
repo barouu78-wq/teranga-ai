@@ -32,6 +32,8 @@ from routes.exchange_rates import register_exchange_rates_route
 from routes.youth_projects import register_youth_project_route
 from routes.legal import register_legal_routes
 from routes.monetization import register_monetization_routes
+from routes.avis import AVIS_KEY, register_avis_routes
+from services.partner_requests import PartnerRequests
 from routes.coverage import register_coverage_routes
 from services.coverage_log import CoverageLog
 from routes.emergency import register_emergency_routes
@@ -647,6 +649,7 @@ GUARDED_LIMITS = {
     "widget_count": (6, 60),
     "visit_count": (6, 60),
     "partner_request": (3, 10),
+    "avis": (3, 10),
     # Mon CV (Teranga Emploi) : un appel à Claude par CV, avec parfois un PDF de plusieurs pages.
     "cv": (int(os.getenv("CV_RATE_LIMIT", "3")), int(os.getenv("CV_HOURLY_LIMIT", "12"))),
 }
@@ -953,12 +956,15 @@ register_exchange_rates_route(app, {
     "fetch_bceao_rates": fetch_bceao_rates,
 })
 
+# Avis des utilisateurs (/avis) : gardés comme les demandes de partenariat, lus dans /stats-partenaires.
+AVIS = PartnerRequests(redis_client, app.logger, key=AVIS_KEY)
 register_legal_routes(app, {"require_json_post": require_json_post, "rate_guard": rate_guard, "sanitize_text": sanitize_text})
 register_monetization_routes(
     app, redis_client=redis_client, rate_guard=rate_guard,
     known_sources=[p.get("id") for p in SENEGAL_KNOWLEDGE.get("places", []) if isinstance(p, dict)],
-    require_json_post=require_json_post, site_url=SITE_URL,
+    require_json_post=require_json_post, site_url=SITE_URL, avis=AVIS,
 )
+register_avis_routes(app, AVIS, rate_guard=rate_guard, require_json_post=require_json_post)
 # Journal des lacunes : compteurs anonymes par jour et par thème, jamais le texte des questions.
 COVERAGE_LOG = CoverageLog(redis_client, logger=app.logger, places=SENEGAL_KNOWLEDGE.get("places", []))
 register_coverage_routes(app, COVERAGE_LOG, rate_guard=rate_guard)
