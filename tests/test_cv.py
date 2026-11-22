@@ -324,3 +324,19 @@ def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(cla
     assert invalide["route"] == "cv" and invalide["statut"] == "invalide" and invalide["fournisseur_ms"] == "-"
     texte = "".join(handler.lines)
     assert "Comptable" not in texte and "BTS" not in texte and "Awa" not in texte
+
+
+def test_la_page_repond_aux_questions_que_les_gens_tapent_sur_google():
+    """Recherches vues dans la campagne Google Ads CV (22 novembre 2026) : « comment faire un cv », « exemple de cv pour
+    demande d'emploi ». Les réponses ne disent que ce que fait la page et les règles du skill cv-senegal."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvFaqTitre"')
+    faq = html[debut:html.index("</section>", debut)]
+    for question in ("Comment faire un CV pour une demande d’emploi ?", "Je n’ai pas d’expérience : que mettre dans mon CV ?",
+                     "Quel modèle de CV choisir ?", "C’est gratuit ? Mon CV est-il gardé ?", "Où envoyer mon CV ensuite ?"):
+        assert f"<h3>{question}</h3>" in faq, question
+    assert 'href="/offres-emploi"' in faq and "Teranga ne les garde pas" in faq
+    donnees = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+    (faq_ld,) = [n for n in donnees["@graph"] if n["@type"] == "FAQPage"]
+    assert len(faq_ld["mainEntity"]) == 5
+    assert all("<" not in q["acceptedAnswer"]["text"] for q in faq_ld["mainEntity"])  # texte seul, sans balise

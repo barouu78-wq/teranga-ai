@@ -159,15 +159,42 @@ DESCRIPTION_CV = ("Crée gratuitement un CV clair pour l’emploi au Sénégal, 
 PARTAGE_CV = "Je viens de faire mon CV gratuitement avec Teranga AI. Fais le tien ici : "
 
 
+# Questions fréquentes (recherches vues dans la campagne Google Ads CV, 22 novembre 2026) : seulement ce que fait la
+# page et les règles du skill cv-senegal, rien d'inventé. Une réponse peut contenir un lien du site (texte seul en JSON-LD).
+FAQ_CV = (
+    ("Comment faire un CV pour une demande d’emploi ?",
+     "Une page, des titres simples (Profil, Expérience, Formation, Compétences, Langues), du plus récent au plus ancien, "
+     "et en haut ta ville, ton téléphone et ton e-mail. Le profil et l’ordre des expériences s’adaptent au poste visé. "
+     "Ici, Teranga le met en page à partir de ton ancien CV ou du récit de ton parcours."),
+    ("Je n’ai pas d’expérience : que mettre dans mon CV ?",
+     "Les stages, l’apprentissage, le bénévolat, les associations, les petits boulots, l’aide au commerce familial, les "
+     "projets d’études, les outils que tu maîtrises et le permis. La formation passe alors en premier. En haut de la "
+     "page, choisis le départ sans CV et raconte ton parcours : Teranga n’ajoute rien que tu n’as pas fait."),
+    ("Quel modèle de CV choisir ?",
+     "Pour une candidature sur un site d’emploi : Sobre, Classique ou Minimal, car certains logiciels de tri lisent mal "
+     "les colonnes et les bandeaux de couleur. Pour un envoi par e-mail, sur papier ou en main propre, les autres "
+     "modèles conviennent aussi."),
+    ("C’est gratuit ? Mon CV est-il gardé ?",
+     "C’est gratuit. Ton CV et l’offre sont envoyés à l’IA (Claude, d’Anthropic) seulement pour créer ton CV : Teranga "
+     "ne les garde pas. Le CV créé reste sur ton téléphone."),
+    ("Où envoyer mon CV ensuite ?",
+     'Sur les sites d’offres d’emploi au Sénégal réunis par Teranga : <a href="/offres-emploi">voir les offres '
+     "d’emploi</a>. Une vraie offre ne demande jamais d’argent."),
+)
+
+
 def page_cv(site_url: str) -> str:
     """Page /cv (téléphone d'abord). Le formulaire est rempli et envoyé par /static/cv.js ; le CV créé s'affiche dessous."""
     url = site_url.rstrip("/") + "/cv"
     partage = "https://wa.me/?text=" + quote(PARTAGE_CV + url + "?ref=wa", safe="")
-    donnees = json.dumps({
-        "@context": "https://schema.org", "@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url,
-        "description": DESCRIPTION_CV, "applicationCategory": "BusinessApplication", "inLanguage": "fr",
-        "isAccessibleForFree": True,
-    }, ensure_ascii=False).replace("</", "<\\/")
+    questions = [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": re.sub(r"<[^>]+>", "", r)}}
+                 for q, r in FAQ_CV]
+    donnees = json.dumps({"@context": "https://schema.org", "@graph": [
+        {"@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url, "description": DESCRIPTION_CV,
+         "applicationCategory": "BusinessApplication", "inLanguage": "fr", "isAccessibleForFree": True},
+        {"@type": "FAQPage", "mainEntity": questions},
+    ]}, ensure_ascii=False).replace("</", "<\\/")
+    faq = "".join(f"<div class=\"faq\"><h3>{escape(q)}</h3><p>{r}</p></div>" for q, r in FAQ_CV)
     return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -235,6 +262,7 @@ def page_cv(site_url: str) -> str:
 <button type="button" class="cv-bouton" id="cvLettrePdf">Télécharger la lettre en PDF</button></div>
 <p class="cv-note">Relis tout avant d’envoyer. Teranga n’ajoute ni diplôme, ni expérience, ni compétence que tu n’as pas donnés.</p>
 </section>
+<section class="cv-faq" aria-labelledby="cvFaqTitre"><h2 id="cvFaqTitre">Questions fréquentes</h2>{faq}</section>
 </main>
 {site_footer("fr")}
 <script src="{asset_url("cv.js")}" defer></script>
