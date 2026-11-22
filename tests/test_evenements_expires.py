@@ -9,6 +9,7 @@ le voyait encore. La carte vit maintenant dans un <template>, ajouté à la page
 
 import datetime as dt
 import json
+from html.parser import HTMLParser
 import re
 import shutil
 import subprocess
@@ -24,9 +25,31 @@ ROOT = Path(__file__).resolve().parents[1]
 THEME_JS = ROOT / "static" / "theme.js"
 
 
+class _Visible(HTMLParser):
+    """Texte de la page hors <style>, <script> et <template> (contenu inerte, jamais affiché tel quel). Lecteur
+    HTML de la bibliothèque standard plutôt qu'une expression régulière, qui rate « </script > » (CodeQL)."""
+
+    HIDDEN = {"style", "script", "template"}
+
+    def __init__(self):
+        super().__init__()
+        self.depth, self.parts = 0, []
+
+    def handle_starttag(self, tag, attrs):
+        self.depth += tag in self.HIDDEN
+
+    def handle_endtag(self, tag):
+        self.depth -= tag in self.HIDDEN and self.depth > 0
+
+    def handle_data(self, data):
+        if not self.depth:
+            self.parts.append(data)
+
+
 def _texte_visible(html):
-    """Texte de la page hors <style>, <script> et <template> (contenu inerte, jamais affiché tel quel)."""
-    return re.sub(r"<style.*?</style>|<script.*?</script>|<template.*?</template>", "", html, flags=re.S)
+    parser = _Visible()
+    parser.feed(html)
+    return " ".join(parser.parts)
 
 
 def test_l_accueil_n_envoie_plus_le_texte_des_jeux():
