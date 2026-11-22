@@ -35,7 +35,7 @@ def test_la_page_renvoie_vers_chaque_site_sans_recopier_d_offre():
 
 def test_emploi_dakar_n_a_que_sa_page_d_accueil():
     # Conditions d'utilisation d'emploidakar.com (/conditions-generales-dutilisation-cgu/) : liens profonds interdits.
-    (dakar,) = [s for s in SITES_EMPLOI if "emploidakar.com" in s["url"]]
+    (dakar,) = [s for s in SITES_EMPLOI if s["nom"] == "Emploi Dakar"]
     assert dakar["url"] == "https://www.emploidakar.com/"
 
 
