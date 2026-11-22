@@ -82,6 +82,7 @@ un contrôle qui n'a pas tourné.
 | `revue-interface` | « vérifie l'accessibilité », après un changement visible : relire une page (accessibilité, focus, formulaires, mobile, thème sombre) avec des règles figées, adaptées au français |
 | `cv-senegal` | CV ou lettre de motivation pour un emploi au Sénégal, et consigne de l'IA pour « Adapter mon CV » : mettre en valeur sans rien inventer |
 | `offres-emploi` | avant d'ajouter ou d'activer une source d'offres d'emploi : accord écrit du site, robots.txt, lien vers l'annonce d'origine, offres expirées et arnaques retirées |
+| `reverse-engineer-anything` | analyser sans code source une appli dont le propriétaire a les droits (APK `fr.teranga_ai`, site) ; texte seulement, REA n'est ni installé ni lancé sans son accord |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
@@ -89,7 +90,7 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 `.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
 seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
 `.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée), et `cv-senegal` est adapté de `resume-tailor`
-(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`) ; les règles de ce fichier priment sur les leurs.
+(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement) ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
