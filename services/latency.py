@@ -41,7 +41,8 @@ CHAT_FIELDS = (
 VOICE_FIELDS = ("total_ms", "fournisseur_ms", "modele", "statut")
 # /tts envoie le son en flux : premier_mot_ms y est le premier octet de son envoyé.
 TTS_FIELDS = ("total_ms", "premier_mot_ms", "fournisseur_ms", "modele", "statut")
-FIELDS_BY_ROUTE: dict[str, tuple[str, ...]] = {"chat": CHAT_FIELDS, "stt": VOICE_FIELDS, "tts": TTS_FIELDS}
+# /api/cv (Mon CV) : un seul appel à Claude, mesuré comme la transcription.
+FIELDS_BY_ROUTE: dict[str, tuple[str, ...]] = {"chat": CHAT_FIELDS, "stt": VOICE_FIELDS, "tts": TTS_FIELDS, "cv": VOICE_FIELDS}
 
 MODES = frozenset({"flux", "json"})
 # ok : réponse normale · secours : réponse de repli (IA en panne) · erreur : échec côté serveur ou fournisseur ·

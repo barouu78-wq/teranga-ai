@@ -287,3 +287,28 @@ def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_
     assert texte.endswith("https://teranga-ai.fr/cv?ref=wa") and "gratuit" in texte
     assert 'target="_blank"' in balise and 'rel="noopener noreferrer"' in balise
     assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
+
+
+def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(claude, monkeypatch):
+    """Combien de temps attend la personne ? Une ligne « latence route=cv » par demande (services/latency.py) :
+    des nombres et des étiquettes fixes, jamais le parcours, le poste ni le CV."""
+    import latence_harness as h
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")  # le banc de latence retire la clé quand il est importé
+    handler = h.capture_lines()
+    try:
+        for corps, ip, code in (({"parcours": "BTS comptabilité en 2023, deux stages.", "poste": "Comptable"}, "203.0.113.90", 200),
+                                ({"parcours": ""}, "203.0.113.91", 400)):
+            reponse = post(corps, ip)
+            assert reponse.status_code == code
+            reponse.get_data()
+            reponse.close()  # la ligne part à la fermeture de la réponse, comme pour le chat
+    finally:
+        h.release_lines(handler)
+    assert len(handler.lines) == 2, handler.lines
+    ok, invalide = (h.fields(ligne) for ligne in handler.lines)
+    assert ok["route"] == "cv" and ok["statut"] == "ok" and ok["modele"] != "-"
+    assert float(ok["total_ms"]) >= float(ok["fournisseur_ms"]) >= 0
+    assert invalide["route"] == "cv" and invalide["statut"] == "invalide" and invalide["fournisseur_ms"] == "-"
+    texte = "".join(handler.lines)
+    assert "Comptable" not in texte and "BTS" not in texte and "Awa" not in texte
