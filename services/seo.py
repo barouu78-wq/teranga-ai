@@ -97,19 +97,37 @@ SEO_PAGES = {
         ],
         "related": [("specialites-senegal", "Spécialités"), ("visiter-goree", "Gorée"), ("meteo-dakar", "Météo")],
     },
+    # Contenu tiré des fiches « dishes » de data/senegal_knowledge.json (déjà sourcées) ; aucune donnée nouvelle.
     "specialites-senegal": {
-        "title": "Spécialités du Sénégal : ceebu jen, yassa, mafé | Teranga AI",
-        "description": "Cuisine sénégalaise : ceebu jen, yassa, mafé, plats du Nord et de Casamance. Où les goûter.",
+        "title": "Spécialités du Sénégal : ceebu jën, yassa, mafé | Teranga AI",
+        "description": "Cuisine sénégalaise : ceebu jën, yassa, mafé, caldou, mbaxal, desserts au mil et boissons "
+                       "(bissap, bouye, café Touba). Ce qu'on mange, quand et où.",
         "h1": "Spécialités du Sénégal",
-        "intro": "La cuisine change selon la mer, le fleuve et la Casamance. Teranga cite 3 ou 4 plats, pas une liste infinie.",
+        "intro": "Riz, poisson, mil et arachide : la cuisine sénégalaise change selon la côte, le Saloum et la Casamance. "
+                 "Les plats, desserts et boissons à connaître, et où les goûter.",
         "sections": [
-            ("Plats connus", "Ceebu jen, yassa, mafé, dibi."),
-            ("Régions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fumé."),
-            ("Où chercher", "Un quartier à Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
+            ("Le plat national", "Le ceebu jën (thiéboudienne) : riz cuit dans un bouillon de poisson et de tomate, poisson "
+             "farci au « roof » et légumes. Le riz croustillant du fond de la marmite s'appelle le xoon. Inscrit au "
+             "patrimoine culturel immatériel de l'UNESCO en 2021, associé à Saint-Louis, il se mange souvent à midi dans "
+             "un grand plat partagé."),
+            ("Plats par région", "Saint-Louis : ceebu jën. Saloum (Kaolack, Fatick) : mbaxal, riz à l'arachide et au niébé. "
+             "Casamance : caldou, poisson au citron, et yassa. Partout : mafé à la pâte d'arachide, soupou kandja au gombo, "
+             "ceebu yapp à la viande."),
+            ("Dans la rue et le soir", "Le dibi, mouton grillé au feu de bois, s'achète le soir dans les dibiteries. En "
+             "en-cas : fataya et pastels (chaussons frits) et accara, beignets de niébé servis avec une sauce pimentée."),
+            ("Desserts et fêtes", "Thiakry (mil et lait caillé sucré) et lakh se mangent frais. Le thiéré, couscous de mil, "
+             "est le plat de la nuit de Tamxarit ; le ngalakh, au mil, à l'arachide et au pain de singe, est préparé par "
+             "les familles chrétiennes pour le Vendredi saint."),
+            ("Boissons", "L'attaya, thé vert à la menthe servi en trois tournées ; le café Touba au poivre de Guinée ; le "
+             "bissap (hibiscus), le bouye (pain de singe) et le jus de gingembre, très frais."),
         ],
         "faq": [
-            ("Quel plat est le plus cite ?", "Le ceebu jen, souvent le midi."),
-            ("Y a-t-il des photos ?", "Pour certains sujets, oui, via Wikimedia."),
+            ("Quel est le plat national du Sénégal ?", "Le ceebu jën (thiéboudienne), riz au poisson inscrit au patrimoine "
+             "culturel immatériel de l'UNESCO en 2021."),
+            ("Que boire au Sénégal ?", "L'attaya (thé à la menthe), le café Touba, le bissap, le bouye et le jus de gingembre."),
+            ("Quel plat goûter en Casamance ?", "Le caldou, poisson au citron et aux oignons, et le yassa."),
+            ("Où manger sénégalais à Dakar ?", "Par quartier : la Médina pour la cuisine du quotidien, le Plateau, les "
+             "Almadies ou Ngor au bord de la mer. Le guide « Où manger à Dakar » détaille chaque quartier."),
         ],
         "related": [("restaurants-dakar", "Où manger"), ("regions-senegal", "Régions"), ("senegal", "Guide")],
     },
@@ -495,18 +513,24 @@ SEO_PAGES = {
         "related": [("vie-pratique-senegal", "Vie pratique"), ("diaspora-senegalaise", "Diaspora"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
     },
     "entreprendre-senegal": {
-        "title": "Entreprendre au Sénégal : projet et business | Teranga AI",
-        "description": "Créer et développer un projet au Sénégal : idée business, budget, offre, clients, partenaires et plan d'action.",
+        "title": "Entreprendre au Sénégal : statut, APIX, NINEA | Teranga AI",
+        "description": "Créer son entreprise au Sénégal : choisir un statut, immatriculer au guichet unique de l'APIX (RCCM, NINEA), tester son offre, se faire payer et financer.",
         "h1": "Entreprendre au Sénégal",
-        "intro": "Transformez une idée en projet structuré avec un plan simple, des hypothèses claires et des prochaines étapes.",
+        "intro": "Du statut juridique au premier client : les étapes pour lancer une activité au Sénégal, les démarches officielles et les accompagnements qui existent.",
         "sections": [
             ("De l'idée au projet", "Clarifiez le problème, les clients, la solution, le modèle économique et les premières actions."),
             ("Développer une activité", "Travaillez l'offre, le prix, la marge, la communication, la vente, les paiements et la livraison."),
             ("Trouver des partenaires", "Préparez une présentation courte et identifiez les entreprises, associations, écoles, médias ou acteurs publics pertinents.")
         ],
         "faq": [
-            ("Teranga AI peut-il aider à créer un projet ?", "Oui. Vous pouvez partir d'une idée et construire un plan étape par étape."),
-            ("Peut-il aider les jeunes entrepreneurs ?", "Oui. Teranga AI peut aider à structurer projets, compétences, opportunités et partenariats.")
+            ("Où créer son entreprise au Sénégal ?", "À Dakar, au Bureau d'appui à la création d'entreprise (BCE) de l'APIX, "
+             "qui regroupe les formalités (RCCM, NINEA). Les étapes officielles sont sur senegal.eregulations.org."),
+            ("Quel statut choisir pour démarrer ?", "Entreprise individuelle pour démarrer seul, GIE pour produire ou vendre à "
+             "plusieurs, SUARL ou SARL pour une société. Les conditions de chaque forme sont à vérifier auprès de l'APIX."),
+            ("Combien de temps et combien ça coûte ?", "Cela dépend de la forme choisie et du dossier : les pièces, frais et "
+             "délais officiels sont détaillés sur senegal.eregulations.org. À vérifier avant de déposer."),
+            ("Teranga AI peut-il aider à créer un projet ?", "Oui. Partez d'une idée : Teranga aide à construire le plan, le "
+             "budget, l'offre et le dossier, étape par étape."),
         ],
         "related": [("pour-les-entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
     },
@@ -601,6 +625,10 @@ SEO_PAGE_GUIDES = {
         ("Tester avant d'investir", "Vendez d'abord à une dizaine de clients réels, même à petite échelle (WhatsApp, "
          "marché, bouche-à-oreille), avant d'acheter du matériel ou de louer un local. Notez chaque vente et chaque "
          "dépense dès le premier jour."),
+        # Source : senegal.eregulations.org (procédures de création d'entreprise, BCE de l'APIX), relevé du 22/11/2026.
+        ("Où faire les démarches", "À Dakar, le Bureau d'appui à la création d'entreprise (BCE) de l'APIX, 52-54 rue "
+         "Mohamed V, reçoit du lundi au vendredi de 8 h à 17 h. Les étapes, pièces, frais et délais de chaque forme sont "
+         "décrits sur senegal.eregulations.org, le portail officiel des procédures : à vérifier avant de vous déplacer."),
         ("Se faire payer", "Wave et Orange Money sont les moyens de paiement les plus courants ; un numéro marchand "
          "rassure les clients et sépare l'argent de l'activité de l'argent personnel."),
         ("Se faire accompagner", "Incubateurs, chambres de commerce, programmes de la DER/FJ et du FONGIP (garantie "
