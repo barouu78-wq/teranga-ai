@@ -1659,8 +1659,18 @@ document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
   try{
     const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||'')+'&w=500',window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
     const d=await r.json();const img=(d.images||[])[0];if(!img)return;
-    const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
-    const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';
+    const box=tile.querySelector('.place-tile-img');if(!box)return;
+    // La photo est chargée avant de remplacer le fond : relais du site, puis photo directe (comme les galeries) ;
+    // si les deux échouent, la vignette garde sa couleur au lieu d'une case vide.
+    const tries=[img.display_url||('/image-proxy?url='+encodeURIComponent(img.url)),img.url].filter((u,i,a)=>u&&a.indexOf(u)===i);
+    const show=i=>{
+      if(i>=tries.length)return;
+      const probe=new Image();
+      probe.onload=()=>{box.style.backgroundImage='url("'+tries[i].replace(/["\\]/g,'')+'")';box.style.backgroundSize='cover';box.style.backgroundPosition='center';};
+      probe.onerror=()=>show(i+1);
+      probe.src=tries[i];
+    };
+    show(0);
   }catch(_){}
 });
 send.onclick=()=>{
