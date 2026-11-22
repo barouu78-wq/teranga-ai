@@ -159,6 +159,8 @@ def should_use_web(message, context=""):
         "bureau de change", "bureaux de change", "le change", "du change",
         "change euro", "change euros", "change dollar", "change dollars",
         "taux", "inflation", "population", "salaire", "impot", "impôt",
+        # Salaire minimum (SMIG, SMAG) : fixé par décret, il change ; banc qualité réel du 22 novembre 2026.
+        "smig", "smag", "minimum wage",
         "douane", "frontiere", "frontière", "securite", "sécurité",
         "alerte", "pluie", "meteo", "météo", "temperature", "température",
         "greve", "grève", "travaux", "route", "circulation", "manifestation",

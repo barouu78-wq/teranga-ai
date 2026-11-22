@@ -87,3 +87,21 @@ def test_questions_whose_answer_changes_each_year_use_the_web():
         assert should_use_web(question), question
     for question in ("Quelle est la capitale du Sénégal ?", "Comment dit-on merci en wolof ?", "Qui est Léopold Sédar Senghor ?"):
         assert not should_use_web(question), question
+
+
+def test_le_salaire_minimum_change_par_decret_et_passe_par_la_recherche_web():
+    """Banc qualité réel du 22 novembre 2026 (emploi-5) : « Quel est le SMIG au Sénégal ? » ne proposait pas la
+    recherche web (« salaire » y était, pas « SMIG ») ; l'IA a donné un montant de mémoire, sans source. Le salaire
+    minimum change par décret : il se vérifie en ligne."""
+    from services.web_policy import should_use_web
+
+    for question in (
+        "Quel est le SMIG au Sénégal ?",
+        "SMIG Sénégal 2026",
+        "Le smag a augmenté ?",
+        "C'est combien le salaire minimum ?",
+        "What is the minimum wage in Senegal?",
+    ):
+        assert should_use_web(question), question
+    for question in ("Comment dire merci en wolof ?", "Que voir à Saint-Louis ?"):
+        assert not should_use_web(question), question
