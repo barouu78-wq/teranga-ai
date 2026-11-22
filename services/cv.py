@@ -254,6 +254,8 @@ def page_cv(site_url: str) -> str:
 <button type="button" class="cv-bouton" id="cvRecommencer">Recommencer</button></div>
 <div class="cv-partage"><p>Un ami cherche aussi du travail&nbsp;? Envoie-lui Teranga&nbsp;: c’est gratuit.</p>
 <a class="cv-bouton" id="cvPartager" href="{escape(partage)}" target="_blank" rel="noopener noreferrer">Envoyer à un ami sur WhatsApp</a></div>
+<div class="cv-partage"><p>Où envoyer ton CV&nbsp;? Les sites d’offres d’emploi au Sénégal, vérifiés par Teranga.</p>
+<a class="cv-bouton" href="/offres-emploi">Voir les offres d’emploi</a></div>
 <div id="cvVerifier" class="cv-liste" hidden><h3>À vérifier</h3><ul></ul></div>
 <div id="cvManque" class="cv-liste" hidden><h3>Ce que l’offre demande et que ton CV ne montre pas</h3><ul></ul></div>
 <div id="cvLettreBloc" hidden><h3>Lettre de motivation</h3><article id="cvLettre" class="cv-lettre" aria-label="Lettre de motivation"></article>
