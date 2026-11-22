@@ -580,6 +580,13 @@ _LINE_ASKS = (
     ("sante", ("Pharmacie de garde",), ({"pharmacie", "pharmacies"}, {"garde", "ouverte", "ouvertes", "nuit", "dimanche"}), {
         "pharmacie", "pharmacies", "garde", "ouverte", "ouvertes", "nuit", "dimanche", "ou", "trouver", "une", "comment",
         "on"}),
+    # « Comment se protéger du paludisme ? » : la ligne de prévention (moustiquaire imprégnée, répulsif, avis
+    # médical avant le départ), plus utile que la ligne générale « présent dans tout le pays », qui garde les questions
+    # de présence (« Y a-t-il le paludisme au Sénégal ? »). Défaut trouvé par le banc qualité (22 novembre 2026).
+    ("premiers_secours", ("Prévention du paludisme",), ({"paludisme", "palu"},
+                                                        {"proteger", "protection", "eviter", "prevenir", "prevention"}), {
+        "paludisme", "palu", "comment", "se", "proteger", "protection", "eviter", "prevenir", "prevention", "y", "t",
+        "contre", "moustique", "moustiques", "le", "la", "les"}),
     ("sante", ("Paludisme",), ({"paludisme", "palu"},), {
         "paludisme", "palu", "comment", "se", "proteger", "protection", "eviter", "y", "t", "risque", "contre",
         "moustique", "moustiques", "prevenir"}),
@@ -654,7 +661,7 @@ _LINE_ASKS = (
         "marge", "prix", "calculer", "calcul", "fixer", "definir", "mettre", "comment", "ma", "mon", "mes", "sur", "un",
         "produit", "produits", "vente", "bon"}),
 )
-_LINE_THEMES = {"sante": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences",
+_LINE_THEMES = {"sante": "sante", "premiers_secours": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences",
                 "protection": "protection_sociale", "etudes": "etudes", "entreprise": "entreprise", "vente": "commerce",
                 "diplomes": "etudes"}
 
