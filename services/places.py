@@ -6,7 +6,7 @@ import json
 from html import escape
 from urllib.parse import quote
 
-from services.seo import REGION_SEO_NAMES, region_slug
+from services.seo import PLACE_CANONICAL_PATHS, REGION_SEO_NAMES, place_href, region_slug
 from services.site_layout import HEAD_ASSETS, asset_url, body_tag, site_footer, site_header
 
 TYPE_LABELS = {
@@ -28,6 +28,12 @@ def place_index(places) -> dict[str, dict]:
 
 def place_url(site_url: str, place: dict) -> str:
     return f"{site_url.rstrip('/')}/lieux/{quote(str(place.get('id', '')))}"
+
+
+def place_canonical_url(site_url: str, place: dict) -> str:
+    """Adresse canonique d'une fiche : la page guide qui la remplace (PLACE_CANONICAL_PATHS), sinon la fiche."""
+    path = PLACE_CANONICAL_PATHS.get(str(place.get("id", "")))
+    return f"{site_url.rstrip('/')}{path}" if path else place_url(site_url, place)
 
 
 def _coords(place):
@@ -117,7 +123,8 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
     summary = str(place.get("summary", ""))
     history = str(place.get("history", ""))
     type_label = TYPE_LABELS.get(str(place.get("type", "")), "Lieu")
-    url = place_url(site_url, place)
+    # Canonique : la page guide qui remplace la fiche le cas échéant (Gorée → /visiter-goree).
+    url = place_canonical_url(site_url, place)
     title = place_title(name, region)
     description = place_description(place)
     coords = _coords(place)
@@ -158,6 +165,13 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         })
 
     sections = []
+    guide_path = PLACE_CANONICAL_PATHS.get(str(place.get("id", "")))
+    if guide_path:
+        # La page guide est l'adresse de référence : on y mène aussi le visiteur.
+        sections.append(
+            f'<section><h2>Préparer la visite</h2><p>Billet, prix à prévoir et conseils : <a href="{guide_path}">'
+            f"le guide complet pour visiter {escape(name)}</a>.</p></section>"
+        )
     if history:
         sections.append(f"<section><h2>Histoire et contexte</h2><p>{escape(history)}</p></section>")
     if what_to_see:
@@ -206,7 +220,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         sections.append(f'<section class="faq"><h2>Questions fréquentes</h2>{items}</section>')
     if nearby:
         links = "".join(
-            f'<a class="card" href="/lieux/{quote(str(o["id"]))}"><strong>{escape(str(o.get("name", "")))}</strong>'
+            f'<a class="card" href="{place_href(o["id"])}"><strong>{escape(str(o.get("name", "")))}</strong>'
             f'<br><small>{escape(str(o.get("summary", ""))[:110])}</small></a>'
             for o in nearby
         )
