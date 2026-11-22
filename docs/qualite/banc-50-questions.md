@@ -7,9 +7,9 @@ Créé le 22 novembre 2026 (ticket QA P0). Fichiers : `tests/banc_qualite/questi
 
 - **Exécuté** : le mode hors ligne, sans IA ni réseau, le 22 novembre 2026 sur le code de la branche. 50/50
   questions passent après la correction de la réponse prête sur le paludisme (voir plus bas).
-- **Pas encore exécuté** : le mode réel (vraies réponses de l'IA), sur le site ou en local. Il coûte des appels
-  d'IA et demande l'accord du propriétaire. **Aucune note sur 100 n'existe donc encore** : le rapport réel et la
-  fiche humaine en donneront une.
+- **Exécuté en réel** : le 22 novembre 2026, sur https://teranga-ai.fr, par GitHub Actions (workflow
+  `banc-qualite-reel`). 50 réponses, aucune en échec ni dégradée, aucune hallucination grave détectée. Note proposée
+  par Claude, **à valider par un humain** : 94,1/100. Détails : `docs/qualite/resultats-2026-11-22.md`.
 
 ## Les 10 catégories (5 questions chacune)
 
@@ -43,6 +43,7 @@ OPENAI_API_KEY=test-key python scripts/banc_qualite.py hors-ligne
 
 # 2. Payant, avec l'accord du propriétaire : vraies réponses
 python scripts/banc_qualite.py reel --site https://teranga-ai.fr     # site en ligne, 6 s entre deux questions
+#    ou, sans ordinateur : GitHub → Actions → banc-qualite-reel → Run workflow (rapport et fiche en artefact)
 python scripts/banc_qualite.py reel --local                          # ce code, clés dans l'environnement (Render → Shell)
 #    → banc-qualite-<date>.md (réponses, contrôles, temps) et banc-qualite-<date>.csv (fiche à remplir)
 
