@@ -289,6 +289,18 @@ def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_
     assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
 
 
+def test_un_exemple_fictif_montre_le_cv_fini_avant_le_formulaire():
+    """Montrer le résultat avant de demander quoi que ce soit : un CV fini, d'une personne fictive dite comme telle,
+    et un bouton qui mène au formulaire. L'exemple est dessiné par cv.js (même rendu que le vrai CV)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvExemple"')
+    assert debut < html.index('id="cvForm"')
+    exemple = html[debut:html.index("</section>", debut)]
+    assert "personne fictive" in exemple
+    assert 'id="cvExempleFeuille"' in exemple
+    assert re.search(r'<a [^>]*href="#cvForm"[^>]*>Faire le mien</a>', exemple)
+
+
 def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(claude, monkeypatch):
     """Combien de temps attend la personne ? Une ligne « latence route=cv » par demande (services/latency.py) :
     des nombres et des étiquettes fixes, jamais le parcours, le poste ni le CV."""

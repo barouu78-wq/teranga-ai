@@ -246,6 +246,13 @@ body.hote main h2{margin-top:26px}
 .cv-hero h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin:18px 0 8px}
 .cv-hero{padding:0;border-top:0}
 .cv-hero p{color:var(--muted);margin:0 0 18px}
+/* Exemple fini en haut de page (personne fictive) : le haut de la feuille seulement, fondu vers la page. */
+.cv-exemple{display:grid;gap:12px;margin:0 0 26px;padding:0;border-top:0}
+.cv-exemple h2{margin:0;font-size:17px}
+.cv-exemple-cadre{position:relative;max-height:360px;overflow:hidden;border-radius:12px;container-type:inline-size}
+.cv-exemple-cadre::after{content:"";position:absolute;left:0;right:0;bottom:0;height:96px;background:linear-gradient(rgba(0,0,0,0),var(--bg));pointer-events:none}
+.cv-exemple .cv-feuille{box-shadow:none}
+.cv-exemple .cv-principal{justify-self:start}
 .cv-form{display:grid;gap:16px}
 .cv-choix{border:0;margin:0;padding:0;display:grid;gap:10px}
 .cv-choix legend{font-weight:700;margin-bottom:8px}
