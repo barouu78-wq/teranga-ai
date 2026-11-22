@@ -222,6 +222,40 @@ def test_no_games_card_after_the_closing_day(page, base_url):
     assert not page.is_visible("#feteBanner") and not page.is_visible("#jojCard")
 
 
+def test_games_card_is_still_there_on_the_last_evening(page, base_url):
+    """13 novembre 23 h 59 : dernier jour des Jeux, inclus (ticket des événements expirés)."""
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2026, 11, 13, 23, 59))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete") == "joj"
+    assert page.is_visible("#jojCard") and page.text_content("#jojDay") == "Jour 14 sur 14"
+    assert page.errors == []
+
+
+@pytest.mark.parametrize("timezone", ["Africa/Dakar", "Europe/Paris", "America/New_York"])
+def test_after_the_games_the_card_is_not_even_in_the_page(browser, base_url, timezone):
+    """22 novembre 2026 (jour de l'audit) : ni carte, ni texte des Jeux dans la page, pour un visiteur de Dakar, de
+    la diaspora en France ou aux États-Unis. Le guide reste joignable par son adresse."""
+    import datetime
+
+    context = browser.new_context(locale="fr-FR", timezone_id=timezone, service_workers="block",
+                                  viewport={"width": 390, "height": 844})
+    context.route(lambda url: not url.startswith(base_url), lambda route: route.abort())
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.clock.install(time=datetime.datetime(2026, 11, 22, 10, 0))
+    page.goto(base_url + "/")
+    page.locator("#heroInput").wait_for(timeout=5000)
+    assert page.evaluate("document.body.dataset.fete || ''") == ""
+    assert page.locator("#jojCard").count() == 0
+    texte = page.evaluate("document.body.innerText")
+    assert "Jeux Olympiques" not in texte and "JOJ" not in texte, texte[:300]
+    assert errors == []
+    context.close()
+
+
 @pytest.mark.parametrize("fete,symbol,hour", [("korite", "☪", 11), ("tabaski", "🐑", 21), ("magal", "🕌", 11)])
 def test_religious_festivals_have_their_own_decor_day_and_night(page, base_url, fete, symbol, hour):
     import datetime

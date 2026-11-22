@@ -422,23 +422,37 @@ const FETE_TEXT={
       joj:'Dakar 2026 Youth Olympics: guide (in French)'}
 };
 // JOJ Dakar 2026 : une carte (#jojCard) remplace le bandeau ; FETE_TEXT.joj devient son nom pour les lecteurs d'écran.
-// Mêmes dates que static/theme.js (joj : 31 octobre, 14 jours).
-const JOJ_START=new Date(2026,9,31),JOJ_DAYS=14;
+// Dates lues dans static/theme.js (seule copie, vérifiée contre services/events.py par tests/test_evenements_expires.py).
+// La carte vit dans un <template> (#jojCardTpl) : hors des Jeux, son texte n'est pas dans la page.
+const JOJ_RANGE=window.terangaTheme&&window.terangaTheme.range?window.terangaTheme.range('joj',2026):null;
+const JOJ_START=JOJ_RANGE?new Date(JOJ_RANGE.start[0],JOJ_RANGE.start[1]-1,JOJ_RANGE.start[2]):null;
+const JOJ_DAYS=JOJ_RANGE?JOJ_RANGE.days:0;
 const JOJ_TEXT={
   fr:{kicker:'Jeux Olympiques de la Jeunesse',where:'31 oct. – 13 nov. · Dakar, Diamniadio, Saly',cta:'Le guide pratique',day:n=>'Jour '+n+' sur '+JOJ_DAYS},
   en:{kicker:'Youth Olympic Games',where:'31 Oct – 13 Nov · Dakar, Diamniadio, Saly',cta:'Guide (in French)',day:n=>'Day '+n+' of '+JOJ_DAYS}
 };
 // Jour des Jeux (1 à 14) à la date du visiteur, ou 0 en dehors (fête forcée par ?fete=joj).
 function jojDay(date){
+  if(!JOJ_START)return 0;
   const today=new Date(date.getFullYear(),date.getMonth(),date.getDate());
   const n=Math.round((today-JOJ_START)/86400000)+1;  // arrondi : un jour de changement d'heure dure 23 ou 25 h
   return n>=1&&n<=JOJ_DAYS?n:0;
 }
+// Ajoute la carte à la page (une seule fois) ; faux si le modèle manque.
+function jojCard(){
+  if($('jojCard'))return true;
+  const tpl=$('jojCardTpl');
+  if(!tpl||!tpl.content)return false;
+  tpl.replaceWith(tpl.content.cloneNode(true));
+  return !!$('jojCard');
+}
 function renderJojCard(){
+  if(!jojCard())return false;
   const t=JOJ_TEXT[lang]||JOJ_TEXT.fr,n=jojDay(new Date());
   $('jojKicker').textContent=t.kicker;$('jojWhere').textContent=t.where;$('jojCta').textContent=t.cta;
   $('jojDay').textContent=n?t.day(n):'';
   $('jojCard').setAttribute('aria-label',(FETE_TEXT[lang]||FETE_TEXT.fr).joj+(n?' · '+t.day(n):''));
+  return true;
 }
 function applyTheme(){
   const api=window.terangaTheme;
@@ -457,10 +471,10 @@ function applyFete(){
   const name=window.terangaTheme?window.terangaTheme.fete():'';
   const text=name&&((FETE_TEXT[lang]||FETE_TEXT.fr)[name]);
   const banner=$('feteBanner');
-  if(text){
+  // Carte JOJ introuvable (page ancienne en cache) : aucune fête plutôt qu'une carte vide.
+  if(text&&(name!=='joj'||renderJojCard())){
     document.body.dataset.fete=name;
-    if(name==='joj'){banner.textContent='';renderJojCard();}
-    else banner.textContent=text;
+    banner.textContent=name==='joj'?'':text;
   }
   else{delete document.body.dataset.fete;banner.textContent='';}
 }

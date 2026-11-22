@@ -32,7 +32,10 @@ def _reponse(message, language="fr", raw=None):
     ("Où trouver une pharmacie de garde ?", "sante", ("Pharmacie de garde",), "sante"),
     ("Pharmacie de garde à Dakar", "sante", ("Pharmacie de garde",), "sante"),
     ("Pharmacie ouverte la nuit à Dakar ?", "sante", ("Pharmacie de garde",), "sante"),
-    ("Comment se protéger du paludisme ?", "sante", ("Paludisme",), "sante"),
+    # Banc qualité (22 novembre 2026) : se protéger = la ligne de prévention (moustiquaire imprégnée, répulsif).
+    ("Comment se protéger du paludisme ?", "premiers_secours", ("Prévention du paludisme",), "sante"),
+    ("Paludisme : comment se protéger ?", "premiers_secours", ("Prévention du paludisme",), "sante"),
+    ("Comment éviter le palu ?", "premiers_secours", ("Prévention du paludisme",), "sante"),
     ("Y a-t-il le paludisme au Sénégal ?", "sante", ("Paludisme",), "sante"),
     ("Peut-on boire l'eau du robinet à Dakar ?", "sante", ("Eau",), "sante"),
     ("L'eau du robinet est-elle potable au Sénégal ?", "sante", ("Eau",), "sante"),

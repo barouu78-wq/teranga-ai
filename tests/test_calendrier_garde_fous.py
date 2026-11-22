@@ -11,7 +11,6 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from types import SimpleNamespace
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
@@ -24,14 +23,9 @@ QUESTION = "Quels conseils pour voyager pendant la Tabaski avec des enfants ?"
 
 
 def _horloge(monkeypatch, day):
-    """Simule seulement l'horloge du calendrier : services/events.py lit la date du jour avec _dt.date.today()."""
-
-    class Jour(dt.date):
-        @classmethod
-        def today(cls):
-            return cls(day.year, day.month, day.day)
-
-    monkeypatch.setattr(events, "_dt", SimpleNamespace(date=Jour))
+    """Simule seulement l'horloge du calendrier : services/events.py lit la date du jour avec today_in_dakar()
+    (heure de Dakar, depuis le ticket des événements expirés du 22 novembre 2026)."""
+    monkeypatch.setattr(events, "today_in_dakar", lambda: day)
 
 
 def _contexte_du_chat(question):

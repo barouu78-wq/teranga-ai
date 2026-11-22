@@ -765,10 +765,33 @@ def _fr_hreflang_links(slug, site_url):
     return hreflang_links(topic, site_url) if topic else ""
 
 
+JOJ_PAST_NOTICE = ("Les JOJ Dakar 2026 sont terminés : ils ont eu lieu du 31 octobre au 13 novembre 2026. Cette page "
+                   "reste un repère sur les sites des Jeux.")
+
+
+def _joj_page_after_closing(page):
+    """Guide JOJ après la clôture (13 novembre 2026, services/events.py) : au passé, sans programme du jour ni
+    billets à chercher, ni trajets « entre deux épreuves »."""
+    from services import events
+
+    if not events.event_is_over("Jeux Olympiques de la Jeunesse"):
+        return page
+    past = dict(page)
+    past["intro"] = page["intro"].replace("ont lieu du 31 octobre", "ont eu lieu du 31 octobre")
+    past["sections"] = [("Les Jeux sont terminés", JOJ_PAST_NOTICE)] + [
+        section for section in page["sections"] if section[0] not in {"Programme et billets", "Vos trajets avec Teranga AI"}
+    ]
+    past["faq"] = [("Quand ont eu lieu les JOJ Dakar 2026 ?" if q.startswith("Quand ont lieu") else q, a)
+                   for q, a in page["faq"]]
+    return past
+
+
 def render_seo_page(slug, site_url, places=None, dishes=None):
     page = SEO_PAGES.get(slug)
     if not page:
         return None
+    if slug == "joj-dakar-2026":
+        page = _joj_page_after_closing(page)
     sections = "".join(
         "<section><h2>%s</h2><p>%s</p></section>" % (heading, text)
         for heading, text in list(page["sections"]) + SEO_PAGE_GUIDES.get(slug, [])
