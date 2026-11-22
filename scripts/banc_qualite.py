@@ -40,7 +40,7 @@ GRILLE = (("exactitude", 25), ("comprehension", 20), ("contexte_senegal", 20), (
 OBJECTIF = 85
 # Limites du site (app.py) : 16 messages par minute et 120 par heure et par visiteur. 6 s entre deux questions
 # reste sous la limite par minute ; 50 questions tiennent dans l'heure.
-PAUSE_SITE = 6.0
+PAUSE_SITE = float(os.getenv("BANC_PAUSE", "6"))
 
 
 def load(path: Path = QUESTIONS_FILE) -> dict:

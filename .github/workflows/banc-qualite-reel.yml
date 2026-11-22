@@ -1,0 +1,46 @@
+name: banc-qualite-reel
+
+# Banc qualité de 50 questions sur le site EN LIGNE (scripts/banc_qualite.py, docs/qualite/banc-50-questions.md).
+# PAYANT : jusqu'à 50 requêtes vers l'IA, comptées dans AI_PLAFOND_JOUR. Accord du propriétaire du 22 novembre 2026.
+# Ne tourne que sur la branche qa/banc-reel (jamais sur main, jamais sur une PR, jamais programmé).
+# Aucune clé : le banc passe par le site comme un visiteur (jeton CSRF, /chat), 6 s entre deux questions.
+
+on:
+  push:
+    branches: [qa/banc-reel]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: banc-qualite-reel
+  cancel-in-progress: false
+
+jobs:
+  banc:
+    name: Banc qualité réel (50 questions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+      - name: Poser les 50 questions au site en ligne
+        run: python scripts/banc_qualite.py reel --site https://teranga-ai.fr --sortie banc-qualite-reel
+      - name: Résumé
+        if: always()
+        run: |
+          if [ -f banc-qualite-reel.md ]; then sed -n '1,20p' banc-qualite-reel.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Publier le rapport et la fiche de notation
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: banc-qualite-reel
+          path: |
+            banc-qualite-reel.md
+            banc-qualite-reel.csv
+          if-no-files-found: warn
+          retention-days: 30
