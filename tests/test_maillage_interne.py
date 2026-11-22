@@ -80,14 +80,17 @@ def test_dakar_page_links_to_the_two_dakar_guides_that_had_no_inbound_link(clien
 
 
 def test_each_localized_page_links_to_its_translations_and_to_every_other_topic_of_its_language(client):
-    from services.international_seo import LANGS, TOPICS
+    from services.international_seo import FR_EQUIVALENTS, LANGS, TOPICS, _localized_path
 
     cache: dict = {}
     for lang in LANGS:
         for topic in TOPICS:
+            if lang == "fr" and topic in FR_EQUIVALENTS:
+                continue  # redirige (301) vers la page française qui le remplace
             links = _internal_links(client, f"/{lang}/{topic}", cache)
-            translations = {f"/{other}/{topic}" for other in LANGS if other != lang}
-            siblings = {f"/{lang}/{other}" for other in TOPICS if other != topic}
+            # La version française d'un sujet peut être une page française existante (/fr/goree-island → /visiter-goree).
+            translations = {_localized_path(other, topic) for other in LANGS if other != lang}
+            siblings = {_localized_path(lang, other) for other in TOPICS if other != topic}
             assert translations <= links, (lang, topic, translations - links)
             assert siblings <= links, (lang, topic, siblings - links)
 

@@ -73,7 +73,9 @@ def test_region_page_describes_the_region():
 def test_topic_pages_reuse_the_knowledge_base():
     client = _client()
     goree = client.get("/visiter-goree", base_url=B).get_data(as_text=True)
-    assert "Histoire de l'île de Gorée" in goree and 'href="/lieux/goree"' in goree
+    # La fiche /lieux/goree renvoie sa canonique vers cette page : plus de carte vers elle-même, mais toujours
+    # l'histoire tirée de la base et des cartes vers les autres lieux (tests/test_goree_page_unique.py).
+    assert "Histoire de l'île de Gorée" in goree and 'href="/lieux/dakar-renaissance"' in goree
     food = client.get("/specialites-senegal", base_url=B).get_data(as_text=True)
     assert "Plats et boissons à goûter" in food and "Yassa" in food
 

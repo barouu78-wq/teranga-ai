@@ -41,19 +41,43 @@ SEO_PAGES = {
         ],
         "related": [("visiter-goree", "Gorée"), ("restaurants-dakar", "Où manger"), ("senegal", "Guide")],
     },
+    # Page unique de Gorée en français : /lieux/goree y renvoie sa canonique et /fr/goree-island y redirige
+    # (PLACE_CANONICAL_PATHS, FR_EQUIVALENTS). Sources (relevé du 22 novembre 2026) : billet en ligne et tarif adulte,
+    # au-senegal.com/goree-reservez-desormais-votre-billet-de-chaloupe-en-ligne,18591.html ; taxe communale,
+    # au-senegal.com/chaloupe-de-goree,322.html ; Maison des Esclaves, au-senegal.com/maison-des-esclaves,2782.html ;
+    # musée historique, routard.com (fort d'Estrées).
     "visiter-goree": {
-        "title": "Visiter Gorée : Maison des Esclaves, ferry, photos | Teranga AI",
-        "description": "Île de Gorée : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
+        "title": "Visiter Gorée : chaloupe, billet en ligne, que voir | Teranga AI",
+        "description": "Visiter Gorée depuis Dakar : chaloupe de 20 minutes, billet en ligne, prix à prévoir, "
+                       "Maison des Esclaves, Castel et conseils pour une demi-journée.",
         "h1": "Visiter l'île de Gorée",
-        "intro": "Gorée fait face à Dakar. On y vient pour l'histoire et la Maison des Esclaves. Demandez une réponse courte, photos et carte.",
+        "intro": "À environ 20 minutes de chaloupe de Dakar, Gorée est une petite île sans voitures, inscrite au "
+                 "patrimoine mondial de l'UNESCO en 1978 et lieu de mémoire de la traite atlantique. Comment y aller, "
+                 "ce qu'il faut prévoir et ce qu'il faut voir.",
         "sections": [
-            ("S'y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : à vérifier le jour du départ."),
-            ("Quoi voir", "Maison des Esclaves, ruelles, musées. Comptez 2 à 4 heures."),
-            ("Question type", "Parle-moi de Gorée et montre l'île."),
+            ("Acheter son billet en ligne", "Depuis le 29 octobre 2026, le Port autonome de Dakar vend les billets de "
+             "la chaloupe en ligne sur dakargoree.sn : on choisit le trajet (Dakar-Gorée ou Gorée-Dakar), la date et un "
+             "départ disponible, on paie par carte bancaire, Wave ou Orange Money, puis on embarque avec le QR code reçu. "
+             "Pratique le week-end et pendant les vacances, quand l'affluence est forte."),
+            ("Prix à prévoir", "La plateforme officielle affiche 1 500 FCFA par adulte ; le tarif dépend du statut "
+             "(Sénégalais, résident, non-résident), vérifiez le vôtre au moment de réserver. Ajoutez la taxe communale "
+             "de Gorée (500 FCFA par personne, à régler avant d'embarquer) et la visite guidée de la Maison des Esclaves "
+             "(1 000 FCFA). Montants relevés en novembre 2026, à vérifier sur place."),
+            ("Que voir", "La Maison des Esclaves et sa « porte du voyage sans retour » ; le Castel, point haut de l'île, "
+             "avec la vue sur Dakar ; le musée historique de l'IFAN dans le fort d'Estrées ; les ruelles sans voitures et "
+             "les ateliers d'artistes. Une demi-journée suffit pour l'essentiel, une journée laisse le temps de la plage."),
+            ("Conseils", "Évitez le lundi : la Maison des Esclaves et le musée historique sont fermés. Si un guide vous "
+             "propose ses services à l'arrivée, fixez le prix avant la visite. La Maison des Esclaves est un lieu de "
+             "mémoire : tenue correcte et silence. Ruelles pavées et escaliers : l'île est difficile en fauteuil roulant."),
         ],
         "faq": [
-            ("Une demi-journée suffit-elle ?", "Oui, beaucoup de visites tiennent en une matinée."),
-            ("Faut-il réserver le ferry ?", "Souvent non. Vérifiez l'affluence le jour J."),
+            ("Peut-on acheter le billet de la chaloupe en ligne ?", "Oui, depuis le 29 octobre 2026, sur dakargoree.sn : "
+             "choix du départ, paiement par carte, Wave ou Orange Money, embarquement avec un QR code."),
+            ("Combien coûte la traversée ?", "La plateforme officielle affiche 1 500 FCFA par adulte ; le tarif dépend "
+             "du statut. Comptez aussi 500 FCFA de taxe communale. À vérifier au moment de réserver."),
+            ("Une demi-journée suffit-elle ?", "Oui pour la Maison des Esclaves, le Castel et le musée. Une journée laisse "
+             "le temps de la plage et des ateliers."),
+            ("Quel jour éviter ?", "Le lundi : la Maison des Esclaves et le musée historique sont fermés."),
         ],
         "related": [("meteo-dakar", "Météo"), ("restaurants-dakar", "Manger à Dakar"), ("senegal", "Guide")],
     },
@@ -612,6 +636,14 @@ SEO_PAGE_PLACES = {
     "visiter-goree": ["goree", "dakar-renaissance", "musee-civilisations", "iles-de-la-madeleine"],
 }
 SEO_PAGE_DISHES = {"specialites-senegal", "restaurants-dakar"}
+# Fiches de lieu doublées par une page guide : la fiche reste accessible mais renvoie sa canonique vers la page guide
+# et sort du sitemap, pour qu'une seule adresse se positionne sur la requête (trois pages Gorée se concurrençaient).
+PLACE_CANONICAL_PATHS = {"goree": "/visiter-goree"}
+
+
+def place_href(place_id):
+    """Lien interne vers un lieu : la page guide quand elle existe, sinon la fiche /lieux/<id>."""
+    return PLACE_CANONICAL_PATHS.get(str(place_id)) or "/lieux/%s" % quote(str(place_id))
 # Questions concrètes de la diaspora (plan du 19 octobre 2026, docs/PLAN-DIASPORA.md). Chacune a une réponse vérifiée :
 # réponse prête (services/quick_answers.py) ou repères (services/practical_facts.py), voir tests/test_page_diaspora.py.
 # Un clic pré-remplit la question dans Teranga ; elle n'est jamais envoyée sans l'utilisateur.
@@ -644,9 +676,11 @@ def _seo_extra_html(slug, places=None, dishes=None):
     parts = []
     if chosen:
         cards = "".join(
-            '<a class="card" href="/lieux/%s"><strong>%s</strong><br><small>%s</small></a>'
-            % (quote(str(p["id"])), escape(str(p.get("name", ""))), escape(str(p.get("summary", ""))))
+            '<a class="card" href="%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (place_href(p["id"]), escape(str(p.get("name", ""))), escape(str(p.get("summary", ""))))
             for p in chosen
+            # Pas de carte qui renverrait vers la page elle-même.
+            if place_href(p["id"]) != "/%s" % slug
         )
         parts.append('<section><h2>Lieux à découvrir</h2><div class="grid">%s</div></section>' % cards)
         if slug == "visiter-goree" and chosen[0].get("history"):
@@ -691,6 +725,15 @@ JOJ_FACTS_HTML = (
     "<li><b>Une première</b><span>en Afrique</span></li>"
     "</ul>\n"
 )
+
+
+def _fr_hreflang_links(slug, site_url):
+    """Balises hreflang d'une page française qui remplace un guide traduit (/fr/goree-island → /visiter-goree) :
+    les versions en, es, de, it pointent ici, cette page pointe vers elles (liens réciproques)."""
+    from services.international_seo import hreflang_links, international_topic_for_fr_path
+
+    topic = international_topic_for_fr_path("/" + slug)
+    return hreflang_links(topic, site_url) if topic else ""
 
 
 def render_seo_page(slug, site_url, places=None, dishes=None):
@@ -806,7 +849,7 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         "sections": sections + _seo_extra_html(slug, places, dishes),
         "faq": faq_html,
         "source": source_link,
-        "head": HEAD_ASSETS,
+        "head": _fr_hreflang_links(slug, site_url) + HEAD_ASSETS,
         "header": site_header(),
         "footer": site_footer(),
     }
@@ -897,7 +940,7 @@ def render_region_page(region_name, site_url, knowledge_places=None, knowledge_r
     places_section = ""
     if region_places:
         cards = "".join(
-            f'<a class="card" href="/lieux/{quote(str(p["id"]))}"><strong>{escape(str(p.get("name", "")))}</strong>'
+            f'<a class="card" href="{place_href(p["id"])}"><strong>{escape(str(p.get("name", "")))}</strong>'
             f'<br><small>{escape(str(p.get("summary", "")))}</small></a>'
             for p in region_places
         )
@@ -906,7 +949,7 @@ def render_region_page(region_name, site_url, knowledge_places=None, knowledge_r
             "@type": "ItemList",
             "name": f"Lieux à visiter : {region_name}",
             "itemListElement": [
-                {"@type": "ListItem", "position": i + 1, "url": f"{site_url}/lieux/{quote(str(p['id']))}", "name": p.get("name", "")}
+                {"@type": "ListItem", "position": i + 1, "url": site_url + place_href(p["id"]), "name": p.get("name", "")}
                 for i, p in enumerate(region_places)
             ],
         })

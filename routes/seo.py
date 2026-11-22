@@ -9,7 +9,7 @@ from flask import Response, abort, current_app
 
 from services.adsense import ads_txt
 from services.international_seo import localized_sitemap_urls
-from services.seo import SEO_PAGES, REGION_SEO_NAMES, render_region_page, region_slug, render_seo_page
+from services.seo import PLACE_CANONICAL_PATHS, SEO_PAGES, REGION_SEO_NAMES, render_region_page, region_slug, render_seo_page
 
 
 
@@ -26,6 +26,8 @@ def _content_date() -> str:
 
 def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
     place_ids = [str(place["id"]) for place in places or [] if place.get("id")]
+    # Fiches dont la canonique est une page guide (Gorée → /visiter-goree) : hors sitemap, qui ne liste que des canoniques.
+    sitemap_place_ids = [place_id for place_id in place_ids if place_id not in PLACE_CANONICAL_PATHS]
     lastmod = _content_date()
 
     @app.get("/regions/<slug>")
@@ -140,7 +142,7 @@ def register_seo_routes(app, site_url, places=None, regions=None, dishes=None):
             )
             + "".join(
                 f"<url><loc>{site_url}/lieux/{escape(place_id)}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>"
-                for place_id in place_ids
+                for place_id in sitemap_place_ids
             )
             + "</urlset>"
         )

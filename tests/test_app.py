@@ -551,9 +551,15 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert len(LANGS) == 5
     assert len(TOPICS) == 12
 
+    from services.international_seo import FR_EQUIVALENTS
+
     for lang in LANGS:
         for topic in TOPICS:
             response = client.get(f"/{lang}/{topic}")
+            if lang == "fr" and topic in FR_EQUIVALENTS:
+                # Doublon d'une page française (/fr/goree-island → /visiter-goree) : redirection 301.
+                assert response.status_code == 301
+                continue
             assert response.status_code == 200
             body = response.get_data(as_text=True)
             assert '<link rel="canonical"' in body
