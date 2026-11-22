@@ -24,6 +24,8 @@ from services.practical_facts import matching_topics, practical_context  # noqa:
         "Quels sont les sites d'emploi au Sénégal ?",
         "Des offres de stage pour étudiants ?",
         "Aide-moi dans ma recherche d'emploi",
+        "Je suis à la recherche d'un emploi au Sénégal",  # relecture Codex : l'article « un »
+        "Je suis à la recherche de travail à Mbour",
         "Where can I find a job in Dakar?",
         "Any job offers in Senegal?",
     ],

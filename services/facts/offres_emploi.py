@@ -7,7 +7,8 @@ ni dire si elle est encore ouverte.
 
 Déclencheurs : « emploi » seul sert aussi à « emploi du temps » et « mode d'emploi », « travail » seul à « travaux »,
 « droit du travail » ou « travail à domicile » : seuls comptent « offre(s) d'emploi / de stage », chercher ou trouver
-un emploi, un travail, un job, un boulot ou un stage, la recherche d'emploi, les sites d'emploi, et l'anglais « job
+un emploi, un travail, un job, un boulot ou un stage, la recherche d'(un) emploi ou de travail (« à la recherche
+d'un emploi », relecture Codex), les sites d'emploi, et l'anglais « job
 offers », « find a job », « job search », « looking for a job ».
 """
 
@@ -15,7 +16,7 @@ TOPICS = (
     ("offres_emploi",
      r"\boffres? d ?emplois?\b|\boffres? de (stages?|travail|jobs?)\b|"
      r"\b(cherch|trouv|recherch)\w* (du |un |une |mon |un premier )?(emploi|travail|job|boulot|stage)\b|"
-     r"\brecherche d ?emploi\b|\bsites? d ?(emploi|offres)\b|"
+     r"\brecherche (d ?|de )(un |une )?(emploi|travail|job|boulot|stage)s?\b|\bsites? d ?(emploi|offres)\b|"
      r"\bjob offers?\b|\bjob search\b|\b(find|finding|looking for|get|search for) (a )?(job|internship)\b",
      ("Page « Offres d'emploi au Sénégal » de Teranga AI : https://teranga-ai.fr/offres-emploi. Elle renvoie vers "
       "des sites d'offres vérifiés le 22 novembre 2026 (Emploi Dakar, Senjob, Concoursn) et vers le guichet unique de "
