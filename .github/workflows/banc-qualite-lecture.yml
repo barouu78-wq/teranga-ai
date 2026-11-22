@@ -1,0 +1,28 @@
+name: banc-qualite-lecture
+
+# Affiche dans le journal le rapport du banc qualité réel (passage 45075422082), sans rien reposer au site ni à
+# l'IA : le réseau de la session de Claude ne peut pas télécharger les artefacts. Branche qa/banc-reel-lecture
+# seulement.
+
+on:
+  push:
+    branches: [qa/banc-reel-lecture]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  lire:
+    name: Lire le rapport du banc
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Télécharger l'artefact du passage réel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 45075422082 --repo "$GITHUB_REPOSITORY" --name banc-qualite-reel --dir rapport
+      - name: Afficher le rapport et la fiche
+        run: |
+          echo "=====RAPPORT====="; cat rapport/banc-qualite-reel.md
+          echo "=====FICHE====="; cat rapport/banc-qualite-reel.csv
