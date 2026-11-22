@@ -165,6 +165,7 @@ HARD=[
  ("fr","Je veux ouvrir une boutique, comment créer mon activité ?",["NINEA"]),
  ("fr","Combien de temps en bateau pour Ziguinchor ?",["environ 15 h"]),
  ("fr","Je veux louer une voiture à l'aéroport",["AIBD"]),
+ ("fr","Je cherche du travail à Dakar, tu as des offres ?",["https://teranga-ai.fr/offres-emploi"]),
 ]
 
 NOISE=[  # (question, textes qui NE doivent PAS apparaître)
@@ -174,6 +175,7 @@ NOISE=[  # (question, textes qui NE doivent PAS apparaître)
  ("fr","Que penser de la série Netflix sur une arnaque financière ?",["REPÈRES PRATIQUES"]),
  ("fr","Je suis volontaire pour une ONG au Sénégal",["REPÈRES PRATIQUES"]),
  ("fr","Comment fonctionne le tirage au sort de la CAN ?",["REPÈRES PRATIQUES"]),
+ ("fr","Quel est l'emploi du temps du lycée Lamine Guèye ?",["teranga-ai.fr/offres-emploi"]),
  ("fr","Je cherche un billet d'avion pour Dakar",["REPÈRES PRATIQUES"]),
  ("fr","Y a-t-il de la fraude électorale au Sénégal ?",["REPÈRES PRATIQUES"]),
  ("fr","Quel est le code postal de Dakar ?",["REPÈRES PRATIQUES"]),
