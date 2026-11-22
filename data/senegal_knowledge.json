@@ -2514,9 +2514,9 @@
       "type": "natural_site",
       "region": "Thiès",
       "locality": "Mbour",
-      "summary": "Réserve animalière de 3 500 hectares entre Sindia et Nguékokh, à environ 65 km de Dakar.",
-      "history": "Fondée en 1986 sur une partie d'un espace classé dès 1933 ; elle abrite rhinocéros blancs, girafes, zèbres, buffles, élands de Derby et plus de 120 espèces d'oiseaux.",
-      "what_to_see": "Safari en véhicule; girafes et rhinocéros; baobabs; oiseaux",
+      "summary": "Réserve animalière privée de 3 500 hectares à 65 km de Dakar, sur la route de Mbour : girafes, rhinocéros blancs, zèbres et élands de Derby.",
+      "history": "Née d'un projet de reboisement achevé en 1986, sur une partie d'un espace classé dès 1933, la réserve a été officiellement créée en 1990, première réserve privée du Sénégal. Elle abrite rhinocéros blancs, girafes, zèbres, buffles, élands de Derby, crocodiles du Nil, tortues sillonnées et plus de 120 espèces d'oiseaux ; il n'y a ni lions ni éléphants en liberté. On y voit aussi des tumulus classés et des baobabs creux qui servaient autrefois de sépulture aux griots.",
+      "what_to_see": "Safari en véhicule avec un guide; girafes, rhinocéros blancs et élands de Derby; crocodiles et buffles au point d'eau, visibles depuis le bar-restaurant; baobab-sépulture des griots et tumulus; plus de 120 espèces d'oiseaux",
       "latitude": 14.56,
       "longitude": -17.03,
       "image_queries": [
@@ -2525,12 +2525,15 @@
       ],
       "sources": [
         "https://lesoleil.sn/enquetes/reserve-de-bandia-un-joyau-ecologique-exceptionnel/",
-        "https://au-senegal.com/reserve-de-bandia,2865.html"
+        "https://au-senegal.com/reserve-de-bandia,2865.html",
+        "https://www.breizh-info.com/2026/01/26/256205/senegal-la-reserve-de-bandia-un-safari-inattendu-aux-portes-de-dakar/"
       ],
       "aliases": [
-        "Bandia"
+        "Bandia",
+        "Bandia Reserve",
+        "Réserve Bandia"
       ],
-      "access": "À environ 65 km de Dakar sur la route de Mbour ; visite en véhicule avec un guide de la réserve."
+      "access": "Sur la RN1 Dakar–Mbour, entre Sindia et Nguékokh (vers le km 64 depuis Dakar), à environ 15 km de Saly. Ouvert tous les jours de 8 h à 19 h. Visite uniquement en véhicule (le vôtre ou un 4x4 loué sur place) avec un guide obligatoire ; on ne descend pas du véhicule hors des arrêts prévus. Tarifs indiqués par Au Sénégal : entrée 12 000 FCFA par adulte et 7 000 FCFA par enfant de 3 à 12 ans, 10 000 FCFA pour un véhicule personnel, 6 500 FCFA de guide par véhicule, location d'un véhicule de safari de 40 000 à 60 000 FCFA. Horaires et tarifs à vérifier avant la visite."
     },
     {
       "id": "ile-de-ngor",
@@ -2637,9 +2640,9 @@
       "type": "locality",
       "region": "Kaffrine",
       "locality": "Kaffrine",
-      "summary": "Capitale régionale au cœur du bassin arachidier, sur l'axe Kaolack–Tambacounda.",
-      "history": "La région de Kaffrine a été créée en 2008 ; elle regroupe les départements de Birkelane, Kaffrine, Koungheul et Malem-Hodar. Kaffrine est la capitale du Ndoucoumane ; le mil et l'arachide y dominent l'agriculture.",
-      "what_to_see": "Marché de Kaffrine; vie rurale du bassin arachidier; journées culturelles",
+      "summary": "Capitale du Ndoucoumane et de la région de Kaffrine, au cœur du bassin arachidier, sur la route nationale 1 entre Kaolack et Tambacounda.",
+      "history": "Kaffrine est la capitale du Ndoucoumane, ancienne province du royaume du Saloum. La région de Kaffrine, créée en 2008, regroupe les départements de Birkelane, Kaffrine, Koungheul et Malem-Hodar. Le mil puis l'arachide dominent l'agriculture ; la commune comptait 57 307 habitants au recensement de 2023.",
+      "what_to_see": "Médina Baye de Kaffrine, quartier religieux fondé par Cheikh Abdou Barham Wilane, sur la route de Nganda; marché central; vie rurale du bassin arachidier",
       "latitude": 14.1014,
       "longitude": -15.5432,
       "image_queries": [
@@ -2648,7 +2651,17 @@
       ],
       "sources": [
         "https://en.wikipedia.org/wiki/Kaffrine_region",
-        "https://en.wikipedia.org/wiki/Kaffrine"
+        "https://en.wikipedia.org/wiki/Kaffrine",
+        "https://en.wikipedia.org/wiki/Ndoucoumane",
+        "https://fr.allafrica.com/stories/202607220200.html",
+        "https://en.wikipedia.org/wiki/N1_road_(Senegal)",
+        "https://www.rome2rio.com/s/Kaffrine/Dakar"
+      ],
+      "access": "Sur la route nationale 1 (Dakar–Mbour–Fatick–Kaolack–Tambacounda) : environ 250 km de Dakar par la route, soit à peu près 3 heures de voiture, et 56 km de Kaolack à vol d'oiseau. Sans voiture, passer par Kaolack puis prendre un taxi-brousse ; en ville, vélos-taxis et motos-taxis. Durées et tarifs à vérifier.",
+      "aliases": [
+        "Kafrin",
+        "Ndoucoumane",
+        "Ndoukoumane"
       ]
     },
     {
@@ -2678,15 +2691,24 @@
       "region": "Diourbel",
       "locality": "Mbacké",
       "summary": "Ville du Baol fondée en 1796, berceau de la famille de Cheikh Ahmadou Bamba, qui forme avec Touba la deuxième agglomération du Sénégal.",
-      "history": "Mbacké (ou Mbacké-Baol) a été fondée en 1796 par Mame Maram, arrière-grand-père de Cheikh Ahmadou Bamba, sur une terre accordée par le damel du Baol Amari Ngoné Ndella Fall. Chef-lieu de département de la région de Diourbel, à environ 190 km à l'est de Dakar, elle est aujourd'hui soudée à Touba.",
-      "what_to_see": "Quartiers historiques de Mbacké; marché; proximité de Touba et de sa Grande Mosquée",
+      "history": "Mbacké (ou Mbacké-Baol) a été fondée en 1796 par Mame Maram, arrière-grand-père de Cheikh Ahmadou Bamba, sur une terre accordée par le damel du Baol Amari Ngoné Ndella Fall. Centre réputé d'enseignement islamique dès la première moitié du XIXᵉ siècle, elle est la ville natale de Cheikh Ahmadou Bamba, fondateur du mouridisme ; dans le quartier de Mbacké Khéwar, une petite mosquée blanche marque son lieu de naissance. Chef-lieu de département de la région de Diourbel, à environ 190 km à l'est de Dakar, elle est aujourd'hui soudée à Touba.",
+      "what_to_see": "Mbacké Khéwar, quartier où une petite mosquée marque le lieu de naissance de Cheikh Ahmadou Bamba; Grande Mosquée Touba-Mbacké, ouverte au culte en 2023 sur la route de Touba, au croisement de Darou Salam; marché de Mbacké; Grande Mosquée de Touba, à quelques kilomètres",
       "latitude": 14.7917,
       "longitude": -15.9083,
       "image_queries": [
         "Mbacké Sénégal"
       ],
       "sources": [
-        "https://en.wikipedia.org/wiki/Mback%C3%A9"
+        "https://en.wikipedia.org/wiki/Mback%C3%A9",
+        "https://senego.com/sur-les-traces-de-bamba-mbacke-khewar-la-part-dheritage_1593388.html",
+        "https://www.seneplus.com/node/185170",
+        "https://au-senegal.com/l-autoroute-ila-touba-officiellement-inauguree,15564.html"
+      ],
+      "access": "À environ 190 km à l'est de Dakar. Le plus rapide : l'autoroute à péage Ila Touba (113 km de Thiès à Touba, ouverte en décembre 2018), sortie Touba, puis la route qui relie Touba à Mbacké. Tarif du péage à vérifier.",
+      "aliases": [
+        "Mbacke",
+        "Mbacké Baol",
+        "Mbacké-Baol"
       ]
     },
     {
