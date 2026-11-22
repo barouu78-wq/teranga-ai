@@ -596,7 +596,8 @@ SEO_PAGE_GUIDES = {
     "emploi-senegal": [
         ("Où chercher", "Les sites d'offres d'emploi sénégalais, les pages carrières des entreprises, LinkedIn et les "
          "groupes professionnels sont les canaux les plus utilisés. Le réseau compte beaucoup : anciens camarades, "
-         "associations professionnelles, forums emploi des universités et des écoles."),
+         "associations professionnelles, forums emploi des universités et des écoles. Les sites d'offres vérifiés par "
+         'Teranga sont réunis sur la page <a href="/offres-emploi">Offres d\'emploi au Sénégal</a>.'),
         ("Organismes à connaître", "L'Agence nationale pour la promotion de l'emploi des jeunes (ANPEJ), l'Office national de formation "
          "professionnelle (ONFP) et la Délégation générale à l'entrepreneuriat rapide des femmes et des jeunes (DER/FJ) accompagnent les jeunes et les "
          "porteurs de projets. Leurs programmes changent : vérifiez les services actuels sur leur site officiel."),

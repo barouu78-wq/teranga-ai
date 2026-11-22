@@ -9,6 +9,7 @@ from services.backup_ai import backup_enabled, claude_model, claude_response
 from services.cv import CONSIGNE_CV, ERREURS_DEMANDE, CvIllisible, DemandeInvalide, construire_demande, lire_reponse, page_cv
 from services.fichiers import FichierInvalide, message_erreur
 from services.latency import LatencyTrace
+from services.offres_emploi import page_offres_emploi
 
 NO_STORE = {"Cache-Control": "no-store"}
 
@@ -17,6 +18,10 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, ai_budge
     @app.get("/cv")
     def cv_page():
         return Response(page_cv(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=600"})
+
+    @app.get("/offres-emploi")
+    def offres_emploi_page():
+        return Response(page_offres_emploi(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=600"})
 
     def cv_body(trace):
         refus = rate_guard("cv")  # quotas par minute et par heure
