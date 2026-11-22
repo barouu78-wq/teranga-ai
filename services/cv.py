@@ -168,8 +168,8 @@ FAQ_CV = (
      "Ici, Teranga le met en page à partir de ton ancien CV ou du récit de ton parcours."),
     ("Je n’ai pas d’expérience : que mettre dans mon CV ?",
      "Les stages, l’apprentissage, le bénévolat, les associations, les petits boulots, l’aide au commerce familial, les "
-     "projets d’études, les outils que tu maîtrises et le permis. La formation passe alors en premier. Choisis « Je n’ai "
-     "pas de CV » et raconte ton parcours : Teranga n’ajoute rien que tu n’as pas fait."),
+     "projets d’études, les outils que tu maîtrises et le permis. La formation passe alors en premier. En haut de la "
+     "page, choisis le départ sans CV et raconte ton parcours : Teranga n’ajoute rien que tu n’as pas fait."),
     ("Quel modèle de CV choisir ?",
      "Pour une candidature sur un site d’emploi : Sobre, Classique ou Minimal, car certains logiciels de tri lisent mal "
      "les colonnes et les bandeaux de couleur. Pour un envoi par e-mail, sur papier ou en main propre, les autres "
