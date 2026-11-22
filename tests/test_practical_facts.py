@@ -75,8 +75,9 @@ def test_entry_questions_keep_the_visa_facts():
 
 
 def test_short_acronyms_and_inner_words_do_not_trigger_social_or_paper_topics():
-    for question in ("Où apprendre le HTML et le CSS à Dakar ?", "Offre d'emploi directeur DAF"):
-        assert matching_topics(question) == [], question
+    assert matching_topics("Où apprendre le HTML et le CSS à Dakar ?") == []
+    # « DAF » ne déclenche ni le social ni les papiers ; « offre d'emploi » mène à la page des offres (22 novembre 2026).
+    assert matching_topics("Offre d'emploi directeur DAF") == ["offres_emploi"]
     # « allocations » contient « location » : pas de faits de transport.
     assert matching_topics("Quelles allocations familiales pour mes enfants ?") == ["protection"]
     assert "transport" in matching_topics("Je veux une location de voiture")
