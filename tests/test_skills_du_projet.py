@@ -86,6 +86,10 @@ REPRISES = {
     # 19 novembre 2026 (« installe ce skill », propriétaire) : reverse-engineer-anything de morluto/rea, texte seulement ;
     # ni le serveur MCP REA ni le paquet npm rea-agents ne sont installés.
     "LICENCE-rea.txt": ("morluto/rea", ("reverse-engineer-anything",)),
+    # 23 novembre 2026 (« Oui go », propriétaire) : cinq skills de marketing de coreyhaines31/marketingskills, texte
+    # seulement (SKILL.md et references/*.md) ; ni scripts/, ni assets/ (Google Tag Manager), ni evals/.
+    "LICENCE-marketingskills.txt": ("coreyhaines31/marketingskills",
+                                    ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo")),
 }
 
 
@@ -184,3 +188,17 @@ def test_reverse_engineer_anything_n_installe_rien_et_reste_sur_nos_applis():
     corps = texte.split("# REA", 1)[1]
     avant_npx = corps.split("npx -y rea-agents", 1)[0]
     assert "Projet Teranga AI" in avant_npx.rsplit("##", 1)[1]  # la section qui cite la commande rappelle la règle
+
+
+def test_conversion_tracking_renvoie_au_controleur_google_ads_avec_consentement():
+    """Relecture Codex (#655) : le skill repris propose d'ajouter gtag.js directement dans les pages et de lire des
+    fichiers assets/ et scripts/ non repris. En tête, la seule voie Teranga (consentement d'abord) et l'avertissement."""
+    dossier = SKILLS / "conversion-tracking"
+    regle = (dossier / "SKILL.md").read_text(encoding="utf-8").split("# Conversion Tracking", 1)[0]
+    for mot in ("services/google_ads_tag.py", "static/google-ads-consent.js", "terangaAdsConversion",
+                "Ne jamais ajouter `gtag.js`", "ne sont\n>   pas repris"):
+        assert mot in regle, mot
+    assert not (dossier / "assets").exists() and not (dossier / "scripts").exists()
+    for nom in ("browser-side.md", "google-ads.md", "conversion-moments.md"):
+        debut = (dossier / "references" / nom).read_text(encoding="utf-8")[:600]
+        assert "Teranga AI" in debut and "ne s'appliquent pas" in debut, nom
