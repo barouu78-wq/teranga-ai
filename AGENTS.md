@@ -97,6 +97,9 @@ un contrôle qui n'a pas tourné.
 | `humanizer` | retirer d'un texte les tournures typiques d'une IA, sans changer les faits |
 | `fp-check` | alerte de sécurité (Codex, CodeQL, Bandit) : vrai problème ou fausse alerte, preuves à l'appui |
 | `sharp-edges` | réglages et usages dangereux dans le code ou la configuration, avant de toucher à la sécurité |
+| `core-web-vitals` | vitesse vue par Google (LCP, INP, CLS) : corriger à partir de mesures réelles (PageSpeed) |
+| `performance` | site plus rapide sur téléphone : mesurer avant et après, sans script ni CDN externe |
+| `accessibility` | accessibilité WCAG 2.2 (lecteur d'écran, clavier, contrastes), en complément de `revue-interface` |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
@@ -104,7 +107,7 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 `.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
 seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
 `.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée), et `cv-senegal` est adapté de `resume-tailor`
-(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building`, `programmatic-seo`, `aso`, `social`, `copywriting`, `content-strategy` et `community-marketing` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement), `seo-hreflang` d'AgriciDaniel/claude-seo (MIT, `.claude/skills/LICENCE-claude-seo.txt`), `humanizer` de blader/humanizer (MIT, `.claude/skills/LICENCE-humanizer.txt`), et `fp-check` et `sharp-edges` de trailofbits/skills (CC BY-SA 4.0, `.claude/skills/LICENCE-trailofbits.txt`), texte seulement ; les règles de ce fichier priment sur les leurs.
+(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building`, `programmatic-seo`, `aso`, `social`, `copywriting`, `content-strategy` et `community-marketing` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement), `seo-hreflang` d'AgriciDaniel/claude-seo (MIT, `.claude/skills/LICENCE-claude-seo.txt`), `humanizer` de blader/humanizer (MIT, `.claude/skills/LICENCE-humanizer.txt`), `fp-check` et `sharp-edges` de trailofbits/skills (CC BY-SA 4.0, `.claude/skills/LICENCE-trailofbits.txt`), et `core-web-vitals`, `performance` et `accessibility` d'addyosmani/web-quality-skills (MIT, `.claude/skills/LICENCE-web-quality-skills.txt`), texte seulement ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
