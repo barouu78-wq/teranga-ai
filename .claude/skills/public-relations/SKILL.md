@@ -158,7 +158,7 @@ Combine: recent product milestones + active news cycles + any data you've collec
 Go to [story-angles.md](references/story-angles.md). Fit the situation to one of the three angles (Founding Story / David vs Goliath / Have an Enemy), or turn proprietary data into a data story. Remember: a milestone alone isn't a story — milestone *with narrative* is.
 
 ### "Write a press release for our launch"
-Go to [press-releases.md](references/press-releases.md). Check the release is worth it, draft it in the standard structure, post it on the newsroom page, then pick distribution by goal and budget. Pitch journalists separately.
+Go to [press-releases.md](references/press-releases.md). Check the release is worth it, draft it in the standard structure, and stop at the draft. **Teranga AI :** nothing is posted on `/presse`, sent or distributed without the owner's explicit approval for that text; then pick distribution by goal and budget. Pitch journalists separately (drafts only).
 
 ### "Respond to this HARO query"
 Go to [press-platforms.md](references/press-platforms.md), use the response template, keep it under 200 words.

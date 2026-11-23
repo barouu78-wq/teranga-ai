@@ -387,6 +387,9 @@ Per-concept format is defined in [references/static-ad-templates.md](references/
 
 When a person who isn't you needs to review and pick — a client, a partner, a stakeholder — produce a **creative review page**: a self-contained HTML artifact that presents each concept as an in-feed platform mockup (Instagram/Facebook, with a whitelist-handle toggle), breaks carousels into a labeled frame-by-frame storyboard, lets them toggle headline/copy variations, and discloses what's grounded in real assets. It's the visual upgrade to INDEX.md — a decision made off one link instead of by reading markdown. The template ships at [assets/creative-review-template.html](assets/creative-review-template.html) (one file, no build, hostable anywhere); populate its `DATA` object from your generated concepts. Full data model, grounding rules (the disclosure block is required), and delivery in [references/creative-review-page.md](references/creative-review-page.md).
 
+> **Teranga AI** : le modèle HTML de cette page (`assets/creative-review-template.html`) n'est pas repris. Présenter les
+> annonces dans un tableau Markdown ou une page faite avec l'outil Artifact, et ne pas le promettre.
+
 ### Iteration Report
 
 When iterating, include a summary:

@@ -1,5 +1,10 @@
 # The Creative Review Page
 
+> **Teranga AI** : le modèle `assets/creative-review-template.html` cité ici n'est pas repris (texte seulement). Pour une
+> page de relecture, préparer un tableau Markdown des annonces (titre, texte, angle) ou utiliser l'outil Artifact de
+> Claude ; ne jamais promettre ce fichier.
+
+
 A shareable, self-contained web page that presents generated ad concepts for a client or stakeholder to **review and pick** — the visual upgrade to `INDEX.md`. Where the markdown outputs are built for the operator, the review page is built for the person approving the spend: it shows each concept as an in-feed platform mockup, breaks carousels into a labeled frame-by-frame storyboard, lets them toggle copy variations, and discloses what's grounded in real assets.
 
 The template ships at [assets/creative-review-template.html](../assets/creative-review-template.html). It's one file — inline CSS and JS, no build, no dependencies, no network. Open it locally, host it on any static host (Vercel/Netlify/GitHub Pages), or hand off the `.html` file directly.
