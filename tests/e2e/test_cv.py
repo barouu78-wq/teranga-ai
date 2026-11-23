@@ -70,6 +70,7 @@ def test_un_parcours_devient_un_cv_modifiable_garde_sur_le_telephone(page, base_
 def test_un_cv_en_pdf_part_avec_le_poste_et_recommencer_efface_tout(page, base_url):
     envois = []
     ouvrir(page, base_url, envois)
+    page.get_by_text("J’ai déjà un CV").click()  # le départ par défaut est le parcours depuis le 23 novembre 2026
     page.set_input_files("#cvFichier", files=[{"name": "mon-cv.pdf", "mimeType": "application/pdf",
                                                "buffer": b"%PDF-1.4\n%%EOF\n"}])
     page.get_by_text("Fichier prêt : mon-cv.pdf").wait_for()
@@ -86,6 +87,9 @@ def test_un_cv_en_pdf_part_avec_le_poste_et_recommencer_efface_tout(page, base_u
 def test_sans_cv_ni_parcours_rien_ne_part(page, base_url):
     envois = []
     ouvrir(page, base_url, envois)
+    page.get_by_role("button", name="Créer mon CV").click()  # départ par défaut : le parcours
+    page.locator("#cvErreur").get_by_text("Raconte ton parcours en quelques phrases.").wait_for()
+    page.get_by_text("J’ai déjà un CV").click()
     page.get_by_role("button", name="Créer mon CV").click()
     page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
     assert envois == []
@@ -266,6 +270,7 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
     ouvrir(page, base_url, envois)
     page.get_by_role("link", name="Faire le mien").click()
+    page.get_by_text("J’ai déjà un CV").click()
     page.get_by_role("button", name="Créer mon CV").click()  # sans fichier : refusé
     page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
     page.get_by_role("button", name="Créer mon CV").click()  # deuxième refus : pas de nouveau signal
@@ -279,3 +284,21 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     page.wait_for_timeout(300)  # les signaux partent sans attendre de réponse
     assert sorted(etapes) == sorted(["faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"]), etapes
     assert len(envois) == 1
+
+
+def test_sans_cv_le_nom_et_trois_lignes_suffisent(page, base_url):
+    """Départ par défaut (« Go 1 » du 23 novembre 2026) : pas de fichier à chercher. Le nom part en tête du parcours."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    assert page.locator("#cvParcours").is_visible() and page.locator("#cvNom").is_visible()
+    assert page.locator("#cvBlocFichier").is_hidden()
+    page.fill("#cvNom", "Awa Ndiaye")
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.fill("#cvPoste", "Comptable")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert envois[-1]["parcours"] == "Nom : Awa Ndiaye\nBTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar."
+    # Recommencer revient au départ par défaut, nom compris.
+    page.get_by_role("button", name="Recommencer").click()
+    assert page.locator("#cvParcours").is_visible() and page.locator("#cvBlocFichier").is_hidden()
+    assert page.input_value("#cvNom") == ""

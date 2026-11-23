@@ -262,6 +262,7 @@ body.hote main h2{margin-top:26px}
 .cv-option small{display:block;color:var(--muted)}
 .cv-option:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .cv-champ{display:grid;gap:6px}
+.cv-bloc-parcours{display:grid;gap:16px}
 .cv-champ label{font-weight:700}
 .cv-champ label small{font-weight:400;color:var(--muted)}
 .cv-champ input[type=text],.cv-champ textarea{width:100%;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit}
