@@ -69,12 +69,10 @@ def place_title(name: str, region: str, limit: int = 65) -> str:
     senegal » ou « kaffrine senegal ». La région reste dans la description de la page.
     """
     pays = "" if "sénégal" in name.casefold() else ", Sénégal"
-    where = f" ({region})" if region and region.casefold() not in name.casefold() else ""
     for candidate in (
         f"{name}{pays} : que voir, accès, carte | Teranga AI",
         f"{name}{pays} : que voir, carte | Teranga AI",
-        f"{name}{where} : que voir, carte | Teranga AI",
-        f"{name} : que voir, carte | Teranga AI",
+        f"{name}{pays} | Teranga AI",
         f"{name} | Teranga AI",
     ):
         if len(candidate) <= limit:
