@@ -21,6 +21,14 @@
     return null;
   }
   function erreur(texte){$('cvErreur').textContent=texte||'';}
+  // Étapes du formulaire, comptées par le serveur chaque mois sans rien de ce que la personne écrit (routes/monetization.py,
+  // cv_etape) : savoir où les visiteurs s'arrêtent. Une fois chacune par visite ; une erreur réseau est ignorée.
+  const signales=new Set();
+  function etape(nom){
+    if(signales.has(nom))return;
+    signales.add(nom);
+    try{fetch('/cv/etape/'+nom,{cache:'no-store',keepalive:true,credentials:'omit'}).catch(()=>{});}catch(_){}
+  }
 
   // --- Fichier : photo réduite en JPEG (1 568 px), PDF ou Word de 2 Mo au plus (le serveur revérifie tout) ---
   function base64(blob){
@@ -203,12 +211,14 @@
     const depart=document.querySelector('input[name="depart"]:checked').value;
     const corps={poste:$('cvPoste').value.trim(),offre:$('cvOffre').value.trim()};
     if(depart==='fichier'){
-      if(!piece){erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();return;}
+      if(!piece){etape('refus-fichier');erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();return;}
       corps.fichier=piece;
     }else{
-      corps.parcours=$('cvParcours').value.trim();
-      if(corps.parcours.length<20){erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      const recit=$('cvParcours').value.trim(),nom=$('cvNom').value.trim();
+      if(recit.length<20){etape('refus-parcours');erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      corps.parcours=(nom?'Nom : '+nom+'\n':'')+recit;
     }
+    etape('envoi');
     const bouton=$('cvCreer');
     bouton.disabled=true;bouton.textContent='Création de ton CV…';bouton.setAttribute('aria-busy','true');
     try{
@@ -267,6 +277,13 @@
     catch(err){e.target.value='';erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
   });
   $('cvForm').addEventListener('submit',creer);
+  // « debut » : un vrai champ touché par la personne (clic, choix, saisie), ni le bouton « Créer mon CV » ni le curseur
+  // que la page place elle-même après un refus (relecture Codex, #644).
+  ['click','change','input'].forEach(t=>$('cvForm').addEventListener(t,e=>{
+    if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))etape('debut');
+  }));
+  const faireLeMien=document.querySelector('#cvExemple a[href="#cvForm"]');
+  if(faireLeMien)faireLeMien.addEventListener('click',()=>etape('faire-le-mien'));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
@@ -278,7 +295,7 @@
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
     $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvForm').reset();
-    $('cvBlocFichier').hidden=false;$('cvBlocParcours').hidden=true;$('cvFichierEtat').textContent='';
+    $('cvBlocFichier').hidden=true;$('cvBlocParcours').hidden=false;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });
 

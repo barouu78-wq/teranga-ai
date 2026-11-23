@@ -19,6 +19,9 @@ from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_heade
 MAX_POSTE = 120
 MAX_TEXTE = 6000  # récit du parcours, offre d'emploi
 MIN_PARCOURS = 20
+MAX_NOM = 80
+# Le nom part en tête du récit (« Nom : …\n », static/cv.js) : le champ du récit laisse cette place sous MAX_TEXTE.
+MAX_RECIT = MAX_TEXTE - len("Nom : \n") - MAX_NOM
 
 CONSIGNE_CV = """Tu es l'assistant CV de Teranga AI, pour l'emploi au Sénégal. Tu crées un CV clair à partir de ce que la personne a donné (son CV, ou le récit de son parcours), pour le poste qu'elle vise et, si une offre est fournie, une lettre de motivation.
 
@@ -216,15 +219,19 @@ def page_cv(site_url: str) -> str:
 </section>
 <form id="cvForm" class="cv-form" novalidate>
 <fieldset class="cv-choix"><legend>Ton point de départ</legend>
-<label class="cv-option"><input type="radio" name="depart" value="fichier" checked><span><strong>J’ai déjà un CV</strong><small>PDF, Word ou photo, 2 Mo au plus.</small></span></label>
-<label class="cv-option"><input type="radio" name="depart" value="parcours"><span><strong>Je n’ai pas de CV</strong><small>Raconte ton parcours en quelques phrases.</small></span></label>
+<label class="cv-option"><input type="radio" name="depart" value="parcours" checked><span><strong>Je n’ai pas de CV</strong><small>Raconte ton parcours en quelques lignes&nbsp;: pas besoin de fichier.</small></span></label>
+<label class="cv-option"><input type="radio" name="depart" value="fichier"><span><strong>J’ai déjà un CV</strong><small>PDF, Word ou photo, 2 Mo au plus.</small></span></label>
 </fieldset>
-<div class="cv-champ" id="cvBlocFichier"><span class="cv-etiquette" id="cvFichierTitre">Ton CV</span>
+<div class="cv-champ" id="cvBlocFichier" hidden><span class="cv-etiquette" id="cvFichierTitre">Ton CV</span>
 <input id="cvFichier" class="cv-fichier" type="file" aria-labelledby="cvFichierTitre cvFichierBouton" accept="image/*,application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 <label class="cv-bouton cv-choisir" id="cvFichierBouton" for="cvFichier">Choisir mon CV</label>
 <p class="cv-aide" id="cvFichierEtat" role="status" aria-live="polite"></p></div>
-<div class="cv-champ" id="cvBlocParcours" hidden><label for="cvParcours">Ton parcours</label>
-<textarea id="cvParcours" rows="6" maxlength="{MAX_TEXTE}" placeholder="Tes études, tes stages ou emplois, ce que tu sais faire, les langues que tu parles…"></textarea></div>
+<div class="cv-bloc-parcours" id="cvBlocParcours">
+<div class="cv-champ"><label for="cvNom">Ton nom <small>(facultatif)</small></label>
+<input id="cvNom" type="text" maxlength="{MAX_NOM}" autocomplete="name" placeholder="Prénom et nom"></div>
+<div class="cv-champ"><label for="cvParcours">Tes études et ce que tu as déjà fait</label>
+<textarea id="cvParcours" rows="5" maxlength="{MAX_RECIT}" placeholder="Ex. : Bac L en 2022. Vendeuse deux ans dans la boutique de ma tante. Je sais utiliser Excel, je parle wolof et français."></textarea>
+<p class="cv-aide">Trois lignes suffisent&nbsp;: stages, petits boulots, bénévolat, ce que tu sais faire, les langues que tu parles. Teranga n’ajoute rien.</p></div></div>
 <div class="cv-champ"><label for="cvPoste">Pour quel poste&nbsp;?</label>
 <input id="cvPoste" type="text" maxlength="{MAX_POSTE}" placeholder="Ex. comptable, vendeuse, chauffeur, développeur…" autocomplete="off"></div>
 <div class="cv-champ"><label for="cvOffre">Une offre d’emploi&nbsp;? <small>(facultatif)</small></label>
