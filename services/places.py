@@ -63,13 +63,18 @@ def _head(title, description, url, site_url, ld):
 
 
 def place_title(name: str, region: str, limit: int = 65) -> str:
-    """Titre le plus complet qui tient dans les résultats Google (~65 caractères)."""
+    """Titre le plus complet qui tient dans les résultats Google (~65 caractères).
+
+    « Sénégal » d'abord : Search Console (30 jours au 23 novembre 2026) montre des recherches comme « reserve bandia
+    senegal » ou « kaffrine senegal ». La région reste dans la description de la page.
+    """
+    pays = "" if "sénégal" in name.casefold() else ", Sénégal"
     where = f" ({region})" if region and region.casefold() not in name.casefold() else ""
     for candidate in (
-        f"{name}{where} : histoire, que voir, carte | Teranga AI",
-        f"{name}{where} : histoire et carte | Teranga AI",
-        f"{name} : histoire, que voir, carte | Teranga AI",
-        f"{name} : histoire et carte | Teranga AI",
+        f"{name}{pays} : que voir, accès, carte | Teranga AI",
+        f"{name}{pays} : que voir, carte | Teranga AI",
+        f"{name}{where} : que voir, carte | Teranga AI",
+        f"{name} : que voir, carte | Teranga AI",
         f"{name} | Teranga AI",
     ):
         if len(candidate) <= limit:
