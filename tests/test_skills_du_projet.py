@@ -94,6 +94,8 @@ REPRISES = {
                                      "aso", "social", "copywriting", "content-strategy", "community-marketing")),
     "LICENCE-claude-seo.txt": ("AgriciDaniel/claude-seo", ("seo-hreflang",)),
     "LICENCE-humanizer.txt": ("blader/humanizer", ("humanizer",)),
+    # 23 novembre 2026 (« Go », propriétaire) : vitesse et accessibilité, texte seulement.
+    "LICENCE-web-quality-skills.txt": ("addyosmani/web-quality-skills", ("core-web-vitals", "performance", "accessibility")),
 }
 
 
