@@ -36,7 +36,7 @@ REGION_ALIASES = {
     "Dakar": ("dakar", *WOLOF_PLACE_NAMES), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
     "Kaffrine": ("kaffrine",), "Kaolack": ("kaolack",),
     "Kédougou": ("kedougou", "kédougou"), "Kolda": ("kolda",), "Louga": ("louga",),
-    "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis", "ndar"),
+    "Matam": ("matam",), "Saint-Louis": ("saint-louis", "saint louis"),
     "Sédhiou": ("sedhiou", "sédhiou"), "Tambacounda": ("tambacounda",),
     "Thiès": ("thies", "thiès"), "Ziguinchor": ("ziguinchor",),
 }

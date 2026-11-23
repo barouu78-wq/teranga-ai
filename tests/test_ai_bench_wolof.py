@@ -122,3 +122,12 @@ def test_wolof_names_of_touba_and_saint_louis_bring_their_facts(language, questi
 def test_tuubaa_is_not_dakar():
     assert _payload("Ana yoonu Tubaa ?")["intent_context"]["location"] != "dakar"
     assert _payload("Lan laa mën a seet ci Ndar ?")["intent_context"]["location"] == "saint-louis"
+
+
+# Relecture Codex (#659) : « ndar » ne doit être reconnu que comme mot entier, jamais dans « standard ».
+@pytest.mark.parametrize("question", ["Quelle est le standard au Sénégal ?", "Quel est le standard de vie à Dakar ?",
+                                      "un standard téléphonique pour mon entreprise"])
+def test_ndar_inside_a_word_is_not_saint_louis(question):
+    assert detect_location(question) != "saint-louis"
+    assert _payload(question, "fr")["intent_context"]["location"] != "saint-louis"
+    assert "- Saint-Louis:" not in format_senegal_knowledge(SENEGAL_KNOWLEDGE, question)
