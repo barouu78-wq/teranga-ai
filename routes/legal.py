@@ -9,7 +9,7 @@ import os
 import re
 from html import escape
 
-from flask import Response, current_app, jsonify, request
+from flask import Response, current_app, jsonify, redirect, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
@@ -90,6 +90,36 @@ def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google
 <p class="intro">{escape(copy['intro'])}</p>{sections}<p><small>{escape(copy['updated'])} : {_UPDATED}</small></p></article></main>{site_footer(lang)}</body></html>"""
 
 
+# Mentions légales (loi pour la confiance dans l'économie numérique, article 6). Éditeur et contact donnés par le
+# propriétaire le 23 novembre 2026 ; adresse de l'hébergeur : conditions d'utilisation de Render (render.com/terms).
+_MENTIONS = (
+    ("Éditeur", 'Teranga AI est édité par Oumar Ba. Contact : <a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>.'),
+    ("Directeur de la publication", "Oumar Ba."),
+    ("Hébergeur", 'Render Services, Inc., 525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis '
+                  '(<a href="https://render.com" rel="noopener">render.com</a>), téléphone : +1 415 319 8186.'),
+    ("Réponses de l'assistant", "Les réponses sont produites par une intelligence artificielle à partir de repères "
+     "vérifiés et, parfois, d'une recherche web. Elles peuvent contenir des erreurs : vérifiez auprès des sources "
+     "officielles avant toute démarche importante. En cas d'urgence, consultez la page "
+     '<a href="/urgences">Urgences</a>.'),
+    ("Liens partenaires", "Certains liens mènent vers des sites partenaires qui peuvent verser une commission à "
+     "Teranga AI, sans surcoût pour vous. Ils sont toujours marqués « Lien partenaire »."),
+    ("Données personnelles", 'Voir la <a href="/confidentialite">politique de confidentialité</a>.'),
+    ("Signaler un contenu", 'Pour signaler un contenu inexact ou illicite : '
+     '<a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>.'),
+)
+_MENTIONS_UPDATED = "23 novembre 2026"
+
+
+def render_mentions() -> str:
+    # Textes fixes écrits ici (aucune donnée de visiteur) : le HTML des liens est voulu.
+    sections = "".join(f"<section><h2>{escape(title)}</h2><p>{text}</p></section>" for title, text in _MENTIONS)
+    return f"""<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mentions légales | Teranga AI</title><meta name="robots" content="index,follow">{HEAD_ASSETS}</head>
+<body>{site_header(lang="fr")}<main><article><div class="kicker">Teranga AI</div><h1>Mentions légales</h1>
+{sections}<p><small>Dernière mise à jour : {_MENTIONS_UPDATED}</small></p></article></main>{site_footer("fr")}</body></html>"""
+
+
 # Application Android (paquet PWABuilder). Ces valeurs sont publiques : le
 # fichier assetlinks.json est fait pour être lu par tous. ANDROID_CERT_SHA256
 # (variable d'environnement) peut AJOUTER des empreintes, jamais en retirer.
@@ -133,6 +163,14 @@ def register_legal_routes(app, deps):
     @app.get("/privacy")
     def privacy_en():
         return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot")), google_ads=bool(current_app.config.get("GOOGLE_ADS"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+    @app.get("/mentions-legales")
+    def mentions_legales():
+        return Response(render_mentions(), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+    @app.get("/legal")
+    def legal_redirect():
+        return redirect("/mentions-legales", code=301)
 
     @app.get("/.well-known/assetlinks.json")
     def android_asset_links():
