@@ -91,7 +91,11 @@ REPRISES = {
     "LICENCE-marketingskills.txt": ("coreyhaines31/marketingskills",
                                     ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo",
                                      # 23 novembre 2026, second « Go » : même commit.
-                                     "aso", "social", "copywriting", "content-strategy", "community-marketing")),
+                                     "aso", "social", "copywriting", "content-strategy", "community-marketing",
+                                     # troisième « Go » : même commit.
+                                     "ad-creative", "site-architecture", "free-tools", "public-relations")),
+    # 23 novembre 2026 (« Go ») : writing-plans et writing-skills de Superpowers, texte seulement.
+    "LICENCE-superpowers.txt": ("obra/superpowers", ("writing-plans", "writing-skills")),
     "LICENCE-claude-seo.txt": ("AgriciDaniel/claude-seo", ("seo-hreflang",)),
     "LICENCE-humanizer.txt": ("blader/humanizer", ("humanizer",)),
     # 23 novembre 2026 (« Go », propriétaire) : vitesse et accessibilité, texte seulement.
