@@ -18,7 +18,7 @@ from services.adsense import adsense_config, inject_adsense  # noqa: E402
 
 CLIENT = "ca-pub-1234567890123456"
 SLOT = "9876543210"
-GUIDES = ["/visiter-goree", "/lieux/goree", "/regions/thies", "/fr/senegal-visa", "/explorer",
+GUIDES = ["/visiter-goree", "/lieux/goree", "/regions/thies", "/visa-senegal", "/explorer",
           "/calendrier-fetes-senegal", "/lieux"]
 # Relecture Codex de #598 : une liste des pages autorisées (guides), pas une liste d'exclusions ; une page qui n'est
 # pas un guide (Radar jeunesse, pages de l'entreprise) ou ajoutée plus tard n'a pas d'annonce.

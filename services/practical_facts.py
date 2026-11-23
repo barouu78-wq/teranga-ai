@@ -304,10 +304,18 @@ TOPICS = (
     # et aucun repère douane vérifié n'existe encore.
     ("visa", r"\bvisas?\b|passeport|passport|formalit|entrer au senegal|\bentry\b|"
      r"\bpapiers? (pour|afin de) (voyager|venir|entrer|aller|partir)|(voyager|venir|entrer|arriver) (au|en) senegal.{0,80}\bpapiers?\b|"
-     r"documents? de voyage|travel documents?|entry requirements?",
+     r"documents? de voyage|travel documents?|entry requirements?|"
+     # « Senegal Digital Arrival Card » cherchée sur Google (Search Console, novembre 2026) ; pas « carte bancaire ».
+     r"arrival card|\bsndac\b|\bsdac\b|(carte|fiche|formulaire) d.?(arrivee|entree)\b",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
-      "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",)),
+      "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",
+      # APS reprise par AllAfrica, 10 mars 2026 ; « carte d'arrivée » : seuls des sites privés en parlent (vérifié le
+      # 23 novembre 2026, aucune source officielle trouvée).
+      "Carnet de vaccination : le 10 mars 2026, le ministère des Affaires étrangères a annoncé qu'il n'était plus exigé "
+      "à l'entrée ; la règle a changé plusieurs fois en 2026, à revérifier avant le départ. « Carte d'arrivée "
+      "numérique » (Senegal Digital Arrival Card) : au 23 novembre 2026, aucune source officielle trouvée ne l'exige ; "
+      "des sites privés la font payer. Ne rien payer à un site non officiel, demander à l'ambassade ou au consulat.")),
     # Un mois cité avec un vrai voyage (« Je pars au Sénégal en décembre », « vacances en août ») : pas « partir à la
     # retraite en janvier », ni « rendre visite à ma mère en janvier » (relecture Codex de #520).
     ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
