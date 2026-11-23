@@ -19,6 +19,9 @@ from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_heade
 MAX_POSTE = 120
 MAX_TEXTE = 6000  # récit du parcours, offre d'emploi
 MIN_PARCOURS = 20
+MAX_NOM = 80
+# Le nom part en tête du récit (« Nom : …\n », static/cv.js) : le champ du récit laisse cette place sous MAX_TEXTE.
+MAX_RECIT = MAX_TEXTE - len("Nom : \n") - MAX_NOM
 
 CONSIGNE_CV = """Tu es l'assistant CV de Teranga AI, pour l'emploi au Sénégal. Tu crées un CV clair à partir de ce que la personne a donné (son CV, ou le récit de son parcours), pour le poste qu'elle vise et, si une offre est fournie, une lettre de motivation.
 
@@ -225,9 +228,9 @@ def page_cv(site_url: str) -> str:
 <p class="cv-aide" id="cvFichierEtat" role="status" aria-live="polite"></p></div>
 <div class="cv-bloc-parcours" id="cvBlocParcours">
 <div class="cv-champ"><label for="cvNom">Ton nom <small>(facultatif)</small></label>
-<input id="cvNom" type="text" maxlength="80" autocomplete="name" placeholder="Prénom et nom"></div>
+<input id="cvNom" type="text" maxlength="{MAX_NOM}" autocomplete="name" placeholder="Prénom et nom"></div>
 <div class="cv-champ"><label for="cvParcours">Tes études et ce que tu as déjà fait</label>
-<textarea id="cvParcours" rows="5" maxlength="{MAX_TEXTE}" placeholder="Ex. : Bac L en 2022. Vendeuse deux ans dans la boutique de ma tante. Je sais utiliser Excel, je parle wolof et français."></textarea>
+<textarea id="cvParcours" rows="5" maxlength="{MAX_RECIT}" placeholder="Ex. : Bac L en 2022. Vendeuse deux ans dans la boutique de ma tante. Je sais utiliser Excel, je parle wolof et français."></textarea>
 <p class="cv-aide">Trois lignes suffisent&nbsp;: stages, petits boulots, bénévolat, ce que tu sais faire, les langues que tu parles. Teranga n’ajoute rien.</p></div></div>
 <div class="cv-champ"><label for="cvPoste">Pour quel poste&nbsp;?</label>
 <input id="cvPoste" type="text" maxlength="{MAX_POSTE}" placeholder="Ex. comptable, vendeuse, chauffeur, développeur…" autocomplete="off"></div>

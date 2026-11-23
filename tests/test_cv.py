@@ -355,3 +355,14 @@ def test_le_depart_sans_cv_est_propose_d_abord_sans_fichier_a_chercher():
     assert re.search(r'<div class="cv-bloc-parcours" id="cvBlocParcours">', html)
     nom = re.search(r'<input id="cvNom"[^>]*>', html)
     assert nom and 'autocomplete="name"' in nom.group(0) and 'maxlength="80"' in nom.group(0)
+
+
+def test_un_recit_au_maximum_avec_un_nom_reste_accepte_par_le_serveur():
+    """Relecture Codex (#645) : le nom part en tête du parcours (« Nom : …\\n ») ; un récit à la longueur maximale du
+    champ, avec le nom le plus long, ne doit pas dépasser la limite du serveur (sinon 400, alors que le formulaire
+    l'acceptait)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    recit_max = int(re.search(r'<textarea id="cvParcours"[^>]*maxlength="(\d+)"', html).group(1))
+    nom_max = int(re.search(r'<input id="cvNom"[^>]*maxlength="(\d+)"', html).group(1))
+    parcours = "Nom : " + "n" * nom_max + "\n" + "r" * recit_max
+    construire_demande({"parcours": parcours, "poste": "Comptable"})  # ne lève rien
