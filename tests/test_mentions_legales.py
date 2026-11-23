@@ -25,7 +25,7 @@ def test_la_page_existe_et_nomme_editeur_directeur_et_hebergeur():
     html = response.get_data(as_text=True)
     for fait in ("Mentions légales", "Éditeur", "Oumar Ba", "terangaais@gmail.com",
                  "Directeur de la publication", "Hébergeur", "Render Services, Inc.",
-                 "525 Brannan Street", "San Francisco"):
+                 "525 Brannan Street", "San Francisco", "+1 415 319 8186"):
         assert fait in html, fait
     assert 'href="mailto:terangaais@gmail.com"' in html
     assert 'href="/confidentialite"' in html and 'href="/urgences"' in html

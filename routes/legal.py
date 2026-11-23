@@ -96,7 +96,7 @@ _MENTIONS = (
     ("Éditeur", 'Teranga AI est édité par Oumar Ba. Contact : <a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>.'),
     ("Directeur de la publication", "Oumar Ba."),
     ("Hébergeur", 'Render Services, Inc., 525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis '
-                  '(<a href="https://render.com" rel="noopener">render.com</a>).'),
+                  '(<a href="https://render.com" rel="noopener">render.com</a>), téléphone : +1 415 319 8186.'),
     ("Réponses de l'assistant", "Les réponses sont produites par une intelligence artificielle à partir de repères "
      "vérifiés et, parfois, d'une recherche web. Elles peuvent contenir des erreurs : vérifiez auprès des sources "
      "officielles avant toute démarche importante. En cas d'urgence, consultez la page "
