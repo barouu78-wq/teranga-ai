@@ -112,7 +112,10 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 
 
 KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi",
-               "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux"}
+               "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux",
+               "cv": "Étapes du formulaire Mon CV"}
+# Étapes du formulaire /cv envoyées par static/cv.js (« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent).
+CV_ETAPES = frozenset({"faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"})
 # Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
 VISIT_SOURCES = frozenset({"tiktok", "instagram", "whatsapp", "facebook", "youtube"})
 # Marques que les réseaux ajoutent eux-mêmes : Instagram met « utm_source=ig » sur le lien du profil (journaux du
@@ -230,6 +233,19 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         if rate_guard is None or rate_guard("visit_count") is None:
             stats.record("visite", source)
         return None
+
+    def _vrai_navigateur(agent):
+        # Même règle que count_social_visit : un vrai navigateur s'annonce WebKit ou Gecko, et n'est pas un robot.
+        return ("AppleWebKit/" in agent or "Gecko/" in agent) and not looks_like_bot(agent)
+
+    @app.get("/cv/etape/<nom>")
+    def cv_etape(nom):
+        # Une étape du formulaire Mon CV : compteur du mois, sans rien de ce que la personne écrit, ni IP, ni identifiant.
+        if nom not in CV_ETAPES:
+            abort(404)
+        if _vrai_navigateur(request.headers.get("User-Agent", "")) and (rate_guard is None or rate_guard("visit_count") is None):
+            stats.record("cv", nom)
+        return Response(status=204, headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
 
     @app.get("/go/<kind>")
     def affiliate_redirect(kind):
