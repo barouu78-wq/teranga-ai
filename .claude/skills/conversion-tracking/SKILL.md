@@ -18,10 +18,14 @@ metadata:
 >   propriétaire pour ce changement précis.
 > - Rien ne s'installe ni ne se lance depuis ce texte (programmes, scripts, outils payants cités) sans l'accord du
 >   propriétaire.
-> - Teranga n'utilise pas Google Tag Manager : la balise est `services/google_ads_tag.py` et
->   `static/google-ads-consent.js`, chargée seulement après « Accepter » ; les conversions (`question`, `appli`, `cv`)
->   partent par `GOOGLE_ADS_CONVERSIONS`. Les commandes `python3 scripts/build_recipe.py` et les fichiers `assets/`
->   cités plus bas ne sont pas repris et ne s'appliquent pas ici. Ne jamais contourner le consentement.
+> - **Sur Teranga, une seule voie pour Google Ads** : `services/google_ads_tag.py` et `static/google-ads-consent.js`
+>   (balise chargée seulement après « Accepter », avec nonce dans la CSP) ; une conversion s'envoie par
+>   `window.terangaAdsConversion('<nom>')` après un succès confirmé, et son étiquette s'ajoute à
+>   `GOOGLE_ADS_CONVERSIONS` (`question`, `appli`, `cv`). Ne jamais ajouter `gtag.js`, Google Tag Manager ou un pixel
+>   directement dans une page, ni élargir la CSP pour eux : cela contournerait le consentement (`AGENTS.md`, Sécurité).
+> - Les dossiers `assets/` (extraits par outil, modèles GTM) et `scripts/` (`build_recipe.py`) cités plus bas **ne sont
+>   pas repris** : les branches qui demandent de les lire ou de les lancer ne s'appliquent pas ici. Pour « l'extrait
+>   de l'outil X », répondre qu'il n'est pas disponible dans ce dépôt et passer par la voie Teranga ci-dessus.
 
 # Conversion Tracking
 

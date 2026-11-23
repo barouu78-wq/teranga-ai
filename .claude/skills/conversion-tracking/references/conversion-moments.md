@@ -1,5 +1,10 @@
 # Conversion moments: how each tool signals success
 
+> **Teranga AI** : les passages de ce fichier qui ajoutent `gtag.js`, Google Tag Manager ou un pixel directement dans
+> une page, ou qui renvoient à `assets/` et `scripts/` (non repris), ne s'appliquent pas. Voie unique : voir l'en-tête
+> de `../SKILL.md` (`services/google_ads_tag.py`, `static/google-ads-consent.js`, consentement d'abord).
+
+
 Load this to establish or diagnose the conversion moment. Section 1 is the lead-gen problem (success must be inferred from a browser signal, and every tool signals differently); it carries literal, grep-able strings for working from (A) form mechanics, (B) static page source, (C) a headless browser, and (D) a codebase. Section 2 covers the moments this repo ships tested detectors for. Section 3 is the long tail. Section 4 is ecommerce, where the problem mostly does not exist.
 
 **Fix assets.** When a finding here names a missing or wrong detection hook, the fix usually already exists in this skill. Tested listeners for 22 form and booking tools and 4 universal patterns (26 in all) live in `../assets/snippets/` (paste-in JS) and `../assets/gtm-recipes/detect/` (importable GTM containers), both pushing the canonical dataLayer event names listed in `../assets/gtm-recipes/event-map.json` (for example `gravity_form_submitted`, `typeform_form_submitted`, `calendly_event_scheduled`). Diagnose against those exact names, fix by installing those exact assets.

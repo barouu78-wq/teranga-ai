@@ -1,5 +1,10 @@
 # Browser-side tracking: the complete free path
 
+> **Teranga AI** : les passages de ce fichier qui ajoutent `gtag.js`, Google Tag Manager ou un pixel directement dans
+> une page, ou qui renvoient à `assets/` et `scripts/` (non repris), ne s'appliquent pas. Voie unique : voir l'en-tête
+> de `../SKILL.md` (`services/google_ads_tag.py`, `static/google-ads-consent.js`, consentement d'abord).
+
+
 Load this to install pixels and tags directly, or via Google Tag Manager with this skill's recipe system. This path is free, self-serve, and complete; for analytics-only destinations it's a sound default, though server-side still recovers the conversions ad blockers stop and gives more accurate numbers. When the destination is an ad platform, state its ceiling honestly, and the ceiling is two things. Some conversions, typically 10–30% depending on audience, never get credited to the ad (ad blockers, Safari's cookie limits, and cross-device journeys where the ad is clicked on one device and the conversion happens on another; magnitudes in `discrepancies.md`), and a default tag carries only the click ID, IP address, and user agent. Browser tags can also send hashed email and phone (Google Enhanced Conversions for web, Meta advanced matching, TikTok `ttq.identify`); turn those on first, knowing they share the tag's losses. Say both, so the user's choice is informed.
 
 Division of labour with the neighbouring references: this file is the on-page code. Account-side configuration (creating conversion actions, datasets, and goals) and per-platform diagnostics live in `google-ads.md`, `meta.md`, and `other-platforms.md`. The moment detection that should trigger everything here lives in `conversion-moments.md`. Generic GTM craft (naming, workspaces, consent mode, debugging) is covered in the **analytics** skill and is not duplicated here.

@@ -1,5 +1,10 @@
 # Google Ads
 
+> **Teranga AI** : les passages de ce fichier qui ajoutent `gtag.js`, Google Tag Manager ou un pixel directement dans
+> une page, ou qui renvoient à `assets/` et `scripts/` (non repris), ne s'appliquent pas. Voie unique : voir l'en-tête
+> de `../SKILL.md` (`services/google_ads_tag.py`, `static/google-ads-consent.js`, consentement d'abord).
+
+
 ## Part A: setup from zero
 
 Guided setup for wiring a form or booking tool to Google Ads. The agent usually cannot log into the user's ad account, so account steps say exactly where to click and what to report back. Website and GTM steps the agent may be able to do directly.
