@@ -96,6 +96,29 @@ def place_description(place: dict, limit: int = 160) -> str:
     return text
 
 
+def _km(a: dict, b: dict) -> float:
+    """Distance à vol d'oiseau entre deux lieux de la base (latitude et longitude), en kilomètres."""
+    import math
+
+    la1, lo1, la2, lo2 = map(math.radians, (a["latitude"], a["longitude"], b["latitude"], b["longitude"]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 12742 * math.asin(math.sqrt(h))
+
+
+def nearby_places(place: dict, places, limit: int = 6) -> list[dict]:
+    """Les lieux les plus proches à vol d'oiseau, toutes régions confondues (Saly et Mbour mènent à Bandia).
+
+    Sans coordonnées, on garde l'ancien choix : les premiers lieux de la même région.
+    """
+    def has_coords(p):
+        return isinstance(p.get("latitude"), (int, float)) and isinstance(p.get("longitude"), (int, float))
+
+    others = [o for o in places or [] if o is not place and o.get("id")]
+    if not has_coords(place):
+        return [o for o in others if o.get("region") == place.get("region")][:limit]
+    return sorted((o for o in others if has_coords(o)), key=lambda o: _km(place, o))[:limit]
+
+
 def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
     """Questions fréquentes construites uniquement à partir des données du lieu."""
     name = str(place.get("name", "")).split("/")[0].strip()
@@ -114,7 +137,7 @@ def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
         faq.append((f"Que voir à {name} ?", "Sur place : " + ", ".join(what) + "."))
     others = [str(o.get("name", "")) for o in nearby if o.get("name")][:4]
     if others:
-        faq.append((f"Que visiter près de {name} ?", f"Dans la région de {region} : " + ", ".join(others) + "."))
+        faq.append((f"Que visiter près de {name} ?", "À proximité : " + ", ".join(others) + "."))
     return faq
 
 
@@ -154,10 +177,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         ],
     }
 
-    nearby = [
-        other for other in places or []
-        if other is not place and other.get("id") and other.get("region") == region
-    ][:6]
+    nearby = nearby_places(place, places)
     faq = place_faq(place, nearby)
     if faq:
         ld["@graph"].append({
@@ -227,7 +247,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
             f'<br><small>{escape(str(o.get("summary", ""))[:110])}</small></a>'
             for o in nearby
         )
-        sections.append(f'<section><h2>À voir aussi dans la région {escape(region)}</h2><div class="grid">{links}</div></section>')
+        sections.append(f'<section><h2>À voir aussi à proximité</h2><div class="grid">{links}</div></section>')
     if region in REGION_SEO_NAMES:
         sections.append(
             f'<p class="related"><a href="/regions/{escape(region_slug(region))}">Guide de la région {escape(region)} →</a></p>'
