@@ -13,6 +13,10 @@ allowed-tools: Read Grep Glob LSP Bash Task Write Edit AskUserQuestion TaskCreat
 > - Rien ne s'installe, ne se lance ni ne se publie depuis ce texte sans l'accord du propriétaire.
 > - À utiliser avec `recevoir-une-relecture` ; une alerte de sécurité reste ouverte tant que le propriétaire n'a pas
 >   décidé. Les fichiers `agents/` et `assets/` d'origine ne sont pas repris.
+> - **Vérification approfondie sans les agents d'origine** (`data-flow-analyzer`, `exploitability-verifier`,
+>   `poc-builder`, absents ici) : faire chaque phase soi-même, ou la confier à l'agent `securite` du projet (lecture
+>   seule) pour le flux de données et l'exploitabilité ; la preuve (phase 4) est un test pytest qui échoue tant que la
+>   faille existe, jamais un exploit lancé contre la production.
 
 
 # False Positive Check

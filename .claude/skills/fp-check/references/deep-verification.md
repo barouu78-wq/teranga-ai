@@ -1,5 +1,10 @@
 # Deep Verification
 
+> **Teranga AI** : les agents `data-flow-analyzer`, `exploitability-verifier` et `poc-builder` cités ci-dessous ne sont
+> pas repris. Faire ces phases soi-même ou avec l'agent `securite` du projet ; la preuve est un test pytest local, jamais
+> un exploit contre la production (voir l'en-tête de `../SKILL.md`).
+
+
 Full task-based verification for complex bugs. Use when routing from SKILL.md selects the deep path, or when standard verification escalates.
 
 ## If Escalated from Standard

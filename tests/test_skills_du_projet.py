@@ -227,3 +227,13 @@ def test_les_skills_qui_publient_ou_contactent_rappellent_que_l_agent_ne_le_fait
                      ("aso", "Ne jamais modifier la Google Play Console")):
         regle = (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")[:2500]
         assert mot in regle, nom
+
+
+def test_fp_check_ne_depend_pas_des_agents_non_repris():
+    """Relecture Codex (#656) : la vérification approfondie demandait des agents d'origine non repris. En tête, le
+    chemin du projet (soi-même ou l'agent securite, preuve par un test local)."""
+    regle = (SKILLS / "fp-check" / "SKILL.md").read_text(encoding="utf-8")[:3000]
+    assert "agent `securite`" in regle and "test pytest" in regle and "jamais un exploit" in regle
+    debut = (SKILLS / "fp-check" / "references" / "deep-verification.md").read_text(encoding="utf-8")[:600]
+    assert "Teranga AI" in debut and "securite" in debut
+    assert (ROOT / ".claude" / "agents" / "securite.md").exists()
