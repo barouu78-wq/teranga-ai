@@ -46,6 +46,30 @@
     document.head.appendChild(tag);
   }
 
+  // Conversions (GOOGLE_ADS_CONVERSIONS) : seulement après « Accepter », une fois par session et par action.
+  const conversions = {question: script.dataset.conversionQuestion, appli: script.dataset.conversionAppli,
+                       cv: script.dataset.conversionCv};
+  const sent = {};
+  function sendConversion(name) {
+    const label = conversions[name] || "";
+    if (!started || readConsent() !== "accepted" || !/^AW-\d{6,15}\/[A-Za-z0-9_-]{4,40}$/.test(label)) return;
+    const key = "teranga_ads_conv_" + name;
+    let done = sent[name];
+    try { done = done || window.sessionStorage.getItem(key) === "1"; } catch (_) {}
+    if (done) return;
+    sent[name] = true;
+    try { window.sessionStorage.setItem(key, "1"); } catch (_) {}
+    gtag("event", "conversion", {send_to: label});
+  }
+  window.terangaAdsConversion = sendConversion;
+  // Lien vers l'application Android (APK ou Google Play), sur n'importe quelle page.
+  document.addEventListener("click", event => {
+    const link = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+    if (!link) return;
+    const href = link.getAttribute("href") || "";
+    if (/play\.google\.com\/store\/apps/.test(href) || /\.apk(?:$|[?#])/.test(href)) sendConversion("appli");
+  }, true);
+
   function removePanel() {
     if (panel) panel.remove();
     panel = null;
