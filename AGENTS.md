@@ -83,6 +83,11 @@ un contrôle qui n'a pas tourné.
 | `cv-senegal` | CV ou lettre de motivation pour un emploi au Sénégal, et consigne de l'IA pour « Adapter mon CV » : mettre en valeur sans rien inventer |
 | `offres-emploi` | avant d'ajouter ou d'activer une source d'offres d'emploi : accord écrit du site, robots.txt, lien vers l'annonce d'origine, offres expirées et arnaques retirées |
 | `reverse-engineer-anything` | analyser sans code source une appli dont le propriétaire a les droits (APK `fr.teranga_ai`, site) ; texte seulement, REA n'est ni installé ni lancé sans son accord |
+| `conversion-tracking` | conversions Google Ads (question, appli, CV) : mettre en place, vérifier qu'une conversion test arrive, comprendre un écart ; jamais avant le consentement |
+| `ads` | campagnes Google Ads : garder ou couper, budget, mots-clés ; chiffres réels seulement (« MANQUANT » sinon), tout changement attend l'accord du propriétaire |
+| `cro` | page d'arrivée ou formulaire qui convertit mal (`/cv`, accueil) : quoi changer d'abord, avec un test e2e |
+| `link-building` | obtenir des liens d'autres sites (partenaires, presse, diaspora) sans pratique à risque pour Google |
+| `programmatic-seo` | pages en nombre sur un modèle (fiches de lieux, régions) : utiles, sourcées, jamais minces |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
@@ -90,7 +95,7 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 `.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
 seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
 `.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée), et `cv-senegal` est adapté de `resume-tailor`
-(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement) ; les règles de ce fichier priment sur les leurs.
+(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building` et `programmatic-seo` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement) ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 

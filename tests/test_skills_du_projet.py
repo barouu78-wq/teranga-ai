@@ -86,6 +86,10 @@ REPRISES = {
     # 19 novembre 2026 (« installe ce skill », propriétaire) : reverse-engineer-anything de morluto/rea, texte seulement ;
     # ni le serveur MCP REA ni le paquet npm rea-agents ne sont installés.
     "LICENCE-rea.txt": ("morluto/rea", ("reverse-engineer-anything",)),
+    # 23 novembre 2026 (« Oui go », propriétaire) : cinq skills de marketing de coreyhaines31/marketingskills, texte
+    # seulement (SKILL.md et references/*.md) ; ni scripts/, ni assets/ (Google Tag Manager), ni evals/.
+    "LICENCE-marketingskills.txt": ("coreyhaines31/marketingskills",
+                                    ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo")),
 }
 
 
