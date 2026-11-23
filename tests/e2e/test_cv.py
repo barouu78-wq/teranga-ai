@@ -338,3 +338,23 @@ def test_le_bouton_du_formulaire_reste_visible_au_dessus_du_bandeau_des_cookies(
     bouton.click()
     assert page.evaluate("location.hash") == "#cvForm"
     assert page.errors == []
+
+
+def test_le_bouton_du_titre_disparait_avec_le_formulaire_et_revient_avec_recommencer(page, base_url):
+    """Relecture Codex (#653) : un CV gardé sur le téléphone cache le formulaire ; le bouton du titre, qui y mène,
+    doit disparaître aussi au lieu de rester sans effet, puis revenir avec « Recommencer »."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    bouton = page.locator(".cv-hero a[href='#cvForm']")
+    assert bouton.is_visible()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert not bouton.is_visible()
+    page.reload()  # CV restauré depuis le téléphone
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert not bouton.is_visible()
+    page.get_by_role("button", name="Recommencer").click()
+    assert bouton.is_visible()
+    assert page.errors == []

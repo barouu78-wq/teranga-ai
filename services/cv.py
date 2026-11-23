@@ -211,7 +211,7 @@ def page_cv(site_url: str) -> str:
 <main class="cv-main">
 <section class="cv-hero"><h1>Ton CV, prêt pour l’emploi au Sénégal</h1>
 <p>Un CV clair et soigné en quelques minutes. Teranga met en valeur ce que tu as vraiment fait&nbsp;: il n’invente rien.</p>
-<a class="cv-bouton cv-principal" href="#cvForm">Faire mon CV</a></section>
+<a class="cv-bouton cv-principal" id="cvAller" href="#cvForm">Faire mon CV</a></section>
 <section class="cv-exemple" id="cvExemple" aria-labelledby="cvExempleTitre">
 <h2 id="cvExempleTitre">Exemple de CV fait avec Teranga</h2>
 <div class="cv-exemple-cadre"><article id="cvExempleFeuille" class="cv-feuille teranga" aria-label="Exemple de CV"></article></div>

@@ -194,7 +194,7 @@
   }
 
   function afficher(){
-    $('cvForm').hidden=true;$('cvExemple').hidden=true;
+    $('cvForm').hidden=true;$('cvExemple').hidden=true;$('cvAller').hidden=true;
     $('cvResultat').hidden=false;
     rendre();
     const titre=$('cvResultatTitre');titre.tabIndex=-1;titre.focus();
@@ -297,7 +297,7 @@
   $('cvLettrePdf').addEventListener('click',()=>imprimer('imprime-lettre'));
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
-    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvForm').reset();
+    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvAller').hidden=false;$('cvForm').reset();
     $('cvBlocFichier').hidden=true;$('cvBlocParcours').hidden=false;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });
