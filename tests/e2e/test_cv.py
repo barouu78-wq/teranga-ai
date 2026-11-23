@@ -257,3 +257,40 @@ def test_l_exemple_de_cv_fini_mene_au_formulaire_et_s_efface_quand_mon_cv_est_pr
     assert exemple.is_hidden()
     page.get_by_role("button", name="Recommencer").click()
     assert exemple.is_visible()
+
+
+def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url):
+    """« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent. Chaque étape part une seule fois par visite,
+    sans rien de ce que la personne écrit dans l'adresse."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    ouvrir(page, base_url, envois)
+    page.get_by_role("link", name="Faire le mien").click()
+    page.get_by_role("button", name="Créer mon CV").click()  # sans fichier : refusé
+    page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
+    page.get_by_role("button", name="Créer mon CV").click()  # deuxième refus : pas de nouveau signal
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "Trop court")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.locator("#cvErreur").get_by_text("Raconte ton parcours en quelques phrases.").wait_for()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.wait_for_timeout(300)  # les signaux partent sans attendre de réponse
+    assert sorted(etapes) == sorted(["faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"]), etapes
+    assert len(envois) == 1
+
+
+def test_cliquer_creer_sans_toucher_un_champ_n_est_pas_un_debut(page, base_url):
+    """Relecture Codex (#644) : « debut » veut dire « premier champ touché » ; le clic sur « Créer mon CV » seul n'en
+    est pas un."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    ouvrir(page, base_url, envois)
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.locator("#cvErreur").wait_for()
+    page.wait_for_timeout(300)
+    assert "debut" not in etapes, etapes
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.wait_for_timeout(300)
+    assert etapes.count("debut") == 1, etapes
