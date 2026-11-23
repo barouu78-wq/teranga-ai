@@ -83,7 +83,13 @@ def test_topic_pages_reuse_the_knowledge_base():
 def test_long_place_names_get_a_shorter_title():
     from services.places import place_title
 
-    assert place_title("Gorée", "Dakar") == "Gorée (Dakar) : histoire, que voir, carte | Teranga AI"
+    # Search Console (30 jours au 23 novembre 2026) : « reserve bandia senegal », « kaffrine senegal »… Les fiches
+    # de lieux ne disaient jamais « Sénégal » dans leur titre.
+    assert place_title("Gorée", "Dakar") == "Gorée, Sénégal : que voir, accès, carte | Teranga AI"
+    assert place_title("Réserve de Bandia", "Thiès") == "Réserve de Bandia, Sénégal : que voir, accès, carte | Teranga AI"
+    assert place_title("Musée des Civilisations noires du Sénégal", "Dakar").count("Sénégal") == 1
+    # Relecture Codex (#654) : un nom long garde « Sénégal » si la forme courte tient.
+    assert place_title("Musée des Civilisations Noires", "Dakar") == "Musée des Civilisations Noires, Sénégal | Teranga AI"
     long = place_title("Manufactures sénégalaises des arts décoratifs", "Thiès")
     assert len(long) <= 65 and long.startswith("Manufactures")
 
