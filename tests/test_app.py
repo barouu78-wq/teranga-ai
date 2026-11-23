@@ -992,7 +992,8 @@ def test_production_startup_contract():
     assert "buildCommand: pip install -r requirements.txt" in render
     assert "startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app" in render
     assert "healthCheckPath: /health" in render
-    assert "plan: 2c-8g" in render
+    # La taille de la production (0,5 processeur, 512 Mo) : jamais une machine plus chère par erreur.
+    assert "plan: 0.5c-512mb" in render
     assert "value: https://teranga-ai.fr" in render
     assert "key: ALLOWED_ORIGINS" in render
     assert "key: OPENAI_API_KEY" in render

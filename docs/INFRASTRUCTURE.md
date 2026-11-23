@@ -89,11 +89,11 @@ Plus tard, à décider :
 
 ### Piège : `render.yaml` ne décrit pas la production
 
-- Il nomme le service `teranga-ai` et demande une machine `2c-8g`, alors que la production est `teranga-ai-1` en
-  Starter (0,5 processeur, 512 Mo). Recréer un service avec ce fichier tel quel ferait monter la facture.
+- Il nomme le service `teranga-ai`, alors que la production est `teranga-ai-1`. Depuis le 23 novembre 2026, il demande
+  la même taille que la production (`0.5c-512mb` : 0,5 processeur, 512 Mo) au lieu de `2c-8g`, qui aurait fait monter
+  la facture si un Blueprint avait été créé avec ce fichier.
 - Il n'agit pas sur la production : il a été ajouté le 24 septembre, après la création des deux services (20 septembre),
   et la production n'a jamais pris la taille qu'il demande.
-- À corriger dans une PR à part, après avoir vérifié dans Render qu'aucun *Blueprint* ne le suit.
 - Sur Render, la commande saisie dans le tableau de bord l'emporte sur `Procfile` et `render.yaml`. C'est pour cela que
   les réglages de Gunicorn sont dans `gunicorn.conf.py`.
 
