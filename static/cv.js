@@ -87,7 +87,7 @@
     return s;
   }
   function section(feuille,titre,nom){
-    const s=el('section','cv-section'),h=el('h4','cv-rubrique');
+    const s=el('section','cv-section'),h=el('h3','cv-rubrique');
     h.append(icone(nom),document.createTextNode(titre));
     s.appendChild(h);feuille.appendChild(s);return s;
   }

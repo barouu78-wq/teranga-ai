@@ -358,3 +358,30 @@ def test_le_bouton_du_titre_disparait_avec_le_formulaire_et_revient_avec_recomme
     page.get_by_role("button", name="Recommencer").click()
     assert bouton.is_visible()
     assert page.errors == []
+
+
+TITRES = """() => [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+  .filter(h => h.getBoundingClientRect().height > 0).map(h => +h.tagName[1])"""
+
+
+def test_les_titres_du_cv_ne_sautent_pas_de_niveau(page, base_url):
+    """Audit d'accessibilité du 23 novembre 2026 : les rubriques du CV (Profil, Expérience…) étaient des h4 sous un
+    h2, un saut de niveau qui gêne la navigation au lecteur d'écran. Vrai pour l'exemple et pour le CV créé."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    def sans_saut():
+        niveaux = page.evaluate(TITRES)
+        assert niveaux.count(1) == 1
+        assert all(b <= a + 1 for a, b in zip(niveaux, niveaux[1:])), niveaux
+
+    sans_saut()  # exemple de CV
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    sans_saut()  # CV créé
+    # Les rubriques gardent leur style de CV (12 px), pas celui des titres « À vérifier » (17 px).
+    tailles = page.evaluate("""() => [...document.querySelectorAll('#cvFeuille .cv-rubrique')]
+      .map(h => getComputedStyle(h).fontSize)""")
+    assert tailles and set(tailles) == {"12px"}, tailles
+    assert page.errors == []
