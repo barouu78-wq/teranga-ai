@@ -228,6 +228,8 @@
       const d=await r.json().catch(()=>({}));
       if(!r.ok||!d.cv){erreur(d.error||ERREUR);return;}
       cv=d.cv;garder();afficher();
+      // Conversion « cv » de Google Ads : envoyée seulement après « Accepter », une fois par session (google-ads-consent.js).
+      if(window.terangaAdsConversion)window.terangaAdsConversion('cv');
     }catch(_){erreur(ERREUR);}
     finally{bouton.disabled=false;bouton.textContent='Créer mon CV';bouton.removeAttribute('aria-busy');}
   }

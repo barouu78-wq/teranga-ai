@@ -8,6 +8,7 @@ from services.google_ads_tag import google_ads_config
 TAG = "AW-18578242897"
 QUESTION = TAG + "/question_lbl1"
 APPLI = TAG + "/appli_lbl22"
+CV = TAG + "/cv_lbl333"
 CONVERSIONS = """() => (window.dataLayer || []).map(a => Array.from(a))
   .filter(a => a[0] === 'event' && a[1] === 'conversion').map(a => a[2].send_to)"""
 
@@ -17,7 +18,7 @@ def ads(monkeypatch):
     import app as app_module
 
     monkeypatch.setitem(app_module.app.config, "GOOGLE_ADS",
-                        google_ads_config(TAG, f"question:{QUESTION},appli:{APPLI}"))
+                        google_ads_config(TAG, f"question:{QUESTION},appli:{APPLI},cv:{CV}"))
 
 
 def _prepare(page, choice):
@@ -70,4 +71,35 @@ def test_le_lien_de_l_appli_compte_une_conversion(page, base_url, ads, monkeypat
     page.locator("a[href$='.apk']").first.click()
     page.locator("a[href*='play.google.com/store/apps']").first.click()
     assert page.evaluate(CONVERSIONS) == [APPLI]  # une seule, même après deux liens
+    assert page.errors == []
+
+
+def _cv_cree(page, base_url, choice):
+    """Ouvre /cv (venu d'une annonce : la campagne active du 23 novembre 2026 mène ici), répond au bandeau et crée un CV."""
+    import json
+
+    from tests.e2e.test_cv import CV as REPONSE
+
+    page.route("https://www.googletagmanager.com/**", lambda route: route.fulfill(content_type="text/javascript",
+                                                                                body="/* gtag simulé */"))
+    page.route(f"{base_url}/api/cv", lambda route: route.fulfill(body=json.dumps({"cv": REPONSE}),
+                                                                  content_type="application/json"))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/cv")
+    page.locator(f".teranga-ads-consent-panel [data-choice='{choice}']").click()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+
+
+def test_un_cv_cree_compte_une_conversion_cv(page, base_url, ads):
+    _cv_cree(page, base_url, "accept")
+    assert page.evaluate(CONVERSIONS) == [CV]
+    assert page.errors == []
+
+
+def test_un_cv_cree_sans_accord_ne_compte_rien(page, base_url, ads):
+    _cv_cree(page, base_url, "reject")
+    assert page.evaluate(CONVERSIONS) == []
     assert page.errors == []
