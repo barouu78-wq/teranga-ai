@@ -9,6 +9,14 @@ Compétences concernées :
 - cro
 - link-building
 - programmatic-seo
+- aso
+- social
+- copywriting
+- content-strategy
+- community-marketing
+
+Ajout du 23 novembre 2026 (« Go » du propriétaire), même commit : aso, social, copywriting, content-strategy et
+community-marketing, texte seulement (SKILL.md et references/*.md).
 
 Licence d'origine, reproduite telle quelle :
 

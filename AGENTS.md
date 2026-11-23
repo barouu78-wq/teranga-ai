@@ -88,6 +88,15 @@ un contrôle qui n'a pas tourné.
 | `cro` | page d'arrivée ou formulaire qui convertit mal (`/cv`, accueil) : quoi changer d'abord, avec un test e2e |
 | `link-building` | obtenir des liens d'autres sites (partenaires, presse, diaspora) sans pratique à risque pour Google |
 | `programmatic-seo` | pages en nombre sur un modèle (fiches de lieux, régions) : utiles, sourcées, jamais minces |
+| `aso` | fiche Google Play de l'appli (titre, description, captures) : propositions seulement, jamais de changement dans la Console |
+| `social` | publications Instagram, TikTok, Facebook : brouillons à partir des faits vérifiés, jamais publiés par l'agent |
+| `copywriting` | texte d'une page (accueil, page d'annonce, CV, diaspora) : titre et promesse, sans rien inventer |
+| `content-strategy` | quels sujets écrire et dans quel ordre, d'après les recherches réelles (Search Console) |
+| `community-marketing` | communauté en ligne (groupes de la diaspora) : messages préparés, l'agent ne contacte personne |
+| `seo-hreflang` | pages en plusieurs langues (fr, en, es) : balises hreflang et versions correctes |
+| `humanizer` | retirer d'un texte les tournures typiques d'une IA, sans changer les faits |
+| `fp-check` | alerte de sécurité (Codex, CodeQL, Bandit) : vrai problème ou fausse alerte, preuves à l'appui |
+| `sharp-edges` | réglages et usages dangereux dans le code ou la configuration, avant de toucher à la sécurité |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
 Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
@@ -95,7 +104,7 @@ génération d'images) et les quatre `ponytail` sont repris de GitHub sous licen
 `.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
 seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
 `.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée), et `cv-senegal` est adapté de `resume-tailor`
-(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building` et `programmatic-seo` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement) ; les règles de ce fichier priment sur les leurs.
+(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building`, `programmatic-seo`, `aso`, `social`, `copywriting`, `content-strategy` et `community-marketing` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement), `seo-hreflang` d'AgriciDaniel/claude-seo (MIT, `.claude/skills/LICENCE-claude-seo.txt`), `humanizer` de blader/humanizer (MIT, `.claude/skills/LICENCE-humanizer.txt`), et `fp-check` et `sharp-edges` de trailofbits/skills (CC BY-SA 4.0, `.claude/skills/LICENCE-trailofbits.txt`), texte seulement ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 

@@ -89,7 +89,11 @@ REPRISES = {
     # 23 novembre 2026 (« Oui go », propriétaire) : cinq skills de marketing de coreyhaines31/marketingskills, texte
     # seulement (SKILL.md et references/*.md) ; ni scripts/, ni assets/ (Google Tag Manager), ni evals/.
     "LICENCE-marketingskills.txt": ("coreyhaines31/marketingskills",
-                                    ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo")),
+                                    ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo",
+                                     # 23 novembre 2026, second « Go » : même commit.
+                                     "aso", "social", "copywriting", "content-strategy", "community-marketing")),
+    "LICENCE-claude-seo.txt": ("AgriciDaniel/claude-seo", ("seo-hreflang",)),
+    "LICENCE-humanizer.txt": ("blader/humanizer", ("humanizer",)),
 }
 
 
@@ -202,3 +206,34 @@ def test_conversion_tracking_renvoie_au_controleur_google_ads_avec_consentement(
     for nom in ("browser-side.md", "google-ads.md", "conversion-moments.md"):
         debut = (dossier / "references" / nom).read_text(encoding="utf-8")[:600]
         assert "Teranga AI" in debut and "ne s'appliquent pas" in debut, nom
+
+
+def test_les_skills_de_trail_of_bits_gardent_leur_licence_cc_by_sa():
+    """23 novembre 2026 (« Go », propriétaire) : fp-check et sharp-edges de trailofbits/skills, sous CC BY-SA 4.0 (pas
+    MIT) : la licence d'origine et l'auteur restent, les adaptations gardent la même licence, texte seulement."""
+    licence = (SKILLS / "LICENCE-trailofbits.txt").read_text(encoding="utf-8")
+    assert "Attribution-ShareAlike 4.0" in licence and "https://github.com/trailofbits/skills" in licence
+    assert re.search(r"commit [0-9a-f]{40}", licence)
+    for nom in ("fp-check", "sharp-edges"):
+        assert nom in NOMS and f"- {nom}" in licence
+        texte = (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")
+        assert "LICENCE-trailofbits.txt" in texte and "AGENTS.md" in texte
+        fichiers = [p for p in (SKILLS / nom).rglob("*") if p.is_file()]
+        assert all(p.suffix == ".md" for p in fichiers), (nom, fichiers)
+
+
+def test_les_skills_qui_publient_ou_contactent_rappellent_que_l_agent_ne_le_fait_jamais():
+    for nom, mot in (("social", "ne publie jamais"), ("community-marketing", "ne contacte personne"),
+                     ("aso", "Ne jamais modifier la Google Play Console")):
+        regle = (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")[:2500]
+        assert mot in regle, nom
+
+
+def test_fp_check_ne_depend_pas_des_agents_non_repris():
+    """Relecture Codex (#656) : la vérification approfondie demandait des agents d'origine non repris. En tête, le
+    chemin du projet (soi-même ou l'agent securite, preuve par un test local)."""
+    regle = (SKILLS / "fp-check" / "SKILL.md").read_text(encoding="utf-8")[:3000]
+    assert "agent `securite`" in regle and "test pytest" in regle and "jamais un exploit" in regle
+    debut = (SKILLS / "fp-check" / "references" / "deep-verification.md").read_text(encoding="utf-8")[:600]
+    assert "Teranga AI" in debut and "securite" in debut
+    assert (ROOT / ".claude" / "agents" / "securite.md").exists()
