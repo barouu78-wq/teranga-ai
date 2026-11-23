@@ -97,3 +97,28 @@ NEIGHBOURS = [
 @pytest.mark.parametrize("language,question,location", NEIGHBOURS, ids=[q for _, q, _ in NEIGHBOURS])
 def test_neighbours_keep_their_location(language, question, location):
     assert _payload(question, language)["intent_context"]["location"] == location
+
+
+# Banc réel du 22 novembre 2026 (langues-5, « Ana yoonu Tubaa ? ») : « Tubaa » n'était pas reconnu, le modèle n'a
+# reçu aucun repère sur Touba et a inventé une région (« Mbàkke-Kajoor »). Noms wolof sourcés : Touba « Tuubaa »
+# (souvent écrit « Tubaa ») et Saint-Louis « Ndar » (en.wikipedia.org, articles Grand Magal of Touba et
+# Saint-Louis, Senegal ; sites.bu.edu/ria/wolof, unité 3).
+AUTRES_VILLES = [
+    ("wo", "Ana yoonu Tubaa ?", "Touba", "Diourbel"),
+    ("wo", "Naka laa demee Tuubaa ?", "Touba", "Diourbel"),
+    ("wo", "Lan laa mën a seet ci Ndar ?", "Saint-Louis", "Saint-Louis"),
+    ("fr", "je vais a ndar demain", "Saint-Louis", "Saint-Louis"),
+]
+
+
+@pytest.mark.parametrize("language,question,lieu,region", AUTRES_VILLES, ids=[q for _, q, _, _ in AUTRES_VILLES])
+def test_wolof_names_of_touba_and_saint_louis_bring_their_facts(language, question, lieu, region):
+    context = _context(_payload(question, language), question)
+    lieux = context.split("LIEUX PERTINENTS :", 1)[1].split("\n\n", 1)[0] if "LIEUX PERTINENTS :" in context else ""
+    assert lieu in lieux, lieux[:300]
+    assert f"- {region}:" in context
+
+
+def test_tuubaa_is_not_dakar():
+    assert _payload("Ana yoonu Tubaa ?")["intent_context"]["location"] != "dakar"
+    assert _payload("Lan laa mën a seet ci Ndar ?")["intent_context"]["location"] == "saint-louis"

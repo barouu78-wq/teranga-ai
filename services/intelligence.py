@@ -48,7 +48,7 @@ _DYNAMIC_INTENTS = {"trip_planning", "weather", "transport", "restaurant", "phot
 _LOCATION_ALIASES = {
     "dakar": ("dakar", *WOLOF_PLACE_NAMES),
     "goree": ("goree", "gorée", "ile de goree", "île de gorée"),
-    "saint-louis": ("saint-louis", "saint louis"),
+    "saint-louis": ("saint-louis", "saint louis", "ndar"),
     "lac rose": ("lac rose", "lake retba", "retba"),
     "casamance": ("casamance",),
     "senegal": ("senegal", "sénégal"),
