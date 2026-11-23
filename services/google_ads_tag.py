@@ -1,7 +1,8 @@
 """Balise Google Ads (mesure des conversions des campagnes), éteinte par défaut.
 
 Allumée seulement si GOOGLE_ADS_TAG_ID (« AW- » suivi de chiffres) est défini sur Render. Décision du propriétaire
-du 16 novembre 2026 : mesurer ce que deviennent les visiteurs venus des annonces Google Ads.
+du 16 novembre 2026 : mesurer ce que deviennent les visiteurs venus des annonces Google Ads. Les conversions
+(GOOGLE_ADS_CONVERSIONS, « action:AW-…/libellé ») ne partent elles aussi qu'après « Accepter ».
 
 Le site n'injecte que son propre contrôleur (/static/google-ads-consent.js). Aucun script Google n'est chargé avant un
 « Accepter » explicite du visiteur (CNIL : les cookies publicitaires demandent un accord préalable, « Refuser » aussi
@@ -17,6 +18,11 @@ from html import escape
 from services.analytics import PRIVATE_PREFIXES
 
 _TAG_ID = re.compile(r"AW-\d{6,15}")
+# Étiquette d'une action de conversion, telle que Google Ads la donne : « AW-<identifiant>/<libellé> ».
+_CONVERSION = re.compile(r"AW-\d{6,15}/[A-Za-z0-9_-]{4,40}")
+# Actions mesurées (constat du 23 novembre 2026 : aucune conversion n'était envoyée, Google Ads ne pouvait rien
+# optimiser) : première question au chat, lien vers l'application Android (APK ou Google Play), CV créé.
+CONVERSION_ACTIONS = ("question", "appli", "cv")
 # Origines dont gtag.js a besoin (script et envois) d'après la documentation CSP de Google Ads.
 GOOGLE_ADS_ORIGINS = (
     "https://www.googletagmanager.com",
@@ -26,18 +32,39 @@ GOOGLE_ADS_ORIGINS = (
 )
 
 
-def google_ads_config(tag_id: object) -> dict[str, object] | None:
+def google_ads_conversions(raw: object) -> dict[str, str]:
+    """GOOGLE_ADS_CONVERSIONS : « action:AW-…/libellé » séparés par des virgules. Une entrée inconnue ou mal formée
+    est ignorée seule ; le libellé n'est pas un secret (il est visible dans la page)."""
+    found: dict[str, str] = {}
+    for item in str(raw or "").split(","):
+        name, _, label = item.strip().partition(":")
+        name, label = name.strip().lower(), label.strip()
+        if name in CONVERSION_ACTIONS and _CONVERSION.fullmatch(label):
+            found[name] = label
+    return found
+
+
+def google_ads_config(tag_id: object, conversions: object = None) -> dict[str, object] | None:
     """Valide l'identifiant ; None (balise éteinte) s'il manque ou n'a pas le bon format."""
     value = str(tag_id or "").strip().upper()
     if not _TAG_ID.fullmatch(value):
         return None
-    return {"tag_id": value, "origins": GOOGLE_ADS_ORIGINS}
+    config: dict[str, object] = {"tag_id": value, "origins": GOOGLE_ADS_ORIGINS}
+    labels = google_ads_conversions(conversions)
+    if labels:
+        config["conversions"] = labels
+    return config
 
 
 def google_ads_tag(config: dict[str, object] | None) -> str:
     if not config:
         return ""
-    return f'<script src="/static/google-ads-consent.js" defer data-tag-id="{escape(str(config["tag_id"]), quote=True)}"></script>'
+    labels = "".join(
+        f' data-conversion-{name}="{escape(label, quote=True)}"'
+        for name, label in sorted(dict(config.get("conversions") or {}).items())
+    )
+    return (f'<script src="/static/google-ads-consent.js" defer data-tag-id="{escape(str(config["tag_id"]), quote=True)}"'
+            f"{labels}></script>")
 
 
 def inject_google_ads(response, config: dict[str, object] | None, path: str = ""):
