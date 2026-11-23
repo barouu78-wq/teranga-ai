@@ -84,3 +84,23 @@ def test_un_script_ne_peut_pas_gonfler_les_etapes(monkeypatch):
 def test_la_confidentialite_le_dit():
     html = _client().get("/confidentialite", base_url=B).get_data(as_text=True)
     assert "étapes du formulaire « Mon CV »" in html and "sans enregistrer ce que vous écrivez" in html
+
+
+def test_les_etapes_du_cv_ne_gonflent_pas_le_total_montre_aux_partenaires(monkeypatch):
+    """Relecture Codex (#644) : le total du mois (« clic(s) ou visite(s) ») sert à négocier avec les partenaires ; les
+    étapes du formulaire, une mesure interne, sont à part."""
+    monkeypatch.setenv("STATS_TOKEN", CLE)
+    client = _client()
+
+    def total():
+        page = client.post("/stats-partenaires", data={"cle": CLE}, base_url=B,
+                           environ_base={"REMOTE_ADDR": f"203.0.113.{next(_IP_STATS)}"}).get_data(as_text=True)
+        trouve = re.search(r"— (\d+) clic\(s\) ou visite\(s\)</h2>", page)
+        return (int(trouve.group(1)) if trouve else 0), page
+
+    avant, _ = total()
+    assert _etape(client, "debut", "203.0.113.165").status_code == 204
+    apres, page = total()
+    assert apres == avant
+    mesure = page[page.index("Mon CV : étapes du formulaire"):]
+    assert "<td>Étapes du formulaire Mon CV</td><td>debut</td>" in mesure

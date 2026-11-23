@@ -114,6 +114,8 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi",
                "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux",
                "cv": "Étapes du formulaire Mon CV"}
+# Mesures internes du site, gardées à part : elles ne comptent pas dans le total montré aux partenaires.
+INTERNAL_KINDS = frozenset({"cv"})
 # Étapes du formulaire /cv envoyées par static/cv.js (« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent).
 CV_ETAPES = frozenset({"faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"})
 # Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
@@ -152,16 +154,27 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
     else:
         blocks = []
         for month in summary:
-            kinds = " · ".join(f"{escape(KIND_LABELS.get(k, k))} : <strong>{n}</strong>" for k, n in sorted(month["by_kind"].items()))
+            partner_kinds = {k: n for k, n in month["by_kind"].items() if k not in INTERNAL_KINDS}
+            kinds = " · ".join(f"{escape(KIND_LABELS.get(k, k))} : <strong>{n}</strong>" for k, n in sorted(partner_kinds.items()))
             rows = "".join(
                 f"<tr><td>{escape(KIND_LABELS.get(kind, kind))}</td><td>{escape(source)}</td><td>{n}</td></tr>"
-                for kind, source, n in month["rows"][:50]
+                for kind, source, n in [r for r in month["rows"] if r[0] not in INTERNAL_KINDS][:50]
             )
             table = (
                 f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Nombre</th></tr></thead><tbody>{rows}</tbody></table>"
                 if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
             )
-            blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s) ou visite(s)</h2><p>{kinds}</p>{table}</section>")
+            internal = "".join(
+                f"<tr><td>{escape(KIND_LABELS.get(kind, kind))}</td><td>{escape(source)}</td><td>{n}</td></tr>"
+                for kind, source, n in month["rows"] if kind in INTERNAL_KINDS
+            )
+            mesure = (
+                "<h3>Mon CV : étapes du formulaire (mesure interne, à ne pas montrer aux partenaires)</h3>"
+                f"<table><thead><tr><th>Mesure</th><th>Étape</th><th>Nombre</th></tr></thead><tbody>{internal}</tbody></table>"
+                if internal else ""
+            )
+            total = sum(partner_kinds.values())
+            blocks.append(f"<section><h2>{escape(month['month'])} — {total} clic(s) ou visite(s)</h2><p>{kinds}</p>{table}{mesure}</section>")
         body = (
             "<h1>Statistiques partenaires</h1>"
             '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'

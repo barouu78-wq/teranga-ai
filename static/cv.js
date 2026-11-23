@@ -277,7 +277,11 @@
     catch(err){e.target.value='';erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
   });
   $('cvForm').addEventListener('submit',creer);
-  ['focusin','click','change'].forEach(t=>$('cvForm').addEventListener(t,()=>etape('debut')));
+  // « debut » : un vrai champ touché par la personne (clic, choix, saisie), ni le bouton « Créer mon CV » ni le curseur
+  // que la page place elle-même après un refus (relecture Codex, #644).
+  ['click','change','input'].forEach(t=>$('cvForm').addEventListener(t,e=>{
+    if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))etape('debut');
+  }));
   const faireLeMien=document.querySelector('#cvExemple a[href="#cvForm"]');
   if(faireLeMien)faireLeMien.addEventListener('click',()=>etape('faire-le-mien'));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
