@@ -77,6 +77,7 @@ Announce errors to screen readers and focus the first invalid field on submit.
 
 ```html
 <form novalidate>
+  <div id="error-summary" role="alert" tabindex="-1"></div>
   <div class="field" aria-live="polite">
     <label for="email">Email</label>
     <input type="email" id="email"
@@ -91,15 +92,14 @@ Announce errors to screen readers and focus the first invalid field on submit.
 
 ```javascript
 form.addEventListener('submit', (e) => {
-  const firstError = form.querySelector('[aria-invalid="true"]');
-  if (firstError) {
+  // Teranga AI (relecture Codex #657) : l'exemple d'origine lisait `errors` et `#error-summary` sans les définir.
+  const errors = form.querySelectorAll('[aria-invalid="true"]');
+  if (errors.length) {
     e.preventDefault();
-    firstError.focus();
-
-    const errorSummary = document.getElementById('error-summary');
-    errorSummary.textContent =
+    // role="alert" annonce le résumé ; le focus va au premier champ à corriger.
+    document.getElementById('error-summary').textContent =
       `${errors.length} errors found. Please fix them and try again.`;
-    errorSummary.focus();
+    errors[0].focus();
   }
 });
 ```

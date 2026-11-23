@@ -1,7 +1,8 @@
 Compétences reprises de https://github.com/addyosmani/web-quality-skills, commit afa8da942115f2961fdbfa80807ea0b232ff6c00,
 le 23 novembre 2026 (accord du propriétaire : « Go »). Seul le texte est repris (SKILL.md et references/*.md) : ni
 scripts/, ni les skills seo, best-practices et web-quality-audit. Changements : description traduite en français, note de
-provenance et règles du projet en tête de chaque SKILL.md.
+provenance et règles du projet en tête de chaque SKILL.md ; exemple « Error handling » de
+accessibility/references/A11Y-PATTERNS.md corrigé (variables non définies).
 
 Compétences concernées :
 - core-web-vitals
