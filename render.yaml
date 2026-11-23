@@ -2,7 +2,9 @@ services:
   - type: web
     name: teranga-ai
     runtime: python
-    plan: 2c-8g
+    # Taille réelle de la production teranga-ai-1 (lue sur Render le 23 novembre 2026). Ne pas l'augmenter ici :
+    # un Blueprint créé un jour avec ce fichier ferait monter la facture.
+    plan: 0.5c-512mb
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app
     healthCheckPath: /health
