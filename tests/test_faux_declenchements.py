@@ -23,7 +23,7 @@ import pytest
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 import app as app_module  # noqa: E402
-from services.chat_service import select_chat_model  # noqa: E402
+from services.orchestrator import build_agent_plan  # noqa: E402
 from services.practical_facts import matching_topics  # noqa: E402
 
 LUNA, SOL = "gpt-5.6-luna", "gpt-5.6-sol"
@@ -80,7 +80,7 @@ def people(payload):
 
 
 def model(payload):
-    return select_chat_model(payload, LUNA, SOL)
+    return build_agent_plan(payload, model=LUNA, complex_model=SOL).model
 
 
 # « vacances », « séjour » : planificateur et modèle complexe.

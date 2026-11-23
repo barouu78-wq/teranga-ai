@@ -16,15 +16,6 @@ _ENRICHMENT_EXECUTOR = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ter
 ENRICHMENT_TIMEOUT = 12.0
 
 
-def select_chat_model(payload, model, complex_model=None):
-    """Return the model selected by the bounded agent plan."""
-    return build_agent_plan(
-        payload,
-        model=model,
-        complex_model=complex_model,
-    ).model
-
-
 def build_chat_service(
     *,
     client,

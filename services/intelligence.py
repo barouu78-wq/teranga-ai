@@ -14,8 +14,6 @@ from .web_policy import should_use_web
 from .validation import sanitize_text
 
 
-SUPPORTED_LANGUAGES = ("fr", "en", "wo", "ff")
-
 _INTENT_PATTERNS = {
     "trip_planning": (
         "voyage", "trip", "itineraire", "itinéraire", "programme",
