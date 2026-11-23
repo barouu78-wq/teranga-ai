@@ -246,6 +246,7 @@ body.hote main h2{margin-top:26px}
 .cv-hero h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin:18px 0 8px}
 .cv-hero{padding:0;border-top:0}
 .cv-hero p{color:var(--muted);margin:0 0 18px}
+.cv-hero .cv-principal{display:inline-flex;margin-bottom:28px}
 /* Exemple fini en haut de page (personne fictive) : le haut de la feuille seulement, fondu vers la page. */
 .cv-exemple{display:grid;gap:12px;margin:0 0 26px;padding:0;border-top:0}
 .cv-exemple h2{margin:0;font-size:17px}

@@ -317,3 +317,24 @@ def test_cliquer_creer_sans_toucher_un_champ_n_est_pas_un_debut(page, base_url):
     page.get_by_text("Je n’ai pas de CV").click()
     page.wait_for_timeout(300)
     assert etapes.count("debut") == 1, etapes
+
+
+def test_le_bouton_du_formulaire_reste_visible_au_dessus_du_bandeau_des_cookies(page, base_url, monkeypatch):
+    """Constat du 23 novembre 2026 : sur téléphone, le visiteur venu d'une annonce voyait le bandeau « Cookies
+    publicitaires » recouvrir « Faire le mien », placé sous l'exemple. Un bouton sous le titre reste visible."""
+    import app as app_module
+    from services.google_ads_tag import google_ads_config
+
+    monkeypatch.setitem(app_module.app.config, "GOOGLE_ADS", google_ads_config("AW-18578242897"))
+    page.route("https://www.googletagmanager.com/**", lambda route: route.fulfill(content_type="text/javascript", body=""))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/cv")
+    bandeau = page.locator(".teranga-ads-consent-panel")
+    bandeau.wait_for()
+    bouton = page.locator(".cv-hero a[href='#cvForm']")
+    haut_bandeau = bandeau.bounding_box()["y"]
+    boite = bouton.bounding_box()
+    assert boite["y"] + boite["height"] <= haut_bandeau
+    bouton.click()
+    assert page.evaluate("location.hash") == "#cvForm"
+    assert page.errors == []

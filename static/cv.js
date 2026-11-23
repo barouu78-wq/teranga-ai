@@ -284,8 +284,9 @@
   ['click','change','input'].forEach(t=>$('cvForm').addEventListener(t,e=>{
     if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))etape('debut');
   }));
-  const faireLeMien=document.querySelector('#cvExemple a[href="#cvForm"]');
-  if(faireLeMien)faireLeMien.addEventListener('click',()=>etape('faire-le-mien'));
+  // Deux boutons mènent au formulaire : sous le titre (visible au-dessus du bandeau des cookies sur téléphone) et
+  // sous l'exemple. Une seule étape « faire-le-mien » par visite.
+  document.querySelectorAll('.cv-main a[href="#cvForm"]').forEach(a=>a.addEventListener('click',()=>etape('faire-le-mien')));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
