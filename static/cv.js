@@ -214,8 +214,9 @@
       if(!piece){etape('refus-fichier');erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();return;}
       corps.fichier=piece;
     }else{
-      corps.parcours=$('cvParcours').value.trim();
-      if(corps.parcours.length<20){etape('refus-parcours');erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      const recit=$('cvParcours').value.trim(),nom=$('cvNom').value.trim();
+      if(recit.length<20){etape('refus-parcours');erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      corps.parcours=(nom?'Nom : '+nom+'\n':'')+recit;
     }
     etape('envoi');
     const bouton=$('cvCreer');
@@ -294,7 +295,7 @@
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
     $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvForm').reset();
-    $('cvBlocFichier').hidden=false;$('cvBlocParcours').hidden=true;$('cvFichierEtat').textContent='';
+    $('cvBlocFichier').hidden=true;$('cvBlocParcours').hidden=false;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });
 
