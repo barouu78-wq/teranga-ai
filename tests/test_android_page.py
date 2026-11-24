@@ -46,8 +46,7 @@ def test_home_page_links_to_the_android_download_page():
     from app import app
 
     html = app.test_client().get("/").get_data(as_text=True)
-    # Accueil allégé (23 novembre 2026) : la carte est partie, le lien reste dans les guides repliés.
-    assert '<a href="/telecharger">Appli Android</a>' in html
+    assert 'id="planCta" href="/telecharger"' in html
 
 
 def test_home_links_to_the_cv_builder():

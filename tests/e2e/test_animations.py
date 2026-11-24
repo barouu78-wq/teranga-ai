@@ -10,8 +10,8 @@ l'animation finie. Un visiteur qui a demandé moins d'animations (réglage du t�
 import datetime
 import json
 
-# « Je suis… », « À découvrir » et le convertisseur sont partis le 23 novembre 2026 (tests/test_accueil_allege.py).
-ARRIVEES = ["#jojCard", ".hero-greet", "#heroTitle", "#heroText", ".plan-cta"]
+ARRIVEES = ["#jojCard", ".hero-greet", "#heroTitle", "#heroText", ".audience-btn", ".hero-discover", ".plan-cta",
+            ".fx-widget"]
 ANIMATIONS = """(selecteurs) => selecteurs.map((s) => getComputedStyle(document.querySelector(s)).animationName)"""
 FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
   .every((a) => a.playState === 'finished')"""
@@ -53,7 +53,7 @@ def test_home_blocks_arrive_with_an_animation_and_nothing_is_removed(page, base_
 
 def test_buttons_press_and_the_theme_icon_turns(page, base_url):
     open_home(page, base_url)
-    for selecteur in (".hero-chips button", "#heroSend", "#heroMic", ".tabbar a"):
+    for selecteur in (".audience-btn", "#heroSend", "#heroMic", ".tabbar a"):
         transition = page.evaluate("(s) => getComputedStyle(document.querySelector(s)).transitionProperty", selecteur)
         assert "scale" in transition, (selecteur, transition)
     assert "rotate" in page.evaluate("getComputedStyle(document.querySelector('#themeBtn svg')).transitionProperty")
@@ -65,8 +65,8 @@ def test_less_motion_turns_every_new_animation_off(page, base_url):
     noms = page.evaluate(ANIMATIONS, ARRIVEES + ["#heroAsk", "#jojDay"])
     assert all(nom == "none" for nom in noms), noms
     assert page.evaluate("getComputedStyle(document.querySelector('.joj-confetti')).display") == "none"
-    assert "scale" not in page.evaluate("getComputedStyle(document.querySelector('.hero-chips button')).transitionProperty")
-    assert page.is_visible("#jojCard") and page.is_visible("#cvCta")  # tout reste là, sans mouvement
+    assert "scale" not in page.evaluate("getComputedStyle(document.querySelector('.audience-btn')).transitionProperty")
+    assert page.is_visible("#jojCard") and page.is_visible(".hero-discover")  # tout reste là, sans mouvement
     assert page.errors == []
 
 

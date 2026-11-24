@@ -8,8 +8,7 @@ résolue avec des `Decimal`, puis injectée dans le contexte de l'IA sous la for
 Règles de ce module :
 - Les chiffres viennent uniquement de la question de l'utilisateur et de la parité fixe
   1 € = 655,957 FCFA. Aucun taux de change ni prix n'est inventé : pour le dollar, la livre ou toute autre
-  devise, le taux varie, le bloc le dit et renvoie vers les cours de référence de la BCEAO, sans chiffre
-  (le convertisseur de l'accueil a été retiré le 23 novembre 2026).
+  devise, le taux varie, le bloc le dit et renvoie vers le convertisseur du site, sans chiffre.
 - `Decimal` partout (jamais de `float` pour l'argent) ; arrondi commercial (0,5 vers le haut).
 - Mieux vaut ne rien ajouter qu'un calcul douteux : écriture ambiguë (« 1,250 »), plusieurs lectures
   possibles, devises mélangées, nombre énorme ou division par zéro donnent un bloc vide ou « non calculable ».
@@ -493,8 +492,8 @@ def _note_taux_variable(mots: list[str]) -> str:
     noms = " / ".join(dict.fromkeys(mots))
     return (
         f"- Conversion avec « {noms} » : le taux de change varie chaque jour, donc aucun chiffre n'est calculé ici "
-        "(ne pas inventer de taux). Renvoyer vers les cours de référence de la BCEAO (bceao.int) ou vers le taux du "
-        "jour d'une banque ou d'un bureau de change."
+        "(ne pas inventer de taux). Renvoyer vers le convertisseur de la page d'accueil de teranga-ai.fr (euro, "
+        "dollar US, livre sterling) ou vers le taux du jour d'une banque ou d'un bureau de change."
     )
 
 

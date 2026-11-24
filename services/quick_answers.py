@@ -136,7 +136,7 @@ def _conversion_reply(line: str) -> str:
         "Cette parité entre l'euro et le franc CFA est fixe : elle ne change pas d'un jour à l'autre.",
         "Pour un transfert ou un change, comparez le montant reçu, frais compris : tout écart entre le taux annoncé et "
         "cette parité est un coût (marge ou commission de change), en plus des frais affichés.",
-        "Dollar ou livre : le taux change chaque jour, voir les cours de référence de la BCEAO (bceao.int).",
+        "Convertisseur (euro, dollar, livre) : page d'accueil de teranga-ai.fr",
     ])
 
 

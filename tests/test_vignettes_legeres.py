@@ -11,6 +11,7 @@ from flask import Flask
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
+from home_source import home_source  # noqa: E402
 from routes.explorer import register_explorer_routes  # noqa: E402
 from services.images import image_proxy_url, smaller_thumb  # noqa: E402
 
@@ -55,3 +56,6 @@ def test_une_largeur_inconnue_ne_change_rien():
     image = _client().get("/explorer-image?query=Lac+Rose&w=9999").get_json()["images"][0]
     assert image["url"] == GRANDE
 
+
+def test_l_accueil_demande_la_petite_vignette():
+    assert "'&w=500'" in home_source()

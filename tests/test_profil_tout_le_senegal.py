@@ -4,9 +4,6 @@ Demande du propriétaire (24 octobre 2026) : « une IA qui peut répondre à tou
 toute la population, et qui reste une IA. Avant, un nouveau visiteur était rangé d'office dans le profil « touriste » :
 l'IA recevait la consigne de privilégier le voyage, même pour un habitant qui demandait ses papiers. Les quatre profils
 (touriste, résident, diaspora, commerçant) restent au choix ; seul le profil par défaut change.
-
-Accueil allégé (23 novembre 2026, tests/test_accueil_allege.py) : l'accueil ne propose plus « Je suis… » et envoie
-toujours « general ». Le serveur accepte encore les quatre profils (planificateur de voyage).
 """
 
 import os
@@ -70,13 +67,22 @@ def test_le_planificateur_et_la_voix_acceptent_le_profil_general():
 
 # --- Accueil --------------------------------------------------------------------------------------------------------
 
-def test_l_accueil_envoie_toujours_le_profil_general():
-    assert "const audience='general'" in HOME_JS
-    assert "teranga-audience" not in HOME_JS
+def test_le_bouton_tout_le_senegal_est_le_premier_et_choisi_par_defaut():
+    html = app_module.app.test_client().get("/", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    boutons = re.findall(r'<button type="button" class="audience-btn( on)?" data-audience="(\w+)" aria-pressed="(\w+)"', html)
+    assert [b[1] for b in boutons] == ["general", "tourist", "resident", "diaspora", "merchant"]
+    assert boutons[0] == (" on", "general", "true")
+    assert all(on == "" and pressed == "false" for on, _, pressed in boutons[1:])
+    assert "Tout le Sénégal" in html
+
+
+def test_le_script_de_l_accueil_part_du_profil_general():
+    assert "storageGet('teranga-audience','general')" in HOME_JS
+    assert "['general','tourist','resident','diaspora','merchant']" in HOME_JS
 
 
 def _suggestions_fr():
-    bloc = re.search(r"\nfr:\{\n general:\[(.*?)\],?\n\}", HOME_JS, re.S)
+    bloc = re.search(r"\nfr:\{\n general:\[(.*?)\],\n tourist:", HOME_JS, re.S)
     assert bloc, "suggestions « general » en français introuvables"
     return re.findall(r"\['([^']+)',\"([^\"]+)\"\]", bloc.group(1))
 

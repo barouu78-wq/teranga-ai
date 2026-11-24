@@ -60,9 +60,7 @@ def test_chaque_page_citee_existe():
 def test_les_outils_cites_existent_sur_l_accueil():
     home = app_module.app.test_client().get("/", base_url="https://teranga-ai.fr").get_data(as_text=True)
     assert 'aria-label="Parler"' in home              # micro
-    # « Convertir des euros en francs CFA » : le chat le fait (le convertisseur de l'accueil a été retiré le
-    # 23 novembre 2026, tests/test_accueil_allege.py).
-    assert "65 595,70 FCFA" in quick_answer({"message": "100 euros en FCFA", "language": "fr"}, {})["reply"]
+    assert 'aria-label="Convertisseur de devises"' in home
     assert 'data-lang="wo"' in home                    # interface en wolof
 
 
