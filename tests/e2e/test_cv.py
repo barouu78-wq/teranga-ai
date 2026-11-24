@@ -486,3 +486,17 @@ def test_le_resultat_reste_court_et_le_pdf_toujours_a_portee(page, base_url):
     page.evaluate("window.scrollBy(0, 200)")
     pdf = page.locator("#cvPdf").bounding_box()
     assert 0 <= pdf["y"] and pdf["y"] + pdf["height"] <= 844, pdf
+
+
+def test_a_l_impression_le_cv_reste_dans_le_flux_de_la_page(page, base_url):
+    """iPhone du propriétaire (24 novembre 2026) : en position absolue, Safari coupait ce qui dépassait de la page 1
+    (fin de la formation perdue) au lieu de créer une page 2. Le CV et la lettre s'impriment dans le flux normal."""
+    ouvrir(page, base_url, [])
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.fill("#cvOffre", "Recrute comptable, permis B souhaité.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.emulate_media(media="print")
+    for classe, cible in (("imprime-cv", "cvFeuille"), ("imprime-lettre", "cvLettre")):
+        page.evaluate(f"document.body.className = '{classe}'")
+        assert page.evaluate(f"getComputedStyle(document.getElementById('{cible}')).position") == "static", classe
