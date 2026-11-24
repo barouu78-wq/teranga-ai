@@ -281,7 +281,10 @@ body.hote main h2{margin-top:26px}
 .cv-resultat h2{margin:18px 0 0}
 .cv-resultat h3:not(.cv-rubrique){margin:8px 0 6px;font-size:17px}
 .cv-alerte{margin:0;padding:12px 14px;border-radius:14px;border:1px solid #c9473d;background:rgba(201,71,61,.10);font-weight:700}
-.cv-modeles{display:flex;gap:8px;flex-wrap:wrap}
+/* Remarque du propriétaire (24 novembre 2026) : la page résultat était trop longue. Les 9 modèles tiennent sur une
+   ligne qui défile, et « Télécharger en PDF » reste en bas de l'écran pendant la lecture du CV. */
+.cv-modeles{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;overscroll-behavior-x:contain;-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent)}
+.cv-modeles .cv-modele{flex:0 0 auto;white-space:nowrap}
 .cv-modele{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .cv-modele[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .cv-modele{display:inline-flex;align-items:center;gap:8px}
@@ -296,6 +299,7 @@ body.hote main h2{margin-top:26px}
 [data-modele="baobab"] .cv-pastille{background:linear-gradient(135deg,#a2462b 50%,#f4ead7 50%)}
 [data-modele="elegant"] .cv-pastille{background:linear-gradient(135deg,#1d2b4f 50%,#c9a24d 50%)}
 .cv-actions{display:flex;gap:10px;flex-wrap:wrap}
+.cv-resultat .cv-actions{position:sticky;bottom:0;z-index:2;padding:10px 0 calc(10px + env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--line-strong)}
 a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 .cv-partage{margin:16px 0;padding:14px 16px;border:1px solid var(--line-strong);border-radius:14px}
 .cv-partage p{margin:0 0 10px}
@@ -448,6 +452,10 @@ a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-d
   body.imprime-cv #cvFeuille *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   /* Réduit juste assez pour une page (cv.js) ; dans les modèles à colonne, la colonne va jusqu'en bas de la page A4. */
   body.imprime-cv #cvFeuille{zoom:var(--cv-echelle,1)}
-  body.imprime-cv #cvFeuille:is(.moderne,.baobab,.elegant,.teranga,.ocean){min-height:calc(266mm / var(--cv-echelle,1));grid-template-rows:auto 1fr}
+  body.imprime-cv #cvFeuille:is(.moderne,.baobab,.elegant,.teranga,.ocean){min-height:calc(240mm / var(--cv-echelle,1));grid-template-rows:auto 1fr}
   body.imprime-cv #cvFeuille .cv-bloc,body.imprime-cv #cvFeuille li{break-inside:avoid}
+  /* Une date ou un intitulé de poste ne reste jamais seul en bas de page (vu le 24 novembre 2026 sur iPhone :
+     « 2023-2025 » en bas de la page 1, son poste en haut de la page 2). page-break-* pour Safari. */
+  body.imprime-cv #cvFeuille :is(.cv-quand,.cv-poste,.cv-rubrique){break-after:avoid;page-break-after:avoid}
+  body.imprime-cv #cvFeuille .cv-bloc{page-break-inside:avoid}
 }
