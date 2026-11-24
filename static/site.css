@@ -444,7 +444,11 @@ a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-d
   body.imprime-cv *:not(:has(#cvFeuille),#cvFeuille,#cvFeuille *),body.imprime-lettre *:not(:has(#cvLettre),#cvLettre,#cvLettre *){display:none}
   body.imprime-cv #cvFeuille,body.imprime-cv #cvFeuille *,body.imprime-lettre #cvLettre,body.imprime-lettre #cvLettre *{visibility:visible}
   html:has(body.imprime-cv),html:has(body.imprime-lettre),body.imprime-cv,body.imprime-lettre{background:#fff!important}
-  body.imprime-cv #cvFeuille,body.imprime-lettre #cvLettre{position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none;border-radius:0}
+  /* Dans le flux, pas en position absolue : Safari sur iPhone coupait ce qui dépassait de la page 1 au lieu de créer
+     une page 2 (vu le 24 novembre 2026 : fin de la formation perdue). Les parents gardés n'ajoutent aucune marge. */
+  body.imprime-cv :has(#cvFeuille),body.imprime-lettre :has(#cvLettre){display:block;margin:0;padding:0;border:0;max-width:none;width:auto;min-height:0;box-shadow:none;background:none}
+  body.imprime-cv,body.imprime-lettre{margin:0;padding:0}
+  body.imprime-cv #cvFeuille,body.imprime-lettre #cvLettre{position:static;width:100%;margin:0;border:0;box-shadow:none;border-radius:0}
   .cv-feuille [data-champ]:focus{outline:0}
   body.imprime-cv #cvFeuille{display:grid;grid-template-columns:none}
   body.imprime-cv #cvFeuille.moderne,body.imprime-cv #cvFeuille.baobab,body.imprime-cv #cvFeuille.elegant{grid-template-columns:34% 1fr;grid-template-areas:"tete tete" "cote corps"}
