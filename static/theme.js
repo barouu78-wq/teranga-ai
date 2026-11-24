@@ -1,13 +1,14 @@
 // Thème du site, partagé par l'accueil et toutes les pages.
-// Mode « auto » (par défaut) : jour = « Terre de Teranga », nuit (18 h–6 h,
-// heure du visiteur) = « Nuit de Dakar ». Le visiteur peut forcer clair/sombre.
+// Mode « auto » (par défaut) : jour = « Vert Sénégal », nuit (18 h–6 h,
+// heure du visiteur) = « Nuit verte ». Le visiteur peut forcer clair/sombre.
 // Les grandes fêtes ajoutent une touche (data-fete) sans changer la base.
 (function(){
   var KEY='teranga-theme';
   // Dates des fêtes religieuses : estimations (calendrier lunaire), à ajuster
   // selon l'annonce officielle. Format : [mois, jour] de début, durée en jours.
   var FETES={
-    2026:{korite:[3,20,2],tabaski:[5,27,2],magal:[8,2,2]},
+    // joj : JOJ Dakar 2026, du 31 octobre au 13 novembre inclus (14 jours).
+    2026:{korite:[3,20,2],tabaski:[5,27,2],magal:[8,2,2],joj:[10,31,14]},
     2027:{korite:[3,10,2],tabaski:[5,17,2],magal:[7,23,2]}
   };
   // Les anciennes versions enregistraient « light » ou « dark » au moindre
@@ -27,10 +28,20 @@
   function saveMode(mode){try{localStorage.setItem(KEY,mode);}catch(e){}}
   function isNight(date){var h=(date||new Date()).getHours();return h>=18||h<6;}
   function resolve(mode,date){return mode==='dark'||(mode==='auto'&&isNight(date))?'dark':'light';}
+  // Fête mal saisie (nombre manquant ou faux) : jamais affichée, plutôt qu'une fête qui ne finit pas.
+  function valid(f){
+    return !!f&&f.length===3&&f[0]>=1&&f[0]<=12&&f[1]>=1&&f[1]<=31&&f[2]>=1&&f[2]<=31;
+  }
+  // Fin exclue : le jour qui suit le dernier jour, à minuit, heure du visiteur.
   function within(date,month,day,days){
     var start=new Date(date.getFullYear(),month-1,day);
-    var end=new Date(start.getTime()+days*86400000);
+    var end=new Date(date.getFullYear(),month-1,day+days);
     return date>=start&&date<end;
+  }
+  // Dates d'une fête pour une année ({start:[année,mois,jour],days}), ou null : une seule copie des dates (home.js).
+  function range(name,year){
+    var f=(FETES[year]||{})[name];
+    return valid(f)?{start:[year,f[0],f[1]],days:f[2]}:null;
   }
   function fete(date){
     date=date||new Date();
@@ -39,7 +50,7 @@
     if(m===4&&d>=3&&d<=5)return 'independance';
     if((m===12&&d===31)||(m===1&&d===1))return 'nouvel-an';
     var year=FETES[date.getFullYear()]||{};
-    for(var name in year){var f=year[name];if(within(date,f[0],f[1],f[2]))return name;}
+    for(var name in year){var f=year[name];if(valid(f)&&within(date,f[0],f[1],f[2]))return name;}
     return '';
   }
   function apply(target){
@@ -47,7 +58,7 @@
     (target||document.documentElement).dataset.theme=theme;
     return {mode:mode,theme:theme};
   }
-  window.terangaTheme={readMode:readMode,saveMode:saveMode,resolve:resolve,isNight:isNight,fete:fete,apply:apply};
+  window.terangaTheme={readMode:readMode,saveMode:saveMode,resolve:resolve,isNight:isNight,fete:fete,range:range,apply:apply};
   apply();
   // Passage automatique jour/nuit sans recharger la page.
   setInterval(function(){if(readMode()==='auto')apply();},5*60*1000);

@@ -551,9 +551,15 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert len(LANGS) == 5
     assert len(TOPICS) == 12
 
+    from services.international_seo import FR_EQUIVALENTS
+
     for lang in LANGS:
         for topic in TOPICS:
             response = client.get(f"/{lang}/{topic}")
+            if lang == "fr" and topic in FR_EQUIVALENTS:
+                # Doublon d'une page française (/fr/goree-island → /visiter-goree) : redirection 301.
+                assert response.status_code == 301
+                continue
             assert response.status_code == 200
             body = response.get_data(as_text=True)
             assert '<link rel="canonical"' in body
@@ -569,6 +575,17 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
 def test_visual_requests_trigger_web_search_first():
     assert should_use_web("Montre-moi des photos de Gorée") is True
     assert should_use_web("À quoi ressemble ce lieu ?") is True
+
+
+def test_system_prompt_donne_l_essentiel_puis_les_details_sur_demande():
+    """V5 « réponses courtes » : l'essentiel en 5 à 8 lignes, même pour un guide ; le détail seulement sur demande
+    (bouton « Plus de détails » du chat, qui envoie cette question)."""
+    import app as app_module
+    prompt = app_module.SYSTEM_PROMPT
+    assert "5 à 8 lignes au plus" in prompt
+    assert "même pour une démarche ou un guide" in prompt
+    assert "Quand l'utilisateur demande plus de détails" in prompt
+    assert "vise environ 2 à 5 phrases" not in prompt
 
 
 def test_visual_system_rule_requires_web_before_requesting_user_photo():
@@ -839,7 +856,7 @@ def test_chat_input_normalization_bounds_and_filters():
     assert error is None
     assert payload["message"] == "x" * 2000
     assert payload["language"] == "fr"
-    assert payload["audience"] == "tourist"
+    assert payload["audience"] == "general"  # profil « Tout le Sénégal » par défaut (test_profil_tout_le_senegal.py)
     assert len(payload["history"]) == 12
     assert all(item["role"] == "user" for item in payload["history"])
     assert all(item["content"] == "u" for item in payload["history"])
@@ -908,7 +925,10 @@ def test_home_bounds_persisted_chat_history():
 
     assert "slice(0,1200)" in html
     assert "version:2" in html
-    assert "LS.setItem('teranga-history'" in html
+    # Conversation neuve à chaque visite (5 nov. 2026) : gardée dans l'onglet seulement, 30 minutes au plus.
+    assert "SS.setItem('teranga-history'" in html
+    assert "LS.setItem('teranga-history'" not in html
+    assert "CHAT_IDLE_MS=30*60*1000" in html
     assert "safeHistory" in html
 
 
@@ -918,7 +938,7 @@ def test_home_audience_buttons_bind_directly():
     html = served_home(app.test_client())
 
     assert "document.querySelectorAll('.audience-btn').forEach" in html
-    assert "['tourist','resident','diaspora','merchant']" in html
+    assert "['general','tourist','resident','diaspora','merchant']" in html  # « Tout le Sénégal » en premier
     assert "diaspora:{" in html
     assert "resident:{" in html
 
@@ -972,13 +992,14 @@ def test_production_startup_contract():
     assert "buildCommand: pip install -r requirements.txt" in render
     assert "startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app" in render
     assert "healthCheckPath: /health" in render
-    assert "plan: 2c-8g" in render
+    # La taille de la production (0,5 processeur, 512 Mo) : jamais une machine plus chère par erreur.
+    assert "plan: 0.5c-512mb" in render
     assert "value: https://teranga-ai.fr" in render
     assert "key: ALLOWED_ORIGINS" in render
     assert "key: OPENAI_API_KEY" in render
     assert "key: SECRET_KEY" in render
     assert "from app import app" in wsgi
-    assert "gunicorn>=" in requirements
+    assert "gunicorn==" in requirements  # versions figées : tests/test_versions_figees.py
 
 
 def test_structured_memory_separates_temporary_constraints_from_preferences():
@@ -1040,9 +1061,11 @@ def test_robots_blocks_api_and_proxy_endpoints():
 
 
 def test_indexnow_workflow_targets_canonical_domain():
+    # Le domaine est passé du workflow au script qu'il lance (tests/test_indexnow_submit.py).
     workflow = (ROOT / ".github" / "workflows" / "indexnow-submit.yml").read_text(encoding="utf-8")
-    assert "onrender.com" not in workflow
-    assert '"host": "teranga-ai.fr"' in workflow
+    script = (ROOT / "scripts" / "indexnow_submit.py").read_text(encoding="utf-8")
+    assert "onrender.com" not in workflow + script
+    assert '"host": "teranga-ai.fr"' in script
 
 
 def test_every_seo_page_in_sitemap_is_served():

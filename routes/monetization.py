@@ -12,17 +12,24 @@ from urllib.parse import quote
 from flask import Response, abort, jsonify, redirect, request
 
 from services.click_stats import ClickStats
+from services.coverage_log import looks_like_bot
 from services.partner_requests import KINDS, PartnerRequests
 
 from services.monetization import affiliate_config, affiliate_target, clean_query
 from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_header, social_meta
+
+# Décision du propriétaire du 18 octobre 2026 (plan « de A à Z », décision 1) : un seul prix, en FCFA, après le
+# mois offert. Les messages prêts à envoyer (docs/VENTES-MESSAGES.md, docs/messages-prospects-prets.md) reprennent
+# ce montant ; tests/test_prix_partenaire.py vérifie qu'ils restent d'accord.
+PARTNER_MONTHLY_PRICE = "15 000 FCFA"
 
 OFFERS = (
     (
         "Adresse partenaire",
         "Votre hôtel, restaurant, agence ou service de guide apparaît, avec la mention « Partenaire », "
         "sur les fiches des lieux de votre ville et dans les recommandations de l'assistant quand un "
-        "visiteur cherche ce que vous proposez.",
+        f"visiteur cherche ce que vous proposez. {PARTNER_MONTHLY_PRICE} par mois, sans engagement ; "
+        "offre de lancement : premier mois offert aux premiers partenaires.",
     ),
     (
         "Bouton Teranga AI sur votre site",
@@ -98,13 +105,27 @@ def render_offers_page(site_url: str = "https://teranga-ai.fr") -> str:
 <h1>Devenir partenaire de Teranga AI</h1>
 <p class="intro">Chaque jour, des voyageurs et des membres de la diaspora demandent à Teranga AI où dormir, quoi visiter et qui contacter au Sénégal. Soyez la réponse.</p>
 <section><h2>Nos offres</h2><div class="grid">{cards}</div></section>
-<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Tarifs de lancement sur demande, adaptés à la taille de votre activité.</p></section>
+<section><h2>Nos engagements</h2><p>Les partenaires sont toujours signalés comme tels : l'assistant ne présente jamais une adresse payante comme un avis neutre. Nous ne publions ni faux avis ni faux chiffres d'audience. Adresse partenaire : {PARTNER_MONTHLY_PRICE} par mois, sans engagement (offre de lancement : premier mois offert aux premiers partenaires) ; autres offres : tarif sur demande.</p></section>
 <section id="demande"><h2>Demander un partenariat</h2><p>Présentez votre activité en une minute : nous vous recontactons par téléphone, WhatsApp ou e-mail.</p>{_request_form()}</section>
 <section><h2>{_contact_title()}</h2>{_contact_links("Partenariat Teranga AI")}</section>
 </article></main>{site_footer()}</body></html>"""
 
 
-KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi"}
+KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activités (GetYourGuide)", "taxi": "🚕 Taxi",
+               "widget": "Widget (visiteurs envoyés)", "visite": "Visites venues des réseaux",
+               "cv": "Étapes du formulaire Mon CV"}
+# Mesures internes du site, gardées à part : elles ne comptent pas dans le total montré aux partenaires.
+INTERNAL_KINDS = frozenset({"cv"})
+# Étapes du formulaire /cv envoyées par static/cv.js (« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent).
+# « refus-fichier » : « Créer mon CV » sans fichier ; « fichier-refuse » : un fichier choisi mais refusé (type, poids).
+CV_ETAPES = frozenset({"faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours", "envoi"})
+# Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
+VISIT_SOURCES = frozenset({"tiktok", "instagram", "whatsapp", "facebook", "youtube"})
+# Marques que les réseaux ajoutent eux-mêmes : Instagram met « utm_source=ig » sur le lien du profil (journaux du
+# 1er novembre 2026). Elles comptent pour leur réseau, sans ligne à part.
+VISIT_SOURCE_ALIASES = {"ig": "instagram"}
+# Lignes par mois (liens /go et partenaires du widget) au-delà desquelles un nouveau partenaire est compté « autre ».
+WIDGET_MAX_FIELDS = 500
 
 
 def _stats_token() -> str:
@@ -134,16 +155,27 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
     else:
         blocks = []
         for month in summary:
-            kinds = " · ".join(f"{escape(KIND_LABELS.get(k, k))} : <strong>{n}</strong>" for k, n in sorted(month["by_kind"].items()))
+            partner_kinds = {k: n for k, n in month["by_kind"].items() if k not in INTERNAL_KINDS}
+            kinds = " · ".join(f"{escape(KIND_LABELS.get(k, k))} : <strong>{n}</strong>" for k, n in sorted(partner_kinds.items()))
             rows = "".join(
                 f"<tr><td>{escape(KIND_LABELS.get(kind, kind))}</td><td>{escape(source)}</td><td>{n}</td></tr>"
-                for kind, source, n in month["rows"][:50]
+                for kind, source, n in [r for r in month["rows"] if r[0] not in INTERNAL_KINDS][:50]
             )
             table = (
-                f"<table><thead><tr><th>Lien</th><th>Page d'origine</th><th>Clics</th></tr></thead><tbody>{rows}</tbody></table>"
+                f"<table><thead><tr><th>Lien</th><th>Origine</th><th>Nombre</th></tr></thead><tbody>{rows}</tbody></table>"
                 if rows else '<p class="muted">Aucun clic ce mois-ci.</p>'
             )
-            blocks.append(f"<section><h2>{escape(month['month'])} — {month['total']} clic(s)</h2><p>{kinds}</p>{table}</section>")
+            internal = "".join(
+                f"<tr><td>{escape(KIND_LABELS.get(kind, kind))}</td><td>{escape(source)}</td><td>{n}</td></tr>"
+                for kind, source, n in month["rows"] if kind in INTERNAL_KINDS
+            )
+            mesure = (
+                "<h3>Mon CV : étapes du formulaire (mesure interne, à ne pas montrer aux partenaires)</h3>"
+                f"<table><thead><tr><th>Mesure</th><th>Étape</th><th>Nombre</th></tr></thead><tbody>{internal}</tbody></table>"
+                if internal else ""
+            )
+            total = sum(partner_kinds.values())
+            blocks.append(f"<section><h2>{escape(month['month'])} — {total} clic(s) ou visite(s)</h2><p>{kinds}</p>{table}{mesure}</section>")
         body = (
             "<h1>Statistiques partenaires</h1>"
             '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'
@@ -184,6 +216,50 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
             app.logger.warning("stats-partenaires: mot de passe refusé")
             return Response(render_stats_page(None, "Mot de passe incorrect."), status=403, mimetype="text/html", headers=headers)
         return Response(render_stats_page(stats.summary(), requests=partner_requests.recent()), mimetype="text/html", headers=headers)
+
+    @app.before_request
+    def count_widget_visit():
+        # Visiteur arrivé par le bouton du widget partenaire (static/widget.js) : compté par partenaire, sans
+        # donnée personnelle. Les pages passent par le serveur même avec le service worker (réseau d'abord).
+        if request.method != "GET" or request.path != "/" or request.args.get("utm_medium") != "widget":
+            return None
+        partner = re.sub(r"[^a-z0-9_-]", "", str(request.args.get("utm_source", "")).lower())[:40]
+        # Comme pour /go : quelques visites par minute et par visiteur, pour qu'un script ne gonfle pas les chiffres.
+        if partner and (rate_guard is None or rate_guard("widget_count") is None):
+            stats.record("widget", partner, max_fields=WIDGET_MAX_FIELDS)
+        return None
+
+    @app.before_request
+    def count_social_visit():
+        # Visiteur arrivé par le lien marqué d'une publication (?utm_source=tiktok…) : compté par réseau, sans donnée
+        # personnelle ni outil extérieur. Les aperçus de liens (robots de WhatsApp, Facebook…) ne comptent pas.
+        if request.method != "GET" or request.args.get("utm_medium") == "widget":
+            return None
+        source = str(request.args.get("utm_source", "")).strip().lower()
+        source = VISIT_SOURCE_ALIASES.get(source, source)
+        agent = request.headers.get("User-Agent", "")
+        # Seul un vrai navigateur compte : Safari, Chrome, Firefox et les navigateurs intégrés de TikTok ou Instagram
+        # s'annoncent tous WebKit ou Gecko. L'aperçu WhatsApp (« WhatsApp/2.x ») ou un outil (« Mozilla/5.0
+        # (compatible) », vu le 6 novembre) ne le font pas ; les robots qui imitent un navigateur restent écartés.
+        navigateur = "AppleWebKit/" in agent or "Gecko/" in agent
+        if source not in VISIT_SOURCES or not navigateur or looks_like_bot(agent):
+            return None
+        if rate_guard is None or rate_guard("visit_count") is None:
+            stats.record("visite", source)
+        return None
+
+    def _vrai_navigateur(agent):
+        # Même règle que count_social_visit : un vrai navigateur s'annonce WebKit ou Gecko, et n'est pas un robot.
+        return ("AppleWebKit/" in agent or "Gecko/" in agent) and not looks_like_bot(agent)
+
+    @app.get("/cv/etape/<nom>")
+    def cv_etape(nom):
+        # Une étape du formulaire Mon CV : compteur du mois, sans rien de ce que la personne écrit, ni IP, ni identifiant.
+        if nom not in CV_ETAPES:
+            abort(404)
+        if _vrai_navigateur(request.headers.get("User-Agent", "")) and (rate_guard is None or rate_guard("visit_count") is None):
+            stats.record("cv", nom)
+        return Response(status=204, headers={"Cache-Control": "no-store", "X-Robots-Tag": "noindex"})
 
     @app.get("/go/<kind>")
     def affiliate_redirect(kind):

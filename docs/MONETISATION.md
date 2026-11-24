@@ -54,12 +54,15 @@ C'est la source la plus intéressante au Sénégal : tu vends directement une mi
 - L'assistant peut le recommander quand un visiteur cherche ce qu'il propose. Il précise toujours « partenaire de Teranga AI » : c'est une obligation légale et une question de confiance.
 - La page **teranga-ai.fr/offres-partenaires** présente les offres.
 
-### Tarifs de lancement : à toi de décider
-Suggestions de départ, à ajuster selon tes premiers retours :
+### Tarifs de lancement
+**Décidé le 18 octobre 2026** : l'adresse partenaire coûte **15 000 FCFA par mois**, après un premier mois offert,
+sans engagement. Ce prix est affiché sur /offres-partenaires (`PARTNER_MONTHLY_PRICE` dans `routes/monetization.py`)
+et repris dans les messages prêts à envoyer. Les autres offres restent des suggestions, à ajuster selon tes premiers
+retours :
 
-| Offre | Prix de lancement suggéré |
+| Offre | Prix de lancement |
 |---|---|
-| Adresse partenaire (1 ville) | 15 000 à 25 000 FCFA par mois (ou 25 à 40 € pour la France) |
+| Adresse partenaire (1 ville) | **15 000 FCFA par mois** (décidé) |
 | Bouton Teranga AI aux couleurs du partenaire | 10 000 FCFA par mois |
 | Guide thématique sponsorisé | 50 000 FCFA, une seule fois |
 

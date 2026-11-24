@@ -76,9 +76,13 @@ def test_static_files_are_gzipped_and_versioned_ones_cached_for_a_year():
     assert response.headers["Content-Encoding"] == "gzip"
     assert gzip.decompress(response.data) == open("static/home.js", "rb").read()
     assert response.headers["Cache-Control"] == "public, max-age=31536000, immutable"
-    # Ancienne empreinte : contenu actuel, mais pas figé un an chez le visiteur.
+    # Empreinte qui ne correspond pas au fichier servi : jamais gardée sans revérifier. Pendant un
+    # déploiement, l'ancien serveur reçoit la nouvelle adresse et sert l'ancien fichier ; gardé une heure,
+    # il cachait les neuf modèles de Mon CV au propriétaire (15 novembre 2026).
     stale = client.get("/static/home.js?v=0000000000", headers={"Accept-Encoding": "gzip"})
-    assert stale.headers["Cache-Control"] == "public, max-age=3600"
+    assert stale.headers["Cache-Control"] == "no-cache"
+    # Sans empreinte, le fichier reste gardé une heure.
+    assert client.get("/static/home.js").headers["Cache-Control"] == "public, max-age=3600"
     # Les requêtes partielles restent non compressées et correctes.
     partial = client.get(url, headers={"Accept-Encoding": "gzip", "Range": "bytes=0-9"})
     assert partial.status_code == 206 and "Content-Encoding" not in partial.headers

@@ -30,8 +30,6 @@ Cette PR installe les connecteurs de base, mais ne branche pas encore automatiqu
 2. Ajouter les secrets de production dans le gestionnaire d'environnement.
 3. Ajouter une couche d'orchestration côté serveur : choix du fournisseur selon l'intention, délais maximum, limite de résultats, cache, attribution des sources et solution de repli.
 4. Ajouter des tests d'intégration contrôlés avec clés valides, sans exposer les secrets.
-5. Intégrer séparément Google Search Console via OAuth/service account autorisé et tester les permissions sur la propriété du site.
-6. Intégrer Semrush selon le produit et les droits API du compte. La présence de `SEMRUSH_API_KEY` ne constitue pas une intégration Semrush.
 
 Les appels réseau sont déclenchés uniquement par une invocation explicite des fonctions du module. Toute intégration au chat doit aussi conserver les limites de débit, les délais et les règles de sécurité existantes.
 
@@ -40,17 +38,8 @@ Les appels réseau sont déclenchés uniquement par une invocation explicite des
 
 Lorsqu'une question contient explicitement une URL et que `FIRECRAWL_API_KEY` est configurée, le chat peut extraire le Markdown de cette page. Le contenu extrait est traité comme une source non fiable. Si Firecrawl échoue, la recherche standard reste disponible.
 
-## Étape 3 : Google Search Console et Semrush
+## Étape 3 : Google Search Console et Semrush (retirée le 23 novembre 2026)
 
-Le module `services/seo_integrations.py` expose deux fonctions côté serveur :
-
-- `search_console_query()` : interroge les performances d'une propriété Search Console via un jeton OAuth. Pour une installation durable, privilégier un refresh token OAuth stocké dans les secrets du serveur. L'application Google doit être autorisée à lire la propriété vérifiée.
-- `semrush_domain_overview(domain)` : appelle le rapport Semrush `domain_ranks`. Ce rapport consomme des unités API ; vérifier les droits et le solde du compte avant activation.
-
-Variables à configurer dans le gestionnaire de secrets du déploiement :
-
-- `GOOGLE_SEARCH_CONSOLE_SITE_URL`
-- `GOOGLE_SEARCH_CONSOLE_TOKEN` **ou** `GOOGLE_SEARCH_CONSOLE_REFRESH_TOKEN`, `GOOGLE_SEARCH_CONSOLE_CLIENT_ID`, `GOOGLE_SEARCH_CONSOLE_CLIENT_SECRET`
-- `SEMRUSH_API_KEY` et, si nécessaire, `SEMRUSH_DATABASE`
-
-Ces fonctions sont prêtes à être appelées côté serveur, mais ne lisent pas automatiquement les données tant qu'un workflow SEO ne les appelle pas. Une clé présente n'est pas une preuve que le compte dispose des autorisations ou quotas nécessaires. Les tests de CI utilisent des réponses simulées ; le test réel nécessitera les secrets et une propriété Search Console autorisée.
+Les clients Search Console et Semrush écrits dans le code n'étaient appelés par aucune page ni aucun workflow : ils ont
+été supprimés. Search Console et Google Ads se lisent désormais par le connecteur Windsor.ai de Claude, en lecture
+seule, sans clé stockée dans le site. Les variables `GOOGLE_SEARCH_CONSOLE_*` et `SEMRUSH_*` ne servent plus à rien.

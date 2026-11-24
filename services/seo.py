@@ -41,19 +41,43 @@ SEO_PAGES = {
         ],
         "related": [("visiter-goree", "Gorée"), ("restaurants-dakar", "Où manger"), ("senegal", "Guide")],
     },
+    # Page unique de Gorée en français : /lieux/goree y renvoie sa canonique et /fr/goree-island y redirige
+    # (PLACE_CANONICAL_PATHS, FR_EQUIVALENTS). Sources (relevé du 22 novembre 2026) : billet en ligne et tarif adulte,
+    # au-senegal.com/goree-reservez-desormais-votre-billet-de-chaloupe-en-ligne,18591.html ; taxe communale,
+    # au-senegal.com/chaloupe-de-goree,322.html ; Maison des Esclaves, au-senegal.com/maison-des-esclaves,2782.html ;
+    # musée historique, routard.com (fort d'Estrées).
     "visiter-goree": {
-        "title": "Visiter Gorée : Maison des Esclaves, ferry, photos | Teranga AI",
-        "description": "Île de Gorée : histoire, Maison des Esclaves, ferry depuis Dakar. Photos et carte avec Teranga AI.",
+        "title": "Visiter Gorée : chaloupe, billet en ligne, que voir | Teranga AI",
+        "description": "Visiter Gorée depuis Dakar : chaloupe de 20 minutes, billet en ligne, prix à prévoir, "
+                       "Maison des Esclaves, Castel et conseils pour une demi-journée.",
         "h1": "Visiter l'île de Gorée",
-        "intro": "Gorée fait face à Dakar. On y vient pour l'histoire et la Maison des Esclaves. Demandez une réponse courte, photos et carte.",
+        "intro": "À environ 20 minutes de chaloupe de Dakar, Gorée est une petite île sans voitures, inscrite au "
+                 "patrimoine mondial de l'UNESCO en 1978 et lieu de mémoire de la traite atlantique. Comment y aller, "
+                 "ce qu'il faut prévoir et ce qu'il faut voir.",
         "sections": [
-            ("S'y rendre", "Ferry depuis le port de Dakar. Horaires et tarifs : à vérifier le jour du départ."),
-            ("Quoi voir", "Maison des Esclaves, ruelles, musées. Comptez 2 à 4 heures."),
-            ("Question type", "Parle-moi de Gorée et montre l'île."),
+            ("Acheter son billet en ligne", "Depuis le 29 octobre 2026, le Port autonome de Dakar vend les billets de "
+             "la chaloupe en ligne sur dakargoree.sn : on choisit le trajet (Dakar-Gorée ou Gorée-Dakar), la date et un "
+             "départ disponible, on paie par carte bancaire, Wave ou Orange Money, puis on embarque avec le QR code reçu. "
+             "Pratique le week-end et pendant les vacances, quand l'affluence est forte."),
+            ("Prix à prévoir", "La plateforme officielle affiche 1 500 FCFA par adulte ; le tarif dépend du statut "
+             "(Sénégalais, résident, non-résident), vérifiez le vôtre au moment de réserver. Ajoutez la taxe communale "
+             "de Gorée (500 FCFA par personne, à régler avant d'embarquer) et la visite guidée de la Maison des Esclaves "
+             "(1 000 FCFA). Montants relevés en novembre 2026, à vérifier sur place."),
+            ("Que voir", "La Maison des Esclaves et sa « porte du voyage sans retour » ; le Castel, point haut de l'île, "
+             "avec la vue sur Dakar ; le musée historique de l'IFAN dans le fort d'Estrées ; les ruelles sans voitures et "
+             "les ateliers d'artistes. Une demi-journée suffit pour l'essentiel, une journée laisse le temps de la plage."),
+            ("Conseils", "Évitez le lundi : la Maison des Esclaves et le musée historique sont fermés. Si un guide vous "
+             "propose ses services à l'arrivée, fixez le prix avant la visite. La Maison des Esclaves est un lieu de "
+             "mémoire : tenue correcte et silence. Ruelles pavées et escaliers : l'île est difficile en fauteuil roulant."),
         ],
         "faq": [
-            ("Une demi-journée suffit-elle ?", "Oui, beaucoup de visites tiennent en une matinée."),
-            ("Faut-il réserver le ferry ?", "Souvent non. Vérifiez l'affluence le jour J."),
+            ("Peut-on acheter le billet de la chaloupe en ligne ?", "Oui, depuis le 29 octobre 2026, sur dakargoree.sn : "
+             "choix du départ, paiement par carte, Wave ou Orange Money, embarquement avec un QR code."),
+            ("Combien coûte la traversée ?", "La plateforme officielle affiche 1 500 FCFA par adulte ; le tarif dépend "
+             "du statut. Comptez aussi 500 FCFA de taxe communale. À vérifier au moment de réserver."),
+            ("Une demi-journée suffit-elle ?", "Oui pour la Maison des Esclaves, le Castel et le musée. Une journée laisse "
+             "le temps de la plage et des ateliers."),
+            ("Quel jour éviter ?", "Le lundi : la Maison des Esclaves et le musée historique sont fermés."),
         ],
         "related": [("meteo-dakar", "Météo"), ("restaurants-dakar", "Manger à Dakar"), ("senegal", "Guide")],
     },
@@ -73,19 +97,37 @@ SEO_PAGES = {
         ],
         "related": [("specialites-senegal", "Spécialités"), ("visiter-goree", "Gorée"), ("meteo-dakar", "Météo")],
     },
+    # Contenu tiré des fiches « dishes » de data/senegal_knowledge.json (déjà sourcées) ; aucune donnée nouvelle.
     "specialites-senegal": {
-        "title": "Spécialités du Sénégal : ceebu jen, yassa, mafé | Teranga AI",
-        "description": "Cuisine sénégalaise : ceebu jen, yassa, mafé, plats du Nord et de Casamance. Où les goûter.",
+        "title": "Spécialités du Sénégal : ceebu jën, yassa, mafé | Teranga AI",
+        "description": "Cuisine sénégalaise : ceebu jën, yassa, mafé, caldou, mbaxal, desserts au mil et boissons "
+                       "(bissap, bouye, café Touba). Ce qu'on mange, quand et où.",
         "h1": "Spécialités du Sénégal",
-        "intro": "La cuisine change selon la mer, le fleuve et la Casamance. Teranga cite 3 ou 4 plats, pas une liste infinie.",
+        "intro": "Riz, poisson, mil et arachide : la cuisine sénégalaise change selon la côte, le Saloum et la Casamance. "
+                 "Les plats, desserts et boissons à connaître, et où les goûter.",
         "sections": [
-            ("Plats connus", "Ceebu jen, yassa, mafé, dibi."),
-            ("Régions", "Nord : mil et fleuve. Centre : arachide. Casamance : riz, fruits, poisson fumé."),
-            ("Où chercher", "Un quartier à Dakar, ou une ville : Saint-Louis, Kaolack, Ziguinchor."),
+            ("Le plat national", "Le ceebu jën (thiéboudienne) : riz cuit dans un bouillon de poisson et de tomate, poisson "
+             "farci au « roof » et légumes. Le riz croustillant du fond de la marmite s'appelle le xoon. Inscrit au "
+             "patrimoine culturel immatériel de l'UNESCO en 2021, associé à Saint-Louis, il se mange souvent à midi dans "
+             "un grand plat partagé."),
+            ("Plats par région", "Saint-Louis : ceebu jën. Saloum (Kaolack, Fatick) : mbaxal, riz à l'arachide et au niébé. "
+             "Casamance : caldou, poisson au citron, et yassa. Partout : mafé à la pâte d'arachide, soupou kandja au gombo, "
+             "ceebu yapp à la viande."),
+            ("Dans la rue et le soir", "Le dibi, mouton grillé au feu de bois, s'achète le soir dans les dibiteries. En "
+             "en-cas : fataya et pastels (chaussons frits) et accara, beignets de niébé servis avec une sauce pimentée."),
+            ("Desserts et fêtes", "Thiakry (mil et lait caillé sucré) et lakh se mangent frais. Le thiéré, couscous de mil, "
+             "est le plat de la nuit de Tamxarit ; le ngalakh, au mil, à l'arachide et au pain de singe, est préparé par "
+             "les familles chrétiennes pour le Vendredi saint."),
+            ("Boissons", "L'attaya, thé vert à la menthe servi en trois tournées ; le café Touba au poivre de Guinée ; le "
+             "bissap (hibiscus), le bouye (pain de singe) et le jus de gingembre, très frais."),
         ],
         "faq": [
-            ("Quel plat est le plus cite ?", "Le ceebu jen, souvent le midi."),
-            ("Y a-t-il des photos ?", "Pour certains sujets, oui, via Wikimedia."),
+            ("Quel est le plat national du Sénégal ?", "Le ceebu jën (thiéboudienne), riz au poisson inscrit au patrimoine "
+             "culturel immatériel de l'UNESCO en 2021."),
+            ("Que boire au Sénégal ?", "L'attaya (thé à la menthe), le café Touba, le bissap, le bouye et le jus de gingembre."),
+            ("Quel plat goûter en Casamance ?", "Le caldou, poisson au citron et aux oignons, et le yassa."),
+            ("Où manger sénégalais à Dakar ?", "Par quartier : la Médina pour la cuisine du quotidien, le Plateau, les "
+             "Almadies ou Ngor au bord de la mer. Le guide « Où manger à Dakar » détaille chaque quartier."),
         ],
         "related": [("restaurants-dakar", "Où manger"), ("regions-senegal", "Régions"), ("senegal", "Guide")],
     },
@@ -119,7 +161,7 @@ SEO_PAGES = {
             ("L'assistant est-il réservé aux voyageurs ?", "Non. Il s'adresse aussi aux résidents, à la diaspora et aux commerçants."),
             ("Peut-on parler wolof ?", "Oui, Teranga AI propose le wolof en plus du français et de l'anglais. Le pulaar est en cours d'amélioration et n'est pas encore proposé dans l'interface."),
         ],
-        "related": [("france-senegal", "France ↔ Sénégal"), ("senegal", "Guide du Sénégal"), ("specialites-senegal", "Spécialités")],
+        "related": [("demarches-senegal", "Démarches"), ("senegal", "Guide du Sénégal"), ("france-senegal", "France ↔ Sénégal")],
     },
     "a-propos": {
         "title": "À propos de Teranga AI : assistant numérique du Sénégal",
@@ -207,7 +249,9 @@ SEO_PAGES = {
             ("Quels quartiers de Dakar peut-on explorer ?", "Plateau, Médina, Almadies, Ngor, Ouakam et d'autres quartiers peuvent être décrits selon votre activité."),
             ("Peut-on préparer une journée à Dakar ?", "Oui. Indiquez votre point de départ, le temps disponible et vos centres d'intérêt.")
         ],
-        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("senegal", "Guide du Sénégal")]
+        # visiter-dakar et assistant-ia-dakar n'étaient liées par aucune page : elles ne sont
+        # plus atteignables que par le plan du site tant qu'elles ne figurent pas ici.
+        "related": [("meteo-dakar", "Météo Dakar"), ("visiter-goree", "Visiter Gorée"), ("restaurants-dakar", "Restaurants Dakar"), ("visiter-dakar", "Visiter Dakar"), ("assistant-ia-dakar", "Assistant IA Dakar"), ("senegal", "Guide du Sénégal"), ("joj-dakar-2026", "JOJ Dakar 2026")]
     },
     "pour-les-entreprises": {
         "title": "Teranga AI pour les entreprises au Sénégal et en France",
@@ -326,6 +370,26 @@ SEO_PAGES = {
             ("Peut-on préparer son trajet avec Teranga AI ?", "Oui. Indiquez votre heure d'arrivée et votre destination finale pour obtenir des repères à vérifier avant le départ.")
         ],
         "related": [("transport-dakar", "Transport Dakar"), ("dakar", "Dakar"), ("meteo-dakar", "Météo Dakar")]
+    },
+    # JOJ Dakar 2026 : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    # Aucun logo, anneau ni mascotte (marques du CIO) ; aucun prix ni horaire : le programme est sur le site officiel.
+    "joj-dakar-2026": {
+        "title": "JOJ Dakar 2026 : dates, sites et guide pratique | Teranga AI",
+        "description": "JOJ Dakar 2026, du 31 octobre au 13 novembre : les sites de Dakar, Diamniadio et Saly, comment s'y rendre et où trouver le programme officiel.",
+        "h1": "JOJ Dakar 2026 : le guide pratique",
+        "intro": "Les Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026 ont lieu du 31 octobre au 13 novembre 2026. Ce sont les premiers Jeux Olympiques de la Jeunesse organisés en Afrique, sur trois sites : Dakar, Diamniadio et Saly.",
+        "sections": [
+            ("Dakar", "La Corniche Ouest accueille les festivités et les animations pour les jeunes. La natation se dispute à la piscine olympique de la Tour de l'Œuf, l'athlétisme au stade Iba Mar Diop."),
+            ("Diamniadio", "Diamniadio accueille le village olympique et la cérémonie d'ouverture, au stade Abdoulaye Wade. Les sports en salle (judo, escrime, gymnastique, tennis de table…) ont lieu au Dakar Arena et au centre des expositions. Depuis Dakar, le TER va jusqu'à Diamniadio."),
+            ("Saly", "Sur la Petite Côte, la plage de Saly accueille les sports de plage et les sports nautiques, comme le beach-volley, la voile et le triathlon."),
+            ("Programme et billets", "Le programme du jour, les billets et les conditions d'accès sont sur le <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">site officiel des JOJ Dakar 2026</a>. Teranga AI ne vend pas de billets." % "https://www.olympics.com/en/dakar-2026"),
+            ("Vos trajets avec Teranga AI", "Demandez à Teranga AI comment rejoindre un site depuis votre quartier ou l'aéroport AIBD, et que visiter entre deux épreuves. Prévoyez de la marge pour vos trajets."),
+        ],
+        "faq": [
+            ("Quand ont lieu les JOJ Dakar 2026 ?", "Du 31 octobre au 13 novembre 2026, à Dakar, Diamniadio et Saly."),
+            ("Teranga AI est-il le site officiel des JOJ ?", "Non. Teranga AI n'est pas un site officiel des JOJ : il n'est lié ni au Comité international olympique ni au comité d'organisation. Le programme et les billets sont sur le site officiel."),
+        ],
+        "related": [("transport-dakar", "Transport Dakar"), ("aibd-dakar", "AIBD → Dakar"), ("visiter-dakar", "Visiter Dakar"), ("calendrier-fetes-senegal", "Calendrier des fêtes")]
     },
     "visiter-dakar": {
         "title": "Visiter Dakar : que voir et que faire | Teranga AI",
@@ -446,21 +510,73 @@ SEO_PAGES = {
             ("Combien coûtent ces démarches ?", "Les frais changent et varient selon le lieu : Teranga AI ne donne pas de montant non vérifié. Demandez le tarif officiel au guichet ou sur le site de l'administration."),
             ("Teranga AI peut-il m'aider à préparer mon dossier ?", "Oui : indiquez la démarche, où vous vivez et ce que vous avez déjà, et Teranga AI vous aide à lister les pièces à demander et les questions à poser, en vous renvoyant vers le bon guichet pour confirmer.")
         ],
-        "related": [("vie-pratique-senegal", "Vie pratique"), ("diaspora-senegalaise", "Diaspora"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
+        "related": [("vie-pratique-senegal", "Vie pratique"), ("arnaques-mobile-money-senegal", "Arnaques mobile money"), ("diaspora-senegalaise", "Diaspora"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
+    },
+    # Arnaques et sécurité du mobile money (23 novembre 2026) : la Search Console montrait que ces sujets n'apparaissaient
+    # jamais dans Google, faute de page dédiée. Contenu repris des repères vérifiés « arnaques » et « mobile_money » de
+    # services/practical_facts.py (sources en tête de ce fichier) : aucun montant, frais, plafond ni numéro d'opérateur.
+    "visa-senegal": {
+        "title": "Visa Sénégal : entrée, passeport, vaccins | Teranga AI",
+        "description": "Faut-il un visa pour le Sénégal ? Court séjour, passeport, carnet de vaccination, « carte d'arrivée » en ligne et faux sites de visas : ce qui est vérifié.",
+        "h1": "Visa et conditions d'entrée au Sénégal",
+        "intro": "Avant de réserver, trois questions : faut-il un visa, quels papiers emporter, et quels sites éviter. Voici les repères vérifiés par Teranga, avec leurs sources. Les règles d'entrée changent : vérifiez toujours auprès de l'ambassade ou du consulat du Sénégal avant le départ.",
+        "sections": [
+            ("Faut-il un visa ?", "Les ressortissants de l'Union européenne (dont la France), du Royaume-Uni, des États-Unis, du Canada et de nombreux autres pays n'ont en général pas besoin de visa pour un court séjour de moins de 90 jours. Pour un séjour plus long, un travail ou des études, renseignez-vous auprès de l'ambassade ou du consulat du Sénégal de votre pays."),
+            ("Passeport", "Pour un Français, un passeport valide plus de 6 mois est obligatoire (France Diplomatie, conseils aux voyageurs). Autres nationalités : la règle est en général la même, à vérifier auprès de l'ambassade du Sénégal. Vérifiez la date d'expiration avant de réserver."),
+            ("Carnet de vaccination", "Le 10 mars 2026, le ministère des Affaires étrangères a annoncé que le carnet de vaccination n'était plus exigé pour entrer au Sénégal (dépêche de l'APS reprise par AllAfrica). La règle a changé plusieurs fois en 2026 : vérifiez-la juste avant le départ. Ne pas être contrôlé n'empêche pas d'être protégé : demandez conseil à un centre de vaccinations internationales, notamment pour la fièvre jaune."),
+            ("« Senegal Digital Arrival Card » : prudence", "Des sites privés proposent, souvent contre paiement, une « carte d'arrivée numérique » qu'ils présentent comme obligatoire. Au 23 novembre 2026, Teranga n'a trouvé aucune source officielle sénégalaise qui l'exige. Ne payez rien à un site non officiel : demandez à l'ambassade ou au consulat du Sénégal si une formalité en ligne existe pour votre voyage."),
+            ("Faux sites de visas", "En avril 2026, le ministère des Affaires étrangères a signalé un faux site vendant des « visas » du Sénégal et rappelé que les visas relèvent des missions diplomatiques et consulaires. Ne versez rien à un « facilitateur » qui promet un visa ou un voyage : voir aussi notre page sur les arnaques."),
+            ("Sources", "Repères relevés en novembre 2026 : repère « entrée » de Teranga (ambassades du Sénégal, à revérifier) ; passeport valide plus de 6 mois : France Diplomatie, conseils aux voyageurs pour le Sénégal (vérifié le 24 novembre 2026) ; carnet de vaccination : dépêche de l'Agence de presse sénégalaise reprise par AllAfrica le 10 mars 2026 ; faux site de visas : communiqué du ministère de l'Intégration africaine et des Affaires étrangères du 16 avril 2026 relayé par Le Soleil, SenePlus, APA et AllAfrica. Ces repères ne remplacent pas l'avis de l'ambassade ou du consulat."),
+        ],
+        "faq": [
+            ("Un Français a-t-il besoin d'un visa pour le Sénégal ?", "En général non pour un court séjour de moins de 90 jours, mais un passeport valide plus de 6 mois est obligatoire (France Diplomatie). Vérifiez auprès de l'ambassade du Sénégal avant le départ : les règles peuvent changer."),
+            ("Faut-il remplir une carte d'arrivée en ligne ?", "Au 23 novembre 2026, Teranga n'a trouvé aucune source officielle qui l'exige ; des sites privés la vendent. Demandez à l'ambassade ou au consulat avant de payer quoi que ce soit."),
+            ("Le carnet de vaccination est-il obligatoire ?", "Le ministère des Affaires étrangères a annoncé le 10 mars 2026 qu'il n'était plus exigé à l'entrée. La règle a changé plusieurs fois : vérifiez juste avant le départ."),
+        ],
+        "related": [("arnaques-mobile-money-senegal", "Arnaques"), ("urgences", "Urgences"), ("diaspora-senegalaise", "Diaspora"), ("vie-pratique-senegal", "Vie pratique")]
+    },
+    "arnaques-mobile-money-senegal": {
+        "title": "Arnaques Wave et Orange Money au Sénégal | Teranga AI",
+        "description": "Faux agents, codes SMS, envoi « par erreur », faux SMS d'amende : reconnaître les arnaques au mobile money au Sénégal et que faire si l'on est victime.",
+        "h1": "Arnaques Wave et Orange Money : les reconnaître, réagir",
+        "intro": "Wave, Orange Money et Free Money (devenu Yas) servent à envoyer de l'argent, payer et recharger son crédit. Les escrocs visent surtout une chose : votre code secret. Voici les arnaques signalées au Sénégal et les bons réflexes, tirés des alertes de la BCEAO, de la Police nationale et du Trésor public.",
+        "sections": [
+            ("La règle d'or : votre code reste secret", "Votre code secret est personnel. Ne le dites jamais, ni à un « agent de l'opérateur », ni à un vendeur, ni à un proche ; ne le saisissez pas devant quelqu'un et ne laissez personne « faire les manipulations » sur votre téléphone. Même règle pour le code reçu par SMS. Si un tiers connaît votre code, ou au moindre doute, prévenez l'opérateur et changez-le."),
+            ("Le faux agent de l'opérateur", "Un inconnu appelle pour un « problème de compte », une « mise à jour » ou un « gain », puis demande votre code secret, le code reçu par SMS, ou de taper un code qu'il vous dicte. C'est le cas le plus souvent signalé par la police et la presse. Raccrochez et rappelez l'opérateur par un numéro officiel que vous connaissez déjà. La BCEAO a aussi recensé des arnaques « par hypnose » : un inconnu engage la conversation pour obtenir le code."),
+            ("L'argent envoyé « par erreur »", "Quelqu'un affirme vous avoir envoyé de l'argent par erreur et vous demande de le renvoyer : ne renvoyez rien et ne donnez aucun code, c'est une arnaque décrite par la BCEAO. Demandez à l'opérateur de gérer le retour. Si c'est vous qui vous êtes trompé de numéro, contactez tout de suite le service client avec la référence de la transaction, le numéro saisi, le montant et l'heure, et demandez une réclamation écrite : l'annulation n'est jamais garantie."),
+            ("Faux SMS et faux liens", "En juillet et août 2026, le Trésor public et la Police nationale ont alerté sur de faux SMS d'« amende » avec un lien de paiement. Le Trésor indique que les services de l'État n'envoient pas de SMS avec un lien cliquable pour payer une amende. Ne cliquez pas, ne répondez pas, ne donnez aucune donnée bancaire : vérifiez sur un site officiel que vous tapez vous-même."),
+            ("« Voici mon nouveau numéro »", "Un message dit : « mon téléphone est cassé, voici mon nouveau numéro », puis demande de l'argent en urgence. Rappelez votre proche sur son ancien numéro, ou posez-lui une question que lui seul connaît, avant tout envoi. Si votre propre ligne cesse soudain de fonctionner, cela peut signaler un échange frauduleux de carte SIM : prévenez aussitôt l'opérateur."),
+            ("Faux vendeurs et fausses locations", "Des faux vendeurs copient les visuels de grandes enseignes, publient des annonces à prix très bas sur Facebook, Instagram ou TikTok, font payer par Wave ou Orange Money puis bloquent l'acheteur ; la police a démantelé un tel réseau en mars 2026. Un prix anormalement bas est une alerte : payez à la livraison ou à un vendeur identifiable, et gardez captures et références de paiement. Pour un logement, ne payez rien, même un « acompte », avant une visite, et exigez un reçu écrit."),
+            ("Faux policiers, faux visas, faux recrutements", "De faux gendarmes et de faux policiers ont été signalés par la presse : demandez la carte professionnelle et le nom, ne remettez ni téléphone, ni code, ni argent, proposez d'aller au commissariat ; en cas de menace, appelez le 17. Ne versez rien à un intermédiaire qui promet un visa, un emploi ou un voyage : en avril 2026, le ministère des Affaires étrangères a signalé un faux site vendant des « visas » du Sénégal ; les visas relèvent des ambassades et des consulats."),
+            ("Victime d'une arnaque : que faire ?", "Prévenez tout de suite l'opérateur (Wave, Orange Money, Yas…) pour bloquer le compte ; si le téléphone est perdu ou volé, faites bloquer aussi la ligne. Gardez les preuves : captures d'écran, numéros, références de transaction. Portez plainte au commissariat, à la brigade de gendarmerie ou à la Division spéciale de cybersécurité de la Police nationale (plainte contre X possible). Le remboursement n'est pas garanti. Sans réponse satisfaisante de l'opérateur, écrivez à la BCEAO, régulateur de la monnaie électronique ; l'ARTP reçoit les réclamations sur le téléphone et internet. Numéros d'urgence : <a href=\"/urgences\">teranga-ai.fr/urgences</a>."),
+            ("Sources", "Repères relevés en octobre 2026 dans la presse et les synthèses qui relaient les communiqués officiels : rapport de surveillance de la BCEAO sur la monnaie électronique (2019) ; alertes du Trésor public (juillet 2026) et de la Police nationale (août 2026) sur les faux SMS ; communiqué du ministère de l'Intégration africaine et des Affaires étrangères du 16 avril 2026 sur les faux visas ; Police nationale, mars 2026, sur les faux vendeurs en ligne ; annonce du passage de Free Sénégal à Yas (novembre 2024). Frais, plafonds, coordonnées et délais changent : vérifiez-les auprès de l'opérateur, de la BCEAO ou de l'ARTP."),
+        ],
+        "faq": [
+            ("Un agent Wave ou Orange Money peut-il me demander mon code ?", "Non. Votre code secret et le code reçu par SMS ne se donnent à personne, même à quelqu'un qui se présente comme un agent de l'opérateur. Raccrochez et rappelez l'opérateur par un numéro officiel que vous connaissez déjà."),
+            ("Quelqu'un m'a envoyé de l'argent « par erreur », je le renvoie ?", "Non : c'est une arnaque décrite par la BCEAO. Ne renvoyez rien et ne donnez aucun code ; demandez à l'opérateur de gérer le retour."),
+            ("On m'a volé de l'argent sur Wave ou Orange Money : que faire ?", "Prévenez tout de suite l'opérateur pour bloquer le compte, gardez les preuves (captures, numéros, références) et portez plainte au commissariat, à la gendarmerie ou à la Division spéciale de cybersécurité. Le remboursement n'est pas garanti."),
+        ],
+        "related": [("urgences", "Urgences"), ("demarches-senegal", "Démarches"), ("diaspora-senegalaise", "Diaspora"), ("vie-pratique-senegal", "Vie pratique")]
     },
     "entreprendre-senegal": {
-        "title": "Entreprendre au Sénégal : projet et business | Teranga AI",
-        "description": "Créer et développer un projet au Sénégal : idée business, budget, offre, clients, partenaires et plan d'action.",
+        "title": "Entreprendre au Sénégal : statut, APIX, NINEA | Teranga AI",
+        "description": "Créer son entreprise au Sénégal : choisir un statut, immatriculer au guichet unique de l'APIX (RCCM, NINEA), tester son offre, se faire payer et financer.",
         "h1": "Entreprendre au Sénégal",
-        "intro": "Transformez une idée en projet structuré avec un plan simple, des hypothèses claires et des prochaines étapes.",
+        "intro": "Du statut juridique au premier client : les étapes pour lancer une activité au Sénégal, les démarches officielles et les accompagnements qui existent.",
         "sections": [
             ("De l'idée au projet", "Clarifiez le problème, les clients, la solution, le modèle économique et les premières actions."),
             ("Développer une activité", "Travaillez l'offre, le prix, la marge, la communication, la vente, les paiements et la livraison."),
             ("Trouver des partenaires", "Préparez une présentation courte et identifiez les entreprises, associations, écoles, médias ou acteurs publics pertinents.")
         ],
         "faq": [
-            ("Teranga AI peut-il aider à créer un projet ?", "Oui. Vous pouvez partir d'une idée et construire un plan étape par étape."),
-            ("Peut-il aider les jeunes entrepreneurs ?", "Oui. Teranga AI peut aider à structurer projets, compétences, opportunités et partenariats.")
+            ("Où créer son entreprise au Sénégal ?", "À Dakar, au Bureau d'appui à la création d'entreprise (BCE) de l'APIX, "
+             "qui regroupe les formalités (RCCM, NINEA). Les étapes officielles sont sur senegal.eregulations.org."),
+            ("Quel statut choisir pour démarrer ?", "Entreprise individuelle pour démarrer seul, GIE pour produire ou vendre à "
+             "plusieurs, SUARL ou SARL pour une société. Les conditions de chaque forme sont à vérifier auprès de l'APIX."),
+            ("Combien de temps et combien ça coûte ?", "Cela dépend de la forme choisie et du dossier : les pièces, frais et "
+             "délais officiels sont détaillés sur senegal.eregulations.org. À vérifier avant de déposer."),
+            ("Teranga AI peut-il aider à créer un projet ?", "Oui. Partez d'une idée : Teranga aide à construire le plan, le "
+             "budget, l'offre et le dossier, étape par étape."),
         ],
         "related": [("pour-les-entreprises", "Pour les entreprises"), ("partenaires", "Partenaires"), ("emploi-senegal", "Emploi"), ("formation-senegal", "Formation")]
     },
@@ -495,11 +611,12 @@ SEO_PAGE_GUIDES = {
     "transport-senegal": [
         ("Depuis l'aéroport AIBD", "L'aéroport international Blaise Diagne est à Diass, à environ 45 km du centre de "
          "Dakar, relié par l'autoroute à péage. Options : taxi (prix fixé avant de monter), navettes, voiture avec "
-         "chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; son prolongement vers l'aéroport est prévu : "
-         'vérifiez s\'il est en service. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
+         "chauffeur réservée à l'avance. Le TER relie Dakar à l'aéroport via Diamniadio : la section Diamniadio–AIBD "
+         "est en service depuis le 28 septembre 2026 (APS). Horaires, gares et tarifs : vérifiez auprès de "
+         'l\'exploitant du TER. Détails sur la page <a href="/aibd-dakar">AIBD → Dakar</a>.'),
         ("Se déplacer à Dakar", "Les taxis n'ont pas de compteur : on fixe le prix avant de partir. Les applications "
          "comme Yango ou Heetch affichent un prix à l'avance. Le BRT (bus rapide sur voie réservée) relie le centre à "
-         "Guédiawaye, le TER dessert la banlieue jusqu'à Diamniadio, et les bus Dakar Dem Dikk couvrent la ville. "
+         "Guédiawaye, le TER dessert la banlieue, Diamniadio et l'aéroport AIBD, et les bus Dakar Dem Dikk couvrent la ville. "
          "Évitez les heures de pointe sur la corniche et l'autoroute."),
         ("Entre les villes", "Les « sept-places » (taxis-brousse) partent quand ils sont pleins, depuis la gare routière "
          "des Baux Maraîchers à Pikine pour Dakar ; ils sont rapides mais serrés. Les bus et cars sont moins chers et plus "
@@ -525,7 +642,8 @@ SEO_PAGE_GUIDES = {
     "emploi-senegal": [
         ("Où chercher", "Les sites d'offres d'emploi sénégalais, les pages carrières des entreprises, LinkedIn et les "
          "groupes professionnels sont les canaux les plus utilisés. Le réseau compte beaucoup : anciens camarades, "
-         "associations professionnelles, forums emploi des universités et des écoles."),
+         "associations professionnelles, forums emploi des universités et des écoles. Les sites d'offres vérifiés par "
+         'Teranga sont réunis sur la page <a href="/offres-emploi">Offres d\'emploi au Sénégal</a>.'),
         ("Organismes à connaître", "L'Agence nationale pour la promotion de l'emploi des jeunes (ANPEJ), l'Office national de formation "
          "professionnelle (ONFP) et la Délégation générale à l'entrepreneuriat rapide des femmes et des jeunes (DER/FJ) accompagnent les jeunes et les "
          "porteurs de projets. Leurs programmes changent : vérifiez les services actuels sur leur site officiel."),
@@ -554,6 +672,10 @@ SEO_PAGE_GUIDES = {
         ("Tester avant d'investir", "Vendez d'abord à une dizaine de clients réels, même à petite échelle (WhatsApp, "
          "marché, bouche-à-oreille), avant d'acheter du matériel ou de louer un local. Notez chaque vente et chaque "
          "dépense dès le premier jour."),
+        # Source : senegal.eregulations.org (procédures de création d'entreprise, BCE de l'APIX), relevé du 22/11/2026.
+        ("Où faire les démarches", "À Dakar, le Bureau d'appui à la création d'entreprise (BCE) de l'APIX, 52-54 rue "
+         "Mohamed V, reçoit du lundi au vendredi de 8 h à 17 h. Les étapes, pièces, frais et délais de chaque forme sont "
+         "décrits sur senegal.eregulations.org, le portail officiel des procédures : à vérifier avant de vous déplacer."),
         ("Se faire payer", "Wave et Orange Money sont les moyens de paiement les plus courants ; un numéro marchand "
          "rassure les clients et sépare l'argent de l'activité de l'argent personnel."),
         ("Se faire accompagner", "Incubateurs, chambres de commerce, programmes de la DER/FJ et du FONGIP (garantie "
@@ -589,12 +711,35 @@ SEO_PAGE_PLACES = {
     "visiter-goree": ["goree", "dakar-renaissance", "musee-civilisations", "iles-de-la-madeleine"],
 }
 SEO_PAGE_DISHES = {"specialites-senegal", "restaurants-dakar"}
+# Fiches de lieu doublées par une page guide : la fiche reste accessible mais renvoie sa canonique vers la page guide
+# et sort du sitemap, pour qu'une seule adresse se positionne sur la requête (trois pages Gorée se concurrençaient).
+PLACE_CANONICAL_PATHS = {"goree": "/visiter-goree"}
+
+
+def place_href(place_id):
+    """Lien interne vers un lieu : la page guide quand elle existe, sinon la fiche /lieux/<id>."""
+    return PLACE_CANONICAL_PATHS.get(str(place_id)) or "/lieux/%s" % quote(str(place_id))
+# Questions concrètes de la diaspora (plan du 19 octobre 2026, docs/PLAN-DIASPORA.md). Chacune a une réponse vérifiée :
+# réponse prête (services/quick_answers.py) ou repères (services/practical_facts.py), voir tests/test_page_diaspora.py.
+# Un clic pré-remplit la question dans Teranga ; elle n'est jamais envoyée sans l'utilisateur.
+DIASPORA_QUESTIONS = (
+    ("Argent", "100 euros en FCFA ?"),
+    ("Envoyer de l'argent", "Comment envoyer de l'argent au Sénégal ?"),
+    ("Fêtes", "C'est quand la Tabaski ?"),
+    ("Papiers", "Quels papiers pour renouveler ma carte d'identité ?"),
+    ("Terrain", "Que faut-il vérifier avant d'acheter un terrain au Sénégal ?"),
+    ("Arrivée", "Que prévoir en arrivant à l'aéroport AIBD ?"),
+    ("Urgences", "Quels numéros d'urgence au Sénégal ?"),
+)
 
 
 # Pages lues par les partenaires : l'appel à l'action mène au formulaire de demande.
 PARTNER_SLUGS = {"partenaires", "pour-les-entreprises", "media-kit", "presse"}
 DEFAULT_CTA = ('<div class="ctaBox"><strong>Une question précise ?</strong><p>Réponse courte, photo et carte quand le lieu '
                'est connu.</p><a class="cta primary" href="/">Ouvrir Teranga AI</a></div>')
+# Page Emploi (plan du 21 novembre 2026, tout sur le CV) : le bouton mène à l'outil de CV.
+CV_CTA = ('<div class="ctaBox"><strong>Votre CV, gratuit</strong><p>Envoyez votre CV ou racontez votre parcours : Teranga '
+          'en fait un CV clair, prêt en PDF, sans rien inventer.</p><a class="cta primary" href="/cv">Faire mon CV gratuit</a></div>')
 PARTNER_CTA = ('<div class="ctaBox"><strong>Devenir partenaire</strong><p>Présentez votre activité en une minute : nous '
                'vous recontactons par téléphone, WhatsApp ou e-mail.</p><div class="actions">'
                '<a class="cta primary" href="/offres-partenaires#demande">Demander un partenariat</a>'
@@ -606,15 +751,37 @@ def _seo_extra_html(slug, places=None, dishes=None):
     parts = []
     if chosen:
         cards = "".join(
-            '<a class="card" href="/lieux/%s"><strong>%s</strong><br><small>%s</small></a>'
-            % (quote(str(p["id"])), escape(str(p.get("name", ""))), escape(str(p.get("summary", ""))))
+            '<a class="card" href="%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (place_href(p["id"]), escape(str(p.get("name", ""))), escape(str(p.get("summary", ""))))
             for p in chosen
+            # Pas de carte qui renverrait vers la page elle-même.
+            if place_href(p["id"]) != "/%s" % slug
         )
         parts.append('<section><h2>Lieux à découvrir</h2><div class="grid">%s</div></section>' % cards)
         if slug == "visiter-goree" and chosen[0].get("history"):
             parts.insert(0, "<section><h2>Histoire de l'île de Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["history"])))
             if chosen[0].get("access"):
                 parts.insert(1, "<section><h2>Comment aller à Gorée</h2><p>%s</p></section>" % escape(str(chosen[0]["access"])))
+    if slug == "regions-senegal":
+        # La liste des régions en texte brut ne menait nulle part : les 14 pages /regions/<nom>
+        # n'étaient atteignables que depuis une fiche de lieu (3 clics) ou le plan du site.
+        cards = "".join(
+            '<a class="card" href="/regions/%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (region_slug(name), escape(name), escape(REGION_CONTENT[name][0]))
+            for name in REGION_SEO_NAMES
+        )
+        parts.insert(0, '<section><h2>Le guide de chaque région</h2><div class="grid">%s</div></section>' % cards)
+    if slug == "diaspora-senegalaise":
+        cards = "".join(
+            # lang=fr : les questions sont en français ; sans lui, un visiteur resté en anglais ou en wolof n'aurait pas
+            # les réponses prêtes (en français seulement). Espace insécable avant « ? » à l'affichage : le point
+            # d'interrogation ne passe jamais seul à la ligne.
+            '<a class="card" href="/?lang=fr&amp;q=%s"><strong>%s</strong><br><small>%s</small></a>'
+            % (quote(question, safe=""), escape(label), escape(question).replace(" ?", "\u00a0?"))
+            for label, question in DIASPORA_QUESTIONS
+        )
+        parts.insert(0, "<section><h2>Les questions de la diaspora</h2><p>Touchez une question : elle s'ouvre dans "
+                        'Teranga, prête à envoyer.</p><div class="grid">%s</div></section>' % cards)
     if slug in SEO_PAGE_DISHES and dishes:
         items = "".join(
             "<h3>%s</h3><p>%s</p>" % (escape(str(d.get("name", ""))), escape(str(d.get("text", ""))))
@@ -624,10 +791,53 @@ def _seo_extra_html(slug, places=None, dishes=None):
     return "".join(parts)
 
 
+# Guide JOJ : trois repères en tête de page, tirés des mêmes faits officiels que la page (olympics.com, relevé du
+# 31 octobre 2026) : du 31 octobre au 13 novembre 2026 (14 jours), trois sites, premiers JOJ organisés en Afrique.
+JOJ_FACTS_HTML = (
+    '<ul class="joj-facts">'
+    "<li><b>31 oct. → 13 nov.</b><span>2026, 14 jours</span></li>"
+    "<li><b>3 sites</b><span>Dakar, Diamniadio, Saly</span></li>"
+    "<li><b>Une première</b><span>en Afrique</span></li>"
+    "</ul>\n"
+)
+
+
+def _fr_hreflang_links(slug, site_url):
+    """Balises hreflang d'une page française qui remplace un guide traduit (/fr/goree-island → /visiter-goree) :
+    les versions en, es, de, it pointent ici, cette page pointe vers elles (liens réciproques)."""
+    from services.international_seo import hreflang_links, international_topic_for_fr_path
+
+    topic = international_topic_for_fr_path("/" + slug)
+    return hreflang_links(topic, site_url) if topic else ""
+
+
+JOJ_PAST_NOTICE = ("Les JOJ Dakar 2026 sont terminés : ils ont eu lieu du 31 octobre au 13 novembre 2026. Cette page "
+                   "reste un repère sur les sites des Jeux.")
+
+
+def _joj_page_after_closing(page):
+    """Guide JOJ après la clôture (13 novembre 2026, services/events.py) : au passé, sans programme du jour ni
+    billets à chercher, ni trajets « entre deux épreuves »."""
+    from services import events
+
+    if not events.event_is_over("Jeux Olympiques de la Jeunesse"):
+        return page
+    past = dict(page)
+    past["intro"] = page["intro"].replace("ont lieu du 31 octobre", "ont eu lieu du 31 octobre")
+    past["sections"] = [("Les Jeux sont terminés", JOJ_PAST_NOTICE)] + [
+        section for section in page["sections"] if section[0] not in {"Programme et billets", "Vos trajets avec Teranga AI"}
+    ]
+    past["faq"] = [("Quand ont eu lieu les JOJ Dakar 2026 ?" if q.startswith("Quand ont lieu") else q, a)
+                   for q, a in page["faq"]]
+    return past
+
+
 def render_seo_page(slug, site_url, places=None, dishes=None):
     page = SEO_PAGES.get(slug)
     if not page:
         return None
+    if slug == "joj-dakar-2026":
+        page = _joj_page_after_closing(page)
     sections = "".join(
         "<section><h2>%s</h2><p>%s</p></section>" % (heading, text)
         for heading, text in list(page["sections"]) + SEO_PAGE_GUIDES.get(slug, [])
@@ -647,6 +857,12 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         related_html = '<span class="related-label">Voir aussi :</span>%s<a href="/explorer">Explorer</a><a href="/lieux">Lieux</a>' % related
     if slug in PARTNER_SLUGS:
         source_link = ""
+    elif slug == "joj-dakar-2026":
+        source_link = (
+            '<p class="source">Source : <a href="https://www.olympics.com/en/dakar-2026" target="_blank" '
+            'rel="noopener noreferrer">site officiel des JOJ Dakar 2026</a>, relevé le 31 octobre 2026. '
+            "Teranga AI n'est pas un site officiel des JOJ.</p>"
+        )
     elif slug in {"senegal", "regions-senegal"}:
         source_link = (
             '<p class="source">Source : <a href="https://www.tourisme.gouv.sn/donnees-generales-sur-le-senegal.html" '
@@ -706,11 +922,11 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
 </head>
 <body>%(header)s<main>
 <div class=\"related\">%(related)s<button id=\"share-page\" class=\"share-page\" type=\"button\">Partager</button></div><script src=\"%(share_js)s\" defer></script>
-<article>
+<article%(article_class)s>
 <div class=\"kicker\">Sénégal · Teranga AI</div>
 <h1>%(h1)s</h1>
 <p class=\"intro\">%(intro)s</p>
-%(sections)s
+%(lead)s%(sections)s
 %(faq)s
 %(cta)s
 %(source)s
@@ -722,14 +938,16 @@ def render_seo_page(slug, site_url, places=None, dishes=None):
         "site": site_url,
         "ld": ld_json,
         "related": related_html,
-        "cta": PARTNER_CTA if slug in PARTNER_SLUGS else DEFAULT_CTA,
+        "cta": PARTNER_CTA if slug in PARTNER_SLUGS else CV_CTA if slug == "emploi-senegal" else DEFAULT_CTA,
         "share_js": asset_url("share-page.js"),
         "h1": page["h1"],
         "intro": page["intro"],
+        "article_class": ' class="page-joj"' if slug == "joj-dakar-2026" else "",
+        "lead": JOJ_FACTS_HTML if slug == "joj-dakar-2026" else "",
         "sections": sections + _seo_extra_html(slug, places, dishes),
         "faq": faq_html,
         "source": source_link,
-        "head": HEAD_ASSETS,
+        "head": _fr_hreflang_links(slug, site_url) + HEAD_ASSETS,
         "header": site_header(),
         "footer": site_footer(),
     }
@@ -820,7 +1038,7 @@ def render_region_page(region_name, site_url, knowledge_places=None, knowledge_r
     places_section = ""
     if region_places:
         cards = "".join(
-            f'<a class="card" href="/lieux/{quote(str(p["id"]))}"><strong>{escape(str(p.get("name", "")))}</strong>'
+            f'<a class="card" href="{place_href(p["id"])}"><strong>{escape(str(p.get("name", "")))}</strong>'
             f'<br><small>{escape(str(p.get("summary", "")))}</small></a>'
             for p in region_places
         )
@@ -829,7 +1047,7 @@ def render_region_page(region_name, site_url, knowledge_places=None, knowledge_r
             "@type": "ItemList",
             "name": f"Lieux à visiter : {region_name}",
             "itemListElement": [
-                {"@type": "ListItem", "position": i + 1, "url": f"{site_url}/lieux/{quote(str(p['id']))}", "name": p.get("name", "")}
+                {"@type": "ListItem", "position": i + 1, "url": site_url + place_href(p["id"]), "name": p.get("name", "")}
                 for i, p in enumerate(region_places)
             ],
         })

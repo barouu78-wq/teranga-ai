@@ -131,8 +131,28 @@ FAQ = {
 
 LANG_NAMES = {"en":"English","es":"Español","de":"Deutsch","it":"Italiano","fr":"Français"}
 
+# Guides dont la version française est une page française existante : /fr/<sujet> y redirige (301), sort du
+# sitemap, et le hreflang « fr » des autres langues pointe vers elle. Une seule page française par sujet.
+FR_EQUIVALENTS = {"goree-island": "/visiter-goree", "senegal-visa": "/visa-senegal"}
+
+
+def international_topic_for_fr_path(path):
+    return next((topic for topic, fr_path in FR_EQUIVALENTS.items() if fr_path == path), None)
+
+
 def _localized_path(lang, topic):
+    if lang == "fr" and topic in FR_EQUIVALENTS:
+        return FR_EQUIVALENTS[topic]
     return f"/{lang}/{topic}"
+
+
+def hreflang_links(topic, site_url):
+    base = site_url.rstrip("/")
+    links = "".join(
+        f'<link rel="alternate" hreflang="{escape(lang)}" href="{base}{_localized_path(lang, topic)}">'
+        for lang in LANGS
+    )
+    return links + f'<link rel="alternate" hreflang="x-default" href="{base}{_localized_path("en", topic)}">'
 
 def render_international_page(lang, topic, site_url):
     page = TOPICS.get(topic)
@@ -142,14 +162,19 @@ def render_international_page(lang, topic, site_url):
     sections = "".join(f"<section><h2>{escape(h)}</h2><p>{escape(p)}</p></section>" for h,p in COPY[lang])
     faq = "".join(f"<div class='faq'><h3>{escape(q)}</h3><p>{escape(a)}</p></div>" for q,a in FAQ[lang])
     url = f"{site_url.rstrip('/')}{_localized_path(lang, topic)}"
-    alternates = "".join(
-        f'<link rel="alternate" hreflang="{escape(l)}" href="{site_url.rstrip("/")}{_localized_path(l, topic)}">'
-        for l in LANGS
-    )
-    alternates += f'<link rel="alternate" hreflang="x-default" href="{site_url.rstrip("/")}{_localized_path("en", topic)}">'
+    alternates = hreflang_links(topic, site_url)
+    # Tous les sujets de la langue (et non les 8 premiers) : sinon sim-card, weather, visa et
+    # trip-planner n'avaient aucun lien entrant et ne se trouvaient que dans le plan du site.
     related = "".join(
         f'<a href="{_localized_path(lang, t)}">{escape(TOPICS[t][lang][0])}</a>'
-        for t in list(TOPICS)[:8] if t != topic
+        for t in TOPICS if t != topic
+    )
+    # Même sujet dans les autres langues : relie entre elles les 5 versions d'une page
+    # (les balises hreflang du <head> ne sont pas des liens que le robot suit comme tels).
+    switch_label = {"en": "Languages", "es": "Idiomas", "de": "Sprachen", "it": "Lingue", "fr": "Langues"}[lang]
+    lang_switch = "".join(
+        f'<a href="{_localized_path(l, topic)}" lang="{escape(l)}" hreflang="{escape(l)}">{escape(LANG_NAMES[l])}</a>'
+        for l in LANGS if l != lang
     )
     faq_ld = [{"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in FAQ[lang]]
     ld = {
@@ -178,7 +203,7 @@ def render_international_page(lang, topic, site_url):
 <title>{escape(title)}</title><script type="application/ld+json">{ld_json}</script>
 {HEAD_ASSETS}
 </head><body>{site_header(lang=lang)}<main>
-<div class="related">{related}<button id="share-page" class="share-page" type="button" data-copied="{escape({"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}[lang])}" data-failed="{escape({"en":"Copy the page address","es":"Copie la dirección de la página","de":"Seitenadresse kopieren","it":"Copia l’indirizzo della pagina","fr":"Copiez l’adresse de la page"}[lang])}">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script src="{asset_url("share-page.js")}" defer></script></div><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
+<div class="related">{related}<button id="share-page" class="share-page" type="button" data-copied="{escape({"en":"Link copied","es":"Enlace copiado","de":"Link kopiert","it":"Link copiato","fr":"Lien copié"}[lang])}" data-failed="{escape({"en":"Copy the page address","es":"Copie la dirección de la página","de":"Seitenadresse kopieren","it":"Copia l’indirizzo della pagina","fr":"Copiez l’adresse de la page"}[lang])}">{escape({"en":"Share","es":"Compartir","de":"Teilen","it":"Condividi","fr":"Partager"}[lang])}</button><script src="{asset_url("share-page.js")}" defer></script></div><nav class="lang-switch" aria-label="{escape(switch_label)}">{lang_switch}</nav><article><div class="kicker">Senegal · {escape(LANG_NAMES[lang])}</div>
 <h1>{escape(title)}</h1><p class="intro">{escape(description)}</p>{sections}
 <section><h2>{"Frequently asked questions" if lang=="en" else "Preguntas frecuentes" if lang=="es" else "Häufige Fragen" if lang=="de" else "Domande frequenti" if lang=="it" else "Questions fréquentes"}</h2>{faq}</section>
 <div class="ctaBox"><strong>{escape(cta)}</strong><p><a class="cta primary" href="/">{escape({"en":"Open Teranga AI","es":"Abrir Teranga AI","de":"Teranga AI öffnen","it":"Apri Teranga AI","fr":"Ouvrir Teranga AI"}[lang])}</a></p></div>
@@ -188,6 +213,11 @@ def render_international_page(lang, topic, site_url):
 def register_localized_routes(app, site_url):
     @app.get("/<lang>/<topic>")
     def localized_travel_page(lang, topic):
+        if lang == "fr" and topic in FR_EQUIVALENTS:
+            from flask import redirect
+
+            # Doublon de la page française : on regroupe les signaux sur elle.
+            return redirect(FR_EQUIVALENTS[topic], code=301)
         response = render_international_page(lang, topic, site_url)
         if response is None:
             from flask import abort, redirect
@@ -206,10 +236,11 @@ def localized_sitemap_urls(site_url):
     return [
         f"{site_url.rstrip('/')}/{lang}/{topic}"
         for lang in LANGS for topic in TOPICS
+        if not (lang == "fr" and topic in FR_EQUIVALENTS)
     ]
 
 def localized_routes():
-    return {(lang, topic) for lang in LANGS for topic in TOPICS}
+    return {(lang, topic) for lang in LANGS for topic in TOPICS if not (lang == "fr" and topic in FR_EQUIVALENTS)}
 
 
 # --- Rich topic-specific content layer ---
@@ -337,12 +368,12 @@ TOPIC_DETAILS = {
     "dakar-airport-to-city": {
         "en": [
             ("Where the airport is", "Blaise Diagne International Airport (AIBD) is in Diass, about 45 km from central Dakar, linked by a toll motorway. Allow roughly 45 minutes to over an hour depending on traffic."),
-            ("Your options", "Airport taxis (agree the fare before getting in), shuttle buses, ride-hailing apps such as Yango or Heetch where available, or a pre-booked car with driver, often the simplest after a night flight. The TER train links Dakar to Diamniadio; check whether its airport extension is running."),
+            ("Your options", "Airport taxis (agree the fare before getting in), shuttle buses, ride-hailing apps such as Yango or Heetch where available, or a pre-booked car with driver, often the simplest after a night flight. The TER train links Dakar to the airport via Diamniadio: the Diamniadio–AIBD section has been running since 28 September 2026 (APS). Check timetables, stations and fares with the TER operator."),
             ("Arriving late", "Book your first night's transfer in advance, keep some CFA francs or a working mobile money account, and share your accommodation address with the driver before leaving."),
         ],
         "fr": [
             ("Où est l'aéroport", "L'aéroport Blaise Diagne (AIBD) est à Diass, à environ 45 km du centre de Dakar par l'autoroute à péage. Comptez de 45 minutes à plus d'une heure selon la circulation."),
-            ("Les options", "Taxi (prix fixé avant de monter), navettes, applications comme Yango ou Heetch, ou voiture avec chauffeur réservée à l'avance. Le TER relie Dakar à Diamniadio ; vérifiez si le prolongement vers l'aéroport est en service."),
+            ("Les options", "Taxi (prix fixé avant de monter), navettes, applications comme Yango ou Heetch, ou voiture avec chauffeur réservée à l'avance. Le TER relie Dakar à l'aéroport via Diamniadio : la section Diamniadio–AIBD est en service depuis le 28 septembre 2026 (APS). Horaires, gares et tarifs : vérifiez auprès de l'exploitant du TER."),
         ],
     },
     "senegal-visa": {
@@ -367,12 +398,12 @@ TOPIC_DETAILS = {
     },
     "senegal-transport": {
         "en": [
-            ("In Dakar", "Taxis have no meters: agree on the fare before you go, or use an app such as Yango or Heetch that shows the price upfront. The BRT rapid bus links the centre to Guédiawaye, and the TER train serves the suburbs as far as Diamniadio."),
+            ("In Dakar", "Taxis have no meters: agree on the fare before you go, or use an app such as Yango or Heetch that shows the price upfront. The BRT rapid bus links the centre to Guédiawaye, and the TER train serves the suburbs, Diamniadio and AIBD airport."),
             ("Between cities", "Shared 'sept-place' taxis leave when full from the Baux Maraîchers bus station in Pikine: fast but cramped. Buses are cheaper and slower. A car with driver is the easiest option for a multi-stop trip."),
             ("To Casamance", "Fly to Ziguinchor or Cap Skirring, take the overnight boat from Dakar to Ziguinchor (about 15 hours, book a cabin), or drive through The Gambia via the Farafenni bridge, with a border crossing."),
         ],
         "fr": [
-            ("À Dakar", "Les taxis n'ont pas de compteur : fixez le prix avant de partir, ou utilisez Yango ou Heetch. Le BRT relie le centre à Guédiawaye ; le TER dessert la banlieue jusqu'à Diamniadio."),
+            ("À Dakar", "Les taxis n'ont pas de compteur : fixez le prix avant de partir, ou utilisez Yango ou Heetch. Le BRT relie le centre à Guédiawaye ; le TER dessert la banlieue, Diamniadio et l'aéroport AIBD."),
             ("Entre les villes", "Les sept-places partent quand ils sont pleins depuis la gare des Baux Maraîchers à Pikine. Les bus sont moins chers et plus lents ; la voiture avec chauffeur est la plus simple pour un circuit."),
         ],
     },

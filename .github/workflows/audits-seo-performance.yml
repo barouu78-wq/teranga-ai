@@ -22,8 +22,8 @@ jobs:
     name: Audit SEO local
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
           cache: pip
@@ -35,7 +35,7 @@ jobs:
         run: python scripts/audit_seo.py --json > seo-audit-report.json
       - name: Publier le rapport SEO
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rapport-seo
           path: seo-audit-report.json
@@ -49,9 +49,12 @@ jobs:
 
   performance-smoke:
     name: Diagnostic HTTPS, disponibilité et latence publique
+    # Sonde le site EN LIGNE : son résultat ne dépend pas du code d'une PR. Sur une PR il restait rouge tant que le DNS
+    # était défaillant et ouvrait un ticket par PR. Il tourne en programmation (lundi) et à la main.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Tester les pages publiques et diagnostiquer TLS
@@ -71,7 +74,13 @@ jobs:
           from pathlib import Path
 
           base = os.environ["SITE_URL"].rstrip("/")
-          paths = ["/", "/robots.txt", "/sitemap.xml"]
+          # Pages clés du référencement (200 attendu) et adresses courtes qui doivent y mener par une redirection.
+          paths = [
+              "/", "/robots.txt", "/sitemap.xml",
+              "/assistant-senegal", "/dakar", "/meteo-dakar", "/visiter-goree",
+              "/meteo", "/goree",
+          ]
+          expected_final = {"/meteo": "/meteo-dakar", "/goree": "/visiter-goree"}
           results = []
           failed = False
 
@@ -83,14 +92,17 @@ jobs:
               )
               started = time.monotonic()
               status = "ERROR"
+              final_url = None
               error_type = None
               error_message = None
               try:
                   with urllib.request.urlopen(request, timeout=20) as response:
                       status = response.status
+                      final_url = response.geturl()
                       response.read(2048)
               except urllib.error.HTTPError as exc:
                   status = exc.code
+                  final_url = exc.geturl()
                   error_type = "http_error"
                   error_message = str(exc)
               except urllib.error.URLError as exc:
@@ -118,15 +130,21 @@ jobs:
               results.append({
                   "url": url,
                   "status": status,
+                  "final_url": final_url,
                   "latency_ms": elapsed_ms,
                   "error_type": error_type,
                   "error": error_message,
               })
               print(
-                  f"{url}: status={status}, latency={elapsed_ms}ms, "
+                  f"{url}: status={status}, final_url={final_url}, latency={elapsed_ms}ms, "
                   f"error_type={error_type}, error={error_message}"
               )
               if status != 200 or elapsed_ms > 10000:
+                  failed = True
+              # Une adresse courte doit aboutir à sa vraie page (redirection suivie), pas à la page 404.
+              wanted = expected_final.get(path)
+              if wanted and status == 200 and not (final_url or "").endswith(wanted):
+                  print(f"ALERTE: {url} aboutit à {final_url} au lieu de {base + wanted}")
                   failed = True
 
           report = {
@@ -145,7 +163,7 @@ jobs:
           PY
       - name: Publier le diagnostic public même en cas d'échec
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rapport-public-https-performance
           path: rapport-public.json
@@ -161,7 +179,7 @@ jobs:
           { echo "### Diagnostic TLS par adresse"; echo '```'; cat diagnostic-tls.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - name: Publier le diagnostic TLS par adresse
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: diagnostic-tls-par-adresse
           path: |

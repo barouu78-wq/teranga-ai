@@ -32,6 +32,8 @@ def test_new_places_cite_their_sources():
         "pointe-des-almadies", "parc-de-hann", "toubab-dialaw", "keur-moussa", "kayar", "mar-lodj", "pointe-de-sangomar",
         "gandiol", "enampore", "elinkine", "abene", "nioro-du-rip", "thilogne",
         "ile-a-morphil", "aere-lao", "cas-cas", "sinthiou-bamambe", "waounde", "podor",
+        "reserve-de-guembeul", "reserve-de-kalissaye", "grand-theatre-national",
+        "musee-senghor", "village-des-arts",
     ):
         place = next(p for p in DATA["places"] if p["id"] == place_id)
         assert place.get("sources"), place_id
@@ -138,3 +140,13 @@ def test_chat_stream_sends_place_links(monkeypatch):
                            headers={"X-CSRF-Token": token, "Origin": base}, base_url=base)
     events = [json.loads(line) for line in response.get_data(as_text=True).splitlines() if line]
     assert {"places": [{"id": "goree", "name": "Île de Gorée"}]} in events
+
+
+def test_places_seen_in_search_console_have_practical_access():
+    # Fiches qui apparaissent déjà dans Google (Search Console, novembre 2026) : on y trouve comment y aller,
+    # avec les repères changeants marqués « à vérifier », et plusieurs sources.
+    for place_id in ("mbacke", "kaffrine", "reserve-de-bandia"):
+        place = next(p for p in DATA["places"] if p["id"] == place_id)
+        assert "à vérifier" in place.get("access", ""), place_id
+        assert len(place.get("sources", [])) >= 3, place_id
+        assert len(place["what_to_see"].split(";")) >= 3, place_id

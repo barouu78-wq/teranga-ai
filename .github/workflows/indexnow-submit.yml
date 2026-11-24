@@ -1,30 +1,21 @@
 name: Submit IndexNow URLs
 
+# Signale toutes les pages du plan du site publié à IndexNow (Bing, Yandex, Seznam…).
+# À lancer à la main (Actions → Submit IndexNow URLs → Run workflow) après un changement de pages :
+# IndexNow demande de ne signaler que des pages nouvelles ou modifiées, pas à chaque fusion.
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   submit:
-    if: contains(github.event.head_commit.message, 'submit IndexNow URLs')
     runs-on: ubuntu-latest
     steps:
-      - name: Submit URLs to IndexNow
-        env:
-          INDEXNOW_KEY: 8078ffb659c643b58bddddca48be0627
-          KEY_LOCATION: https://teranga-ai.fr/8078ffb659c643b58bddddca48be0627.txt
-        run: |
-          curl --fail-with-body -X POST "https://api.indexnow.org/indexnow"             -H "Content-Type: application/json; charset=utf-8"             -d '{
-              "host": "teranga-ai.fr",
-              "key": "'"$INDEXNOW_KEY"'",
-              "keyLocation": "'"$KEY_LOCATION"'",
-              "urlList": [
-                "https://teranga-ai.fr/",
-                "https://teranga-ai.fr/trip-planner",
-                "https://teranga-ai.fr/explorer",
-                "https://teranga-ai.fr/visiter-goree",
-                "https://teranga-ai.fr/fr/senegal-travel-guide",
-                "https://teranga-ai.fr/en/dakar-travel-guide"
-              ]
-            }'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.14"
+      - name: Submit sitemap URLs to IndexNow
+        run: python scripts/indexnow_submit.py

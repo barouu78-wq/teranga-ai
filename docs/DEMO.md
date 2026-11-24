@@ -25,11 +25,11 @@ Taper : **« Que voir à Saint-Louis en une journée ? »**
 
 ## 5. Pour le partenaire — 1 min 30
 - **Partager une réponse** : bouton « Partager » → lien vérifié (/partage), impossible à falsifier.
-- **Widget** : montrer la ligne à coller sur son site (page /pour-les-entreprises). Le bouton ouvre Teranga AI ; le partenaire est identifié dans la mesure d'audience (`utm_source`).
+- **Widget** : montrer la ligne à coller sur son site (page /pour-les-entreprises). Le bouton ouvre Teranga AI ; chaque visiteur envoyé est compté au nom du partenaire (`data-partner`), sans donnée personnelle.
 - Proposer un **pilote** de 4 à 8 semaines avec des indicateurs fixés à l'avance (voir ci-dessous).
 
 ## Indicateurs d'un pilote
-- Clics sur le widget (utm_source du partenaire).
+- Visiteurs envoyés par le widget : ligne « Widget (visiteurs envoyés) » de /stats-partenaires, par mois et par partenaire.
 - Questions posées depuis ces visites.
 - Retours qualitatifs du personnel et des clients (5 à 10 retours suffisent).
 

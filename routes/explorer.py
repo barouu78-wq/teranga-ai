@@ -9,6 +9,7 @@ from collections import OrderedDict
 from flask import Response, jsonify, request
 
 from services.explorer import render_explorer_page
+from services.images import THUMB_STEPS, smaller_thumb
 
 IMAGE_CACHE_TTL = 6 * 60 * 60
 # Aucune photo trouvée : on ne réinterroge pas Google/Wikipédia pendant 15 min
@@ -131,6 +132,25 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
                 return images, "commons"
         return [], "none"
 
+    def sized(images):
+        """Vignettes plus étroites quand la page le demande (?w=500 : cartes de l'accueil) ; le cache garde la grande."""
+        try:
+            width = int(request.args.get("w", ""))
+        except ValueError:
+            return images
+        if width not in THUMB_STEPS:
+            return images
+        out = []
+        for item in images:
+            item = dict(item)
+            small = smaller_thumb(item.get("url", ""), width)
+            if small != item.get("url"):
+                item["url"] = small
+                if str(item.get("display_url", "")).startswith("/image-proxy"):
+                    item["display_url"] = image_proxy_url(small)
+            out.append(item)
+        return out
+
     @app.get("/explorer-image")
     def explorer_image():
         query = request.args.get("query", "").strip()[:180]
@@ -140,7 +160,7 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
         cache_name = f"{query}|{title}"
         images = cached_images(cache_name)
         if images is not None:
-            return jsonify({"images": images})
+            return jsonify({"images": sized(images)})
         if rate_guard is not None:
             blocked = rate_guard("explorer_image")
             if blocked is not None:
@@ -150,7 +170,7 @@ def register_explorer_routes(app, knowledge, fetch_google_images, fetch_commons_
             # Visible dans les journaux : quels lieux n'ont aucune photo.
             app.logger.info("explorer-image none query=%r title=%r", query, title)
         store_images(cache_name, images)
-        return jsonify({"images": images})
+        return jsonify({"images": sized(images)})
 
     @app.get("/explorer")
     def explorer():

@@ -4,6 +4,7 @@ import secrets
 
 from flask import Response, jsonify, request
 
+from services.http_security import json_body
 from services.shared_answers import MAX_TOKEN, open_token, render_share_page
 
 
@@ -20,7 +21,7 @@ def register_share_routes(app, site_url):
     def open_shared_answer():
         if request.content_length and request.content_length > MAX_TOKEN + 200:
             return jsonify({"error": "invalid"}), 413
-        data = request.get_json(silent=True) or {}
+        data = json_body(request) or {}
         shared = open_token(app.config["SECRET_KEY"], data.get("token") if isinstance(data, dict) else "")
         if shared is None:
             return jsonify({"error": "invalid"}), 400

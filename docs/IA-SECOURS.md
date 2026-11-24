@@ -31,6 +31,9 @@ Sur Render, ajoute (ou modifie) la variable :
 
 Pour revenir en arrière, remets `openai` : effet en une minute, sans redéploiement de code.
 
+**Réglage actuel de la production** : `AI_PRINCIPALE=claude`. Les journaux du 2 au 8 novembre 2026 montrent
+`modele=claude-sonnet-5-5` sur les réponses du chat ; le propriétaire a confirmé ce choix le 9 novembre 2026.
+
 Optionnel : `ANTHROPIC_MODEL` choisit le modèle Claude. Par défaut `claude-opus-5-5` (le plus
 capable) ; `claude-sonnet-5-5` coûte moins cher et répond un peu plus vite.
 
@@ -72,9 +75,7 @@ ce qu'il sait, **repris tel quel** (aucune reformulation, aucun fait ajouté) :
 
 Quand rien ne correspond, le site préfère **ne rien inventer** : le message honnête (« pas de réponse
 prête ») renvoie vers `/lieux`, `/urgences`, `/calendrier-fetes-senegal` et `/trip-planner`, et ne
-rappelle les numéros d'urgence que si la question touche à une urgence. Il est prêt dans
-`knowledge_fallback(..., always=True)`, mais le chat ne l'utilise pas encore : en attendant, une
-question sans rapport avec la base reçoit toujours le message d'erreur habituel.
+rappelle les numéros d'urgence que si la question touche à une urgence.
 
 Pour le développeur : un nouveau sujet de repères pratiques reçoit son titre dans `_TITLES`
 (`services/fallback_answer.py`) ; sans titre, il s'affiche sous « Repères pratiques ».
@@ -85,6 +86,11 @@ Journaux Render : `chat_fallback_used mode=stream` ou `mode=json` quand la base 
 
 - Chat : réponse écrite complète. Les photos et la carte viennent d'autres services et restent
   les mêmes quelle que soit l'IA.
+- Réponse coupée par la limite de longueur (OpenAI ou Claude, IA principale ou de secours) : le chat
+  ajoute à la fin « Réponse coupée : écris « continue » pour avoir la suite. » (en anglais : « Answer cut
+  short: type “continue” to get the rest. »). Pour que « continue » reprenne où elle s'est arrêtée, le
+  modèle reçoit la fin de sa réponse coupée. Une réponse coupée n'est jamais mise en cache. Le planificateur
+  de voyage a son propre flux et n'est pas concerné.
 - Planificateur : itinéraire complet. Il passe sur l'autre IA si la clé existe, mais n'a **pas** de repli
   sur la base du site (un itinéraire demande une IA) : si aucune IA ne répond, il affiche son message
   d'erreur.

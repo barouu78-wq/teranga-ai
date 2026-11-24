@@ -2514,9 +2514,9 @@
       "type": "natural_site",
       "region": "Thiès",
       "locality": "Mbour",
-      "summary": "Réserve animalière de 3 500 hectares entre Sindia et Nguékokh, à environ 65 km de Dakar.",
-      "history": "Fondée en 1986 sur une partie d'un espace classé dès 1933 ; elle abrite rhinocéros blancs, girafes, zèbres, buffles, élands de Derby et plus de 120 espèces d'oiseaux.",
-      "what_to_see": "Safari en véhicule; girafes et rhinocéros; baobabs; oiseaux",
+      "summary": "Réserve animalière privée de 3 500 hectares à 65 km de Dakar, sur la route de Mbour : girafes, rhinocéros blancs, zèbres et élands de Derby.",
+      "history": "Née d'un projet de reboisement achevé en 1986, sur une partie d'un espace classé dès 1933, la réserve a été officiellement créée en 1990, première réserve privée du Sénégal. Elle abrite rhinocéros blancs, girafes, zèbres, buffles, élands de Derby, crocodiles du Nil, tortues sillonnées et plus de 120 espèces d'oiseaux ; il n'y a ni lions ni éléphants en liberté. On y voit aussi des tumulus classés et des baobabs creux qui servaient autrefois de sépulture aux griots.",
+      "what_to_see": "Safari en véhicule avec un guide; girafes, rhinocéros blancs et élands de Derby; crocodiles et buffles au point d'eau, visibles depuis le bar-restaurant; baobab-sépulture des griots et tumulus; plus de 120 espèces d'oiseaux",
       "latitude": 14.56,
       "longitude": -17.03,
       "image_queries": [
@@ -2525,12 +2525,15 @@
       ],
       "sources": [
         "https://lesoleil.sn/enquetes/reserve-de-bandia-un-joyau-ecologique-exceptionnel/",
-        "https://au-senegal.com/reserve-de-bandia,2865.html"
+        "https://au-senegal.com/reserve-de-bandia,2865.html",
+        "https://www.breizh-info.com/2026/01/26/256205/senegal-la-reserve-de-bandia-un-safari-inattendu-aux-portes-de-dakar/"
       ],
       "aliases": [
-        "Bandia"
+        "Bandia",
+        "Bandia Reserve",
+        "Réserve Bandia"
       ],
-      "access": "À environ 65 km de Dakar sur la route de Mbour ; visite en véhicule avec un guide de la réserve."
+      "access": "Sur la RN1 Dakar–Mbour, entre Sindia et Nguékokh (vers le km 64 depuis Dakar), à environ 15 km de Saly. Ouvert tous les jours de 8 h à 19 h. Visite uniquement en véhicule (le vôtre ou un 4x4 loué sur place) avec un guide obligatoire ; on ne descend pas du véhicule hors des arrêts prévus. Tarifs indiqués par Au Sénégal : entrée 12 000 FCFA par adulte et 7 000 FCFA par enfant de 3 à 12 ans, 10 000 FCFA pour un véhicule personnel, 6 500 FCFA de guide par véhicule, location d'un véhicule de safari de 40 000 à 60 000 FCFA. Horaires et tarifs à vérifier avant la visite."
     },
     {
       "id": "ile-de-ngor",
@@ -2637,9 +2640,9 @@
       "type": "locality",
       "region": "Kaffrine",
       "locality": "Kaffrine",
-      "summary": "Capitale régionale au cœur du bassin arachidier, sur l'axe Kaolack–Tambacounda.",
-      "history": "La région de Kaffrine a été créée en 2008 ; elle regroupe les départements de Birkelane, Kaffrine, Koungheul et Malem-Hodar. Kaffrine est la capitale du Ndoucoumane ; le mil et l'arachide y dominent l'agriculture.",
-      "what_to_see": "Marché de Kaffrine; vie rurale du bassin arachidier; journées culturelles",
+      "summary": "Capitale du Ndoucoumane et de la région de Kaffrine, au cœur du bassin arachidier, sur la route nationale 1 entre Kaolack et Tambacounda.",
+      "history": "Kaffrine est la capitale du Ndoucoumane, ancienne province du royaume du Saloum. La région de Kaffrine, créée en 2008, regroupe les départements de Birkelane, Kaffrine, Koungheul et Malem-Hodar. Le mil puis l'arachide dominent l'agriculture ; la commune comptait 57 307 habitants au recensement de 2023.",
+      "what_to_see": "Médina Baye de Kaffrine, quartier religieux fondé par Cheikh Abdou Barham Wilane, sur la route de Nganda; marché central; vie rurale du bassin arachidier",
       "latitude": 14.1014,
       "longitude": -15.5432,
       "image_queries": [
@@ -2648,7 +2651,17 @@
       ],
       "sources": [
         "https://en.wikipedia.org/wiki/Kaffrine_region",
-        "https://en.wikipedia.org/wiki/Kaffrine"
+        "https://en.wikipedia.org/wiki/Kaffrine",
+        "https://en.wikipedia.org/wiki/Ndoucoumane",
+        "https://fr.allafrica.com/stories/202607220200.html",
+        "https://en.wikipedia.org/wiki/N1_road_(Senegal)",
+        "https://www.rome2rio.com/s/Kaffrine/Dakar"
+      ],
+      "access": "Sur la route nationale 1 (Dakar–Mbour–Fatick–Kaolack–Tambacounda) : environ 250 km de Dakar par la route, soit à peu près 3 heures de voiture, et 56 km de Kaolack à vol d'oiseau. Sans voiture, passer par Kaolack puis prendre un taxi-brousse ; en ville, vélos-taxis et motos-taxis. Durées et tarifs à vérifier.",
+      "aliases": [
+        "Kafrin",
+        "Ndoucoumane",
+        "Ndoukoumane"
       ]
     },
     {
@@ -2678,15 +2691,24 @@
       "region": "Diourbel",
       "locality": "Mbacké",
       "summary": "Ville du Baol fondée en 1796, berceau de la famille de Cheikh Ahmadou Bamba, qui forme avec Touba la deuxième agglomération du Sénégal.",
-      "history": "Mbacké (ou Mbacké-Baol) a été fondée en 1796 par Mame Maram, arrière-grand-père de Cheikh Ahmadou Bamba, sur une terre accordée par le damel du Baol Amari Ngoné Ndella Fall. Chef-lieu de département de la région de Diourbel, à environ 190 km à l'est de Dakar, elle est aujourd'hui soudée à Touba.",
-      "what_to_see": "Quartiers historiques de Mbacké; marché; proximité de Touba et de sa Grande Mosquée",
+      "history": "Mbacké (ou Mbacké-Baol) a été fondée en 1796 par Mame Maram, arrière-grand-père de Cheikh Ahmadou Bamba, sur une terre accordée par le damel du Baol Amari Ngoné Ndella Fall. Centre réputé d'enseignement islamique dès la première moitié du XIXᵉ siècle, elle est la ville natale de Cheikh Ahmadou Bamba, fondateur du mouridisme ; dans le quartier de Mbacké Khéwar, une petite mosquée blanche marque son lieu de naissance. Chef-lieu de département de la région de Diourbel, à environ 190 km à l'est de Dakar, elle est aujourd'hui soudée à Touba.",
+      "what_to_see": "Mbacké Khéwar, quartier où une petite mosquée marque le lieu de naissance de Cheikh Ahmadou Bamba; Grande Mosquée Touba-Mbacké, ouverte au culte en 2023 sur la route de Touba, au croisement de Darou Salam; marché de Mbacké; Grande Mosquée de Touba, à quelques kilomètres",
       "latitude": 14.7917,
       "longitude": -15.9083,
       "image_queries": [
         "Mbacké Sénégal"
       ],
       "sources": [
-        "https://en.wikipedia.org/wiki/Mback%C3%A9"
+        "https://en.wikipedia.org/wiki/Mback%C3%A9",
+        "https://senego.com/sur-les-traces-de-bamba-mbacke-khewar-la-part-dheritage_1593388.html",
+        "https://www.seneplus.com/node/185170",
+        "https://au-senegal.com/l-autoroute-ila-touba-officiellement-inauguree,15564.html"
+      ],
+      "access": "À environ 190 km à l'est de Dakar. Le plus rapide : l'autoroute à péage Ila Touba (113 km de Thiès à Touba, ouverte en décembre 2018), sortie Touba, puis la route qui relie Touba à Mbacké. Tarif du péage à vérifier.",
+      "aliases": [
+        "Mbacke",
+        "Mbacké Baol",
+        "Mbacké-Baol"
       ]
     },
     {
@@ -3501,6 +3523,136 @@
         "Mausolée Seydina Limamou Laye Yoff"
       ],
       "access": "À Yoff, au nord de Dakar ; tenue couverte et discrétion, se renseigner sur place avant d'entrer."
+    },
+    {
+      "id": "reserve-de-guembeul",
+      "name": "Réserve spéciale de faune de Guembeul",
+      "type": "natural_site",
+      "region": "Saint-Louis",
+      "locality": "Gandiol",
+      "summary": "Réserve de 720 ha au sud de Saint-Louis, consacrée à la reproduction surveillée et à l'élevage d'espèces menacées, notamment les oryx et les gazelles dama ; c'est aussi un centre de réintroduction de gazelles.",
+      "history": "Créée en 1983 dans un but scientifique, classée réserve de faune (catégorie IV de l'UICN) la même année. Inscrite sur la liste Ramsar des zones humides d'importance internationale le 29 septembre 1986.",
+      "what_to_see": "Oryx et gazelles dama; tortues sillonnées; phacochères, patas et varans; lagunes saumâtres; environ 200 espèces d'oiseaux dont des flamants; plus grand site de nidification d'avocettes du Sénégal",
+      "latitude": 15.9219,
+      "longitude": -16.4646,
+      "image_queries": [
+        "Réserve de Guembeul Sénégal",
+        "Guembeul gazelles Saint-Louis"
+      ],
+      "sources": [
+        "https://en.wikipedia.org/wiki/Guembeul_Natural_Reserve",
+        "https://au-senegal.com/reserve-speciale-de-faune-de-guembeul,2866.html"
+      ],
+      "aliases": [
+        "Guembeul",
+        "Gueumbeul",
+        "Réserve de Guembeul",
+        "Guembeul Natural Reserve"
+      ],
+      "access": "À une douzaine de kilomètres au sud de Saint-Louis, sur la route de Gandiol. Horaires, tarif et guide : à vérifier sur place."
+    },
+    {
+      "id": "reserve-de-kalissaye",
+      "name": "Réserve ornithologique de Kalissaye",
+      "type": "natural_site",
+      "region": "Ziguinchor",
+      "locality": "Kafountine",
+      "summary": "Réserve à l'embouchure du marigot de Kalissaye, dans le delta de la Casamance, entre les îles du Bliss et de Karones, pour les oiseaux marins et les tortues marines.",
+      "history": "Créée en juillet 1978 pour protéger les colonies d'oiseaux marins et les tortues marines. Jusqu'à 10 000 sternes caspiennes y ont été comptées dans les années 1980.",
+      "what_to_see": "Îles du Bliss et de Karones; sternes caspiennes et royales; pélicans; limicoles; tortues marines; lamantins",
+      "latitude": 12.667,
+      "longitude": -16.75,
+      "coordinates_precision": "approximate",
+      "image_queries": [
+        "Réserve ornithologique de Kalissaye Sénégal",
+        "Kalissaye Casamance oiseaux"
+      ],
+      "sources": [
+        "https://fr.wikipedia.org/wiki/R%C3%A9serve_ornithologique_de_Kalissaye",
+        "https://en.wikipedia.org/wiki/Kalissaye_Avifaunal_Reserve",
+        "https://fr.allafrica.com/stories/202406050184.html"
+      ],
+      "aliases": [
+        "Kalissaye",
+        "Kalyssaye",
+        "Réserve de Kalissaye"
+      ],
+      "access": "Dans la commune de Kafountine (Bignona). Wikipédia la dit fermée à cause du conflit en Casamance, un article de 2024 décrit une visite en pirogue par les bolongs : ouverture et accès à vérifier sur place."
+    },
+    {
+      "id": "grand-theatre-national",
+      "name": "Grand Théâtre national Doudou Ndiaye Rose",
+      "type": "cultural_site",
+      "region": "Dakar",
+      "locality": "Dakar-Plateau",
+      "summary": "Grande salle de spectacle de Dakar, de 1 800 places, au carrefour Cyrnos et du boulevard de l'Arsenal.",
+      "history": "Inauguré le 15 avril 2011, il fait partie du projet des « sept merveilles » du parc culturel de Dakar. Sa construction a mobilisé plus de 400 ouvriers sénégalais et chinois pendant plus de 27 mois. Il porte le nom de Doudou Ndiaye Rose.",
+      "what_to_see": "Représentations d'œuvres du répertoire sénégalais, africain et mondial; programmation à vérifier avant de venir",
+      "latitude": 14.6831,
+      "longitude": -17.4383,
+      "image_queries": [
+        "Grand Théâtre national Dakar",
+        "Grand Théâtre Doudou Ndiaye Rose Dakar"
+      ],
+      "sources": [
+        "https://au-senegal.com/grand-theatre-national-doudou-ndiaye-rose,3330.html",
+        "https://www.au-senegal.com/le-grand-theatre-national-une-des-7-merveilles-du-senegal,3120.html"
+      ],
+      "aliases": [
+        "Grand Théâtre national",
+        "Grand Théâtre"
+      ],
+      "access": "Carrefour Cyrnos et boulevard de l'Arsenal, entre le Plateau et la Médina. Programme et billets : à vérifier auprès du théâtre."
+    },
+    {
+      "id": "musee-senghor",
+      "name": "Musée Léopold Sédar Senghor (maison de Senghor)",
+      "type": "museum",
+      "region": "Dakar",
+      "locality": "Fann Résidence",
+      "summary": "Ancienne maison du président-poète Léopold Sédar Senghor, devenue musée, près de la Corniche Ouest.",
+      "history": "Maison construite à la fin des années 1970 sur une parcelle d'environ 8 000 m². Rachetée par l'État et réhabilitée, elle a été inaugurée comme musée le 30 novembre 2014, lors du XVe sommet de la Francophonie.",
+      "what_to_see": "Pièces de réception, salon blanc avec sculptures et collections personnelles, bureau et bibliothèque de Senghor, chambres de la famille, jardin avec piscine; visite guidée",
+      "latitude": 14.6935,
+      "longitude": -17.4705,
+      "image_queries": [
+        "Musée Léopold Sédar Senghor Fann",
+        "Maison de Senghor musée"
+      ],
+      "sources": [
+        "https://au-senegal.com/la-maison-de-senghor-est-devenue-musee,10713.html",
+        "https://lepetitjournal.com/dakar/a-voir-a-faire/musee-senghor-dakar-la-rencontre-de-lhomme-de-culture-244339"
+      ],
+      "aliases": [
+        "Musée Senghor",
+        "Maison de Senghor",
+        "Maison Senghor"
+      ],
+      "access": "Rue Léo Frobenius, Fann Résidence. Jours, horaires et tarifs : à vérifier avant de venir."
+    },
+    {
+      "id": "village-des-arts",
+      "name": "Village des Arts",
+      "type": "cultural_site",
+      "region": "Dakar",
+      "locality": "Yoff",
+      "summary": "Lieu d'ateliers d'artistes sur environ 4 hectares, avec la galerie Léopold Sédar Senghor, près du stade Léopold Sédar Senghor.",
+      "history": "Les ateliers logeaient d'abord les ouvriers chinois qui ont construit le stade Léopold Sédar Senghor. Après leur départ en 1998, le ministère de la Culture les a attribués à des artistes, issus de l'École des Beaux-Arts de Dakar ou autodidactes. La galerie a été réhabilitée avec la Fondation Sonatel.",
+      "what_to_see": "Galerie Léopold Sédar Senghor, ateliers d'artistes, sculptures en plein air; expositions et programmation à vérifier",
+      "latitude": 14.7455,
+      "longitude": -17.4525,
+      "image_queries": [
+        "Village des Arts Dakar",
+        "Galerie Léopold Sédar Senghor Village des Arts"
+      ],
+      "sources": [
+        "https://au-senegal.com/le-village-des-arts-fait-peau-neuve,15755.html",
+        "https://www.seneplus.com/node/32813"
+      ],
+      "aliases": [
+        "Village des Arts"
+      ],
+      "access": "À Yoff, à environ 500 m du stade Léopold Sédar Senghor. Horaires et expositions : à vérifier."
     }
   ],
   "authoritative_sources": [
@@ -4314,7 +4466,8 @@
         "thieb",
         "tieb",
         "tiep",
-        "riz au poisson"
+        "riz au poisson",
+        "plat national"
       ],
       "kind": "plat",
       "text": "Riz cuit dans un bouillon de poisson et de tomate, servi avec le poisson farci au « roof » (persil, ail, piment) et des légumes : manioc, chou, carotte, aubergine, navet, gombo. Le riz croustillant du fond de la marmite s'appelle le xoon. Plat national, inscrit au patrimoine culturel immatériel de l'UNESCO en 2021. Traditionnellement associé à Saint-Louis ; on le mange souvent à midi, dans un grand plat partagé.",

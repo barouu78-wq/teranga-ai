@@ -23,6 +23,7 @@ import datetime as _dt
 import re
 
 from services.events import _asked, french_date, upcoming_events
+from services.intelligence import refers_to_thread
 from services.places import mentioned_places
 from services.practical_facts import TOPICS, matching_topics
 from services.senegal_knowledge import _fold
@@ -65,6 +66,7 @@ _TITLES = {
     "protection": ("Santé et protection sociale", "Health cover and social protection"),
     "etudes": ("Études et bourses", "Studies and grants"),
     "langue": ("Langues", "Languages"),
+    "joj": ("JOJ Dakar 2026", "Dakar 2026 Youth Olympic Games"),
 }
 _DEFAULT_TITLE = ("Repères pratiques", "Practical facts")
 _EVENTS_TITLE = ("Prochaines fêtes et événements", "Upcoming holidays and events")
@@ -223,7 +225,8 @@ def _events_text(message: str, lang: str, today: _dt.date | None) -> str:
     if not chosen and _AID.search(folded):
         chosen = [event for event in upcoming if "Korité" in event["name"] or "Tabaski" in event["name"]]
     if not chosen and _GENERIC_EVENTS.search(folded) and not _PRIVATE_PARTY.search(folded):
-        chosen = upcoming
+        # « Les prochains jours fériés ? » : les fêtes seulement ; un événement sportif (JOJ) n'en est pas une.
+        chosen = [event for event in upcoming if event["kind"] != "sport"]
     if not chosen:
         return ""
     return _section(_EVENTS_TITLE[1 if lang == "en" else 0], [_event_line(event, lang) for event in chosen[:MAX_EVENTS]])
@@ -248,26 +251,37 @@ def no_ready_answer(message: str, lang: str = "fr") -> str:
     return "\n\n".join(parts)
 
 
-def knowledge_fallback(
-    message: str, places, dishes=(), lang: str = "fr", *, always: bool = False, today: _dt.date | None = None
-) -> str | None:
-    """Réponse tirée de la base du site : lieu ou plat cité, fêtes, repères pratiques qui correspondent.
-
-    Renvoie None quand rien ne correspond, sauf si `always` est vrai ou si la question touche à une
-    urgence : le message honnête de `no_ready_answer` est alors renvoyé. `today` fixe la date de
-    référence du calendrier (tests)."""
-    lang = "en" if lang == "en" else "fr"
-    found = mentioned_places(message, places or [], limit=1)
+def _answer_parts(text: str, places, dishes, lang: str, today: _dt.date | None) -> list[str]:
+    """Lieu ou plat cité dans `text`, fêtes et repères pratiques qui correspondent (textes de la base, tels quels)."""
+    found = mentioned_places(text, places or [], limit=1)
     by_id = {str(p.get("id")): p for p in places or [] if isinstance(p, dict)}
     body = ""
     if found:
         body = _place_text(by_id.get(found[0]["id"], found[0]))
     else:
-        dish = _matched_dish(dishes, message)
+        dish = _matched_dish(dishes, text)
         if dish:
             where = f" Où : {dish['where']}." if dish.get("where") else ""
             body = f"{dish.get('name')} : {dish.get('text')}{where}"
-    parts = [part for part in (body, _events_text(message, lang, today), _practical_text(message, lang)) if part]
+    return [part for part in (body, _events_text(text, lang, today), _practical_text(text, lang)) if part]
+
+
+def knowledge_fallback(
+    message: str, places, dishes=(), lang: str = "fr", *, always: bool = False, today: _dt.date | None = None,
+    context: str = "",
+) -> str | None:
+    """Réponse tirée de la base du site : lieu ou plat cité, fêtes, repères pratiques qui correspondent.
+
+    `context` est la question enrichie du sujet du fil (payload « contextual_query ») : quand la question seule
+    ne donne rien et qu'elle renvoie au fil (« Comment y aller ? » après Gorée, « Et pour un incendie ? » après les
+    urgences), la réponse vient du sujet de la conversation ; une question autonome ne le reprend pas (relecture
+    Codex de #530). Renvoie None quand rien ne correspond, sauf si `always` est vrai ou si la question touche à une
+    urgence : le message honnête de `no_ready_answer` est alors renvoyé. `today` fixe la
+    date de référence du calendrier (tests)."""
+    lang = "en" if lang == "en" else "fr"
+    parts = _answer_parts(message, places, dishes, lang, today)
+    if not parts and context and fold_text(context) != fold_text(message) and refers_to_thread(message):
+        parts = _answer_parts(context, places, dishes, lang, today)
     if not parts:
         return no_ready_answer(message, lang) if always or _is_urgent(message) else None
     return f"{_INTRO[lang]}\n\n" + "\n\n".join(parts) + f"\n\n{_OUTRO[lang]}"

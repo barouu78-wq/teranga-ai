@@ -180,6 +180,28 @@ def _google_photo_matches_query(query, alt, page_url):
     return True
 
 
+def _google_error_details(exc, api_key=""):
+    """(status, reason, message) d'une erreur Google, sur une ligne, sans la clé ; chaînes vides si illisible."""
+    try:
+        body = exc.read().decode("utf-8", errors="replace")
+    except Exception:
+        body = ""
+    if api_key:
+        body = body.replace(api_key, "[REDACTED]")
+    try:
+        error = (json.loads(body) or {}).get("error") or {}
+    except (ValueError, AttributeError):
+        error = {}
+    if not isinstance(error, dict):
+        error = {}
+    first = (error.get("errors") or [{}])[0]
+    if not isinstance(first, dict):
+        first = {}
+    message = str(error.get("message") or first.get("message") or body[:200])
+    message = " ".join(message.split())[:200]
+    return str(error.get("status") or ""), str(first.get("reason") or ""), message
+
+
 def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
     """Recherche d'images via Google Custom Search JSON API."""
     query = str(query or "").strip()
@@ -207,14 +229,10 @@ def fetch_google_images(query, api_key, cse_id, limit=4, urlopen_fn=None):
         with opener(req, timeout=8) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except HTTPError as exc:
-        try:
-            body = exc.read().decode("utf-8", errors="replace")
-        except Exception:
-            body = ""
-        safe_body = body.replace(api_key, "[REDACTED]") if api_key else body
-        message = "Google Custom Search HTTP %s pour %r (cx=%s): %s" % (exc.code, query, cse_id, safe_body[:1200])
-        logger.error(message)
-        print(message, flush=True)
+        # Raison lisible jointe à l'erreur : l'appelant distingue un refus d'accès (définitif) d'un quota
+        # (passager) et écrit la seule ligne de journal, sans la clé ni le JSON complet (avant : plus de 20
+        # lignes par refus, doublées par un print).
+        exc.google_status, exc.google_reason, exc.google_message = _google_error_details(exc, api_key)
         raise
 
     candidates, seen = [], set()
@@ -354,7 +372,7 @@ _ARTICLE_IMAGE_EXCLUDED = (
     "icon", "icone", "plan ", "diagram", "chart", "graph", "signature", "relief",
     "satellite", "population", "pictogram", "symbol", "stamp", "timbre", "banknote", "billet",
 )
-_ARTICLE_CACHE: dict[tuple[str, int], tuple[float, list[dict]]] = {}
+_ARTICLE_CACHE: dict[tuple[str], tuple[float, list[dict]]] = {}
 
 
 def _article_title_candidates(title):
@@ -363,6 +381,24 @@ def _article_title_candidates(title):
     if not base:
         return []
     return [f"{base} (Sénégal)", base]
+
+
+def _lead_image_page_url(article, opener, lang="fr"):
+    """Page Commons de la photo principale de l'article (pageimages), ou "" si l'API ne la donne pas."""
+    params = {"action": "query", "format": "json", "titles": article, "redirects": "1",
+              "prop": "pageimages", "piprop": "name"}
+    req = Request(f"https://{lang}.wikipedia.org/w/api.php?" + urlencode(params),
+                  headers={"User-Agent": wikimedia_user_agent()})
+    try:
+        with opener(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+    except Exception:
+        return ""  # sans photo principale, l'ordre de l'API reste valable
+    for page in ((data.get("query") or {}).get("pages") or {}).values():
+        name = str(page.get("pageimage") or "")
+        if name:
+            return "https://commons.wikimedia.org/wiki/" + quote("File:" + name.replace(" ", "_"), safe=":")
+    return ""
 
 
 def fetch_article_images(title, limit=6, image_validator=None, display_url_builder=None, urlopen_fn=None, lang="fr"):
@@ -374,10 +410,12 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
     candidates = _article_title_candidates(title)
     if not candidates:
         return []
-    cache_key = (_normalize(candidates[-1]), int(limit))
+    # Le cache garde toutes les photos retenues de l'article, quel que soit le nombre demandé : « Plus de photos »
+    # (16 au lieu de 8) relit la même liste au lieu de refaire les deux appels à Wikipédia.
+    cache_key = (_normalize(candidates[-1]),)
     cached = _ARTICLE_CACHE.get(cache_key)
     if cached is not None and time.monotonic() - cached[0] < _IMAGE_CACHE_TTL_SECONDS:
-        return [dict(item) for item in cached[1]]
+        return [dict(item) for item in cached[1][:limit]]
 
     opener = urlopen_fn or urlopen
     validate = image_validator or (lambda src: str(src or ""))
@@ -440,8 +478,11 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
                 "license": meta_text("LicenseShortName"),
                 "page_url": "https://commons.wikimedia.org/wiki/" + quote(file_title.replace(" ", "_"), safe=":"),
             })
-            if len(out) >= limit:
-                break
+        # L'API renvoie les fichiers par ordre alphabétique (« Aéroport… » passait devant la ville) : la photo
+        # principale choisie par les rédacteurs de l'article passe en premier (tests/test_photo_principale.py).
+        if len(out) > 1:
+            lead = _lead_image_page_url(article, opener, lang)
+            out.sort(key=lambda item: item["page_url"] != lead)
         if out:
             break
     if not out and failures:
@@ -452,7 +493,7 @@ def fetch_article_images(title, limit=6, image_validator=None, display_url_build
     if len(_ARTICLE_CACHE) >= _IMAGE_CACHE_MAX_ENTRIES and cache_key not in _ARTICLE_CACHE:
         _ARTICLE_CACHE.pop(min(list(_ARTICLE_CACHE.items()), key=lambda entry: entry[1][0])[0], None)
     _ARTICLE_CACHE[cache_key] = (time.monotonic(), [dict(item) for item in out])
-    return [dict(item) for item in out]
+    return [dict(item) for item in out[:limit]]
 
 
 def fetch_commons_image(title, image_validator=None, display_url_builder=None, urlopen_fn=None):
@@ -578,6 +619,21 @@ def usable_wiki_image(src: object) -> str:
     if "flag_of" in lowered or "coat_of_arms" in lowered or lowered.endswith(".svg.png"):
         return ""
     return src
+
+
+# Largeurs de vignette que Wikimedia sert sans calcul supplémentaire (paliers standard). Une carte de l'accueil
+# (170 px, écran ×3) n'a pas besoin des 1 280 px de la fiche du lieu (tests/test_vignettes_legeres.py).
+THUMB_STEPS = (330, 500, 960)
+_THUMB_PATH = re.compile(r"(/thumb/[^?#]+/)(\d+)px-([^/?#]+)$")
+
+
+def smaller_thumb(src: object, width: int) -> str:
+    """Même photo Wikimedia en vignette plus étroite ; jamais agrandie, et seulement une vignette du relais."""
+    src = str(src or "")
+    match = _THUMB_PATH.search(src)
+    if width not in THUMB_STEPS or not match or not allowed_image_url(src) or int(match.group(2)) <= width:
+        return src
+    return src[:match.start()] + f"{match.group(1)}{width}px-{match.group(3)}"
 
 
 def image_proxy_url(src: object) -> str:

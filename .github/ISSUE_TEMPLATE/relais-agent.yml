@@ -1,0 +1,64 @@
+name: "Relais entre agents (ChatGPT ↔ Claude Code)"
+description: "Confier une tâche précise à un autre agent, avec le contexte et la preuve attendue. Protocole dans docs/pont-chatgpt-claude.md."
+title: "[Relais] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Un ticket n'a **aucun coût** et ne lance rien tout seul. Pour lancer Claude Code tout de suite, utiliser la commande du pont
+        dans un commentaire (voir `docs/claude-github-bridge.md`). **Ne jamais écrire de secret dans ce ticket.**
+  - type: dropdown
+    id: de
+    attributes:
+      label: "De la part de"
+      options:
+        - Propriétaire
+        - ChatGPT
+        - Claude Code
+    validations:
+      required: true
+  - type: dropdown
+    id: pour
+    attributes:
+      label: "Pour"
+      options:
+        - Claude Code
+        - ChatGPT
+        - Propriétaire
+    validations:
+      required: true
+  - type: textarea
+    id: objectif
+    attributes:
+      label: "Objectif (une seule tâche précise)"
+      description: "Une phrase. Une mission en plusieurs volets échoue : la découper en plusieurs tickets."
+    validations:
+      required: true
+  - type: textarea
+    id: contexte
+    attributes:
+      label: "Contexte et liens"
+      description: "Issue, PR, exécution GitHub Actions, état de main."
+    validations:
+      required: true
+  - type: textarea
+    id: contraintes
+    attributes:
+      label: "Contraintes"
+      description: "Fichiers permis ou interdits, ce qu'il ne faut pas toucher."
+  - type: textarea
+    id: resultat
+    attributes:
+      label: "Résultat attendu et preuve"
+      description: "Tests à lancer, PR attendue, capture, mesure."
+    validations:
+      required: true
+  - type: checkboxes
+    id: regles
+    attributes:
+      label: "Règles communes"
+      options:
+        - label: "Ce ticket ne contient aucun secret (clé, jeton, mot de passe)."
+          required: true
+        - label: "Aucune fusion ni aucun déploiement sans validation explicite du propriétaire."
+          required: true

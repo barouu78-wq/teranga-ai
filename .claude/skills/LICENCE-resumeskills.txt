@@ -1,0 +1,33 @@
+Compétence reprise de https://github.com/Paramchoudhary/ResumeSkills, commit 74ae19e7c62b0516d1c298328e5544976c12da5d
+(fichier skills/resume-tailor/SKILL.md), le 15 novembre 2026 (« Go » du propriétaire pour les skills emploi). Seul le
+texte est repris : aucun script. Changements : traduit en français ; adapté aux règles du projet (rien d'inventé, CV
+gardé sur le téléphone, lettre de motivation, jeunes sans expérience, offres d'emploi au Sénégal) ; exemples américains
+(dollars, certification PMP, noms de fichiers) retirés ; « score de correspondance » chiffré retiré (aucun pourcentage
+inventé) ; le renvoi vers un autre skill de la collection (job-description-analyzer) remplacé par l'étape « Lire l'offre ».
+
+Compétence concernée :
+- cv-senegal
+
+Licence d'origine, reproduite telle quelle :
+
+MIT License
+
+Copyright (c) 2026 Resume Skills
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

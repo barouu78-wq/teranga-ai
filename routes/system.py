@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import Response, jsonify, request
 
 from services.assets import ICON_SVG, OG_SVG, build_og_png
+from services.discover import pick_two, tiles_html
 from services.site_layout import asset_url, HEAD_ASSETS, site_footer, site_header
 
 
@@ -50,10 +51,13 @@ def register_system_routes(app, deps):
     home_html = deps["home_html"]
     site_url = deps["site_url"]
     build_icon_png = deps["build_icon_png"]
+    discover_places = deps.get("discover_places") or []
     redis_client = deps.get("redis_client")
     redis_configured = deps.get("redis_configured", redis_client is not None)
     # Seulement « configuré ou non » : jamais la clé elle-même.
     google_images = "configured" if deps.get("google_images_configured") else "missing"
+    # État à jour (pause de quota, accès refusé par Google) quand l'application le fournit.
+    google_images_status = deps.get("google_images_status")
 
     @app.route(f"/{indexnow_key}.txt")
     def indexnow():
@@ -71,7 +75,14 @@ def register_system_routes(app, deps):
                 redis_state = "ok" if redis_client.ping() else "unavailable"
             except Exception:
                 redis_state = "unavailable"
-        return jsonify({"status": "ok", "service": "teranga-ai", "redis": redis_state, "google_images": google_images}), 200, {"Cache-Control": "no-store"}
+        google_state = google_images
+        if google_images_status is not None:
+            try:
+                google_state = google_images_status()
+            # /health doit toujours répondre : on garde l'état de configuration.
+            except Exception:  # nosec B110
+                pass
+        return jsonify({"status": "ok", "service": "teranga-ai", "redis": redis_state, "google_images": google_state}), 200, {"Cache-Control": "no-store"}
 
     # Images partagées (aperçus WhatsApp/Facebook, favicon) : référencées par
     # toutes les pages, elles doivent toujours répondre.
@@ -164,7 +175,7 @@ def register_system_routes(app, deps):
                     "id": "/",
                     "name": "Teranga AI",
                     "short_name": "Teranga",
-                    "description": "Teranga AI, votre guide du Sénégal : histoire des lieux, météo, itinéraires, négociation au marché et vie pratique, en français, anglais et wolof.",
+                    "description": "Teranga AI, l’IA qui répond à vos questions sur le Sénégal : démarches, santé, argent, travail, études, culture et voyage, en français, anglais et wolof.",
                     "start_url": "/",
                     "scope": "/",
                     "display": "standalone",
@@ -172,8 +183,8 @@ def register_system_routes(app, deps):
                     "orientation": "portrait-primary",
                     "lang": "fr",
                     "dir": "ltr",
-                    "background_color": "#fbf3e6",
-                    "theme_color": "#b5451b",
+                    "background_color": "#0b0d10",
+                    "theme_color": "#0b0d10",
                     "categories": ["travel", "education", "lifestyle"],
                     "prefer_related_applications": False,
                     "launch_handler": {"client_mode": ["navigate-existing", "auto"]},
@@ -246,6 +257,8 @@ def register_system_routes(app, deps):
         request._csp_nonce = nonce
         response = Response(
             home_html.replace("__CSP_NONCE__", nonce)
+            # « À découvrir » : deux lieux de la vitrine, tirés à chaque visite (services/discover.py).
+            .replace("__DISCOVER_TILES__", tiles_html(pick_two(discover_places)))
             .replace("__SITE_URL__", site_url)
             .replace("__HOME_JS__", home_js_url)
             .replace("__THEME_JS__", theme_js_url),

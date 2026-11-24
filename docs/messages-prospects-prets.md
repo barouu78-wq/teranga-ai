@@ -77,7 +77,7 @@ Page à capturer : teranga-ai.fr/aibd-dakar
 
 ## S'ils répondent « combien ça coûte ? »
 
-> Pour le lancement, le premier mois est offert. Ensuite, c'est [ton prix, par exemple 15 000 FCFA] par mois, sans engagement : vous arrêtez quand vous voulez. Je vous montre d'abord le résultat, vous décidez après.
+> Pour le lancement, le premier mois est offert. Ensuite, c'est 15 000 FCFA par mois, sans engagement : vous arrêtez quand vous voulez. Je vous montre d'abord le résultat, vous décidez après.
 
 ## S'ils disent oui
 

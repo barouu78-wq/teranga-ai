@@ -96,7 +96,8 @@ def test_vocabulary_is_closed_and_well_formed():
                 plain = keyword.rstrip("*")
                 assert plain == fold_text(plain), f"{theme.id}: « {keyword} » doit être sans accents ni majuscules"
         assert all(c.startswith("repere:") or c in {"cite", "lieux", "personnes", "histoire", "plats", "partenaires", "guide",
-                                                    "marche", "fetes", "meteo", "wolof", "pulaar"} for c in theme.covers), theme.id
+                                                    "marche", "fetes", "meteo", "wolof", "pulaar", "profil", "capitale", "panorama"}
+                   for c in theme.covers), theme.id
 
 
 def test_practical_topics_used_for_coverage_exist():
@@ -516,7 +517,7 @@ def test_streamed_chat_is_counted_too(journal, monkeypatch):
         yield SimpleNamespace(type="response.output_text.delta", delta="Gorée est une île.")
 
     monkeypatch.setitem(app_module._CHAT_SERVICE, "create_response", stream)
-    response, _ = _chat("203.0.113.155", "Parle-moi de Gorée", mode_json=False)
+    response, _ = _chat("203.0.113.155", "Parle-moi de Gorée en détail", mode_json=False)
     assert response.status_code == 200 and "Gorée est une île." in response.get_data(as_text=True)
     (counters,) = redis.hashes.values()
     assert counters["voyage|c"] == 1 and counters["total"] == 1

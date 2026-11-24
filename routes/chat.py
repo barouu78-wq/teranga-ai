@@ -7,11 +7,16 @@ import time
 from flask import Response, jsonify, request, stream_with_context
 
 from services.answer_cache import cache_key, replay_chunks
+from services.external_research import attach_external_data
 from services.fallback_answer import knowledge_fallback
+from services.latency import PAYLOAD_KEY, LatencyTrace
 from services.backup_ai import backup_complete, backup_enabled, claude_is_primary
+from services.fichiers import FICHIER_ILLISIBLE
 from services.monetization import affiliate_config, booking_links
 from services.places import mentioned_places
 from services.shared_answers import sign_answer
+from services.truncation import cut_notice, is_cut_by_length, mark_incomplete, with_cut_notice
+from services.web_policy import research_query
 
 
 def register_chat_route(app, deps):
@@ -44,11 +49,29 @@ def register_chat_route(app, deps):
     knowledge_places = deps.get("knowledge_places") or []
     knowledge_dishes = deps.get("knowledge_dishes") or []
     places_by_id = {str(p.get("id")): p for p in knowledge_places if isinstance(p, dict) and p.get("id")}
+    quick_answer = deps.get("quick_answer")  # réponses prêtes sans le modèle (services/quick_answers.py)
     coverage_log = deps.get("coverage_log")  # compteurs anonymes par thème (services/coverage_log.py)
+    ai_budget = deps.get("ai_budget")  # plafond d'appels payants par jour (services/ai_budget.py)
+
+    def knowledge_reply(payload):
+        """Réponse de la base vérifiée, sans aucun appel payant ; None seulement si elle-même échoue."""
+        try:
+            return knowledge_fallback(
+                payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"), always=True,
+                context=payload.get("contextual_query", ""),  # une suite de conversation garde le sujet du fil
+            )
+        except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
+            logger.exception("chat_fallback")
+            return None
 
     def fallback_for(payload):
         """Réponse de secours quand l'IA est en panne : Claude s'il est configuré (et
-        qu'il n'est pas déjà l'IA principale), sinon la base de connaissances, sinon None."""
+        qu'il n'est pas déjà l'IA principale), sinon la base de connaissances. Quand la base ne connaît pas
+        la question, le message honnête « je préfère ne rien inventer » (avec les pages utiles du site) :
+        une panne ne finit donc jamais en erreur sèche. None seulement si le secours lui-même échoue."""
+        if (payload.get("fichier") or {}).get("bloc"):
+            # Photo ou PDF que Claude n'a pas pu lire : le dire, plutôt qu'une réponse qui n'aurait pas vu le fichier.
+            return FICHIER_ILLISIBLE.get(payload.get("language", "fr"), FICHIER_ILLISIBLE["fr"])
         if backup_enabled() and not claude_is_primary():
             try:
                 reply = backup_complete(
@@ -56,17 +79,14 @@ def register_chat_route(app, deps):
                     system=payload.get("instructions", ""),
                     max_tokens=1500,
                     timeout=45,
+                    language=payload.get("language", "fr"),  # mention « Réponse coupée » si Claude atteint la limite
                 )
                 if reply:
                     logger.warning("chat_backup_ai_used")
                     return clean_answer(reply)
             except Exception:  # noqa: BLE001 - on passe au secours suivant
                 logger.exception("chat_backup_ai")
-        try:
-            return knowledge_fallback(payload.get("message", ""), knowledge_places, knowledge_dishes, payload.get("language", "fr"))
-        except Exception:  # noqa: BLE001 - le secours ne doit jamais aggraver la panne
-            logger.exception("chat_fallback")
-            return None
+        return knowledge_reply(payload)
 
     def places_with_booking(message, language):
         """Fiches citées ; la première porte ses liens « Réserver » (affiliés) s'ils sont configurés."""
@@ -82,9 +102,9 @@ def register_chat_route(app, deps):
     answer_cache = deps.get("answer_cache")
     cache_model = deps.get("cache_model", "")
 
-    @app.post("/chat")
-    @require_json_post
-    def chat():
+    def chat_body(trace):
+        """Corps de la route /chat. `trace` chronomètre les étapes (services/latency.py) : il ne change aucune réponse."""
+        trace.mode = "json" if request.headers.get("X-Teranga-Mode", "").lower() == "json" else "flux"
         ip = client_ip()
         identity = abuse_key(ip)
         if abuse_blocked(ip) or abuse_blocked(identity):
@@ -98,10 +118,27 @@ def register_chat_route(app, deps):
             return jsonify({"error": "Trop de demandes sur une courte période. Réessaie plus tard."}), 429, {"Retry-After": "300"}
 
         parse_started_at = time.perf_counter()
-        payload, error = parse_chat_payload()
+        with trace.stage("contexte"):
+            payload, error = parse_chat_payload()
         logger.info("chat_payload_ms %.2f", (time.perf_counter() - parse_started_at) * 1000)
         if error:
             return error
+
+        def first_word():
+            """Juste avant d'envoyer le premier texte au client : fige le délai « premier mot » et le modèle appelé."""
+            trace.first_word()
+            trace.model = payload.get(PAYLOAD_KEY)
+
+        # Réponse prête (numéros d'urgence vérifiés, conversion euro ↔ FCFA) : servie comme une réponse en
+        # cache, sans le modèle ni la recherche web, avant toute ancienne réponse du modèle en cache.
+        # Avec un fichier joint, la réponse dépend du fichier : ni réponse prête ni cache (dans un sens ou dans l'autre).
+        has_file = bool(payload.get("fichier_nom"))
+        ready = quick_answer(payload, request.get_json(silent=True)) if quick_answer is not None and not has_file else None
+        if ready:
+            payload["use_web"] = False
+            # Journal des lacunes : une réponse prête est vérifiée ; elle couvre son thème, et seulement lui.
+            payload["ready_answer"] = ready.get("theme") or ""
+
         if payload["use_web"]:
             # Même identité que plus haut (déjà vérifiée contre les abus).
             web_identity = identity
@@ -117,8 +154,13 @@ def register_chat_route(app, deps):
 
         photo_only = bool(payload.get("photo_only"))
         photo_query = str(payload.get("photo_query") or payload.get("message", ""))
+        photo_page = int(payload.get("photo_page") or 0)
         if photo_only:
             language = payload.get("language", "fr")
+
+            def photo_gallery():
+                # « Plus de photos » : page suivante de la galerie, sans les photos déjà montrées.
+                return fetch_topic_images(photo_query, page=photo_page) if photo_page else fetch_topic_images(photo_query)
 
             def photo_lead(image):
                 # Le texte nomme le sujet réellement cherché et ne promet jamais
@@ -127,16 +169,24 @@ def register_chat_route(app, deps):
                 # « Saly Sénégal » est une précision de recherche, pas le sujet.
                 subject = re.sub(r"\s+s[ée]n[ée]gal$", "", subject, flags=re.I) or subject
                 if language == "en":
+                    if image and photo_page:
+                        return f"Here are more photos for “{subject}”." if subject else "Here are more photos."
                     if image:
                         return f"Here are some photos for “{subject}”." if subject else "Here are some photos."
+                    if photo_page:
+                        return "I couldn't find any other reliable photos for this subject. Try another place, for example Saint-Louis, Lompoul or the Pink Lake."
                     return "I couldn't find a reliable photo for this request. Try naming a specific place, for example Gorée, Saint-Louis or Lompoul."
+                if image and photo_page:
+                    return f"Voici d'autres photos pour « {subject} »." if subject else "Voici d'autres photos."
                 if image:
                     return f"Voici quelques photos pour « {subject} »." if subject else "Voici quelques photos."
+                if photo_page:
+                    return "Je n'ai pas trouvé d'autres photos fiables pour ce sujet. Essaie un autre lieu, par exemple Saint-Louis, Lompoul ou le lac Rose."
                 return "Je n'ai pas trouvé de photo fiable pour cette demande. Essaie en précisant un lieu, par exemple Gorée, Saint-Louis ou Lompoul."
 
             if request.headers.get("X-Teranga-Mode", "").lower() == "json":
                 try:
-                    image = fetch_topic_images(photo_query)
+                    image = photo_gallery()
                     return jsonify({"reply": photo_lead(image), "sources": [], "image": image, "map": None})
                 except Exception as exc:
                     logger.exception("Erreur photo-only /chat")
@@ -144,21 +194,45 @@ def register_chat_route(app, deps):
 
             def generate_photo_only():
                 try:
-                    image = fetch_topic_images(photo_query)
+                    image = photo_gallery()
+                    trace.first_word()
                     yield json.dumps({"d": photo_lead(image)}, ensure_ascii=False) + "\n"
                     if image:
                         yield json.dumps({"img": image}, ensure_ascii=False) + "\n"
+                    trace.ok()
                     yield json.dumps({"done": True}) + "\n"
                 except Exception as exc:
                     logger.exception("Erreur stream photo-only /chat")
+                    trace.status = "erreur"
                     yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
             return Response(stream_with_context(generate_photo_only()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
-        key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None else None
-        cached = answer_cache.get(key) if key else None
+        key = cache_key(payload, request.get_json(silent=True), model=cache_model() if callable(cache_model) else cache_model) if answer_cache is not None and not has_file else None
+        cached = ready or (answer_cache.get(key) if key else None)
+        trace.cache = bool(cached)
+        trace.ready = bool(ready)
         if cached:
             logger.info("chat_cache_hit")
+        elif ai_budget is not None and not ai_budget.take():
+            # Plafond d'appels payants du jour atteint : la base vérifiée répond, sans IA ni recherche web.
+            trace.status = "secours"
+            language = payload.get("language", "fr")
+            reply = knowledge_reply(payload)
+            if not reply:
+                return jsonify({"error": public_error(RuntimeError("plafond"), language)}), 503, {"Retry-After": str(ai_budget.retry_after())}
+            places = places_with_booking(payload.get("message", ""), language)
+            if request.headers.get("X-Teranga-Mode", "").lower() == "json":
+                return jsonify({"reply": reply, "degraded": True, "places": places})
+
+            def generate_capped():
+                first_word()
+                yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
+                if places:
+                    yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
+                yield json.dumps({"degraded": True, "done": True}) + "\n"
+
+            return Response(stream_with_context(generate_capped()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
 
         # La recherche externe n'est déclenchée qu'en cas de cache manquant.
         # En cas d'indisponibilité, le chat conserve son comportement habituel.
@@ -166,17 +240,17 @@ def register_chat_route(app, deps):
             external_research_context = deps.get("external_research_context")
             if callable(external_research_context):
                 try:
-                    research = external_research_context(payload.get("message", ""))
-                    if isinstance(research, dict) and research.get("context"):
-                        payload["instructions"] = (
-                            str(payload.get("instructions", ""))
-                            + "\n\n" + str(research["context"])
-                        )
+                    with trace.stage("recherche"):
+                        # Requête nettoyée : sujet du fil pour un suivi, sans e-mail ni téléphone, longueur bornée.
+                        research = external_research_context(research_query(payload))
+                    # Le contenu web est une donnée non fiable : bloc délimité dans l'entrée, jamais dans les instructions.
+                    if isinstance(research, dict) and attach_external_data(payload, research.get("context")):
                         payload["external_sources"] = research.get("sources", [])
                         payload["use_web"] = False
                         logger.info("external_research_used provider=%s", research.get("provider", "unknown"))
                 except Exception:  # noqa: BLE001 - la recherche externe est facultative
                     logger.warning("external_research_failed")
+        trace.web = bool(payload.get("use_web"))  # outil de recherche web du fournisseur (inclus dans fournisseur_ms)
 
 
         def merged_sources(sources):
@@ -226,11 +300,16 @@ def register_chat_route(app, deps):
                 if cached:
                     reply, sources, image, maps = cached["reply"], cached.get("sources") or [], cached.get("image"), cached.get("map")
                 else:
-                    reply, sources, image, maps = complete_reply(payload)
+                    with trace.stage("fournisseur"):
+                        reply, sources, image, maps = complete_reply(payload)
+                    trace.model = payload.get(PAYLOAD_KEY)
                     sources = merged_sources(sources)
                     # Une réponse coupée (limite de longueur) ne doit pas être resservie à tout le monde.
                     if reply and answer_cache is not None and not payload.get("reply_incomplete"):
                         answer_cache.set(key, reply=reply, sources=sources, image=image, maps=maps)
+                    if reply and payload.get("reply_cut"):
+                        # Arrêtée par la limite de longueur : le dire (après la mise en cache, qui l'a écartée).
+                        reply = with_cut_notice(reply, payload.get("language", "fr"))
                 sources = merged_sources(sources)
                 if not reply:
                     reply = "Je n'ai pas réussi à répondre. Réessaie."
@@ -238,9 +317,11 @@ def register_chat_route(app, deps):
                 return jsonify({"reply": reply, "share": share, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr")), "sources": sources, "image": image, "map": maps, "itinerary_edit": payload.get("trip_edit_proposal"), "ux": payload.get("ux_hints"), "action": payload.get("action_request")})
             except Exception as exc:
                 logger.exception("Erreur JSON /chat")
+                trace.model = payload.get(PAYLOAD_KEY)
                 fallback = fallback_for(payload)
                 if fallback:
                     logger.warning("chat_fallback_used mode=json")
+                    trace.status = "secours"
                     return jsonify({"reply": fallback, "degraded": True, "places": places_with_booking(payload.get("message", ""), payload.get("language", "fr"))})
                 return jsonify({"error": public_error(exc, payload.get("language", "fr"))}), 503, {"Retry-After": "10"}
 
@@ -248,9 +329,11 @@ def register_chat_route(app, deps):
             def generate_cached():
                 reply = cached["reply"]
                 for chunk in replay_chunks(reply):
+                    trace.first_word()
                     yield json.dumps({"d": chunk}, ensure_ascii=False) + "\n"
                 for event in finishing_events(reply, cached.get("sources") or [], cached.get("image"), cached.get("map")):
                     yield json.dumps(event, ensure_ascii=False) + "\n"
+                trace.ok()
                 yield json.dumps({"done": True}) + "\n"
 
             return Response(stream_with_context(generate_cached()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
@@ -260,7 +343,9 @@ def register_chat_route(app, deps):
             model_started_at = time.perf_counter()
             first_output_logged = False
             yielded = False
+            searching_announced = False
             completed = False  # réponse terminée par le modèle (pas coupée, pas de secours)
+            cut = False  # arrêtée par la limite de longueur : la mention « Réponse coupée » est ajoutée
             sources = []
             answer_parts = []
             # Les enrichissements (images, carte) tournent pendant que le modèle écrit.
@@ -270,6 +355,7 @@ def register_chat_route(app, deps):
                 else None
             )
             try:
+                trace.begin("fournisseur")
                 stream = create_response(payload, stream=True)
                 logger.info("chat_model_startup_ms %.2f", (time.perf_counter() - model_started_at) * 1000)
                 for event in stream:
@@ -279,6 +365,11 @@ def register_chat_route(app, deps):
                         failure = field(failed, "error", None)
                         message = field(failure, "message", None) or field(failure, "code", None) or "La réponse IA a échoué."
                         raise RuntimeError(f"OpenAI response.failed: {message}")
+                    if etype.startswith("response.web_search_call") and not yielded and not searching_announced:
+                        # Le modèle cherche vraiment sur le web : la page le dit au lieu de trois points muets
+                        # (jusqu'à 16 s avant le premier mot, journaux Render du 18 octobre 2026).
+                        searching_announced = True
+                        yield json.dumps({"st": "web"}) + "\n"
                     if "annotation" in etype or "web_search" in etype or "output_item" in etype or etype.endswith(".completed"):
                         extra = extract_sources(event)
                         if extra:
@@ -290,6 +381,7 @@ def register_chat_route(app, deps):
                             logger.info("chat_ttfb_ms %.2f", (time.perf_counter() - started_at) * 1000)
                         yielded = True
                         answer_parts.append(delta)
+                        first_word()
                         yield json.dumps({"d": delta}, ensure_ascii=False) + "\n"
                     elif etype == "response.completed":
                         completed = True
@@ -304,7 +396,10 @@ def register_chat_route(app, deps):
                         if text and not yielded:
                             yielded = True
                             answer_parts.append(clean_answer(text))
+                            first_word()
                             yield json.dumps({"d": answer_parts[-1]}, ensure_ascii=False) + "\n"
+                    elif etype == "response.incomplete" and is_cut_by_length(getattr(event, "response", None)):
+                        cut = True
                 if not yielded:
                     if enrichments is not None:
                         # Les enrichissements déjà lancés servent encore : un seul appel texte en plus.
@@ -312,16 +407,25 @@ def register_chat_route(app, deps):
                         reply = clean_answer(getattr(response, "output_text", "") or "")
                         sources = extract_sources(response) or sources
                         image, maps = chat_enrichment_result(enrichments)
-                        if getattr(response, "status", None) == "incomplete":
-                            payload["reply_incomplete"] = True
+                        mark_incomplete(payload, response)
                     else:
                         reply, sources, image, maps = complete_reply(payload)
                     completed = bool(reply) and not payload.get("reply_incomplete")
+                    cut = bool(reply) and bool(payload.get("reply_cut"))
                     # Jamais de bulle vide : la base de connaissances, sinon un message clair.
+                    if not reply:
+                        trace.status = "secours"
                     reply = reply or fallback_for(payload) or "Je n'ai pas réussi à répondre. Réessaie."
+                    if cut:
+                        reply = with_cut_notice(reply, payload.get("language", "fr"))
                     answer_parts.append(reply)
+                    first_word()
                     yield json.dumps({"d": reply}, ensure_ascii=False) + "\n"
                 else:
+                    if cut:
+                        notice = "\n\n" + cut_notice(payload.get("language", "fr"))
+                        answer_parts.append(notice)
+                        yield json.dumps({"d": notice}, ensure_ascii=False) + "\n"
                     if enrichments is not None:
                         image, maps = chat_enrichment_result(enrichments)
                     elif run_chat_enrichments:
@@ -336,19 +440,31 @@ def register_chat_route(app, deps):
                 # Une réponse coupée (limite de longueur) ou de secours ne doit pas être resservie 12 h à tout le monde.
                 if answer_cache is not None and key and completed:
                     answer_cache.set(key, reply=final_reply, sources=sources, image=image, maps=maps)
+                trace.ok()
                 yield json.dumps({"done": True}) + "\n"
             except Exception as exc:
                 logger.exception("Erreur stream /chat")
+                trace.end("fournisseur")
+                trace.model = payload.get(PAYLOAD_KEY)
                 # Rien n'a encore été affiché : répondre avec la base plutôt qu'une erreur.
                 fallback = None if yielded else fallback_for(payload)
                 if fallback:
                     logger.warning("chat_fallback_used mode=stream")
+                    trace.status = "secours"
+                    first_word()
                     yield json.dumps({"d": fallback}, ensure_ascii=False) + "\n"
                     places = places_with_booking(payload.get("message", ""), payload.get("language", "fr"))
                     if places:
                         yield json.dumps({"places": places}, ensure_ascii=False) + "\n"
                     yield json.dumps({"degraded": True, "done": True}) + "\n"
                     return
+                trace.status = "erreur"
                 yield json.dumps({"error": public_error(exc, payload.get("language", "fr"))}, ensure_ascii=False) + "\n"
 
         return Response(stream_with_context(generate()), mimetype="application/x-ndjson", headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"})
+
+    @app.post("/chat")
+    @require_json_post
+    def chat():
+        # Une ligne de journal « latence » par requête (étapes, premier mot, cache) : des nombres, jamais de texte.
+        return LatencyTrace("chat").run(app, chat_body)

@@ -23,9 +23,13 @@ def _broken(*_args, **_kwargs):
 
 class FakeStream:
     def __init__(self, texts, stop_reason="end_turn", citations=()):
-        self.text_stream = iter(texts)
+        # Événements du SDK Anthropic (`for event in stream`) : un `content_block_delta` par morceau de texte.
+        self.events = [SimpleNamespace(type="content_block_delta", delta=SimpleNamespace(type="text_delta", text=t)) for t in texts]
         block = SimpleNamespace(type="text", text="".join(texts), citations=list(citations))
         self.message = SimpleNamespace(stop_reason=stop_reason, content=[block])
+
+    def __iter__(self):
+        return iter(self.events)
 
     def __enter__(self):
         return self
@@ -76,6 +80,17 @@ def test_claude_events_web_sources_pause_and_refusal(monkeypatch):
     # Même signal que l'API Responses d'OpenAI : la route ne met pas une réponse coupée en cache.
     assert truncated[-1].response.status == "incomplete"
     assert events[-1].response.status == "completed"
+
+
+def test_claude_events_announce_a_web_search_without_changing_the_text():
+    stream = FakeStream(["Selon les sources, ", "oui."])
+    search = SimpleNamespace(type="content_block_start", content_block=SimpleNamespace(type="server_tool_use", name="web_search"))
+    other = SimpleNamespace(type="content_block_start", content_block=SimpleNamespace(type="server_tool_use", name="web_fetch"))
+    stream.events = [search, other, *stream.events]
+    events = list(claude_events("Actualité Dakar", web=True, client=FakeClient(stream)))
+    assert [e.type for e in events] == ["response.web_search_call.in_progress", "response.output_text.delta",
+                                        "response.output_text.delta", "response.completed"]
+    assert events[-1].response.output_text == "Selon les sources, oui."
 
 
 def test_primary_switch_needs_key_and_value(monkeypatch):

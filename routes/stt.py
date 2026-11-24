@@ -6,6 +6,8 @@ import os
 
 from flask import jsonify, request
 
+from services.latency import LatencyTrace
+
 
 def audio_filename(raw: bytes, declared: str = "") -> str:
     """Nom de fichier cohérent avec le vrai format de l'enregistrement.
@@ -52,10 +54,10 @@ def register_stt_route(app, deps):
     public_error = deps["public_error"]
     _field = deps["_field"]
     client = deps["client"]
+    ai_budget = deps.get("ai_budget")  # plafond d'appels payants par jour (services/ai_budget.py)
 
-    @app.post("/stt")
-    def stt():
-        """Transcribe a short voice turn for hands-free conversation."""
+    def stt_body(trace):
+        """Transcribe a short voice turn for hands-free conversation (`trace` : durée du fournisseur, services/latency.py)."""
         if not origin_allowed():
             return jsonify({"error": "Origine non autorisée."}), 403
         cookie_token = request.cookies.get(CSRF_COOKIE, "")
@@ -93,6 +95,8 @@ def register_stt_route(app, deps):
         language = str(request.form.get("language", "fr")).lower()[:8]
         if language not in SAFE_LANG:
             language = "fr"
+        if ai_budget is not None and not ai_budget.take():
+            return jsonify({"error": "La dictée vocale a atteint sa limite du jour. Écris ta question."}), 503, {"Retry-After": str(ai_budget.retry_after())}
         try:
             audio_file = io.BytesIO(raw)
             audio_file.name = audio_filename(raw)
@@ -108,11 +112,17 @@ def register_stt_route(app, deps):
             voice_context = sanitize_text(request.form.get("context", ""), 1800).strip()
             base_prompt = transcription_prompt(language) + " Contexte : Sénégal, Dakar, AIBD, Gorée, Rufisque, Thiès, Saint-Louis, Saly, Casamance, FCFA, BCEAO."
             kwargs["prompt"] = base_prompt + (f" Contexte récent de la conversation : {voice_context}" if voice_context else "")
-            result = client.audio.transcriptions.create(**kwargs)
+            trace.model = kwargs["model"]
+            with trace.stage("fournisseur"):
+                result = client.audio.transcriptions.create(**kwargs)
             text = _field(result, "text", "") or ""
             text = sanitize_text(text, MAX_MESSAGE_LENGTH).strip()
             return jsonify({"text": text})
         except Exception as exc:
             app.logger.exception("Erreur /stt")
             return jsonify({"error": public_error(exc)}), 500
-    
+
+    @app.post("/stt")
+    def stt():
+        # Une ligne de journal « latence » par requête : des nombres, jamais le texte transcrit.
+        return LatencyTrace("stt").run(app, stt_body)

@@ -11,9 +11,15 @@ def test_every_place_has_a_page_and_is_in_sitemap():
     client = app.test_client()
     sitemap = client.get("/sitemap.xml").get_data(as_text=True)
     assert "/lieux</loc>" in sitemap
+    from services.seo import PLACE_CANONICAL_PATHS
+
     for place in SENEGAL_KNOWLEDGE["places"]:
         response = client.get(f"/lieux/{place['id']}")
         assert response.status_code == 200, place["id"]
+        if place["id"] in PLACE_CANONICAL_PATHS:
+            # Fiche dont la canonique est une page guide (Gorée → /visiter-goree) : la page guide est au sitemap.
+            assert f"{PLACE_CANONICAL_PATHS[place['id']]}</loc>" in sitemap
+            continue
         assert f"/lieux/{place['id']}</loc>" in sitemap
     index = client.get("/lieux").get_data(as_text=True)
     assert "Île de Gorée" in index and 'href="/lieux/goree"' in index

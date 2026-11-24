@@ -121,6 +121,141 @@ def test_festive_touch_on_independence_day(page, base_url):
     assert page.evaluate("document.body.dataset.fete") == "tabaski"
 
 
+# Les mesures se font sur la mise en page finale : pendant l'animation d'entrée (PR #566), un déplacement en cours
+# donne des tailles comme 43,99999 px au lieu de 44 (CI du 1er novembre 2026). On attend la fin des animations.
+ANIMATIONS_FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+  .every((a) => a.playState === 'finished')"""
+
+JOJ_CARD = """() => {
+  const card = document.getElementById('jojCard'), cta = card.querySelector('.joj-cta'), input = document.getElementById('heroInput');
+  const box = card.getBoundingClientRect();
+  return {href: card.getAttribute('href'), label: card.getAttribute('aria-label') || '', text: card.textContent,
+          day: document.getElementById('jojDay').textContent, bg: getComputedStyle(card).backgroundImage,
+          height: box.height, cta: cta.getBoundingClientRect().height, ctaWidth: cta.getBoundingClientRect().width,
+          scene: document.querySelector('.hero-scene').getBoundingClientRect().height,
+          flag: document.querySelector('.hero-signature').getBoundingClientRect().height,
+          banner: document.getElementById('feteBanner').getBoundingClientRect().height,
+          input: input.getBoundingClientRect().bottom, stage: document.getElementById('stage').getBoundingClientRect().bottom,
+          scrollWidth: document.documentElement.scrollWidth};
+}"""
+
+
+@pytest.mark.parametrize("hour", [11, 21])
+def test_youth_olympic_games_card_leads_to_the_guide(page, base_url, hour):
+    """JOJ Dakar 2026 (31 octobre – 13 novembre). Retour du propriétaire du 1er novembre 2026 sur l'accueil JOJ
+    (« ça fait un peu sombre et vide ») : sur téléphone, une carte de fête (vert du Sénégal, confettis, sans emblème
+    olympique) remplace la scène, le drapeau seul et le petit bandeau. Elle dit quel jour des Jeux on est, nomme les
+    trois sites et mène au guide /joj-dakar-2026 ; zone tactile d'au moins 44 px, de jour comme de nuit."""
+    import datetime
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete") == "joj"
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)
+    card = page.evaluate(JOJ_CARD)
+    assert card["href"] == "/joj-dakar-2026" and "JOJ" in card["label"], card
+    assert "Dakar 2026" in card["text"] and "Diamniadio" in card["text"] and "Saly" in card["text"], card
+    assert card["day"] == "Jour 3 sur 14", card  # 2 novembre : troisième jour des Jeux
+    assert "radial-gradient" in card["bg"] and card["cta"] >= 44, card
+    assert card["scene"] == 0 and card["flag"] == 0 and card["banner"] == 0, card  # plus de drapeau seul ni de bandeau
+    assert card["input"] <= card["stage"], card  # la question reste dans le premier écran
+    assert card["scrollWidth"] <= 390, card  # aucun défilement horizontal
+    page.click("#jojCard")
+    page.wait_for_url("**/joj-dakar-2026")
+    assert page.errors == []
+
+
+@pytest.mark.parametrize("hour", [11, 21])
+@pytest.mark.parametrize("size", [(390, 664), (360, 560)])
+def test_games_card_stays_compact_on_a_low_phone_screen(page, base_url, hour, size):
+    """iPhone avec les barres de Safari (captures du propriétaire du 1er novembre 2026) : la carte JOJ tient sur une
+    ligne (« Dakar 2026 », le jour, une flèche vers le guide) pour garder la question dans le premier écran."""
+    import datetime
+
+    page.set_viewport_size({"width": size[0], "height": size[1]})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, hour, 0))
+    page.goto(base_url + "/")
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)
+    card = page.evaluate(JOJ_CARD)
+    assert card["scene"] == 0 and 44 <= card["height"] <= 80, card
+    assert card["cta"] >= 44 and card["ctaWidth"] >= 44, card
+    assert card["input"] <= card["stage"], card  # la question reste dans le premier écran
+    assert card["scrollWidth"] <= size[0], card
+    assert page.errors == []
+
+
+def test_games_card_speaks_english(page, base_url):
+    import datetime
+
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.clock.install(time=datetime.datetime(2026, 11, 13, 11, 0))
+    page.goto(base_url + "/")
+    page.click("[data-lang='en']")
+    card = page.evaluate(JOJ_CARD)
+    assert card["day"] == "Day 14 of 14" and "Youth Olympic Games" in card["text"], card
+    assert page.errors == []
+
+
+def test_on_a_computer_the_festive_scene_stays_with_the_card(page, base_url):
+    import datetime
+
+    page.set_viewport_size({"width": 1280, "height": 800})
+    page.clock.install(time=datetime.datetime(2026, 11, 2, 21, 0))
+    page.goto(base_url + "/")
+    decor = page.evaluate("""() => {
+      const sky = document.querySelector('.scene-sky');
+      return {bg: getComputedStyle(sky).backgroundImage, title: getComputedStyle(sky, '::before').content,
+              visible: sky.getBoundingClientRect().height > 0};
+    }""")
+    assert decor["visible"] and "radial-gradient" in decor["bg"] and "JOJ 2026" in decor["title"], decor
+    assert page.is_visible("#jojCard")
+    assert page.errors == []
+
+
+def test_no_games_card_after_the_closing_day(page, base_url):
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2026, 11, 14, 11, 0))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete || ''") == ""
+    assert not page.is_visible("#feteBanner") and not page.is_visible("#jojCard")
+
+
+def test_games_card_is_still_there_on_the_last_evening(page, base_url):
+    """13 novembre 23 h 59 : dernier jour des Jeux, inclus (ticket des événements expirés)."""
+    import datetime
+
+    page.clock.install(time=datetime.datetime(2026, 11, 13, 23, 59))
+    page.goto(base_url + "/")
+    assert page.evaluate("document.body.dataset.fete") == "joj"
+    assert page.is_visible("#jojCard") and page.text_content("#jojDay") == "Jour 14 sur 14"
+    assert page.errors == []
+
+
+@pytest.mark.parametrize("timezone", ["Africa/Dakar", "Europe/Paris", "America/New_York"])
+def test_after_the_games_the_card_is_not_even_in_the_page(browser, base_url, timezone):
+    """22 novembre 2026 (jour de l'audit) : ni carte, ni texte des Jeux dans la page, pour un visiteur de Dakar, de
+    la diaspora en France ou aux États-Unis. Le guide reste joignable par son adresse."""
+    import datetime
+
+    context = browser.new_context(locale="fr-FR", timezone_id=timezone, service_workers="block",
+                                  viewport={"width": 390, "height": 844})
+    context.route(lambda url: not url.startswith(base_url), lambda route: route.abort())
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda exc: errors.append(str(exc)))
+    page.clock.install(time=datetime.datetime(2026, 11, 22, 10, 0))
+    page.goto(base_url + "/")
+    page.locator("#heroInput").wait_for(timeout=5000)
+    assert page.evaluate("document.body.dataset.fete || ''") == ""
+    assert page.locator("#jojCard").count() == 0
+    texte = page.evaluate("document.body.innerText")
+    assert "Jeux Olympiques" not in texte and "JOJ" not in texte, texte[:300]
+    assert errors == []
+    context.close()
+
+
 @pytest.mark.parametrize("fete,symbol,hour", [("korite", "☪", 11), ("tabaski", "🐑", 21), ("magal", "🕌", 11)])
 def test_religious_festivals_have_their_own_decor_day_and_night(page, base_url, fete, symbol, hour):
     import datetime
@@ -457,7 +592,9 @@ def test_mobile_home_suggestion_chip_asks_the_question(page, base_url):
     page.set_viewport_size({"width": 390, "height": 844})
     page.route(f"{base_url}/chat", lambda r: r.fulfill(body=stream({"d": "Réponse à la suggestion."}), content_type="application/x-ndjson"))
     page.goto(base_url + "/")
+    # Accueil V5 : le thème ouvre ses questions fréquentes, la première est la question qu'il posait avant.
     page.locator("#heroChips button").first.click()
+    page.locator("#themeQsList button").first.click()
     page.get_by_text("Réponse à la suggestion.").wait_for(timeout=5000)
     assert page.errors == []
 
@@ -496,6 +633,54 @@ def test_shared_link_restores_long_trip_with_unknown_region(page, base_url):
     assert "Étape 20" in page.locator("#result").inner_text()
     assert page.errors == []
 
+def _shared_trip_url(base_url):
+    import base64
+
+    days = [{"day": n, "title": f"Étape {n}", "region": "Dakar", "morning": "Gorée",
+             "afternoon": "Plage", "evening": "Dîner", "transport": "Taxi"} for n in range(1, 4)]
+    payload = {"arrival": "2026-11-01", "departure": "2026-11-04", "adults": 2, "children": 0,
+               "edited_plan": {"summary": "Trois jours à Dakar", "days": days, "practical_notes": []}}
+    encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
+    return f"{base_url}/trip-planner#trip={encoded}"
+
+
+def test_trip_pdf_button_prints_only_the_itinerary(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    # Sans le « ; true » final, Playwright appellerait la fonction renvoyée par l'expression.
+    page.evaluate("window.__printed = 0; window.print = () => { window.__printed += 1; }; true")
+    page.click("#trip-pdf")
+    assert page.evaluate("window.__printed") == 1
+    page.emulate_media(media="print")
+    assert page.is_visible(".day-card")
+    assert page.is_visible(".print-only")
+    for hidden in ("#planner", "#trip-pdf", "#copy", "#editor-actions", ".day-edit", "header", "footer"):
+        assert not page.is_visible(hidden), hidden
+    page.emulate_media(media="screen")
+    assert not page.is_visible(".print-only")
+    assert page.errors == []
+
+
+def test_trip_share_button_uses_the_phone_share_sheet(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    page.evaluate("window.__shared = null; navigator.share = async d => { window.__shared = d; }; true")
+    page.click("#copy")
+    page.wait_for_function("window.__shared !== null")
+    assert "#trip=" in page.evaluate("window.__shared.url")
+    assert page.errors == []
+
+
+def test_trip_share_button_copies_without_share_sheet(page, base_url):
+    page.goto(_shared_trip_url(base_url))
+    page.wait_for_selector(".day-card")
+    page.evaluate("delete Navigator.prototype.share")
+    page.click("#copy")
+    page.locator("#copy", has_text="Lien copié").wait_for(timeout=3000)
+    assert "#trip=" in page.evaluate("navigator.clipboard.readText()")
+    assert page.errors == []
+
+
 @pytest.mark.parametrize(
     "audience,expected_suggestion",
     [
@@ -522,3 +707,15 @@ def test_home_audience_profiles_respond_and_persist(page, base_url, audience, ex
     page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
     assert page.errors == []
 
+
+
+def test_trip_date_error_shows_a_plain_apostrophe(page, base_url):
+    """Départ avant l'arrivée : « d'arrivée » s'affiche tel quel, pas « d&#x27;arrivée »."""
+    page.goto(base_url + "/trip-planner")
+    page.fill("input[name=arrival]", "2026-11-10")
+    page.fill("input[name=departure]", "2026-11-05")
+    page.click("[data-next]")
+    text = page.locator("#status").inner_text()
+    assert "d'arrivée" in text, text
+    assert "&" not in text, text
+    assert page.errors == []

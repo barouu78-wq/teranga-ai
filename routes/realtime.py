@@ -49,9 +49,9 @@ def register_realtime_route(app, deps):
         language = str(request.form.get("language", "fr")).lower()[:8]
         if language not in SAFE_LANG:
             language = "fr"
-        audience = str(request.form.get("audience", "resident")).lower()[:16]
-        if audience not in {"tourist", "resident", "diaspora", "merchant"}:
-            audience = "resident"
+        audience = str(request.form.get("audience", "general")).lower()[:16]
+        if audience not in {"general", "tourist", "resident", "diaspora", "merchant"}:
+            audience = "general"
         context = sanitize_text(request.form.get("context", ""), 3000).strip()
         if not sdp or len(sdp) > 200_000:
             return jsonify({"error": "Session vocale invalide."}), 400
@@ -65,6 +65,7 @@ def register_realtime_route(app, deps):
             "ff": "pulaar",
         }[language]
         audience_name = {
+            "general": "interlocuteur qui peut être habitant, membre de la diaspora, commerçant ou voyageur",
             "tourist": "voyageur",
             "resident": "résident",
             "diaspora": "membre de la diaspora",

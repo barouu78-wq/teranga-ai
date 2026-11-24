@@ -69,6 +69,16 @@ def page(browser, base_url):
     )
     context.route(f"{base_url}/exchange-rates*", lambda route: route.fulfill(json={"rates": {"EUR": 655.957}}))
     pg = context.new_page()
+    # E2E_CPU_THROTTLE=12 : navigateur ralenti 12 fois (CDP), pour vérifier qu'aucun test ne dépend de la
+    # vitesse de la machine. Sans la variable, le navigateur tourne à sa vitesse normale.
+    pg.cdp = None
+    try:
+        rate = float(os.getenv("E2E_CPU_THROTTLE") or 1)
+    except ValueError:
+        rate = 1
+    if rate > 1:
+        pg.cdp = context.new_cdp_session(pg)  # gardé : la session ne doit pas être libérée avant le test
+        pg.cdp.send("Emulation.setCPUThrottlingRate", {"rate": rate})
     pg.errors = []
     pg.on("pageerror", lambda exc: pg.errors.append(str(exc)))
     yield pg

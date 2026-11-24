@@ -121,6 +121,20 @@ def test_exchange_rates_say_so_when_the_bceao_page_could_not_be_read(monkeypatch
     assert data["source"] == "BCEAO" and data["live"] is True
 
 
+def test_exchange_rates_give_the_time_of_the_last_successful_read_not_the_request_time(monkeypatch):
+    """Relecture Codex (#666) : l'accueil affiche « vérifié <checked_at> » ; c'est l'heure de la dernière lecture
+    réussie de la BCEAO, jamais l'heure de la requête, et rien si la BCEAO n'a jamais été lue."""
+    client = app_module.app.test_client()
+    lecture = time.mktime((2026, 11, 20, 9, 0, 0, 0, 0, 0)) - time.timezone
+    monkeypatch.setattr(app_module, "_fx_cache", {"at": time.time(), "date": "20 novembre 2026",
+                                                  "rates": {"EUR": 655.957}, "verifie_at": lecture})
+    data = client.get("/exchange-rates", base_url=B, environ_base={"REMOTE_ADDR": "203.0.113.166"}).get_json()
+    assert data["checked_at"] == "2026-11-20T09:00:00Z"
+    monkeypatch.setattr(app_module, "_fx_cache", {"at": time.time(), "date": "", "rates": {"EUR": 655.957}})
+    data = client.get("/exchange-rates", base_url=B, environ_base={"REMOTE_ADDR": "203.0.113.167"}).get_json()
+    assert data["checked_at"] is None
+
+
 def _fake_forecast(monkeypatch):
     calls = []
 

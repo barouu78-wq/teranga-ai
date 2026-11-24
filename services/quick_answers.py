@@ -1,0 +1,771 @@
+"""Réponses prêtes aux questions fréquentes, servies sans appeler le modèle.
+
+Une question courte qui ne demande que les numéros d'urgence (« Numéro de la police ? ») reçoit tout
+de suite les numéros vérifiés de la page /urgences (routes/emergency.py, source : ambassade de France au
+Sénégal, relevés le 6 octobre 2026). Seuls 17, 18 et 1515 sont servis : la gendarmerie et SOS Médecins
+sont à revérifier.
+
+Une question courte qui ne demande qu'une conversion euro ↔ FCFA (« 100 euros en FCFA ? ») reçoit le calcul de
+services/calculators.py, à la parité fixe 1 € = 655,957 FCFA (décision du propriétaire du 19 octobre 2026 : Teranga
+répond seul à ce qu'il sait déjà calculer). Le dollar et la livre (taux variable) et l'anglais vont au modèle.
+
+Une question qui donne la somme envoyée en euros et la somme reçue en FCFA (« J'ai envoyé 200 €, ma famille a reçu
+128 000 FCFA ») reçoit l'écart avec la parité fixe, en FCFA, en euros et en pourcentage : ce que le change a coûté, en
+plus des frais affichés. C'est un calcul, aucun taux ni frais n'est inventé. Le sens inverse (FCFA envoyés) va au modèle.
+
+Une question courte sur l'heure à Dakar ou le décalage avec Paris reçoit l'heure du moment à Dakar (UTC+0 toute l'année,
+repère vérifié) et l'écart actuel avec Paris (1 h ou 2 h, selon l'heure d'été française de la base des fuseaux). Une
+question sur l'indicatif du Sénégal reçoit +221 (repère vérifié). « À quelle heure part le ferry ? » va au modèle.
+
+Une question courte qui ne demande que la date d'une fête (« C'est quand la Tabaski ? ») reçoit la date du calendrier
+vérifié (services/events.py), avec son statut : une fête lunaire non confirmée reste « estimée ».
+
+Une question courte qui demande ce qu'est un plat, un en-cas, un dessert ou une boisson de la base (« C'est quoi le
+yassa ? ») reçoit sa description, telle quelle, de data/senegal_knowledge.json.
+
+Une question courte qui demande ce qu'est un lieu de la base (« Que voir à Saint-Louis ? ») reçoit sa fiche, et une
+question sur une des 14 régions (« Que faire à Dakar ? », « C'est quoi la région de Thiès ? ») son dossier, tels quels.
+Une question courte sur Woyofal (« Pourquoi trois codes ? », « Comment acheter du crédit Woyofal ? »), les prises
+électriques (« Quel voltage au Sénégal ? »), la carte SIM (« Quel opérateur ? »), la meilleure saison (« Quand partir au
+Sénégal ? ») ou les langues (« Quelle langue parle-t-on ? ») reçoit le repère vérifié de services/practical_facts.py,
+tel quel.
+Toute autre formulation (une situation, une date, un trajet, une précision) va au modèle.
+"""
+
+from __future__ import annotations
+
+import datetime as _dt
+import re
+from decimal import Decimal
+from functools import lru_cache
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from typing import Any
+
+from routes.emergency import ADVICE, EMBASSY_LINKS, EMERGENCY_NUMBERS
+from services.answer_cache import _has_earlier_turns
+from services.calculators import (
+    arrondir,
+    calculation_block,
+    eur_vers_fcfa,
+    fcfa_vers_eur,
+    format_montant,
+    format_nombre,
+    format_pourcent,
+    montants_du_texte,
+)
+from services.events import _ALIASES, TYPE_LABELS, _asked, french_date, upcoming_events
+from services.fallback_answer import _place_text
+from services.places import mentioned_places
+from services.practical_facts import TOPICS as _PRACTICAL_TOPICS
+from services.senegal_knowledge import load_senegal_knowledge
+from services.seo import region_slug
+from services.text import fold_text
+
+MAX_CHARS = 80
+_NUMBER_WORDS = {"numero", "numeros", "num", "tel", "telephone", "appeler", "number", "numbers", "call"}
+_SERVICE_WORDS = {"urgence", "urgences", "police", "pompier", "pompiers", "samu", "secours",
+                  "emergency", "emergencies", "ambulance"}
+# Mots qui ne changent pas la demande. Un mot hors de cette liste (un lieu précis, une situation) : le modèle répond.
+_FILLER_WORDS = {
+    "quel", "quels", "quelle", "quelles", "est", "sont", "c", "ce", "le", "la", "les", "l", "de", "d", "du", "des",
+    "au", "a", "en", "pour", "qui", "cas", "s", "il", "te", "vous", "plait", "stp", "svp", "bonjour", "merci",
+    "senegal", "dakar", "what", "is", "are", "the", "in", "for", "who", "to", "please", "hi", "hello",
+    "fire", "brigade", "department", "service", "services", "medical", "medicale",
+}
+_ALLOWED = _NUMBER_WORDS | _SERVICE_WORDS | _FILLER_WORDS
+_LABELS_EN = {"17": "Police", "18": "Fire brigade", "1515": "SAMU (medical emergency)"}
+_SOURCES = [{"title": "Ambassade de France au Sénégal", "url": EMBASSY_LINKS[0][1]}]
+
+
+def _asks_emergency_numbers(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    return (
+        bool(words)
+        and set(words) <= _ALLOWED
+        and bool(_SERVICE_WORDS.intersection(words))
+        and bool(_NUMBER_WORDS.intersection(words))
+    )
+
+
+def _emergency_reply(language: str) -> str:
+    national = [entry for entry in EMERGENCY_NUMBERS if entry[0] in _LABELS_EN]
+    if language == "en":
+        lines = ["Emergency numbers in Senegal, free from any phone, even without credit:"]
+        lines += [f"- {_LABELS_EN[shown]}: {shown}" for shown, _, _, _ in national]
+        lines += ["", "Give the exact place first (neighbourhood, landmark, hotel name), then what is happening.",
+                  "All useful numbers, readable offline: teranga-ai.fr/urgences"]
+    else:
+        lines = ["Numéros d'urgence au Sénégal, gratuits depuis tous les téléphones, même sans crédit :"]
+        lines += [f"- {service} : {shown}" for shown, _, service, _ in national]
+        lines += ["", ADVICE[1], "Tous les numéros utiles, lisibles hors connexion : teranga-ai.fr/urgences"]
+    return "\n".join(lines)
+
+
+# Conversion euro ↔ FCFA : une devise à parité fixe, des nombres et des mots qui ne changent pas la demande.
+_FIXED_CURRENCY_WORDS = {"euro", "euros", "eur", "fcfa", "cfa", "xof", "franc", "francs"}
+_CONVERSION_WORDS = _FIXED_CURRENCY_WORDS | {
+    "convertir", "convertis", "convertit", "convertissez", "conversion", "combien", "font", "fait", "vaut", "valent",
+    "egal", "egale", "egalent", "donne", "donnent", "mille", "million", "millions", "un", "une", "ca",
+    "f",  # « 10 000 F CFA » : le F du franc CFA écrit à part
+} | _FILLER_WORDS
+# Un opérateur de calcul n'est pas un mot : sans ce garde-fou, « 100 euros en FCFA * 2 » perdait son « * 2 ».
+_OPERATORS = re.compile(r"[*/+×÷%^]|\d\s*-\s*\d|\s-\s")
+
+
+def _conversion_line(message: str) -> str | None:
+    """La ligne du calcul vérifié (« 100 € = 65 595,70 FCFA (…), parité fixe : … »), ou None."""
+    if len(message) > MAX_CHARS or _OPERATORS.search(message):
+        return None
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    if not any(word.isdigit() for word in words) or not _FIXED_CURRENCY_WORDS.intersection(words):
+        return None
+    if any(not word.isdigit() and word not in _CONVERSION_WORDS for word in words):
+        return None
+    lines = [line[2:] for line in calculation_block(message).splitlines() if line.startswith("- ")]
+    # Une seule conversion, à la parité fixe : sinon (plusieurs montants, autre calcul), le modèle répond.
+    if len(lines) != 1 or "parité fixe : 1 € = 655,957 FCFA" not in lines[0]:
+        return None
+    return lines[0]
+
+
+def _conversion_reply(line: str) -> str:
+    return "\n".join([
+        line,
+        "Cette parité entre l'euro et le franc CFA est fixe : elle ne change pas d'un jour à l'autre.",
+        "Pour un transfert ou un change, comparez le montant reçu, frais compris : tout écart entre le taux annoncé et "
+        "cette parité est un coût (marge ou commission de change), en plus des frais affichés.",
+        "Convertisseur (euro, dollar, livre) : page d'accueil de teranga-ai.fr",
+    ])
+
+
+# Date d'une fête : un mot qui demande « quand », le nom de la fête et des mots qui ne changent pas la demande.
+# Écart d'un transfert euro → FCFA. Le texte est déjà sans accents (montants_du_texte).
+_TRANSFER_MAX_CHARS = 160
+_SENT = re.compile(r"\b(?:envoy|envoi|transfer|vire|verse)\w*")
+_RECEIVED = re.compile(r"\b(?:recu|recue|recus|recues|recoit|recoivent|recevoir|touche|touchee|touches|touchees|"
+                       r"arrive|arrivee|arrives|arrivees|obtenu|obtenue)\b")
+
+
+def _transfer_amounts(message: str) -> tuple[Decimal, Decimal] | None:
+    """(euros envoyés, FCFA reçus) si la question donne exactement ces deux montants, sinon None."""
+    if len(message) > _TRANSFER_MAX_CHARS:
+        return None
+    texte, montants = montants_du_texte(message)
+    euros = [m for m in montants if m.devise == "EUR"]
+    fcfa = [m for m in montants if m.devise == "XOF"]
+    if len(montants) != 2 or len(euros) != 1 or len(fcfa) != 1:
+        return None
+    euro, recu = euros[0], fcfa[0]
+    if not euro.valeur or recu.valeur is None:
+        return None
+    sent = [m.start() for m in _SENT.finditer(texte)]
+    received = [m.start() for m in _RECEIVED.finditer(texte)]
+    if not sent or not received:
+        return None
+
+    def distance(montant, positions):
+        return min(abs(position - montant.debut) for position in positions)
+
+    # Chaque montant va avec le verbe le plus proche : les euros envoyés, les FCFA reçus. Sinon (FCFA envoyés,
+    # euros reçus), c'est l'autre sens : le modèle répond.
+    if distance(euro, sent) > distance(euro, received) or distance(recu, received) > distance(recu, sent):
+        return None
+    # Bien plus que la parité : montants mal lus ou autre situation, le modèle répond.
+    if recu.valeur > eur_vers_fcfa(euro.valeur) * Decimal("1.05"):
+        return None
+    return euro.valeur, recu.valeur
+
+
+def _transfer_reply(euros: Decimal, recu: Decimal) -> str:
+    attendu = eur_vers_fcfa(euros)
+    lines = [f"Au taux officiel (parité fixe 1 € = 655,957 FCFA), {format_montant(euros, 'EUR')} = "
+             f"{format_nombre(attendu, 0)} FCFA."]
+    ecart = arrondir(attendu - recu, 0)
+    if ecart == 0:
+        return "\n".join(lines + [
+            f"Montant reçu : {format_montant(recu, 'XOF')}. Il correspond à la parité : le change ne vous a rien coûté.",
+            "Le coût du transfert se limite alors aux frais payés à l'envoi.",
+        ])
+    if ecart < 0:  # reçu au-dessus de la parité (jusqu'à 5 %) : on le dit tel quel
+        return "\n".join(lines + [
+            f"Montant reçu : {format_montant(recu, 'XOF')}, soit {format_nombre(-ecart)} FCFA de plus que la valeur à "
+            "la parité : le change ne vous a rien coûté.",
+            "Le coût du transfert se limite alors aux frais payés à l'envoi.",
+        ])
+    perte = euros - fcfa_vers_eur(recu)
+    return "\n".join(lines + [
+        f"Montant reçu : {format_montant(recu, 'XOF')}, soit {format_nombre(ecart)} FCFA de moins "
+        f"({format_montant(perte, 'EUR')}, {format_pourcent(perte / euros * 100)} de la somme envoyée).",
+        "Cet écart est un coût du change (marge ou commission), en plus des frais payés à l'envoi.",
+        "Pour comparer deux services : regardez le montant reçu en FCFA pour la même somme envoyée, frais compris.",
+    ])
+
+
+# Heure de Dakar et décalage avec Paris (sujet « heure » de practical_facts : UTC+0 toute l'année, sans changement
+# d'heure). L'heure du moment et l'heure d'été française viennent de la base des fuseaux (zoneinfo + tzdata).
+_TIME_WORDS = {"heure", "heures", "decalage", "horaire", "fuseau"}
+_TIME_ALLOWED = _TIME_WORDS | _FILLER_WORDS | {
+    "paris", "france", "entre", "et", "avec", "maintenant", "actuellement", "moment", "y", "t", "fait", "qu", "on",
+}
+
+
+def _now_utc() -> _dt.datetime:
+    return _dt.datetime.now(_dt.timezone.utc)
+
+
+def _asked_time(message: str) -> bool:
+    """« Quelle heure est-il à Dakar ? », « Décalage horaire Sénégal ? » ; pas « À quelle heure part le ferry ? »."""
+    if len(message) > MAX_CHARS:
+        return False
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    if not words or any(word not in _TIME_ALLOWED for word in words) or not _TIME_WORDS.intersection(words):
+        return False
+    return bool({"decalage", "fuseau", "dakar", "senegal"}.intersection(words))
+
+
+def _time_reply(now: _dt.datetime) -> str | None:
+    try:
+        dakar = now.astimezone(ZoneInfo("Africa/Dakar"))
+        paris = now.astimezone(ZoneInfo("Europe/Paris"))
+    except ZoneInfoNotFoundError:
+        return None  # base des fuseaux absente : le modèle répond avec le repère vérifié
+    ecart = round((paris.utcoffset() - dakar.utcoffset()).total_seconds() / 3600)
+    if dakar.utcoffset() != _dt.timedelta(0) or ecart not in (1, 2):
+        return None
+    saison = "heure d'été" if ecart == 2 else "heure d'hiver"
+    return "\n".join([
+        f"À Dakar, il est {dakar.hour} h {dakar.minute:02d} (heure du Sénégal, UTC+0).",
+        f"En ce moment, il y a {ecart} h de moins qu'à Paris ({saison} en France).",
+        "Le Sénégal ne change jamais d'heure : 1 h de moins que Paris en hiver, 2 h de moins en été.",
+    ])
+
+
+# Indicatif téléphonique (sujet « sim » de practical_facts : « Indicatif : +221 »).
+_PHONE_CODE_ALLOWED = _FILLER_WORDS | {"indicatif", "telephonique", "telephone", "international", "pays"}
+_PHONE_CODE_REPLY = "L'indicatif téléphonique du Sénégal est +221.\nDepuis l'étranger, composez +221 puis le numéro."
+
+
+def _asked_phone_code(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    words = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    return ("indicatif" in words and bool({"senegal", "dakar"}.intersection(words))
+            and all(word in _PHONE_CODE_ALLOWED for word in words))
+
+
+_WHEN_WORDS = {"quand", "date"}
+_HOLIDAY_WORDS = {word for names in _ALIASES.values() for name in names for word in name.split()} | {
+    "fete", "festival", "international", "grand", "saint", "louis", "touba",
+}
+_DATE_WORDS = _WHEN_WORDS | _HOLIDAY_WORDS | _FILLER_WORDS | {
+    "prochain", "prochaine", "tombe", "sera", "cette", "annee", "que",
+}
+
+
+def _today() -> _dt.date:
+    return _dt.date.today()
+
+
+def _asked_holiday(message: str) -> dict | None:
+    """La prochaine occurrence de la seule fête dont la question demande la date, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    folded = fold_text(message).lower()
+    words = re.findall(r"[a-z0-9]+", folded)
+    if not _WHEN_WORDS.intersection(words):
+        return None
+    years = {int(word) for word in words if word.isdigit() and len(word) == 4}
+    if any(word not in _DATE_WORDS and not (word.isdigit() and len(word) == 4) for word in words):
+        return None
+    # « 4 avril » (Indépendance) est le seul nom de fête avec un nombre : déjà couvert par « independance ».
+    named = {}
+    for event in upcoming_events(_today()):
+        if _asked(event, folded):
+            named.setdefault(event["name"], event)
+    if len(named) != 1:
+        return None
+    (event,) = named.values()
+    if years and years != {event["start"].year}:
+        return None
+    return event
+
+
+def _holiday_reply(event: dict) -> str:
+    when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
+    days = event["days_left"]
+    soon = "aujourd'hui" if days <= 0 else ("demain" if days == 1 else f"dans {days} jours")
+    if event["end"] and days == 0:
+        soon = "commence aujourd'hui"
+    elif event["end"] and days < 0:  # sur plusieurs jours, déjà commencé (les JOJ) : pas « aujourd'hui » seul
+        soon = "en cours, dernier jour aujourd'hui" if event["end"] == _today() else "en cours"
+    lines = [f"{event['name']} : {when} ({soon})."]
+    if event["place"] != "Tout le pays":
+        lines.append(f"Lieu : {event['place']}.")
+    if event["confirmed"]:
+        lines.append("Date confirmée.")
+    else:
+        lines.append("Date estimée : les fêtes musulmanes suivent le calendrier lunaire, et la date exacte est fixée "
+                     "quelques jours avant, à l'observation du croissant de lune.")
+    lines += [event["tips"], "Toutes les fêtes de l'année : teranga-ai.fr/calendrier-fetes-senegal"]
+    return "\n".join(lines)
+
+
+# « Quels sont les jours fériés ? » (V5) : les prochaines dates du calendrier vérifié, avec son étiquette (jour férié,
+# fête nationale, fête religieuse) et « date estimée » pour une fête lunaire non confirmée. Rien n'est ajouté au
+# calendrier. Festivals et sport ne sont pas fériés. Sans date précise ni année : « demain », « le 4 avril » ou
+# « 2025 » vont au modèle (tests/test_reponse_seule_jours_feries.py).
+_FERIE_WORDS = {"ferie", "feries", "feriee", "feriees"}
+_HOLIDAYS_ALLOWED = _FERIE_WORDS | {
+    "jour", "jours", "fete", "fetes", "calendrier", "prochain", "prochains", "prochaine", "prochaines", "liste",
+    "officiels", "y", "t", "on",
+}
+_HOLIDAY_KINDS = ("holiday", "national", "religious")
+_HOLIDAY_LIST_SIZE = 6
+
+
+def _asked_holidays(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    asked = words & _FERIE_WORDS or ("fetes" in words and words & {"prochaines", "calendrier", "liste"})
+    return bool(asked) and words <= _HOLIDAYS_ALLOWED | _FILLER_WORDS
+
+
+def _holidays_reply() -> str | None:
+    events = [e for e in upcoming_events(_today()) if e["kind"] in _HOLIDAY_KINDS][:_HOLIDAY_LIST_SIZE]
+    if not events:
+        return None  # après la dernière date du calendrier : le modèle répond
+    lines = ["Prochaines fêtes et jours fériés au Sénégal :"]
+    for event in events:
+        label = TYPE_LABELS[event["kind"]].lower() + ("" if event["confirmed"] else ", date estimée")
+        lines.append(f"- {event['name']} : {french_date(event['start'])} ({label})")
+    if not all(event["confirmed"] for event in events):
+        lines.append("Les fêtes musulmanes suivent le calendrier lunaire : leur date exacte est fixée quelques jours "
+                     "avant, à l'observation du croissant de lune.")
+    lines.append("Toutes les fêtes de l'année : teranga-ai.fr/calendrier-fetes-senegal")
+    return "\n".join(lines)
+
+
+# Plat de la base : un mot qui demande « c'est quoi », le nom du plat et des mots qui ne changent pas la demande.
+_WHAT_WORDS = {"quoi", "qu", "definition", "signifie", "explique"}
+# Un ingrédient seul n'est pas le plat : « C'est quoi le gingembre ? » ne parle pas forcément du jus.
+_INGREDIENT_ALIASES = {"gingembre", "hibiscus"}
+
+
+def _folded(text: object) -> str:
+    return fold_text(str(text or "")).lower().strip()
+
+
+@lru_cache(maxsize=1)
+def _dish_index() -> tuple[tuple[tuple[re.Pattern, dict], ...], frozenset]:
+    """(motif du nom, plat) pour chaque plat décrit dans la base, et les mots de leurs noms ; chargés une fois."""
+    entries, name_words = [], set()
+    for dish in load_senegal_knowledge().get("dishes", []):
+        if not isinstance(dish, dict) or not dish.get("name") or not dish.get("text"):
+            continue
+        names = {_folded(name) for name in [dish["name"], *(dish.get("aliases") or [])]} - _INGREDIENT_ALIASES - {""}
+        for name in names:
+            name_words.update(re.findall(r"[a-z0-9]+", name))
+        pattern = re.compile(r"(?<![a-z0-9])(?:" + "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+                             + r")(?![a-z0-9])")
+        entries.append((pattern, dish))
+    return tuple(entries), frozenset(name_words)
+
+
+def _asked_dish(message: str) -> dict | None:
+    """Le seul plat de la base dont la question demande ce qu'il est, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    folded = _folded(message)
+    words = re.findall(r"[a-z0-9]+", folded)
+    if not _WHAT_WORDS.intersection(words):
+        return None
+    entries, name_words = _dish_index()
+    allowed = _WHAT_WORDS | name_words | _FILLER_WORDS | {"que", "moi", "un", "une", "ca", "veut", "dire"}
+    if any(word not in allowed for word in words):
+        return None
+    found = [dish for pattern, dish in entries if pattern.search(folded)]
+    return found[0] if len(found) == 1 else None
+
+
+def _dish_reply(dish: dict) -> str:
+    lines = [f"{dish['name']} — {dish.get('kind') or 'spécialité'}", dish["text"]]
+    if dish.get("where"):
+        lines.append(f"Où : {dish['where']}.")
+    lines.append("Toutes les spécialités : teranga-ai.fr/specialites-senegal")
+    return "\n".join(lines)
+
+
+# Lieu de la base (Teranga plus indépendant, choix du propriétaire du 31 octobre 2026) : « C'est quoi le Lac Rose ? »,
+# « Que voir à Saint-Louis ? », « Parle-moi de Gorée ». Seule la demande de ce qu'est un lieu est servie, avec les textes
+# de sa fiche tels quels ; transport, prix, horaires, hébergement, dates et itinéraires restent au modèle (aucun de ces
+# mots n'est accepté). Un seul lieu reconnu, sinon le modèle répond.
+_PLACE_ASK = re.compile(
+    r"(?<![a-z])(?:c est quoi|qu est ce que|parle moi|parlez moi|presente moi|presentez moi|raconte moi|racontez moi|"
+    r"histoire|que voir|quoi voir|que visiter|que faire|quoi faire|visiter|decouvrir)(?![a-z])"
+)
+_PLACE_WORDS = _FILLER_WORDS | {
+    "quoi", "qu", "que", "parle", "parlez", "presente", "presentez", "raconte", "racontez", "moi", "histoire",
+    "voir", "visiter", "faire", "decouvrir", "un", "une", "sur", "aux", "ile",
+}
+
+
+def _place_name_words(place: dict) -> set:
+    """Mots du nom et des alias d'un lieu (« lac », « rose », « retba »…)."""
+    words = set()
+    for name in [*str(place.get("name", "")).split("/"), *(place.get("aliases") or [])]:
+        words.update(re.findall(r"[a-z0-9]+", _folded(name)))
+    return words
+
+
+def _asked_place(message: str) -> dict | None:
+    """Le seul lieu de la base dont la question demande ce qu'il est, ou None.
+
+    Chaque mot doit être une demande (« c'est quoi », « que voir »…), un mot de liaison ou un mot du nom de CE lieu :
+    « Que visiter à Thiès en famille ? » reste au modèle, qui sait adapter la réponse."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = re.findall(r"[a-z0-9]+", _folded(message))
+    if not words or not _PLACE_ASK.search(" ".join(words)):
+        return None
+    places = load_senegal_knowledge().get("places", [])
+    found = mentioned_places(message, places, limit=2)
+    if len(found) != 1:
+        return None
+    place = next((p for p in places if isinstance(p, dict) and p.get("id") == found[0]["id"]), None)
+    if place is None or any(word not in _PLACE_WORDS and word not in _place_name_words(place) for word in words):
+        return None
+    return place
+
+
+def _place_reply(place: dict) -> str:
+    return "\n".join([
+        _place_text(place),
+        "Horaires et tarifs : à vérifier avant de partir.",
+        f"La fiche du lieu, avec photos et carte : teranga-ai.fr/lieux/{place['id']}",
+    ])
+
+
+# Région de la base (V4, étape 2, Go du propriétaire du 31 octobre 2026) : « Que faire à Dakar ? », « C'est quoi la
+# région de Thiès ? ». Mêmes demandes que pour un lieu, sauf l'histoire : le dossier d'une région n'a pas de texte
+# d'histoire. Une ville homonyme (« Que voir à Thiès ? ») garde la fiche du lieu, servie avant.
+_REGION_ASK = re.compile(
+    r"(?<![a-z])(?:c est quoi|qu est ce que|parle moi|parlez moi|presente moi|presentez moi|"
+    r"que voir|quoi voir|que visiter|que faire|quoi faire|visiter|decouvrir)(?![a-z])"
+)
+_REGION_WORDS = (_PLACE_WORDS - {"histoire", "raconte", "racontez", "ile"}) | {"region", "dans"}
+
+
+@lru_cache(maxsize=1)
+def _region_index() -> tuple[tuple[re.Pattern, dict], ...]:
+    """(motif du nom, région) pour chaque région dont le dossier a tous les textes de la réponse."""
+    entries = []
+    for region in load_senegal_knowledge().get("regions", []):
+        dossier = region.get("regional_dossier") if isinstance(region, dict) else None
+        if not dossier or not all(dossier.get(key) for key in ("identity", "geography")):
+            continue
+        name = " ".join(re.findall(r"[a-z0-9]+", _folded(region.get("name"))))
+        if name and region.get("id") and region.get("highlights"):
+            entries.append((re.compile(rf"(?<![a-z0-9]){re.escape(name)}(?![a-z0-9])"), region))
+    return tuple(entries)
+
+
+def _asked_region(message: str) -> dict | None:
+    """La seule région de la base dont la question demande ce qu'elle est, ou None."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = re.findall(r"[a-z0-9]+", _folded(message))
+    text = " ".join(words)
+    if not words or not _REGION_ASK.search(text):
+        return None
+    found = [region for pattern, region in _region_index() if pattern.search(text)]
+    if len(found) != 1:
+        return None
+    name_words = set(re.findall(r"[a-z0-9]+", _folded(found[0]["name"])))
+    return None if any(word not in _REGION_WORDS and word not in name_words for word in words) else found[0]
+
+
+def _region_reply(region: dict) -> str:
+    dossier = region["regional_dossier"]
+    title = f"Région de {region['name']}"
+    if dossier.get("capital_regionale"):
+        title += f" (capitale régionale : {dossier['capital_regionale']})"
+    lines = [title, dossier["identity"], dossier["geography"], "À ne pas manquer : " + ", ".join(region["highlights"]) + "."]
+    foods = region.get("foods") or dossier.get("foods")
+    if foods:
+        lines.append("À goûter : " + ", ".join(foods) + ".")
+    # Le champ « practical » du dossier est une consigne pour l'IA (« doivent être datées… »), pas un conseil au lecteur.
+    lines.append("Horaires, tarifs, accès et transports : à vérifier avant de partir.")
+    lines.append(f"Le guide de la région, avec ses lieux à visiter : teranga-ai.fr/regions/{region_slug(region['name'])}")
+    return "\n".join(lines)
+
+
+# « Que peux-tu faire ? », « Qui es-tu ? » : rien dans le contexte de l'IA ne décrit le service, qui risquait d'inventer
+# des fonctions (relevé /stats-ia du 24 octobre 2026). Chaque page citée existe (tests/test_reponse_seule_presentation.py
+# l'ouvre). Teranga s'adresse à toute la population : Sénégalais au pays, diaspora, commerçants et voyageurs.
+# Woyofal et prises électriques (V5) : le repère vérifié de services/practical_facts.py, tel quel (le texte que l'IA
+# reçoit aussi, sources dans ce fichier). Seulement pour une question courte faite de ces mots-là : une situation
+# (« mon compteur affiche une erreur »), un montant ou une autre précision vont au modèle.
+_TOPIC_ASKS = (
+    ("factures", {"woyofal"}, {
+        "woyofal", "senelec", "code", "codes", "trois", "3", "credit", "recharge", "recharger", "acheter", "achat",
+        "compteur", "electricite", "prepaye", "prepayee", "comment", "pourquoi", "ou", "quoi", "on", "un", "une", "mon",
+        "ma", "faire", "marche", "fonctionne"}),
+    # « tension » seul ne suffit pas (politique, tension artérielle) : il faut aussi « électrique », « prise »…
+    ("electricite", {"prise", "prises", "voltage", "electrique", "electriques", "adaptateur", "adaptateurs"}, {
+        "prise", "prises", "electrique", "electriques", "voltage", "tension", "adaptateur", "adaptateurs", "type",
+        "types", "courant", "faut", "un", "une"}),
+    # Carte SIM et opérateurs, meilleure saison, langues parlées : repères durables, sans prix ni horaire.
+    ("sim", {"sim", "esim", "puce", "operateur", "operateurs"}, {
+        "sim", "esim", "puce", "puces", "carte", "cartes", "operateur", "operateurs", "telephonique", "telephoniques",
+        "mobile", "acheter", "achat", "avoir", "trouver", "prendre", "ou", "comment", "un", "une", "on", "peut", "je",
+        "telephone"}),
+    # « partir » ne compte qu'avec « quand » (voir _asked_practical_topic).
+    ("saison", {"saison", "saisons", "periode", "climat"}, {
+        "saison", "saisons", "periode", "climat", "partir", "venir", "aller", "visiter", "voyager", "quand",
+        "meilleure", "meilleur", "pluies", "pluie", "seche", "hivernage", "un", "une", "y", "on", "faut"}),
+    ("langue", {"langue", "langues"}, {
+        "langue", "langues", "parle", "parlent", "parlee", "parlees", "parler", "officielle", "officielles", "on", "t",
+        "y", "principale", "principales"}),
+    # Visa d'entrée et envoi d'argent vers le Sénégal (questions fréquentes de l'accueil V5) : sans nationalité, autre
+    # pays, situation ni montant. Pour l'envoi, « argent » et un verbe d'envoi sont exigés ensemble (tuple de groupes) :
+    # « Transfert aéroport » ou « envoyer un colis » vont au modèle.
+    ("visa", {"visa", "visas"}, {
+        "visa", "visas", "faut", "un", "besoin", "ai", "je", "on", "t", "y", "aller", "venir", "visiter", "voyager",
+        "entrer", "entree", "passeport", "et", "necessaire", "obligatoire"}),
+    ("envoi_argent", ({"argent"}, {"envoyer", "envoi", "transfert", "transferts", "transferer", "comparer"}), {
+        "argent", "envoyer", "envoi", "transfert", "transferts", "transferer", "comparer", "deux", "comment", "vers",
+        "ma", "mon", "famille", "un", "une", "on", "peut", "je", "meilleur", "meilleure", "moyen", "faire", "quoi"}),
+)
+_TOPIC_THEMES = {"factures": "electricite", "electricite": "electricite", "sim": "internet", "saison": "meteo",
+                 "langue": "langue", "visa": "visa", "envoi_argent": "argent"}
+_TOPIC_LINKS = {"factures": "Toutes les démarches : teranga-ai.fr/demarches-senegal"}
+
+
+def _asked_practical_topic(message: str) -> str | None:
+    """Le sujet de practical_facts (« factures », « electricite », « sim », « saison », « langue », « visa »,
+    « envoi_argent ») si la question ne demande que ça, sinon None."""
+    if len(message) > MAX_CHARS:
+        return None
+    tokens = re.findall(r"[a-z0-9]+", fold_text(message).lower())
+    words = set(tokens)
+    for name, required, allowed in _TOPIC_ASKS:
+        # « Quand partir de Dakar ? » : un départ, pas la meilleure saison pour venir (relecture Gitar de #582).
+        if name == "saison" and re.search(r"\bpartir (?:de|d|du|des)\b", " ".join(tokens)):
+            continue
+        # « Envoyer de l'argent du Sénégal » : le sens inverse du repère « vers le Sénégal » (relecture Gitar de #584).
+        if name == "envoi_argent" and re.search(r"\b(?:du|de|d|depuis) (?:senegal|dakar)\b", " ".join(tokens)):
+            continue
+        # « Quand partir au Sénégal ? » oui ; « Partir au Sénégal » seul n'est pas une question de saison (Codex, #582).
+        groups = required if isinstance(required, tuple) else (required,)
+        asked = all(words & group for group in groups) or (name == "saison" and {"quand", "partir"} <= words)
+        if asked and words <= allowed | _FILLER_WORDS:
+            return name
+    return None
+
+
+def _practical_reply(name: str) -> str:
+    facts = next(facts for topic, _, facts in _PRACTICAL_TOPICS if topic == name)
+    return "\n".join([*facts, *([_TOPIC_LINKS[name]] if name in _TOPIC_LINKS else [])])
+
+
+# Une ligne précise d'un repère (V5) : « Où trouver une pharmacie de garde ? » reçoit la ligne « Pharmacie de garde »
+# du sujet « sante », telle quelle, pas tout le repère. (sujet, débuts des lignes servies dans cet ordre, groupes de mots
+# qui doivent tous apparaître, mots permis en plus des mots de liaison). tests/test_reponse_seule_lignes.py vérifie que
+# chaque début désigne une seule ligne de services/practical_facts.py.
+_ARNAQUE_WORDS = {"arnaque", "arnaques", "arnaquer", "arnaquee", "escroque", "escroquee", "escroquerie", "victime"}
+_LINE_ASKS = (
+    ("sante", ("Pharmacie de garde",), ({"pharmacie", "pharmacies"}, {"garde", "ouverte", "ouvertes", "nuit", "dimanche"}), {
+        "pharmacie", "pharmacies", "garde", "ouverte", "ouvertes", "nuit", "dimanche", "ou", "trouver", "une", "comment",
+        "on"}),
+    # « Comment se protéger du paludisme ? » : la ligne de prévention (moustiquaire imprégnée, répulsif, avis
+    # médical avant le départ), plus utile que la ligne générale « présent dans tout le pays », qui garde les questions
+    # de présence (« Y a-t-il le paludisme au Sénégal ? »). Défaut trouvé par le banc qualité (22 novembre 2026).
+    ("premiers_secours", ("Prévention du paludisme",), ({"paludisme", "palu"},
+                                                        {"proteger", "protection", "eviter", "prevenir", "prevention"}), {
+        "paludisme", "palu", "comment", "se", "proteger", "protection", "eviter", "prevenir", "prevention", "y", "t",
+        "contre", "moustique", "moustiques", "le", "la", "les"}),
+    ("sante", ("Paludisme",), ({"paludisme", "palu"},), {
+        "paludisme", "palu", "comment", "se", "proteger", "protection", "eviter", "y", "t", "risque", "contre",
+        "moustique", "moustiques", "prevenir"}),
+    ("sante", ("Eau",), ({"eau"}, {"robinet", "boire", "potable"}), {
+        "eau", "robinet", "boire", "potable", "peut", "on", "elle", "puis", "je"}),
+    ("sante", ("Fièvre jaune",), ({"fievre"}, {"jaune"}), {
+        "fievre", "jaune", "vaccin", "vaccination", "faut", "obligatoire", "certificat", "contre", "un"}),
+    ("papiers", ("Carte d'identité",), ({"identite"},), {
+        "carte", "identite", "cni", "biometrique", "nationale", "refaire", "renouveler", "renouvellement", "faire",
+        "obtenir", "demander", "demande", "comment", "ma", "mon", "une", "pieces", "papiers", "documents", "faut", "que"}),
+    # Un verbe de demande est exigé : « Faut-il un passeport pour le Sénégal ? » parle d'entrer au pays.
+    ("papiers", ("Passeport",), ({"passeport"}, {"faire", "refaire", "renouveler", "renouvellement", "obtenir",
+                                                 "demander", "demande", "pieces", "documents"}), {
+        "passeport", "faire", "refaire", "renouveler", "renouvellement", "obtenir", "demander", "demande", "pieces",
+        "documents", "comment", "un", "mon", "senegalais", "que", "faut"}),
+    ("papiers", ("État civil", "En ligne"), ({"naissance"},), {
+        "acte", "actes", "extrait", "extraits", "naissance", "copie", "litterale", "integrale", "comment", "obtenir",
+        "demander", "demande", "faire", "avoir", "un", "une", "mon", "ma", "ou", "depuis", "etranger"}),
+    ("papiers", ("Casier judiciaire", "En ligne"), ({"casier"},), {
+        "casier", "judiciaire", "bulletin", "n", "3", "extrait", "comment", "demander", "demande", "obtenir", "faire",
+        "avoir", "un", "mon", "ou", "ligne"}),
+    # Pas « changer » ni « oublié » : la ligne ne dit pas comment faire.
+    ("mobile_money", ("Code secret",), ({"code", "codes"}, {"secret", "pin"}), {
+        "code", "codes", "secret", "pin", "comment", "proteger", "securiser", "mon", "ma", "wave", "orange", "money",
+        "free", "yas", "mobile", "donner", "faut", "on", "peut", "qui", "ou"}),
+    ("mobile_money", ("Envoi par erreur",), ({"erreur"}, {"argent", "envoi", "envoye", "envoyer", "transfert", "recu",
+                                                         "depot"}), {
+        "erreur", "argent", "envoi", "envoye", "envoyer", "transfert", "recu", "depot", "par", "j", "ai", "on", "m",
+        "que", "faire", "comment", "un", "sur", "mon", "wave", "orange", "money", "quelqu"}),
+    ("arnaques", ("Faux proche",), ({"nouveau"}, {"numero"}, {"voici"} | _ARNAQUE_WORDS), {
+        "voici", "mon", "nouveau", "numero", "ce", "une", "telephone", "casse", "quelqu", "un", "m", "ecrit", "dit",
+        "que", "faire", "on"} | _ARNAQUE_WORDS),
+    ("arnaques", ("Faux SMS",), ({"sms", "message"}, {"amende", "amendes"}), {
+        "sms", "message", "amende", "amendes", "un", "une", "j", "ai", "recu", "vrai", "faux", "ce", "lien", "avec",
+        "payer", "que", "faire"} | _ARNAQUE_WORDS),
+    ("arnaques", ("Si l'on est victime",), (_ARNAQUE_WORDS, {"faire", "plainte"}), {
+        "on", "m", "sur", "wave", "orange", "money", "yas", "free", "mobile", "que", "faire", "je", "me", "suis", "fait",
+        "j", "ai", "ete", "une", "porter", "plainte", "comment", "quoi"} | _ARNAQUE_WORDS),
+    # Deuxième lot : protection sociale, études, entreprise, vente (questions fréquentes de l'accueil V5).
+    ("protection", ("Santé : la couverture maladie universelle",), ({"cmu", "universelle"},), {
+        "cmu", "couverture", "maladie", "universelle", "quoi", "qu", "comment", "ca", "marche", "fonctionne", "que"}),
+    ("protection", ("Bourse de sécurité familiale",), ({"bourse"}, {"securite"}, {"familiale"}), {
+        "bourse", "securite", "familiale", "bsf", "quoi", "comment", "obtenir", "avoir", "une"}),
+    ("etudes", ("Bourses",), ({"bourse", "bourses"}, {"etudes", "etude", "etudier", "etudiant", "etudiants",
+                                                     "universite", "etranger"}), {
+        "bourse", "bourses", "etudes", "etude", "etudier", "etudiant", "etudiants", "universite", "etranger", "etat",
+        "comment", "obtenir", "avoir", "demander", "demande", "une", "un", "on", "peut", "l"}),
+    # « Inscription au bac » n'est pas l'orientation après le bac : il faut l'université, Campusen ou un ISEP.
+    ("etudes", ("Après le bac",), ({"universite", "universites", "campusen", "isep"},), {
+        "universite", "universites", "campusen", "isep", "comment", "s", "inscrire", "inscription", "apres", "bac",
+        "publique", "publiques", "orientation", "faire", "mon", "ma", "une", "on", "quand", "ca", "marche",
+        "fonctionne"}),
+    ("entreprise", ("Créer une activité",), ({"entreprise", "societe", "activite", "sarl", "suarl", "gie", "ninea",
+                                              "rccm"},
+                                             {"creer", "creation", "immatriculer", "immatriculation", "ouvrir",
+                                              "ninea", "rccm"}), {
+        "entreprise", "societe", "activite", "sarl", "suarl", "gie", "ninea", "rccm", "creer", "creation",
+        "immatriculer", "immatriculation", "ouvrir", "comment", "mon", "ma", "une", "un", "quoi", "faut", "quelles",
+        "demarches", "formalites", "petite", "on", "peut", "je"}),
+    ("vente", ("Vendre sur WhatsApp",), ({"whatsapp"}, {"vendre", "vente", "ventes", "clients", "catalogue"}), {
+        "whatsapp", "business", "vendre", "vente", "ventes", "clients", "client", "catalogue", "comment", "sur",
+        "utiliser", "mes", "mon", "ma", "produits", "bien", "plus"}),
+    # « Comment faire reconnaître un diplôme obtenu à l'étranger ? » : l'organisme et les pièces. Une situation
+    # (« refusée ») ou un diplôme précis (« mon doctorat privé ») vont au modèle, qui a aussi la ligne ANAQ-Sup.
+    ("diplomes", ("Reconnaissance d'un diplôme", "Pièces à fournir"), ({"diplome", "diplomes"},
+                                                                    {"reconnaitre", "reconnaissance", "equivalence",
+                                                                     "equivalences", "homologuer", "homologation"}), {
+        "diplome", "diplomes", "reconnaitre", "reconnaissance", "equivalence", "equivalences", "homologuer",
+        "homologation", "comment", "faire", "un", "une", "mon", "obtenu", "etranger", "l", "demande", "demander",
+        "obtenir", "quelles", "pieces", "dossier", "pour"}),
+    ("vente", ("Fixer un prix",), ({"marge", "prix"}, {"calculer", "calcul", "fixer", "definir", "mettre"}), {
+        "marge", "prix", "calculer", "calcul", "fixer", "definir", "mettre", "comment", "ma", "mon", "mes", "sur", "un",
+        "produit", "produits", "vente", "bon"}),
+)
+_LINE_THEMES = {"sante": "sante", "premiers_secours": "sante", "papiers": "papiers", "mobile_money": "argent", "arnaques": "urgences",
+                "protection": "protection_sociale", "etudes": "etudes", "entreprise": "entreprise", "vente": "commerce",
+                "diplomes": "etudes"}
+
+
+def _asked_practical_line(message: str) -> tuple[str, str] | None:
+    """(sujet, lignes de repère) qui répondent à une question courte ne demandant que ça, sinon None."""
+    if len(message) > MAX_CHARS:
+        return None
+    words = set(re.findall(r"[a-z0-9]+", fold_text(message).lower()))
+    for topic, starts, groups, allowed in _LINE_ASKS:
+        if all(words & group for group in groups) and words <= allowed | _FILLER_WORDS:
+            facts = next(facts for name, _, facts in _PRACTICAL_TOPICS if name == topic)
+            return topic, "\n".join(next(f for f in facts if f.startswith(start)) for start in starts)
+    return None
+
+
+_ABOUT = re.compile(
+    r"(?<![a-z])(?:qui es tu|tu es qui|qui etes vous|vous etes qui|"
+    r"(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire|tu (?:peux|sais) faire quoi|"
+    r"tu sers a quoi|a quoi tu sers|a quoi sert teranga|c est quoi teranga|qu est ce que teranga|"
+    r"presente toi|presentez vous|comment (?:tu peux|peux tu|pouvez vous) m aider)(?![a-z])"
+)
+_ABOUT_ALLOWED = _FILLER_WORDS | {
+    "es", "etes", "tu", "toi", "vous", "que", "qu", "quoi", "peux", "sais", "pouvez", "savez", "faire", "sers", "sert",
+    "teranga", "ai", "ia", "presente", "presentez", "comment", "m", "aider", "exactement", "concretement", "alors",
+    "donc", "et", "ici", "dis", "moi",
+}
+_ABOUT_REPLY = "\n".join([
+    "Je suis Teranga AI, l'assistant du Sénégal, pour tout le monde : les Sénégalais au pays, la diaspora, "
+    "les commerçants et les voyageurs.",
+    "Je réponds aux questions de tous les jours : démarches, santé, argent, transport, téléphone, emploi, études, "
+    "création d'entreprise, mais aussi culture, histoire, cuisine et lieux à visiter.",
+    "Vous pouvez aussi :",
+    "- me parler avec le micro et écouter la réponse ;",
+    "- convertir des euros en francs CFA ;",
+    "- trouver les numéros d'urgence : teranga-ai.fr/urgences",
+    "- voir les dates des fêtes : teranga-ai.fr/calendrier-fetes-senegal",
+    "- préparer un voyage jour par jour : teranga-ai.fr/trip-planner",
+    "- découvrir les lieux à visiter : teranga-ai.fr/lieux",
+    "Posez votre question en français, en anglais ou en wolof.",
+])
+
+
+def _asked_about_teranga(message: str) -> bool:
+    if len(message) > MAX_CHARS:
+        return False
+    folded = _folded(message)
+    words = re.findall(r"[a-z0-9]+", folded)
+    return bool(words) and all(word in _ABOUT_ALLOWED for word in words) and bool(_ABOUT.search(" ".join(words)))
+
+
+def quick_answer(payload: dict[str, Any], raw: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Réponse prête ({reply, sources}) au format du cache des réponses, ou None (le modèle répond).
+
+    « theme » : le seul thème de /stats-ia que la réponse couvre (services/coverage_log.py)."""
+    raw = raw if isinstance(raw, dict) else {}
+    language = str(payload.get("language") or "fr")
+    message = str(payload.get("message") or "")
+    if language not in ("fr", "en") or payload.get("photo_only"):
+        return None
+    if _has_earlier_turns(raw.get("history"), message):
+        return None
+    if any(str(raw.get(name) or "").strip() for name in ("context_place", "trip_context", "trip_edit_request")):
+        return None
+    if _asks_emergency_numbers(message):
+        return {"reply": _emergency_reply(language), "sources": list(_SOURCES), "image": None, "map": None, "theme": "urgences"}
+    if language == "fr":
+        line = _conversion_line(message)
+        if line:
+            return {"reply": _conversion_reply(line), "sources": [], "image": None, "map": None, "theme": "argent"}
+        transfer = _transfer_amounts(message)
+        if transfer:
+            return {"reply": _transfer_reply(*transfer), "sources": [], "image": None, "map": None, "theme": "argent"}
+        if _asked_time(message):
+            reply = _time_reply(_now_utc())
+            if reply:
+                return {"reply": reply, "sources": [], "image": None, "map": None, "theme": "voyage"}
+        if _asked_phone_code(message):
+            return {"reply": _PHONE_CODE_REPLY, "sources": [], "image": None, "map": None, "theme": "internet"}
+        if _asked_about_teranga(message):
+            return {"reply": _ABOUT_REPLY, "sources": [], "image": None, "map": None, "theme": "teranga_ai"}
+        topic = _asked_practical_topic(message)
+        if topic:
+            return {"reply": _practical_reply(topic), "sources": [], "image": None, "map": None,
+                    "theme": _TOPIC_THEMES[topic]}
+        served = _asked_practical_line(message)
+        if served:
+            return {"reply": served[1], "sources": [], "image": None, "map": None, "theme": _LINE_THEMES[served[0]]}
+        event = _asked_holiday(message)
+        if event:
+            return {"reply": _holiday_reply(event), "sources": [], "image": None, "map": None, "theme": "fetes"}
+        if _asked_holidays(message):
+            reply = _holidays_reply()
+            if reply:
+                return {"reply": reply, "sources": [], "image": None, "map": None, "theme": "fetes"}
+        dish = _asked_dish(message)
+        if dish:
+            return {"reply": _dish_reply(dish), "sources": [], "image": None, "map": None, "theme": "cuisine"}
+        place = _asked_place(message)
+        if place:
+            return {"reply": _place_reply(place), "sources": [], "image": None, "map": None, "theme": "voyage",
+                    "place_id": place["id"]}
+        region = _asked_region(message)
+        if region:
+            return {"reply": _region_reply(region), "sources": [], "image": None, "map": None, "theme": "voyage",
+                    "region_id": region["id"]}
+    return None

@@ -1,6 +1,6 @@
 ---
 name: ajouter-un-lieu
-description: Ajouter un lieu sourcé à la base de connaissances de Teranga AI (data/senegal_knowledge.json) : fiche complète, sources, coordonnées, tests. À utiliser pour tout nouveau lieu, site, marché, île, musée ou localité.
+description: Ajouter un lieu sourcé à la base de connaissances de Teranga AI (data/senegal_knowledge.json) avec fiche complète, sources, coordonnées et tests. À utiliser pour tout nouveau lieu, site, marché, île, musée ou localité.
 ---
 
 # Ajouter un lieu

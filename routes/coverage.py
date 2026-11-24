@@ -102,8 +102,9 @@ base de connaissances, et aucune recherche web n'était déclenchée. Elle répo
 Le tri place en premier les sujets qui cumulent le plus de questions non couvertes : ce sont les meilleurs candidats à de
 nouveaux repères vérifiés ou à de nouvelles fiches.</p>
 <p>Une question qui touche deux sujets est comptée une fois dans chacun : la somme des lignes peut dépasser le nombre de
-questions. La ligne <strong>Autre</strong> regroupe les questions qui ne correspondent à aucun sujet connu ; si elle
-grossit, il manque un sujet dans la liste.</p>"""
+questions. Un suivi sans sujet propre (« Et pour y aller ? ») est compté dans le sujet de la conversation ; un
+préambule seul (« J'ai une question », « Je m'appelle Awa ») n'est pas compté. La ligne <strong>Autre</strong> regroupe
+les questions qui ne correspondent à aucun sujet connu ; si elle grossit, il manque un sujet dans la liste.</p>"""
     return f"""<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Statistiques de l'IA | Teranga AI</title><meta name="robots" content="noindex,nofollow">{HEAD_ASSETS}{_STYLE}</head>

@@ -11,7 +11,12 @@ import pytest
 
 from .test_clicks import PLAN, _fill_planner, ask, stream
 
-PROFILES = ["tourist", "resident", "diaspora", "merchant"]
+PROFILES = ["general", "tourist", "resident", "diaspora", "merchant"]  # « Tout le Sénégal » par défaut
+
+
+# Les profils arrivent en glissant (animations, PR #566) : les tailles se mesurent une fois les animations finies.
+ANIMATIONS_FINIES = """() => document.getAnimations().filter((a) => a.effect && a.effect.getComputedTiming().iterations !== Infinity)
+  .every((a) => a.playState === 'finished')"""
 
 
 def _chat_recorder(page, base_url, answer="Réponse du profil."):
@@ -25,10 +30,22 @@ def _chat_recorder(page, base_url, answer="Réponse du profil."):
     return bodies
 
 
+# Thèmes rapides affichés par profil : quatre au plus depuis le 10 novembre 2026 (dix avant, « Faut déjà réduire tout ça »).
+CHIPS = {"general": 4, "tourist": 4, "resident": 4, "diaspora": 4, "merchant": 4}
+
+
 def _first_suggestion(page):
     chip = page.locator("#heroChips button").first
     chip.wait_for(timeout=3000)
     return chip.get_attribute("data-q")
+
+
+def _ask_first_suggestion(page):
+    """Un thème de « Tout le Sénégal » ouvre d'abord ses questions fréquentes (V5) ; la première est sa question."""
+    chip = page.locator("#heroChips button").first
+    chip.click()
+    if chip.get_attribute("data-topic"):
+        page.locator("#themeQsList button").first.click()
 
 
 @pytest.mark.parametrize("audience", PROFILES)
@@ -37,7 +54,7 @@ def test_each_profile_sends_its_audience_and_its_suggestion_to_the_chat(page, ba
     page.goto(base_url + "/")
     page.locator(f'.audience-btn[data-audience="{audience}"]').click()
     question = _first_suggestion(page)
-    page.locator("#heroChips button").first.click()
+    _ask_first_suggestion(page)
     page.get_by_text("Réponse du profil.").wait_for(timeout=5000)
     assert len(bodies) == 1
     assert bodies[0]["audience"] == audience
@@ -46,17 +63,17 @@ def test_each_profile_sends_its_audience_and_its_suggestion_to_the_chat(page, ba
     assert page.errors == []
 
 
-def test_the_four_profiles_do_not_share_the_same_suggestions(page, base_url):
+def test_the_profiles_do_not_share_the_same_suggestions(page, base_url):
     page.goto(base_url + "/")
     seen = {}
     for audience in PROFILES:
         page.locator(f'.audience-btn[data-audience="{audience}"]').click()
         _first_suggestion(page)
         seen[audience] = tuple(b.get_attribute("data-q") for b in page.locator("#heroChips button").all())
-        assert len(seen[audience]) == 4, audience
-    assert len(set(seen.values())) == 4, seen
+        assert len(seen[audience]) == CHIPS[audience], audience
+    assert len(set(seen.values())) == len(PROFILES), seen
     # Aucune suggestion n'est reprise telle quelle d'un profil à l'autre en tête de liste.
-    assert len({questions[0] for questions in seen.values()}) == 4
+    assert len({questions[0] for questions in seen.values()}) == len(PROFILES)
 
 
 @pytest.mark.parametrize("audience", PROFILES)
@@ -75,16 +92,18 @@ def test_profile_survives_a_reload_and_is_still_sent_to_the_chat(page, base_url,
 
 
 @pytest.mark.parametrize("saved", ["pirate", "", "TOURIST ", "__proto__", "constructor"])
-def test_an_unknown_saved_profile_falls_back_to_tourist(page, base_url, saved):
-    """Une valeur périmée ou altérée dans le stockage ne doit ni vider les suggestions ni partir telle quelle au serveur."""
+def test_an_unknown_saved_profile_falls_back_to_general(page, base_url, saved):
+    """Une valeur périmée ou altérée dans le stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
+
+    Le profil de secours est « Tout le Sénégal » (general) depuis le 24 octobre 2026 : avant, c'était « tourist »."""
     bodies = _chat_recorder(page, base_url)
     page.add_init_script(f"try{{localStorage.setItem('teranga-audience',{json.dumps(saved)})}}catch(_){{}}")
     page.goto(base_url + "/")
-    assert page.locator('.audience-btn[data-audience="tourist"]').get_attribute("aria-pressed") == "true"
-    assert len(page.locator("#heroChips button").all()) == 4
+    assert page.locator('.audience-btn[data-audience="general"]').get_attribute("aria-pressed") == "true"
+    assert len(page.locator("#heroChips button").all()) == CHIPS["general"]
     ask(page, "Bonjour")
     page.get_by_text("Réponse du profil.").wait_for(timeout=5000)
-    assert bodies[0]["audience"] == "tourist"
+    assert bodies[0]["audience"] == "general"
     assert page.errors == []
 
 
@@ -108,9 +127,10 @@ def test_profile_is_carried_to_the_trip_planner(page, base_url, audience):
 
 
 def test_profile_buttons_are_comfortable_to_tap_on_a_phone(page, base_url):
-    """La rangée des profils défile en horizontal sur téléphone : chaque bouton doit rester atteignable et assez grand."""
+    """Sur téléphone, chaque profil doit rester visible, atteignable et assez grand (deux lignes depuis le 5e profil)."""
     page.set_viewport_size({"width": 390, "height": 844})
     page.goto(base_url + "/")
+    page.wait_for_function(ANIMATIONS_FINIES, timeout=5000)  # mesures sur la mise en page finale, pas pendant l'arrivée
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")  # la page ne défile pas de côté
     for audience in PROFILES:
         button = page.locator(f'.audience-btn[data-audience="{audience}"]')

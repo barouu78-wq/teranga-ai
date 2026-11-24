@@ -18,6 +18,13 @@ import threading
 from types import SimpleNamespace
 from typing import Any, Iterator
 
+# Chargé au démarrage de chaque processus Gunicorn, pas à la première question : l'import seul prend 1,7 s
+# (plus sur Render) et retardait le premier mot du chat de 4 à 9 s après chaque mise en ligne (journaux du
+# 15 au 18 novembre 2026, tests/test_claude_demarrage.py).
+import anthropic
+
+from .truncation import is_cut_by_length, with_cut_notice
+
 DEFAULT_MODEL = "claude-opus-5-5"
 # Re-exécute côté serveur une demande refusée par prudence sur le modèle recommandé.
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -46,8 +53,6 @@ def _client():
     with _client_lock:
         client = _clients.get(key)
         if client is None:
-            import anthropic
-
             # Pas de nouvelle tentative : le secours OpenAI prend le relais plus vite.
             client = anthropic.Anthropic(api_key=key, max_retries=0)
             _clients.clear()
@@ -80,6 +85,7 @@ def claude_events(
     web: bool = False,
     effort: str = "low",
     client: Any = None,
+    attachment: dict | None = None,
 ) -> Iterator[SimpleNamespace]:
     """Flux Claude au format des événements OpenAI Responses.
 
@@ -87,7 +93,9 @@ def claude_events(
     passe alors au secours.
     """
     client = client or _client()
-    messages: list[dict] = [{"role": "user", "content": str(prompt)}]
+    # Fichier joint (services/fichiers.py) : son bloc `image` ou `document` passe avant le texte de la question.
+    content: Any = [attachment, {"type": "text", "text": str(prompt)}] if attachment else str(prompt)
+    messages: list[dict] = [{"role": "user", "content": content}]
     params: dict[str, Any] = {
         "model": claude_model(),
         "max_tokens": int(max_tokens),
@@ -106,10 +114,18 @@ def claude_events(
     usage = {"input_tokens": 0, "output_tokens": 0}
     for _ in range(MAX_CONTINUATIONS + 1):
         with client.beta.messages.stream(messages=messages, **params) as stream:
-            for text in stream.text_stream:
-                if text:
-                    parts.append(text)
-                    yield SimpleNamespace(type="response.output_text.delta", delta=text)
+            for event in stream:
+                kind = getattr(event, "type", "")
+                if kind == "content_block_start":
+                    block = getattr(event, "content_block", None)
+                    if getattr(block, "type", "") == "server_tool_use" and getattr(block, "name", "") == "web_search":
+                        # Même nom que l'API Responses : la route affiche « Je cherche des informations à jour… ».
+                        yield SimpleNamespace(type="response.web_search_call.in_progress")
+                elif kind == "content_block_delta" and getattr(event.delta, "type", "") == "text_delta":
+                    text = event.delta.text
+                    if text:
+                        parts.append(text)
+                        yield SimpleNamespace(type="response.output_text.delta", delta=text)
             message = stream.get_final_message()
         stop_reason = getattr(message, "stop_reason", None)
         for name in usage:
@@ -143,8 +159,14 @@ def backup_complete(
     max_tokens: int = 2000,
     timeout: float = 60.0,
     client: Any = None,
+    language: str | None = None,
 ) -> str:
-    """Texte de la réponse de Claude, ou "" si Claude n'est pas configuré."""
+    """Texte de la réponse de Claude, ou "" si Claude n'est pas configuré.
+
+    Avec `language` (chat), si Claude s'arrête à la limite de longueur, la mention « Réponse coupée » est ajoutée
+    dans cette langue. Sans `language` (planificateur : le texte est du JSON), le texte est rendu tel quel."""
     if not backup_enabled() or not str(prompt or "").strip():
         return ""
-    return claude_response(prompt, system=system, max_tokens=max_tokens, timeout=timeout, client=client).output_text.strip()
+    final = claude_response(prompt, system=system, max_tokens=max_tokens, timeout=timeout, client=client)
+    text = final.output_text.strip()
+    return with_cut_notice(text, language) if language and is_cut_by_length(final) else text

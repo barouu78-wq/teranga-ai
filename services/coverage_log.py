@@ -77,12 +77,18 @@ THEMES: tuple[Theme, ...] = (
     _theme("visa", "Visa et entrée dans le pays",
            "visa*, passeport, passport, formalites, douane*, entrer au senegal, entree au senegal, frontiere*, "
            "titre de sejour, carte de sejour, permis de sejour, entry requirements, customs",
-           "repere:visa"),
+           "repere:visa repere:frontieres"),
+    # Demande sur les pays voisins (Gambie, Mauritanie, Mali, Guinées) : avant d'investir dans un guide par pays.
+    # Un pays voisin cité avec un voyage arrive par le repère « frontieres » (voir _PRACTICAL_THEME).
+    _theme("pays_voisins", "Pays voisins et frontières",
+           "re:(?<!sans )frontieres?, poste frontiere, pays voisin*, pays limitrophe*, border, cross border",
+           "repere:frontieres"),
     _theme("argent", "Argent, change et paiements",
            "argent, euro*, fcfa, cfa, xof, change, changer de l argent, dollar*, payer, paiement*, wave, orange money, "
            "mobile money, carte bancaire, retrait*, distributeur*, atm, banque*, bancaire*, virement*, western union, "
-           "transfert d argent, envoyer de l argent, monnaie, espece*, pourboire*, money, cash, payment",
-           "repere:argent repere:mobile_money"),
+           "transfert d argent, envoyer de l argent, envoi d argent, transferer de l argent, moneygram, remitly, "
+           "worldremit, monnaie, espece*, pourboire*, money, cash, payment",
+           "repere:argent repere:mobile_money repere:envoi_argent"),
     _theme("transport", "Transport et déplacements",
            "taxi*, sept places, 7 places, ter, brt, bus, car rapide, dem dikk, aibd, aeroport*, airport, ferry, chaloupe, "
            "bateau*, train, voiture*, location de voiture, louer une voiture, conduire, conduite, se deplacer, "
@@ -109,7 +115,7 @@ THEMES: tuple[Theme, ...] = (
            "etude*, etudier, etudiant*, universite*, fac, ucad, campusen, bac, bachelier*, bfem, licence, master, "
            "doctorat, bourse*, ecole*, college*, lycee*, creche*, scolarite, formation*, diplome*, inscription*, "
            "orientation, enseignant*, professeur*, coud, isep, student*, school, university",
-           "repere:etudes"),
+           "repere:etudes repere:diplomes"),
     _theme("entreprise", "Créer une entreprise",
            "entreprise*, creer une societe, ouvrir une societe, creation de societe, startup*, start up, ninea, rccm, apix, "
            "immatriculation, statut juridique, sarl, suarl, gie, auto entrepreneur, entrepreneur*, entreprendre, "
@@ -131,8 +137,17 @@ THEMES: tuple[Theme, ...] = (
     _theme("voyage", "Voyage et tourisme",
            "voyage*, voyager, sejour*, visiter, visite*, tourisme, touriste*, tourist*, itineraire*, circuit*, excursion*, "
            "que voir, quoi voir, a voir, vacances, plage*, week end, weekend, decalage horaire, fuseau horaire, "
-           "quelle heure, time zone, trip, travel*, holiday*, sightseeing, agence de voyage, decouvrir, decouverte",
-           "cite guide repere:saison repere:heure repere:visa"),
+           "quelle heure, time zone, trip, travel*, holiday*, sightseeing, agence de voyage, decouvrir, decouverte, "
+           "valise*, bagage*, re:(?:que|quoi) faire au senegal, "
+           "re:(?:je pars|je part|partir|je vais|aller|je viens|venir|voyager) (?:au|en) senegal",
+           "cite guide panorama repere:saison repere:heure repere:visa"),
+    # « profil » : ligne « Profil » de la base (superficie, régions, langues, voisins…) ; « capitale » : la ligne
+    # « Repères nationaux », présente dans chaque contexte, donne la capitale (voir chat_signals).
+    _theme("pays", "Le Sénégal en bref (capitale, superficie, symboles)",
+           "capitale*, superficie, population, habitant*, demographi*, geographi*, drapeau*, hymne*, armoirie*, "
+           "devise nationale, re:symboles? nationa\\w*, re:(?:combien|nombre) de (?:regions|departements|communes), "
+           "carte du senegal",
+           "profil capitale"),
     _theme("meteo", "Météo et saisons",
            "meteo, quel temps, pluie*, pleut, pleuvoir, temperature*, chaleur, saison*, hivernage, harmattan, climat*, "
            "orage*, humidite, weather, rain*, climate, quand partir, meilleure periode, meilleur moment, best time, "
@@ -151,7 +166,8 @@ THEMES: tuple[Theme, ...] = (
     _theme("culture", "Culture, histoire et traditions",
            "culture*, culturel*, histoire*, historique*, tradition*, musique*, mbalax, griot*, patrimoine, musee*, theatre, "
            "danse*, tam tam, sabar, kora, cinema, litterature, ecrivain*, poete*, senghor, personnage*, esclavage, "
-           "colonisation*, colonial*, royaume*, empire*, ethnie*, caste*, teranga, hospitalite, coutume*, savoir vivre",
+           "colonisation*, colonial*, royaume*, empire*, ethnie*, caste*, re:teranga(?! ai(?![a-z0-9])), hospitalite, coutume*, "
+           "savoir vivre",
            "histoire personnes cite"),
     _theme("langue", "Langues",
            "langue*, wolof, pulaar, pular, peul, peulh, fulfulde, serere, diola, joola, mandingue, soninke, bambara, "
@@ -209,18 +225,27 @@ THEMES: tuple[Theme, ...] = (
            "depute*, maire, gouverneur, premier ministre, greve*, manifestation*, loi de finances, parlement",
            ""),
     _theme("economie", "Prix, budget et économie",
-           "economie, pib, inflation, croissance, dette, demographie, population, statistique*, ansd, cout de la vie, "
+           "economie, pib, inflation, croissance, dette, statistique*, ansd, cout de la vie, "
            "prix, budget, combien coute, pouvoir d achat, pauvrete, developpement, investir, investissement*",
            ""),
     _theme("diaspora", "Diaspora et retour au pays",
            "diaspora*, retour au senegal, retour au pays, rentrer au pays, rentrer au senegal, retourner vivre, "
            "retourner au senegal, expatrie*, double nationalite, binational*, emigr*, immigr*, migrant*, migration, "
-           "s installer au senegal, vivre au senegal",
+           "re:(?:s|m|nous|me|se) installer au senegal, vivre au senegal, re:senegalais(?:es)? de l exterieur",
            "repere:foncier repere:argent repere:papiers repere:protection"),
     _theme("famille", "Famille, mariage et vie sociale",
            "famille*, mariage*, marier, epouse*, epoux, mari, bapteme*, naissance*, deces, funerailles, enterrement*, "
            "ceremonie*, dot, belle famille, enfant*, bebe*, nounou, tontine*, voisin*, amitie, rencontre*, celibataire, "
            "couple*, politesse, etiquette",
+           ""),
+    # Rien dans le contexte de l'IA ne décrit le service (pages, outils) : seule la réponse prête de
+    # services/quick_answers.py (« Que peux-tu faire ? ») couvre ces questions.
+    _theme("teranga_ai", "Questions sur Teranga AI",
+           "teranga ai, re:qui es tu, re:tu es qui, re:qui etes vous, "
+           "re:(?:que|qu est ce que) (?:tu |vous )?(?:peux|sais|pouvez|savez) (?:tu |vous )?faire, "
+           "re:tu (?:peux|sais) faire quoi, re:qui t a (?:cree|fait|concu|developpe|programme), "
+           "re:comment tu t appelles, re:tu t appelles comment, re:es tu (?:un robot|une ia|humain|chatgpt), "
+           "what can you do, who are you",
            ""),
 )
 
@@ -244,8 +269,9 @@ _COMPILED = tuple((theme, _compile(theme.keywords)) for theme in THEMES)
 _PRACTICAL_THEME = {
     "urgences": "urgences", "arnaques": "urgences", "sante": "sante", "argent": "argent", "mobile_money": "argent", "sim": "internet", "electricite": "electricite",
     "heure": "voyage", "visa": "visa", "saison": "meteo", "entreprise": "entreprise", "transport": "transport",
-    "foncier": "logement", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
-    "protection": "protection_sociale", "etudes": "etudes", "langue": "langue",
+    "foncier": "logement", "envoi_argent": "argent", "vente": "commerce", "papiers": "papiers", "factures": "electricite",
+    "protection": "protection_sociale", "etudes": "etudes", "diplomes": "etudes", "langue": "langue",
+    "frontieres": "pays_voisins",
 }
 
 # Titres que services/senegal_knowledge.py, events.py et monetization.py mettent en début de ligne dans le contexte
@@ -262,8 +288,13 @@ _MARKERS = tuple(
         ("pulaar", "PHRASES PULAAR SÛRES"),
         ("fetes", "PROCHAINES FÊTES ET ÉVÉNEMENTS"),
         ("partenaires", "ADRESSES PARTENAIRES DE TERANGA AI"),
+        ("profil", "- Profil : superficie"),
+        ("panorama", "PANORAMA DU SÉNÉGAL"),
     )
 )
+# Ligne de la base présente dans chaque contexte : elle ne couvre que la question qui demande la capitale.
+_NATIONAL_LINE = re.compile(r"^- Repères nationaux : capitale ", re.M)
+_ASKS_CAPITAL = re.compile(r"(?<![a-z0-9])capitales?(?![a-z0-9])")
 _MODE_SIGNAL = {"guide": "guide", "market": "marche", "market_practice": "marche"}
 # Signaux « larges » : la base choisit lieux, régions et personnages par recoupement de mots (« marche » ramène un
 # marché, « religion » un lieu saint…). Ils couvrent donc peu de thèmes ; le signal « cite » (un lieu ou une région
@@ -275,12 +306,18 @@ _REGION_NAME = re.compile(
     + r")(?![a-z0-9])"
 )
 
-# Salutations et politesses seules : ce ne sont pas des questions, on ne les compte pas.
+# Salutations, politesses et préambules seuls (« J'ai une question », « Je m'appelle Awa », « Peux-tu m'aider ? ») :
+# ce ne sont pas des questions, on ne les compte pas.
 _SMALL_TALK = re.compile(
     r"^(?:(?:bonjour|bonsoir|salut|hello|hi|hey|coucou|salam|aleikoum|aleykum|nanga def|maa ngi fi|merci|beaucoup|thanks?|thank you|"
+    r"j ai une (?:petite )?question|une (?:petite )?question|"
+    r"(?:est ce que )?(?:tu peux|peux tu|pouvez vous|vous pouvez|tu pourrais|pourrais tu|pourriez vous) m aider|aide moi|aidez moi|"
     r"oui|non|ok|okay|d accord|super|parfait|cool|bravo|au revoir|a bientot|bye|ca va|bien|stp|svp|s il te plait|s il vous plait|"
     r"encore|continue|suite|plus|waaw|deedeet|jerejef|jere jef|tout|et toi|et vous)(?![a-z0-9]) ?)+$"
 )
+# Présentation en fin de message (« Bonjour, je m'appelle Awa ») : hors de l'expression répétée ci-dessus, où un
+# prénom quelconque ([a-z]+) ouvrirait un risque de retour arrière exponentiel sur un texte piégé (alerte CodeQL, #519).
+_INTRODUCTION = re.compile(r"(?:^| )(?:je m appelle|moi c est|mon nom est) [a-z]+$")
 _BOT_AGENT = re.compile(
     r"(?<![a-z])[a-z]*bot(?![a-z])|crawl|spider|slurp|scrap|curl|wget|python|httpx|aiohttp|go http client|java/|libwww|"
     r"headless|phantom|lighthouse|pingdom|uptime|monitor|facebookexternalhit|preview",
@@ -297,23 +334,73 @@ def looks_like_bot(user_agent: str) -> bool:
 def is_small_talk(message: str) -> bool:
     """Salutation, politesse ou ponctuation seule (« Merci beaucoup ! », « ok », « ??? »)."""
     plain = " ".join(re.sub(r"[^a-z0-9]+", " ", fold_text(message)).split())
+    introduction = _INTRODUCTION.search(plain)
+    if introduction:
+        plain = plain[:introduction.start()]
     return not plain or bool(_SMALL_TALK.match(plain))
 
 
-def chat_signals(payload: dict, places=None) -> frozenset[str]:
-    """Ce que le contexte de l'IA contenait pour cette question (voir _MARKERS et THEMES[*].covers)."""
+def _context_signals(payload: dict) -> set[str]:
     instructions = str(payload.get("instructions") or "")
-    message = str(payload.get("message") or "")
     signals = {signal for signal, pattern in _MARKERS if pattern.search(instructions)}
-    signals.update("repere:" + topic for topic in matching_topics(message))
-    if _REGION_NAME.search(fold_text(message)) or mentioned_places(message, places):
-        signals.add("cite")
+    signals.update("repere:" + topic for topic in matching_topics(str(payload.get("message") or "")))
     signals.update(_MODE_SIGNAL[mode] for mode in payload.get("modes") or () if mode in _MODE_SIGNAL)
     if payload.get("live_weather"):
         signals.add("meteo")
     if payload.get("use_web"):
         signals.add("web")
-    return frozenset(signals)
+    ready = str(payload.get("ready_answer") or "")
+    if ready in THEME_LABELS:
+        signals.add("pret:" + ready)
+    return signals
+
+
+def _names_a_place(text: str, places) -> bool:
+    return bool(_REGION_NAME.search(fold_text(text)) or mentioned_places(text, places))
+
+
+def _active_turn(thread: str, message: str, places) -> tuple[str, bool]:
+    """Dernier tour de l'utilisateur, avant le suivi, qui a un sujet à lui, et s'il nomme un lieu.
+
+    « contextual_query » joint les quatre derniers tours par « | » : après « Qui était Senghor ? » puis « Parle-moi de
+    Gorée », « Et pour y aller ? » parle de Gorée, pas de Senghor (relecture Codex de #519)."""
+    turns = [turn for turn in thread.split(" | ") if turn.strip()]
+    if turns and fold_text(turns[-1]) == fold_text(message):
+        turns.pop()
+    for turn in reversed(turns):
+        cites = _names_a_place(turn, places)
+        if cites or themes_of(turn) != [OTHER]:
+            return turn, cites
+    return message, False
+
+
+def read_question(payload: dict, places=None) -> tuple[str, frozenset[str]]:
+    """(texte qui porte le sujet, ce que le contexte de l'IA contenait pour lui), calculés une seule fois.
+
+    Le sujet est la question, ou, pour un suivi sans sujet propre (« Et pour y aller ? »), le dernier tour du fil
+    récent (« contextual_query ») qui en a un. Rien de ce texte n'est conservé."""
+    message = str(payload.get("message") or "")
+    signals = _context_signals(payload)
+    subject, cites = message, _names_a_place(message, places)
+    thread = str(payload.get("contextual_query") or "")
+    if thread and fold_text(thread) != fold_text(message):
+        if themes_of(message, frozenset(signals | ({"cite"} if cites else set()))) == [OTHER]:
+            subject, cites = _active_turn(thread, message, places)
+    if cites:
+        signals.add("cite")
+    if _NATIONAL_LINE.search(str(payload.get("instructions") or "")) and _ASKS_CAPITAL.search(fold_text(subject)):
+        signals.add("capitale")
+    return subject, frozenset(signals)
+
+
+def subject_of(payload: dict, places=None) -> str:
+    """Texte qui porte le sujet de la question (voir read_question)."""
+    return read_question(payload, places)[0]
+
+
+def chat_signals(payload: dict, places=None) -> frozenset[str]:
+    """Ce que le contexte de l'IA contenait pour cette question (voir _MARKERS et THEMES[*].covers)."""
+    return read_question(payload, places)[1]
 
 
 def themes_of(message: str, signals: frozenset[str] = frozenset()) -> list[str]:
@@ -339,8 +426,9 @@ _BY_ID = {theme.id: theme for theme in THEMES}
 
 
 def covered(theme_id: str, signals: frozenset[str]) -> bool:
-    """Le contexte contenait-il quelque chose pour ce thème ? Une recherche web déclenchée suffit."""
-    if "web" in signals:
+    """Le contexte contenait-il quelque chose pour ce thème ? Une recherche web déclenchée suffit, comme une réponse
+    prête (services/quick_answers.py : faits vérifiés, sans le modèle) sur ce thème-là (« pret:<thème> »)."""
+    if "web" in signals or "pret:" + theme_id in signals:
         return True
     theme = _BY_ID.get(theme_id)
     # « Autre » : les signaux larges ne prouvent rien sur un sujet que personne n'a su nommer.
@@ -382,7 +470,7 @@ class CoverageLog:
             message = str(payload.get("message") or "")
             if not message.strip() or is_small_talk(message):
                 return
-            self.record(classify(message, chat_signals(payload, self._places)))
+            self.record(classify(*read_question(payload, self._places)))
         except Exception as exc:  # noqa: BLE001 - le journal ne doit jamais gêner une réponse
             self._warn("coverage-log: question non comptée (%s)", type(exc).__name__)
 

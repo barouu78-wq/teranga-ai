@@ -60,6 +60,14 @@ def test_third_party_actions_are_pinned_to_a_full_commit():
         assert re.fullmatch(r"[0-9a-f]{40}", ref), f"{name}@{ref} n'est pas épinglé par commit (tag mobile)"
 
 
+def test_checkout_does_not_leave_its_write_token_for_the_install_step():
+    # Le jeton du workflow (contents: write) ne doit pas rester dans la configuration git pendant pip install :
+    # l'action Claude installe ensuite son propre jeton (src/github/operations/git-config.ts, commit épinglé).
+    step = WORKFLOW.split("name: Check out repository")[1].split("- name:")[0]
+    assert "persist-credentials: false" in step
+    assert "persist-credentials: true" not in WORKFLOW
+
+
 def test_allowed_tools_cannot_reach_main_install_code_or_the_web():
     tools = _allowed_tools()
     joined = " ".join(tools)

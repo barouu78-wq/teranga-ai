@@ -21,7 +21,7 @@ def test_privacy_contact_email_is_configurable(monkeypatch):
     assert "Google Play" in render_privacy("fr", "")
 
 
-PROVIDER_KEYS = ("ANTHROPIC_API_KEY", "TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY")
+PROVIDER_KEYS = ("TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY")
 
 
 def _privacy(lang, monkeypatch, **keys):
@@ -37,19 +37,19 @@ def _privacy(lang, monkeypatch, **keys):
 def test_privacy_names_no_optional_provider_when_none_is_enabled(monkeypatch):
     for lang in ("fr", "en"):
         page = _privacy(lang, monkeypatch)
-        for name in ("Anthropic", "Tavily", "Firecrawl"):
+        for name in ("Tavily", "Firecrawl"):
             assert name not in page, (lang, name)
         assert "Exa " not in page and "via Exa" not in page
 
 
 def test_privacy_names_each_optional_provider_only_when_its_key_is_present(monkeypatch):
     secret = "valeur-secrete-123"
-    fr = _privacy("fr", monkeypatch, ANTHROPIC_API_KEY=secret)
-    assert "Anthropic (Claude)" in fr and "Tavily" not in fr and "Firecrawl" not in fr
+    fr = _privacy("fr", monkeypatch, TAVILY_API_KEY=secret)
+    assert "via Tavily" in fr and "via Exa" not in fr and "via Firecrawl" not in fr
     fr = _privacy("fr", monkeypatch, TAVILY_API_KEY=secret, EXA_API_KEY=secret, FIRECRAWL_API_KEY=secret)
-    assert "via Tavily" in fr and "via Exa" in fr and "via Firecrawl" in fr and "Anthropic" not in fr
-    en = _privacy("en", monkeypatch, ANTHROPIC_API_KEY=secret, TAVILY_API_KEY=secret, FIRECRAWL_API_KEY=secret)
-    assert "Anthropic (Claude)" in en and "via Tavily" in en and "via Firecrawl" in en and "via Exa" not in en
+    assert "via Tavily" in fr and "via Exa" in fr and "via Firecrawl" in fr
+    en = _privacy("en", monkeypatch, TAVILY_API_KEY=secret, FIRECRAWL_API_KEY=secret)
+    assert "via Tavily" in en and "via Firecrawl" in en and "via Exa" not in en
     # Seule la présence d'une clé est lue : sa valeur ne figure jamais dans la page.
     assert secret not in fr and secret not in en
 
@@ -103,7 +103,9 @@ def test_manifest_uses_the_new_brand_colors():
     from app import app
 
     manifest = app.test_client().get("/manifest.webmanifest").get_json()
-    assert manifest["theme_color"] == "#b5451b" and manifest["background_color"] == "#fbf3e6"
+    # Version 3.0 « Nuit dorée » : l'écran de lancement de l'application montre le logo sur le noir de la nuit
+    # (tests/test_design_nuit_doree.py).
+    assert manifest["theme_color"] == "#0b0d10" and manifest["background_color"] == "#0b0d10"
 
 
 def test_manifest_has_store_ready_screenshots_and_shortcuts():

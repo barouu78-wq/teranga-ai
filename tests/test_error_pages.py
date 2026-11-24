@@ -38,6 +38,9 @@ def test_ai_failure_in_json_mode_is_503_with_retry_after(monkeypatch):
 
     # Mode JSON : passe par complete_reply ; aucun appel réseau réel.
     monkeypatch.setitem(app_module._CHAT_SERVICE, "complete_reply", broken)
+    # Depuis le mode autonome branché (always=True), une panne de l'IA reçoit le message honnête de la base du
+    # site (200). Le 503 avec Retry-After reste le dernier recours quand même ce secours échoue.
+    monkeypatch.setattr("routes.chat.knowledge_fallback", broken)
     client = app_module.app.test_client()
     token = client.get("/csrf", base_url=B).get_json()["token"]
     client.set_cookie("teranga_csrf", token, domain="teranga-ai.fr")
@@ -79,3 +82,15 @@ def test_redirect_target_never_leaves_the_site():
         target = redirect_target(path, always)
         assert target == "" or (target.startswith("/") and not target.startswith("//") and "\\" not in target), (path, target)
     assert redirect_target("/existe-pas/", lambda _path: False) == ""
+
+
+def test_les_icones_iphone_de_toutes_tailles_menent_a_l_icone_du_site():
+    # Conseil du 9 novembre 2026 : des iPhone demandent /apple-touch-icon-240x240.png, qui tombait en 404.
+    # iOS essaie aussi d'autres tailles et la variante « -precomposed » : toutes vont vers l'icône du site.
+    client = _client()
+    for path in ("/apple-touch-icon-240x240.png", "/apple-touch-icon-180x180.png",
+                 "/apple-touch-icon-120x120-precomposed.png", "/apple-touch-icon.png"):
+        response = client.get(path, base_url=B)
+        assert response.status_code == 301, path
+        assert response.headers["Location"].endswith("/icon-192.png"), path
+    assert client.get("/apple-touch-icon-240x240.png.php", base_url=B).status_code == 404

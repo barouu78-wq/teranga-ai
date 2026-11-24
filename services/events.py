@@ -20,6 +20,11 @@ EVENTS = (
      "Des millions de pèlerins : routes vers Touba très chargées, hébergement souvent chez l'habitant. Tenue couverte et respect des consignes de la ville sainte."),
     (_dt.date(2026, 8, 25), None, "Gamou (Maouloud)", "Tivaouane, Ndiassane, Médina Baye", "religious", True,
      "Nuit de prières et de chants à Tivaouane ; jour férié. Prévoir des trajets longs vers Tivaouane la veille."),
+    # JOJ : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    (_dt.date(2026, 10, 31), _dt.date(2026, 11, 13), "Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026",
+     "Dakar, Diamniadio et Saly", "sport", True,
+     "Premiers Jeux Olympiques de la Jeunesse organisés en Afrique. Programme du jour et billets sur le site officiel "
+     "olympics.com ; guide pratique : teranga-ai.fr/joj-dakar-2026. Prévoyez de la marge pour vos trajets."),
     (_dt.date(2026, 11, 1), None, "Toussaint", "Tout le pays", "holiday", True,
      "Jour férié : administrations et banques fermées."),
     (_dt.date(2026, 12, 25), None, "Noël", "Tout le pays", "holiday", True,
@@ -50,7 +55,8 @@ EVENTS = (
      "Nuit de prières et de chants à Tivaouane ; jour férié. Prévoir des trajets longs vers Tivaouane la veille."),
 )
 
-TYPE_LABELS = {"religious": "Fête religieuse", "national": "Fête nationale", "holiday": "Jour férié", "festival": "Festival"}
+TYPE_LABELS = {"religious": "Fête religieuse", "national": "Fête nationale", "holiday": "Jour férié", "festival": "Festival",
+               "sport": "Événement sportif"}
 _MONTHS = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre")
 
 
@@ -58,11 +64,30 @@ def french_date(day: _dt.date) -> str:
     return f"{day.day} {_MONTHS[day.month - 1]} {day.year}"
 
 
+def today_in_dakar() -> _dt.date:
+    """Date du jour à Dakar : heure universelle toute l'année (pas d'heure d'été), quel que soit le serveur."""
+    return _dt.datetime.now(_dt.timezone.utc).date()
+
+
+_DATE, _DATETIME = _dt.date, _dt.datetime  # gardés : un test peut remplacer _dt pour simuler l'horloge
+
+
+def _is_day(value: object) -> bool:
+    return isinstance(value, _DATE) and not isinstance(value, _DATETIME)
+
+
+def _valid_dates(start: object, end: object) -> bool:
+    """Une ligne mal saisie (date absente ou en texte, fin avant le début) n'est jamais affichée."""
+    return _is_day(start) and (end is None or (_is_day(end) and end >= start))
+
+
 def upcoming_events(today: _dt.date | None = None, limit: int | None = None) -> list[dict]:
-    """Événements en cours ou à venir, du plus proche au plus lointain."""
-    today = today or _dt.date.today()
+    """Événements en cours ou à venir, du plus proche au plus lointain. Un événement terminé (sa date de fin, ou
+    son unique jour, est passée) est retiré ; une ligne aux dates invalides aussi."""
+    today = today or today_in_dakar()
     items = []
-    for start, end, name, place, kind, confirmed, tips in sorted(EVENTS, key=lambda e: e[0]):
+    for start, end, name, place, kind, confirmed, tips in sorted(
+            (e for e in EVENTS if _valid_dates(e[0], e[1])), key=lambda e: e[0]):
         if (end or start) < today:
             continue
         items.append({
@@ -86,6 +111,7 @@ _ALIASES = {
     "Toussaint": ("toussaint",),
     "Ascension": ("ascension",),
     "Assomption": ("assomption", "assumption"),
+    "JOJ": ("joj", "jeux olympiques", "olympiques de la jeunesse", "youth olympic"),
 }
 
 
@@ -106,13 +132,25 @@ def events_context(today: _dt.date | None = None, query: str = "") -> str:
     """Bloc court pour l'assistant : les prochaines fêtes, avec le statut de la date.
 
     Les 6 plus proches, plus toute fête nommée dans la question même si elle est plus
-    lointaine (« C'est quand la Tabaski ? » en octobre)."""
+    lointaine (« C'est quand la Tabaski ? » en octobre). Rien après la dernière date du
+    calendrier : un titre seul ferait compter la question comme couverte (coverage_log)."""
     folded = _fold(query)
     upcoming = upcoming_events(today)
     chosen = upcoming[:6] + [e for e in upcoming[6:] if _asked(e, folded)]
+    if not chosen:
+        return ""
     lines = ["PROCHAINES FÊTES ET ÉVÉNEMENTS AU SÉNÉGAL (dates lunaires estimées tant que non confirmées) :"]
     for event in chosen:
         when = french_date(event["start"]) + (f" au {french_date(event['end'])}" if event["end"] else "")
         status = "confirmée" if event["confirmed"] else "estimée, à confirmer"
         lines.append(f"- {event['name']} ({event['place']}) : {when} [{status}]. {event['tips']}")
     return "\n".join(lines)
+
+
+def event_is_over(name_prefix: str, today: _dt.date | None = None) -> bool:
+    """L'événement dont le nom commence ainsi est-il terminé ? Faux s'il est introuvable ou mal daté."""
+    today = today or today_in_dakar()
+    for start, end, name, *_rest in EVENTS:
+        if str(name).startswith(name_prefix) and _valid_dates(start, end):
+            return (end or start) < today
+    return False

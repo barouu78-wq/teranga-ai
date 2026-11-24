@@ -22,14 +22,15 @@ fr:{
   sub:'Assistant Sénégal',ph:'Pose ta question…',send:'Envoyer',
   welcome:'Salut, je suis Teranga AI. Que veux-tu savoir sur le Sénégal ?',
   timeout:'Délai dépassé. Réessaie.',rateLimit:'Trop de demandes pour le moment. Réessaie dans quelques minutes.',err:'Service indisponible.',
+  searching:'Je cherche des informations à jour…',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
-  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',
+  share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
   sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',heroPh:'Ex. Comment aller à Gorée ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',appTitle:'Télécharger l’appli Android',appHint:'APK ou Google Play · deviens testeur',cvTitle:'Faire mon CV gratuit',cvHint:'Pour l’emploi au Sénégal · prêt en PDF',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
-  heroText:'Voyage, météo, transport, culture et vie pratique — des réponses utiles, sans bruit.',
+  heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes tes questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
   hintTouch:'Réponse en direct',
   cards:[
@@ -45,14 +46,15 @@ en:{
   sub:'Senegal assistant',ph:'Ask a question…',send:'Send',
   welcome:'Hi, I am Teranga AI. What do you want to know about Senegal?',
   timeout:'Timed out. Try again.',rateLimit:'Too many requests right now. Try again in a few minutes.',err:'Service unavailable.',
+  searching:'Looking for up-to-date information…',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
-  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',
+  share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
   sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',discoverTitle:'Discover',allPlaces:'All places',heroPh:'E.g. How do I get to Gorée?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',
+  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',appTitle:'Get the Android app',appHint:'APK or Google Play · become a tester',cvTitle:'Free CV builder (in French)',cvHint:'For jobs in Senegal · ready as a PDF',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
-  heroText:'Travel, weather, transport, culture and everyday life — useful answers, without the noise.',
+  heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
   hintTouch:'Live answers',
   cards:[
@@ -201,25 +203,30 @@ setInterval(loadFx,10*60*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
 const AUDIENCE={
 fr:{
+ general:[['Voyage',"Que faire au Sénégal en une semaine ?"],['Argent',"Combien font 100 euros en FCFA ?"],['Santé',"Où trouver une pharmacie de garde ?"],['Arnaques',"On m'a arnaqué sur Wave, que faire ?"]],
  tourist:[['Visite guidée',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Négocier au marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
  merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
 },
 en:{
+ general:[['Travel',"What can I do in Senegal in one week?"],['Money',"How much is 100 euros in CFA francs?"],['Health',"Where can I find an on-duty pharmacy?"],['Scams',"I was scammed on Wave, what should I do?"]],
  tourist:[['Guided tour','Be my guide: tell me the history of Gorée and what to see there.'],['Market bargaining','How do I bargain at Sandaga market? Give me the method and useful Wolof phrases.'],['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
  merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
 },
 wo:{
+ general:[['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
  tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Waxaale njëg',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Yoon',"Naka laa dem AIBD ba sama hôtel, te ñaata laa wara def budget?"],['Budget',"Ñaata laa wara def budget bés bu nekk ci Senegaal?"],['Jëfandikoo',"Yan ndigal yu am solo laa wara xam ngir visiter Dakar ak Gorée?"],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
  merchant:[['Njëg ak marge',"Jàppale ma defar njëg ak marge ci sama produit."],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['WhatsApp',"Naka laa mëna tëral commande yi ci WhatsApp?"],['Fey',"Yan yoon yu fey laa mëna jëfandikoo ngir sama clients?"],['Stock',"Jàppale ma tëral stock bi te moytu rupture."],['Client toubab',"Naka laa mëna dalal te jaay ak client turist bu jóge biti?"]]
 },
 ff:{
+ general:[['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
  tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Laawol','No mbaydi mi AIBD haa hôtel am, e hol ko mi heftin e budget?'],['Budget','Hol budget mi waɗa ñalawma e Senegaal?'],['Jokkondiral','Hol cuɓe mawɗe mi anndu ngam yahrude Dakar e Gorée?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
  merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
 }
 };
-let audience=storageGet('teranga-audience','tourist');
+// « Tout le Sénégal » par défaut : sans profil choisi, Teranga répond à toute question, pas seulement au voyage.
+let audience=storageGet('teranga-audience','general');
 // Une valeur périmée ou altérée du stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
-if(!['tourist','resident','diaspora','merchant'].includes(audience))audience='tourist';
+if(!['general','tourist','resident','diaspora','merchant'].includes(audience))audience='general';
 const audienceContext={
  tourist:{
   fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
@@ -250,13 +257,57 @@ const audienceContext={
 // Une icône fixe par bouton (même ordre dans toutes les langues) : deviner l'icône
 // d'après le titre traduit donnait des doublons et des erreurs selon la langue.
 const AUDIENCE_ICONS={
+ general:['doc','people','exchange','route','safety','home','culture','shop','guide','chat'],
  tourist:['guide','market','weather','route','money','safety','food','chat','exchange','wifi'],
  resident:['home','doc','money','place'],
  diaspora:['route','home','exchange','invest'],
  merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
+// « Tout le Sénégal » en français et en anglais : quatre thèmes depuis le 10 novembre 2026, réordonnés. L'icône suit le
+// thème (relecture Codex de #597) ; les listes en wolof et en pulaar gardent l'ordre de AUDIENCE_ICONS.general.
+const GENERAL_ICONS={Voyage:'route',Travel:'route',Argent:'exchange',Money:'exchange',Santé:'people',Health:'people',
+  Arnaques:'safety',Scams:'safety'};
+// Thèmes rapides de « Tout le Sénégal » (V5) : trois questions fréquentes par thème, la première est celle que le
+// thème posait avant. Français et anglais seulement : en wolof, le thème pose directement sa question (pas de
+// traduction inventée).
+const THEME_QS={
+fr:{
+ 'Santé':["Où trouver une pharmacie de garde ?","Comment se protéger du paludisme ?","C'est quoi la CMU ?"],
+ 'Argent':["Combien font 100 euros en FCFA ?","J'ai reçu de l'argent par erreur, que faire ?","Comment comparer deux transferts d'argent ?"],
+ 'Voyage':["Que faire au Sénégal en une semaine ?","Faut-il un visa pour le Sénégal ?","Quelle est la meilleure saison pour visiter le Sénégal ?"],
+ 'Arnaques':["On m'a arnaqué sur Wave, que faire ?","« Voici mon nouveau numéro » : est-ce une arnaque ?","Comment protéger mon code secret Wave ou Orange Money ?"]
+},
+en:{
+ 'Health':["Where can I find an on-duty pharmacy?","How do I protect myself from malaria?","What is the CMU health coverage?"],
+ 'Money':["How much is 100 euros in CFA francs?","I received money by mistake, what should I do?","How do I compare two money transfers?"],
+ 'Travel':["What can I do in Senegal in one week?","Do I need a visa for Senegal?","When is the best time to visit Senegal?"],
+ 'Scams':["I was scammed on Wave, what should I do?","“This is my new number”: is it a scam?","How do I protect my Wave or Orange Money PIN?"]
+}
+};
+const THEME_QS_ARROW='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function closeThemeQs(){
+  const panel=$('themeQs');if(panel)panel.hidden=true;
+  document.querySelectorAll('#heroChips [aria-expanded="true"]').forEach(b=>b.setAttribute('aria-expanded','false'));
+}
+function toggleThemeQs(chip){
+  const wasOpen=chip.getAttribute('aria-expanded')==='true';
+  closeThemeQs();
+  const qs=(THEME_QS[lang]||{})[chip.dataset.topic];
+  if(wasOpen||!qs)return;
+  const t=T[lang];
+  $('themeQsTitle').textContent=(t.topicQs||T.fr.topicQs).replace('{t}',chip.dataset.topic);
+  $('themeQsList').replaceChildren(...qs.map(q=>{const b=document.createElement('button');b.type='button';b.dataset.q=q;
+    const span=document.createElement('span');span.textContent=q;b.append(span);b.insertAdjacentHTML('beforeend',THEME_QS_ARROW);return b;}));
+  chip.setAttribute('aria-expanded','true');
+  $('themeQs').hidden=false;
+  // Sous les thèmes, le panneau peut tomber sous la barre d'onglets : il remonte juste assez pour être lu.
+  const calme=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('themeQs').scrollIntoView({block:'nearest',behavior:calme?'auto':'smooth'});
+}
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
+  const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes tes questions'];
+  $('audienceGeneral').textContent=generalLabels[0];$('audienceGeneralHint').textContent=generalLabels[1];
   const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
   $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
   $('audienceResident').textContent=labels[2];$('audienceResidentHint').textContent=labels[3];
@@ -265,7 +316,7 @@ function renderAudience(){
   document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
   const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
   const icons=AUDIENCE_ICONS[audience]||[];
-  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:icons[i]}));
+  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:(audience==='general'&&GENERAL_ICONS[t])||icons[i]}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
     const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
@@ -275,7 +326,14 @@ function renderAudience(){
   });
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
   const heroChips=$('heroChips');
-  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;return b;}));
+  // Thèmes rapides (V5) : jusqu'à dix ; ceux de « Tout le Sénégal » ouvrent leurs questions fréquentes.
+  const topicQs=audience==='general'?THEME_QS[lang]:null;
+  if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
+    if(topicQs&&topicQs[c.t]){b.dataset.topic=c.t;b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','themeQs');}
+    return b;}));
+  closeThemeQs();
+  $('audienceLabel').textContent=t.whoTitle||T.fr.whoTitle;
+  $('topicsTitle').textContent=t.topicsTitle||T.fr.topicsTitle;
 }
 
 // ?lang=… (widget partenaire, pages en anglais) prime sur la langue mémorisée.
@@ -284,8 +342,12 @@ let lang=['fr','en','wo','ff'].includes(urlParams.get('lang'))?urlParams.get('la
 if(!T[lang])lang='fr';
 let history=[], rec=null, listening=false, audio=null, autoVoice=storageGet('teranga-voice','1')!=='0', voiceConversation=false, voiceWaitingForAnswer=false, voiceSpeaking=false, voiceText='', inflight=null;
 let persistTimer=0, scrollRaf=0, stickToBottom=true, lastLang='';
+// Conversation neuve à chaque visite (demande du propriétaire, 5 nov. 2026) : gardée seulement dans l'onglet
+// (sessionStorage) et 30 minutes après la dernière activité ; plus rien dans le téléphone (localStorage).
+const CHAT_IDLE_MS=30*60*1000;
+let lastActivity=Date.now();
 // Logo Teranga (même dessin que l'en-tête) à la place de l'émoji 🌴.
-const AVATAR_SVG='<svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 21V9M5 13c3-.8 4.2-4 7-4s4 3.2 7 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="6" r="2.2" fill="currentColor"/></svg>';
+const AVATAR_SVG='<svg viewBox="0 0 100 100" aria-hidden="true"><use href="#sn-logo"/></svg>'; // logo (baobab doré) dessiné une fois dans home.html (#sn-logo)
 function cleanReply(text){
   return String(text||'')
     .replace(/```[\s\S]*?```/g,m=>m.replace(/```/g,''))
@@ -347,16 +409,51 @@ function setChatMode(on){
 function hideHero(){setChatMode(true);}
 function showHero(){setChatMode(false);}
 function applyThemeColor(){
-  $('themeColor').content=document.body.dataset.theme==='dark'?'#0b0f17':'#fbf3e6';
+  $('themeColor').content=document.body.dataset.theme==='dark'?'#0b0d10':'#fbf8f1';
 }
 const THEME_LABELS={
   fr:{auto:'Thème : automatique (jour/nuit)',light:'Thème : clair',dark:'Thème : sombre'},
   en:{auto:'Theme: automatic (day/night)',light:'Theme: light',dark:'Theme: dark'}
 };
 const FETE_TEXT={
-  fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !'},
-  en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!'}
+  fr:{independance:'🇸🇳 Bonne fête de l’Indépendance !',korite:'🌙 Korité bu neex !',tabaski:'🐑 Tabaski mubarak !',magal:'🕌 Bon Grand Magal de Touba !','nouvel-an':'✨ Bonne année !',
+      joj:'JOJ Dakar 2026 : le guide pratique'},
+  en:{independance:'🇸🇳 Happy Independence Day!',korite:'🌙 Eid Mubarak!',tabaski:'🐑 Tabaski Mubarak!',magal:'🕌 Blessed Grand Magal of Touba!','nouvel-an':'✨ Happy New Year!',
+      joj:'Dakar 2026 Youth Olympics: guide (in French)'}
 };
+// JOJ Dakar 2026 : une carte (#jojCard) remplace le bandeau ; FETE_TEXT.joj devient son nom pour les lecteurs d'écran.
+// Dates lues dans static/theme.js (seule copie, vérifiée contre services/events.py par tests/test_evenements_expires.py).
+// La carte vit dans un <template> (#jojCardTpl) : hors des Jeux, son texte n'est pas dans la page.
+const JOJ_RANGE=window.terangaTheme&&window.terangaTheme.range?window.terangaTheme.range('joj',2026):null;
+const JOJ_START=JOJ_RANGE?new Date(JOJ_RANGE.start[0],JOJ_RANGE.start[1]-1,JOJ_RANGE.start[2]):null;
+const JOJ_DAYS=JOJ_RANGE?JOJ_RANGE.days:0;
+const JOJ_TEXT={
+  fr:{kicker:'Jeux Olympiques de la Jeunesse',where:'31 oct. – 13 nov. · Dakar, Diamniadio, Saly',cta:'Le guide pratique',day:n=>'Jour '+n+' sur '+JOJ_DAYS},
+  en:{kicker:'Youth Olympic Games',where:'31 Oct – 13 Nov · Dakar, Diamniadio, Saly',cta:'Guide (in French)',day:n=>'Day '+n+' of '+JOJ_DAYS}
+};
+// Jour des Jeux (1 à 14) à la date du visiteur, ou 0 en dehors (fête forcée par ?fete=joj).
+function jojDay(date){
+  if(!JOJ_START)return 0;
+  const today=new Date(date.getFullYear(),date.getMonth(),date.getDate());
+  const n=Math.round((today-JOJ_START)/86400000)+1;  // arrondi : un jour de changement d'heure dure 23 ou 25 h
+  return n>=1&&n<=JOJ_DAYS?n:0;
+}
+// Ajoute la carte à la page (une seule fois) ; faux si le modèle manque.
+function jojCard(){
+  if($('jojCard'))return true;
+  const tpl=$('jojCardTpl');
+  if(!tpl||!tpl.content)return false;
+  tpl.replaceWith(tpl.content.cloneNode(true));
+  return !!$('jojCard');
+}
+function renderJojCard(){
+  if(!jojCard())return false;
+  const t=JOJ_TEXT[lang]||JOJ_TEXT.fr,n=jojDay(new Date());
+  $('jojKicker').textContent=t.kicker;$('jojWhere').textContent=t.where;$('jojCta').textContent=t.cta;
+  $('jojDay').textContent=n?t.day(n):'';
+  $('jojCard').setAttribute('aria-label',(FETE_TEXT[lang]||FETE_TEXT.fr).joj+(n?' · '+t.day(n):''));
+  return true;
+}
 function applyTheme(){
   const api=window.terangaTheme;
   const mode=api?api.readMode():(storageGet('teranga-theme','')||'auto');
@@ -373,8 +470,13 @@ function applyTheme(){
 function applyFete(){
   const name=window.terangaTheme?window.terangaTheme.fete():'';
   const text=name&&((FETE_TEXT[lang]||FETE_TEXT.fr)[name]);
-  if(text){document.body.dataset.fete=name;$('feteBanner').textContent=text;}
-  else{delete document.body.dataset.fete;$('feteBanner').textContent='';}
+  const banner=$('feteBanner');
+  // Carte JOJ introuvable (page ancienne en cache) : aucune fête plutôt qu'une carte vide.
+  if(text&&(name!=='joj'||renderJojCard())){
+    document.body.dataset.fete=name;
+    banner.textContent=name==='joj'?'':text;
+  }
+  else{delete document.body.dataset.fete;banner.textContent='';}
 }
 function sharePayload(){
   const url=location.origin+'/';
@@ -495,7 +597,7 @@ function addProjectOffer(col,idea){
   if(!idea)return;
   const box=document.createElement('div');box.className='project-offer';
   const btn=document.createElement('button');btn.type='button';btn.className='project-offer-btn';
-  const idle=lang==='en'?'🚀 Build my project plan':'🚀 Construire mon plan';
+  const idle=lang==='en'?'Build my project plan':'Construire mon plan';
   btn.textContent=idle;
   const more=document.createElement('button');more.type='button';more.className='project-offer-more';
   more.textContent=lang==='en'?'Add budget, city…':'Préciser budget, ville…';
@@ -519,8 +621,262 @@ function addProjectOffer(col,idea){
   };
   box.append(btn,more,out);col.appendChild(box);
 }
+// Boutons de suite (version 9) : les 2 ou 3 suggestions que le serveur joint déjà à chaque réponse
+// (`ux.followups`, services/intelligence.py). Un appui pose la suggestion comme nouvelle question, sauf
+// « Préciser ma demande », qui remet le curseur dans la zone de saisie. Une seule rangée : sous la dernière réponse.
+const FOLLOWUP_CLARIFY='Préciser ma demande';
+// Page en anglais : libellés du serveur traduits ; un libellé inconnu n'a pas de bouton plutôt qu'un bouton en français.
+const FOLLOWUP_EN={'Budget':'Budget','Transport':'Transport','Programme détaillé':'Detailed itinerary',
+  'Itinéraire':'Route','Prix':'Prices','Alternative':'Alternatives','Options':'Options','Localiser':'Show on a map',
+  "Plan d'action":'Action plan','Opportunités':'Opportunities','Offres':'Job offers','CV':'CV','Formations':'Courses',
+  'Conditions':'Requirements',"Plan d'apprentissage":'Learning plan','Financement':'Funding','Comparer':'Compare',
+  'Demain':'Tomorrow','Cette semaine':'This week','Prévisions':'Forecast','Plus de photos':'More photos',
+  'Que voir ?':'What to see?','Préciser ma demande':'Refine my question','Que faire ensuite ?':'What next?'};
+function followupLabel(item){
+  if(lang!=='en')return item;  // wolof et pulaar : le français, comme le reste des textes non traduits
+  const at=item.match(/^(.+?) à (.+)$/);  // « Prix à Dakar » → « Prices in Dakar »
+  if(at&&FOLLOWUP_EN[at[1]])return FOLLOWUP_EN[at[1]]+' in '+at[2];
+  return FOLLOWUP_EN[item]||'';
+}
+function clearFollowups(){document.querySelectorAll('.followups,.more-details').forEach(row=>row.remove());}
+// « Plus de détails » (V5) : l'IA donne d'abord l'essentiel ; ce bouton envoie la question comme si on l'avait tapée.
+// Wolof : libellé français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+function moreDetailsLabel(){return lang==='en'?'More details':'Plus de détails';}
+// Les deux libellés : la langue peut changer entre la question et un rechargement.
+function isMoreDetails(text){return text==='Plus de détails'||text==='More details';}
+// Dernière vraie question (pas « Plus de détails ») : celle qu'on met sur l'image partagée.
+function lastRealQuestion(){for(let i=history.length-1;i>=0;i--){const m=history[i];if(m&&m.role==='user'&&!isMoreDetails(m.content))return m.content;}return '';}
+function addMoreDetails(col){
+  const btn=document.createElement('button');btn.type='button';btn.className='more-details';btn.textContent=moreDetailsLabel();
+  btn.onclick=()=>ask(moreDetailsLabel());
+  answerRow(col).prepend(btn);
+}
+// Ligne sous la réponse : « Plus de détails » puis « Partager en image » (boutons de 44 px).
+function answerRow(col){
+  let row=col.querySelector(':scope > .answer-row');
+  if(row)return row;
+  row=document.createElement('div');row.className='answer-row';
+  const bubble=col.querySelector('.bubble');  // juste sous la réponse, avant les boutons Écouter, Copier…
+  if(bubble)bubble.after(row);else col.appendChild(row);
+  return row;
+}
+// Partager une réponse en image (V5) : image 1080 × 1920 au format statut (WhatsApp, TikTok, Instagram), dessinée dans
+// le téléphone avec la question, la réponse et teranga-ai.fr. Rien n'est envoyé au serveur, aucune bibliothèque.
+// Wolof : textes français en attendant la relecture du wolof par un locuteur natif (pas de traduction inventée).
+const SHARE_IMG_TXT={
+  fr:{button:'Partager en image',share:'Partager',save:"Enregistrer l'image",close:'Fermer',bg:'Fond',nuit:'Nuit dorée',vert:'Vert',sable:'Sable',
+    question:'QUESTION',source:'Réponse de Teranga AI, assistant IA',ask:'Pose ta question sur le Sénégal',more:'La suite sur teranga-ai.fr',
+    note:"L'adresse teranga-ai.fr est sur l'image.",preview:"Aperçu de l'image à partager",text:'Pose ta question sur le Sénégal : https://teranga-ai.fr'},
+  en:{button:'Share as image',share:'Share',save:'Save image',close:'Close',bg:'Background',nuit:'Golden night',vert:'Green',sable:'Sand',
+    question:'QUESTION',source:'Answer from Teranga AI, an AI assistant',ask:'Ask your question about Senegal',more:'Read more on teranga-ai.fr',
+    note:'The teranga-ai.fr address is on the image.',preview:'Preview of the image to share',text:'Ask your question about Senegal: https://teranga-ai.fr'}
+};
+function shareImgTxt(){return SHARE_IMG_TXT[lang]||SHARE_IMG_TXT.fr;}
+const SHARE_IMG_FONDS={
+  nuit:{bg:'#0b0d10',panel:'#14171c',ink:'#f5efe3',title:'#f6dfa8',gold:'#e8b04b',muted:'#a9a296',line:'rgba(232,176,75,.28)',pill:'#e8b04b',pillInk:'#0b0d10'},
+  vert:{bg:'#0f6a43',panel:'#0b5636',ink:'#fff6dc',title:'#f5d58a',gold:'#f5d58a',muted:'rgba(255,246,220,.82)',line:'rgba(245,213,138,.36)',pill:'#f5d58a',pillInk:'#0b3d27'},
+  sable:{bg:'#fbf8f1',panel:'#f1ead8',ink:'#14110d',title:'#14110d',gold:'#8a6100',muted:'#5e574b',line:'rgba(20,17,13,.16)',pill:'#14110d',pillInk:'#f5d58a'}
+};
+let shareImg=null,shareImgFond='nuit';
+function addShareImage(col,question,answer){
+  const btn=document.createElement('button');btn.type='button';btn.className='share-img-btn';btn.textContent=shareImgTxt().button;
+  btn.onclick=()=>openShareImg(question,answer,btn);
+  answerRow(col).appendChild(btn);
+}
+// Lignes d'un texte dans une largeur donnée ; au-delà de maxLines, la dernière ligne finit par « … ».
+function shareImgLines(ctx,text,maxW,maxLines){
+  const lines=[];
+  for(const p of String(text||'').split(/\n+/)){
+    let line='';
+    for(let w of p.replace(/\s+/g,' ').trim().split(' ').filter(Boolean)){
+      // Mot plus large que la ligne (un lien) : coupé en morceaux qui tiennent (relecture Gitar de #580).
+      while(w.length>1&&ctx.measureText(w).width>maxW){
+        let n=w.length-1;
+        while(n>1&&ctx.measureText(w.slice(0,n)).width>maxW)n--;
+        if(line){lines.push(line);line='';}
+        lines.push(w.slice(0,n));w=w.slice(n);
+      }
+      const test=line?line+' '+w:w;
+      if(line&&ctx.measureText(test).width>maxW){lines.push(line);line=w;}else line=test;
+    }
+    if(line)lines.push(line);
+  }
+  if(lines.length<=maxLines)return {lines,cut:false};
+  const kept=lines.slice(0,maxLines);
+  let last=kept[maxLines-1];
+  while(last&&ctx.measureText(last+' …').width>maxW)last=last.includes(' ')?last.slice(0,last.lastIndexOf(' ')):last.slice(0,-1);
+  kept[maxLines-1]=last+' …';
+  return {lines:kept,cut:true};
+}
+function shareImgRound(ctx,x,y,w,h,r){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);}
+// Logo : les mêmes tracés que le baobab doré du site (#sn-logo dans home.html).
+function shareImgLogo(ctx,x,y,size){
+  ctx.save();ctx.translate(x,y);ctx.scale(size/100,size/100);
+  ctx.fillStyle='#e8b04b';ctx.beginPath();ctx.arc(50,50,44,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#0b0d10';
+  ctx.fill(new Path2D('M19.8 82 Q50 75 80.2 82 A44 44 0 0 1 19.8 82 Z'));
+  ctx.fill(new Path2D('M37 85 Q44 72 43 57 L57 57 Q56 72 63 85 Z'));
+  ctx.strokeStyle='#0b0d10';ctx.lineWidth=5.5;ctx.lineCap='round';ctx.lineJoin='round';
+  ['M46 58 L36 46 L28 42','M36 46 L34 37','M50 57 L50 37','M50 45 L43 35','M50 43 L57 33','M54 58 L64 46 L72 42','M64 46 L66 37'].forEach(d=>ctx.stroke(new Path2D(d)));
+  ctx.restore();
+}
+async function drawShareImage(question,answer,fond){
+  const W=1080,H=1920,P=90,c=SHARE_IMG_FONDS[fond]||SHARE_IMG_FONDS.nuit,t=shareImgTxt();
+  const display='"Bricolage Grotesque",system-ui,sans-serif',body='"Atkinson Hyperlegible",system-ui,sans-serif';
+  try{await Promise.all(['700 64px '+display,'600 58px '+display,'400 46px '+body,'700 34px '+body].map(f=>document.fonts.load(f)));}catch(_){}
+  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle=c.bg;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=c.line;ctx.lineWidth=3;
+  for(const r of [330,220]){ctx.beginPath();ctx.arc(W-30,30,r,0,Math.PI*2);ctx.stroke();}
+  shareImgLogo(ctx,P,96,110);
+  ctx.font='700 64px '+display;ctx.fillStyle=c.title;ctx.fillText('Teranga ',P+140,172);
+  ctx.fillStyle=c.gold;ctx.fillText('AI',P+140+ctx.measureText('Teranga ').width,172);
+  // Mesure d'abord (question, puis réponse dans la place qui reste), dessin ensuite : le bloc est centré entre le
+  // logo et le pied, un peu plus haut que le milieu.
+  const top=280,bottom=1500,footer=1560,pad=50,lh=66,x0=P-20,pw=W-2*P+40,inner=pw-2*pad,more=70;
+  const q=String(question||'').trim();
+  ctx.font='600 58px '+display;
+  const ql=q?shareImgLines(ctx,lang==='en'?'“'+q+'”':'« '+q+' »',W-2*P,4).lines:[];
+  const qh=q?60+ql.length*72+50:0;
+  ctx.font='400 46px '+body;
+  const room=bottom-top-qh-2*pad;
+  let a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor(room/lh)));
+  if(a.cut)a=shareImgLines(ctx,answer,inner,Math.max(3,Math.floor((room-more)/lh)));
+  const ph=2*pad+a.lines.length*lh+(a.cut?more:0);
+  let y=top+Math.max(0,Math.round((bottom-top-qh-ph)*0.42));
+  if(q){
+    ctx.font='700 34px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.question,P,y+34);y+=60;
+    ctx.font='600 58px '+display;ctx.fillStyle=c.ink;
+    for(const l of ql){y+=72;ctx.fillText(l,P,y);}
+    y+=50;
+  }
+  // La réponse, dans un panneau ; coupée proprement si elle ne tient pas.
+  ctx.fillStyle=c.panel;shareImgRound(ctx,x0,y,pw,ph,40);ctx.fill();
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.stroke();
+  ctx.font='400 46px '+body;ctx.fillStyle=c.ink;let ty=y+pad;
+  for(const l of a.lines){ctx.fillText(l,x0+pad,ty+48);ty+=lh;}
+  if(a.cut){ctx.font='700 38px '+body;ctx.fillStyle=c.gold;ctx.fillText(t.more,x0+pad,ty+52);}
+  // Pied : d'où vient la réponse et l'adresse du site.
+  ctx.strokeStyle=c.line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(P,footer);ctx.lineTo(W-P,footer);ctx.stroke();
+  ctx.font='400 32px '+body;ctx.fillStyle=c.muted;ctx.fillText(t.source,P,footer+64);
+  ctx.font='400 38px '+body;ctx.fillText(t.ask,P,footer+150);
+  ctx.font='700 78px '+display;ctx.fillStyle=c.ink;ctx.fillText('teranga-ai.fr',P,footer+245);
+  const s=130,px=W-P-s,py=footer+130;
+  ctx.fillStyle=c.pill;shareImgRound(ctx,px,py,s,s,34);ctx.fill();
+  ctx.strokeStyle=c.pillInk;ctx.lineWidth=9;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(px+38,py+s/2);ctx.lineTo(px+s-38,py+s/2);ctx.moveTo(px+s/2+6,py+36);ctx.lineTo(px+s-38,py+s/2);ctx.lineTo(px+s/2+6,py+s-36);ctx.stroke();
+  return new Promise(ok=>canvas.toBlob(ok,'image/png'));
+}
+function shareImgDialog(){
+  let d=$('shareImgDialog');
+  if(d)return d;
+  d=document.createElement('div');d.id='shareImgDialog';d.className='share-img';d.hidden=true;
+  d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','shareImgTitle');
+  // Gabarit fixe (aucun texte venu de l'utilisateur ou de l'IA) ; les libellés sont posés en textContent.
+  d.innerHTML='<div class="share-img-panel"><div class="share-img-head"><h2 id="shareImgTitle"></h2>'
+    +'<button type="button" class="share-img-close" id="shareImgClose"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></div>'
+    +'<div class="share-img-frame"><img id="shareImgPreview" alt=""></div>'
+    +'<div class="share-img-bgs" role="group" id="shareImgBgs"></div>'
+    +'<button type="button" class="share-img-go" id="shareImgShare"></button>'
+    +'<button type="button" class="share-img-save" id="shareImgSave"></button>'
+    +'<p class="share-img-note" id="shareImgNote"></p></div>';
+  document.body.appendChild(d);
+  for(const fond of Object.keys(SHARE_IMG_FONDS)){
+    const b=document.createElement('button');b.type='button';b.dataset.fond=fond;
+    const dot=document.createElement('span');dot.className='share-img-dot';dot.style.background=SHARE_IMG_FONDS[fond].bg;
+    b.append(dot,document.createElement('span'));
+    b.onclick=()=>{shareImgFond=fond;if(shareImg){shareImg.fond=fond;renderShareImg();}shareImgLabels();};
+    $('shareImgBgs').appendChild(b);
+  }
+  $('shareImgClose').onclick=closeShareImg;
+  $('shareImgShare').onclick=shareImgShare;
+  $('shareImgSave').onclick=shareImgSave;
+  $('shareImgPreview').addEventListener('load',()=>{const img=$('shareImgPreview');img.dataset.fond=img.dataset.pending||'';});
+  d.addEventListener('click',e=>{if(e.target===d)closeShareImg();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!d.hidden){e.preventDefault();closeShareImg();}});
+  d.addEventListener('keydown',e=>{
+    if(e.key!=='Tab')return;  // le focus reste dans la fenêtre
+    const items=[...d.querySelectorAll('button:not([disabled])')];
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
+  return d;
+}
+function shareImgLabels(){
+  const t=shareImgTxt();
+  $('shareImgTitle').textContent=t.button;
+  $('shareImgClose').setAttribute('aria-label',t.close);
+  $('shareImgPreview').alt=t.preview;
+  $('shareImgBgs').setAttribute('aria-label',t.bg);
+  $('shareImgBgs').querySelectorAll('button').forEach(b=>{b.lastChild.textContent=t[b.dataset.fond];b.setAttribute('aria-pressed',b.dataset.fond===shareImgFond?'true':'false');});
+  $('shareImgShare').textContent=t.share;$('shareImgSave').textContent=t.save;$('shareImgNote').textContent=t.note;
+}
+async function renderShareImg(){
+  const s=shareImg;if(!s)return;
+  const fond=s.fond;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=true;
+  const blob=await drawShareImage(s.question,s.answer,fond);
+  if(!blob||shareImg!==s||s.fond!==fond)return;  // fenêtre fermée ou autre fond choisi entre-temps
+  if(s.url)URL.revokeObjectURL(s.url);
+  s.blob=blob;s.url=URL.createObjectURL(blob);
+  const img=$('shareImgPreview');img.dataset.pending=fond;img.src=s.url;
+  $('shareImgShare').disabled=$('shareImgSave').disabled=false;
+}
+function openShareImg(question,answer,opener){
+  const d=shareImgDialog();
+  shareImg={question:String(question||'').slice(0,300),answer:String(answer||''),fond:shareImgFond,opener};
+  shareImgLabels();
+  d.hidden=false;document.body.classList.add('share-img-open');
+  $('shareImgClose').focus();  // « Partager » reste désactivé tant que l'image se dessine
+  renderShareImg();
+}
+function closeShareImg(){
+  const d=$('shareImgDialog');if(!d||d.hidden)return;
+  d.hidden=true;document.body.classList.remove('share-img-open');
+  const s=shareImg;shareImg=null;
+  if(s&&s.url)URL.revokeObjectURL(s.url);
+  $('shareImgPreview').removeAttribute('src');delete $('shareImgPreview').dataset.fond;
+  if(s&&s.opener&&s.opener.isConnected)s.opener.focus();
+}
+async function shareImgShare(){
+  const s=shareImg;if(!s||!s.blob)return;
+  const file=new File([s.blob],'teranga-ai.png',{type:'image/png'});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Teranga AI',text:shareImgTxt().text});return;}
+  }catch(e){if(e&&e.name==='AbortError')return;}  // partage annulé : rien d'autre
+  shareImgSave();  // pas de partage de fichier (ordinateur) : l'image est enregistrée
+}
+function shareImgSave(){
+  const s=shareImg;if(!s||!s.url)return;
+  const a=document.createElement('a');a.href=s.url;a.download='teranga-ai.png';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function addFollowups(col,ux){
+  clearFollowups();
+  if(!ux||ux.show_followups!==true||!Array.isArray(ux.followups))return;
+  const items=[];
+  for(const raw of ux.followups){
+    const item=String(raw||'').trim().slice(0,80);
+    const label=item?followupLabel(item):'';
+    if(label&&!items.some(x=>x.label===label))items.push({item,label});
+    if(items.length===3)break;
+  }
+  if(!items.length)return;
+  const row=document.createElement('div');row.className='followups';row.setAttribute('role','group');
+  row.setAttribute('aria-label',lang==='en'?'To continue':'Pour continuer');
+  for(const {item,label} of items){
+    const btn=document.createElement('button');btn.type='button';btn.className='followup';btn.textContent=label;
+    // startsWith : « Préciser ma demande à Dakar » (lieu ajouté par un serveur plus ancien) reste ce bouton.
+    btn.onclick=()=>{if(item.startsWith(FOLLOWUP_CLARIFY)){input.focus();return;}ask(label);};
+    row.appendChild(btn);
+  }
+  col.appendChild(row);
+}
 function renderInlineProject(container,p){
-  const h=document.createElement('h3');h.textContent='🚀 '+(p.name||(lang==='en'?'Your project':'Ton projet'));
+  const h=document.createElement('h3');h.textContent=(p.name||(lang==='en'?'Your project':'Ton projet'));
   const meta=document.createElement('p');meta.className='project-meta';
   meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');
   const next=document.createElement('p');const strong=document.createElement('strong');
@@ -532,8 +888,8 @@ function renderInlineProject(container,p){
   renderProjectProgress(container,p);
   const links=document.createElement('div');links.className='place-links';
   const q='?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');
-  const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'🔎 Opportunities':'🔎 Opportunités';
-  const partner=document.createElement('a');partner.href='/partners'+q;partner.textContent=lang==='en'?'🤝 Partners':'🤝 Partenaires';
+  const opp=document.createElement('a');opp.href='/opportunities'+q;opp.textContent=lang==='en'?'Opportunities':'Opportunités';
+  const partner=document.createElement('a');partner.href='/partners'+q;partner.textContent=lang==='en'?'Partners':'Partenaires';
   links.append(opp,partner);container.appendChild(links);
 }
 // Lien vers la fiche /lieux des lieux cités dans la question.
@@ -543,7 +899,7 @@ function addPlaceLinks(col,places){
   const box=document.createElement('div');box.className='place-links';
   list.forEach(p=>{
     const a=document.createElement('a');a.href='/lieux/'+p.id;
-    a.textContent=(lang==='en'?'📍 Place guide: ':'📍 Fiche : ')+String(p.name||'');
+    a.textContent=(lang==='en'?'Place guide: ':'Fiche : ')+String(p.name||'');
     box.appendChild(a);
     // Liens « Réserver » (partenaires affiliés) : uniquement nos redirections /go/.
     (Array.isArray(p.book)?p.book:[]).slice(0,2).forEach(b=>{
@@ -670,13 +1026,21 @@ function setLang(next){
   if(document.body.dataset.themeMode){applyTheme();applyFete();}
   document.querySelectorAll('#langs button').forEach(b=>{const active=b.dataset.lang===next;b.classList.toggle('on',active);b.setAttribute('aria-pressed',active?'true':'false');});
   const t=T[lang];
-  $('sub').textContent=t.sub;input.placeholder=t.ph;send.textContent=t.send;
-  $('voiceToggle').textContent=autoVoice?t.vOn:t.vOff;
+  $('sub').textContent=t.sub;input.placeholder=t.ph;sendLabel(t.send);pieceLabels();
+  setVoiceToggle(autoVoice);
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
   if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
+  if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
   if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
+  // Cartes « À découvrir » (tirées par le serveur) : la région dans la langue choisie ; « UNESCO » ne change pas.
+  document.querySelectorAll('.place-tile[data-region]:not([data-unesco])').forEach(tile=>{
+    const sub=tile.querySelector('small');if(sub)sub.textContent=(t.regionOf||T.fr.regionOf).replace('{r}',tile.dataset.region);
+  });
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
-  if($('planCtaTitle')){$('planCtaTitle').textContent=t.planTitle||t.journeyTravel;$('planCtaHint').textContent=t.planHint||t.journeyTravelHint;}
+  // Carte mise en avant : l'appli Android (téléchargement et test fermé Google Play).
+  // Dans l'appli elle-même (TWA ou écran d'accueil), elle redevient « Planifier mon voyage ».
+  if($('planCtaTitle')){var inApp=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||document.referrer.indexOf('android-app://')===0;$('planCta').href=inApp?'/trip-planner':'/telecharger';$('planCtaTitle').textContent=inApp?(t.planTitle||t.journeyTravel):(t.appTitle||'Télécharger l’appli Android');$('planCtaHint').textContent=inApp?(t.planHint||t.journeyTravelHint):(t.appHint||'APK ou Google Play · deviens testeur');}
+  if($('cvCtaTitle')){$('cvCtaTitle').textContent=t.cvTitle||T.fr.cvTitle;$('cvCtaHint').textContent=t.cvHint||T.fr.cvHint;}
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
   const tabs=document.querySelectorAll('#tabbar [data-tab]');
@@ -690,11 +1054,12 @@ function setLang(next){
   $('fxTitle').textContent=lang==='en'?'Currency converter':lang==='wo'?'Soppi xaalis':lang==='ff'?'Waylugol ceede':'Convertisseur';
   $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
+  renderVoiceState();
   if(rec)rec.lang=voiceMap[lang];
 }
 document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
   const nextAudience=String(btn.dataset.audience||'').trim();
-  if(!['tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  if(!['general','tourist','resident','diaspora','merchant'].includes(nextAudience))return;
   audience=nextAudience;
   try{LS.setItem('teranga-audience',audience)}catch(_){}
   renderAudience();
@@ -808,7 +1173,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     if(!res.ok)throw new Error(data.error||T[lang].err);
     const p=data.project||{};
     result.innerHTML='';
-    const h=document.createElement('h3');h.textContent='🚀 '+(p.name||'Ton projet');result.appendChild(h);
+    const h=document.createElement('h3');h.textContent=(p.name||'Ton projet');result.appendChild(h);
     const meta=document.createElement('p');meta.textContent=[p.category,p.city,p.budget_fcfa?new Intl.NumberFormat('fr-FR').format(p.budget_fcfa)+' FCFA':''].filter(Boolean).join(' · ');result.appendChild(meta);
     const next=document.createElement('p');next.innerHTML='<strong>Prochaine action :</strong> ';const nextText=document.createTextNode(p.next_action||'Valider ton idée sur le terrain.');next.appendChild(nextText);result.appendChild(next);
     const list=document.createElement('ol');list.className='project-steps';
@@ -817,7 +1182,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
     renderProjectProgress(result,p);
     renderProjectTracking(result,p);
     const matchBox=document.createElement('div');matchBox.className='project-progress';
-    matchBox.innerHTML='<div class="project-progress-title">🎯 Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
+    matchBox.innerHTML='<div class="project-progress-title">Prochaines pistes</div><p>Recherche des opportunités et partenaires adaptés…</p>';
     result.appendChild(matchBox);
     try{
       let matchRes=await postJSON('/api/projects/matches',JSON.stringify({project:p}));
@@ -825,7 +1190,7 @@ $('projectForm')?.addEventListener('submit',async e=>{
       const matchData=await matchRes.json().catch(()=>({}));
       if(matchRes.ok&&matchData.matches){
         const m=matchData.matches;
-        matchBox.innerHTML='<div class="project-progress-title">🎯 Opportunités & partenaires</div>';
+        matchBox.innerHTML='<div class="project-progress-title">Opportunités & partenaires</div>';
         const summary=document.createElement('p');
         summary.textContent=(m.counts?.opportunities||0)+' opportunité(s) · '+(m.counts?.partners||0)+' partenaire(s) correspondant à ton projet.';
         matchBox.appendChild(summary);
@@ -835,8 +1200,8 @@ $('projectForm')?.addEventListener('submit',async e=>{
           matchBox.appendChild(ul);
         }
         const links=document.createElement('div');links.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
-        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='🔎 Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
-        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='🤝 Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const opp=document.createElement('a');opp.href='/opportunities?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');opp.textContent='Voir le radar';opp.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
+        const partner=document.createElement('a');partner.href='/partners?category='+encodeURIComponent(p.category||'')+'&city='+encodeURIComponent(p.city||'');partner.textContent='Voir les partenaires';partner.style.cssText='text-decoration:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-weight:800;color:inherit';
         links.append(opp,partner);matchBox.appendChild(links);
       }
     }catch(_){}
@@ -863,13 +1228,20 @@ $('tabbar').addEventListener('click',e=>{
   if(!btn)return;
   showHero();stage.scrollTop=0;
 });
-function reset(){
-  if(history.length&&!confirm(T[lang].resetAsk))return;
+function clearConversation(){
   if(inflight)inflight.abort();
   history=[];messages.replaceChildren();showHero();
   SS.removeItem('teranga-history');
   LS.removeItem('teranga-history');
 }
+function reset(){
+  if(history.length&&!confirm(T[lang].resetAsk))return;
+  clearConversation();
+}
+// Onglet retrouvé après 30 minutes sans activité : nouvelle conversation, sans demander confirmation.
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&history.length&&!inflight&&Date.now()-lastActivity>=CHAT_IDLE_MS)clearConversation();
+});
 let resumeVoiceTimer=0;
 function answerExtras(item){
   const extras={};
@@ -886,6 +1258,7 @@ function answerExtras(item){
   }catch(_){return {}}
 }
 function persist(){
+  lastActivity=Date.now();
   clearTimeout(persistTimer);
   persistTimer=setTimeout(()=>{
     try{
@@ -899,15 +1272,18 @@ function persist(){
       })).filter(item=>item.content);
       const payload=JSON.stringify({version:2,lang,history:safeHistory,updatedAt:Date.now()});
       SS.setItem('teranga-history',payload);
-      LS.setItem('teranga-history',payload);
     }catch(e){}
   },250);
 }
 function restore(){
   try{
-    const raw=SS.getItem('teranga-history')||LS.getItem('teranga-history');
+    LS.removeItem('teranga-history');  // ancienne version : conversation gardée sans limite dans le téléphone
+    const raw=SS.getItem('teranga-history');
     if(!raw)return;
     const data=JSON.parse(raw);
+    const age=Date.now()-Number(data.updatedAt||0);
+    if(!(age>=0&&age<CHAT_IDLE_MS)){SS.removeItem('teranga-history');return;}  // nouvelle visite : chat vide
+    lastActivity=Number(data.updatedAt);
     // ?lang=… (widget partenaire, pages anglaises) prime sur la langue de la conversation enregistrée.
     if(data.lang&&T[data.lang]&&!T[urlParams.get('lang')])lang=data.lang;
     if(Array.isArray(data.history)&&data.history.length){
@@ -920,6 +1296,7 @@ function restore(){
       history=restored;
       hideHero();
       const frag=document.createDocumentFragment();
+      let lastCol=null,lastAsked='';
       history.forEach(item=>{
         const row=document.createElement('div');
         row.className='msg '+item.role;
@@ -930,34 +1307,126 @@ function restore(){
         const b=document.createElement('div');b.className='bubble';
         b.textContent=cleanReply(item.content||'');
         col.appendChild(b);
+        if(item.role==='user'&&!isMoreDetails(item.content))lastAsked=item.content;
         if(item.role==='assistant'){
           addActs(col,item.content||'',null,item.share||'');
+          addShareImage(col,lastAsked,item.content||'');
           addCityImage(col,item.image);
           addMap(col,item.map);
           addSources(col,item.sources);
         }
+        lastCol=col;
         row.appendChild(col);
         frag.appendChild(row);
       });
+      // « Plus de détails » revient sous la dernière réponse (pas si elle répond déjà à « Plus de détails »).
+      const last=history[history.length-1],asked=history[history.length-2];
+      if(lastCol&&last&&last.role==='assistant'&&!(asked&&isMoreDetails(asked.content)))addMoreDetails(lastCol);
       messages.appendChild(frag);
       stage.scrollTop=stage.scrollHeight;
     }
   }catch(e){}
 }
-async function ask(preset,fromVoice=false,isRetry=false){
-  const text=(preset||input.value).trim();
+// Fichier joint (« Go fichiers » du propriétaire, 15 novembre 2026) : une photo (réduite ici), un PDF ou un Word de
+// 2 Mo au plus part avec la question suivante, puis il est oublié : seul son nom reste dans la bulle. Le serveur
+// revérifie tout (services/fichiers.py).
+const PIECE_MAX=2*1024*1024,PIECE_DOCX='application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const PIECE_TEXT={
+  fr:{add:'Joindre un fichier (photo, PDF ou Word)',title:'Joindre un fichier',remove:'Retirer le fichier',
+    note:'Lu par l’IA pour te répondre, jamais gardé par Teranga. Évite carte d’identité, carte bancaire et mots de passe.',
+    type:'Ce type de fichier n’est pas accepté : photo, PDF ou Word (.docx).',size:'Fichier trop lourd : 2 Mo au plus.',
+    read:'Fichier illisible. Choisis-le de nouveau.',ask:'Explique-moi ce document.',added:'Fichier ajouté : ',
+    photo:'Photo',pdf:'PDF',word:'Word',ko:'Ko',mo:'Mo'},
+  en:{add:'Attach a file (photo, PDF or Word)',title:'Attach a file',remove:'Remove the file',
+    note:'Read by the AI to answer you, never kept by Teranga. Avoid ID cards, bank cards and passwords.',
+    type:'This file type is not accepted: photo, PDF or Word (.docx).',size:'File too large: 2 MB at most.',
+    read:'Unreadable file. Please choose it again.',ask:'Explain this document to me.',added:'File added: ',
+    photo:'Photo',pdf:'PDF',word:'Word',ko:'KB',mo:'MB'}
+};
+const PIECE_ICON='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 16.5h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+let piece=null;
+function pieceText(){return PIECE_TEXT[lang]||PIECE_TEXT.fr;}
+function sendLabel(text){const l=send.querySelector('.send-label');if(l)l.textContent=text;else send.textContent=text;}
+function pieceLabels(){
+  const t=pieceText();
+  for(const id of ['joindre','heroJoindre']){const b=$(id);if(b){b.setAttribute('aria-label',t.add);b.title=t.title;}}
+  if(piece)renderPiece();
+}
+function pieceSize(n,t){return n<1048576?Math.max(1,Math.round(n/1024))+' '+t.ko:(n/1048576).toFixed(1).replace('.',lang==='en'?'.':',')+' '+t.mo;}
+function readAsBase64(blob){
+  return new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>ko(new Error('read'));r.readAsDataURL(blob);});
+}
+async function photoJpeg(file){
+  // 1 568 px au plus (la taille que l'IA lit), fond blanc pour les PNG transparents, JPEG de qualité 0,85.
+  const bmp=await createImageBitmap(file);
+  const k=Math.min(1,1568/Math.max(bmp.width,bmp.height));
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(bmp.width*k));c.height=Math.max(1,Math.round(bmp.height*k));
+  const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(bmp,0,0,c.width,c.height);
+  if(bmp.close)bmp.close();
+  const blob=await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.85));
+  if(!blob)throw new Error('read');
+  return blob;
+}
+async function readPiece(file){
+  const nom=String(file.name||'fichier').slice(-80);
+  let type=file.type||'',blob=file;
+  if(!type&&/\.docx$/i.test(nom))type=PIECE_DOCX;
+  if(!type&&/\.pdf$/i.test(nom))type='application/pdf';
+  if(/^image\//.test(type)){
+    // Une photo de l'iPhone (HEIC) est convertie ici quand le navigateur sait la lire.
+    try{blob=await photoJpeg(file);type='image/jpeg';}
+    catch(_){if(!/^image\/(jpeg|png|webp)$/.test(type))throw new Error('type');}
+  }else if(type!=='application/pdf'&&type!==PIECE_DOCX)throw new Error('type');
+  if(blob.size>PIECE_MAX)throw new Error('size');
+  const genre=type===PIECE_DOCX?'word':(type==='application/pdf'?'pdf':'photo');
+  return {nom,type,genre,taille:blob.size,donnees:await readAsBase64(blob)};
+}
+function renderPiece(error){
+  const t=pieceText();
+  for(const id of ['piece','heroPiece']){
+    const zone=$(id);if(!zone)continue;
+    zone.replaceChildren();
+    zone.hidden=!piece&&!error;
+    if(error){const p=document.createElement('p');p.className='piece-err';p.textContent=error;zone.appendChild(p);continue;}
+    if(!piece)continue;
+    const row=document.createElement('div');row.className='piece';
+    row.insertAdjacentHTML('afterbegin',PIECE_ICON);
+    const name=document.createElement('span');name.textContent=piece.nom;
+    const small=document.createElement('small');small.textContent=t[piece.genre]+' · '+pieceSize(piece.taille,t);name.appendChild(small);
+    const rm=document.createElement('button');rm.type='button';rm.title=t.remove;rm.setAttribute('aria-label',t.remove+' '+piece.nom);
+    rm.innerHTML='<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    rm.onclick=()=>{piece=null;renderPiece();$('pieceStatus').textContent='';const back=hero&&!hero.hidden&&$('heroJoindre')&&$('heroJoindre').offsetParent?$('heroJoindre'):$('joindre');back.focus();};
+    const note=document.createElement('p');note.className='piece-note';note.textContent=t.note;
+    row.append(name,rm);zone.append(row,note);
+  }
+}
+function addPieceLine(bubble,nom){
+  const line=document.createElement('span');line.className='msg-piece';
+  line.insertAdjacentHTML('afterbegin',PIECE_ICON);line.appendChild(document.createTextNode(nom));
+  bubble.appendChild(line);
+}
+async function ask(preset,fromVoice=false,isRetry=false,retryPiece=null){
+  // Un renvoi (« Réessayer ») reprend le fichier de SA question, jamais celui d'une question envoyée depuis.
+  const sending=isRetry?retryPiece:piece;
+  let text=(preset||input.value).trim();
+  if(!text&&sending)text=pieceText().ask;  // un fichier seul : « Explique-moi ce document. »
   if(!text||send.disabled)return;
   // Une seule question à la fois : un clic pendant une réponse ne lance pas
   // une seconde requête (qui dérèglerait le bouton Envoyer/Arrêter).
   if(inflight){send.classList.remove('nudge');void send.offsetWidth;send.classList.add('nudge');return;}
   hideHero();
+  clearFollowups();  // nouvelle question : les suggestions de la réponse précédente ne servent plus
   if(!isRetry){
-    addMsg('user',text,{animate:true});
+    // Conversion Google Ads « question » : ne part qu'après « Accepter » (static/google-ads-consent.js).
+    if(window.terangaAdsConversion)window.terangaAdsConversion('question');
+    const sent=addMsg('user',text,{animate:true});
+    if(sending)addPieceLine(sent.b,sending.nom);
     history.push({role:'user',content:text});
     persist();
+    if(sending){piece=null;renderPiece();}
   }
   input.value='';input.style.height='';$('count').textContent='0 / 2000';
-  send.disabled=false;send.textContent=T[lang].stop;
+  send.disabled=false;sendLabel(T[lang].stop);
   send.dataset.mode='stop';
   const wait=addMsg('assistant','',{animate:true});
   wait.row.classList.add('thinking');
@@ -966,7 +1435,11 @@ async function ask(preset,fromVoice=false,isRetry=false){
   const dots=document.createElement('div');dots.className='typing';
   dots.append(document.createElement('i'),document.createElement('i'),document.createElement('i'));
   wait.b.replaceWith(dots);
+  // Recherche web lancée par le modèle (événement « st ») : une phrase sous les points, retirée avec eux.
+  let searching=null;
+  const dropSearching=()=>{if(searching){searching.remove();searching=null;}};
   const ctrl=new AbortController();inflight=ctrl;
+  resetVoiceStreamTts();  // nouvelle réponse : la voix repart de zéro (rien du tour précédent, voix de nouveau permise)
   // Délai d'INACTIVITÉ : une longue réponse qui arrive encore n'est jamais coupée.
   let kill=0,timedOut=false;
   const arm=()=>{clearTimeout(kill);kill=setTimeout(()=>{timedOut=true;ctrl.abort();},40000);};
@@ -974,7 +1447,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
   let reply='', sources=[], image=null, map=null, itineraryEdit=null, shareToken='', places=[], ux=null;
   try{
   // Préparé dans le try : une erreur imprévue libère toujours le bouton (finally).
-  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
+  const body=JSON.stringify({message:text,history:history.slice(-12),language:lang,audience,hote:SS.getItem('teranga-hote')||'',fichier:sending?{nom:sending.nom,type:sending.type,donnees:sending.donnees}:undefined,context_place:SS.getItem('teranga-place-name')||'',trip_context:SS.getItem('teranga-trip-context')||'',trip_edit_request:((SS.getItem('teranga-trip-context')||'').trim()?text:'')});
     // Coupure réseau avant toute réponse (redémarrage du serveur, réseau mobile) :
     // un seul nouvel essai automatique, 2 s plus tard.
     let res;
@@ -997,6 +1470,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       if(!pending)return;
       live+=pending;pending='';
       if(!shown){
+        dropSearching();
         dots.replaceWith(wait.b);
         wait.row.classList.remove('thinking');
         wait.b.classList.add('live');
@@ -1014,6 +1488,13 @@ async function ask(preset,fromVoice=false,isRetry=false){
     // Un seul traitement des événements, pour les lignes complètes comme pour la dernière.
     const applyEvent=ev=>{
       if(ev.error)throw new Error(ev.error);
+      if(ev.st==='web'){
+        if(!shown&&!searching&&dots.parentNode){
+          searching=document.createElement('p');searching.className='typing-status';
+          searching.setAttribute('role','status');searching.textContent=T[lang].searching||T.fr.searching;
+          dots.after(searching);scrollStage();
+        }
+      }
       if(ev.d)queue(ev.d);
       if(ev.s)sources=ev.s;
       if(ev.img)image=ev.img;
@@ -1065,6 +1546,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       pending=reply;flush();
     }
     reply=cleanReply(reply);
+    dropSearching();
     if(!shown){dots.replaceWith(wait.b);wait.row.classList.remove('thinking');node.nodeValue=reply||T[lang].err;}
     else {wait.row.classList.remove('thinking');node.nodeValue=reply;if(cursor.parentNode)cursor.remove();}
     wait.b.classList.remove('live');
@@ -1073,14 +1555,18 @@ async function ask(preset,fromVoice=false,isRetry=false){
     addMap(wait.col,map);
     addPlaceLinks(wait.col,places);
     if(ux&&ux.intent==='project')addProjectOffer(wait.col,text);
+    if(reply)addFollowups(wait.col,ux);
+    if(reply&&!isMoreDetails(text))addMoreDetails(wait.col);  // pas sous la réponse détaillée elle-même
+    if(reply)addShareImage(wait.col,isMoreDetails(text)?lastRealQuestion():text,reply);
     // Source chips (Wikipedia, etc.) stay hidden in the chat UI.
     history.push({role:'assistant',content:reply,sources,image,map,share:shareToken});
     history=history.slice(-12);
     persist();
     if(autoVoice&&reply){
       voiceWaitingForAnswer=true;
-      flushVoiceStreamTts(reply);
-      if(!voiceStreamTtsCount&&!voiceTtsQueue.length)queueVoiceSpeech(reply);
+      // Conversation vocale : la suite de la réponse part d'un seul appel (la première partie est déjà partie
+      // pendant le flux). Question écrite : toute la réponse. Voix coupée pendant la réponse : rien.
+      if(!flushVoiceStreamTts(reply)&&!voiceStreamTtsMuted)queueVoiceSpeech(reply);
     }
   }catch(err){
     const aborted=err.name==='AbortError';
@@ -1092,10 +1578,11 @@ async function ask(preset,fromVoice=false,isRetry=false){
     const msg=offline
       ?(lang==='en'?'You are offline. Teranga needs internet to answer; guides you already opened stay available.':'Tu es hors ligne. Teranga a besoin d’internet pour répondre ; les guides déjà ouverts restent consultables.')
       :aborted
-      ?T[lang].timeout
+      ?(timedOut?T[lang].timeout:(lang==='en'?'Answer stopped.':'Réponse interrompue.'))
       :err.status===429
         ?T[lang].rateLimit
         :raw;
+    dropSearching();
     if(dots.parentNode)dots.replaceWith(wait.b);
     wait.row.classList.remove('thinking');
     node.nodeValue=msg;
@@ -1110,7 +1597,7 @@ async function ask(preset,fromVoice=false,isRetry=false){
       retry.className='speak';retry.type='button';retry.textContent=T[lang].retry;
       retry.onclick=()=>{
         if(wait.row.parentNode)wait.row.remove();
-        ask(text,fromVoice,true);
+        ask(text,fromVoice,true,sending);
       };
       wait.col.appendChild(retry);
       if(err.status===429){
@@ -1135,15 +1622,16 @@ async function ask(preset,fromVoice=false,isRetry=false){
     }
   }finally{
     clearTimeout(kill);
+    // Réponse finie, ratée ou arrêtée : plus rien de son flux ne doit être lu (le délai de la 1re partie, le texte reçu).
+    resetVoiceStreamTts();
     inflight=null;
     send.dataset.mode='';
     send.disabled=false;
-    send.textContent=T[lang].send;
+    sendLabel(T[lang].send);
     if(voiceConversation&&autoVoice&&!voiceSpeaking&&!voiceSTTBusy){
       voiceWaitingForAnswer=false;
-      voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
       setTimeout(startVoiceCapture,140);
-    }else if(!voiceConversation)input.focus();
+    }else if(!voiceConversation&&!fromVoice)input.focus();  // un arrêt vocal n'ouvre pas le clavier
   }
 }
 $('langs').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.lang);};
@@ -1151,24 +1639,54 @@ $('chips').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);
 $('cards').onclick=e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);};
 // Design v2 : champ de question en haut de l'accueil (téléphone). Il passe la question
 // au même circuit que la barre du bas (ask), puis la conversation prend le relais.
-$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
+$('heroChips')?.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.topic)toggleThemeQs(b);else ask(b.dataset.q);});
+$('themeQsList')?.addEventListener('click',e=>{const b=e.target.closest('button');if(b)ask(b.dataset.q);});
 $('heroAsk')?.addEventListener('submit',e=>{
   e.preventDefault();
   const q=$('heroInput').value.trim();
-  if(!q){$('heroInput').focus();return;}
+  if(!q&&!piece){$('heroInput').focus();return;}
   // Une réponse est en cours : on garde la question dans le champ plutôt que de la perdre.
   if(inflight||send.disabled)return;
   $('heroInput').value='';
   ask(q);
 });
 $('heroMic')?.addEventListener('click',()=>mic.click());
-// Photos des deux lieux à découvrir (mêmes images que les fiches), sans bloquer l'affichage.
+$('joindre').onclick=()=>$('pieceInput').click();
+$('heroJoindre')?.addEventListener('click',()=>$('pieceInput').click());
+$('pieceInput').onchange=async e=>{
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';  // le même fichier pourra être choisi de nouveau
+  if(!file)return;
+  const t=pieceText();
+  try{
+    piece=await readPiece(file);
+    renderPiece();
+    $('pieceStatus').textContent=t.added+piece.nom;
+  }catch(err){
+    piece=null;
+    const message=t[err&&err.message]||t.read;
+    renderPiece(message);
+    $('pieceStatus').textContent=message;
+  }
+};
+// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage. Vignette de 500 px :
+// la carte fait 170 px, la vignette de 1 280 px de la fiche pesait jusqu'à 537 Ko.
 document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
   try{
-    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo),window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||'')+'&w=500',window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
     const d=await r.json();const img=(d.images||[])[0];if(!img)return;
-    const url=img.display_url||('/image-proxy?url='+encodeURIComponent(img.url));
-    const box=tile.querySelector('.place-tile-img');if(box)box.style.background='center/cover no-repeat url("'+url.replace(/["\\]/g,'')+'")';
+    const box=tile.querySelector('.place-tile-img');if(!box)return;
+    // La photo est chargée avant de remplacer le fond : relais du site, puis photo directe (comme les galeries) ;
+    // si les deux échouent, la vignette garde sa couleur au lieu d'une case vide.
+    const tries=[img.display_url||('/image-proxy?url='+encodeURIComponent(img.url)),img.url].filter((u,i,a)=>u&&a.indexOf(u)===i);
+    const show=i=>{
+      if(i>=tries.length)return;
+      const probe=new Image();
+      probe.onload=()=>{box.style.backgroundImage='url("'+tries[i].replace(/["\\]/g,'')+'")';box.style.backgroundSize='cover';box.style.backgroundPosition='center';};
+      probe.onerror=()=>show(i+1);
+      probe.src=tries[i];
+    };
+    show(0);
   }catch(_){}
 });
 send.onclick=()=>{
@@ -1237,15 +1755,98 @@ const VOICE_MAX_MS=30000;
 const VOICE_NOISE_CALIBRATION_MS=550;
 const VOICE_BARGE_MS=220;
 const VOICE_RESTART_MS=90;
+// Au-delà, on cesse de rouvrir le micro tout seul : un lieu bruyant ou une panne ne doivent pas
+// épuiser les transcriptions (45 par heure et par personne) en boucle.
+const VOICE_MAX_MISSES=3;
 
-function voiceStatus(text){
-  if($('hint'))$('hint').textContent=text||T[lang].hintTouch;
+// ── État de la conversation vocale ─────────────────────────────────────────────
+// Une seule source de vérité : voicePhase() lit l'état réel (micro, transcription, réflexion,
+// lecture). La barre #voiceBar l'affiche (même sur l'accueil téléphone, où la barre du bas est
+// cachée) et #voiceState l'annonce aux lecteurs d'écran. Wolof et pulaar : seuls les mots déjà
+// traduits dans l'interface le sont, le reste s'affiche en français (à faire relire).
+const VOICE_TEXT={
+  fr:{starting:'J’active le micro…',listening:'Je t’écoute…',hearing:'Je t’entends…',transcribing:'Je transcris…',
+    thinking:'Je réfléchis…',speaking:'Je parle…',stop:'Arrêter',stopLabel:'Arrêter la conversation vocale',interrupt:'Couper la voix et parler',
+    close:'Fermer',retry:'Réessayer',talk:'Parler',unclear:'Je n’ai pas bien entendu. Parle encore.',
+    stopped:'Mode vocal arrêté.',micOff:'Microphone indisponible.',failed:'Je n’ai pas bien compris. Réessaie.',
+    tooMany:'Trop de demandes vocales. Réessaie dans {n} s.',
+    ttsFailed:'Je n’ai pas pu lire toute la réponse à voix haute. Elle reste écrite.',
+    gaveUp:'Je n’arrive pas à te comprendre. Touche le micro pour reprendre.'},
+  en:{starting:'Starting the microphone…',listening:'I’m listening…',hearing:'I hear you…',transcribing:'Transcribing…',
+    thinking:'Thinking…',speaking:'Speaking…',stop:'Stop',stopLabel:'Stop the voice conversation',interrupt:'Interrupt and speak',
+    close:'Close',retry:'Retry',talk:'Speak',unclear:'I didn’t catch that. Try again.',
+    stopped:'Voice mode stopped.',micOff:'Microphone unavailable.',failed:'I didn’t quite catch that. Try again.',
+    tooMany:'Too many voice requests. Try again in {n}s.',
+    ttsFailed:'I couldn’t read the whole answer aloud. It’s still on screen.',
+    gaveUp:'I can’t make out what you say. Tap the microphone to resume.'},
+  wo:{listening:'Maa ngi déglu…',hearing:'Maa ngi déglu…',talk:'Wax'},
+  ff:{listening:'Mi heɗii…',hearing:'Mi heɗii…'}
+};
+function vt(key,n){
+  const own=VOICE_TEXT[lang];
+  return String((own&&own[key])||VOICE_TEXT.fr[key]||'').replace('{n}',n===undefined?'':n);
+}
+let voiceNotice=null, voiceNoticeId=0, voiceTicker=0, voiceShown='', voiceSpoke=false, voiceTranscribing=false;
+function voicePhase(){
+  if(!voiceConversation)return '';
+  if(voiceSpeaking){voiceSpoke=true;return 'speaking';}
+  // La voix se prépare (appel /tts) : « Je parle » seulement quand le son part, sans clignoter entre deux phrases.
+  if(voiceTtsPlaying||voiceTtsQueue.length)return voiceSpoke?'speaking':'thinking';
+  voiceSpoke=false;
+  if(voiceTranscribing)return 'transcribing';
+  if(inflight||voiceSTTBusy)return 'thinking';
+  if(voiceCaptureBusy&&!listening)return 'starting';
+  return listening&&voiceSpeechStarted?'hearing':'listening';
+}
+// Message court affiché dans la barre (info : disparaît seul ; sticky : reste jusqu'à une action).
+function voiceNote(text,opts){
+  const o=opts||{};
+  voiceNotice={id:++voiceNoticeId,text,sticky:!!o.sticky,until:Date.now()+(o.ms||3500),retry:o.retry||null};
+  ensureVoiceTicker();
+}
+function clearVoiceNotice(){
+  voiceNotice=null;
+  renderVoiceState();
+}
+function renderVoiceState(){
+  const bar=$('voiceBar');
+  if(!bar)return;
+  const phase=voicePhase();
+  // Un message d'information cède la place dès qu'un nouveau tour commence (je parle, on me répond).
+  if(voiceNotice&&!voiceNotice.sticky&&(Date.now()>voiceNotice.until||phase==='hearing'||phase==='transcribing'||phase==='speaking'))voiceNotice=null;
+  const note=voiceNotice;
+  const mode=note?(note.sticky?'error':'info'):phase;
+  const text=note?note.text:(phase?vt(phase):'');
+  const key=[mode,text,!!(note&&note.retry),voiceConversation,lang].join('|');
+  if(key!==voiceShown){
+    voiceShown=key;
+    bar.hidden=!mode;
+    bar.dataset.phase=mode;
+    $('voiceText').textContent=text;
+    $('voiceState').textContent=text;
+    const retry=$('voiceRetry');
+    retry.hidden=!(note&&note.retry);
+    retry.textContent=vt('retry');
+    const stop=$('voiceStop');
+    stop.textContent=voiceConversation?vt('stop'):vt('close');
+    stop.setAttribute('aria-label',voiceConversation?vt('stopLabel'):vt('close'));
+  }
+  // Le micro (barre du bas) et celui de l'accueil disent ce qu'un appui va faire :
+  // pendant la voix il la coupe et écoute ; sinon il arrête la conversation, ou la démarre.
+  const label=voiceSpeaking?vt('interrupt'):voiceConversation?vt('stopLabel'):vt('talk');
+  [mic,$('heroMic')].forEach(b=>{
+    if(b&&!b.disabled&&b.getAttribute('aria-label')!==label){b.setAttribute('aria-label',label);b.title=label;}
+  });
+  if(!voiceConversation&&!voiceNotice&&voiceTicker){clearInterval(voiceTicker);voiceTicker=0;}
+}
+function ensureVoiceTicker(){
+  if(!voiceTicker)voiceTicker=setInterval(renderVoiceState,250);
+  renderVoiceState();
 }
 function voiceSetMicState(on){
   listening=!!on;
   mic.classList.toggle('listen',!!on);
-  mic.setAttribute('aria-label',on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler'));
-  mic.title=on?(T[lang].voiceStop||'Arrêter la conversation vocale'):(T[lang].listen||'Parler');
+  renderVoiceState();
 }
 function clearVoiceRestart(){
   clearTimeout(voiceRestartTimer);
@@ -1354,10 +1955,21 @@ function voiceFileName(type){
   if(t.includes('wav'))return 'teranga-voice.wav';
   return 'teranga-voice.webm';
 }
+// Transcription en cours : annulable (bouton « Arrêter »), et chaque envoi a son numéro pour qu'un
+// envoi abandonné ne remette pas à zéro l'état du suivant.
+let voiceSttCtrl=null, voiceSttGen=0, voiceMisses=0;
+function abortVoiceStt(){
+  const ctrl=voiceSttCtrl;
+  voiceSttCtrl=null;
+  if(ctrl){try{ctrl.abort();}catch(_){}}
+}
 async function postVoiceAudio(blob,turnId){
   if(!blob||!blob.size||voiceSTTBusy||!voiceConversation||turnId!==voiceTurnId)return;
-  voiceSTTBusy=true;voiceWaitingForAnswer=true;
-  voiceStatus(lang==='fr'?'Je comprends…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
+  const gen=++voiceSttGen;
+  const ctrl=new AbortController();voiceSttCtrl=ctrl;
+  voiceSTTBusy=true;voiceWaitingForAnswer=true;voiceTranscribing=true;
+  // Délai avant de rouvrir le micro si rien d'autre ne le fait (texte vide, erreur, réponse sans voix).
+  let resumeIn=200;
   try{
     if(!cookie('teranga_csrf'))await refreshCsrf();
     if(!voiceConversation||turnId!==voiceTurnId)return;
@@ -1370,7 +1982,7 @@ async function postVoiceAudio(blob,turnId){
     let res=await fetch('/stt',{
       method:'POST',
       headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-      body:form,credentials:'same-origin'
+      body:form,credentials:'same-origin',signal:ctrl.signal
     });
     if(res.status===403){
       await refreshCsrf();
@@ -1378,36 +1990,48 @@ async function postVoiceAudio(blob,turnId){
       res=await fetch('/stt',{
         method:'POST',
         headers:{'X-CSRF-Token':cookie('teranga_csrf')},
-        body:form,credentials:'same-origin'
+        body:form,credentials:'same-origin',signal:ctrl.signal
       });
     }
     const data=await res.json().catch(()=>({}));
     if(!voiceConversation||turnId!==voiceTurnId)return;
+    voiceTranscribing=false;
     if(!res.ok){const error=new Error(data.error||'stt');error.status=res.status;error.retryAfter=res.headers.get('Retry-After')||'';throw error;}
     const text=String(data.text||'').replace(/\s+/g,' ').trim();
     if(/^(stop|arrête|arrete|arrêter|arrete de parler|tais[- ]toi|quitte le mode vocal|sort du mode vocal)[.!?\s]*$/i.test(text)){
       endVoiceMode();
-      voiceStatus(lang==='fr'?'Mode vocal arrêté.':lang==='en'?'Voice mode stopped.':T[lang].hintTouch);
+      voiceNote(vt('stopped'));
       return;
     }
     if(!text){
       voiceWaitingForAnswer=false;
-      voiceStatus(lang==='fr'?'Je n’ai pas bien entendu. Parle encore.':lang==='en'?'I didn’t catch that. Try again.':T[lang].hintTouch);
-      scheduleVoiceCapture(280);
+      if(++voiceMisses>=VOICE_MAX_MISSES){endVoiceMode();voiceNote(vt('gaveUp'),{sticky:true});return;}
+      voiceNote(vt('unclear'));
+      resumeIn=280;
       return;
     }
+    voiceMisses=0;
     input.value=text;
     input.dispatchEvent(new Event('input',{bubbles:true}));
     await ask(text,true);
   }catch(err){
     voiceWaitingForAnswer=false;
-    if(voiceConversation){
+    // Arrêt demandé ou nouveau tour : l'échec d'un envoi abandonné ne dit rien.
+    if(voiceConversation&&turnId===voiceTurnId){
       const waitSeconds=err.status===429?Math.min(300,Math.max(1,Number.parseInt(err.retryAfter||'0',10)||5)):0;
-      voiceStatus(waitSeconds?(lang==='fr'?'Trop de demandes vocales. Réessaie dans '+waitSeconds+' s.':lang==='en'?'Too many voice requests. Try again in '+waitSeconds+'s.':T[lang].hintTouch):lang==='fr'?'Je n’ai pas bien compris. Réessaie.':lang==='en'?'I didn’t quite catch that. Try again.':T[lang].hintTouch);
-      scheduleVoiceCapture(waitSeconds?waitSeconds*1000:500);
+      if(!waitSeconds&&++voiceMisses>=VOICE_MAX_MISSES){endVoiceMode();voiceNote(vt('gaveUp'),{sticky:true});return;}
+      voiceNote(waitSeconds?vt('tooMany',waitSeconds):vt('failed'),{ms:waitSeconds?waitSeconds*1000:3500});
+      resumeIn=waitSeconds?waitSeconds*1000:500;
     }
   }finally{
-    voiceSTTBusy=false;
+    if(gen===voiceSttGen){
+      voiceSTTBusy=false;voiceTranscribing=false;
+      if(voiceSttCtrl===ctrl)voiceSttCtrl=null;
+      // Avant, scheduleVoiceCapture() était appelé pendant que voiceSTTBusy était encore vrai : il ne
+      // faisait rien, et l'écoute ne reprenait jamais après un texte vide, une erreur de transcription
+      // ou du chat. Si une voix est en cours, c'est sa fin qui rouvre le micro.
+      if(voiceConversation&&turnId===voiceTurnId&&!inflight&&!voiceSpeaking&&!voiceTtsPlaying&&!voiceTtsQueue.length)scheduleVoiceCapture(resumeIn);
+    }
   }
 }
 function finishVoiceRecording(){
@@ -1435,7 +2059,6 @@ async function startVoiceCapture(){
     voiceChunks=[];voiceSpeechStarted=false;voiceSpeechStartedAt=0;voiceLastLoudAt=0;
     voiceNoiseFloor=.008;voiceNoiseSamples=0;
     voiceSetMicState(true);
-    voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'I’m listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
 
     if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))voiceRecorderMime='audio/webm;codecs=opus';
     else if(MediaRecorder.isTypeSupported('audio/webm'))voiceRecorderMime='audio/webm';
@@ -1479,7 +2102,6 @@ async function startVoiceCapture(){
         if(!voiceSpeechStarted){
           voiceSpeechStarted=true;
           voiceSpeechStartedAt=now;
-          voiceStatus(lang==='fr'?'Je t’écoute…':lang==='en'?'Listening…':lang==='wo'?'Maa ngi déglu…':'Mi heɗii…');
         }
         voiceLastLoudAt=now;
       }
@@ -1497,27 +2119,40 @@ async function startVoiceCapture(){
       try{rec.start();}catch(_){}
     }else{
       endVoiceMode();
-      voiceStatus(lang==='fr'?'Microphone indisponible.':lang==='en'?'Microphone unavailable.':'Micro indisponible.');
+      voiceNote(vt('micOff'),{sticky:true});
     }
   }
+}
+// Bouton « Voix IA auto » : le texte (lu par les lecteurs d'écran, caché derrière l'icône sur téléphone) et aria-pressed.
+function setVoiceToggle(on){
+  $('voiceToggleText').textContent=on?T[lang].vOn:T[lang].vOff;
+  $('voiceToggle').setAttribute('aria-pressed',on?'true':'false');
 }
 function beginVoiceMode(){
   voiceConversation=true;autoVoice=true;
   LS.setItem('teranga-voice','1');
   document.body.classList.add('voice-active');
-  $('voiceToggle').textContent=T[lang].vOn;
-  voiceStatus(lang==='fr'?'Mode vocal · parle naturellement.':lang==='en'?'Voice mode · speak naturally.':lang==='wo'?'Mode baat · wax ak yomb.':'Mode baat · haal no feewi.');
+  setVoiceToggle(true);
+  voiceNotice=null;voiceMisses=0;
+  ensureVoiceTicker();
 }
 function endVoiceMode(){
   clearVoiceSilence();
   voiceConversation=false;voiceWaitingForAnswer=false;
   voiceDraft='';
   voiceTurnId++;
+  abortVoiceStt();
   stopVoiceCapture();stopVoiceMonitor();
   if(rec&&listening){try{rec.stop();}catch(_){}}
   document.body.classList.remove('voice-active');
-  $('voiceToggle').textContent=T[lang].vOff;
-  voiceStatus(T[lang].hintTouch);
+  setVoiceToggle(false);
+  renderVoiceState();
+}
+// Arrêt complet, quelle que soit l'étape : plus d'écoute, plus de voix, plus de réponse en attente.
+function stopVoiceConversation(){
+  endVoiceMode();
+  stopSpeakingForListening();
+  if(inflight)inflight.abort();
 }
 function stopSpeakingForListening(){
   clearVoiceTtsQueue();
@@ -1541,7 +2176,6 @@ function finishSpeech(btn){
   resetListenButton(btn);
   if(voiceConversation&&!inflight&&!voiceSTTBusy){
     voiceWaitingForAnswer=false;
-    voiceStatus(lang==='fr'?'À toi.':lang==='en'?'Your turn.':lang==='wo'?'Sa wax.':'Jooni maa heɗii.');
     scheduleVoiceCapture(180);
   }
 }
@@ -1593,8 +2227,17 @@ mic.onclick=()=>{
     return;
   }
   if(listening||voiceCaptureBusy){endVoiceMode();return;}
+  // Transcription, réflexion ou voix qui se prépare : le micro rouge arrête tout (il restait sans effet).
+  if(voiceConversation&&(voiceSTTBusy||inflight||voiceTtsPlaying||voiceTtsQueue.length)){stopVoiceConversation();return;}
   beginVoiceMode();
   startVoiceCapture();
+};
+$('voiceStop').onclick=()=>{
+  if(voiceConversation)stopVoiceConversation();
+  else clearVoiceNotice();
+  // Le bouton disparaît : le focus clavier revient sur le micro visible au lieu de se perdre.
+  const target=[mic,$('heroMic')].find(b=>b&&b.offsetParent);
+  if(target)target.focus();
 };
 $('voiceToggle').onclick=()=>{
   autoVoice=!autoVoice;
@@ -1610,9 +2253,15 @@ $('voiceToggle').onclick=()=>{
 };
 loadFx();
 themeInit();restore();setLang(lang);try{const prefill=SS.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();SS.removeItem('teranga-chat-prefill');}}catch(_){}
+// Teranga Hôtes (/hote/<nom>) : la maison suit la conversation (ses informations vont dans le contexte de l'IA).
+const urlHote=(urlParams.get('hote')||'').trim();
+if(/^[a-z0-9-]{2,40}$/.test(urlHote)){try{SS.setItem('teranga-hote',urlHote);}catch(_){}}
 // ?q=… (fiches lieux, réponses partagées, widget) : question pré-remplie, jamais envoyée sans l'utilisateur.
 const urlQuestion=(urlParams.get('q')||'').trim().slice(0,500);
 if(urlQuestion&&!input.value){input.value=urlQuestion;input.dispatchEvent(new Event('input'));input.focus();}setupMic();
 // Téléphone avant la conversation : la barre du bas est cachée, la question pré-remplie
 // (?q=, « revoir mon séjour ») va dans le champ du haut, visible.
 (function(){const hi=$('heroInput');if(hi&&input.value&&!input.offsetParent&&hi.offsetParent){hi.value=input.value;input.value='';hi.focus();}})();
+// Seule exception : la question écrite ou choisie par le visiteur sur la page d'une maison d'hôtes part tout de
+// suite ; l'adresse est nettoyée pour qu'un rechargement ne la renvoie pas.
+if(urlQuestion&&/^[a-z0-9-]{2,40}$/.test(urlHote)){input.value='';const hi=$('heroInput');if(hi)hi.value='';try{window.history.replaceState(null,'',location.pathname);}catch(_){}  /* « history » est la conversation */ask(urlQuestion);}

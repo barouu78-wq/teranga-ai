@@ -35,9 +35,13 @@ class ClickStats:
         self._memory: dict[str, Counter] = {}
         self._lock = threading.Lock()
 
-    def record(self, kind: str, source: str, day: _dt.date | None = None) -> None:
+    def record(self, kind: str, source: str, day: _dt.date | None = None, max_fields: int | None = None) -> None:
         field = f"{kind}|{source or '-'}"
         month = _month(day)
+        # Origine libre (nom de partenaire du widget) : au-delà de max_fields lignes dans le mois, une nouvelle
+        # origine est comptée « autre », pour qu'un script ne puisse pas remplir Redis de noms inventés.
+        if max_fields is not None and not self._has_room(month, field, max_fields):
+            field = f"{kind}|autre"
         if self.redis is not None:
             try:
                 key = _PREFIX + month
@@ -58,6 +62,17 @@ class ClickStats:
             self._memory.setdefault(month, Counter())[field] += 1
             for old_month in sorted(self._memory)[:-13]:  # environ un an en mémoire
                 self._memory.pop(old_month, None)
+
+    def _has_room(self, month: str, field: str, max_fields: int) -> bool:
+        if self.redis is not None:
+            try:
+                key = _PREFIX + month
+                return bool(self.redis.hexists(key, field)) or self.redis.hlen(key) < max_fields
+            except Exception:
+                pass  # record() retombe alors sur la mémoire et le signale
+        with self._lock:
+            counts = self._memory.get(month, Counter())
+            return field in counts or len(counts) < max_fields
 
     def month_counts(self, month: str) -> Counter:
         # Clics comptés en mémoire pendant une panne Redis : ajoutés aux chiffres

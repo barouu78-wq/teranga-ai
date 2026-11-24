@@ -1,4 +1,9 @@
-from services.chat_service import select_chat_model
+from services.orchestrator import build_agent_plan
+
+
+def select_chat_model(payload, model, complex_model=None):
+    """Modèle choisi par le plan de l'agent, comme dans build_chat_service."""
+    return build_agent_plan(payload, model=model, complex_model=complex_model).model
 
 
 def test_simple_chat_stays_on_luna():

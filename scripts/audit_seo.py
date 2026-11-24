@@ -19,6 +19,7 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
+from urllib.parse import urlsplit
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -102,8 +103,21 @@ def audit(client=None) -> tuple[int, list[tuple[str, str]]]:
     problems: list[tuple[str, str]] = []
     titles: Counter = Counter()
     descriptions: Counter = Counter()
+    expected_origin = urlsplit(BASE)
     for location in locations:
-        path = location.split("teranga-ai.fr", 1)[-1] or "/"
+        parsed = urlsplit(html.unescape(location))
+        if (
+            parsed.scheme != expected_origin.scheme
+            or parsed.netloc != expected_origin.netloc
+            or not parsed.path.startswith("/")
+            or parsed.query
+            or parsed.fragment
+        ):
+            problems.append(
+                ("/sitemap.xml", f"URL non canonique ou externe dans le sitemap : {location}")
+            )
+            continue
+        path = parsed.path or "/"
         response = client.get(path, base_url=BASE)
         if response.status_code != 200:
             problems.append((path, f"réponse HTTP {response.status_code}"))

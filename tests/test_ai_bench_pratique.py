@@ -12,6 +12,7 @@ import pytest
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from app import app, parse_chat_payload  # noqa: E402
+from services.dakar_date import today_line  # noqa: E402
 
 PROBES = [
  # urgences et santé
@@ -74,6 +75,7 @@ PROBES = [
  ("fr","Comment aller en Casamance depuis Dakar ?",["bateau de nuit Dakar–Ziguinchor"]),
  ("fr","C'est quoi un sept-places ?",["sept-places depuis la gare routière"]),
  ("fr","Prendre le TER à Dakar",["TER Dakar ↔ Diamniadio"]),
+ ("fr","Le TER va-t-il jusqu'à l'aéroport AIBD ?",["TER Dakar ↔ Diamniadio ↔ aéroport AIBD","en service depuis le 28 septembre 2026"]),
  ("fr","Comment aller à Saint-Louis depuis Dakar ?",["Saint-Louis"]),
  # lieux
  ("fr","Que voir à Kédougou ?",["Kédougou"]),
@@ -106,7 +108,7 @@ PROBES = [
  ("fr","Qui est Lat Dior ?",["Lat Dior"]),
  # pratique
  ("fr","Quelle est la meilleure période pour visiter le Sénégal ?",["Saison sèche environ de novembre à mai"]),
- ("fr","Quelle carte SIM acheter au Sénégal ?",["Orange, Free et Expresso"]),
+ ("fr","Quelle carte SIM acheter au Sénégal ?",["Orange, Yas (ex-Free"]),
  ("fr","Quel type de prise électrique au Sénégal ?",["230 V"]),
  ("fr","Combien coûte un taxi à Dakar ?",["fixer le prix avant de monter"]),
  ("fr","Comment négocier au marché ?",["NÉGOCIATION"]),
@@ -150,7 +152,7 @@ HARD=[
  ("en","How do I get from Dakar airport to the city?",["45 km"]),
  ("en","When is Tabaski this year?",["Tabaski (Aïd el-Kébir)"]),
  ("en","Can I pay with my phone in Senegal?",["Wave et Orange Money"]),
- ("en","Where can I buy a SIM card in Dakar?",["Orange, Free et Expresso"]),
+ ("en","Where can I buy a SIM card in Dakar?",["Orange, Yas (ex-Free"]),
  ("en","What languages are spoken in Senegal?",["wolof est la langue la plus parlée"]),
  ("fr","Je me suis fait voler mon téléphone",["Police 17"]),
  ("fr","On parle quelle langue à Dakar ?",["wolof est la langue la plus parlée"]),
@@ -163,6 +165,7 @@ HARD=[
  ("fr","Je veux ouvrir une boutique, comment créer mon activité ?",["NINEA"]),
  ("fr","Combien de temps en bateau pour Ziguinchor ?",["environ 15 h"]),
  ("fr","Je veux louer une voiture à l'aéroport",["AIBD"]),
+ ("fr","Je cherche du travail à Dakar, tu as des offres ?",["https://teranga-ai.fr/offres-emploi"]),
 ]
 
 NOISE=[  # (question, textes qui NE doivent PAS apparaître)
@@ -172,6 +175,7 @@ NOISE=[  # (question, textes qui NE doivent PAS apparaître)
  ("fr","Que penser de la série Netflix sur une arnaque financière ?",["REPÈRES PRATIQUES"]),
  ("fr","Je suis volontaire pour une ONG au Sénégal",["REPÈRES PRATIQUES"]),
  ("fr","Comment fonctionne le tirage au sort de la CAN ?",["REPÈRES PRATIQUES"]),
+ ("fr","Quel est l'emploi du temps du lycée Lamine Guèye ?",["teranga-ai.fr/offres-emploi"]),
  ("fr","Je cherche un billet d'avion pour Dakar",["REPÈRES PRATIQUES"]),
  ("fr","Y a-t-il de la fraude électorale au Sénégal ?",["REPÈRES PRATIQUES"]),
  ("fr","Quel est le code postal de Dakar ?",["REPÈRES PRATIQUES"]),
@@ -215,7 +219,8 @@ def _context(question, lang):
     with app.test_request_context("/chat", method="POST", json={"message": question, "language": lang}):
         payload, error = parse_chat_payload()
     assert error is None
-    return payload["instructions"].replace(question, " ")
+    # Ni la question ni la date du jour (« 18 », « 2027 ») ne doivent compter comme un fait trouvé.
+    return payload["instructions"].replace(question, " ").replace(today_line(payload["language"]), " ")
 
 
 @pytest.mark.parametrize("lang,question,expected", PROBES + HARD, ids=[q for _, q, _ in PROBES + HARD])
