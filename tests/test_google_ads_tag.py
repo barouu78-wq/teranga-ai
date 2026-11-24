@@ -80,3 +80,36 @@ def test_private_pages_never_get_google_ads(monkeypatch):
     response = client.get("/stats-partenaires")
     assert "google-ads-consent.js" not in response.get_data(as_text=True)
     assert "googletagmanager" not in response.headers.get("Content-Security-Policy", "")
+
+
+# Conversions (constat du 23 novembre 2026) : la balise se déclarait (« config ») sans jamais envoyer de conversion ;
+# Google Ads ne savait pas quels clics menaient à quelque chose et ne pouvait rien optimiser. GOOGLE_ADS_CONVERSIONS
+# (Render) donne l'étiquette de chaque action : « question:AW-…/…,appli:AW-…/… ».
+
+def test_les_conversions_se_lisent_dans_une_variable_et_refusent_le_reste():
+    from services.google_ads_tag import google_ads_conversions
+
+    raw = " question:AW-18578242897/AbC_d-12 , appli:AW-18578242897/xyz98765 "
+    assert google_ads_conversions(raw) == {"question": "AW-18578242897/AbC_d-12", "appli": "AW-18578242897/xyz98765"}
+    assert google_ads_conversions("") == {} and google_ads_conversions(None) == {}
+    # Action inconnue, étiquette mal formée, injection : ignorées une à une, jamais tout le reste.
+    raw = 'inconnue:AW-123456/abcd,question:AW-12/abcd,appli:AW-123456/ab"cd,cv:AW-123456/abcd1234'
+    assert google_ads_conversions(raw) == {"cv": "AW-123456/abcd1234"}
+
+
+def test_la_balise_porte_les_etiquettes_de_conversion():
+    config = google_ads_config("AW-18578242897", "question:AW-18578242897/AbC_d-12")
+    assert config["conversions"] == {"question": "AW-18578242897/AbC_d-12"}
+    tag = google_ads_tag(config)
+    assert 'data-conversion-question="AW-18578242897/AbC_d-12"' in tag
+    assert "googletagmanager" not in tag
+    # Sans conversion configurée, la balise reste exactement la même qu'avant.
+    assert google_ads_config("AW-18578242897", "") == {"tag_id": "AW-18578242897", "origins": GOOGLE_ADS_ORIGINS}
+    assert google_ads_config("", "question:AW-18578242897/AbC_d-12") is None  # pas de balise : pas de conversion
+
+
+def test_le_script_n_envoie_une_conversion_qu_apres_accord():
+    js = Path(__file__).resolve().parents[1].joinpath("static", "google-ads-consent.js").read_text(encoding="utf-8")
+    conversion = js.split("function sendConversion(", 1)[1].split("\n  }\n", 1)[0]
+    assert "started" in conversion and 'readConsent() !== "accepted"' in conversion
+    assert '"event", "conversion"' in conversion and "send_to" in conversion

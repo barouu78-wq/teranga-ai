@@ -194,7 +194,7 @@
   }
 
   function afficher(){
-    $('cvForm').hidden=true;$('cvExemple').hidden=true;
+    $('cvForm').hidden=true;$('cvExemple').hidden=true;$('cvAller').hidden=true;
     $('cvResultat').hidden=false;
     rendre();
     const titre=$('cvResultatTitre');titre.tabIndex=-1;titre.focus();
@@ -228,6 +228,8 @@
       const d=await r.json().catch(()=>({}));
       if(!r.ok||!d.cv){erreur(d.error||ERREUR);return;}
       cv=d.cv;garder();afficher();
+      // Conversion « cv » de Google Ads : envoyée seulement après « Accepter », une fois par session (google-ads-consent.js).
+      if(window.terangaAdsConversion)window.terangaAdsConversion('cv');
     }catch(_){erreur(ERREUR);}
     finally{bouton.disabled=false;bouton.textContent='Créer mon CV';bouton.removeAttribute('aria-busy');}
   }
@@ -282,8 +284,9 @@
   ['click','change','input'].forEach(t=>$('cvForm').addEventListener(t,e=>{
     if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))etape('debut');
   }));
-  const faireLeMien=document.querySelector('#cvExemple a[href="#cvForm"]');
-  if(faireLeMien)faireLeMien.addEventListener('click',()=>etape('faire-le-mien'));
+  // Deux boutons mènent au formulaire : sous le titre (visible au-dessus du bandeau des cookies sur téléphone) et
+  // sous l'exemple. Une seule étape « faire-le-mien » par visite.
+  document.querySelectorAll('.cv-main a[href="#cvForm"]').forEach(a=>a.addEventListener('click',()=>etape('faire-le-mien')));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
@@ -294,7 +297,7 @@
   $('cvLettrePdf').addEventListener('click',()=>imprimer('imprime-lettre'));
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
-    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvForm').reset();
+    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvAller').hidden=false;$('cvForm').reset();
     $('cvBlocFichier').hidden=true;$('cvBlocParcours').hidden=false;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });

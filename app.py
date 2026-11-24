@@ -322,7 +322,6 @@ WEB_RATE_WINDOW = 60
 ABUSE_SCORE_WINDOW = 600
 ABUSE_BLOCK_SECONDS = 600
 ABUSE_SCORE_THRESHOLD = 8
-ABUSE_LOG_SAMPLE = 40
 RATE_LOCK = threading.Lock()
 CSRF_COOKIE = "teranga_csrf"
 CSRF_HEADER = "X-CSRF-Token"
@@ -538,7 +537,7 @@ POSTHOG = posthog_config(os.getenv("POSTHOG_PROJECT_KEY"), os.getenv("POSTHOG_AP
 # Annonces Google en fin de page de guide : éteintes sans ADSENSE_CLIENT et ADSENSE_SLOT (services/adsense.py).
 app.config["ADSENSE"] = adsense_config(os.getenv("ADSENSE_CLIENT"), os.getenv("ADSENSE_SLOT"))
 # Balise Google Ads (conversions des campagnes) : éteinte sans GOOGLE_ADS_TAG_ID, chargée après accord du visiteur.
-app.config["GOOGLE_ADS"] = google_ads_config(os.getenv("GOOGLE_ADS_TAG_ID"))
+app.config["GOOGLE_ADS"] = google_ads_config(os.getenv("GOOGLE_ADS_TAG_ID"), os.getenv("GOOGLE_ADS_CONVERSIONS"))
 
 _allowed_image_url = allowed_image_url
 _SAFE_IMAGE_OPENER = build_opener(SafeImageRedirectHandler)

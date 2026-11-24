@@ -1262,6 +1262,8 @@ async function ask(preset,fromVoice=false,isRetry=false,retryPiece=null){
   hideHero();
   clearFollowups();  // nouvelle question : les suggestions de la réponse précédente ne servent plus
   if(!isRetry){
+    // Conversion Google Ads « question » : ne part qu'après « Accepter » (static/google-ads-consent.js).
+    if(window.terangaAdsConversion)window.terangaAdsConversion('question');
     const sent=addMsg('user',text,{animate:true});
     if(sending)addPieceLine(sent.b,sending.nom);
     history.push({role:'user',content:text});

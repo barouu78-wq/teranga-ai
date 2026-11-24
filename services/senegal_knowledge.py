@@ -137,9 +137,6 @@ def _fold(value) -> str:
     text = unicodedata.normalize("NFD", str(value or "").casefold())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
 
-def region_highlights(region: str) -> tuple[str, ...]:
-    return REGION_HIGHLIGHTS.get(str(region or ""), ())
-
 SOURCE_PRIORITY = (
     "gov.sn",
     "ansd.sn",

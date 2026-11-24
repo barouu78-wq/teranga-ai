@@ -87,17 +87,3 @@ def language_instruction(language):
         "de vocabulaire. Ne parle pas de cette vérification dans la réponse."
     )
 
-
-def is_supported_language(language):
-    """Return whether a language is supported by the chat language engine."""
-    return language in LANGUAGE_RULES
-
-
-def language_test_cases():
-    """Small stable prompts used by automated language regression tests."""
-    return {
-        "fr": "Explique en français pourquoi Gorée est importante.",
-        "en": "Explain in English why Gorée is important.",
-        "wo": "Wax ma ci wolof lu tax Gorée am solo.",
-        "ff": "Fiytu am Pulaar ko fii Gorée waɗi maanaa.",
-    }
