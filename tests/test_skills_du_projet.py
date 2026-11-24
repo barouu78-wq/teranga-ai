@@ -83,6 +83,23 @@ REPRISES = {
     # traduit et adapté au Sénégal dans cv-senegal. tailored-resume-generator (ComposioHQ) a été écarté : son exemple
     # invente des chiffres que le candidat n'a jamais donnés.
     "LICENCE-resumeskills.txt": ("Paramchoudhary/ResumeSkills", ("cv-senegal",)),
+    # 19 novembre 2026 (« installe ce skill », propriétaire) : reverse-engineer-anything de morluto/rea, texte seulement ;
+    # ni le serveur MCP REA ni le paquet npm rea-agents ne sont installés.
+    "LICENCE-rea.txt": ("morluto/rea", ("reverse-engineer-anything",)),
+    # 23 novembre 2026 (« Oui go », propriétaire) : cinq skills de marketing de coreyhaines31/marketingskills, texte
+    # seulement (SKILL.md et references/*.md) ; ni scripts/, ni assets/ (Google Tag Manager), ni evals/.
+    "LICENCE-marketingskills.txt": ("coreyhaines31/marketingskills",
+                                    ("ads", "conversion-tracking", "cro", "link-building", "programmatic-seo",
+                                     # 23 novembre 2026, second « Go » : même commit.
+                                     "aso", "social", "copywriting", "content-strategy", "community-marketing",
+                                     # troisième « Go » : même commit.
+                                     "ad-creative", "site-architecture", "free-tools", "public-relations")),
+    # 23 novembre 2026 (« Go ») : writing-plans et writing-skills de Superpowers, texte seulement.
+    "LICENCE-superpowers.txt": ("obra/superpowers", ("writing-plans", "writing-skills")),
+    "LICENCE-claude-seo.txt": ("AgriciDaniel/claude-seo", ("seo-hreflang",)),
+    "LICENCE-humanizer.txt": ("blader/humanizer", ("humanizer",)),
+    # 23 novembre 2026 (« Go », propriétaire) : vitesse et accessibilité, texte seulement.
+    "LICENCE-web-quality-skills.txt": ("addyosmani/web-quality-skills", ("core-web-vitals", "performance", "accessibility")),
 }
 
 
@@ -169,3 +186,60 @@ def test_offres_emploi_fixe_les_regles_des_sources():
     for regle in ("accord écrit", "robots.txt", "annonce d'origine", "expirée", "hors du Sénégal", "Ne paie jamais",
                   "EmploiDakar", "AGENTS.md"):
         assert regle in texte, regle
+
+
+def test_reverse_engineer_anything_n_installe_rien_et_reste_sur_nos_applis():
+    """REA conseille `npx -y rea-agents@latest` et `rea setup` : dans ce projet, rien ne s'installe ni ne se lance sans
+    l'accord du propriétaire, et seules ses propres applis sont analysées (pas de copie de l'appli d'un autre)."""
+    texte = (SKILLS / "reverse-engineer-anything" / "SKILL.md").read_text(encoding="utf-8")
+    regle = texte.split("# REA", 1)[0]
+    for mot in ("accord écrit du propriétaire", "npx rea-agents", "rea setup", "fr.teranga_ai", "recopier", "AGENTS.md"):
+        assert mot in regle, mot
+    corps = texte.split("# REA", 1)[1]
+    avant_npx = corps.split("npx -y rea-agents", 1)[0]
+    assert "Projet Teranga AI" in avant_npx.rsplit("##", 1)[1]  # la section qui cite la commande rappelle la règle
+
+
+def test_conversion_tracking_renvoie_au_controleur_google_ads_avec_consentement():
+    """Relecture Codex (#655) : le skill repris propose d'ajouter gtag.js directement dans les pages et de lire des
+    fichiers assets/ et scripts/ non repris. En tête, la seule voie Teranga (consentement d'abord) et l'avertissement."""
+    dossier = SKILLS / "conversion-tracking"
+    regle = (dossier / "SKILL.md").read_text(encoding="utf-8").split("# Conversion Tracking", 1)[0]
+    for mot in ("services/google_ads_tag.py", "static/google-ads-consent.js", "terangaAdsConversion",
+                "Ne jamais ajouter `gtag.js`", "ne sont\n>   pas repris"):
+        assert mot in regle, mot
+    assert not (dossier / "assets").exists() and not (dossier / "scripts").exists()
+    for nom in ("browser-side.md", "google-ads.md", "conversion-moments.md"):
+        debut = (dossier / "references" / nom).read_text(encoding="utf-8")[:600]
+        assert "Teranga AI" in debut and "ne s'appliquent pas" in debut, nom
+
+
+def test_les_skills_de_trail_of_bits_gardent_leur_licence_cc_by_sa():
+    """23 novembre 2026 (« Go », propriétaire) : fp-check et sharp-edges de trailofbits/skills, sous CC BY-SA 4.0 (pas
+    MIT) : la licence d'origine et l'auteur restent, les adaptations gardent la même licence, texte seulement."""
+    licence = (SKILLS / "LICENCE-trailofbits.txt").read_text(encoding="utf-8")
+    assert "Attribution-ShareAlike 4.0" in licence and "https://github.com/trailofbits/skills" in licence
+    assert re.search(r"commit [0-9a-f]{40}", licence)
+    for nom in ("fp-check", "sharp-edges"):
+        assert nom in NOMS and f"- {nom}" in licence
+        texte = (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")
+        assert "LICENCE-trailofbits.txt" in texte and "AGENTS.md" in texte
+        fichiers = [p for p in (SKILLS / nom).rglob("*") if p.is_file()]
+        assert all(p.suffix == ".md" for p in fichiers), (nom, fichiers)
+
+
+def test_les_skills_qui_publient_ou_contactent_rappellent_que_l_agent_ne_le_fait_jamais():
+    for nom, mot in (("social", "ne publie jamais"), ("community-marketing", "ne contacte personne"),
+                     ("aso", "Ne jamais modifier la Google Play Console")):
+        regle = (SKILLS / nom / "SKILL.md").read_text(encoding="utf-8")[:2500]
+        assert mot in regle, nom
+
+
+def test_fp_check_ne_depend_pas_des_agents_non_repris():
+    """Relecture Codex (#656) : la vérification approfondie demandait des agents d'origine non repris. En tête, le
+    chemin du projet (soi-même ou l'agent securite, preuve par un test local)."""
+    regle = (SKILLS / "fp-check" / "SKILL.md").read_text(encoding="utf-8")[:3000]
+    assert "agent `securite`" in regle and "test pytest" in regle and "jamais un exploit" in regle
+    debut = (SKILLS / "fp-check" / "references" / "deep-verification.md").read_text(encoding="utf-8")[:600]
+    assert "Teranga AI" in debut and "securite" in debut
+    assert (ROOT / ".claude" / "agents" / "securite.md").exists()

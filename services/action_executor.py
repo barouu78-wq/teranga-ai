@@ -8,7 +8,7 @@ by the caller, and requires explicit confirmation for execution.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 from uuid import uuid4
 
 
@@ -52,62 +52,4 @@ def prepare_action(action: str) -> ActionExecutionResult:
         executed=False,
         requires_confirmation=True,
         request_id=request_id,
-    )
-
-
-def execute_action(
-    action: str,
-    *,
-    confirmed: bool = False,
-    request_id: str | None = None,
-    handlers: dict[str, Callable[[], Any]] | None = None,
-) -> ActionExecutionResult:
-    """Execute only an allowlisted handler after explicit confirmation."""
-    execution_request_id = request_id or uuid4().hex
-    if action not in ALLOWED_ACTIONS:
-        return ActionExecutionResult(
-            action=action,
-            status="unsupported",
-            executed=False,
-            requires_confirmation=False,
-            request_id=execution_request_id,
-        )
-
-    if not confirmed or not request_id:
-        return ActionExecutionResult(
-            action=action,
-            status="confirmation_required",
-            executed=False,
-            requires_confirmation=True,
-            request_id=execution_request_id,
-        )
-
-    handler = (handlers or {}).get(action)
-    if handler is None:
-        return ActionExecutionResult(
-            action=action,
-            status="not_implemented",
-            executed=False,
-            requires_confirmation=False,
-            request_id=execution_request_id,
-        )
-
-    try:
-        result = handler()
-    except Exception:
-        return ActionExecutionResult(
-            action=action,
-            status="execution_failed",
-            executed=False,
-            requires_confirmation=False,
-            request_id=execution_request_id,
-        )
-
-    return ActionExecutionResult(
-        action=action,
-        status="executed",
-        executed=True,
-        requires_confirmation=False,
-        result=result,
-        request_id=execution_request_id,
     )

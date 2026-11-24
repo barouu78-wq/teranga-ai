@@ -9,7 +9,7 @@ import os
 import re
 from html import escape
 
-from flask import Response, current_app, jsonify, request
+from flask import Response, current_app, jsonify, redirect, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
@@ -30,7 +30,7 @@ _PRIVACY = {
             ("Liens de réservation et partenaires", "Certains liens « Réserver » mènent vers des sites partenaires (activités, hébergements) qui peuvent nous verser une commission, sans surcoût pour vous. Nous comptons les clics sur ces liens sans enregistrer d'information vous concernant. Les adresses partenaires sont toujours signalées comme telles."),
             ("Demandes de partenariat", "Si un professionnel remplit le formulaire de la page des offres partenaires, son nom, son activité, sa ville, son contact et son message sont conservés au plus 200 demandes et environ un an, uniquement pour le recontacter."),
             ("Avis sur l'application", "Si vous envoyez un avis depuis la page « Donner mon avis », son sujet, votre message, le contact que vous indiquez (facultatif) et le fait qu'il vienne de l'application Android ou du site sont conservés au plus 200 avis et environ un an, uniquement pour améliorer Teranga AI et vous répondre."),
-            ("Statistiques anonymes des sujets", "Pour savoir quels sujets enrichir en priorité, le site tient des compteurs anonymes. Pour chaque question posée à l'assistant, il ajoute 1 au compteur du jour d'un ou plusieurs sujets prédéfinis (santé, transport, pêche…) et note si l'assistant disposait, sur ce sujet, d'informations de notre base ou d'une recherche web. Ces compteurs ne contiennent ni le texte de votre question, ni votre adresse IP, ni votre identifiant, ni une empreinte de l'un d'eux : ils ne permettent pas de savoir qui a posé quelle question. Ils sont supprimés automatiquement après environ 90 jours."),
+            ("Statistiques anonymes des sujets", "Pour savoir quels sujets enrichir en priorité, le site tient des compteurs anonymes. Pour chaque question posée à l'assistant, il ajoute 1 au compteur du jour d'un ou plusieurs sujets prédéfinis (santé, transport, pêche…) et note si l'assistant disposait, sur ce sujet, d'informations de notre base ou d'une recherche web. Ces compteurs ne contiennent ni le texte de votre question, ni votre adresse IP, ni votre identifiant, ni une empreinte de l'un d'eux : ils ne permettent pas de savoir qui a posé quelle question. Ils sont supprimés automatiquement après environ 90 jours. Sur la page « Mon CV », le site compte aussi, chaque mois, les étapes du formulaire « Mon CV » (premier champ touché, envoi…), sans enregistrer ce que vous écrivez ni d'information vous concernant."),
             ("Signalements", "Si vous signalez une réponse, la question et la réponse concernées sont enregistrées dans nos journaux pour améliorer l'assistant."),
             ("Vos droits", "Il n'y a pas de compte : nous ne conservons pas de profil vous concernant. Pour toute question ou demande liée à vos données, contactez-nous{contact}."),
         ],
@@ -92,6 +92,40 @@ def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google
 <p class="intro">{escape(copy['intro'])}</p>{sections}<p><small>{escape(copy['updated'])} : {_UPDATED}</small></p></article></main>{site_footer(lang)}</body></html>"""
 
 
+# Mentions légales (loi pour la confiance dans l'économie numérique, article 6). Éditeur et contact donnés par le
+# propriétaire le 23 novembre 2026 ; éditeur non professionnel, adresse et téléphone confiés à l'hébergeur et non
+# publiés (choix du propriétaire, 24 novembre 2026) ; adresse de l'hébergeur : conditions d'utilisation de Render (render.com/terms).
+_MENTIONS = (
+    ("Éditeur", 'Teranga AI est édité par Oumar Ba, particulier, à titre non professionnel. Contact : '
+                '<a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>. Conformément à la loi pour la '
+                "confiance dans l'économie numérique, ses coordonnées (adresse, téléphone) ne sont pas publiées : elles ont été "
+                "communiquées à l'hébergeur."),
+    ("Directeur de la publication", "Oumar Ba."),
+    ("Hébergeur", 'Render Services, Inc., 525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis '
+                  '(<a href="https://render.com" rel="noopener">render.com</a>), téléphone : +1 415 319 8186.'),
+    ("Réponses de l'assistant", "Les réponses sont produites par une intelligence artificielle à partir de repères "
+     "vérifiés et, parfois, d'une recherche web. Elles peuvent contenir des erreurs : vérifiez auprès des sources "
+     "officielles avant toute démarche importante. En cas d'urgence, consultez la page "
+     '<a href="/urgences">Urgences</a>.'),
+    ("Liens partenaires", "Certains liens mènent vers des sites partenaires qui peuvent verser une commission à "
+     "Teranga AI, sans surcoût pour vous. Ils sont toujours marqués « Lien partenaire »."),
+    ("Données personnelles", 'Voir la <a href="/confidentialite">politique de confidentialité</a>.'),
+    ("Signaler un contenu", 'Pour signaler un contenu inexact ou illicite : '
+     '<a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>.'),
+)
+_MENTIONS_UPDATED = "23 novembre 2026"
+
+
+def render_mentions() -> str:
+    # Textes fixes écrits ici (aucune donnée de visiteur) : le HTML des liens est voulu.
+    sections = "".join(f"<section><h2>{escape(title)}</h2><p>{text}</p></section>" for title, text in _MENTIONS)
+    return f"""<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mentions légales | Teranga AI</title><meta name="robots" content="index,follow">{HEAD_ASSETS}</head>
+<body>{site_header(lang="fr")}<main><article><div class="kicker">Teranga AI</div><h1>Mentions légales</h1>
+{sections}<p><small>Dernière mise à jour : {_MENTIONS_UPDATED}</small></p></article></main>{site_footer("fr")}</body></html>"""
+
+
 # Application Android (paquet PWABuilder). Ces valeurs sont publiques : le
 # fichier assetlinks.json est fait pour être lu par tous. ANDROID_CERT_SHA256
 # (variable d'environnement) peut AJOUTER des empreintes, jamais en retirer.
@@ -135,6 +169,14 @@ def register_legal_routes(app, deps):
     @app.get("/privacy")
     def privacy_en():
         return Response(render_privacy("en", os.getenv("CONTACT_EMAIL", "").strip(), ads=bool((current_app.config.get("ADSENSE") or {}).get("slot")), google_ads=bool(current_app.config.get("GOOGLE_ADS"))), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+    @app.get("/mentions-legales")
+    def mentions_legales():
+        return Response(render_mentions(), mimetype="text/html", headers={"Cache-Control": "public, max-age=3600"})
+
+    @app.get("/legal")
+    def legal_redirect():
+        return redirect("/mentions-legales", code=301)
 
     @app.get("/.well-known/assetlinks.json")
     def android_asset_links():

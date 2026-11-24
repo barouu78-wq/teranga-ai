@@ -62,7 +62,9 @@ def fetch_bceao_rates(
             if callable(close):
                 close()
         date, rates = parse_bceao_rates(raw, dict(cache["rates"]))
-        cache = {"at": now, "date": date, "rates": rates}
+        # « verifie_at » : heure de la dernière lecture réussie, montrée comme « vérifié » sur l'accueil. Un échec plus
+        # tard la garde telle quelle (relecture Codex de #666) : l'heure de la requête n'est pas une vérification.
+        cache = {"at": now, "date": date, "rates": rates, "verifie_at": now if date else cache.get("verifie_at")}
         return cache
     except Exception:
         if logger is not None:

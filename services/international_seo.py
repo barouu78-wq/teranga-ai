@@ -133,7 +133,7 @@ LANG_NAMES = {"en":"English","es":"Español","de":"Deutsch","it":"Italiano","fr"
 
 # Guides dont la version française est une page française existante : /fr/<sujet> y redirige (301), sort du
 # sitemap, et le hreflang « fr » des autres langues pointe vers elle. Une seule page française par sujet.
-FR_EQUIVALENTS = {"goree-island": "/visiter-goree"}
+FR_EQUIVALENTS = {"goree-island": "/visiter-goree", "senegal-visa": "/visa-senegal"}
 
 
 def international_topic_for_fr_path(path):

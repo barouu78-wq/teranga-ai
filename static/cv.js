@@ -21,6 +21,14 @@
     return null;
   }
   function erreur(texte){$('cvErreur').textContent=texte||'';}
+  // Étapes du formulaire, comptées par le serveur chaque mois sans rien de ce que la personne écrit (routes/monetization.py,
+  // cv_etape) : savoir où les visiteurs s'arrêtent. Une fois chacune par visite ; une erreur réseau est ignorée.
+  const signales=new Set();
+  function etape(nom){
+    if(signales.has(nom))return;
+    signales.add(nom);
+    try{fetch('/cv/etape/'+nom,{cache:'no-store',keepalive:true,credentials:'omit'}).catch(()=>{});}catch(_){}
+  }
 
   // --- Fichier : photo réduite en JPEG (1 568 px), PDF ou Word de 2 Mo au plus (le serveur revérifie tout) ---
   function base64(blob){
@@ -57,7 +65,7 @@
     if(e.contentEditable!=='plaintext-only')e.contentEditable='true';
     return e;
   }
-  function champ(tag,cls,valeur,chemin){return modifiable(el(tag,cls,valeur||''),chemin);}
+  function champModifiable(tag,cls,valeur,chemin){return modifiable(el(tag,cls,valeur||''),chemin);}
   // Icônes Lucide v1.75.0 (https://lucide.dev, licence ISC : static/LICENCE-lucide.txt), recopiées ici : aucun fichier
   // ni script d'un autre site. Décoratives (aria-hidden), elles prennent la couleur du texte de chaque modèle.
   const ICONES={
@@ -79,18 +87,32 @@
     return s;
   }
   function section(feuille,titre,nom){
-    const s=el('section','cv-section'),h=el('h4','cv-rubrique');
+    const s=el('section','cv-section'),h=el('h3','cv-rubrique');
     h.append(icone(nom),document.createTextNode(titre));
     s.appendChild(h);feuille.appendChild(s);return s;
   }
 
+  // Exemple du haut de page : une personne fictive (dite comme telle sur la page), jamais le CV de quelqu'un.
+  const EXEMPLE={
+    nom:'Awa Ndiaye',titre:'Assistante comptable',ville:'Dakar',telephone:'77 000 00 00',email:'awa.ndiaye@exemple.sn',
+    profil:'Titulaire d’un BTS comptabilité et gestion. Deux stages en cabinet : saisie, rapprochements bancaires et classement des pièces. Utilise Sage et Excel.',
+    experiences:[
+      {poste:'Stagiaire comptable',employeur:'Cabinet comptable',lieu:'Dakar',dates:'Mars – août 2025',
+       taches:['Saisie des factures fournisseurs dans Sage','Préparation des rapprochements bancaires du mois','Classement et archivage des pièces comptables']},
+      {poste:'Vendeuse (job d’été)',employeur:'Boutique de quartier',lieu:'Dakar',dates:'Été 2023',taches:['Tenue de la caisse','Accueil et conseil des clients']}],
+    formations:[{diplome:'BTS Comptabilité et gestion',etablissement:'Institut de formation',dates:'2025'},
+                {diplome:'Baccalauréat G',etablissement:'Lycée',dates:'2022'}],
+    competences:['Sage','Excel : tableaux et formules','Saisie comptable','Rapprochement bancaire'],
+    langues:['Français','Wolof','Anglais (notions)'],
+  };
   function initiales(nom){
     return String(nom||'').split(/\s+/).filter(Boolean).slice(0,2).map(m=>m[0].toUpperCase()).join('');
   }
   // Trois zones : en-tête, corps (profil, expérience, formation) et côté (compétences, langues). Chaque modèle les
   // place à sa façon (CSS) : une colonne pour Sobre, deux colonnes sur la feuille A4 pour Moderne et Teranga.
-  function rendre(){
-    const f=$('cvFeuille');
+  // dessiner() sert au vrai CV (modifiable) et à l'exemple du haut de page (lecture seule).
+  function dessiner(f,cv,modele,modifier){
+    const champ=(tag,cls,valeur,chemin)=>modifier?champModifiable(tag,cls,valeur,chemin):el(tag,cls,valeur||'');
     f.replaceChildren();
     f.className='cv-feuille '+modele;
     const tete=el('header','cv-tete'),corps=el('div','cv-corps'),cote=el('div','cv-cote');
@@ -139,12 +161,15 @@
     if(cv.langues&&cv.langues.length)section(cote,'Langues','langues').appendChild(champ('p','cv-texte',cv.langues.join(', '),'langues.texte'));
     f.append(tete,corps);
     if(cote.childNodes.length)f.appendChild(cote);
+  }
+  function rendre(){
+    dessiner($('cvFeuille'),cv,modele,true);
     liste('cvVerifier',cv.a_verifier);
     liste('cvManque',cv.manque);
     const alerte=$('cvAlerte');alerte.textContent=cv.alerte||'';alerte.hidden=!cv.alerte;
     const lettre=$('cvLettre');lettre.replaceChildren();
     $('cvLettreBloc').hidden=!cv.lettre;
-    if(cv.lettre)lettre.appendChild(champ('div','cv-lettre-texte',cv.lettre,'lettre'));
+    if(cv.lettre)lettre.appendChild(champModifiable('div','cv-lettre-texte',cv.lettre,'lettre'));
     document.querySelectorAll('.cv-modele').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modele===modele)));
   }
   function liste(id,valeurs){
@@ -169,7 +194,7 @@
   }
 
   function afficher(){
-    $('cvForm').hidden=true;
+    $('cvForm').hidden=true;$('cvExemple').hidden=true;$('cvAller').hidden=true;
     $('cvResultat').hidden=false;
     rendre();
     const titre=$('cvResultatTitre');titre.tabIndex=-1;titre.focus();
@@ -186,12 +211,16 @@
     const depart=document.querySelector('input[name="depart"]:checked').value;
     const corps={poste:$('cvPoste').value.trim(),offre:$('cvOffre').value.trim()};
     if(depart==='fichier'){
-      if(!piece){erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();return;}
+      // Journaux du 23 novembre 2026 : « J'ai déjà un CV », puis « Créer mon CV » sans fichier, puis départ. Le choix
+      // du fichier s'ouvre directement (le clic de la personne l'autorise).
+      if(!piece){etape('refus-fichier');erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();$('cvFichier').click();return;}
       corps.fichier=piece;
     }else{
-      corps.parcours=$('cvParcours').value.trim();
-      if(corps.parcours.length<20){erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      const recit=$('cvParcours').value.trim(),nom=$('cvNom').value.trim();
+      if(recit.length<20){etape('refus-parcours');erreur('Raconte ton parcours en quelques phrases.');$('cvParcours').focus();return;}
+      corps.parcours=(nom?'Nom : '+nom+'\n':'')+recit;
     }
+    etape('envoi');
     const bouton=$('cvCreer');
     bouton.disabled=true;bouton.textContent='Création de ton CV…';bouton.setAttribute('aria-busy','true');
     try{
@@ -201,6 +230,8 @@
       const d=await r.json().catch(()=>({}));
       if(!r.ok||!d.cv){erreur(d.error||ERREUR);return;}
       cv=d.cv;garder();afficher();
+      // Conversion « cv » de Google Ads : envoyée seulement après « Accepter », une fois par session (google-ads-consent.js).
+      if(window.terangaAdsConversion)window.terangaAdsConversion('cv');
     }catch(_){erreur(ERREUR);}
     finally{bouton.disabled=false;bouton.textContent='Créer mon CV';bouton.removeAttribute('aria-busy');}
   }
@@ -247,9 +278,17 @@
     piece=null;$('cvFichierEtat').textContent='';erreur('');
     if(!file)return;
     try{piece=await lirePiece(file);$('cvFichierEtat').textContent='Fichier prêt : '+piece.nom;}
-    catch(err){e.target.value='';erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
+    catch(err){e.target.value='';etape('fichier-refuse');erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
   });
   $('cvForm').addEventListener('submit',creer);
+  // « debut » : un vrai champ touché par la personne (clic, choix, saisie), ni le bouton « Créer mon CV » ni le curseur
+  // que la page place elle-même après un refus (relecture Codex, #644).
+  ['click','change','input'].forEach(t=>$('cvForm').addEventListener(t,e=>{
+    if(e.target&&e.target.matches&&e.target.matches('input,textarea,select'))etape('debut');
+  }));
+  // Deux boutons mènent au formulaire : sous le titre (visible au-dessus du bandeau des cookies sur téléphone) et
+  // sous l'exemple. Une seule étape « faire-le-mien » par visite.
+  document.querySelectorAll('.cv-main a[href="#cvForm"]').forEach(a=>a.addEventListener('click',()=>etape('faire-le-mien')));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
@@ -260,11 +299,12 @@
   $('cvLettrePdf').addEventListener('click',()=>imprimer('imprime-lettre'));
   $('cvRecommencer').addEventListener('click',()=>{
     cv=null;piece=null;oublier();
-    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvForm').reset();
-    $('cvBlocFichier').hidden=false;$('cvBlocParcours').hidden=true;$('cvFichierEtat').textContent='';
+    $('cvResultat').hidden=true;$('cvForm').hidden=false;$('cvExemple').hidden=false;$('cvAller').hidden=false;$('cvForm').reset();
+    $('cvBlocFichier').hidden=true;$('cvBlocParcours').hidden=false;$('cvFichierEtat').textContent='';
     $('cvCreer').focus();
   });
 
+  dessiner($('cvExempleFeuille'),EXEMPLE,'teranga',false);
   // Un CV déjà créé sur ce téléphone revient tel quel.
   const garde=relire();
   if(garde){cv=garde.cv;modele=MODELES.includes(garde.modele)?garde.modele:'sobre';afficher();}

@@ -246,6 +246,14 @@ body.hote main h2{margin-top:26px}
 .cv-hero h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin:18px 0 8px}
 .cv-hero{padding:0;border-top:0}
 .cv-hero p{color:var(--muted);margin:0 0 18px}
+.cv-hero .cv-principal{display:inline-flex;margin-bottom:28px}
+/* Exemple fini en haut de page (personne fictive) : le haut de la feuille seulement, fondu vers la page. */
+.cv-exemple{display:grid;gap:12px;margin:0 0 26px;padding:0;border-top:0}
+.cv-exemple h2{margin:0;font-size:17px}
+.cv-exemple-cadre{position:relative;max-height:360px;overflow:hidden;border-radius:12px;container-type:inline-size}
+.cv-exemple-cadre::after{content:"";position:absolute;left:0;right:0;bottom:0;height:96px;background:linear-gradient(rgba(0,0,0,0),var(--bg));pointer-events:none}
+.cv-exemple .cv-feuille{box-shadow:none}
+.cv-exemple .cv-principal{justify-self:start}
 .cv-form{display:grid;gap:16px}
 .cv-choix{border:0;margin:0;padding:0;display:grid;gap:10px}
 .cv-choix legend{font-weight:700;margin-bottom:8px}
@@ -255,6 +263,7 @@ body.hote main h2{margin-top:26px}
 .cv-option small{display:block;color:var(--muted)}
 .cv-option:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .cv-champ{display:grid;gap:6px}
+.cv-bloc-parcours{display:grid;gap:16px}
 .cv-champ label{font-weight:700}
 .cv-champ label small{font-weight:400;color:var(--muted)}
 .cv-champ input[type=text],.cv-champ textarea{width:100%;min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit}
@@ -270,7 +279,7 @@ body.hote main h2{margin-top:26px}
 .cv-bouton:disabled{opacity:.7;cursor:progress}
 .cv-resultat{display:grid;gap:14px;margin-top:8px;padding:0;border-top:0;container-type:inline-size}
 .cv-resultat h2{margin:18px 0 0}
-.cv-resultat h3{margin:8px 0 6px;font-size:17px}
+.cv-resultat h3:not(.cv-rubrique){margin:8px 0 6px;font-size:17px}
 .cv-alerte{margin:0;padding:12px 14px;border-radius:14px;border:1px solid #c9473d;background:rgba(201,71,61,.10);font-weight:700}
 .cv-modeles{display:flex;gap:8px;flex-wrap:wrap}
 .cv-modele{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
@@ -292,6 +301,20 @@ a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-d
 .cv-partage p{margin:0 0 10px}
 .cv-liste ul{margin:0;padding-left:20px}
 .cv-liste li{margin:4px 0}
+/* Offres d'emploi (/offres-emploi) : des cartes qui renvoient vers les sites d'offres, rien de recopié. */
+.emploi-main h1{font-size:clamp(28px,7vw,40px);line-height:1.1;margin:18px 0 8px}
+.emploi-intro,.emploi-note{color:var(--muted)}
+.emploi-note{font-size:14px}
+.emploi-cv,.emploi-alerte{margin:16px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--line-strong)}
+.emploi-cv p,.emploi-alerte p{margin:0 0 10px}
+.emploi-alerte{border-color:#c9473d;background:rgba(201,71,61,.10)}
+.emploi-alerte p{margin:0}
+.emploi-sites{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.emploi-site{padding:16px;border-radius:16px;border:1px solid var(--line-strong);background:var(--surface)}
+.emploi-site h2{margin:0 0 6px;font-size:19px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.emploi-site p{margin:0 0 12px;color:var(--muted)}
+.emploi-public{padding:2px 10px;border-radius:999px;background:var(--accent-soft);color:var(--ink);font-size:12px;font-weight:700}
+.emploi-domaine{font-weight:400}
 /* La feuille reste « papier » dans les deux thèmes : c'est ce qui sera imprimé. Trois zones (en-tête, corps,
    côté) que chaque modèle place à sa façon ; deux colonnes dès que la feuille est assez large, et toujours en A4. */
 .cv-feuille,.cv-lettre{background:#fff;color:#22201c;border:1px solid #ddd;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.22);font:14px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;overflow-wrap:anywhere}

@@ -289,6 +289,18 @@ def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_
     assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
 
 
+def test_un_exemple_fictif_montre_le_cv_fini_avant_le_formulaire():
+    """Montrer le résultat avant de demander quoi que ce soit : un CV fini, d'une personne fictive dite comme telle,
+    et un bouton qui mène au formulaire. L'exemple est dessiné par cv.js (même rendu que le vrai CV)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvExemple"')
+    assert debut < html.index('id="cvForm"')
+    exemple = html[debut:html.index("</section>", debut)]
+    assert "personne fictive" in exemple
+    assert 'id="cvExempleFeuille"' in exemple
+    assert re.search(r'<a [^>]*href="#cvForm"[^>]*>Faire le mien</a>', exemple)
+
+
 def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(claude, monkeypatch):
     """Combien de temps attend la personne ? Une ligne « latence route=cv » par demande (services/latency.py) :
     des nombres et des étiquettes fixes, jamais le parcours, le poste ni le CV."""
@@ -312,3 +324,45 @@ def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(cla
     assert invalide["route"] == "cv" and invalide["statut"] == "invalide" and invalide["fournisseur_ms"] == "-"
     texte = "".join(handler.lines)
     assert "Comptable" not in texte and "BTS" not in texte and "Awa" not in texte
+
+
+def test_la_page_repond_aux_questions_que_les_gens_tapent_sur_google():
+    """Recherches vues dans la campagne Google Ads CV (22 novembre 2026) : « comment faire un cv », « exemple de cv pour
+    demande d'emploi ». Les réponses ne disent que ce que fait la page et les règles du skill cv-senegal."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvFaqTitre"')
+    faq = html[debut:html.index("</section>", debut)]
+    for question in ("Comment faire un CV pour une demande d’emploi ?", "Je n’ai pas d’expérience : que mettre dans mon CV ?",
+                     "Quel modèle de CV choisir ?", "C’est gratuit ? Mon CV est-il gardé ?", "Où envoyer mon CV ensuite ?"):
+        assert f"<h3>{question}</h3>" in faq, question
+    assert 'href="/offres-emploi"' in faq and "Teranga ne les garde pas" in faq
+    donnees = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+    (faq_ld,) = [n for n in donnees["@graph"] if n["@type"] == "FAQPage"]
+    assert len(faq_ld["mainEntity"]) == 5
+    assert all("<" not in q["acceptedAnswer"]["text"] for q in faq_ld["mainEntity"])  # texte seul, sans balise
+
+
+def test_le_depart_sans_cv_est_propose_d_abord_sans_fichier_a_chercher():
+    """« Go 1 » du 23 novembre 2026 : les visiteurs venus de la pub (« comment faire un cv ») n'ont souvent pas de CV
+    sur leur téléphone. Le départ par défaut est donc le récit du parcours, avec le nom à part ; le fichier reste au
+    choix."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    choix = html[html.index('<fieldset class="cv-choix">'):html.index("</fieldset>")]
+    assert choix.index('value="parcours"') < choix.index('value="fichier"')
+    assert re.search(r'<input type="radio" name="depart" value="parcours" checked>', choix)
+    assert "pas besoin de fichier" in choix
+    assert re.search(r'<div class="cv-champ" id="cvBlocFichier" hidden>', html)
+    assert re.search(r'<div class="cv-bloc-parcours" id="cvBlocParcours">', html)
+    nom = re.search(r'<input id="cvNom"[^>]*>', html)
+    assert nom and 'autocomplete="name"' in nom.group(0) and 'maxlength="80"' in nom.group(0)
+
+
+def test_un_recit_au_maximum_avec_un_nom_reste_accepte_par_le_serveur():
+    """Relecture Codex (#645) : le nom part en tête du parcours (« Nom : …\\n ») ; un récit à la longueur maximale du
+    champ, avec le nom le plus long, ne doit pas dépasser la limite du serveur (sinon 400, alors que le formulaire
+    l'acceptait)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    recit_max = int(re.search(r'<textarea id="cvParcours"[^>]*maxlength="(\d+)"', html).group(1))
+    nom_max = int(re.search(r'<input id="cvNom"[^>]*maxlength="(\d+)"', html).group(1))
+    parcours = "Nom : " + "n" * nom_max + "\n" + "r" * recit_max
+    construire_demande({"parcours": parcours, "poste": "Comptable"})  # ne lève rien

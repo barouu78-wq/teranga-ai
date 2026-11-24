@@ -8,7 +8,7 @@ Ce document définit la répartition des responsabilités, les règles de coordi
 **Responsable :** indexabilité et croissance organique.
 - Contrôler robots.txt, sitemap XML, canonicals, redirections, métadonnées, données structurées et liens internes.
 - Prioriser les pages utiles au Sénégal, à Dakar et à la diaspora, sans créer de pages artificielles.
-- Analyser Search Console/Semrush uniquement si les identifiants et accès sont configurés et fonctionnels.
+- Lire Search Console par le connecteur Windsor.ai de Claude (lecture seule) quand il est disponible ; sinon, le dire.
 - Livrer un rapport avec preuves, URL concernées, impact, effort et indicateurs de suivi.
 - Ne pas modifier DNS, domaine, secrets ou paramètres de production.
 
@@ -64,8 +64,8 @@ Ce document définit la répartition des responsabilités, les règles de coordi
 - Une exécution échouée est une alerte à diagnostiquer, pas une validation réussie.
 
 ### P3 — Connexions externes
-- Vérifier la présence et la validité des variables nécessaires à Search Console et Semrush dans l'environnement d'hébergement, sans afficher les valeurs secrètes.
-- Si les accès ne sont pas configurés, signaler « non configuré » ; ne jamais prétendre qu'une collecte de données réelles a eu lieu.
+- Search Console et Google Ads se lisent par le connecteur Windsor.ai de Claude, sans clé stockée dans le site.
+- Si le connecteur n'est pas disponible, signaler « non configuré » ; ne jamais prétendre qu'une collecte de données réelles a eu lieu.
 
 ## 4. Règles communes
 - Une seule PR par objectif cohérent ; pas de changements non liés.

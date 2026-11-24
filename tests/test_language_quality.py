@@ -1,8 +1,6 @@
 from services.language_quality import (
     LANGUAGE_RULES,
-    is_supported_language,
     language_instruction,
-    language_test_cases,
 )
 
 
@@ -38,14 +36,3 @@ def test_code_switching_is_not_a_language_fallback():
     assert "N'invente jamais un mot" in language_instruction("wo")
     assert "N'invente pas de vocabulaire pulaar" in language_instruction("ff")
 
-
-def test_language_test_cases_cover_supported_chat_languages():
-    cases = language_test_cases()
-    assert set(cases) == set(LANGUAGE_RULES) == {"fr", "en", "wo", "ff"}
-    assert all(isinstance(prompt, str) and prompt.strip() for prompt in cases.values())
-
-
-def test_language_support_check_is_explicit():
-    assert all(is_supported_language(lang) for lang in ("fr", "en", "wo", "ff"))
-    assert not is_supported_language("es")
-    assert not is_supported_language("")

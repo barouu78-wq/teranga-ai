@@ -19,6 +19,9 @@ from services.site_layout import HEAD_ASSETS, asset_url, site_footer, site_heade
 MAX_POSTE = 120
 MAX_TEXTE = 6000  # récit du parcours, offre d'emploi
 MIN_PARCOURS = 20
+MAX_NOM = 80
+# Le nom part en tête du récit (« Nom : …\n », static/cv.js) : le champ du récit laisse cette place sous MAX_TEXTE.
+MAX_RECIT = MAX_TEXTE - len("Nom : \n") - MAX_NOM
 
 CONSIGNE_CV = """Tu es l'assistant CV de Teranga AI, pour l'emploi au Sénégal. Tu crées un CV clair à partir de ce que la personne a donné (son CV, ou le récit de son parcours), pour le poste qu'elle vise et, si une offre est fournie, une lettre de motivation.
 
@@ -159,15 +162,42 @@ DESCRIPTION_CV = ("Crée gratuitement un CV clair pour l’emploi au Sénégal, 
 PARTAGE_CV = "Je viens de faire mon CV gratuitement avec Teranga AI. Fais le tien ici : "
 
 
+# Questions fréquentes (recherches vues dans la campagne Google Ads CV, 22 novembre 2026) : seulement ce que fait la
+# page et les règles du skill cv-senegal, rien d'inventé. Une réponse peut contenir un lien du site (texte seul en JSON-LD).
+FAQ_CV = (
+    ("Comment faire un CV pour une demande d’emploi ?",
+     "Une page, des titres simples (Profil, Expérience, Formation, Compétences, Langues), du plus récent au plus ancien, "
+     "et en haut ta ville, ton téléphone et ton e-mail. Le profil et l’ordre des expériences s’adaptent au poste visé. "
+     "Ici, Teranga le met en page à partir de ton ancien CV ou du récit de ton parcours."),
+    ("Je n’ai pas d’expérience : que mettre dans mon CV ?",
+     "Les stages, l’apprentissage, le bénévolat, les associations, les petits boulots, l’aide au commerce familial, les "
+     "projets d’études, les outils que tu maîtrises et le permis. La formation passe alors en premier. En haut de la "
+     "page, choisis le départ sans CV et raconte ton parcours : Teranga n’ajoute rien que tu n’as pas fait."),
+    ("Quel modèle de CV choisir ?",
+     "Pour une candidature sur un site d’emploi : Sobre, Classique ou Minimal, car certains logiciels de tri lisent mal "
+     "les colonnes et les bandeaux de couleur. Pour un envoi par e-mail, sur papier ou en main propre, les autres "
+     "modèles conviennent aussi."),
+    ("C’est gratuit ? Mon CV est-il gardé ?",
+     "C’est gratuit. Ton CV et l’offre sont envoyés à l’IA (Claude, d’Anthropic) seulement pour créer ton CV : Teranga "
+     "ne les garde pas. Le CV créé reste sur ton téléphone."),
+    ("Où envoyer mon CV ensuite ?",
+     'Sur les sites d’offres d’emploi au Sénégal réunis par Teranga : <a href="/offres-emploi">voir les offres '
+     "d’emploi</a>. Une vraie offre ne demande jamais d’argent."),
+)
+
+
 def page_cv(site_url: str) -> str:
     """Page /cv (téléphone d'abord). Le formulaire est rempli et envoyé par /static/cv.js ; le CV créé s'affiche dessous."""
     url = site_url.rstrip("/") + "/cv"
     partage = "https://wa.me/?text=" + quote(PARTAGE_CV + url + "?ref=wa", safe="")
-    donnees = json.dumps({
-        "@context": "https://schema.org", "@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url,
-        "description": DESCRIPTION_CV, "applicationCategory": "BusinessApplication", "inLanguage": "fr",
-        "isAccessibleForFree": True,
-    }, ensure_ascii=False).replace("</", "<\\/")
+    questions = [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": re.sub(r"<[^>]+>", "", r)}}
+                 for q, r in FAQ_CV]
+    donnees = json.dumps({"@context": "https://schema.org", "@graph": [
+        {"@type": "WebApplication", "name": "Mon CV · Teranga AI", "url": url, "description": DESCRIPTION_CV,
+         "applicationCategory": "BusinessApplication", "inLanguage": "fr", "isAccessibleForFree": True},
+        {"@type": "FAQPage", "mainEntity": questions},
+    ]}, ensure_ascii=False).replace("</", "<\\/")
+    faq = "".join(f"<div class=\"faq\"><h3>{escape(q)}</h3><p>{r}</p></div>" for q, r in FAQ_CV)
     return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="format-detection" content="telephone=no,email=no,address=no">
@@ -180,18 +210,29 @@ def page_cv(site_url: str) -> str:
 {site_header("/cv")}
 <main class="cv-main">
 <section class="cv-hero"><h1>Ton CV, prêt pour l’emploi au Sénégal</h1>
-<p>Un CV clair et soigné en quelques minutes. Teranga met en valeur ce que tu as vraiment fait&nbsp;: il n’invente rien.</p></section>
+<p>Un CV clair et soigné en quelques minutes. Teranga met en valeur ce que tu as vraiment fait&nbsp;: il n’invente rien.</p>
+<a class="cv-bouton cv-principal" id="cvAller" href="#cvForm">Faire mon CV</a></section>
+<section class="cv-exemple" id="cvExemple" aria-labelledby="cvExempleTitre">
+<h2 id="cvExempleTitre">Exemple de CV fait avec Teranga</h2>
+<div class="cv-exemple-cadre"><article id="cvExempleFeuille" class="cv-feuille teranga" aria-label="Exemple de CV"></article></div>
+<p class="cv-aide">Awa est une personne fictive. Ton CV reprend seulement ce que tu donnes, dans le modèle de ton choix.</p>
+<a class="cv-bouton cv-principal" href="#cvForm">Faire le mien</a>
+</section>
 <form id="cvForm" class="cv-form" novalidate>
 <fieldset class="cv-choix"><legend>Ton point de départ</legend>
-<label class="cv-option"><input type="radio" name="depart" value="fichier" checked><span><strong>J’ai déjà un CV</strong><small>PDF, Word ou photo, 2 Mo au plus.</small></span></label>
-<label class="cv-option"><input type="radio" name="depart" value="parcours"><span><strong>Je n’ai pas de CV</strong><small>Raconte ton parcours en quelques phrases.</small></span></label>
+<label class="cv-option"><input type="radio" name="depart" value="parcours" checked><span><strong>Je n’ai pas de CV</strong><small>Raconte ton parcours en quelques lignes&nbsp;: pas besoin de fichier.</small></span></label>
+<label class="cv-option"><input type="radio" name="depart" value="fichier"><span><strong>J’ai déjà un CV</strong><small>PDF, Word ou photo, 2 Mo au plus.</small></span></label>
 </fieldset>
-<div class="cv-champ" id="cvBlocFichier"><span class="cv-etiquette" id="cvFichierTitre">Ton CV</span>
+<div class="cv-champ" id="cvBlocFichier" hidden><span class="cv-etiquette" id="cvFichierTitre">Ton CV</span>
 <input id="cvFichier" class="cv-fichier" type="file" aria-labelledby="cvFichierTitre cvFichierBouton" accept="image/*,application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
 <label class="cv-bouton cv-choisir" id="cvFichierBouton" for="cvFichier">Choisir mon CV</label>
 <p class="cv-aide" id="cvFichierEtat" role="status" aria-live="polite"></p></div>
-<div class="cv-champ" id="cvBlocParcours" hidden><label for="cvParcours">Ton parcours</label>
-<textarea id="cvParcours" rows="6" maxlength="{MAX_TEXTE}" placeholder="Tes études, tes stages ou emplois, ce que tu sais faire, les langues que tu parles…"></textarea></div>
+<div class="cv-bloc-parcours" id="cvBlocParcours">
+<div class="cv-champ"><label for="cvNom">Ton nom <small>(facultatif)</small></label>
+<input id="cvNom" type="text" maxlength="{MAX_NOM}" autocomplete="name" placeholder="Prénom et nom"></div>
+<div class="cv-champ"><label for="cvParcours">Tes études et ce que tu as déjà fait</label>
+<textarea id="cvParcours" rows="5" maxlength="{MAX_RECIT}" placeholder="Ex. : Bac L en 2022. Vendeuse deux ans dans la boutique de ma tante. Je sais utiliser Excel, je parle wolof et français."></textarea>
+<p class="cv-aide">Trois lignes suffisent&nbsp;: stages, petits boulots, bénévolat, ce que tu sais faire, les langues que tu parles. Teranga n’ajoute rien.</p></div></div>
 <div class="cv-champ"><label for="cvPoste">Pour quel poste&nbsp;?</label>
 <input id="cvPoste" type="text" maxlength="{MAX_POSTE}" placeholder="Ex. comptable, vendeuse, chauffeur, développeur…" autocomplete="off"></div>
 <div class="cv-champ"><label for="cvOffre">Une offre d’emploi&nbsp;? <small>(facultatif)</small></label>
@@ -221,12 +262,15 @@ def page_cv(site_url: str) -> str:
 <button type="button" class="cv-bouton" id="cvRecommencer">Recommencer</button></div>
 <div class="cv-partage"><p>Un ami cherche aussi du travail&nbsp;? Envoie-lui Teranga&nbsp;: c’est gratuit.</p>
 <a class="cv-bouton" id="cvPartager" href="{escape(partage)}" target="_blank" rel="noopener noreferrer">Envoyer à un ami sur WhatsApp</a></div>
+<div class="cv-partage"><p>Où envoyer ton CV&nbsp;? Les sites d’offres d’emploi au Sénégal, vérifiés par Teranga.</p>
+<a class="cv-bouton" href="/offres-emploi">Voir les offres d’emploi</a></div>
 <div id="cvVerifier" class="cv-liste" hidden><h3>À vérifier</h3><ul></ul></div>
 <div id="cvManque" class="cv-liste" hidden><h3>Ce que l’offre demande et que ton CV ne montre pas</h3><ul></ul></div>
 <div id="cvLettreBloc" hidden><h3>Lettre de motivation</h3><article id="cvLettre" class="cv-lettre" aria-label="Lettre de motivation"></article>
 <button type="button" class="cv-bouton" id="cvLettrePdf">Télécharger la lettre en PDF</button></div>
 <p class="cv-note">Relis tout avant d’envoyer. Teranga n’ajoute ni diplôme, ni expérience, ni compétence que tu n’as pas donnés.</p>
 </section>
+<section class="cv-faq" aria-labelledby="cvFaqTitre"><h2 id="cvFaqTitre">Questions fréquentes</h2>{faq}</section>
 </main>
 {site_footer("fr")}
 <script src="{asset_url("cv.js")}" defer></script>

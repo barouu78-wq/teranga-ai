@@ -70,6 +70,7 @@ def test_un_parcours_devient_un_cv_modifiable_garde_sur_le_telephone(page, base_
 def test_un_cv_en_pdf_part_avec_le_poste_et_recommencer_efface_tout(page, base_url):
     envois = []
     ouvrir(page, base_url, envois)
+    page.get_by_text("J’ai déjà un CV").click()  # le départ par défaut est le parcours depuis le 23 novembre 2026
     page.set_input_files("#cvFichier", files=[{"name": "mon-cv.pdf", "mimeType": "application/pdf",
                                                "buffer": b"%PDF-1.4\n%%EOF\n"}])
     page.get_by_text("Fichier prêt : mon-cv.pdf").wait_for()
@@ -86,6 +87,9 @@ def test_un_cv_en_pdf_part_avec_le_poste_et_recommencer_efface_tout(page, base_u
 def test_sans_cv_ni_parcours_rien_ne_part(page, base_url):
     envois = []
     ouvrir(page, base_url, envois)
+    page.get_by_role("button", name="Créer mon CV").click()  # départ par défaut : le parcours
+    page.locator("#cvErreur").get_by_text("Raconte ton parcours en quelques phrases.").wait_for()
+    page.get_by_text("J’ai déjà un CV").click()
     page.get_by_role("button", name="Créer mon CV").click()
     page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
     assert envois == []
@@ -230,3 +234,159 @@ def test_les_contacts_et_les_rubriques_portent_une_icone_decorative(page, base_u
     assert contacts.nth(1).inner_text().strip() == "77 000 00 00"
     page.get_by_role("button", name="Élégant", exact=True).click()
     assert feuille.locator(".cv-rubrique svg.cv-ico").count() == rubriques.count()
+
+
+def test_l_exemple_de_cv_fini_mene_au_formulaire_et_s_efface_quand_mon_cv_est_pret(page, base_url):
+    from playwright.sync_api import expect
+
+    envois = []
+    ouvrir(page, base_url, envois)
+    exemple = page.locator("#cvExemple")
+    assert exemple.get_by_text("personne fictive").is_visible()
+    feuille = page.locator("#cvExempleFeuille")
+    feuille.get_by_text("Assistante comptable").wait_for()
+    # Même rendu que le vrai CV (icônes comprises), mais rien à modifier : ce n'est pas le CV de la personne.
+    assert feuille.locator("svg.cv-ico").count() >= 5
+    assert feuille.locator("[contenteditable]").count() == 0
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    page.get_by_role("link", name="Faire le mien").click()
+    expect(page.locator("#cvForm")).to_be_in_viewport()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert exemple.is_hidden()
+    page.reload()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert exemple.is_hidden()
+    page.get_by_role("button", name="Recommencer").click()
+    assert exemple.is_visible()
+
+
+def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url):
+    """« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent. Chaque étape part une seule fois par visite,
+    sans rien de ce que la personne écrit dans l'adresse."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    ouvrir(page, base_url, envois)
+    page.get_by_role("link", name="Faire le mien").click()
+    page.get_by_text("J’ai déjà un CV").click()
+    with page.expect_file_chooser():
+        page.get_by_role("button", name="Créer mon CV").click()  # sans fichier : refusé, le choix du fichier s'ouvre
+    page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
+    with page.expect_file_chooser():
+        page.get_by_role("button", name="Créer mon CV").click()  # deuxième refus : pas de nouveau signal
+    page.set_input_files("#cvFichier", files=[{"name": "cv.txt", "mimeType": "text/plain", "buffer": b"texte"}])
+    page.get_by_text("Ce type de fichier n’est pas accepté").wait_for()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "Trop court")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.locator("#cvErreur").get_by_text("Raconte ton parcours en quelques phrases.").wait_for()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.wait_for_timeout(300)  # les signaux partent sans attendre de réponse
+    assert sorted(etapes) == sorted(["faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours",
+                                     "envoi"]), etapes
+    assert len(envois) == 1
+
+
+def test_sans_cv_le_nom_et_trois_lignes_suffisent(page, base_url):
+    """Départ par défaut (« Go 1 » du 23 novembre 2026) : pas de fichier à chercher. Le nom part en tête du parcours."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    assert page.locator("#cvParcours").is_visible() and page.locator("#cvNom").is_visible()
+    assert page.locator("#cvBlocFichier").is_hidden()
+    page.fill("#cvNom", "Awa Ndiaye")
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.fill("#cvPoste", "Comptable")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert envois[-1]["parcours"] == "Nom : Awa Ndiaye\nBTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar."
+    # Recommencer revient au départ par défaut, nom compris.
+    page.get_by_role("button", name="Recommencer").click()
+    assert page.locator("#cvParcours").is_visible() and page.locator("#cvBlocFichier").is_hidden()
+    assert page.input_value("#cvNom") == ""
+
+
+def test_cliquer_creer_sans_toucher_un_champ_n_est_pas_un_debut(page, base_url):
+    """Relecture Codex (#644) : « debut » veut dire « premier champ touché » ; le clic sur « Créer mon CV » seul n'en
+    est pas un."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    ouvrir(page, base_url, envois)
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.locator("#cvErreur").wait_for()
+    page.wait_for_timeout(300)
+    assert "debut" not in etapes, etapes
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.wait_for_timeout(300)
+    assert etapes.count("debut") == 1, etapes
+
+
+def test_le_bouton_du_formulaire_reste_visible_au_dessus_du_bandeau_des_cookies(page, base_url, monkeypatch):
+    """Constat du 23 novembre 2026 : sur téléphone, le visiteur venu d'une annonce voyait le bandeau « Cookies
+    publicitaires » recouvrir « Faire le mien », placé sous l'exemple. Un bouton sous le titre reste visible."""
+    import app as app_module
+    from services.google_ads_tag import google_ads_config
+
+    monkeypatch.setitem(app_module.app.config, "GOOGLE_ADS", google_ads_config("AW-18578242897"))
+    page.route("https://www.googletagmanager.com/**", lambda route: route.fulfill(content_type="text/javascript", body=""))
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.goto(base_url + "/cv")
+    bandeau = page.locator(".teranga-ads-consent-panel")
+    bandeau.wait_for()
+    bouton = page.locator(".cv-hero a[href='#cvForm']")
+    haut_bandeau = bandeau.bounding_box()["y"]
+    boite = bouton.bounding_box()
+    assert boite["y"] + boite["height"] <= haut_bandeau
+    bouton.click()
+    assert page.evaluate("location.hash") == "#cvForm"
+    assert page.errors == []
+
+
+def test_le_bouton_du_titre_disparait_avec_le_formulaire_et_revient_avec_recommencer(page, base_url):
+    """Relecture Codex (#653) : un CV gardé sur le téléphone cache le formulaire ; le bouton du titre, qui y mène,
+    doit disparaître aussi au lieu de rester sans effet, puis revenir avec « Recommencer »."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    bouton = page.locator(".cv-hero a[href='#cvForm']")
+    assert bouton.is_visible()
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert not bouton.is_visible()
+    page.reload()  # CV restauré depuis le téléphone
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    assert not bouton.is_visible()
+    page.get_by_role("button", name="Recommencer").click()
+    assert bouton.is_visible()
+    assert page.errors == []
+
+
+TITRES = """() => [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+  .filter(h => h.getBoundingClientRect().height > 0).map(h => +h.tagName[1])"""
+
+
+def test_les_titres_du_cv_ne_sautent_pas_de_niveau(page, base_url):
+    """Audit d'accessibilité du 23 novembre 2026 : les rubriques du CV (Profil, Expérience…) étaient des h4 sous un
+    h2, un saut de niveau qui gêne la navigation au lecteur d'écran. Vrai pour l'exemple et pour le CV créé."""
+    envois = []
+    ouvrir(page, base_url, envois)
+    def sans_saut():
+        niveaux = page.evaluate(TITRES)
+        assert niveaux.count(1) == 1
+        assert all(b <= a + 1 for a, b in zip(niveaux, niveaux[1:])), niveaux
+
+    sans_saut()  # exemple de CV
+    page.get_by_text("Je n’ai pas de CV").click()
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    sans_saut()  # CV créé
+    # Les rubriques gardent leur style de CV (12 px), pas celui des titres « À vérifier » (17 px).
+    tailles = page.evaluate("""() => [...document.querySelectorAll('#cvFeuille .cv-rubrique')]
+      .map(h => getComputedStyle(h).fontSize)""")
+    assert tailles and set(tailles) == {"12px"}, tailles
+    assert page.errors == []
