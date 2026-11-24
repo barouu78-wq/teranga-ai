@@ -43,6 +43,9 @@ def register_exchange_rates_route(app, deps):
                 "live": bool(data["date"]),
                 "date": data["date"],
                 "rates": data["rates"],
-                "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                # Heure de la dernière lecture réussie de la BCEAO (services/exchange_rates.py), jamais celle de
+                # la requête ; rien si la page n'a jamais pu être lue.
+                "checked_at": (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(data["verifie_at"]))
+                               if data.get("verifie_at") else None),
             }
         )
