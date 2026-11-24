@@ -319,7 +319,9 @@ TOPICS = (
       "des sites privés la font payer. Ne rien payer à un site non officiel, demander à l'ambassade ou au consulat.")),
     # Un mois cité avec un vrai voyage (« Je pars au Sénégal en décembre », « vacances en août ») : pas « partir à la
     # retraite en janvier », ni « rendre visite à ma mère en janvier » (relecture Codex de #520).
-    ("saison", r"saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
+    # « quelle température » et « il fait chaud » : questions réelles du 24 novembre 2026 ; pas « a de la température »
+    # (fièvre), qui reste au sujet santé.
+    ("saison", r"quelles? temperatures?|temperature fait il|il fait (?:chaud|froid|frais)|fait il (?:chaud|froid|frais)|saison|quand partir|meilleure periode|meilleur moment|best time|when to go|climat|climate|"
      r"hivernage|pluie|pleut|rainy|\brain\b|chaleur|heat|"
      r"\b(?:voyag\w*|vacances|sejour\w*|(?:pars|part|partir|partons|aller|venir|viens|rentrer|rentre|visiter) "
      r"(?:au |en |le )?senegal)\b[^|?]{0,60}"
@@ -328,7 +330,8 @@ TOPICS = (
       "environ de juillet à octobre (plus tôt et plus longue en Casamance), pistes parfois difficiles. L'intérieur "
       "(Tambacounda, Kédougou, Matam) est très chaud de mars à juin. Prévisions officielles : ANACIM.",)),
     # « société » seul parle aussi de la vie en société ou d'une banque : il faut une forme juridique ou « créer ».
-    ("entreprise", r"entreprise|societe (anonyme|a responsabilite|commerciale|unipersonnelle)|"
+    # « ouvrir une boutique » (question réelle du 24 novembre 2026) ; pas « la boutique ouvre », « restaurant ouvert ».
+    ("entreprise", r"(?:ouvrir|creer|monter|lancer|demarrer) (?:une |un |ma |mon |sa |son |notre )?(?:boutique|commerce|magasin|restaurant|atelier|salon|epicerie|petit commerce)|entreprise|societe (anonyme|a responsabilite|commerciale|unipersonnelle)|"
      r"(creer|ouvrir|monter|enregistrer|immatriculer|fonder|lancer) (une |ma |sa |notre |la )?societe|"
      r"creer (une |mon |ma |son |sa )?(activite|business|startup|boite)|immatricul|"
      r"ninea|rccm|apix|statut juridique|business|startup|\bgie\b|\bsarl\b|suarl",
