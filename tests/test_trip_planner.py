@@ -44,6 +44,25 @@ def test_trip_planner_rejects_invalid_json():
 def test_trip_planner_rejects_reversed_dates():
     response = app.test_client().post("/api/trip-planner", json={"arrival": "2026-10-10", "departure": "2026-10-09"}, headers={"Origin": "https://teranga-ai.fr"})
     assert response.status_code == 400
+    assert response.get_json()["error"] == "La date de retour doit être après la date de départ."
+
+
+def test_les_dates_se_lisent_comme_un_billet_depart_puis_retour():
+    """Propriétaire, 24 novembre 2026 : « mettre c'est quand le départ et c'est quand la personne rentre ».
+
+    « Arrivée » puis « Départ » se lisait du côté du Sénégal ; sur sa capture, le départ (24 nov.) était avant
+    l'arrivée (27 nov.). Les noms des champs (arrival, departure) ne changent pas : l'API, les liens partagés et
+    la consigne de l'IA (« Create exactly N day objects ») restent les mêmes."""
+    from services.trip_planner import _html
+
+    fr = _html("https://example.com", "fr")
+    assert '<label class="field">Départ<span class="date-wrap"><input name="arrival"' in fr
+    assert '<label class="field">Retour<span class="date-wrap"><input name="departure"' in fr
+    assert "Arrivée" not in fr
+    assert '<p id="tripDays" class="trip-days" aria-live="polite"></p>' in fr
+    en = _html("https://example.com", "en")
+    assert '<label class="field">Departure<span class="date-wrap"><input name="arrival"' in en
+    assert '<label class="field">Return<span class="date-wrap"><input name="departure"' in en
 
 
 def test_trip_budget_is_structured():
@@ -375,10 +394,10 @@ def test_trip_planner_mobile_navigation_validates_dates_without_relying_on_date_
     assert "function validDateStep()" in body
     assert "const arrivalInput=form.querySelector('input[name=\"arrival\"]')" in body
     assert "departureInput=form.querySelector('input[name=\"departure\"]')" in body
-    assert "departureInput?.setAttribute('min',arrivalInput.value)" in body
+    assert "departureInput.min=arrivalInput.value" in body
     assert "if(current===0){if(!validDateStep())return}else if(!form.reportValidity())return;" in body
-    assert "La date de départ doit être après la date d&#x27;arrivée." in body
-    assert "Sélectionne une date d’arrivée et une date de départ." in body
+    assert "La date de retour doit être après la date de départ." in body
+    assert "Sélectionne une date de départ et une date de retour." in body
     assert "form.elements.arrival" not in body
     assert "addEventListener('click'" in body
 

@@ -710,12 +710,14 @@ def test_home_audience_profiles_respond_and_persist(page, base_url, audience, ex
 
 
 def test_trip_date_error_shows_a_plain_apostrophe(page, base_url):
-    """Départ avant l'arrivée : « d'arrivée » s'affiche tel quel, pas « d&#x27;arrivée »."""
+    """Voyage trop long : « jusqu'à » s'affiche tel quel, pas « jusqu&#x27;à ».
+
+    Jusqu'au 24 novembre 2026, ce test vérifiait « d'arrivée » (départ avant l'arrivée) ; la page dit désormais
+    départ et retour (tests/e2e/test_planificateur_dates.py) et ce message n'a plus d'apostrophe."""
     page.goto(base_url + "/trip-planner")
     page.fill("input[name=arrival]", "2026-11-10")
-    page.fill("input[name=departure]", "2026-11-05")
+    page.fill("input[name=departure]", "2027-03-10")
     page.click("[data-next]")
     text = page.locator("#status").inner_text()
-    assert "d'arrivée" in text, text
-    assert "&" not in text, text
+    assert text == "Le planificateur prépare jusqu'à 90 jours d'activités.", text
     assert page.errors == []
