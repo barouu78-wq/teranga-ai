@@ -21,6 +21,7 @@ from services.model_params import (
     openai_trip_model,
 )
 from services.senegal_knowledge import SENEGAL_REGIONS
+from services.events import TYPE_LABELS, all_events, events_between
 from services.responses import extract_sources
 
 ALLOWED_LANGS = {"fr", "en", "wo", "ff"}
@@ -50,7 +51,8 @@ UI = {
         "from": "Départ", "to": "Retour", "choose_date": "Choisir une date", "date_error": "La date de retour doit être après la date de départ.",
         "date_required": "Sélectionne une date de départ et une date de retour.",
         "date_too_long": f"Le planificateur prépare jusqu'à {MAX_TRIP_DAYS} jours d'activités.",
-        "trip_day": "jour d'activités", "trip_days": "jours d'activités", "adults": "Adultes", "children": "Enfants",
+        "trip_day": "jour d'activités", "trip_days": "jours d'activités",
+        "during_trip": "Pendant ton séjour", "estimated_date": "date estimée, à confirmer", "events_link": "Calendrier des fêtes", "adults": "Adultes", "children": "Enfants",
         "budget_options": ["Économique", "Confort", "Premium", "Luxe"],
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
@@ -65,7 +67,8 @@ UI = {
         "back": "Edit", "error": "We could not generate the trip right now.", "date_error": "Return must be after departure.", "from": "Departure", "to": "Return",
         "date_required": "Pick a departure date and a return date.",
         "date_too_long": f"The planner prepares up to {MAX_TRIP_DAYS} days.",
-        "trip_day": "day of activities", "trip_days": "days of activities", "choose_date": "Pick a date",
+        "trip_day": "day of activities", "trip_days": "days of activities",
+        "during_trip": "During your trip", "estimated_date": "estimated date, to be confirmed", "events_link": "Festival calendar", "choose_date": "Pick a date",
         "adults": "Adults", "children": "Children",
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
@@ -102,13 +105,26 @@ _TRIP_CONFIG_KEYS = (
     "evening", "loading", "map_title", "morning", "places_label", "practical_checked", "practical_error",
     "practical_loading", "practical_sources",
     "regions", "remove_day", "transport", "edit_day", "day_title", "move_up", "move_down",
-    "trip_day", "trip_days",
+    "trip_day", "trip_days", "during_trip", "estimated_date", "events_link",
 )
+# Types de fêtes en anglais (services/events.py ne les a qu'en français).
+_KIND_LABELS_EN = {"religious": "Religious holiday", "national": "National holiday", "holiday": "Public holiday",
+                   "festival": "Festival", "sport": "Sports event"}
+
+
+def _calendar(lang):
+    """Calendrier vérifié pour « Pendant ton séjour » : le navigateur garde les fêtes entre le départ et le retour
+    (y compris pour un lien partagé). Les conseils, écrits en français, ne sont pas mêlés à la page anglaise."""
+    labels = _KIND_LABELS_EN if lang == "en" else TYPE_LABELS
+    return [{"name": e["name"], "start": e["start"].isoformat(), "end": e["end"].isoformat() if e["end"] else None,
+             "confirmed": bool(e["confirmed"]), "kind": labels.get(e["kind"], ""), "tips": "" if lang == "en" else e["tips"]}
+            for e in all_events()]
 
 
 def _trip_config(params):
     config = {key: params[key] for key in _TRIP_CONFIG_KEYS}
     config["max_days"] = MAX_TRIP_DAYS
+    config["events"] = _calendar(params["lang"])
     config["region_options_json"] = json.loads(params["region_options_json"])
     config["region_coords_json"] = json.loads(params["region_coords_json"])
     # Dans une balise <script>, « < » ne doit jamais apparaître brut.
@@ -145,7 +161,7 @@ h1{{font:600 clamp(34px,6vw,54px)/1.04 var(--font-display);letter-spacing:-.02em
 .card{{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:24px}}
 section{{border-top:0;padding:0}}.step{{display:none}}.step.active{{display:block}}h2{{font-size:24px;margin:0 0 16px}}
 .grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}@media(max-width:650px){{.grid{{grid-template-columns:1fr}}}}
-label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:14px}}.trip-days{{margin:14px 0 0;color:var(--ink);font-weight:600}}.trip-days:empty{{display:none}}
+label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:14px}}.trip-days{{margin:14px 0 0;color:var(--ink);font-weight:600}}.trip-days:empty,.trip-events:empty{{display:none}}.trip-events{{margin:6px 0 0;color:var(--muted)}}.trip-events-box{{margin:14px 0;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface-2)}}.trip-events-box h3{{margin:0 0 6px}}.trip-events-box ul{{margin:0;padding-left:18px}}.trip-events-box li{{margin:8px 0}}.trip-event-tip{{display:block;color:var(--muted);font-size:14px;margin-top:2px}}.trip-events-link{{display:inline-block;min-height:44px;line-height:44px}}
 input[type=date],input[type=number]{{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:50px;-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:13px;padding:13px;font:inherit;font-size:16px}}input[type=date]::-webkit-date-and-time-value{{text-align:left;min-height:1.4em}}.date-wrap{{position:relative;display:block}}.date-hint{{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}}.date-wrap.has-value .date-hint,.date-wrap:focus-within .date-hint{{display:none}}.date-wrap:not(.has-value):not(:focus-within) input[type=date]::-webkit-datetime-edit{{color:transparent}}
 .chips{{display:flex;flex-wrap:wrap;gap:10px}}.chip input{{position:absolute;opacity:0}}.chip span{{display:block;padding:11px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted)}}.chip input:checked+span{{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}}
 .actions{{display:flex;justify-content:space-between;gap:12px;margin-top:24px}}button{{border:0;border-radius:14px;padding:13px 18px;font:800 15px system-ui;cursor:pointer}}.primary{{background:var(--accent);color:var(--accent-ink)}}.secondary{{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}}
@@ -170,7 +186,7 @@ main{{width:100%;padding:0}}.card{{border:0;padding:0;margin:0;background:#fff}}
 <section class="step active" data-step="1"><h2>{dates}</h2><div class="grid">
 <label class="field">{from}<span class="date-wrap"><input name="arrival" type="date" required><span class="date-hint" aria-hidden="true">{choose_date}</span></span></label>
 <label class="field">{to}<span class="date-wrap"><input name="departure" type="date" required><span class="date-hint" aria-hidden="true">{choose_date}</span></span></label></div>
-<p id="tripDays" class="trip-days" aria-live="polite"></p>
+<p id="tripDays" class="trip-days" aria-live="polite"></p><p id="tripEvents" class="trip-events" aria-live="polite"></p>
 <div class="actions"><span></span><button class="primary" type="button" data-next>{cont}</button></div></section>
 <section class="step" data-step="2"><h2>{travelers}</h2><div class="grid">
 <label class="field">{adults}<input name="adults" type="number" min="1" max="20" value="1" required></label>
@@ -192,7 +208,7 @@ main{{width:100%;padding:0}}.card{{border:0;padding:0;margin:0;background:#fff}}
 <script src="{trip_js}"></script></body></html>"""
     params = dict(
         head=HEAD_ASSETS, header=site_header("/trip-planner", lang), footer=site_footer(lang),
-        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t["date_error"]), date_required=escape(t["date_required"]), date_too_long=escape(t["date_too_long"]), trip_day=escape(t["trip_day"]), trip_days=escape(t["trip_days"]),
+        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t["date_error"]), date_required=escape(t["date_required"]), date_too_long=escape(t["date_too_long"]), trip_day=escape(t["trip_day"]), trip_days=escape(t["trip_days"]), during_trip=escape(t["during_trip"]), estimated_date=escape(t["estimated_date"]), events_link=escape(t["events_link"]),
         kicker=escape(t["kicker"]), dates=escape(t["dates"]), travelers=escape(t["travelers"]),
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
@@ -377,6 +393,24 @@ def _day_count(data):
         return 1
 
 
+def _events_block(data):
+    """Fêtes du calendrier vérifié pendant le séjour (« Pendant ton séjour ») ; rien s'il n'y en a pas."""
+    try:
+        found = events_between(date.fromisoformat(data["arrival"]), date.fromisoformat(data["departure"]))
+    except (KeyError, TypeError, ValueError):
+        return ""
+    if not found:
+        return ""
+    lines = ["Holidays and events during the trip (Teranga's verified calendar; an estimated date must be confirmed locally):"]
+    for e in found:
+        when = e["start"].isoformat() + (f" to {e['end'].isoformat()}" if e["end"] else "")
+        status = "confirmed" if e["confirmed"] else "estimated, to be confirmed"
+        lines.append(f"- {e['name']} ({e['place']}): {when} [{status}]. {e['tips']}".rstrip())
+    lines.append("Take them into account on the matching days (closures, busy transport, celebrations) and say when a "
+                 "date is only estimated. Do not invent other holidays or events.")
+    return "\n".join(lines) + "\n"
+
+
 def _prompt(data, known_places=()):
     language = data.get("lang", "fr")
     return f"""{language_instruction(language)}
@@ -392,7 +426,7 @@ Preferred regions: {', '.join(data['regions']) or 'none'}
 Selected place context: {data.get('context_place') or 'none'}
 User profile: {data.get('audience') or 'general'} (explicit preference; adapt priorities without inferring personal facts)
 Surprise me: {data['surprise']}
-{_places_block(known_places)}
+{_events_block(data)}{_places_block(known_places)}
 Return ONLY valid JSON in the user's language. Schema: {{"summary": string, "days": [{{"day": number, "title": string, "region": string, "morning": string, "afternoon": string, "evening": string, "transport": string, "places": [string]}}], "practical_notes": [string]}}. Create exactly {_day_count(data)} day objects, numbered 1 to {_day_count(data)}: day 1 is the arrival date and the last day is the day before departure.
 Include sensible travel pacing, approximate budget categories without inventing fixed current prices, and practical notes.
 Do not claim current opening hours, fares, availability, visa rules or weather unless explicitly verified from live sources.
