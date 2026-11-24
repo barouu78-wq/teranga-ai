@@ -42,7 +42,6 @@ def test_un_seul_ton_le_tutoiement_sur_l_ecran():
     fr = re.search(r"\nconst T=\{\nfr:\{(.*?)\n\},\nen:\{", JS, re.S).group(1)
     assert not re.search(r"\b(vous|votre|vos)\b", BODY, re.I)
     assert not re.search(r"\b(vous|votre|vos)\b", fr, re.I)
-    assert "'Toutes tes questions'" in JS
 
 
 def test_espaces_insecables_dans_les_textes_releves():
@@ -52,6 +51,3 @@ def test_espaces_insecables_dans_les_textes_releves():
     assert "heroTitle:'Une question sur le Sénégal ?'" in JS
     assert "'Fiche : '" in JS
 
-
-def test_avion_et_double_fleche_en_glyphe_texte():
-    assert "✈︎</span>" in HTML and "↔︎</span>" in HTML

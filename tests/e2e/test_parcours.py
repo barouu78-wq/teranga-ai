@@ -99,16 +99,12 @@ def test_chaque_bouton_de_l_accueil_reagit(browser, base_url, device):
     assert errors == [], f"erreurs JavaScript : {errors}"
 
 
-PERSONAS = ["tourist", "resident", "diaspora", "merchant"]
-
-
+# Profils « Je suis… » retirés de l'accueil le 23 novembre 2026 (tests/test_accueil_allege.py) : profil « general ».
 @pytest.mark.parametrize("device", VIEWPORTS)
-@pytest.mark.parametrize("audience", PERSONAS)
-def test_parcours_d_un_profil_suggestion_reponse_puis_suite(page, base_url, device, audience):
+def test_parcours_suggestion_reponse_puis_suite(page, base_url, device):
+    audience = "general"
     sent = _chat(page, ["Première réponse simulée.", "Deuxième réponse simulée."])
     _home(page, base_url, VIEWPORTS[device])
-    page.click(f".audience-btn[data-audience='{audience}']")
-    assert "on" in page.get_attribute(f".audience-btn[data-audience='{audience}']", "class")
     chip = page.locator("#heroChips button:visible").first
     suggestion = chip.inner_text().strip()
     assert suggestion

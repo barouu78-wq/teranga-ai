@@ -260,7 +260,8 @@ def test_millions_de_fcfa():
 ])
 def test_autre_devise_pas_de_taux_invente(question):
     resultat = verifie(question, "le taux de change varie chaque jour", "aucun chiffre n'est calculé", "ne pas inventer de taux",
-                       "convertisseur de la page d'accueil de teranga-ai.fr")
+                       "cours de référence de la BCEAO (bceao.int)")
+    assert "convertisseur" not in resultat  # retiré de l'accueil le 23 novembre 2026 (tests/test_accueil_allege.py)
     lignes = resultat.split("\n")[1:]
     assert len(lignes) == 1 and "=" not in lignes[0]
     # Ni le taux du dollar ou de la livre codé ailleurs dans le dépôt, ni la parité appliquée à tort.

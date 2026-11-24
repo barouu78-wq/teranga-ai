@@ -51,7 +51,7 @@ class _Glyphs(HTMLParser):
 def test_decorative_glyphs_are_hidden_from_screen_readers():
     parser = _Glyphs()
     parser.feed(HOME)
-    assert len(parser.glyphs) >= 8, parser.glyphs  # 5 profils + 3 parcours
+    assert len(parser.glyphs) >= 3, parser.glyphs  # 3 parcours (profils « Je suis… » retirés le 23 novembre 2026)
     for text, attrs in parser.glyphs:
         assert attrs.get("aria-hidden") == "true", f"glyphe lu à voix haute : {text!r}"
 

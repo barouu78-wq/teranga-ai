@@ -55,7 +55,6 @@ def test_post_requests_have_default_timeout_and_friendly_errors():
     start = js.index("async function postJSON(")
     assert "signal=signal||timeoutSignal(45000);" in js[start:start + 200]
     assert "signal:timeoutSignal(10000)" in js  # /csrf
-    assert "signal:timeoutSignal(15000)" in js  # /exchange-rates
     # Le formulaire projet ne montre plus « Failed to fetch » et rend son libellé.
     assert "error.textContent=friendlyError(err);" in js
     assert "button.textContent=idleLabel;" in js

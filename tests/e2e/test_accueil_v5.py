@@ -41,13 +41,12 @@ def _chat(page, base_url):
     return corps
 
 
-def test_la_question_d_abord_puis_les_profils_puis_les_themes(page, base_url):
+def test_la_question_d_abord_puis_les_themes(page, base_url):
+    # « Je suis… » retiré le 23 novembre 2026 (accueil allégé, tests/test_accueil_allege.py).
     _accueil(page, base_url)
-    question, je_suis = _boite(page, "#heroAsk"), _boite(page, "#audienceLabel")
-    profils, themes_titre, themes = _boite(page, "#audienceMode"), _boite(page, "#topicsTitle"), _boite(page, "#heroChips")
-    assert question["bottom"] <= je_suis["top"] <= profils["top"], (question, je_suis, profils)
-    assert profils["bottom"] <= themes_titre["top"] <= themes["top"], (profils, themes_titre, themes)
-    assert page.get_by_text("Je suis…").is_visible() and page.get_by_role("heading", name="Thèmes rapides").is_visible()
+    question, themes_titre, themes = _boite(page, "#heroAsk"), _boite(page, "#topicsTitle"), _boite(page, "#heroChips")
+    assert question["bottom"] <= themes_titre["top"] <= themes["top"], (question, themes_titre, themes)
+    assert page.get_by_text("Je suis…").count() == 0 and page.get_by_role("heading", name="Thèmes rapides").is_visible()
     assert page.locator("#heroChips button").count() == 4
     assert themes["bottom"] <= _boite(page, "#stage")["bottom"]  # les quatre thèmes tiennent dans le premier écran
     assert page.evaluate("document.documentElement.scrollWidth") <= PHONE["width"]
@@ -104,20 +103,6 @@ def test_un_autre_theme_remplace_le_panneau_et_le_meme_le_referme(page, base_url
     assert page.locator('#heroChips button[aria-expanded="true"]').count() == 0
     assert page.errors == []
 
-
-def test_changer_de_profil_referme_le_panneau_et_les_themes_du_profil_posent_leur_question(page, base_url):
-    corps = _chat(page, base_url)
-    _accueil(page, base_url)
-    page.locator("#heroChips button", has_text="Argent").click()
-    page.locator('.audience-btn[data-audience="tourist"]').click()
-    assert not page.locator("#themeQs").is_visible()
-    assert page.locator("#heroChips button").count() == 4
-    premier = page.locator("#heroChips button").first
-    question = premier.get_attribute("data-q")
-    premier.click()
-    page.get_by_text("Réponse du thème.").wait_for(timeout=5000)
-    assert corps[0]["message"] == question and corps[0]["audience"] == "tourist"
-    assert page.errors == []
 
 
 def test_en_anglais(page, base_url):
