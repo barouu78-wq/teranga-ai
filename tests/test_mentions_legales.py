@@ -31,6 +31,14 @@ def test_la_page_existe_et_nomme_editeur_directeur_et_hebergeur():
     assert 'href="/confidentialite"' in html and 'href="/urgences"' in html
 
 
+def test_editeur_particulier_coordonnees_confiees_a_l_hebergeur():
+    # Choix du propriétaire le 24 novembre 2026 : éditeur non professionnel, adresse et téléphone non publiés,
+    # communiqués à l'hébergeur (LCEN).
+    html = _get("/mentions-legales").get_data(as_text=True)
+    assert "à titre non professionnel" in html
+    assert "communiquées à l'hébergeur" in html or "communiquées à l&#39;hébergeur" in html
+
+
 def test_legal_renvoie_vers_les_mentions_legales():
     response = _get("/legal")
     assert response.status_code == 301

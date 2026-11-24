@@ -91,9 +91,13 @@ def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google
 
 
 # Mentions légales (loi pour la confiance dans l'économie numérique, article 6). Éditeur et contact donnés par le
-# propriétaire le 23 novembre 2026 ; adresse de l'hébergeur : conditions d'utilisation de Render (render.com/terms).
+# propriétaire le 23 novembre 2026 ; éditeur non professionnel, adresse et téléphone confiés à l'hébergeur et non
+# publiés (choix du propriétaire, 24 novembre 2026) ; adresse de l'hébergeur : conditions d'utilisation de Render (render.com/terms).
 _MENTIONS = (
-    ("Éditeur", 'Teranga AI est édité par Oumar Ba. Contact : <a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>.'),
+    ("Éditeur", 'Teranga AI est édité par Oumar Ba, particulier, à titre non professionnel. Contact : '
+                '<a href="mailto:terangaais@gmail.com">terangaais@gmail.com</a>. Conformément à la loi pour la '
+                "confiance dans l'économie numérique, ses coordonnées (adresse, téléphone) ne sont pas publiées : elles ont été "
+                "communiquées à l'hébergeur."),
     ("Directeur de la publication", "Oumar Ba."),
     ("Hébergeur", 'Render Services, Inc., 525 Brannan Street, Suite 300, San Francisco, CA 94107, États-Unis '
                   '(<a href="https://render.com" rel="noopener">render.com</a>), téléphone : +1 415 319 8186.'),
