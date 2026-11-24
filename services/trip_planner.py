@@ -47,7 +47,10 @@ UI = {
         "budget": "Budget", "regions": "Régions", "pace": "Rythme",
         "start": "Créer mon voyage", "continue": "Continuer", "generate": "Générer mon itinéraire",
         "result": "Ton voyage est prêt", "back": "Modifier", "error": "Impossible de générer le voyage pour le moment.", "practical_title": "Infos pratiques", "practical_intro": "Vérifie transport, horaires, prix, démarches et services avec des sources web.", "practical_region": "Région", "practical_transport": "Transport", "practical_hours": "Horaires", "practical_prices": "Prix", "practical_procedures": "Démarches", "practical_services": "Services", "practical_loading": "Recherche web en cours…", "practical_error": "Impossible de récupérer les informations pratiques.", "practical_checked": "Vérifié le", "practical_sources": "Sources", "voice_listen": "Écouter", "voice_stop": "Arrêter",
-        "from": "Arrivée", "to": "Départ", "choose_date": "Choisir une date", "date_error": "La date de départ doit être après la date d'arrivée.", "adults": "Adultes", "children": "Enfants",
+        "from": "Départ", "to": "Retour", "choose_date": "Choisir une date", "date_error": "La date de retour doit être après la date de départ.",
+        "date_required": "Sélectionne une date de départ et une date de retour.",
+        "date_too_long": f"Le planificateur prépare jusqu'à {MAX_TRIP_DAYS} jours d'activités.",
+        "trip_day": "jour d'activités", "trip_days": "jours d'activités", "adults": "Adultes", "children": "Enfants",
         "budget_options": ["Économique", "Confort", "Premium", "Luxe"],
         "pace_options": ["Relax", "Équilibré", "Intensif"],
         "interest_options": ["Plages", "Culture & histoire", "Cuisine", "Nature", "Dakar", "Îles", "Faune", "Musique & vie nocturne", "Famille"],
@@ -59,7 +62,10 @@ UI = {
         "intro": "Build a personalized Senegal itinerary in a few steps.",
         "dates": "Dates", "travelers": "Travelers", "interests": "Interests", "budget": "Budget", "regions": "Regions", "pace": "Pace",
         "start": "Create my trip", "continue": "Continue", "generate": "Generate my itinerary", "result": "Your trip is ready",
-        "back": "Edit", "error": "We could not generate the trip right now.", "date_error": "Departure must be after arrival.", "from": "Arrival", "to": "Departure", "choose_date": "Pick a date",
+        "back": "Edit", "error": "We could not generate the trip right now.", "date_error": "Return must be after departure.", "from": "Departure", "to": "Return",
+        "date_required": "Pick a departure date and a return date.",
+        "date_too_long": f"The planner prepares up to {MAX_TRIP_DAYS} days.",
+        "trip_day": "day of activities", "trip_days": "days of activities", "choose_date": "Pick a date",
         "adults": "Adults", "children": "Children",
         "budget_options": ["Budget", "Comfort", "Premium", "Luxury"], "pace_options": ["Relaxed", "Balanced", "Intensive"],
         "interest_options": ["Beaches", "Culture & history", "Food", "Nature", "Dakar", "Islands", "Wildlife", "Music & nightlife", "Family"],
@@ -92,15 +98,17 @@ def _option_list(values, name="x", input_type="checkbox"):
 # Textes passés au script statique static/trip-planner.js (mêmes valeurs,
 # déjà échappées pour le HTML, que lorsque le script était dans la page).
 _TRIP_CONFIG_KEYS = (
-    "lang", "afternoon", "budget_summary", "copied", "date_error", "date_required", "day", "error",
+    "lang", "afternoon", "budget_summary", "copied", "date_error", "date_required", "date_too_long", "day", "error",
     "evening", "loading", "map_title", "morning", "places_label", "practical_checked", "practical_error",
     "practical_hours", "practical_loading", "practical_prices", "practical_sources", "practical_transport",
     "regions", "remove_day", "transport", "voice_listen", "edit_day", "day_title", "move_up", "move_down",
+    "trip_day", "trip_days",
 )
 
 
 def _trip_config(params):
     config = {key: params[key] for key in _TRIP_CONFIG_KEYS}
+    config["max_days"] = MAX_TRIP_DAYS
     config["region_options_json"] = json.loads(params["region_options_json"])
     config["region_coords_json"] = json.loads(params["region_coords_json"])
     # Dans une balise <script>, « < » ne doit jamais apparaître brut.
@@ -137,7 +145,7 @@ h1{{font:600 clamp(34px,6vw,54px)/1.04 var(--font-display);letter-spacing:-.02em
 .card{{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:28px;padding:24px}}
 section{{border-top:0;padding:0}}.step{{display:none}}.step.active{{display:block}}h2{{font-size:24px;margin:0 0 16px}}
 .grid{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}@media(max-width:650px){{.grid{{grid-template-columns:1fr}}}}
-label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:14px}}
+label.field{{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:14px}}.trip-days{{margin:14px 0 0;color:var(--ink);font-weight:600}}.trip-days:empty{{display:none}}
 input[type=date],input[type=number]{{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:50px;-webkit-appearance:none;appearance:none;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:13px;padding:13px;font:inherit;font-size:16px}}input[type=date]::-webkit-date-and-time-value{{text-align:left;min-height:1.4em}}.date-wrap{{position:relative;display:block}}.date-hint{{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}}.date-wrap.has-value .date-hint,.date-wrap:focus-within .date-hint{{display:none}}.date-wrap:not(.has-value):not(:focus-within) input[type=date]::-webkit-datetime-edit{{color:transparent}}
 .chips{{display:flex;flex-wrap:wrap;gap:10px}}.chip input{{position:absolute;opacity:0}}.chip span{{display:block;padding:11px 14px;border:1px solid var(--line);border-radius:999px;cursor:pointer;color:var(--muted)}}.chip input:checked+span{{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}}
 .actions{{display:flex;justify-content:space-between;gap:12px;margin-top:24px}}button{{border:0;border-radius:14px;padding:13px 18px;font:800 15px system-ui;cursor:pointer}}.primary{{background:var(--accent);color:var(--accent-ink)}}.secondary{{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)}}
@@ -162,6 +170,7 @@ main{{width:100%;padding:0}}.card{{border:0;padding:0;margin:0;background:#fff}}
 <section class="step active" data-step="1"><h2>{dates}</h2><div class="grid">
 <label class="field">{from}<span class="date-wrap"><input name="arrival" type="date" required><span class="date-hint" aria-hidden="true">{choose_date}</span></span></label>
 <label class="field">{to}<span class="date-wrap"><input name="departure" type="date" required><span class="date-hint" aria-hidden="true">{choose_date}</span></span></label></div>
+<p id="tripDays" class="trip-days" aria-live="polite"></p>
 <div class="actions"><span></span><button class="primary" type="button" data-next>{cont}</button></div></section>
 <section class="step" data-step="2"><h2>{travelers}</h2><div class="grid">
 <label class="field">{adults}<input name="adults" type="number" min="1" max="20" value="1" required></label>
@@ -182,7 +191,7 @@ main{{width:100%;padding:0}}.card{{border:0;padding:0;margin:0;background:#fff}}
 <script src="{trip_js}"></script></body></html>"""
     params = dict(
         head=HEAD_ASSETS, header=site_header("/trip-planner", lang), footer=site_footer(lang),
-        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t.get("date_error", "La date de départ doit être après la date d'arrivée.")), date_required=escape(t.get("date_required", "Sélectionne une date d’arrivée et une date de départ.")),
+        lang=escape(lang), site=escape(site_url), title=escape(t["title"]), intro=escape(t["intro"]), date_error=escape(t["date_error"]), date_required=escape(t["date_required"]), date_too_long=escape(t["date_too_long"]), trip_day=escape(t["trip_day"]), trip_days=escape(t["trip_days"]),
         kicker=escape(t["kicker"]), dates=escape(t["dates"]), travelers=escape(t["travelers"]),
         interests=escape(t["interests"]), budget=escape(t["budget"]), regions=escape(t["regions"]),
         pace=escape(t["pace"]), start=escape(t["start"]), cont=escape(t["continue"]),
@@ -818,7 +827,7 @@ def register_trip_planner(app, client, site_url, allowed_origins=None, rate_guar
             return jsonify({"error": "Format de date invalide."}), 400
         trip_days = (departure_date - arrival_date).days
         if trip_days <= 0:
-            return jsonify({"error": "La date de départ doit être après l'arrivée."}), 400
+            return jsonify({"error": "La date de retour doit être après la date de départ."}), 400
         if trip_days > MAX_TRIP_DAYS:
             return jsonify({"error": f"La durée du voyage ne peut pas dépasser {MAX_TRIP_DAYS} jours."}), 400
         data = {"lang": lang, "arrival": arrival_date.isoformat(), "departure": departure_date.isoformat(),
