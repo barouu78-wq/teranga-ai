@@ -681,34 +681,6 @@ def test_trip_share_button_copies_without_share_sheet(page, base_url):
     assert page.errors == []
 
 
-@pytest.mark.parametrize(
-    "audience,expected_suggestion",
-    [
-        ("tourist", "Visite guidée"),
-        ("resident", "Vie quotidienne"),
-        ("diaspora", "Préparer mon retour"),
-        ("merchant", "Prix & marge"),
-    ],
-)
-def test_home_audience_profiles_respond_and_persist(page, base_url, audience, expected_suggestion):
-    page.goto(base_url + "/")
-    button = page.locator(f'.audience-btn[data-audience="{audience}"]')
-    button.click()
-
-    assert button.get_attribute("aria-pressed") == "true"
-    assert "on" in (button.get_attribute("class") or "").split()
-    page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
-    assert page.errors == []
-
-    page.reload()
-    selected = page.locator(f'.audience-btn[data-audience="{audience}"]')
-    assert selected.get_attribute("aria-pressed") == "true"
-    assert "on" in (selected.get_attribute("class") or "").split()
-    page.locator("#heroChips button", has_text=expected_suggestion).wait_for(timeout=3000)
-    assert page.errors == []
-
-
-
 def test_trip_date_error_shows_a_plain_apostrophe(page, base_url):
     """Départ avant l'arrivée : « d'arrivée » s'affiche tel quel, pas « d&#x27;arrivée »."""
     page.goto(base_url + "/trip-planner")

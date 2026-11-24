@@ -46,7 +46,6 @@ from routes.system import register_system_routes
 from routes.hotes import register_hotes_routes
 from routes.cv import register_cv_routes
 from services.hotes import charger_hotes, contexte_hote, SLUG as HOTE_SLUG
-from services.discover import discover_pool
 from services.international_seo import register_localized_routes
 from services.youth_projects import advance_project_stage, build_project_brief, build_project_matches, find_project_partners
 from services.youth_opportunities import find_youth_opportunities
@@ -1060,7 +1059,6 @@ register_system_routes(app, {
     "csrf_ttl": CSRF_TTL,
     "csrf_cookie": CSRF_COOKIE,
     "home_html": HOME_HTML,
-    "discover_places": discover_pool(SENEGAL_KNOWLEDGE),
     "site_url": SITE_URL,
     "build_icon_png": build_icon_png,
 })

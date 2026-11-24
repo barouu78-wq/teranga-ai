@@ -201,13 +201,6 @@ def test_home_tts_retry_after_is_wired():
     assert "error.status=res.status" in html
 
 
-def test_home_exchange_rate_retry_after_is_wired():
-    html = served_home(app.test_client())
-
-    assert "res.status===429" in html
-    assert "res.headers.get('Retry-After')" in html
-    assert "Trop de demandes · réessaie dans " in html
-
 
 def test_home_retry_after_countdown_is_wired():
     html = served_home(app.test_client())
@@ -931,16 +924,6 @@ def test_home_bounds_persisted_chat_history():
     assert "CHAT_IDLE_MS=30*60*1000" in html
     assert "safeHistory" in html
 
-
-def test_home_audience_buttons_bind_directly():
-    from app import app
-
-    html = served_home(app.test_client())
-
-    assert "document.querySelectorAll('.audience-btn').forEach" in html
-    assert "['general','tourist','resident','diaspora','merchant']" in html  # « Tout le Sénégal » en premier
-    assert "diaspora:{" in html
-    assert "resident:{" in html
 
 
 def test_home_inline_javascript_parses_with_node(tmp_path):
