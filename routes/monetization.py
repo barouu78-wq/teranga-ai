@@ -117,7 +117,8 @@ KIND_LABELS = {"hotels": "🏨 Hôtels (Booking)", "activites": "🎟️ Activit
 # Mesures internes du site, gardées à part : elles ne comptent pas dans le total montré aux partenaires.
 INTERNAL_KINDS = frozenset({"cv"})
 # Étapes du formulaire /cv envoyées par static/cv.js (« Go 1 » du 23 novembre 2026 : savoir où les visiteurs s'arrêtent).
-CV_ETAPES = frozenset({"faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"})
+# « refus-fichier » : « Créer mon CV » sans fichier ; « fichier-refuse » : un fichier choisi mais refusé (type, poids).
+CV_ETAPES = frozenset({"faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours", "envoi"})
 # Réseaux des liens marqués (?utm_source=…, docs/LIENS-MARQUES.md) : toute autre valeur n'est pas comptée.
 VISIT_SOURCES = frozenset({"tiktok", "instagram", "whatsapp", "facebook", "youtube"})
 # Marques que les réseaux ajoutent eux-mêmes : Instagram met « utm_source=ig » sur le lien du profil (journaux du

@@ -211,7 +211,9 @@
     const depart=document.querySelector('input[name="depart"]:checked').value;
     const corps={poste:$('cvPoste').value.trim(),offre:$('cvOffre').value.trim()};
     if(depart==='fichier'){
-      if(!piece){etape('refus-fichier');erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();return;}
+      // Journaux du 23 novembre 2026 : « J'ai déjà un CV », puis « Créer mon CV » sans fichier, puis départ. Le choix
+      // du fichier s'ouvre directement (le clic de la personne l'autorise).
+      if(!piece){etape('refus-fichier');erreur('Choisis ton CV : PDF, Word ou photo.');$('cvFichier').focus();$('cvFichier').click();return;}
       corps.fichier=piece;
     }else{
       const recit=$('cvParcours').value.trim(),nom=$('cvNom').value.trim();
@@ -276,7 +278,7 @@
     piece=null;$('cvFichierEtat').textContent='';erreur('');
     if(!file)return;
     try{piece=await lirePiece(file);$('cvFichierEtat').textContent='Fichier prêt : '+piece.nom;}
-    catch(err){e.target.value='';erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
+    catch(err){e.target.value='';etape('fichier-refuse');erreur(err&&err.message?err.message:'Fichier illisible. Choisis-le de nouveau.');}
   });
   $('cvForm').addEventListener('submit',creer);
   // « debut » : un vrai champ touché par la personne (clic, choix, saisie), ni le bouton « Créer mon CV » ni le curseur

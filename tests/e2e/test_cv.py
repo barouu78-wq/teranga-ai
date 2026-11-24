@@ -271,9 +271,13 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     ouvrir(page, base_url, envois)
     page.get_by_role("link", name="Faire le mien").click()
     page.get_by_text("J’ai déjà un CV").click()
-    page.get_by_role("button", name="Créer mon CV").click()  # sans fichier : refusé
+    with page.expect_file_chooser():
+        page.get_by_role("button", name="Créer mon CV").click()  # sans fichier : refusé, le choix du fichier s'ouvre
     page.get_by_text("Choisis ton CV : PDF, Word ou photo.").wait_for()
-    page.get_by_role("button", name="Créer mon CV").click()  # deuxième refus : pas de nouveau signal
+    with page.expect_file_chooser():
+        page.get_by_role("button", name="Créer mon CV").click()  # deuxième refus : pas de nouveau signal
+    page.set_input_files("#cvFichier", files=[{"name": "cv.txt", "mimeType": "text/plain", "buffer": b"texte"}])
+    page.get_by_text("Ce type de fichier n’est pas accepté").wait_for()
     page.get_by_text("Je n’ai pas de CV").click()
     page.fill("#cvParcours", "Trop court")
     page.get_by_role("button", name="Créer mon CV").click()
@@ -282,7 +286,8 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     page.get_by_role("button", name="Créer mon CV").click()
     page.get_by_role("heading", name="Ton CV est prêt").wait_for()
     page.wait_for_timeout(300)  # les signaux partent sans attendre de réponse
-    assert sorted(etapes) == sorted(["faire-le-mien", "debut", "refus-fichier", "refus-parcours", "envoi"]), etapes
+    assert sorted(etapes) == sorted(["faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours",
+                                     "envoi"]), etapes
     assert len(envois) == 1
 
 
