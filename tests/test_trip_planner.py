@@ -538,7 +538,11 @@ def test_trip_planner_exposes_editable_itinerary_controls():
     body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="editor-actions"' in body
     assert 'id="add-day"' in body
-    assert 'id="save-trip"' in body
+    # Page du résultat allégée avec l'accord du propriétaire (24 novembre 2026, tests/e2e/test_planificateur_resultat.py) :
+    # plus de bouton « Enregistrer les modifications », chaque changement s'enregistre (saveTrip).
+    assert 'id="save-trip"' not in body
+    assert "function saveTrip()" in body
+    assert 'id="edit-choices"' in body
     assert "function renderEditablePlan(plan)" in body
     assert "function syncEditor()" in body
     assert "data-up" in body
@@ -552,7 +556,7 @@ def test_trip_planner_editor_controls_follow_ui_language():
 
     body = with_planner_script(_html("https://example.com", "en"))
     assert "+ Add a day" in body
-    assert "Save changes" in body
+    assert "Change my choices" in body
     assert "Remove" in body
 
 
@@ -564,7 +568,7 @@ def test_trip_planner_editor_exposes_region_and_map_sync():
     assert "const REGION_OPTIONS=[" in body
     assert "const REGION_COORDS={" in body
     assert "function updateMapFromPlan()" in body
-    assert "updateJourneySteps()" in body
+    assert "updatePracticalRegions()" in body
     assert "updateMapFromPlan()" in body
     assert "openstreetmap.org/export/embed.html?bbox=" in body
 
@@ -577,15 +581,18 @@ def test_trip_planner_editor_map_sync_uses_all_supported_regions():
         assert f'"{region}"' in body
 
 
-def test_trip_planner_exposes_numbered_route_visual():
+def test_trip_planner_keeps_the_map_without_the_route_sketch_and_day_list():
+    """Page du résultat allégée avec l'accord du propriétaire (24 novembre 2026, tests/e2e/test_planificateur_resultat.py) :
+    le petit tracé (noms illisibles quand deux jours ont la même région) et la liste « Jour 1 Dakar… » (qui répète
+    les journées) sont retirés ; la vraie carte reste."""
     from services.trip_planner import _html
 
     body = with_planner_script(_html("https://example.com", "fr"))
-    assert 'id="route-visual"' in body
-    assert "function updateRouteVisual()" in body
-    assert "route-line" in body
-    assert "route-point" in body
-    assert 'aria-label="Carte du voyage"' in body
+    for removed in ('id="route-visual"', "updateRouteVisual", "route-line", "route-point",
+                    'id="journey-steps"', "updateJourneySteps", "journey-step"):
+        assert removed not in body, removed
+    assert 'id="map"' in body
+    assert "openstreetmap.org/export/embed.html?bbox=" in body
 
 
 def test_trip_planner_exposes_practical_info_controls_and_endpoint():
@@ -643,14 +650,17 @@ def test_practical_info_rejects_unknown_region_and_category():
     assert client.post("/api/practical-info", headers={"Origin": "https://evil.example"}, json={"region": "Dakar", "category": "hours"}).status_code == 403
 
 
-def test_trip_planner_exposes_day_level_practical_actions():
+def test_trip_planner_practical_info_stays_once_for_the_whole_trip():
+    """Page du résultat allégée avec l'accord du propriétaire (24 novembre 2026, tests/e2e/test_planificateur_resultat.py) :
+    les boutons Transport, Horaires, Prix sous chaque jour sont retirés ; « Infos pratiques » reste en bas, une
+    fois, avec le choix de la région."""
     from services.trip_planner import _html
     body = with_planner_script(_html("https://example.com", "fr"))
-    assert 'data-day-practical="transport"' in body
-    assert 'data-day-practical="hours"' in body
-    assert 'data-day-practical="prices"' in body
-    assert "function bindDayPractical()" in body
-    assert 'loadPractical(button.dataset.dayPractical,region' in body
+    assert "data-day-practical" not in body
+    assert "bindDayPractical" not in body
+    for category in ("transport", "hours", "prices", "procedures", "services"):
+        assert f'data-practical="{category}"' in body
+    assert 'id="practical-region"' in body
     assert 'document.getElementById("practical").style.display=currentPlan.days.some(d=>d.region)?"block":"none"' in body
 
 
@@ -682,7 +692,8 @@ def test_trip_planner_exposes_voice_playback_controls():
     body = with_planner_script(_html("https://example.com", "fr"))
     assert 'id="voice-itinerary"' in body
     assert 'id="voice-stop"' in body
-    assert 'data-day-voice' in body
+    # Plus de bouton « Écouter » sous chaque jour : celui du haut lit tout l'itinéraire.
+    assert 'data-day-voice' not in body
     assert 'id="voice-practical"' in body
     assert 'function speakTripText(text)' in body
     assert 'fetch("/tts"' in body
@@ -705,14 +716,14 @@ def test_trip_planner_share_link_restores_edited_plan_and_refreshes_after_save()
     assert "const sharedPlan=validateSharedPlan(payload.edited_plan);if(sharedPlan)" in body
     assert "renderEditablePlan(currentPlan)" in body
     assert "function refreshShareLink()" in body
-    assert "refreshShareLink();" in body
+    assert "function saveTrip(){if(!currentPlan)return;renumberDays();try{SS.setItem('teranga-trip-plan',JSON.stringify(currentPlan))}catch(_){}refreshShareLink()}" in body
     assert "updatePracticalRegions();" in body
 
 
 def test_trip_planner_render_syncs_practical_regions():
     from services.trip_planner import _html
     body = with_planner_script(_html("https://example.com", "fr"))
-    assert "bindDayPractical();bindDayVoice();bindDayLive();updateJourneySteps();updatePracticalRegions();updateMapFromPlan()" in body
+    assert "bindEditor();bindDayLive();updatePracticalRegions();updateMapFromPlan();showChoices(false);" in body
 
 
 def test_trip_planner_carries_context_place_from_query_to_session():
@@ -769,10 +780,10 @@ def test_trip_planner_sync_editor_updates_practical_region():
     html = with_planner_script(app.test_client().get("/trip-planner?lang=fr").get_data(as_text=True))
 
     sync_start = html.index("function syncEditor")
-    sync_end = html.index("function daySpeechText", sync_start)
+    sync_end = html.index("function saveTrip", sync_start)
     sync = html[sync_start:sync_end]
 
-    assert "updateJourneySteps();updatePracticalRegions();updateMapFromPlan();persistTripContext()" in sync
+    assert "updatePracticalRegions();updateMapFromPlan();persistTripContext();saveTrip()" in sync
 
 
 def test_trip_planner_persists_richer_itinerary_context_for_chat():
