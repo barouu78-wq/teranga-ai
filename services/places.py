@@ -6,7 +6,7 @@ import json
 from html import escape
 from urllib.parse import quote
 
-from services.seo import REGION_SEO_NAMES, region_slug
+from services.seo import PLACE_CANONICAL_PATHS, REGION_SEO_NAMES, place_href, region_slug
 from services.site_layout import HEAD_ASSETS, asset_url, body_tag, site_footer, site_header
 
 TYPE_LABELS = {
@@ -28,6 +28,12 @@ def place_index(places) -> dict[str, dict]:
 
 def place_url(site_url: str, place: dict) -> str:
     return f"{site_url.rstrip('/')}/lieux/{quote(str(place.get('id', '')))}"
+
+
+def place_canonical_url(site_url: str, place: dict) -> str:
+    """Adresse canonique d'une fiche : la page guide qui la remplace (PLACE_CANONICAL_PATHS), sinon la fiche."""
+    path = PLACE_CANONICAL_PATHS.get(str(place.get("id", "")))
+    return f"{site_url.rstrip('/')}{path}" if path else place_url(site_url, place)
 
 
 def _coords(place):
@@ -57,13 +63,16 @@ def _head(title, description, url, site_url, ld):
 
 
 def place_title(name: str, region: str, limit: int = 65) -> str:
-    """Titre le plus complet qui tient dans les résultats Google (~65 caractères)."""
-    where = f" ({region})" if region and region.casefold() not in name.casefold() else ""
+    """Titre le plus complet qui tient dans les résultats Google (~65 caractères).
+
+    « Sénégal » d'abord : Search Console (30 jours au 23 novembre 2026) montre des recherches comme « reserve bandia
+    senegal » ou « kaffrine senegal ». La région reste dans la description de la page.
+    """
+    pays = "" if "sénégal" in name.casefold() else ", Sénégal"
     for candidate in (
-        f"{name}{where} : histoire, que voir, carte | Teranga AI",
-        f"{name}{where} : histoire et carte | Teranga AI",
-        f"{name} : histoire, que voir, carte | Teranga AI",
-        f"{name} : histoire et carte | Teranga AI",
+        f"{name}{pays} : que voir, accès, carte | Teranga AI",
+        f"{name}{pays} : que voir, carte | Teranga AI",
+        f"{name}{pays} | Teranga AI",
         f"{name} | Teranga AI",
     ):
         if len(candidate) <= limit:
@@ -87,6 +96,29 @@ def place_description(place: dict, limit: int = 160) -> str:
     return text
 
 
+def _km(a: dict, b: dict) -> float:
+    """Distance à vol d'oiseau entre deux lieux de la base (latitude et longitude), en kilomètres."""
+    import math
+
+    la1, lo1, la2, lo2 = map(math.radians, (a["latitude"], a["longitude"], b["latitude"], b["longitude"]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 12742 * math.asin(math.sqrt(h))
+
+
+def nearby_places(place: dict, places, limit: int = 6) -> list[dict]:
+    """Les lieux les plus proches à vol d'oiseau, toutes régions confondues (Saly et Mbour mènent à Bandia).
+
+    Sans coordonnées, on garde l'ancien choix : les premiers lieux de la même région.
+    """
+    def has_coords(p):
+        return isinstance(p.get("latitude"), (int, float)) and isinstance(p.get("longitude"), (int, float))
+
+    others = [o for o in places or [] if o is not place and o.get("id")]
+    if not has_coords(place):
+        return [o for o in others if o.get("region") == place.get("region")][:limit]
+    return sorted((o for o in others if has_coords(o)), key=lambda o: _km(place, o))[:limit]
+
+
 def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
     """Questions fréquentes construites uniquement à partir des données du lieu."""
     name = str(place.get("name", "")).split("/")[0].strip()
@@ -105,7 +137,7 @@ def place_faq(place: dict, nearby=()) -> list[tuple[str, str]]:
         faq.append((f"Que voir à {name} ?", "Sur place : " + ", ".join(what) + "."))
     others = [str(o.get("name", "")) for o in nearby if o.get("name")][:4]
     if others:
-        faq.append((f"Que visiter près de {name} ?", f"Dans la région de {region} : " + ", ".join(others) + "."))
+        faq.append((f"Que visiter près de {name} ?", "À proximité : " + ", ".join(others) + "."))
     return faq
 
 
@@ -117,7 +149,8 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
     summary = str(place.get("summary", ""))
     history = str(place.get("history", ""))
     type_label = TYPE_LABELS.get(str(place.get("type", "")), "Lieu")
-    url = place_url(site_url, place)
+    # Canonique : la page guide qui remplace la fiche le cas échéant (Gorée → /visiter-goree).
+    url = place_canonical_url(site_url, place)
     title = place_title(name, region)
     description = place_description(place)
     coords = _coords(place)
@@ -144,10 +177,7 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         ],
     }
 
-    nearby = [
-        other for other in places or []
-        if other is not place and other.get("id") and other.get("region") == region
-    ][:6]
+    nearby = nearby_places(place, places)
     faq = place_faq(place, nearby)
     if faq:
         ld["@graph"].append({
@@ -158,6 +188,13 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         })
 
     sections = []
+    guide_path = PLACE_CANONICAL_PATHS.get(str(place.get("id", "")))
+    if guide_path:
+        # La page guide est l'adresse de référence : on y mène aussi le visiteur.
+        sections.append(
+            f'<section><h2>Préparer la visite</h2><p>Billet, prix à prévoir et conseils : <a href="{guide_path}">'
+            f"le guide complet pour visiter {escape(name)}</a>.</p></section>"
+        )
     if history:
         sections.append(f"<section><h2>Histoire et contexte</h2><p>{escape(history)}</p></section>")
     if what_to_see:
@@ -206,11 +243,11 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         sections.append(f'<section class="faq"><h2>Questions fréquentes</h2>{items}</section>')
     if nearby:
         links = "".join(
-            f'<a class="card" href="/lieux/{quote(str(o["id"]))}"><strong>{escape(str(o.get("name", "")))}</strong>'
+            f'<a class="card" href="{place_href(o["id"])}"><strong>{escape(str(o.get("name", "")))}</strong>'
             f'<br><small>{escape(str(o.get("summary", ""))[:110])}</small></a>'
             for o in nearby
         )
-        sections.append(f'<section><h2>À voir aussi dans la région {escape(region)}</h2><div class="grid">{links}</div></section>')
+        sections.append(f'<section><h2>À voir aussi à proximité</h2><div class="grid">{links}</div></section>')
     if region in REGION_SEO_NAMES:
         sections.append(
             f'<p class="related"><a href="/regions/{escape(region_slug(region))}">Guide de la région {escape(region)} →</a></p>'
@@ -245,10 +282,14 @@ def render_place_page(place: dict, places, site_url: str, nonce: str = "", extra
         f"<script{nonce_attr}>(async()=>{{const box=document.getElementById('gallery');if(!box)return;"
         "try{const d=await fetch('/explorer-image?query='+encodeURIComponent(box.dataset.query)+'&title='+encodeURIComponent(box.dataset.title||''),(window.AbortSignal&&AbortSignal.timeout)?{signal:AbortSignal.timeout(15000)}:{}).then(r=>r.json());"
         "const list=(d.images||[]).slice(0,4);if(!list.length){box.closest('section').remove();return}"
-        "const hero=document.getElementById('placeHero');if(hero){const h=document.createElement('img');h.decoding='async';h.alt=list[0].alt||box.dataset.title||'';"
-        "h.src=list[0].display_url||('/image-proxy?url='+encodeURIComponent(list[0].url));hero.appendChild(h);hero.hidden=false}"
-        "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.alt=x.alt||'';"
-        "img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url));box.appendChild(img)});"
+        # Relais d'images refusé (429 après la page Explorer, vu le 15 novembre 2026) : photo chargée directement chez
+        # Wikimedia, comme sur l'Explorer et l'accueil ; si ça échoue aussi, elle disparaît au lieu de rester cassée.
+        "const pose=(img,x,echec)=>{img.decoding='async';img.onerror=()=>{if(!img.dataset.direct&&x.url){img.dataset.direct='1';img.src=x.url}"
+        "else{img.remove();echec()}};img.src=x.display_url||('/image-proxy?url='+encodeURIComponent(x.url))};"
+        "const hero=document.getElementById('placeHero');if(hero){const h=document.createElement('img');h.alt=list[0].alt||box.dataset.title||'';"
+        "pose(h,list[0],()=>{hero.hidden=true});hero.appendChild(h);hero.hidden=false}"
+        "list.forEach(x=>{const img=document.createElement('img');img.loading='lazy';img.alt=x.alt||'';"
+        "pose(img,x,()=>{if(!box.querySelector('img'))box.closest('section').remove()});box.appendChild(img)});"
         "document.getElementById('gallery-credit').textContent='Photos : '+(list[0].credit||'Wikimedia Commons')}"
         "catch(_){box.closest('section').remove()}})();</script>"
     )

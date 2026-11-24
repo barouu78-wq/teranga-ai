@@ -9,6 +9,13 @@ https://github.com/obra/superpowers, commit bb92a77741419a4ab5f06e711a283343f1ad
 Seul le texte des méthodes a été repris. Les scripts, le crochet de démarrage de session (SessionStart) et les autres
 skills de Superpowers n'ont pas été copiés.
 
+Ajout du 23 novembre 2026 (accord du propriétaire : « Go »), depuis https://github.com/obra/superpowers, commit
+22f0b463e7a5e579904dd6211a520321035526f7, texte seulement (SKILL.md et references/*.md ; ni render-graphs.js ni
+graphviz-conventions.dot) ; description traduite, note de provenance et correspondances avec les skills du projet en tête :
+
+- writing-plans
+- writing-skills
+
 Licence d'origine :
 
 MIT License

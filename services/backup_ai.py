@@ -18,6 +18,11 @@ import threading
 from types import SimpleNamespace
 from typing import Any, Iterator
 
+# Chargé au démarrage de chaque processus Gunicorn, pas à la première question : l'import seul prend 1,7 s
+# (plus sur Render) et retardait le premier mot du chat de 4 à 9 s après chaque mise en ligne (journaux du
+# 15 au 18 novembre 2026, tests/test_claude_demarrage.py).
+import anthropic
+
 from .truncation import is_cut_by_length, with_cut_notice
 
 DEFAULT_MODEL = "claude-opus-5-5"
@@ -48,8 +53,6 @@ def _client():
     with _client_lock:
         client = _clients.get(key)
         if client is None:
-            import anthropic
-
             # Pas de nouvelle tentative : le secours OpenAI prend le relais plus vite.
             client = anthropic.Anthropic(api_key=key, max_retries=0)
             _clients.clear()

@@ -1225,6 +1225,8 @@ body[data-fete="joj"] .joj-card{order:10}
 .plan-cta strong{font-size:16px}
 .plan-cta small{font-size:13px;opacity:.75}
 .plan-cta svg{flex:0 0 22px;width:22px;height:22px}
+/* Plan du 21 novembre 2026 : le CV, sous les thèmes rapides (même place dans la page qu'à l'écran). */
+.plan-cta.cv-cta{order:10}
 #fxWidget{order:13}
 #journeyStrip{order:14}
 #cards{order:15}
@@ -1310,14 +1312,15 @@ body:not([data-fete]) .hero-signature{display:none}
 <h2 class="hero-label" id="topicsTitle">Thèmes rapides</h2>
 <div class="hero-chips" id="heroChips"></div>
 <div class="theme-qs" id="themeQs" hidden><p class="theme-qs-title" id="themeQsTitle"></p><div class="theme-qs-list" id="themeQsList"></div></div>
-<a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="joj-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></a>
+<template id="jojCardTpl"><a class="joj-card" id="jojCard" href="/joj-dakar-2026"><span class="joj-top"><span class="joj-kicker" id="jojKicker">Jeux Olympiques de la Jeunesse</span><span class="joj-day" id="jojDay"></span></span><strong class="joj-title">Dakar 2026</strong><span class="joj-where" id="jojWhere">31 oct. – 13 nov. · Dakar, Diamniadio, Saly</span><span class="joj-cta"><span id="jojCta">Le guide pratique</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="joj-confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></a></template>
+<a class="plan-cta cv-cta" id="cvCta" href="/cv"><span><strong id="cvCtaTitle">Faire mon CV gratuit</strong><small id="cvCtaHint">Pour l’emploi au Sénégal · prêt en PDF</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 <section class="hero-discover" aria-labelledby="discoverTitle">
   <div class="hero-discover-head"><h2 id="discoverTitle">À découvrir</h2><a href="/lieux" id="allPlaces">Tous les lieux</a></div>
   <div class="hero-discover-grid">
     __DISCOVER_TILES__
   </div>
 </section>
-<a class="plan-cta" id="planCta" href="/trip-planner"><span><strong id="planCtaTitle">Planifier mon voyage</strong><small id="planCtaHint">Un programme jour par jour en 1 minute</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+<a class="plan-cta" id="planCta" href="/telecharger"><span><strong id="planCtaTitle">Télécharger l’appli Android</strong><small id="planCtaHint">APK ou Google Play · deviens testeur</small></span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 <section class="fx-widget" id="fxWidget" aria-label="Convertisseur de devises">
   <div class="fx-head"><div><b id="fxTitle">Convertisseur</b><small id="fxUpdated">Taux indicatif</small></div><span>🇸🇳</span></div>
   <div class="fx-row">

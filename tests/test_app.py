@@ -551,9 +551,15 @@ def test_international_travel_seo_pages_cover_all_localized_routes():
     assert len(LANGS) == 5
     assert len(TOPICS) == 12
 
+    from services.international_seo import FR_EQUIVALENTS
+
     for lang in LANGS:
         for topic in TOPICS:
             response = client.get(f"/{lang}/{topic}")
+            if lang == "fr" and topic in FR_EQUIVALENTS:
+                # Doublon d'une page française (/fr/goree-island → /visiter-goree) : redirection 301.
+                assert response.status_code == 301
+                continue
             assert response.status_code == 200
             body = response.get_data(as_text=True)
             assert '<link rel="canonical"' in body
@@ -986,7 +992,8 @@ def test_production_startup_contract():
     assert "buildCommand: pip install -r requirements.txt" in render
     assert "startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --graceful-timeout 30 wsgi:app" in render
     assert "healthCheckPath: /health" in render
-    assert "plan: 2c-8g" in render
+    # La taille de la production (0,5 processeur, 512 Mo) : jamais une machine plus chère par erreur.
+    assert "plan: 0.5c-512mb" in render
     assert "value: https://teranga-ai.fr" in render
     assert "key: ALLOWED_ORIGINS" in render
     assert "key: OPENAI_API_KEY" in render

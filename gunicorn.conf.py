@@ -10,6 +10,8 @@ Les options passées en ligne de commande (`--workers`, `--timeout`…) l'emport
 """
 import os
 
+from gunicorn.glogging import Logger
+
 
 def _entier(nom, defaut, minimum=1, maximum=16):
     """Lit un entier dans l'environnement ; une valeur absente, invalide ou hors bornes donne le défaut."""
@@ -29,3 +31,20 @@ threads = _entier("GUNICORN_THREADS", 4)
 timeout = 120
 graceful_timeout = 30
 keepalive = 30
+
+
+class _JournalSansControleDeSante(Logger):
+    """Journal d'accès sans les contrôles de santé réussis de Render.
+
+    Depuis le 23 novembre 2026, Render appelle /health toutes les 5 s : une ligne à chaque fois noyait les
+    vraies requêtes. Un contrôle en échec (code autre que 200) reste écrit, pour comprendre un redémarrage.
+    """
+
+    def access(self, resp, req, environ, request_time):
+        if (environ.get("PATH_INFO") == "/health" and environ.get("HTTP_USER_AGENT", "").startswith("Render/")
+                and getattr(resp, "status_code", None) == 200):
+            return
+        super().access(resp, req, environ, request_time)
+
+
+logger_class = _JournalSansControleDeSante

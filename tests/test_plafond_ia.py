@@ -65,16 +65,72 @@ def test_counter_starts_again_at_midnight():
 
 def test_without_redis_each_process_still_counts():
     for redis in (None, _Redis(broken=True)):
-        budget = AiBudget(redis, limit=2, now=_Clock(JOUR))
+        budget = AiBudget(redis, limit=2, now=_Clock(JOUR), processes=1)
         assert [budget.take() for _ in range(3)] == [True, True, False]
 
 
 def test_redis_outage_keeps_the_count_already_used_today():
     redis = _Redis()
-    budget = AiBudget(redis, limit=4, now=_Clock(JOUR))
+    budget = AiBudget(redis, limit=4, now=_Clock(JOUR), processes=1)
     assert [budget.take() for _ in range(3)] == [True, True, True]
     redis.broken = True  # Redis tombe en panne après 3 appels : le processus repart de 3, pas de 0
     assert [budget.take() for _ in range(2)] == [True, False]
+
+
+# Ticket « plafond sans Redis » (audit du 22 novembre 2026) : sans Redis, chaque processus de Gunicorn comptait seul
+# jusqu'au plafond, si bien que le site pouvait faire « plafond × processus » requêtes par jour (1 000 au lieu de 500
+# avec les 2 processus par défaut). Maintenant chaque processus suppose que les autres dépensent comme lui.
+
+@pytest.mark.parametrize("redis", [None, "panne"])
+@pytest.mark.parametrize("processes", [1, 2, 3, 4])
+def test_sans_redis_le_total_de_tous_les_processus_reste_sous_le_plafond(redis, processes):
+    limit = 500
+    shared = _Redis(broken=True) if redis else None
+    workers = [AiBudget(shared, limit=limit, now=_Clock(JOUR), processes=processes) for _ in range(processes)]
+    accepted = 0
+    for _ in range(limit * 2):  # chaque processus reçoit autant de requêtes, bien plus que le plafond
+        accepted += sum(worker.take() for worker in workers)
+    assert limit - processes < accepted <= limit
+
+
+def test_panne_de_redis_en_cours_de_journee_le_reste_du_plafond_est_partage():
+    """300 requêtes déjà comptées par Redis, puis panne : il reste 200 pour la journée, partagées par 2 processus."""
+    redis = _Redis()
+    workers = [AiBudget(redis, limit=500, now=_Clock(JOUR), processes=2) for _ in range(2)]
+    for _ in range(150):
+        assert workers[0].take() and workers[1].take()
+    redis.broken = True
+    accepted = 0
+    for _ in range(1000):
+        accepted += sum(worker.take() for worker in workers)
+    assert 300 + accepted <= 500 and accepted >= 198
+
+
+def test_redis_revenu_le_compte_partage_reprend():
+    redis = _Redis()
+    budget = AiBudget(redis, limit=10, now=_Clock(JOUR), processes=2)
+    redis.broken = True
+    assert [budget.take() for _ in range(6)] == [True] * 5 + [False]
+    redis.broken = False  # Redis revient : son propre compte (0 ici) fait foi de nouveau
+    assert budget.take()
+
+
+def test_le_nombre_de_processus_vient_de_gunicorn(monkeypatch):
+    from services.ai_budget import worker_count
+
+    for raw, expected in (("", 2), ("3", 3), ("0", 2), ("-1", 2), ("abc", 2), (" 4 ", 4)):
+        monkeypatch.setenv("GUNICORN_WORKERS", raw)
+        assert worker_count() == expected, raw
+    monkeypatch.setenv("GUNICORN_WORKERS", "3")
+    assert AiBudget(None, limit=9, now=_Clock(JOUR)).processes == 3
+
+
+def test_le_jour_suivant_le_compte_local_repart_de_zero():
+    clock = _Clock(JOUR)
+    budget = AiBudget(None, limit=4, now=clock, processes=2)
+    assert [budget.take() for _ in range(3)] == [True, True, False]
+    clock.now = JOUR + timedelta(hours=2)  # minuit passé
+    assert budget.take()
 
 
 def test_a_failed_expire_does_not_count_twice_and_is_retried():

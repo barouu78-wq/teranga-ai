@@ -5,9 +5,11 @@ Rien n'est gardé : ni le fichier, ni le récit, ni l'offre, ni le CV rendu (pas
 
 from flask import Response, jsonify, request
 
-from services.backup_ai import backup_enabled, claude_response
+from services.backup_ai import backup_enabled, claude_model, claude_response
 from services.cv import CONSIGNE_CV, ERREURS_DEMANDE, CvIllisible, DemandeInvalide, construire_demande, lire_reponse, page_cv
 from services.fichiers import FichierInvalide, message_erreur
+from services.latency import LatencyTrace
+from services.offres_emploi import page_offres_emploi
 
 NO_STORE = {"Cache-Control": "no-store"}
 
@@ -17,9 +19,11 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, ai_budge
     def cv_page():
         return Response(page_cv(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=600"})
 
-    @app.post("/api/cv")
-    @require_json_post
-    def cv_api():
+    @app.get("/offres-emploi")
+    def offres_emploi_page():
+        return Response(page_offres_emploi(site_url), mimetype="text/html", headers={"Cache-Control": "public, max-age=600"})
+
+    def cv_body(trace):
         refus = rate_guard("cv")  # quotas par minute et par heure
         if refus:
             return refus
@@ -37,7 +41,9 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, ai_budge
         if not ai_budget.take():
             return jsonify({"error": "L'IA a atteint sa limite du jour. Réessaie demain."}), 503, {**NO_STORE, "Retry-After": str(ai_budget.retry_after())}
         try:
-            final = claude_response(prompt, system=CONSIGNE_CV, max_tokens=4000, timeout=60.0, attachment=bloc)
+            trace.model = claude_model()
+            with trace.stage("fournisseur"):
+                final = claude_response(prompt, system=CONSIGNE_CV, max_tokens=4000, timeout=60.0, attachment=bloc)
             cv = lire_reponse(getattr(final, "output_text", "") or "")
         except CvIllisible:
             logger.warning("cv_reponse_illisible")
@@ -48,3 +54,10 @@ def register_cv_routes(app, site_url, *, require_json_post, rate_guard, ai_budge
         logger.info("cv_cree fichier=%s offre=%s lettre=%s", bool(bloc) or "[Texte du document Word" in prompt,
                     "[Offre d'emploi" in prompt, bool(cv["lettre"]))
         return jsonify({"cv": cv}), 200, NO_STORE
+
+    @app.post("/api/cv")
+    @require_json_post
+    def cv_api():
+        # Une ligne « latence route=cv » par demande : combien de temps la personne attend son CV (des nombres,
+        # jamais le parcours ni le CV).
+        return LatencyTrace("cv").run(app, cv_body)

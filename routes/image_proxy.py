@@ -1,6 +1,10 @@
 """Image proxy route registration."""
 
+import time
+
 from flask import Response, request
+
+from services import image_failures
 
 
 def register_image_proxy_route(app, deps):
@@ -63,6 +67,13 @@ def register_image_proxy_route(app, deps):
                 mimetype="text/plain",
             )
 
+        # Échec récent de la même image : on répond tout de suite, sans redemander à Wikimedia
+        # (services/image_failures.py).
+        recalled = image_failures.recall(src)
+        if recalled:
+            return _failure_response(*recalled)
+
+        started = time.monotonic()
         try:
             content_type, data = safe_image_fetch(
                 src,
@@ -70,15 +81,23 @@ def register_image_proxy_route(app, deps):
                 OUTBOUND_TIMEOUT,
                 opener=safe_image_opener,
             )
-            return Response(
-                data,
-                mimetype=content_type,
-                headers={"Cache-Control": "public, max-age=86400"},
-            )
-        except Exception:
-            app.logger.exception("Erreur proxy image Wikimedia")
-            return Response(
-                "Image indisponible",
-                status=502,
-                mimetype="text/plain",
-            )
+        except Exception as exc:
+            kind, retry_after = image_failures.classify(exc)
+            image_failures.remember(src, kind, retry_after)
+            line = image_failures.log_line(src, kind, int((time.monotonic() - started) * 1000), exc)
+            if kind == "inattendue":
+                app.logger.exception(line)  # erreur imprévue : la trace complète aide à la corriger
+            else:
+                app.logger.warning(line)
+            return _failure_response(kind, retry_after)
+        return Response(
+            data,
+            mimetype=content_type,
+            headers={"Cache-Control": "public, max-age=86400"},
+        )
+
+
+def _failure_response(kind, retry_after=0):
+    status, message = image_failures.RESPONSES[kind]
+    headers = {"Retry-After": str(retry_after)} if status == 503 and retry_after else {}
+    return Response(message, status=status, mimetype="text/plain", headers=headers)

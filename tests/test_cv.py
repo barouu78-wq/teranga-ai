@@ -9,6 +9,7 @@ téléphone (stockage du navigateur).
 import base64
 import io
 import json
+import re
 import os
 import zipfile
 from types import SimpleNamespace
@@ -20,6 +21,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 import app as app_module  # noqa: E402
 import routes.cv as cv_routes  # noqa: E402
 from services.cv import CONSIGNE_CV, CvIllisible, construire_demande, lire_reponse  # noqa: E402
+import services.cv as cv_module  # noqa: E402
 from services.long_requests import LONG_PATHS  # noqa: E402
 
 B = "https://teranga-ai.fr"
@@ -140,6 +142,21 @@ def test_la_reponse_est_lue_et_nettoyee():
     assert cv["experiences"][0]["taches"] == ["Saisie des factures"]
 
 
+def test_un_texte_trop_long_n_est_jamais_coupe_au_milieu_d_un_mot():
+    # Vu le 15 novembre 2026 sur le PDF du propriétaire : « …courriers, r » et « …communicatio » (coupés à 60 caractères).
+    longue = "Word : rédaction et mise en forme de documents, courriers, rapports et comptes rendus de réunion"
+    cv = lire_reponse(json.dumps(dict(REPONSE, competences=[longue, "Photoshop : conception graphique et supports de communication"])))
+    assert cv["competences"][1] == "Photoshop : conception graphique et supports de communication"
+    coupee = cv["competences"][0]
+    assert longue.startswith(coupee) and longue[len(coupee)] == " " and not coupee.endswith((",", ";", ":"))
+    tache = cv_module._texte("Assurait " + "l'approvisionnement " * 20, 60)
+    assert len(tache) <= 60 and tache.split()[-1] == "l'approvisionnement"
+
+
+def test_la_consigne_demande_des_competences_courtes():
+    assert "Compétences : intitulés courts" in CONSIGNE_CV
+
+
 @pytest.mark.parametrize("texte", ["", "pas de JSON ici", "[1, 2]", '{"nom": 5, "experiences": "x"}'])
 def test_une_reponse_illisible_leve_une_erreur(texte):
     with pytest.raises(CvIllisible):
@@ -230,3 +247,122 @@ def test_l_iphone_ne_transforme_pas_le_telephone_et_l_e_mail_en_liens():
     # Capture du propriétaire (15 novembre 2026) : Safari soulignait le numéro et l'e-mail du CV comme des liens.
     html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
     assert '<meta name="format-detection" content="telephone=no,email=no,address=no">' in html
+
+
+def test_mon_cv_est_dans_le_plan_du_site_avec_les_mots_que_les_jeunes_cherchent():
+    # 17 novembre 2026 : /cv manquait au plan du site envoyé à Google, et son titre (« Mon CV · Teranga AI ») ne
+    # contenait ni « gratuit » ni « Sénégal ». Les règles communes des pages du plan (titre, description, canonique,
+    # aperçu de partage, JSON-LD) sont vérifiées par tests/test_seo_quality.py.
+    client = app_module.app.test_client()
+    plan = client.get("/sitemap.xml", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert "<loc>https://teranga-ai.fr/cv</loc>" in plan
+    page = client.get("/cv", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    titre = page.split("<title>", 1)[1].split("</title>", 1)[0]
+    assert "CV" in titre and "gratuit" in titre and "Sénégal" in titre
+    assert 'property="og:title"' in page and '"@type": "WebApplication"' in page
+
+
+def test_la_licence_des_icones_lucide_est_livree_avec_le_site():
+    from pathlib import Path
+
+    racine = Path(__file__).resolve().parents[1]
+    licence = (racine / "static" / "LICENCE-lucide.txt").read_text(encoding="utf-8")
+    assert "ISC License" in licence and "Lucide Icons and Contributors" in licence
+    assert "Lucide" in (racine / "static" / "cv.js").read_text(encoding="utf-8")
+
+
+def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_du_cv():
+    """Bouche-à-oreille : le message partagé ne contient que l'adresse de /cv (marquée ?ref=wa pour compter les arrivées)."""
+    from urllib.parse import parse_qs, unquote, urlparse
+
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    resultat = html[html.index('id="cvResultat"'):]
+    lien = re.search(r'<a [^>]*id="cvPartager"[^>]*>', resultat)
+    assert lien, "le bouton de partage doit être dans la section « Ton CV est prêt »"
+    balise = lien.group(0)
+    href = re.search(r'href="([^"]+)"', balise).group(1).replace("&amp;", "&")
+    adresse = urlparse(href)
+    assert (adresse.scheme, adresse.netloc) == ("https", "wa.me")
+    texte = unquote(parse_qs(adresse.query)["text"][0])
+    assert texte.endswith("https://teranga-ai.fr/cv?ref=wa") and "gratuit" in texte
+    assert 'target="_blank"' in balise and 'rel="noopener noreferrer"' in balise
+    assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
+
+
+def test_un_exemple_fictif_montre_le_cv_fini_avant_le_formulaire():
+    """Montrer le résultat avant de demander quoi que ce soit : un CV fini, d'une personne fictive dite comme telle,
+    et un bouton qui mène au formulaire. L'exemple est dessiné par cv.js (même rendu que le vrai CV)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvExemple"')
+    assert debut < html.index('id="cvForm"')
+    exemple = html[debut:html.index("</section>", debut)]
+    assert "personne fictive" in exemple
+    assert 'id="cvExempleFeuille"' in exemple
+    assert re.search(r'<a [^>]*href="#cvForm"[^>]*>Faire le mien</a>', exemple)
+
+
+def test_chaque_creation_de_cv_laisse_une_ligne_de_latence_sans_donnee_du_cv(claude, monkeypatch):
+    """Combien de temps attend la personne ? Une ligne « latence route=cv » par demande (services/latency.py) :
+    des nombres et des étiquettes fixes, jamais le parcours, le poste ni le CV."""
+    import latence_harness as h
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")  # le banc de latence retire la clé quand il est importé
+    handler = h.capture_lines()
+    try:
+        for corps, ip, code in (({"parcours": "BTS comptabilité en 2023, deux stages.", "poste": "Comptable"}, "203.0.113.90", 200),
+                                ({"parcours": ""}, "203.0.113.91", 400)):
+            reponse = post(corps, ip)
+            assert reponse.status_code == code
+            reponse.get_data()
+            reponse.close()  # la ligne part à la fermeture de la réponse, comme pour le chat
+    finally:
+        h.release_lines(handler)
+    assert len(handler.lines) == 2, handler.lines
+    ok, invalide = (h.fields(ligne) for ligne in handler.lines)
+    assert ok["route"] == "cv" and ok["statut"] == "ok" and ok["modele"] != "-"
+    assert float(ok["total_ms"]) >= float(ok["fournisseur_ms"]) >= 0
+    assert invalide["route"] == "cv" and invalide["statut"] == "invalide" and invalide["fournisseur_ms"] == "-"
+    texte = "".join(handler.lines)
+    assert "Comptable" not in texte and "BTS" not in texte and "Awa" not in texte
+
+
+def test_la_page_repond_aux_questions_que_les_gens_tapent_sur_google():
+    """Recherches vues dans la campagne Google Ads CV (22 novembre 2026) : « comment faire un cv », « exemple de cv pour
+    demande d'emploi ». Les réponses ne disent que ce que fait la page et les règles du skill cv-senegal."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    debut = html.index('id="cvFaqTitre"')
+    faq = html[debut:html.index("</section>", debut)]
+    for question in ("Comment faire un CV pour une demande d’emploi ?", "Je n’ai pas d’expérience : que mettre dans mon CV ?",
+                     "Quel modèle de CV choisir ?", "C’est gratuit ? Mon CV est-il gardé ?", "Où envoyer mon CV ensuite ?"):
+        assert f"<h3>{question}</h3>" in faq, question
+    assert 'href="/offres-emploi"' in faq and "Teranga ne les garde pas" in faq
+    donnees = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1))
+    (faq_ld,) = [n for n in donnees["@graph"] if n["@type"] == "FAQPage"]
+    assert len(faq_ld["mainEntity"]) == 5
+    assert all("<" not in q["acceptedAnswer"]["text"] for q in faq_ld["mainEntity"])  # texte seul, sans balise
+
+
+def test_le_depart_sans_cv_est_propose_d_abord_sans_fichier_a_chercher():
+    """« Go 1 » du 23 novembre 2026 : les visiteurs venus de la pub (« comment faire un cv ») n'ont souvent pas de CV
+    sur leur téléphone. Le départ par défaut est donc le récit du parcours, avec le nom à part ; le fichier reste au
+    choix."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    choix = html[html.index('<fieldset class="cv-choix">'):html.index("</fieldset>")]
+    assert choix.index('value="parcours"') < choix.index('value="fichier"')
+    assert re.search(r'<input type="radio" name="depart" value="parcours" checked>', choix)
+    assert "pas besoin de fichier" in choix
+    assert re.search(r'<div class="cv-champ" id="cvBlocFichier" hidden>', html)
+    assert re.search(r'<div class="cv-bloc-parcours" id="cvBlocParcours">', html)
+    nom = re.search(r'<input id="cvNom"[^>]*>', html)
+    assert nom and 'autocomplete="name"' in nom.group(0) and 'maxlength="80"' in nom.group(0)
+
+
+def test_un_recit_au_maximum_avec_un_nom_reste_accepte_par_le_serveur():
+    """Relecture Codex (#645) : le nom part en tête du parcours (« Nom : …\\n ») ; un récit à la longueur maximale du
+    champ, avec le nom le plus long, ne doit pas dépasser la limite du serveur (sinon 400, alors que le formulaire
+    l'acceptait)."""
+    html = app_module.app.test_client().get("/cv", base_url=B).get_data(as_text=True)
+    recit_max = int(re.search(r'<textarea id="cvParcours"[^>]*maxlength="(\d+)"', html).group(1))
+    nom_max = int(re.search(r'<input id="cvNom"[^>]*maxlength="(\d+)"', html).group(1))
+    parcours = "Nom : " + "n" * nom_max + "\n" + "r" * recit_max
+    construire_demande({"parcours": parcours, "poste": "Comptable"})  # ne lève rien

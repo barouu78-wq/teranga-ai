@@ -45,6 +45,7 @@ un contrôle qui n'a pas tourné.
 | `services/hotes.py` + `routes/hotes.py` | Teranga Hôtes : page `/hote/<nom>` d'une maison d'hôtes, ses infos dans le contexte de l'IA, QR code (`data/hotes/`, `docs/produit/teranga-hotes.md`) |
 | `services/fichiers.py` | Fichier joint au chat (photo, PDF, Word ≤ 2 Mo) : vérifié, lu par Claude (le texte d'un Word par toutes les IA), jamais gardé ni mis en cache |
 | `services/adsense.py` | Annonce Google en fin de page de guide et `/ads.txt`, éteintes par défaut (`docs/PUBLICITE.md`) |
+| `services/google_ads_tag.py` + `static/google-ads-consent.js` | Balise Google Ads (conversions des campagnes) après accord du visiteur, éteinte par défaut |
 | `services/backup_ai.py` | Claude (Anthropic) : secours, ou IA principale si `AI_PRINCIPALE=claude` |
 | `templates/home.html` + `static/home.js` | Accueil et chat (design v2) |
 | `static/site.css` | Feuille des pages secondaires (mêmes jetons de couleur que l'accueil) |
@@ -81,14 +82,38 @@ un contrôle qui n'a pas tourné.
 | `revue-interface` | « vérifie l'accessibilité », après un changement visible : relire une page (accessibilité, focus, formulaires, mobile, thème sombre) avec des règles figées, adaptées au français |
 | `cv-senegal` | CV ou lettre de motivation pour un emploi au Sénégal, et consigne de l'IA pour « Adapter mon CV » : mettre en valeur sans rien inventer |
 | `offres-emploi` | avant d'ajouter ou d'activer une source d'offres d'emploi : accord écrit du site, robots.txt, lien vers l'annonce d'origine, offres expirées et arnaques retirées |
+| `reverse-engineer-anything` | analyser sans code source une appli dont le propriétaire a les droits (APK `fr.teranga_ai`, site) ; texte seulement, REA n'est ni installé ni lancé sans son accord |
+| `conversion-tracking` | conversions Google Ads (question, appli, CV) : mettre en place, vérifier qu'une conversion test arrive, comprendre un écart ; jamais avant le consentement |
+| `ads` | campagnes Google Ads : garder ou couper, budget, mots-clés ; chiffres réels seulement (« MANQUANT » sinon), tout changement attend l'accord du propriétaire |
+| `cro` | page d'arrivée ou formulaire qui convertit mal (`/cv`, accueil) : quoi changer d'abord, avec un test e2e |
+| `link-building` | obtenir des liens d'autres sites (partenaires, presse, diaspora) sans pratique à risque pour Google |
+| `programmatic-seo` | pages en nombre sur un modèle (fiches de lieux, régions) : utiles, sourcées, jamais minces |
+| `aso` | fiche Google Play de l'appli (titre, description, captures) : propositions seulement, jamais de changement dans la Console |
+| `social` | publications Instagram, TikTok, Facebook : brouillons à partir des faits vérifiés, jamais publiés par l'agent |
+| `copywriting` | texte d'une page (accueil, page d'annonce, CV, diaspora) : titre et promesse, sans rien inventer |
+| `content-strategy` | quels sujets écrire et dans quel ordre, d'après les recherches réelles (Search Console) |
+| `community-marketing` | communauté en ligne (groupes de la diaspora) : messages préparés, l'agent ne contacte personne |
+| `seo-hreflang` | pages en plusieurs langues (fr, en, es) : balises hreflang et versions correctes |
+| `humanizer` | retirer d'un texte les tournures typiques d'une IA, sans changer les faits |
+| `fp-check` | alerte de sécurité (Codex, CodeQL, Bandit) : vrai problème ou fausse alerte, preuves à l'appui |
+| `sharp-edges` | réglages et usages dangereux dans le code ou la configuration, avant de toucher à la sécurité |
+| `core-web-vitals` | vitesse vue par Google (LCP, INP, CLS) : corriger à partir de mesures réelles (PageSpeed) |
+| `performance` | site plus rapide sur téléphone : mesurer avant et après, sans script ni CDN externe |
+| `accessibility` | accessibilité WCAG 2.2 (lecteur d'écran, clavier, contrastes), en complément de `revue-interface` |
+| `ad-creative` | textes des annonces (titres, accroches, variantes) : rien d'inventé, aucun changement dans Google Ads sans accord |
+| `site-architecture` | organisation des pages et liens internes ; jamais d'adresse cassée sans redirection 301 |
+| `free-tools` | outils gratuits du site (convertisseur, CV, planificateur) pour attirer visiteurs et liens |
+| `public-relations` | presse : angles, communiqués, messages aux journalistes en brouillon, l'agent ne contacte personne |
+| `writing-plans` | plan court et vérifiable avant une tâche en plusieurs étapes |
+| `writing-skills` | écrire ou vérifier un skill du projet, testé comme du code |
 
 `deboguer-methodiquement`, `tester-d-abord`, `verifier-avant-d-annoncer` et `recevoir-une-relecture` sont adaptés de
-Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`). `hallmark` (texte seulement, sans scripts ni
+Superpowers (licence MIT, `.claude/skills/LICENCE-superpowers.txt`), d'où viennent aussi `writing-plans` et `writing-skills` (texte seulement). `hallmark` (texte seulement, sans scripts ni
 génération d'images) et les quatre `ponytail` sont repris de GitHub sous licence MIT (`.claude/skills/LICENCE-hallmark.txt`,
 `.claude/skills/LICENCE-ponytail.txt`), `find-skills` de vercel-labs/skills (MIT, `.claude/skills/LICENCE-vercel-skills.txt`, texte
 seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guidelines (MIT,
 `.claude/skills/LICENCE-web-interface-guidelines.txt`, copie figée), et `cv-senegal` est adapté de `resume-tailor`
-(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`) ; les règles de ce fichier priment sur les leurs.
+(Paramchoudhary/ResumeSkills, MIT, `.claude/skills/LICENCE-resumeskills.txt`), et `reverse-engineer-anything` de morluto/rea (MIT, `.claude/skills/LICENCE-rea.txt`, texte seulement), et `conversion-tracking`, `ads`, `cro`, `link-building`, `programmatic-seo`, `aso`, `social`, `copywriting`, `content-strategy`, `community-marketing`, `ad-creative`, `site-architecture`, `free-tools` et `public-relations` de coreyhaines31/marketingskills (MIT, `.claude/skills/LICENCE-marketingskills.txt`, texte seulement), `seo-hreflang` d'AgriciDaniel/claude-seo (MIT, `.claude/skills/LICENCE-claude-seo.txt`), `humanizer` de blader/humanizer (MIT, `.claude/skills/LICENCE-humanizer.txt`), `fp-check` et `sharp-edges` de trailofbits/skills (CC BY-SA 4.0, `.claude/skills/LICENCE-trailofbits.txt`), et `core-web-vitals`, `performance` et `accessibility` d'addyosmani/web-quality-skills (MIT, `.claude/skills/LICENCE-web-quality-skills.txt`), texte seulement ; les règles de ce fichier priment sur les leurs.
 
 ## Règles à respecter
 
@@ -104,6 +129,9 @@ seulement) et les règles de `revue-interface` de vercel-labs/web-interface-guid
   autre domaine : tout est servi par le site (`static/fonts/`). Seule exception, décidée par le propriétaire le 13 novembre 2026 :
   l'annonce Google AdSense (`services/adsense.py`), seulement sur les pages de guide qui la portent, avec la CSP
   stricte demandée par Google (nonce + `'strict-dynamic'`) ; jamais sur l'accueil, le chat ni les urgences.
+  Deuxième exception, décidée par le propriétaire le 16 novembre 2026 : la balise Google Ads (`services/google_ads_tag.py`,
+  `static/google-ads-consent.js`), allumée par `GOOGLE_ADS_TAG_ID`, chargée seulement après un « Accepter » du visiteur,
+  jamais sur les pages privées ; ses origines Google n'entrent dans la CSP que si elle est allumée.
 - **Garde-fou des agents.** Avant chaque commande de Claude Code, `.claude/hooks/garde_fou.py` (déclaré
   dans `.claude/settings.json`) bloque : pousser sur `main`, une poussée forcée (`--force-with-lease`
   reste permis), `git reset --hard`, `rm -r` sur la racine, le dossier personnel ou le projet, et
@@ -123,7 +151,9 @@ Obligatoires : `OPENAI_API_KEY`, `SECRET_KEY` (≥ 32 caractères en production)
 Utiles : `REDIS_URL`, `SITE_URL`, `CONTACT_EMAIL`, `PARTNER_WHATSAPP`, `STATS_TOKEN`,
 `GOOGLE_SITE_VERIFICATION`, `GETYOURGUIDE_PARTNER_ID`, `BOOKING_AID`, `TAXI_PARTNER_URL`,
 `ANTHROPIC_API_KEY`, `AI_PRINCIPALE`, `ANTHROPIC_MODEL`, `ANALYTICS_SCRIPT_URL`, `ANALYTICS_SITE_ID`,
-`ADSENSE_CLIENT` (compte Google AdSense, publie `/ads.txt`), `ADSENSE_SLOT` (bloc d'annonces : affiche les annonces).
+`ADSENSE_CLIENT` (compte Google AdSense, publie `/ads.txt`), `ADSENSE_SLOT` (bloc d'annonces : affiche les annonces),
+`GOOGLE_ADS_TAG_ID` (balise Google Ads « AW-… », chargée après accord du visiteur),
+`GOOGLE_ADS_CONVERSIONS` (étiquettes des conversions, « question:AW-…/…,appli:AW-…/…,cv:AW-…/… », envoyées après accord seulement).
 Plafond de dépense IA : `AI_PLAFOND_JOUR` (requêtes vers l'IA par jour pour tout le site : chat, planificateur, voix ; défaut 500 ; au-delà, la base vérifiée répond jusqu'à minuit ; un secours après une panne du fournisseur peut faire un second appel pour la même requête).
 **En production, Claude est l'IA principale** (`AI_PRINCIPALE=claude`, modèle `claude-sonnet-5-5` vu dans les journaux du 2 au 8 novembre 2026 ; choix confirmé par le propriétaire le 9 novembre 2026) : OpenAI sert de secours.
 Modèles OpenAI (vide ou invalide = défaut ; lus par `services/model_params.py`) : `OPENAI_MODEL` (défaut `gpt-5.6-luna`), `OPENAI_COMPLEX_MODEL` (défaut `gpt-5.6-sol`), `OPENAI_TRIP_MODEL` (planificateur, sans défaut).

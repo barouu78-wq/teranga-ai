@@ -21,6 +21,16 @@ SENEGAL_REGIONS = (
 # Noms wolof de Dakar, tels que les écrivent les suggestions wolof du site (static/home.js) :
 # « Lan mooy tàkk-tàkk Dakaar tey? », « Nettali ma taariixu Ndakaaru… ».
 WOLOF_PLACE_NAMES = {"dakaar": "dakar", "ndakaaru": "dakar"}
+# Autres villes en wolof (sources : en.wikipedia.org, « Grand Magal of Touba » et « Saint-Louis, Senegal » ;
+# sites.bu.edu/ria/wolof, unité 3). « Tubaa » : orthographe courante de « Tuubaa » (banc réel du 22 novembre 2026).
+# À part de WOLOF_PLACE_NAMES, qui sert aussi d'alias de Dakar.
+WOLOF_CITY_NAMES = {"tuubaa": "touba", "tubaa": "touba", "ndar": "saint-louis"}
+_WOLOF_CITY_RE = re.compile(r"(?<![a-z0-9])(" + "|".join(WOLOF_CITY_NAMES) + r")(?![a-z0-9])")
+
+
+def french_city_names(text: str) -> str:
+    """Remplace un nom wolof de ville (texte déjà sans accents, en minuscules) par son nom français."""
+    return _WOLOF_CITY_RE.sub(lambda m: WOLOF_CITY_NAMES[m.group(1)], text)
 
 REGION_ALIASES = {
     "Dakar": ("dakar", *WOLOF_PLACE_NAMES), "Diourbel": ("diourbel",), "Fatick": ("fatick",),
@@ -136,9 +146,6 @@ def _hit(token: str, words: frozenset) -> bool:
 def _fold(value) -> str:
     text = unicodedata.normalize("NFD", str(value or "").casefold())
     return "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
-
-def region_highlights(region: str) -> tuple[str, ...]:
-    return REGION_HIGHLIGHTS.get(str(region or ""), ())
 
 SOURCE_PRIORITY = (
     "gov.sn",
@@ -472,7 +479,7 @@ def format_senegal_knowledge(data, query: str = "", people: list[dict] | None = 
     # Un nom wolof (« Ndakaaru ») cherche les mêmes lieux que son nom français.
     tokens = [
         WOLOF_PLACE_NAMES.get(token, token)
-        for token in re.findall(r"[a-z0-9]+", _LANGUE_SUJET.sub(" ", _VERBE_MARCHER.sub(" ", _fold(value))))
+        for token in re.findall(r"[a-z0-9]+", _LANGUE_SUJET.sub(" ", _VERBE_MARCHER.sub(" ", french_city_names(_fold(value)))))
         if len(token) >= 3 and token not in _QUERY_STOPWORDS and token not in _SHORT_STOPWORDS and not token.isdigit()
     ]
     places = data.get("places", [])

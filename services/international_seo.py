@@ -131,8 +131,28 @@ FAQ = {
 
 LANG_NAMES = {"en":"English","es":"Español","de":"Deutsch","it":"Italiano","fr":"Français"}
 
+# Guides dont la version française est une page française existante : /fr/<sujet> y redirige (301), sort du
+# sitemap, et le hreflang « fr » des autres langues pointe vers elle. Une seule page française par sujet.
+FR_EQUIVALENTS = {"goree-island": "/visiter-goree", "senegal-visa": "/visa-senegal"}
+
+
+def international_topic_for_fr_path(path):
+    return next((topic for topic, fr_path in FR_EQUIVALENTS.items() if fr_path == path), None)
+
+
 def _localized_path(lang, topic):
+    if lang == "fr" and topic in FR_EQUIVALENTS:
+        return FR_EQUIVALENTS[topic]
     return f"/{lang}/{topic}"
+
+
+def hreflang_links(topic, site_url):
+    base = site_url.rstrip("/")
+    links = "".join(
+        f'<link rel="alternate" hreflang="{escape(lang)}" href="{base}{_localized_path(lang, topic)}">'
+        for lang in LANGS
+    )
+    return links + f'<link rel="alternate" hreflang="x-default" href="{base}{_localized_path("en", topic)}">'
 
 def render_international_page(lang, topic, site_url):
     page = TOPICS.get(topic)
@@ -142,11 +162,7 @@ def render_international_page(lang, topic, site_url):
     sections = "".join(f"<section><h2>{escape(h)}</h2><p>{escape(p)}</p></section>" for h,p in COPY[lang])
     faq = "".join(f"<div class='faq'><h3>{escape(q)}</h3><p>{escape(a)}</p></div>" for q,a in FAQ[lang])
     url = f"{site_url.rstrip('/')}{_localized_path(lang, topic)}"
-    alternates = "".join(
-        f'<link rel="alternate" hreflang="{escape(l)}" href="{site_url.rstrip("/")}{_localized_path(l, topic)}">'
-        for l in LANGS
-    )
-    alternates += f'<link rel="alternate" hreflang="x-default" href="{site_url.rstrip("/")}{_localized_path("en", topic)}">'
+    alternates = hreflang_links(topic, site_url)
     # Tous les sujets de la langue (et non les 8 premiers) : sinon sim-card, weather, visa et
     # trip-planner n'avaient aucun lien entrant et ne se trouvaient que dans le plan du site.
     related = "".join(
@@ -197,6 +213,11 @@ def render_international_page(lang, topic, site_url):
 def register_localized_routes(app, site_url):
     @app.get("/<lang>/<topic>")
     def localized_travel_page(lang, topic):
+        if lang == "fr" and topic in FR_EQUIVALENTS:
+            from flask import redirect
+
+            # Doublon de la page française : on regroupe les signaux sur elle.
+            return redirect(FR_EQUIVALENTS[topic], code=301)
         response = render_international_page(lang, topic, site_url)
         if response is None:
             from flask import abort, redirect
@@ -215,10 +236,11 @@ def localized_sitemap_urls(site_url):
     return [
         f"{site_url.rstrip('/')}/{lang}/{topic}"
         for lang in LANGS for topic in TOPICS
+        if not (lang == "fr" and topic in FR_EQUIVALENTS)
     ]
 
 def localized_routes():
-    return {(lang, topic) for lang in LANGS for topic in TOPICS}
+    return {(lang, topic) for lang in LANGS for topic in TOPICS if not (lang == "fr" and topic in FR_EQUIVALENTS)}
 
 
 # --- Rich topic-specific content layer ---
