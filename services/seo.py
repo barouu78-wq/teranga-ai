@@ -515,6 +515,26 @@ SEO_PAGES = {
     # Arnaques et sécurité du mobile money (23 novembre 2026) : la Search Console montrait que ces sujets n'apparaissaient
     # jamais dans Google, faute de page dédiée. Contenu repris des repères vérifiés « arnaques » et « mobile_money » de
     # services/practical_facts.py (sources en tête de ce fichier) : aucun montant, frais, plafond ni numéro d'opérateur.
+    "visa-senegal": {
+        "title": "Visa Sénégal : entrée, passeport, vaccins | Teranga AI",
+        "description": "Faut-il un visa pour le Sénégal ? Court séjour, passeport, carnet de vaccination, « carte d'arrivée » en ligne et faux sites de visas : ce qui est vérifié.",
+        "h1": "Visa et conditions d'entrée au Sénégal",
+        "intro": "Avant de réserver, trois questions : faut-il un visa, quels papiers emporter, et quels sites éviter. Voici les repères vérifiés par Teranga, avec leurs sources. Les règles d'entrée changent : vérifiez toujours auprès de l'ambassade ou du consulat du Sénégal avant le départ.",
+        "sections": [
+            ("Faut-il un visa ?", "Les ressortissants de l'Union européenne (dont la France), du Royaume-Uni, des États-Unis, du Canada et de nombreux autres pays n'ont en général pas besoin de visa pour un court séjour de moins de 90 jours. Pour un séjour plus long, un travail ou des études, renseignez-vous auprès de l'ambassade ou du consulat du Sénégal de votre pays."),
+            ("Passeport", "Pour un Français, un passeport valide plus de 6 mois est obligatoire (France Diplomatie, conseils aux voyageurs). Autres nationalités : la règle est en général la même, à vérifier auprès de l'ambassade du Sénégal. Vérifiez la date d'expiration avant de réserver."),
+            ("Carnet de vaccination", "Le 10 mars 2026, le ministère des Affaires étrangères a annoncé que le carnet de vaccination n'était plus exigé pour entrer au Sénégal (dépêche de l'APS reprise par AllAfrica). La règle a changé plusieurs fois en 2026 : vérifiez-la juste avant le départ. Ne pas être contrôlé n'empêche pas d'être protégé : demandez conseil à un centre de vaccinations internationales, notamment pour la fièvre jaune."),
+            ("« Senegal Digital Arrival Card » : prudence", "Des sites privés proposent, souvent contre paiement, une « carte d'arrivée numérique » qu'ils présentent comme obligatoire. Au 23 novembre 2026, Teranga n'a trouvé aucune source officielle sénégalaise qui l'exige. Ne payez rien à un site non officiel : demandez à l'ambassade ou au consulat du Sénégal si une formalité en ligne existe pour votre voyage."),
+            ("Faux sites de visas", "En avril 2026, le ministère des Affaires étrangères a signalé un faux site vendant des « visas » du Sénégal et rappelé que les visas relèvent des missions diplomatiques et consulaires. Ne versez rien à un « facilitateur » qui promet un visa ou un voyage : voir aussi notre page sur les arnaques."),
+            ("Sources", "Repères relevés en novembre 2026 : repère « entrée » de Teranga (ambassades du Sénégal, à revérifier) ; passeport valide plus de 6 mois : France Diplomatie, conseils aux voyageurs pour le Sénégal (vérifié le 24 novembre 2026) ; carnet de vaccination : dépêche de l'Agence de presse sénégalaise reprise par AllAfrica le 10 mars 2026 ; faux site de visas : communiqué du ministère de l'Intégration africaine et des Affaires étrangères du 16 avril 2026 relayé par Le Soleil, SenePlus, APA et AllAfrica. Ces repères ne remplacent pas l'avis de l'ambassade ou du consulat."),
+        ],
+        "faq": [
+            ("Un Français a-t-il besoin d'un visa pour le Sénégal ?", "En général non pour un court séjour de moins de 90 jours, mais un passeport valide plus de 6 mois est obligatoire (France Diplomatie). Vérifiez auprès de l'ambassade du Sénégal avant le départ : les règles peuvent changer."),
+            ("Faut-il remplir une carte d'arrivée en ligne ?", "Au 23 novembre 2026, Teranga n'a trouvé aucune source officielle qui l'exige ; des sites privés la vendent. Demandez à l'ambassade ou au consulat avant de payer quoi que ce soit."),
+            ("Le carnet de vaccination est-il obligatoire ?", "Le ministère des Affaires étrangères a annoncé le 10 mars 2026 qu'il n'était plus exigé à l'entrée. La règle a changé plusieurs fois : vérifiez juste avant le départ."),
+        ],
+        "related": [("arnaques-mobile-money-senegal", "Arnaques"), ("urgences", "Urgences"), ("diaspora-senegalaise", "Diaspora"), ("vie-pratique-senegal", "Vie pratique")]
+    },
     "arnaques-mobile-money-senegal": {
         "title": "Arnaques Wave et Orange Money au Sénégal | Teranga AI",
         "description": "Faux agents, codes SMS, envoi « par erreur », faux SMS d'amende : reconnaître les arnaques au mobile money au Sénégal et que faire si l'on est victime.",
