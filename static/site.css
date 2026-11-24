@@ -279,7 +279,7 @@ body.hote main h2{margin-top:26px}
 .cv-bouton:disabled{opacity:.7;cursor:progress}
 .cv-resultat{display:grid;gap:14px;margin-top:8px;padding:0;border-top:0;container-type:inline-size}
 .cv-resultat h2{margin:18px 0 0}
-.cv-resultat h3{margin:8px 0 6px;font-size:17px}
+.cv-resultat h3:not(.cv-rubrique){margin:8px 0 6px;font-size:17px}
 .cv-alerte{margin:0;padding:12px 14px;border-radius:14px;border:1px solid #c9473d;background:rgba(201,71,61,.10);font-weight:700}
 .cv-modeles{display:flex;gap:8px;flex-wrap:wrap}
 .cv-modele{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
