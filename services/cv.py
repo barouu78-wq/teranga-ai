@@ -159,7 +159,10 @@ TITRE_CV = "CV gratuit pour l’emploi au Sénégal · Teranga AI"
 DESCRIPTION_CV = ("Crée gratuitement un CV clair pour l’emploi au Sénégal, à partir de ton CV ou de ton parcours, avec une "
                   "lettre de motivation. Teranga n’invente rien.")
 # Bouche-à-oreille : seulement l'adresse de /cv, jamais le contenu du CV (?ref=wa compte les arrivées dans les journaux).
-PARTAGE_CV = "Je viens de faire mon CV gratuitement avec Teranga AI. Fais le tien ici : "
+# Message pré-écrit (skill referrals, « Go parrainage » du 24 novembre 2026) : ce que l'ami obtient, sans durée promise
+# ni récompense.
+PARTAGE_CV = ("J'ai fait mon CV gratuitement sur Teranga AI : quelques phrases sur ton parcours et il est prêt en PDF. "
+              "Fais le tien : ")
 
 
 # Questions fréquentes (recherches vues dans la campagne Google Ads CV, 22 novembre 2026) : seulement ce que fait la

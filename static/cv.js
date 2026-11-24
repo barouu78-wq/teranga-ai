@@ -289,6 +289,8 @@
   // Deux boutons mènent au formulaire : sous le titre (visible au-dessus du bandeau des cookies sur téléphone) et
   // sous l'exemple. Une seule étape « faire-le-mien » par visite.
   document.querySelectorAll('.cv-main a[href="#cvForm"]').forEach(a=>a.addEventListener('click',()=>etape('faire-le-mien')));
+  // Parrainage (24 novembre 2026) : compter le partage à un ami ; WhatsApp ne reçoit que l'adresse de /cv.
+  if($('cvPartager'))$('cvPartager').addEventListener('click',()=>etape('partage'));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
