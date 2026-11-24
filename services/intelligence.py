@@ -9,7 +9,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, WOLOF_PLACE_NAMES, classify_domain, source_domains
+from .senegal_knowledge import REGION_ALIASES, REGION_HIGHLIGHTS, WOLOF_PLACE_NAMES, classify_domain, french_city_names, source_domains
 from .web_policy import should_use_web
 from .validation import sanitize_text
 
@@ -294,7 +294,8 @@ def detect_intent(text: str) -> str:
 
 
 def detect_location(text: str) -> str | None:
-    normalized = _normalize(text)
+    # « Ndar », « Tuubaa » : mots entiers seulement (pas « standard », relecture Codex de #659).
+    normalized = french_city_names(_normalize(text))
     for location, aliases in _NORMALIZED_LOCATION_ALIASES.items():
         if any(alias in normalized for alias in aliases):
             return location
