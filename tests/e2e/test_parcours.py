@@ -13,11 +13,10 @@ import pytest
 
 VIEWPORTS = {"telephone": (390, 844), "ordinateur": (1280, 800)}
 
-LIST = """() => [...document.querySelectorAll('button, a[href], summary')].filter(e => {
+LIST = """() => [...document.querySelectorAll('button, a[href]')].filter(e => {
   const r = e.getBoundingClientRect(), s = getComputedStyle(e);
   // Hors de la page (lien d'évitement, visible au clavier seulement) : non cliquable au doigt.
-  // checkVisibility : les liens des guides repliés (<details> fermé) ont une boîte mais ne s'affichent pas.
-  return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && e.checkVisibility() && !e.disabled && r.right > 0 && r.left < innerWidth && r.bottom + scrollY > 0;
+  return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && !e.disabled && r.right > 0 && r.left < innerWidth && r.bottom + scrollY > 0;
 }).map((e, i) => { e.dataset.parcours = 'b' + i;
   return {key: 'b' + i, tag: e.tagName, id: e.id, label: (e.getAttribute('aria-label') || e.textContent || '').trim()
     .replace(/\\s+/g, ' ').slice(0, 50), href: e.getAttribute('href') || '', current: e.getAttribute('aria-current') || '',
@@ -59,8 +58,7 @@ def test_chaque_bouton_de_l_accueil_reagit(browser, base_url, device):
     _home(probe, base_url, VIEWPORTS[device])
     items = probe.evaluate(LIST)
     probe.close()
-    # Accueil allégé (23 novembre 2026) : une quinzaine de contrôles visibles, dont le titre « Guides du Sénégal ».
-    assert len(items) >= 15, items
+    assert len(items) >= 20, items
 
     dead, errors = [], []
     for item in items:
@@ -101,21 +99,22 @@ def test_chaque_bouton_de_l_accueil_reagit(browser, base_url, device):
     assert errors == [], f"erreurs JavaScript : {errors}"
 
 
-# Profils « Je suis… » retirés de l'accueil le 23 novembre 2026 (tests/test_accueil_allege.py) : profil « general ».
+PERSONAS = ["tourist", "resident", "diaspora", "merchant"]
+
+
 @pytest.mark.parametrize("device", VIEWPORTS)
-def test_parcours_suggestion_reponse_puis_suite(page, base_url, device):
-    audience = "general"
+@pytest.mark.parametrize("audience", PERSONAS)
+def test_parcours_d_un_profil_suggestion_reponse_puis_suite(page, base_url, device, audience):
     sent = _chat(page, ["Première réponse simulée.", "Deuxième réponse simulée."])
     _home(page, base_url, VIEWPORTS[device])
+    page.click(f".audience-btn[data-audience='{audience}']")
+    assert "on" in page.get_attribute(f".audience-btn[data-audience='{audience}']", "class")
     chip = page.locator("#heroChips button:visible").first
     suggestion = chip.inner_text().strip()
     assert suggestion
-    chip.click()  # un thème de « Tout le Sénégal » ouvre ses questions fréquentes (V5) : on pose la première
-    question = page.locator("#themeQsList button").first
-    attendu = question.get_attribute("data-q")
-    question.click()
+    chip.click()
     page.get_by_text("Première réponse simulée.").wait_for(timeout=5000)
-    assert sent[0]["audience"] == audience and sent[0]["message"] == attendu
+    assert sent[0]["audience"] == audience and sent[0]["message"]
 
     page.fill("#input", "Et pour demain ?")
     page.click("#send")

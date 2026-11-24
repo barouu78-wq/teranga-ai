@@ -25,10 +25,10 @@ fr:{
   searching:'Je cherche des informations à jour…',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
-  sources:'Sources',
+  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
-  heroTitle:'Une question sur le Sénégal ?',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',heroPh:'Ex. Comment refaire ma carte d’identité ?',cvTitle:'Faire mon CV gratuit',cvHint:'Pour l’emploi au Sénégal · prêt en PDF',
+  heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',appTitle:'Télécharger l’appli Android',appHint:'APK ou Google Play · deviens testeur',cvTitle:'Faire mon CV gratuit',cvHint:'Pour l’emploi au Sénégal · prêt en PDF',
   journeyTravel:'Voyager au Sénégal',journeyTravelHint:'Explorer et planifier',journeyProject:'Mon projet',journeyProjectHint:'Jeunesse · idée → revenus',journeyDiscover:'Découvrir le Sénégal',journeyDiscoverHint:'Culture, histoire, gastronomie',journeyChat:'Assistant Teranga',journeyChatHint:'Poser une question',
   heroText:'Vie quotidienne, papiers, santé, argent, culture, voyage — toutes tes questions sur le Sénégal.',
   hint:'Réponse en direct · Entrée pour envoyer',
@@ -49,10 +49,10 @@ en:{
   searching:'Looking for up-to-date information…',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
-  sources:'Sources',
+  sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
-  heroTitle:'A question about Senegal?',topicsTitle:'Quick topics',topicQs:'{t}: common questions',heroPh:'E.g. How do I renew my ID card?',cvTitle:'Free CV builder (in French)',cvHint:'For jobs in Senegal · ready as a PDF',
+  heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',appTitle:'Get the Android app',appHint:'APK or Google Play · become a tester',cvTitle:'Free CV builder (in French)',cvHint:'For jobs in Senegal · ready as a PDF',
   journeyTravel:'Travel Senegal',journeyTravelHint:'Explore and plan',journeyProject:'My project',journeyProjectHint:'Youth · idea → income',journeyDiscover:'Discover Senegal',journeyDiscoverHint:'Culture, history, food',journeyChat:'Teranga Assistant',journeyChatHint:'Ask a question',
   heroText:'Daily life, paperwork, health, money, culture, travel — all your questions about Senegal.',
   hint:'Live answers · Enter to send',
@@ -72,7 +72,7 @@ wo:{
   timeout:'Dafa yàgg. Jéemaatal.',rateLimit:'Dañoo bari laaj léegi. Jéemaatal ci kanam.',err:'Service bañ na.',
   vOn:'Baat auto on',vOff:'Baat auto off',listen:'Dégg',copy:'Koppi',copied:'Koppi na',
   share:'Séddoo',stop:'Taxal',retry:'Jéemaatal',resetAsk:'Dindi waxtaan wi?',
-  sources:'Téere',
+  sources:'Téere',copyLink:'Koppi lien',linkCopied:'Lien koppi na',
   shareText:'Teranga AI — assistant Senegaal (français, anglais, wolof). Tàkk-tàkk, taksi, visa, ñam :',
   install:'Yebal app bi',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Tukki',navSos:'Urgences',
   journeyTravel:'Tukki ci Senegaal',journeyTravelHint:'Seet ak waajal',journeyProject:'Sama projet',journeyProjectHint:'Xale yi · xalaat → xaalis',journeyDiscover:'Xam Senegaal',journeyDiscoverHint:'Aada, taarix, ñam',journeyChat:'Assistant Teranga',journeyChatHint:'Laaj benn mbir',
@@ -95,7 +95,7 @@ ff:{
   timeout:'Sahaa booyii. Fuɗɗit.',rateLimit:'Naamne ɗuuɗe jooni. Fuɗɗito caggal seeɗa.',err:'Sarwiis jaɓaani.',
   vOn:'Sawtu auto on',vOff:'Sawtu auto off',listen:'Heɗo',copy:'Natal',copied:'Natalaa',
   share:'Lollin',stop:'Dartin',retry:'Fuɗɗit',resetAsk:'Momtu yeewtere nde?',
-  sources:'Iwdiiji',
+  sources:'Iwdiiji',copyLink:'Natal jokkol',linkCopied:'Jokkol nataa',
   shareText:'Teranga AI — ballal Senegaal (farayse, english, wolof).',
   install:'Aaf app',navHome:'Jaɓɓorgo',navPlaces:'Lieux',navTrip:'Yahdu',navSos:'Urgences',
   journeyTravel:'Yahrude e Senegaal',journeyTravelHint:'Yiytu e waajta',journeyProject:'Projet am',journeyProjectHint:'Sukaaɓe · miijo → ceede',journeyDiscover:'Anndu Senegaal',journeyDiscoverHint:'Aada, taarik, ñaamdu',journeyChat:'Ballal Teranga',journeyChatHint:'Naamnu ɗum',
@@ -114,28 +114,154 @@ ff:{
 }
 };
 const voiceMap={fr:'fr-FR',en:'en-US',wo:'wo-SN',ff:'fr-FR'};
+const AUDIENCE_EXTRA={
+fr:{
+ resident:[['Vie quotidienne','Aide-moi à gérer ma vie quotidienne au Sénégal : transport, démarches, paiements et services.'],['Démarches','Quelles démarches administratives dois-je vérifier pour ma situation au Sénégal ?'],['Budget maison','Aide-moi à organiser mon budget mensuel en FCFA.'],['Services locaux','Comment trouver les bons services dans mon quartier ?']],
+ diaspora:[['Préparer mon retour','Je prépare un séjour ou un retour au Sénégal : aide-moi à organiser les priorités.'],['Maison & famille','Quelles choses dois-je prévoir pour gérer une maison ou aider ma famille au Sénégal ?'],['Argent à distance','Comment organiser mes transferts et dépenses au Sénégal en limitant les frais ?'],['Investir','Quelles informations dois-je vérifier avant un projet ou un investissement au Sénégal ?']]
+},
+en:{
+ resident:[['Daily life','Help me manage daily life in Senegal: transport, paperwork, payments and services.'],['Paperwork','Which administrative requirements should I verify for my situation in Senegal?'],['Home budget','Help me organize my monthly budget in CFA francs.'],['Local services','How can I find the right services in my area?']],
+ diaspora:[['Plan my return','I am preparing a stay or return to Senegal. Help me organize the priorities.'],['Home & family','What should I plan for managing a home or helping family in Senegal?'],['Money from abroad','How can I organize transfers and spending in Senegal while limiting fees?'],['Investing','What should I verify before a project or investment in Senegal?']]
+},
+wo:{
+ resident:[['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Services','Naka laa mëna gis services yi ci sama quartier?']],
+ diaspora:[['Waxtu dellusi','Maa ngi waajal tukki walla dellusi Senegaal; jàppale ma defar yi ëpp solo.'],['Kër ak waa kër','Lan laa wara waajal ngir sama kër walla dimbali sama waa kër ci Senegaal?'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Investir','Yan mbir laa wara seet bala ma tàmbali projet walla investissement ci Senegaal?']]
+},
+ff:{
+ resident:[['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Sarwiis','No mi yiyirta sarwiis ɗe moƴƴi e quartier am?']],
+ diaspora:[['Waajta ruttorde','Mi waajtii yahdugol walla ruttorde e Senegaal; wallu-mi feewtude ko ɓuri nafde.'],['Suudu e ɓeyngu','Hol ko mi waajta ngam suudu walla wallude ɓeyngu am e Senegaal?'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Investir','Hol ko mi ƴeewta hade mi fuɗɗa projet walla investissement e Senegaal?']]
+}
+};
+const MONEY_SIM={
+fr:{
+tourist:[['Argent & change',"Convertis mon argent en FCFA et explique-moi les frais à prévoir."],['SIM & Internet',"Quelle SIM ou eSIM choisir au Sénégal pour un séjour touristique ?"]],
+merchant:[['Change & frais',"Comment gérer les paiements en FCFA, le change et les frais pour mon activité ?"]]
+},
+en:{
+tourist:[['Money & exchange','Convert my money to CFA francs and explain the fees I should expect.'],['SIM & internet','Which SIM or eSIM should I choose for a tourist stay in Senegal?']],
+merchant:[['Exchange & fees','How should I manage CFA payments, exchange and fees for my business?']]
+},
+wo:{
+tourist:[['Xaalis & change',"Naka laa mëna soppi sama xaalis ci CFA, te lan mooy frais yi?"],['SIM & Internet',"Ban SIM walla eSIM laa wara jënd ci Senegaal ngir tukki?"]],
+merchant:[['Change & frais',"Naka laa wara doxal fey ci CFA, change ak frais ci sama liggéey?"]]
+},
+ff:{
+tourist:[['Ceede e change','No mi waylirta ceede am e CFA, e hol frais mi heftina?'],['SIM e Internet','Hol SIM walla eSIM mi waawi moƴƴude ngam yahdugol e Senegaal?']],
+merchant:[['Change e frais','No mi doxirta feyde e CFA, change e frais e golle am?']]
+}
+};
+const FX_CACHE={EUR:655.957,USD:577.070,GBP:762.860};
+let fxRates={...FX_CACHE};
+function formatCfa(v){return new Intl.NumberFormat(lang==='en'?'en-US':'fr-FR',{maximumFractionDigits:0}).format(Math.round(v))+' FCFA';}
+function updateFx(){
+  const amount=Math.max(0,Number(String($('fxAmount').value).replace(',','.'))||0);
+  const from=$('fxFrom').value;
+  $('fxResult').textContent=formatCfa(amount*(fxRates[from]||FX_CACHE[from]||655.957));
+}
+function formatFxDate(value){
+  if(!value)return '';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '';
+  try{
+    return new Intl.DateTimeFormat(
+      lang==='en'?'en-US':lang==='wo'?'wo':lang==='ff'?'ff':'fr-FR',
+      {weekday:'long',day:'numeric',month:'long',year:'numeric'}
+    ).format(date);
+  }catch(_){
+    return date.toLocaleDateString();
+  }
+}
+async function loadFx(){
+  try{
+    const res=await fetch('/exchange-rates',{cache:'no-store',signal:timeoutSignal(15000)});
+    if(res.ok){
+      const data=await res.json();
+      if(data.rates&&typeof data.rates==='object')fxRates={...fxRates,...data.rates};
+      const ref=data.date?('Taux de référence du '+data.date):(data.live===false?(lang==='en'?'Indicative rate (BCEAO unavailable)':'Taux indicatif (BCEAO indisponible)'):'Taux de référence BCEAO');
+      const checked=formatFxDate(data.checked_at);
+      $('fxUpdated').textContent=checked
+        ? (lang==='en' ? ref.replace('Taux de référence du ','Reference rate ')+' · checked '+checked
+          : lang==='wo' ? ref+' · seet '+checked
+          : lang==='ff' ? ref+' · ƴeewtaa '+checked
+          : ref+' · vérifié '+checked)
+        : ref;
+    }else if(res.status===429){
+      const waitSeconds=Math.min(300,Math.max(1,Number.parseInt(res.headers.get('Retry-After')||'0',10)||15));
+      $('fxUpdated').textContent=lang==='en'
+        ? 'Too many requests · retry in '+waitSeconds+'s'
+        : lang==='wo'
+          ? 'Demaal bu bare · dellusi ci '+waitSeconds+'s'
+          : lang==='ff'
+            ? 'Ɓeydugol ɗaɓɓitanɗe · fuɗɗito e '+waitSeconds+'s'
+            : 'Trop de demandes · réessaie dans '+waitSeconds+' s';
+    }
+  }catch(_){}
+  updateFx();
+}
+$('fxAmount').addEventListener('input',updateFx);$('fxFrom').addEventListener('change',updateFx);
+setInterval(loadFx,10*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')loadFx();});
 const AUDIENCE={
 fr:{
  general:[['Voyage',"Que faire au Sénégal en une semaine ?"],['Argent',"Combien font 100 euros en FCFA ?"],['Santé',"Où trouver une pharmacie de garde ?"],['Arnaques',"On m'a arnaqué sur Wave, que faire ?"]],
+ tourist:[['Visite guidée',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Négocier au marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Météo & tenue',"Quel temps fait-il à Dakar aujourd'hui et comment m'habiller ?"],['Itinéraire',"Comment aller de l'aéroport AIBD à mon hôtel et combien prévoir ?"],['Budget',"Quel budget prévoir par jour au Sénégal ?"],['Sécurité pratique',"Quels conseils pratiques pour visiter Dakar, Gorée et la Petite Côte ?"],['À manger',"Que goûter au Sénégal et où chercher ces plats ?"],['Phrases',"Donne-moi quelques phrases utiles en wolof pour voyager."]],
+ merchant:[['Prix & marge',"Aide-moi à fixer le prix de mon produit et ma marge."],['Vendre en ligne',"Comment présenter mes produits et vendre en ligne au Sénégal ?"],['WhatsApp Business',"Comment organiser mes commandes clients avec WhatsApp ?"],['Paiement',"Quels moyens de paiement utiliser pour encaisser mes clients ?"],['Stock',"Aide-moi à organiser mon stock et éviter les ruptures."],['Client étranger',"Comment accueillir et vendre à un client touristique étranger ?"]]
 },
 en:{
  general:[['Travel',"What can I do in Senegal in one week?"],['Money',"How much is 100 euros in CFA francs?"],['Health',"Where can I find an on-duty pharmacy?"],['Scams',"I was scammed on Wave, what should I do?"]],
+ tourist:[['Guided tour','Be my guide: tell me the history of Gorée and what to see there.'],['Market bargaining','How do I bargain at Sandaga market? Give me the method and useful Wolof phrases.'],['Weather & packing','What is the weather like in Dakar today and what should I pack?'],['Getting around','How do I get from AIBD airport to my hotel and what should I budget?'],['Daily budget','What daily budget should I plan for Senegal?'],['Practical safety','What practical tips should I know for visiting Dakar, Goree and Petite Cote?'],['Food','What Senegalese dishes should I try and where can I look for them?'],['Useful Wolof','Give me useful Wolof phrases for travelling.']],
+ merchant:[['Pricing & margin','Help me set a price and margin for my product.'],['Sell online','How can I present and sell my products online in Senegal?'],['WhatsApp Business','How can I organize customer orders with WhatsApp?'],['Payments','What payment methods can I use to collect customer payments?'],['Stock','Help me organize stock and avoid running out.'],['Foreign customers','How can I welcome and sell to a foreign tourist customer?']]
 },
 wo:{
  general:[['Formalité','Yan formalité laa wara seet ngir sama situation ci Senegaal?'],['Dund','Jàppale ma doxal dund bés bu nekk ci Senegaal: yoon, formalité, fey ak services.'],['Xaalis dale biti','Naka laa mëna tëral yónnee xaalis ak dépense ci Senegaal te moytu frais?'],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Budget kër','Jàppale ma tëral sama budget weer ci CFA.'],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
+ tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Waxaale njëg',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Tàkk-tàkk ak yére',"Lan mooy tàkk-tàkk Dakar tey, te ban yére laa wara sol?"],['Yoon',"Naka laa dem AIBD ba sama hôtel, te ñaata laa wara def budget?"],['Budget',"Ñaata laa wara def budget bés bu nekk ci Senegaal?"],['Jëfandikoo',"Yan ndigal yu am solo laa wara xam ngir visiter Dakar ak Gorée?"],['Ñam',"Yan ñam yu Senegaal laa wara jéem, te fan laa leen mëna gis?"],['Wolof',"Jox ma ay wax yu am solo ci Wolof ngir tukki."]],
+ merchant:[['Njëg ak marge',"Jàppale ma defar njëg ak marge ci sama produit."],['Jaay online',"Naka laa mëna wone te jaay sama produit online ci Senegaal?"],['WhatsApp',"Naka laa mëna tëral commande yi ci WhatsApp?"],['Fey',"Yan yoon yu fey laa mëna jëfandikoo ngir sama clients?"],['Stock',"Jàppale ma tëral stock bi te moytu rupture."],['Client toubab',"Naka laa mëna dalal te jaay ak client turist bu jóge biti?"]]
 },
 ff:{
  general:[['Formalité','Hol formalité mi wara ƴeewta ngam xaalis am e Senegaal?'],['Dundugol','Wallu-mi e doxude dund bés e Senegaal: laawol, formalité, feyde e sarwiis.'],['Ceede daga ley','No mi doxirta yónnude ceede e dépense e Senegaal, ngam faamde frais?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Budget suudu','Wallu-mi feewtude budget am e CFA e yontere.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
+ tourist:[['Guide',"Sois mon guide : raconte-moi l'histoire de Gorée et ce qu'il faut y voir."],['Marché',"Comment négocier au marché Sandaga ? Donne-moi la méthode et les phrases utiles en wolof."],['Kaanawol e cuɓgol','Hol kaanawol Dakar hannde, hol cuɓgol mi waɗa?'],['Laawol','No mbaydi mi AIBD haa hôtel am, e hol ko mi heftin e budget?'],['Budget','Hol budget mi waɗa ñalawma e Senegaal?'],['Jokkondiral','Hol cuɓe mawɗe mi anndu ngam yahrude Dakar e Gorée?'],['Ñaamdu','Hol ñaamdu Senegaal mi ƴeewta, e hol mi yiyta ɗum?'],['Wolof','Hokku-mi konngi Wolof ɗi nafata ngam yahrude.']],
+ merchant:[['Ndeeƴre e marge','Wallu-mi waɗde ndeeƴre e marge ngam ko mi jaayata.'],['Jaaygol online','No mi hollirta e jaayata ko mi jogii online e Senegaal?'],['WhatsApp','No mi waɗirta commandi kliyanji e WhatsApp?'],['Feyde','Hol laawol feyde mi waawi huutoraade e kliyanji am?'],['Stock','Wallu-mi feewtude stock am, ngam alaa rupture.'],['Kliyan yahrude','No mi jaɓirta e jaayirta e kliyan turistowo jogiiɗo e ley?']]
 }
 };
-// Accueil allégé (23 novembre 2026) : plus de choix « Je suis… ». Teranga répond à toute question (profil
-// « general ») ; un ancien choix gardé dans le navigateur n'est plus lu, sinon il resterait caché sans moyen d'en sortir.
-const audience='general';
+// « Tout le Sénégal » par défaut : sans profil choisi, Teranga répond à toute question, pas seulement au voyage.
+let audience=storageGet('teranga-audience','general');
+// Une valeur périmée ou altérée du stockage ne doit ni vider les suggestions ni partir telle quelle au serveur.
+if(!['general','tourist','resident','diaspora','merchant'].includes(audience))audience='general';
+const audienceContext={
+ tourist:{
+  fr:"Profil actif : touriste. Oriente prioritairement vers des réponses pratiques pour voyager : déplacements, budget indicatif, horaires à vérifier, sécurité pratique, culture, nourriture, langues utiles et expériences. Signale les informations qui changent et propose des étapes concrètes.",
+  en:"Active profile: tourist. Prioritize practical travel help: transport, indicative budgets, schedules to verify, practical safety, culture, food, useful languages and experiences. Flag changing information and give concrete next steps.",
+  wo:"Profil bi mooy tukki. Jox ndimbal bu jëm ci yoon, budget, waxtu yu wara ñu seet, aar, aada, ñam ak wax yu am solo. Wax lu mëna soppi, te jox jéego yu leer.",
+  ff:"Profil ngol yahduɗo. Hokkude ballal e laawol, budget, waqtuji, kisal, aada, ñaamdu e konngi nafata. Hollu ko waawi waylude, tee hokku peeje ɗeŋngal."
+ },
+ resident:{
+  fr:"Profil actif : résident. Oriente vers la vie quotidienne au Sénégal : démarches, services, transport, budget, paiements et informations locales à vérifier.",
+  en:"Active profile: resident. Prioritize daily life in Senegal: paperwork, services, transport, budgets, payments and local information to verify.",
+  wo:"Profil bi mooy dëkkkat. Jox ndimbal ci dund bés bu nekk, formalité, services, yoon, budget ak fey.",
+  ff:"Profil ngol moƴƴi e ley. Hokkude ballal e dund bés bu nekk, formalités, services, laawol, budget e feyde."
+ },
+ diaspora:{
+  fr:"Profil actif : diaspora. Oriente vers la préparation de séjours et retours, la gestion à distance, la famille, les dépenses, les démarches et les projets au Sénégal. Distingue toujours les informations indicatives des règles ou tarifs à vérifier.",
+  en:"Active profile: diaspora. Prioritize preparing stays and returns, remote management, family, spending, paperwork and projects in Senegal. Clearly distinguish indicative information from rules or fees that should be verified.",
+  wo:"Profil bi mooy diaspora. Jox ndimbal ci waajal tukki walla dellu, doxal daga woɗnde, ɓeyngu, dépense, formalité ak projet ci Senegaal. Seetal lu wara ƴeewte.",
+  ff:"Profil ngol moƴƴi e diaspora. Hokkude ballal e waajtagol yahdugol walla artugol, doxal daga woɗnde, ɓeyngu, ceede, formalités e projette e Senegaal."
+ },
+ merchant:{
+  fr:"Profil actif : commerçant. Oriente prioritairement vers des réponses utiles à une petite activité au Sénégal : prix et marge, offre, clientèle, vente en ligne, WhatsApp, paiements, stock, livraison, formalités et accueil des touristes. Donne des méthodes simples, des exemples chiffrés clairement présentés comme indicatifs et vérifie les règles ou tarifs actuels si nécessaire.",
+  en:"Active profile: merchant. Prioritize practical help for a small business in Senegal: pricing and margins, offers, customers, online sales, WhatsApp, payments, stock, delivery, formalities and serving tourists. Give simple methods, clearly label example figures as indicative, and verify current rules or fees when needed.",
+  wo:"Profil bi mooy jaaykat. Jox ndimbal bu jëm ci njëg ak marge, clients, jaay online, WhatsApp, fey, stock, livraison, formalités ak accueil turist yi. Jëfandikoo yoon yu yomb, te bu amee xaalis wax ne misaal la; seet lu bees bu ko soxla.",
+  ff:"Profil ngol jaaytoowo. Hokkude ballal e ndeeƴre e marge, clients, jaaygol online, WhatsApp, feyde, stock, yahrude e formalités, e jaɓɓugol yahduɓe. Huutoro laawol hoyre, hollu misaaliji ceede ko misaal tan, tee ƴeewto ko hesɗi so ina waɗi."
+ }
+};
 
 // Une icône fixe par bouton (même ordre dans toutes les langues) : deviner l'icône
 // d'après le titre traduit donnait des doublons et des erreurs selon la langue.
 const AUDIENCE_ICONS={
- general:['doc','people','exchange','route','safety','home','culture','shop','guide','chat']
+ general:['doc','people','exchange','route','safety','home','culture','shop','guide','chat'],
+ tourist:['guide','market','weather','route','money','safety','food','chat','exchange','wifi'],
+ resident:['home','doc','money','place'],
+ diaspora:['route','home','exchange','invest'],
+ merchant:['tag','shop','chat','pay','stock','people','exchange']
 };
 // « Tout le Sénégal » en français et en anglais : quatre thèmes depuis le 10 novembre 2026, réordonnés. L'icône suit le
 // thème (relecture Codex de #597) ; les listes en wolof et en pulaar gardent l'ordre de AUDIENCE_ICONS.general.
@@ -180,9 +306,17 @@ function toggleThemeQs(chip){
 }
 function renderAudience(){
   const t=T[lang], a=AUDIENCE[lang]||AUDIENCE.fr;
-  const rows=a.general||[];
-  const icons=AUDIENCE_ICONS.general;
-  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:GENERAL_ICONS[t]||icons[i]}));
+  const generalLabels=lang==='en'?['All of Senegal','Any question']:lang==='wo'?['Ñépp','Laaj lépp']:['Tout le Sénégal','Toutes tes questions'];
+  $('audienceGeneral').textContent=generalLabels[0];$('audienceGeneralHint').textContent=generalLabels[1];
+  const labels=lang==='fr'?['Touriste','Voyager facilement','Résident','Vivre au Sénégal','Diaspora','Préparer et gérer à distance','Commerçant','Vendre et travailler']:lang==='en'?['Tourist','Travel easily','Resident','Live in Senegal','Diaspora','Plan and manage remotely','Merchant','Sell and work']:lang==='wo'?['Tukki','Dem ak yomb','Dundkat','Dund ci Senegaal','Diaspora','Waajal ak doxal ci sore','Jaaykat','Jaay ak liggéey']:['Yahduɗo','Yahrude e hoyre','Dunndotoowo','Dund e Senegaal','Diaspora','Waajta e doxal daga woɗnde','Jaaytoowo','Jaayde e golle'];
+  $('audienceTourist').textContent=labels[0];$('audienceTouristHint').textContent=labels[1];
+  $('audienceResident').textContent=labels[2];$('audienceResidentHint').textContent=labels[3];
+  $('audienceDiaspora').textContent=labels[4];$('audienceDiasporaHint').textContent=labels[5];
+  $('audienceMerchant').textContent=labels[6];$('audienceMerchantHint').textContent=labels[7];
+  document.querySelectorAll('.audience-btn').forEach(b=>{const on=b.dataset.audience===audience;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+  const rows=[...(a[audience]||[]),...((AUDIENCE_EXTRA[lang]&&AUDIENCE_EXTRA[lang][audience])||[]),...((MONEY_SIM[lang]&&MONEY_SIM[lang][audience])||[])];
+  const icons=AUDIENCE_ICONS[audience]||[];
+  const cards=rows.map(([t,q],i)=>({t,q,d:'',icon:(audience==='general'&&GENERAL_ICONS[t])||icons[i]}));
   const frag=document.createDocumentFragment(),chips=document.createDocumentFragment();
   cards.forEach((c,i)=>{
     const card=document.createElement('button');card.className='card';card.type='button';card.dataset.q=c.q;card.setAttribute('aria-label',c.t);
@@ -193,11 +327,12 @@ function renderAudience(){
   $('cards').replaceChildren(frag);$('chips').replaceChildren(chips);
   const heroChips=$('heroChips');
   // Thèmes rapides (V5) : jusqu'à dix ; ceux de « Tout le Sénégal » ouvrent leurs questions fréquentes.
-  const topicQs=THEME_QS[lang];
+  const topicQs=audience==='general'?THEME_QS[lang]:null;
   if(heroChips)heroChips.replaceChildren(...cards.slice(0,4).map(c=>{const b=document.createElement('button');b.type='button';b.dataset.q=c.q;b.textContent=c.t;
     if(topicQs&&topicQs[c.t]){b.dataset.topic=c.t;b.setAttribute('aria-expanded','false');b.setAttribute('aria-controls','themeQs');}
     return b;}));
   closeThemeQs();
+  $('audienceLabel').textContent=t.whoTitle||T.fr.whoTitle;
   $('topicsTitle').textContent=t.topicsTitle||T.fr.topicsTitle;
 }
 
@@ -351,6 +486,8 @@ function bindShare(){
   const p=sharePayload();
   const wa=$('waShare');
   if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
+  const copy=$('copyLink');
+  if(copy)copy.textContent=T[lang].copyLink;
   const inst=$('installBtn');
   if(inst)inst.textContent=T[lang].install;
 }
@@ -892,8 +1029,17 @@ function setLang(next){
   $('sub').textContent=t.sub;input.placeholder=t.ph;sendLabel(t.send);pieceLabels();
   setVoiceToggle(autoVoice);
   $('heroTitle').textContent=t.heroTitle;$('heroText').textContent=t.heroText;
+  if($('discoverTitle'))$('discoverTitle').textContent=t.discoverTitle||T.fr.discoverTitle;
   if($('skipLink'))$('skipLink').textContent=t.skip||T.fr.skip;
+  if($('allPlaces'))$('allPlaces').textContent=t.allPlaces||T.fr.allPlaces;
+  // Cartes « À découvrir » (tirées par le serveur) : la région dans la langue choisie ; « UNESCO » ne change pas.
+  document.querySelectorAll('.place-tile[data-region]:not([data-unesco])').forEach(tile=>{
+    const sub=tile.querySelector('small');if(sub)sub.textContent=(t.regionOf||T.fr.regionOf).replace('{r}',tile.dataset.region);
+  });
   if($('heroInput'))$('heroInput').placeholder=t.heroPh||t.ph;
+  // Carte mise en avant : l'appli Android (téléchargement et test fermé Google Play).
+  // Dans l'appli elle-même (TWA ou écran d'accueil), elle redevient « Planifier mon voyage ».
+  if($('planCtaTitle')){var inApp=matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: window-controls-overlay)').matches||document.referrer.indexOf('android-app://')===0;$('planCta').href=inApp?'/trip-planner':'/telecharger';$('planCtaTitle').textContent=inApp?(t.planTitle||t.journeyTravel):(t.appTitle||'Télécharger l’appli Android');$('planCtaHint').textContent=inApp?(t.planHint||t.journeyTravelHint):(t.appHint||'APK ou Google Play · deviens testeur');}
   if($('cvCtaTitle')){$('cvCtaTitle').textContent=t.cvTitle||T.fr.cvTitle;$('cvCtaHint').textContent=t.cvHint||T.fr.cvHint;}
   renderJourneyLabels();
   $('hint').textContent=isTouch()?t.hintTouch:t.hint;
@@ -905,10 +1051,19 @@ function setLang(next){
   document.documentElement.lang=next==='wo'?'wo':next;
   renderCards();
   renderAudience();
+  $('fxTitle').textContent=lang==='en'?'Currency converter':lang==='wo'?'Soppi xaalis':lang==='ff'?'Waylugol ceede':'Convertisseur';
+  $('fxNote').textContent=lang==='en'?'Indicative reference rate. The amount actually received may vary by provider and fees.':lang==='wo'?'Tauxu misaal la; xaalis bi nga jot mëna wuute ak frais yi.':lang==='ff'?'Tauxu misaal tan; ceede ɗe njiytaaɗe waawi waylude e frais.':'Taux de référence indicatif. Le montant réellement obtenu peut varier selon l’établissement et les frais.';
   bindShare();
   renderVoiceState();
   if(rec)rec.lang=voiceMap[lang];
 }
+document.querySelectorAll('.audience-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const nextAudience=String(btn.dataset.audience||'').trim();
+  if(!['general','tourist','resident','diaspora','merchant'].includes(nextAudience))return;
+  audience=nextAudience;
+  try{LS.setItem('teranga-audience',audience)}catch(_){}
+  renderAudience();
+}));
 function themeInit(){
   applyTheme();
   applyFete();
@@ -1514,12 +1669,39 @@ $('pieceInput').onchange=async e=>{
     $('pieceStatus').textContent=message;
   }
 };
+// Photos des deux lieux à découvrir (même requête que les fiches), sans bloquer l'affichage. Vignette de 500 px :
+// la carte fait 170 px, la vignette de 1 280 px de la fiche pesait jusqu'à 537 Ko.
+document.querySelectorAll('.place-tile[data-photo]').forEach(async tile=>{
+  try{
+    const r=await fetch('/explorer-image?query='+encodeURIComponent(tile.dataset.photo)+'&title='+encodeURIComponent(tile.dataset.title||'')+'&w=500',window.AbortSignal&&AbortSignal.timeout?{signal:AbortSignal.timeout(12000)}:{});
+    const d=await r.json();const img=(d.images||[])[0];if(!img)return;
+    const box=tile.querySelector('.place-tile-img');if(!box)return;
+    // La photo est chargée avant de remplacer le fond : relais du site, puis photo directe (comme les galeries) ;
+    // si les deux échouent, la vignette garde sa couleur au lieu d'une case vide.
+    const tries=[img.display_url||('/image-proxy?url='+encodeURIComponent(img.url)),img.url].filter((u,i,a)=>u&&a.indexOf(u)===i);
+    const show=i=>{
+      if(i>=tries.length)return;
+      const probe=new Image();
+      probe.onload=()=>{box.style.backgroundImage='url("'+tries[i].replace(/["\\]/g,'')+'")';box.style.backgroundSize='cover';box.style.backgroundPosition='center';};
+      probe.onerror=()=>show(i+1);
+      probe.src=tries[i];
+    };
+    show(0);
+  }catch(_){}
+});
 send.onclick=()=>{
   if(send.dataset.mode==='stop'&&inflight){inflight.abort();return;}
   ask();
 };
 $('resetBtn').onclick=reset;
 $('shareAppBtn').onclick=shareApp;
+$('copyLink').onclick=async()=>{
+  try{
+    await navigator.clipboard.writeText(location.origin+'/');
+    $('copyLink').textContent=T[lang].linkCopied;
+    setTimeout(()=>$('copyLink').textContent=T[lang].copyLink,1200);
+  }catch(e){shareApp();}
+};
 $('themeBtn').onclick=()=>{
   // Auto → clair → sombre → auto.
   const order=['auto','light','dark'];
@@ -2069,6 +2251,7 @@ $('voiceToggle').onclick=()=>{
     stopSpeakingForListening();
   }
 };
+loadFx();
 themeInit();restore();setLang(lang);try{const prefill=SS.getItem('teranga-chat-prefill')||'';if(prefill){input.value=prefill;input.focus();SS.removeItem('teranga-chat-prefill');}}catch(_){}
 // Teranga Hôtes (/hote/<nom>) : la maison suit la conversation (ses informations vont dans le contexte de l'IA).
 const urlHote=(urlParams.get('hote')||'').trim();
