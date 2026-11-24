@@ -182,6 +182,39 @@ def test_un_cv_un_peu_long_tient_sur_une_page_a4(page, base_url):
     assert pages_pdf(page) == 1
 
 
+# CV du propriétaire (24 novembre 2026, modèle Océan) : 5 expériences et 12 compétences sortaient sur 2 pages, une date
+# en bas de la page 1 et son poste en haut de la page 2. Réduire jusqu'à 70 % le fait tenir sur une page.
+PLUS_LONG = dict(LONG, experiences=LONG["experiences"] + [
+    {"poste": "Stagiaire en maintenance", "employeur": "Collège", "lieu": "Thiès", "dates": "Octobre 2014",
+     "taches": ["Contrôlait les structures et les réseaux.", "Remplaçait l'appareillage défectueux.",
+                "Rangeait l'atelier.", "Tenait le registre des interventions."]},
+], competences=LONG["competences"] + ["Gestion des stocks et inventaires", "Préparation de commandes",
+                                      "Contrôle des prix et des promotions", "PowerPoint", "AutoCAD", "Permis B (en cours)"])
+
+
+def test_un_cv_tres_long_tient_aussi_sur_une_page(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/api/cv",
+               lambda route: route.fulfill(body=json.dumps({"cv": PLUS_LONG}), content_type="application/json"))
+    page.add_init_script("window.print = () => { window.__echelle = getComputedStyle(document.getElementById('cvFeuille'))"
+                         ".getPropertyValue('--cv-echelle').trim(); };")
+    page.goto(base_url + "/cv")
+    page.fill("#cvParcours", "BTS management commercial, quatre ans en rayon, intérim de conseiller de vente.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.get_by_role("button", name="Océan", exact=True).click()
+    page.get_by_role("button", name="Télécharger en PDF").click()
+    echelle = page.evaluate("window.__echelle")
+    assert echelle and 0.7 <= float(echelle) < 0.8, echelle
+    from playwright.sync_api import expect
+
+    expect(page.locator("body")).not_to_have_class(re.compile("imprime-cv"))
+    page.emulate_media(media="print")
+    page.evaluate("document.body.classList.add('imprime-cv')")
+    page.evaluate(f"document.getElementById('cvFeuille').style.setProperty('--cv-echelle', '{echelle}')")
+    assert pages_pdf(page) == 1
+
+
 def test_la_lettre_seule_sort_sur_une_page(page, base_url):
     # Le reste de la page, même invisible, ajoutait des pages blanches au PDF.
     envois = []
