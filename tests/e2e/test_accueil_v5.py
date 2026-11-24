@@ -107,7 +107,7 @@ def test_un_autre_theme_remplace_le_panneau_et_le_meme_le_referme(page, base_url
 
 def test_en_anglais(page, base_url):
     _accueil(page, base_url, chemin="/?lang=en")
-    assert page.get_by_text("I am…").is_visible() and page.get_by_role("heading", name="Quick topics").is_visible()
+    assert page.get_by_text("I am…").count() == 0 and page.get_by_role("heading", name="Quick topics").is_visible()
     page.locator("#heroChips button", has_text="Health").click()
     assert "Health: common questions" in page.locator("#themeQs").inner_text()
     assert page.locator("#themeQs").get_by_role("button").count() == 3
