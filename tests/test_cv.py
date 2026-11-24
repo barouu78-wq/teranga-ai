@@ -285,6 +285,9 @@ def test_le_cv_pret_propose_de_l_envoyer_a_un_ami_sur_whatsapp_sans_les_donnees_
     assert (adresse.scheme, adresse.netloc) == ("https", "wa.me")
     texte = unquote(parse_qs(adresse.query)["text"][0])
     assert texte.endswith("https://teranga-ai.fr/cv?ref=wa") and "gratuit" in texte
+    # « Go parrainage » du 24 novembre 2026 (skill referrals) : le message dit à l'ami ce qu'il obtient, sans rien
+    # promettre d'autre (pas de durée, pas de récompense).
+    assert "quelques phrases sur ton parcours" in texte and "prêt en PDF" in texte
     assert 'target="_blank"' in balise and 'rel="noopener noreferrer"' in balise
     assert "Envoyer à un ami sur WhatsApp" in resultat[lien.end():lien.end() + 80]
 

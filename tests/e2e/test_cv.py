@@ -291,6 +291,25 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     assert len(envois) == 1
 
 
+def test_envoyer_a_un_ami_est_compte_une_fois_sans_rien_du_cv(page, base_url):
+    """« Go parrainage » du 24 novembre 2026 : savoir si quelqu'un partage. Le clic sur « Envoyer à un ami sur
+    WhatsApp » compte l'étape « partage » une fois par visite ; WhatsApp ne reçoit que l'adresse de /cv."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    page.context.route("https://wa.me/**", lambda route: route.fulfill(body="ok"))
+    ouvrir(page, base_url, envois)
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    for _ in range(2):
+        with page.context.expect_page() as onglet:
+            page.get_by_role("link", name="Envoyer à un ami sur WhatsApp").click()
+        assert "Ndiaye" not in onglet.value.url and "comptabilit" not in onglet.value.url
+        onglet.value.close()
+    page.wait_for_timeout(300)  # le signal part sans attendre de réponse
+    assert etapes.count("partage") == 1, etapes
+
+
 def test_sans_cv_le_nom_et_trois_lignes_suffisent(page, base_url):
     """Départ par défaut (« Go 1 » du 23 novembre 2026) : pas de fichier à chercher. Le nom part en tête du parcours."""
     envois = []
