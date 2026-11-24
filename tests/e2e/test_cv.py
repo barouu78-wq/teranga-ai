@@ -390,3 +390,23 @@ def test_les_titres_du_cv_ne_sautent_pas_de_niveau(page, base_url):
       .map(h => getComputedStyle(h).fontSize)""")
     assert tailles and set(tailles) == {"12px"}, tailles
     assert page.errors == []
+
+
+def test_le_resultat_reste_court_et_le_pdf_toujours_a_portee(page, base_url):
+    """Remarque du propriétaire (24 novembre 2026, iPhone) : « La page est longue... ». Les 9 modèles tiennent sur une
+    ligne qui défile, et « Télécharger en PDF » reste visible pendant qu'on lit le CV."""
+    ouvrir(page, base_url, [])
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    modeles = page.locator(".cv-modeles").bounding_box()
+    assert modeles["height"] < 64, modeles  # une seule ligne de boutons (44 px)
+    page.get_by_role("button", name="Élégant").scroll_into_view_if_needed()
+    page.get_by_role("button", name="Élégant").click()
+    assert "elegant" in page.locator("#cvFeuille").get_attribute("class")
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    # Au milieu du CV, le bouton de téléchargement est à l'écran.
+    page.locator("#cvFeuille").get_by_text("Saisie des factures").scroll_into_view_if_needed()
+    page.evaluate("window.scrollBy(0, 200)")
+    pdf = page.locator("#cvPdf").bounding_box()
+    assert 0 <= pdf["y"] and pdf["y"] + pdf["height"] <= 844, pdf
