@@ -454,4 +454,8 @@ a.cv-bouton{display:inline-flex;align-items:center;justify-content:center;text-d
   body.imprime-cv #cvFeuille{zoom:var(--cv-echelle,1)}
   body.imprime-cv #cvFeuille:is(.moderne,.baobab,.elegant,.teranga,.ocean){min-height:calc(266mm / var(--cv-echelle,1));grid-template-rows:auto 1fr}
   body.imprime-cv #cvFeuille .cv-bloc,body.imprime-cv #cvFeuille li{break-inside:avoid}
+  /* Une date ou un intitulé de poste ne reste jamais seul en bas de page (vu le 24 novembre 2026 sur iPhone :
+     « 2023-2025 » en bas de la page 1, son poste en haut de la page 2). page-break-* pour Safari. */
+  body.imprime-cv #cvFeuille :is(.cv-quand,.cv-poste,.cv-rubrique){break-after:avoid;page-break-after:avoid}
+  body.imprime-cv #cvFeuille .cv-bloc{page-break-inside:avoid}
 }
