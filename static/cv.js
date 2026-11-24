@@ -237,8 +237,10 @@
   }
 
   // Réduction qui fait tenir le CV sur une page A4 (largeur et hauteur utiles avec les marges de 14 mm de @page) :
-  // mesurée sur une copie hors écran, à la largeur imprimée, sans descendre sous 0,7 (texte encore lisible ; un CV de 5 expériences et 12 compétences en a besoin, vu le 24 novembre 2026). Plus long : deux pages.
-  const A4_LARGEUR=688,A4_HAUTEUR=1000;
+  // mesurée sur une copie hors écran, à la largeur imprimée, sans descendre sous 0,6 (texte encore lisible ; un CV de 5 expériences et 12 compétences en a besoin, vu le 24 novembre 2026). Plus long : deux pages.
+  // Hauteur visée : 90 % de la page, marge pour Safari sur iPhone (vu le 24 novembre 2026 : quelques lignes en page 2
+  // alors que Chromium tenait sur une page).
+  const A4_LARGEUR=688,A4_HAUTEUR=900;
   function echelleUnePage(){
     const boite=document.createElement('div');
     boite.className='cv-resultat';
@@ -249,7 +251,7 @@
     boite.appendChild(copie);
     document.body.appendChild(boite);
     let echelle=1;
-    while(echelle>0.7&&boite.getBoundingClientRect().height>A4_HAUTEUR){
+    while(echelle>0.6&&boite.getBoundingClientRect().height>A4_HAUTEUR){
       echelle=Math.round((echelle-0.05)*100)/100;
       copie.style.zoom=echelle;
     }

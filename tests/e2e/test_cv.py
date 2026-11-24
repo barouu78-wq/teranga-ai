@@ -169,7 +169,7 @@ def test_un_cv_un_peu_long_tient_sur_une_page_a4(page, base_url):
     page.get_by_role("button", name="Élégant", exact=True).click()
     page.get_by_role("button", name="Télécharger en PDF").click()
     echelle = page.evaluate("window.__echelle")
-    assert echelle and 0.8 <= float(echelle) < 1
+    assert echelle and 0.6 <= float(echelle) < 1  # cible 90 % de la page (marge Safari, 24 novembre 2026)
     # window.print est simulé : on attend la fin du mode impression, puis on le remet à la main pour le PDF.
     # Import ici : le job pytest du CI n'installe pas Playwright, il doit pouvoir lire ce fichier et l'ignorer.
     from playwright.sync_api import expect
@@ -205,7 +205,7 @@ def test_un_cv_tres_long_tient_aussi_sur_une_page(page, base_url):
     page.get_by_role("button", name="Océan", exact=True).click()
     page.get_by_role("button", name="Télécharger en PDF").click()
     echelle = page.evaluate("window.__echelle")
-    assert echelle and 0.7 <= float(echelle) < 0.8, echelle
+    assert echelle and 0.6 <= float(echelle) < 0.8, echelle
     from playwright.sync_api import expect
 
     expect(page.locator("body")).not_to_have_class(re.compile("imprime-cv"))
@@ -213,6 +213,30 @@ def test_un_cv_tres_long_tient_aussi_sur_une_page(page, base_url):
     page.evaluate("document.body.classList.add('imprime-cv')")
     page.evaluate(f"document.getElementById('cvFeuille').style.setProperty('--cv-echelle', '{echelle}')")
     assert pages_pdf(page) == 1
+
+
+def test_le_pdf_garde_une_marge_pour_safari(page, base_url):
+    """iPhone du propriétaire (24 novembre 2026, modèle Moderne) : même réduit, le CV débordait de quelques lignes en
+    page 2 (Safari n'imprime pas exactement comme Chromium). Le CV réduit doit tenir dans 90 % de la hauteur A4."""
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/api/cv",
+               lambda route: route.fulfill(body=json.dumps({"cv": PLUS_LONG}), content_type="application/json"))
+    page.add_init_script("window.print = () => { window.__echelle = getComputedStyle(document.getElementById('cvFeuille'))"
+                         ".getPropertyValue('--cv-echelle').trim(); };")
+    page.goto(base_url + "/cv")
+    page.fill("#cvParcours", "BTS management commercial, quatre ans en rayon, intérim de conseiller de vente.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.get_by_role("button", name="Moderne", exact=True).click()
+    page.get_by_role("button", name="Télécharger en PDF").click()
+    echelle = float(page.evaluate("window.__echelle") or 1)
+    hauteur = page.evaluate("""(z) => {
+        const boite = document.createElement('div'); boite.className = 'cv-resultat';
+        boite.style.cssText = 'position:absolute;left:-10000px;top:0;width:688px;margin:0';
+        const copie = document.getElementById('cvFeuille').cloneNode(true); copie.removeAttribute('id');
+        copie.style.zoom = z; boite.appendChild(copie); document.body.appendChild(boite);
+        const h = boite.getBoundingClientRect().height; boite.remove(); return h; }""", echelle)
+    assert hauteur <= 900, (echelle, hauteur)
 
 
 def test_la_lettre_seule_sort_sur_une_page(page, base_url):
