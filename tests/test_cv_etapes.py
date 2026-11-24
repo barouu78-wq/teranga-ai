@@ -45,7 +45,7 @@ def _etape(client, nom, ip, agent=IPHONE):
 def test_chaque_etape_connue_est_comptee_sans_rien_renvoyer(monkeypatch):
     monkeypatch.setenv("STATS_TOKEN", CLE)
     client = _client()
-    etapes = ("faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours", "envoi")
+    etapes = ("faire-le-mien", "debut", "refus-fichier", "fichier-refuse", "refus-parcours", "envoi", "partage")
     avant = _comptes(client)
     for i, etape in enumerate(etapes):
         reponse = _etape(client, etape, f"203.0.113.{141 + i}")

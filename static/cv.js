@@ -237,7 +237,7 @@
   }
 
   // Réduction qui fait tenir le CV sur une page A4 (largeur et hauteur utiles avec les marges de 14 mm de @page) :
-  // mesurée sur une copie hors écran, à la largeur imprimée, sans descendre sous 0,8 (texte encore lisible). Plus long : deux pages.
+  // mesurée sur une copie hors écran, à la largeur imprimée, sans descendre sous 0,7 (texte encore lisible ; un CV de 5 expériences et 12 compétences en a besoin, vu le 24 novembre 2026). Plus long : deux pages.
   const A4_LARGEUR=688,A4_HAUTEUR=1000;
   function echelleUnePage(){
     const boite=document.createElement('div');
@@ -249,7 +249,7 @@
     boite.appendChild(copie);
     document.body.appendChild(boite);
     let echelle=1;
-    while(echelle>0.8&&boite.getBoundingClientRect().height>A4_HAUTEUR){
+    while(echelle>0.7&&boite.getBoundingClientRect().height>A4_HAUTEUR){
       echelle=Math.round((echelle-0.05)*100)/100;
       copie.style.zoom=echelle;
     }
@@ -289,6 +289,8 @@
   // Deux boutons mènent au formulaire : sous le titre (visible au-dessus du bandeau des cookies sur téléphone) et
   // sous l'exemple. Une seule étape « faire-le-mien » par visite.
   document.querySelectorAll('.cv-main a[href="#cvForm"]').forEach(a=>a.addEventListener('click',()=>etape('faire-le-mien')));
+  // Parrainage (24 novembre 2026) : compter le partage à un ami ; WhatsApp ne reçoit que l'adresse de /cv.
+  if($('cvPartager'))$('cvPartager').addEventListener('click',()=>etape('partage'));
   document.querySelectorAll('.cv-modele').forEach(b=>b.addEventListener('click',()=>{
     if(!MODELES.includes(b.dataset.modele)||!cv)return;
     modele=b.dataset.modele;garder();rendre();
