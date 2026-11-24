@@ -46,6 +46,9 @@ def test_la_page_ne_dit_que_des_faits_verifies_avec_leurs_sources():
                  "carte d'arrivée numérique", "aucune source officielle", "Sources"):
         assert fait in html, fait
     texte = re.sub(r"<[^>]+>", " ", html)
+    # France Diplomatie : passeport valide plus de 6 mois « obligatoire » pour les Français (relecture Codex, PR #661).
+    assert "plus de 6 mois est obligatoire" in texte and "France Diplomatie" in texte
+    assert "6 mois conseill" not in texte and "6 mois après l'arrivée est conseillée" not in texte
     assert not re.search(r"\d[\d  .]*\s?(?:€|euros?|F ?CFA|francs)", texte)  # aucun prix inventé
 
 

@@ -309,7 +309,8 @@ TOPICS = (
      r"arrival card|\bsndac\b|\bsdac\b|(carte|fiche|formulaire) d.?(arrivee|entree)\b",
      ("Entrée : les ressortissants de l'Union européenne, du Royaume-Uni, des États-Unis, du Canada et de nombreux "
       "autres pays n'ont en général pas besoin de visa pour un court séjour (moins de 90 jours) ; passeport valide "
-      "6 mois conseillé. Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",
+      "plus de 6 mois obligatoire (France Diplomatie pour les Français ; autres nationalités : même règle en général, "
+      "à confirmer). Toujours faire vérifier auprès de l'ambassade du Sénégal : les règles peuvent changer.",
       # APS reprise par AllAfrica, 10 mars 2026 ; « carte d'arrivée » : seuls des sites privés en parlent (vérifié le
       # 23 novembre 2026, aucune source officielle trouvée).
       "Carnet de vaccination : le 10 mars 2026, le ministère des Affaires étrangères a annoncé qu'il n'était plus exigé "
