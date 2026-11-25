@@ -25,7 +25,7 @@ fr:{
   searching:'Je cherche des informations à jour…',
   vOn:'Voix IA auto on',vOff:'Voix IA auto off',listen:'Écouter',copy:'Copier',copied:'Copié',
   share:'Partager',stop:'Arrêter',retry:'Réessayer',resetAsk:'Effacer la conversation ?',skip:'Aller au contenu',
-  sources:'Sources',copyLink:'Copier le lien',linkCopied:'Lien copié',
+  sources:'Sources',copyLink:'Copier le lien',feedback:'Donner mon avis',linkCopied:'Lien copié',
   shareText:'Teranga AI — l’assistant du Sénégal (français, anglais, wolof). Météo, taxi, visa, cuisine :',
   install:'Installer l’app',navHome:'Accueil',navPlaces:'Lieux',navTrip:'Voyage',navSos:'Urgences',
   heroTitle:'Une question sur le Sénégal ?',whoTitle:'Je suis…',topicsTitle:'Thèmes rapides',topicQs:'{t} : questions fréquentes',discoverTitle:'À découvrir',allPlaces:'Tous les lieux',regionOf:'Région de {r}',heroPh:'Ex. Comment refaire ma carte d’identité ?',planTitle:'Planifier mon voyage',planHint:'Un programme jour par jour en 1 minute',appTitle:'Télécharger l’appli Android',appHint:'APK ou Google Play · deviens testeur',cvTitle:'Faire mon CV gratuit',cvHint:'Pour l’emploi au Sénégal · prêt en PDF',
@@ -49,7 +49,7 @@ en:{
   searching:'Looking for up-to-date information…',
   vOn:'Auto voice on',vOff:'Auto voice off',listen:'Listen',copy:'Copy',copied:'Copied',
   share:'Share',stop:'Stop',retry:'Retry',resetAsk:'Clear the conversation?',skip:'Skip to content',
-  sources:'Sources',copyLink:'Copy link',linkCopied:'Link copied',
+  sources:'Sources',copyLink:'Copy link',feedback:'Give feedback',linkCopied:'Link copied',
   shareText:'Teranga AI — Senegal assistant (French, English, Wolof). Weather, taxi, visa, food:',
   install:'Install app',navHome:'Home',navPlaces:'Places',navTrip:'Trip',navSos:'Emergency',
   heroTitle:'A question about Senegal?',whoTitle:'I am…',topicsTitle:'Quick topics',topicQs:'{t}: common questions',discoverTitle:'Discover',allPlaces:'All places',regionOf:'{r} region',heroPh:'E.g. How do I renew my ID card?',planTitle:'Plan my trip',planHint:'A day-by-day plan in 1 minute',appTitle:'Get the Android app',appHint:'APK or Google Play · become a tester',cvTitle:'Free CV builder (in French)',cvHint:'For jobs in Senegal · ready as a PDF',
@@ -488,6 +488,8 @@ function bindShare(){
   if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(p.text);
   const copy=$('copyLink');
   if(copy)copy.textContent=T[lang].copyLink;
+  const feedback=$('feedbackLink');
+  if(feedback)feedback.textContent=T[lang].feedback||T.fr.feedback;
   const inst=$('installBtn');
   if(inst)inst.textContent=T[lang].install;
 }

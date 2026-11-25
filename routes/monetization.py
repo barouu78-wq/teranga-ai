@@ -146,7 +146,19 @@ def _requests_section(requests: list[dict]) -> str:
             f"<th>Ville</th><th>Contact</th><th>Message</th></tr></thead><tbody>{rows}</tbody></table></section>")
 
 
-def render_stats_page(summary: list[dict] | None, error: str = "", requests: list[dict] | None = None) -> str:
+def _avis_section(avis: list[dict]) -> str:
+    if not avis:
+        return '<section><h2>Avis des utilisateurs</h2><p class="muted">Aucun avis pour le moment.</p></section>'
+    rows = "".join(
+        "<tr>" + "".join(f"<td>{escape(str(item.get(key, '')))}</td>" for key in ("at", "kind_label", "where", "message", "contact")) + "</tr>"
+        for item in avis
+    )
+    return ("<section><h2>Avis des utilisateurs</h2><table><thead><tr><th>Date</th><th>Sujet</th><th>Envoyé depuis</th>"
+            f"<th>Message</th><th>Contact</th></tr></thead><tbody>{rows}</tbody></table></section>")
+
+
+def render_stats_page(summary: list[dict] | None, error: str = "", requests: list[dict] | None = None,
+                      avis: list[dict] | None = None) -> str:
     if summary is None:
         body = f"""<h1>Statistiques partenaires</h1>
 <p class="intro">Clics des visiteurs vers les partenaires, par mois. Page privée.</p>
@@ -180,6 +192,7 @@ def render_stats_page(summary: list[dict] | None, error: str = "", requests: lis
         body = (
             "<h1>Statistiques partenaires</h1>"
             '<p class="intro">Chiffres réels, sans donnée personnelle : à montrer aux partenaires pour négocier.</p>'
+            + _avis_section(avis or [])
             + _requests_section(requests or [])
             + "".join(blocks)
         )
@@ -194,7 +207,8 @@ def _clean(value, limit: int) -> str:
     return re.sub(r"\s{2,}", " ", text)[:limit]
 
 
-def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=(), require_json_post=None, site_url="https://teranga-ai.fr"):
+def register_monetization_routes(app, redis_client=None, rate_guard=None, known_sources=(), require_json_post=None, site_url="https://teranga-ai.fr",
+                                 avis=None):
     stats = ClickStats(redis_client, app.logger)
     partner_requests = PartnerRequests(redis_client, app.logger)
     # Seules les pages d'origine connues (fiches de lieux) sont comptées à part :
@@ -216,7 +230,8 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
         if not hmac.compare_digest(given.encode("utf-8"), token.encode("utf-8")):
             app.logger.warning("stats-partenaires: mot de passe refusé")
             return Response(render_stats_page(None, "Mot de passe incorrect."), status=403, mimetype="text/html", headers=headers)
-        return Response(render_stats_page(stats.summary(), requests=partner_requests.recent()), mimetype="text/html", headers=headers)
+        return Response(render_stats_page(stats.summary(), requests=partner_requests.recent(),
+                                          avis=avis.recent() if avis is not None else None), mimetype="text/html", headers=headers)
 
     @app.before_request
     def count_widget_visit():

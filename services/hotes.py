@@ -142,7 +142,7 @@ def _simple(texte: str) -> str:
     return texte.replace(" ", " ").replace(" ", " ")
 
 
-def contexte_hote(hote: dict, langue: str = "fr") -> str:
+def contexte_hote(hote: dict) -> str:
     """Bloc ajouté aux instructions de l'IA quand la question vient de la page d'un hébergeur."""
     lieu = hote["ville"] + (f" ({hote['region']})" if hote["region"] else "")
     lignes = [f"INFORMATIONS DE L'ÉTABLISSEMENT (fournies par l'hôte le {_simple(date_longue(hote['fourni_le']))}) "

@@ -135,7 +135,7 @@ def test_sans_maison_valide_rien_n_est_ajoute(valeur):
 
 
 def test_le_contexte_ne_contient_que_les_champs_prevus():
-    texte = contexte_hote(charger_hotes(ROOT / "data" / "hotes")[DEMO], "fr")
+    texte = contexte_hote(charger_hotes(ROOT / "data" / "hotes")[DEMO])
     assert "whatsapp" not in texte.lower() and "accord_ecrit" not in texte
 
 
