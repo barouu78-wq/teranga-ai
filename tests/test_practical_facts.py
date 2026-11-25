@@ -347,3 +347,41 @@ def test_first_aid_words_are_listed_with_and_without_accents_in_the_web_policy()
     for accented, plain in (("fièvre", "fievre"), ("répulsif", "repulsif"), ("déshydratation", "deshydratation"),
                             ("diarrhée", "diarrhee"), ("piqûre", "piqure"), ("brûlure", "brulure")):
         assert f'"{accented}"' in source and f'"{plain}"' in source, (accented, plain)
+
+
+# Questions réelles testées le 24 novembre 2026 : le repère existait mais ne partait pas avec la question.
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize("question", [
+    "Il fait quelle température à Dakar en janvier ?",
+    "Quelle température fait-il à Saint-Louis en août ?",
+    "Est-ce qu'il fait chaud au Sénégal en avril ?",
+])
+def test_une_question_de_temperature_recoit_le_repere_des_saisons(question):
+    assert "saison" in matching_topics(question)
+
+
+@pytest.mark.parametrize("question", [
+    "Mon fils a de la température, que faire ?",
+    "Il a 39 de température depuis hier",
+])
+def test_la_temperature_d_un_malade_n_est_pas_une_question_de_saison(question):
+    assert "saison" not in matching_topics(question)
+
+
+@pytest.mark.parametrize("question", [
+    "Je veux ouvrir une boutique à Dakar, quelles démarches ?",
+    "Comment ouvrir un restaurant au Sénégal ?",
+    "Je voudrais monter un commerce à Thiès",
+])
+def test_ouvrir_un_commerce_recoit_le_repere_entreprise(question):
+    assert "entreprise" in matching_topics(question)
+
+
+@pytest.mark.parametrize("question", [
+    "À quelle heure ouvre la boutique Orange ?",
+    "Le restaurant est-il ouvert le dimanche ?",
+])
+def test_un_commerce_ouvert_n_est_pas_une_creation_d_entreprise(question):
+    assert "entreprise" not in matching_topics(question)

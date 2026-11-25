@@ -470,7 +470,7 @@ SEO_PAGES = {
             ("Peut-on améliorer un CV ?", "Oui. Vous pouvez demander une reformulation, une structure plus claire ou une adaptation à une offre."),
             ("Les offres sont-elles vérifiées ?", "Les offres trouvées en ligne doivent être vérifiées sur leur source officielle avant toute candidature.")
         ],
-        "related": [("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("formation-senegal", "Formation")]
+        "related": [("faire-un-cv-senegal", "Faire son CV"), ("ia-senegal", "IA au Sénégal"), ("assistant-senegal", "Assistant Sénégal"), ("formation-senegal", "Formation")]
     },
     "formation-senegal": {
         "title": "Formation Sénégal : études et compétences | Teranga AI",
@@ -515,6 +515,30 @@ SEO_PAGES = {
     # Arnaques et sécurité du mobile money (23 novembre 2026) : la Search Console montrait que ces sujets n'apparaissaient
     # jamais dans Google, faute de page dédiée. Contenu repris des repères vérifiés « arnaques » et « mobile_money » de
     # services/practical_facts.py (sources en tête de ce fichier) : aucun montant, frais, plafond ni numéro d'opérateur.
+    # Recherches réelles de l'annonce « CV Sénégal » (Google Ads, 30 jours, 25 novembre 2026) : « comment faire un cv sans
+    # expérience », « exemple cv étudiant », « comment rédiger un cv », « cv pour stage ». Conseils repris du skill
+    # cv-senegal : rien d'inventé, aucun chiffre.
+    "faire-un-cv-senegal": {
+        "title": "Faire un CV au Sénégal : sans expérience, stage | Teranga AI",
+        "description": "Comment faire un CV pour un emploi ou un stage au Sénégal, même sans expérience : rubriques, exemples de phrases, erreurs à éviter, et un outil gratuit en PDF.",
+        "h1": "Faire un CV pour un emploi ou un stage au Sénégal",
+        "intro": "Un bon CV ne ment pas : il met en valeur ce que tu as vraiment fait. Voici comment l'organiser, quoi écrire quand on a peu d'expérience, et les erreurs qui font écarter un CV. Tu peux ensuite le faire gratuitement avec l'outil de Teranga, qui n'invente rien et te donne un PDF.",
+        "sections": [
+            ("Les rubriques d'un CV", "En haut : ton nom, le poste visé, ta ville, ton téléphone et ton e-mail. Puis un profil de trois ou quatre lignes : le métier que tu vises et deux ou trois forces vraies. Ensuite l'expérience, la formation, les compétences et les langues. Une page suffit le plus souvent ; deux si ton parcours est long."),
+            ("Sans expérience professionnelle", "Rien ne s'invente, mais beaucoup compte : stages, apprentissage, bénévolat, associations, petits boulots, aide dans le commerce familial, projets d'études, responsabilités (délégué de classe, trésorier d'association), permis, outils que tu maîtrises (Word, Excel, réseaux sociaux). Décris ce que tu as fait avec un verbe d'action : « Accueilli les clients et tenu la caisse de la boutique familiale le week-end »."),
+            ("CV d'étudiant ou pour un stage", "Mets la formation en premier si c'est ton atout principal : diplôme en cours, établissement, années, et les cours ou projets liés au stage visé. Ajoute les langues que tu parles vraiment (français, wolof, anglais…) avec ton niveau réel. Pour un stage, dis clairement la période où tu es disponible."),
+            ("Adapter le CV à chaque offre", "Lis l'offre : poste, ville, exigences indispensables et souhaitées. Mets en premier l'expérience et les compétences qui y répondent, en reprenant les mots de l'offre quand ils décrivent un vrai travail que tu as fait. Une offre qui demande de l'argent (frais de dossier, formation payante obligatoire) est probablement une arnaque."),
+            ("Les erreurs qui font écarter un CV", "Ajouter un diplôme, un poste ou un chiffre qu'on n'a pas : une vérification suffit à le découvrir. Des fautes d'orthographe, une adresse e-mail peu sérieuse, un numéro de téléphone faux. Pour une candidature sur un site d'emploi, un modèle simple sans colonnes ni bandeau de couleur, car certains logiciels de tri les lisent mal."),
+            ("Faire ton CV gratuitement avec Teranga", "L'outil de Teranga est gratuit et sans compte. Raconte ton parcours en quelques lignes, ou envoie ton ancien CV (PDF, Word ou photo) : tu obtiens un CV clair, à corriger directement, à télécharger en PDF. Si tu colles une offre d'emploi, tu reçois aussi une lettre de motivation adaptée. Teranga n'invente rien et ne garde pas ce que tu envoies."),
+        ],
+        "faq": [
+            ("Comment faire un CV sans expérience professionnelle ?", "Mets en avant ta formation, tes stages, ton bénévolat, tes petits boulots, tes responsabilités et les outils que tu maîtrises, avec des phrases qui commencent par un verbe d'action. N'invente rien : une vérification suffit."),
+            ("Faut-il une photo sur un CV au Sénégal ?", "Ce n'est pas une obligation. Si tu en mets une, choisis une photo sobre et nette ; si l'offre précise ce qu'elle attend, suis l'offre."),
+            ("Un CV doit-il faire une seule page ?", "Une page suffit le plus souvent, surtout pour un premier emploi ou un stage. Deux pages se justifient pour un parcours long."),
+            ("Le CV de Teranga est-il vraiment gratuit ?", "Oui : sans compte, sans paiement, avec un téléchargement en PDF."),
+        ],
+        "related": [("cv", "Faire mon CV"), ("emploi-senegal", "Emploi au Sénégal"), ("offres-emploi", "Offres d'emploi"), ("arnaques-mobile-money-senegal", "Arnaques")]
+    },
     "visa-senegal": {
         "title": "Visa Sénégal : entrée, passeport, vaccins | Teranga AI",
         "description": "Faut-il un visa pour le Sénégal ? Court séjour, passeport, carnet de vaccination, « carte d'arrivée » en ligne et faux sites de visas : ce qui est vérifié.",

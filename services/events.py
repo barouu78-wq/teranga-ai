@@ -97,6 +97,19 @@ def upcoming_events(today: _dt.date | None = None, limit: int | None = None) -> 
     return items[:limit] if limit else items
 
 
+def all_events() -> list[dict]:
+    """Tout le calendrier, du plus ancien au plus lointain ; une ligne aux dates invalides n'apparaît jamais."""
+    return [{"start": first, "end": last, "name": name, "place": place, "kind": kind, "confirmed": confirmed, "tips": tips}
+            for first, last, name, place, kind, confirmed, tips in sorted(
+                (e for e in EVENTS if _valid_dates(e[0], e[1])), key=lambda e: e[0])]
+
+
+def events_between(start: _dt.date, end: _dt.date) -> list[dict]:
+    """Fêtes qui tombent pendant un séjour, jours de départ et de retour compris (planificateur de voyage).
+    Un festival commencé avant le départ et pas encore fini compte aussi."""
+    return [e for e in all_events() if e["start"] <= end and (e["end"] or e["start"]) >= start]
+
+
 # Autres noms par lesquels on désigne une fête (« Aïd », « jazz », « fête du mouton »…).
 _ALIASES = {
     "Tabaski": ("tabaski", "aid el kebir", "aid al adha", "mouton", "eid al adha"),

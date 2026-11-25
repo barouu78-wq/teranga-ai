@@ -93,7 +93,9 @@ REPRISES = {
                                      # 23 novembre 2026, second « Go » : même commit.
                                      "aso", "social", "copywriting", "content-strategy", "community-marketing",
                                      # troisième « Go » : même commit.
-                                     "ad-creative", "site-architecture", "free-tools", "public-relations")),
+                                     "ad-creative", "site-architecture", "free-tools", "public-relations",
+                                     # 24 novembre 2026 (« Go ») : parrainage et premiers messages aux partenaires.
+                                     "referrals", "cold-email")),
     # 23 novembre 2026 (« Go ») : writing-plans et writing-skills de Superpowers, texte seulement.
     "LICENCE-superpowers.txt": ("obra/superpowers", ("writing-plans", "writing-skills")),
     "LICENCE-claude-seo.txt": ("AgriciDaniel/claude-seo", ("seo-hreflang",)),
@@ -243,3 +245,13 @@ def test_fp_check_ne_depend_pas_des_agents_non_repris():
     debut = (SKILLS / "fp-check" / "references" / "deep-verification.md").read_text(encoding="utf-8")[:600]
     assert "Teranga AI" in debut and "securite" in debut
     assert (ROOT / ".claude" / "agents" / "securite.md").exists()
+
+
+def test_parrainage_et_premiers_messages_gardent_les_regles_du_proprietaire():
+    """24 novembre 2026 (« Go ») : referrals et cold-email, repris de marketingskills. Le texte d'origine conseille des
+    récompenses, des outils payants et des envois en nombre : ici, rien ne part ni ne se paie sans le propriétaire."""
+    parrainage = (SKILLS / "referrals" / "SKILL.md").read_text(encoding="utf-8")
+    assert "Aucune récompense" in parrainage and "jamais d'incitation" in parrainage and "Lien partenaire" in parrainage
+    messages = (SKILLS / "cold-email" / "SKILL.md").read_text(encoding="utf-8")
+    assert "Brouillons seulement" in messages and "aucun envoi ni aucune relance sans l'accord du propriétaire" in messages
+    assert "Aucun fait inventé" in parrainage and "Aucun fait inventé" in messages

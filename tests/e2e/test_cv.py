@@ -169,7 +169,7 @@ def test_un_cv_un_peu_long_tient_sur_une_page_a4(page, base_url):
     page.get_by_role("button", name="Élégant", exact=True).click()
     page.get_by_role("button", name="Télécharger en PDF").click()
     echelle = page.evaluate("window.__echelle")
-    assert echelle and 0.8 <= float(echelle) < 1
+    assert echelle and 0.6 <= float(echelle) < 1  # cible 90 % de la page (marge Safari, 24 novembre 2026)
     # window.print est simulé : on attend la fin du mode impression, puis on le remet à la main pour le PDF.
     # Import ici : le job pytest du CI n'installe pas Playwright, il doit pouvoir lire ce fichier et l'ignorer.
     from playwright.sync_api import expect
@@ -180,6 +180,63 @@ def test_un_cv_un_peu_long_tient_sur_une_page_a4(page, base_url):
     assert pages_pdf(page) == 2  # sans réduction, le CV déborde bien
     page.evaluate(f"document.getElementById('cvFeuille').style.setProperty('--cv-echelle', '{echelle}')")
     assert pages_pdf(page) == 1
+
+
+# CV du propriétaire (24 novembre 2026, modèle Océan) : 5 expériences et 12 compétences sortaient sur 2 pages, une date
+# en bas de la page 1 et son poste en haut de la page 2. Réduire jusqu'à 70 % le fait tenir sur une page.
+PLUS_LONG = dict(LONG, experiences=LONG["experiences"] + [
+    {"poste": "Stagiaire en maintenance", "employeur": "Collège", "lieu": "Thiès", "dates": "Octobre 2014",
+     "taches": ["Contrôlait les structures et les réseaux.", "Remplaçait l'appareillage défectueux.",
+                "Rangeait l'atelier.", "Tenait le registre des interventions."]},
+], competences=LONG["competences"] + ["Gestion des stocks et inventaires", "Préparation de commandes",
+                                      "Contrôle des prix et des promotions", "PowerPoint", "AutoCAD", "Permis B (en cours)"])
+
+
+def test_un_cv_tres_long_tient_aussi_sur_une_page(page, base_url):
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/api/cv",
+               lambda route: route.fulfill(body=json.dumps({"cv": PLUS_LONG}), content_type="application/json"))
+    page.add_init_script("window.print = () => { window.__echelle = getComputedStyle(document.getElementById('cvFeuille'))"
+                         ".getPropertyValue('--cv-echelle').trim(); };")
+    page.goto(base_url + "/cv")
+    page.fill("#cvParcours", "BTS management commercial, quatre ans en rayon, intérim de conseiller de vente.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.get_by_role("button", name="Océan", exact=True).click()
+    page.get_by_role("button", name="Télécharger en PDF").click()
+    echelle = page.evaluate("window.__echelle")
+    assert echelle and 0.6 <= float(echelle) < 0.8, echelle
+    from playwright.sync_api import expect
+
+    expect(page.locator("body")).not_to_have_class(re.compile("imprime-cv"))
+    page.emulate_media(media="print")
+    page.evaluate("document.body.classList.add('imprime-cv')")
+    page.evaluate(f"document.getElementById('cvFeuille').style.setProperty('--cv-echelle', '{echelle}')")
+    assert pages_pdf(page) == 1
+
+
+def test_le_pdf_garde_une_marge_pour_safari(page, base_url):
+    """iPhone du propriétaire (24 novembre 2026, modèle Moderne) : même réduit, le CV débordait de quelques lignes en
+    page 2 (Safari n'imprime pas exactement comme Chromium). Le CV réduit doit tenir dans 90 % de la hauteur A4."""
+    page.set_viewport_size({"width": 390, "height": 844})
+    page.route(f"{base_url}/api/cv",
+               lambda route: route.fulfill(body=json.dumps({"cv": PLUS_LONG}), content_type="application/json"))
+    page.add_init_script("window.print = () => { window.__echelle = getComputedStyle(document.getElementById('cvFeuille'))"
+                         ".getPropertyValue('--cv-echelle').trim(); };")
+    page.goto(base_url + "/cv")
+    page.fill("#cvParcours", "BTS management commercial, quatre ans en rayon, intérim de conseiller de vente.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.get_by_role("button", name="Moderne", exact=True).click()
+    page.get_by_role("button", name="Télécharger en PDF").click()
+    echelle = float(page.evaluate("window.__echelle") or 1)
+    hauteur = page.evaluate("""(z) => {
+        const boite = document.createElement('div'); boite.className = 'cv-resultat';
+        boite.style.cssText = 'position:absolute;left:-10000px;top:0;width:688px;margin:0';
+        const copie = document.getElementById('cvFeuille').cloneNode(true); copie.removeAttribute('id');
+        copie.style.zoom = z; boite.appendChild(copie); document.body.appendChild(boite);
+        const h = boite.getBoundingClientRect().height; boite.remove(); return h; }""", echelle)
+    assert hauteur <= 900, (echelle, hauteur)
 
 
 def test_la_lettre_seule_sort_sur_une_page(page, base_url):
@@ -291,6 +348,25 @@ def test_les_etapes_du_formulaire_sont_signalees_une_fois_chacune(page, base_url
     assert len(envois) == 1
 
 
+def test_envoyer_a_un_ami_est_compte_une_fois_sans_rien_du_cv(page, base_url):
+    """« Go parrainage » du 24 novembre 2026 : savoir si quelqu'un partage. Le clic sur « Envoyer à un ami sur
+    WhatsApp » compte l'étape « partage » une fois par visite ; WhatsApp ne reçoit que l'adresse de /cv."""
+    envois, etapes = [], []
+    page.on("request", lambda req: etapes.append(req.url.split("/cv/etape/", 1)[1]) if "/cv/etape/" in req.url else None)
+    page.context.route("https://wa.me/**", lambda route: route.fulfill(body="ok"))
+    ouvrir(page, base_url, envois)
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    for _ in range(2):
+        with page.context.expect_page() as onglet:
+            page.get_by_role("link", name="Envoyer à un ami sur WhatsApp").click()
+        assert "Ndiaye" not in onglet.value.url and "comptabilit" not in onglet.value.url
+        onglet.value.close()
+    page.wait_for_timeout(300)  # le signal part sans attendre de réponse
+    assert etapes.count("partage") == 1, etapes
+
+
 def test_sans_cv_le_nom_et_trois_lignes_suffisent(page, base_url):
     """Départ par défaut (« Go 1 » du 23 novembre 2026) : pas de fichier à chercher. Le nom part en tête du parcours."""
     envois = []
@@ -390,3 +466,37 @@ def test_les_titres_du_cv_ne_sautent_pas_de_niveau(page, base_url):
       .map(h => getComputedStyle(h).fontSize)""")
     assert tailles and set(tailles) == {"12px"}, tailles
     assert page.errors == []
+
+
+def test_le_resultat_reste_court_et_le_pdf_toujours_a_portee(page, base_url):
+    """Remarque du propriétaire (24 novembre 2026, iPhone) : « La page est longue... ». Les 9 modèles tiennent sur une
+    ligne qui défile, et « Télécharger en PDF » reste visible pendant qu'on lit le CV."""
+    ouvrir(page, base_url, [])
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    modeles = page.locator(".cv-modeles").bounding_box()
+    assert modeles["height"] < 64, modeles  # une seule ligne de boutons (44 px)
+    page.get_by_role("button", name="Élégant").scroll_into_view_if_needed()
+    page.get_by_role("button", name="Élégant").click()
+    assert "elegant" in page.locator("#cvFeuille").get_attribute("class")
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+    # Au milieu du CV, le bouton de téléchargement est à l'écran.
+    page.locator("#cvFeuille").get_by_text("Saisie des factures").scroll_into_view_if_needed()
+    page.evaluate("window.scrollBy(0, 200)")
+    pdf = page.locator("#cvPdf").bounding_box()
+    assert 0 <= pdf["y"] and pdf["y"] + pdf["height"] <= 844, pdf
+
+
+def test_a_l_impression_le_cv_reste_dans_le_flux_de_la_page(page, base_url):
+    """iPhone du propriétaire (24 novembre 2026) : en position absolue, Safari coupait ce qui dépassait de la page 1
+    (fin de la formation perdue) au lieu de créer une page 2. Le CV et la lettre s'impriment dans le flux normal."""
+    ouvrir(page, base_url, [])
+    page.fill("#cvParcours", "BTS comptabilité en 2023, puis trois ans d'aide-comptable à Dakar.")
+    page.fill("#cvOffre", "Recrute comptable, permis B souhaité.")
+    page.get_by_role("button", name="Créer mon CV").click()
+    page.get_by_role("heading", name="Ton CV est prêt").wait_for()
+    page.emulate_media(media="print")
+    for classe, cible in (("imprime-cv", "cvFeuille"), ("imprime-lettre", "cvLettre")):
+        page.evaluate(f"document.body.className = '{classe}'")
+        assert page.evaluate(f"getComputedStyle(document.getElementById('{cible}')).position") == "static", classe
