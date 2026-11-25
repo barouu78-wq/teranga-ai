@@ -13,7 +13,7 @@ from flask import Response, current_app, jsonify, redirect, request
 
 from services.site_layout import HEAD_ASSETS, site_footer, site_header
 
-_UPDATED = "22 novembre 2026"
+_UPDATED = "25 novembre 2026"
 
 _PRIVACY = {
     "fr": {
@@ -67,6 +67,41 @@ _PRIVACY = {
 }
 
 
+# Fournisseurs de recherche facultatifs : cités seulement s'ils sont réellement activés (clé présente chez l'hébergeur),
+# pour que la page reste exacte quelle que soit la configuration. Seule la présence d'une clé est lue, jamais sa valeur.
+# Anthropic et OpenAI sont déjà nommés dans « Ce que vous écrivez ou dites ».
+_OPTIONAL_PROVIDERS = {
+    "fr": {
+        "tavily": " Recherche web via Tavily : la question est transmise.",
+        "exa": " Recherche web via Exa : la question est transmise.",
+        "firecrawl": " Lecture d'une page web dont vous écrivez l'adresse, via Firecrawl : l'adresse est transmise (n'écrivez pas d'adresse privée ni contenant un jeton).",
+    },
+    "en": {
+        "tavily": " Web search via Tavily: the question is sent.",
+        "exa": " Web search via Exa: the question is sent.",
+        "firecrawl": " Reading a web page whose address you type, via Firecrawl: the address is sent (do not type a private address or one containing a token).",
+    },
+}
+_THIRD_PARTY_TITLES = {"Services tiers", "Third-party services"}
+# Avec Firecrawl, une adresse est aussi transmise : la phrase « seule la question… » deviendrait fausse.
+_ONLY_QUESTION = {
+    "fr": ("Seule la question ou le nom du lieu leur est transmis.",
+           "Seule la question ou le nom du lieu leur est transmis, sauf pour Firecrawl (voir ci-dessous)."),
+    "en": ("Only the question or place name is sent.",
+           "Only the question or place name is sent, except to Firecrawl (see below)."),
+}
+
+
+def _section_text(lang: str, title: str, text: str) -> str:
+    """Complète « Services tiers » avec les fournisseurs de recherche réellement activés."""
+    if title not in _THIRD_PARTY_TITLES:
+        return text
+    enabled = [name for name in ("tavily", "exa", "firecrawl") if os.getenv(f"{name.upper()}_API_KEY", "").strip()]
+    if "firecrawl" in enabled:
+        text = text.replace(*_ONLY_QUESTION[lang])
+    return text + "".join(_OPTIONAL_PROVIDERS[lang][name] for name in enabled)
+
+
 def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google_ads: bool = False) -> str:
     copy = _PRIVACY[lang]
     entries = list(copy["sections"])
@@ -82,7 +117,7 @@ def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google
                      f'{escape(copy["partner_sites"])}</a>')
     contact = f' : <a href="mailto:{escape(contact_email)}">{escape(contact_email)}</a>' if contact_email else (" via la fiche de l'application sur Google Play" if lang == "fr" else " via the app's Google Play listing")
     sections = "".join(
-        f"<section><h2>{escape(title)}</h2><p>{escape(text).replace('{contact}', contact).replace('{partner_sites}', partner_sites).replace('{ads_choice}', ads_choice)}</p></section>"
+        f"<section><h2>{escape(title)}</h2><p>{escape(_section_text(lang, title, text)).replace('{contact}', contact).replace('{partner_sites}', partner_sites).replace('{ads_choice}', ads_choice)}</p></section>"
         for title, text in entries
     )
     return f"""<!doctype html>

@@ -21,6 +21,49 @@ def test_privacy_contact_email_is_configurable(monkeypatch):
     assert "Google Play" in render_privacy("fr", "")
 
 
+PROVIDER_KEYS = ("TAVILY_API_KEY", "EXA_API_KEY", "FIRECRAWL_API_KEY")
+
+
+def _privacy(lang, monkeypatch, **keys):
+    from routes.legal import render_privacy
+
+    for name in PROVIDER_KEYS:
+        monkeypatch.delenv(name, raising=False)
+    for name, value in keys.items():
+        monkeypatch.setenv(name, value)
+    return render_privacy(lang, "")
+
+
+def test_privacy_names_no_optional_provider_when_none_is_enabled(monkeypatch):
+    for lang in ("fr", "en"):
+        page = _privacy(lang, monkeypatch)
+        for name in ("Tavily", "Firecrawl"):
+            assert name not in page, (lang, name)
+        assert "Exa " not in page and "via Exa" not in page
+
+
+def test_privacy_names_each_optional_provider_only_when_its_key_is_present(monkeypatch):
+    secret = "valeur-secrete-123"
+    fr = _privacy("fr", monkeypatch, TAVILY_API_KEY=secret)
+    assert "via Tavily" in fr and "via Exa" not in fr and "via Firecrawl" not in fr
+    fr = _privacy("fr", monkeypatch, TAVILY_API_KEY=secret, EXA_API_KEY=secret, FIRECRAWL_API_KEY=secret)
+    assert "via Tavily" in fr and "via Exa" in fr and "via Firecrawl" in fr
+    en = _privacy("en", monkeypatch, TAVILY_API_KEY=secret, FIRECRAWL_API_KEY=secret)
+    assert "via Tavily" in en and "via Firecrawl" in en and "via Exa" not in en
+    # Seule la présence d'une clé est lue : sa valeur ne figure jamais dans la page.
+    assert secret not in fr and secret not in en
+
+
+def test_privacy_route_follows_the_environment(monkeypatch):
+    from app import app
+
+    for name in PROVIDER_KEYS:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", "valeur-secrete-123")
+    page = app.test_client().get("/confidentialite").get_data(as_text=True)
+    assert "via Firecrawl" in page and "valeur-secrete-123" not in page
+
+
 def test_asset_links_declare_the_android_app(monkeypatch):
     from app import app
     from routes.legal import ANDROID_CERT_SHA256, asset_links
@@ -112,3 +155,13 @@ def test_report_reason_is_restricted_to_known_values(caplog):
         )
     lines = [r.getMessage() for r in caplog.records if "ai-report" in r.getMessage()]
     assert lines and all(line.startswith("ai-report reason=other ") and "forged" not in line for line in lines)
+
+
+def test_privacy_does_not_contradict_itself_when_firecrawl_is_enabled(monkeypatch):
+    # Relecture Codex (#421) : « seule la question ou le nom du lieu » est faux si Firecrawl reçoit aussi une adresse.
+    alone = {"fr": "Seule la question ou le nom du lieu leur est transmis.", "en": "Only the question or place name is sent."}
+    for lang, sentence in alone.items():
+        assert sentence in _privacy(lang, monkeypatch)
+        assert sentence in _privacy(lang, monkeypatch, TAVILY_API_KEY="k", EXA_API_KEY="k")
+        page = _privacy(lang, monkeypatch, FIRECRAWL_API_KEY="k")
+        assert sentence not in page and "Firecrawl" in page, lang
