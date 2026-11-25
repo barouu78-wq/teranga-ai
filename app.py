@@ -853,7 +853,7 @@ def parse_chat_payload():
         # Question posée depuis la page d'une maison d'hôtes : ses informations (données par l'hôte) en contexte.
         hote = raw.get("hote")
         if isinstance(hote, str) and HOTE_SLUG.fullmatch(hote) and hote in HOTES:
-            payload["instructions"] += "\n\n" + contexte_hote(HOTES[hote], payload.get("language", "fr"))
+            payload["instructions"] += "\n\n" + contexte_hote(HOTES[hote])
             payload["hote"] = hote
         partner_block = partners_context(partners_for_text(PARTNERS, payload.get("message", "")))
         if partner_block:
