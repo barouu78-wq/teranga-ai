@@ -18,12 +18,17 @@ Compétences concernées :
 - site-architecture
 - free-tools
 - public-relations
+- referrals
+- cold-email
 
 Ajout du 23 novembre 2026 (« Go » du propriétaire), même commit : aso, social, copywriting, content-strategy et
 community-marketing, texte seulement (SKILL.md et references/*.md).
 
 Ajout du 23 novembre 2026 (troisième « Go »), même commit : ad-creative, site-architecture, free-tools et
 public-relations, texte seulement.
+
+Ajout du 24 novembre 2026 (« Go » du propriétaire), même commit : referrals (parrainage, bouche-à-oreille, avis) et
+cold-email (premiers messages aux partenaires, en brouillon), texte seulement (SKILL.md et references/*.md).
 
 Licence d'origine, reproduite telle quelle :
 
