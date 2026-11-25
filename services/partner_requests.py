@@ -27,8 +27,9 @@ KINDS = {
 
 
 class PartnerRequests:
-    def __init__(self, redis_client=None, logger=None):
+    def __init__(self, redis_client=None, logger=None, key: str = _KEY):
         self.redis = redis_client
+        self.key = key  # liste Redis : les avis des utilisateurs (routes/avis.py) ont la leur
         self.logger = logger
         self._memory: deque = deque(maxlen=_KEEP)
         self._lock = threading.Lock()
@@ -49,20 +50,20 @@ class PartnerRequests:
         if self.redis is not None:
             try:
                 pipe = self.redis.pipeline(transaction=False)
-                pipe.lpush(_KEY, raw)
-                pipe.ltrim(_KEY, 0, _KEEP - 1)
-                pipe.expire(_KEY, _KEEP_SECONDS)
+                pipe.lpush(self.key, raw)
+                pipe.ltrim(self.key, 0, _KEEP - 1)
+                pipe.expire(self.key, _KEEP_SECONDS)
                 pipe.execute()
                 # L'expiration de la liste se repousse à chaque ajout : on retire donc aussi les demandes trop anciennes.
                 for _ in range(_KEEP):
-                    tail = self.redis.lrange(_KEY, -1, -1) or []
+                    tail = self.redis.lrange(self.key, -1, -1) or []
                     try:
                         oldest = json.loads(tail[0]) if tail else None
                     except (TypeError, ValueError):
                         oldest = None
                     if not oldest or not self._expired(oldest, now):
                         break
-                    self.redis.rpop(_KEY)
+                    self.redis.rpop(self.key)
                 return
             except Exception:
                 if self.logger is not None:
@@ -76,7 +77,7 @@ class PartnerRequests:
         items: list[dict] = []
         if self.redis is not None:
             try:
-                for raw in self.redis.lrange(_KEY, 0, limit - 1) or []:
+                for raw in self.redis.lrange(self.key, 0, limit - 1) or []:
                     try:
                         items.append(json.loads(raw))
                     except (TypeError, ValueError):
