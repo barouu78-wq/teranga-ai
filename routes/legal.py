@@ -83,15 +83,23 @@ _OPTIONAL_PROVIDERS = {
     },
 }
 _THIRD_PARTY_TITLES = {"Services tiers", "Third-party services"}
+# Avec Firecrawl, une adresse est aussi transmise : la phrase « seule la question… » deviendrait fausse.
+_ONLY_QUESTION = {
+    "fr": ("Seule la question ou le nom du lieu leur est transmis.",
+           "Seule la question ou le nom du lieu leur est transmis, sauf pour Firecrawl (voir ci-dessous)."),
+    "en": ("Only the question or place name is sent.",
+           "Only the question or place name is sent, except to Firecrawl (see below)."),
+}
 
 
 def _section_text(lang: str, title: str, text: str) -> str:
     """Complète « Services tiers » avec les fournisseurs de recherche réellement activés."""
     if title not in _THIRD_PARTY_TITLES:
         return text
-    extra = _OPTIONAL_PROVIDERS[lang]
-    return text + "".join(extra[name] for name in ("tavily", "exa", "firecrawl")
-                          if os.getenv(f"{name.upper()}_API_KEY", "").strip())
+    enabled = [name for name in ("tavily", "exa", "firecrawl") if os.getenv(f"{name.upper()}_API_KEY", "").strip()]
+    if "firecrawl" in enabled:
+        text = text.replace(*_ONLY_QUESTION[lang])
+    return text + "".join(_OPTIONAL_PROVIDERS[lang][name] for name in enabled)
 
 
 def render_privacy(lang: str, contact_email: str = "", ads: bool = False, google_ads: bool = False) -> str:

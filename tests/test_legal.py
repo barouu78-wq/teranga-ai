@@ -155,3 +155,13 @@ def test_report_reason_is_restricted_to_known_values(caplog):
         )
     lines = [r.getMessage() for r in caplog.records if "ai-report" in r.getMessage()]
     assert lines and all(line.startswith("ai-report reason=other ") and "forged" not in line for line in lines)
+
+
+def test_privacy_does_not_contradict_itself_when_firecrawl_is_enabled(monkeypatch):
+    # Relecture Codex (#421) : « seule la question ou le nom du lieu » est faux si Firecrawl reçoit aussi une adresse.
+    alone = {"fr": "Seule la question ou le nom du lieu leur est transmis.", "en": "Only the question or place name is sent."}
+    for lang, sentence in alone.items():
+        assert sentence in _privacy(lang, monkeypatch)
+        assert sentence in _privacy(lang, monkeypatch, TAVILY_API_KEY="k", EXA_API_KEY="k")
+        page = _privacy(lang, monkeypatch, FIRECRAWL_API_KEY="k")
+        assert sentence not in page and "Firecrawl" in page, lang
