@@ -837,6 +837,20 @@ def _fr_hreflang_links(slug, site_url):
 
 JOJ_PAST_NOTICE = ("Les JOJ Dakar 2026 sont terminés : ils ont eu lieu du 31 octobre au 13 novembre 2026. Cette page "
                    "reste un repère sur les sites des Jeux.")
+JOJ_PAST_DESCRIPTION = ("Les JOJ Dakar 2026 ont eu lieu du 31 octobre au 13 novembre 2026 : retour sur les sites de "
+                        "Dakar, Diamniadio et Saly, premiers Jeux de la Jeunesse en Afrique.")
+# Textes des sites au passé (audit du 27 novembre 2026 : « accueille », « se dispute », « ont lieu » restaient au présent).
+JOJ_PAST_SECTIONS = {
+    "Dakar": "La Corniche Ouest a accueilli les festivités et les animations pour les jeunes. La natation s'est disputée "
+             "à la piscine olympique de la Tour de l'Œuf, l'athlétisme au stade Iba Mar Diop.",
+    "Diamniadio": "Diamniadio a accueilli le village olympique et la cérémonie d'ouverture, au stade Abdoulaye Wade. Les "
+                  "sports en salle (judo, escrime, gymnastique, tennis de table…) ont eu lieu au Dakar Arena et au centre "
+                  "des expositions.",
+    "Saly": "Sur la Petite Côte, la plage de Saly a accueilli les sports de plage et les sports nautiques, comme le "
+            "beach-volley, la voile et le triathlon.",
+}
+JOJ_PAST_OFFICIAL_ANSWER = ("Non. Teranga AI n'est pas un site officiel des JOJ : il n'est lié ni au Comité international "
+                            "olympique ni au comité d'organisation. Les résultats sont sur le site officiel.")
 
 
 def _joj_page_after_closing(page):
@@ -848,11 +862,17 @@ def _joj_page_after_closing(page):
         return page
     past = dict(page)
     past["intro"] = page["intro"].replace("ont lieu du 31 octobre", "ont eu lieu du 31 octobre")
+    # Description lue par Google (et reprise dans les données structurées) : plus de programme à trouver.
+    past["description"] = JOJ_PAST_DESCRIPTION
     past["sections"] = [("Les Jeux sont terminés", JOJ_PAST_NOTICE)] + [
-        section for section in page["sections"] if section[0] not in {"Programme et billets", "Vos trajets avec Teranga AI"}
+        (title, JOJ_PAST_SECTIONS.get(title, text)) for title, text in page["sections"]
+        if title not in {"Programme et billets", "Vos trajets avec Teranga AI"}
     ]
-    past["faq"] = [("Quand ont eu lieu les JOJ Dakar 2026 ?" if q.startswith("Quand ont lieu") else q, a)
-                   for q, a in page["faq"]]
+    past["faq"] = [
+        ("Quand ont eu lieu les JOJ Dakar 2026 ?" if q.startswith("Quand ont lieu") else q,
+         JOJ_PAST_OFFICIAL_ANSWER if q.startswith("Teranga AI est-il le site officiel") else a)
+        for q, a in page["faq"]
+    ]
     return past
 
 
