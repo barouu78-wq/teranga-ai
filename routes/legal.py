@@ -225,6 +225,15 @@ def register_legal_routes(app, deps):
             return Response("[]", status=404, mimetype="application/json")
         return Response(json.dumps(links), mimetype="application/json", headers={"Cache-Control": "public, max-age=3600"})
 
+    @app.get("/.well-known/traffic-advice")
+    def traffic_advice():
+        # Autorise le préchargement privé de Chrome (« Private Prefetch Proxy ») : quand teranga-ai.fr apparaît dans
+        # les résultats de Google, la page peut être chargée à l'avance par Google, sans cookie ni adresse IP du
+        # visiteur, et s'ouvre presque aussitôt au clic. Sans ce fichier (404 vus dans les journaux de novembre 2026),
+        # Chrome ne précharge pas. Une page préchargée n'est pas comptée comme visite (routes/monetization.py).
+        return Response(json.dumps([{"user_agent": "prefetch-proxy", "fraction": 1.0}]),
+                        mimetype="application/trafficadvice+json", headers={"Cache-Control": "public, max-age=86400"})
+
     @app.post("/api/report")
     @require_json_post
     def report_answer():
