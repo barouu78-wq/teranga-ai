@@ -351,17 +351,19 @@ TOPICS = (
       "ou route par la Gambie (pont de Farafenni).",
       "Gorée : chaloupe depuis la gare maritime de Dakar, environ 20 minutes.")),
     # JOJ Dakar 2026 : dates et sites du site officiel olympics.com (rubrique Dakar 2026), relevés le 31 octobre 2026.
+    # Les Jeux sont TERMINÉS (13 novembre 2026) : ce repère est au passé, sans programme ni billets à annoncer
+    # (audit du 27 novembre 2026 : la réponse de secours annonçait encore « Programme du jour, billets… »).
     # « Olympique » seul ne déclenche pas (l'Olympique de Marseille) ; « Dakar 2026 » seulement accolé.
     ("joj", r"\bjoj\b|jeux olympiques|olympiques? de la jeunesse|youth olympic|\bdakar 2026\b",
-     ("Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026 : du 31 octobre au 13 novembre 2026, premiers JOJ organisés en "
-      "Afrique, sur trois sites : Dakar, Diamniadio et Saly.",
-      "Dakar : la Corniche Ouest accueille les festivités et les animations pour les jeunes ; natation à la piscine "
-      "olympique de la Tour de l'Œuf, athlétisme au stade Iba Mar Diop.",
-      "Diamniadio : village olympique ; cérémonie d'ouverture au stade Abdoulaye Wade ; sports en salle (judo, escrime, "
-      "gymnastique, tennis de table…) au Dakar Arena et au centre des expositions. Depuis Dakar, le TER va à Diamniadio.",
-      "Saly (Petite Côte) : sports de plage et nautiques sur la plage, comme le beach-volley, la voile et le triathlon.",
-      "Programme du jour, billets et conditions d'accès : site officiel olympics.com (rubrique Dakar 2026) ; aucun prix ni "
-      "horaire à inventer. Teranga AI n'est pas un site officiel des JOJ ; guide : teranga-ai.fr/joj-dakar-2026.")),
+     ("Jeux Olympiques de la Jeunesse (JOJ) Dakar 2026 : ils ont eu lieu du 31 octobre au 13 novembre 2026 et sont "
+      "terminés. Ce furent les premiers JOJ organisés en Afrique, sur trois sites : Dakar, Diamniadio et Saly.",
+      "Dakar : la Corniche Ouest a accueilli les festivités ; natation à la piscine olympique de la Tour de l'Œuf, "
+      "athlétisme au stade Iba Mar Diop.",
+      "Diamniadio : village olympique, cérémonie d'ouverture au stade Abdoulaye Wade, sports en salle au Dakar Arena "
+      "et au centre des expositions.",
+      "Saly (Petite Côte) : sports de plage et nautiques (beach-volley, voile, triathlon).",
+      "Résultats et palmarès : site officiel olympics.com (rubrique Dakar 2026) ; n'en invente aucun. Teranga AI n'est "
+      "pas un site officiel des JOJ.")),
     # Pas un « terrain de foot » ni « island » (qui contient « land »).
     ("foncier", r"terrain(?! (de|d) (foot|football|basket|basketball|sport|tennis|golf|jeux?|camping|rugby|handball|volley))|"
      r"parcelle|titre foncier|acheter (une |un )?(maison|appartement|terrain)|construire (une |ma |sa |notre )?maison|"

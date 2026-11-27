@@ -137,6 +137,36 @@ def test_the_guide_page_has_its_festive_header_and_key_facts():
     assert "page-joj" not in other and "joj-facts" not in other
 
 
+def test_after_the_games_the_ai_facts_are_in_the_past_without_tickets():
+    """Audit du 27 novembre 2026 : les Jeux sont finis depuis le 13 novembre, mais les repères donnés à l'IA (et
+    recopiés tels quels par la réponse de secours) annonçaient encore « Programme du jour, billets… » au présent."""
+    context = practical_context("Où trouver le programme des JOJ Dakar 2026 ?")
+    assert "terminés" in context and "ont eu lieu du 31 octobre au 13 novembre 2026" in context
+    for stale in ("Programme du jour", "billets", "accueille les festivités", "le TER va à Diamniadio"):
+        assert stale not in context, stale
+
+
+def test_after_the_games_the_page_and_its_google_description_are_in_the_past(monkeypatch):
+    from services import events
+
+    monkeypatch.setattr(events, "event_is_over", lambda name, today=None: True)
+    html = _app().get("/joj-dakar-2026", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert "Les Jeux sont terminés" in html
+    assert "ont eu lieu du 31 octobre au 13 novembre 2026" in html  # description lue par Google
+    for stale in ("où trouver le programme officiel", "Le programme et les billets", "accueille les festivités",
+                  "se dispute", "ont lieu au Dakar Arena", "la plage de Saly accueille"):
+        assert stale not in html, stale
+    assert "a accueilli les festivités" in html and "Les résultats sont sur le site officiel" in html
+
+
+def test_while_the_games_run_the_page_stays_in_the_present(monkeypatch):
+    from services import events
+
+    monkeypatch.setattr(events, "event_is_over", lambda name, today=None: False)
+    html = _app().get("/joj-dakar-2026", base_url="https://teranga-ai.fr").get_data(as_text=True)
+    assert "Les Jeux sont terminés" not in html and "Programme et billets" in html
+
+
 def test_no_price_or_time_is_given_on_the_page():
     import re
 
