@@ -501,7 +501,10 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
             "POLITIQUE DE SOURCES : privilégie les sources institutionnelles ou spécialisées fiables "
             "et vérifie les faits actuels avant de les présenter comme actuels."
         )
-    photo_only, photo_query = photo_request(message, history)
+    # Fichier joint : « Qu'est-ce qu'on voit sur cette photo ? » parle du fichier, pas d'une galerie à chercher
+    # (sinon la photo était vérifiée puis ignorée, et Claude jamais appelé : audit du 27 novembre 2026).
+    has_file = isinstance(data, dict) and bool(data.get("fichier"))
+    photo_only, photo_query = (False, "") if has_file else photo_request(message, history)
     use_web = False if photo_only else bool(intent_context.get("needs_web_search"))
     context_instruction = " ".join(
         part for part in (
