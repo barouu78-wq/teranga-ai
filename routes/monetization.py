@@ -237,7 +237,7 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
     def count_widget_visit():
         # Visiteur arrivé par le bouton du widget partenaire (static/widget.js) : compté par partenaire, sans
         # donnée personnelle. Les pages passent par le serveur même avec le service worker (réseau d'abord).
-        if request.method != "GET" or request.path != "/" or request.args.get("utm_medium") != "widget" or _prechargement():
+        if request.method != "GET" or request.path != "/" or request.args.get("utm_medium") != "widget":
             return None
         partner = re.sub(r"[^a-z0-9_-]", "", str(request.args.get("utm_source", "")).lower())[:40]
         # Comme pour /go : quelques visites par minute et par visiteur, pour qu'un script ne gonfle pas les chiffres.
@@ -249,7 +249,7 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
     def count_social_visit():
         # Visiteur arrivé par le lien marqué d'une publication (?utm_source=tiktok…) : compté par réseau, sans donnée
         # personnelle ni outil extérieur. Les aperçus de liens (robots de WhatsApp, Facebook…) ne comptent pas.
-        if request.method != "GET" or request.args.get("utm_medium") == "widget" or _prechargement():
+        if request.method != "GET" or request.args.get("utm_medium") == "widget":
             return None
         source = str(request.args.get("utm_source", "")).strip().lower()
         source = VISIT_SOURCE_ALIASES.get(source, source)
@@ -267,12 +267,6 @@ def register_monetization_routes(app, redis_client=None, rate_guard=None, known_
     def _vrai_navigateur(agent):
         # Même règle que count_social_visit : un vrai navigateur s'annonce WebKit ou Gecko, et n'est pas un robot.
         return ("AppleWebKit/" in agent or "Gecko/" in agent) and not looks_like_bot(agent)
-
-    def _prechargement():
-        # Page chargée à l'avance par le navigateur ou par Google (« Sec-Purpose: prefetch », /.well-known/traffic-advice) :
-        # personne ne l'a encore ouverte, elle ne compte donc pas comme une visite.
-        return "prefetch" in request.headers.get("Sec-Purpose", "").lower() or \
-            "prefetch" in request.headers.get("Purpose", "").lower()
 
     @app.get("/cv/etape/<nom>")
     def cv_etape(nom):
