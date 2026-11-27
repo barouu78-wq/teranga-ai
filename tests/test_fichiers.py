@@ -123,6 +123,23 @@ def test_le_texte_d_un_word_va_dans_la_question_pour_toutes_les_ia():
     assert "FICHIER JOINT" in payload["instructions"]
 
 
+@pytest.mark.parametrize("question", ["Qu'est-ce qu'on voit sur cette photo ?", "What is in this image?",
+                                      "Explique cette image", "Décris la photo"])
+def test_une_question_sur_la_photo_jointe_va_a_l_ia_pas_a_la_galerie(question):
+    # Audit du 27 novembre 2026 : ces mots déclenchaient la galerie de photos (Wikimédia) ; la photo jointe était
+    # vérifiée puis ignorée, Claude jamais appelé, et le contexte (date, repères) jamais ajouté.
+    payload, erreur = payload_avec(fichier(JPEG, "image/jpeg", "rue.jpg"), message=question)
+    assert erreur is None
+    assert payload["photo_only"] is False and payload["photo_query"] == ""
+    assert payload["fichier"]["bloc"]["type"] == "image"
+    assert "FICHIER JOINT" in payload["instructions"]
+
+
+def test_sans_fichier_une_demande_de_photos_reste_une_galerie():
+    payload, _ = payload_avec(None, message="Montre-moi des photos de Saint-Louis")
+    assert payload["photo_only"] is True
+
+
 def test_sans_fichier_rien_ne_change():
     payload, _ = payload_avec(None)
     assert "fichier" not in payload and "fichier_nom" not in payload
