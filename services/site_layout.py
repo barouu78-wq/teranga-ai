@@ -16,16 +16,21 @@ def asset_version(name: str) -> str:
     global _STATIC_DIR
     if _STATIC_DIR is None:
         _STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
-    path = _STATIC_DIR / name
+    # Le nom vient aussi de l'adresse demandée (en-têtes de cache, app.py) : seul un vrai fichier de static/ est
+    # lu, jamais un chemin qui en sort (« .. », chemin absolu) ni un fichier spécial (audit du 27 novembre 2026).
     try:
+        path = (_STATIC_DIR / str(name)).resolve()
+        if not path.is_relative_to(_STATIC_DIR) or not path.is_file():
+            return ""
+        key = path.relative_to(_STATIC_DIR).as_posix()  # une seule entrée par fichier, quelle que soit l'écriture
         mtime = path.stat().st_mtime_ns
-        cached = _VERSIONS.get(name)
+        cached = _VERSIONS.get(key)
         if cached and cached[0] == mtime:
             return cached[1]
         digest = hashlib.sha256(path.read_bytes()).hexdigest()[:10]
-    except OSError:
+    except (OSError, ValueError):
         return ""
-    _VERSIONS[name] = (mtime, digest)
+    _VERSIONS[key] = (mtime, digest)
     return digest
 
 
