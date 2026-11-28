@@ -374,7 +374,11 @@ def build_chat_payload(data, *, sanitize, normalize_chat_input, max_message_leng
     # Dernière réponse coupée par la limite de longueur ? Le modèle en reçoit la fin, sans la mention : « continue » reprend alors où elle s'est arrêtée.
     previous_cut = False
     if isinstance(data, dict) and isinstance(data.get("history"), list):
-        history_for_model, previous_cut = prepare_cut_history(data["history"], max_history_item_length)
+        # Seules les dernières répliques comptent (normalize_chat_input en garde max_history_items) : une liste de
+        # centaines de milliers d'éléments n'est pas parcourue en entier (audit du 27 novembre 2026). Le site envoie
+        # au plus max_history_items répliques ; dix fois plus laisse une marge large aux éléments invalides.
+        recent = data["history"][-max_history_items * 10:]
+        history_for_model, previous_cut = prepare_cut_history(recent, max_history_item_length)
         data = {**data, "history": history_for_model}
     normalized, error = normalize_chat_input(
         data,
