@@ -835,8 +835,11 @@ def parse_chat_payload():
         # Historique borné comme celui que l'IA reçoit (nombre de répliques et longueur de chacune) : les modes ne
         # s'activent pas sur des mots que l'IA ne voit pas, et une réplique géante n'occupe pas le serveur.
         raw_history = raw.get("history") if isinstance(raw.get("history"), list) else []
+        # Même nettoyage que normalize_chat_input (services/chat_payload.py) AVANT la coupe : sinon des espaces en tête
+        # repoussaient la demande au-delà de la coupe, alors que l'IA la voyait (relecture Codex de la PR #684).
         history_for_modes = [
-            {"role": item.get("role"), "content": str(item.get("content") or "")[:MAX_HISTORY_ITEM_LENGTH]}
+            {"role": str(item.get("role", "")).lower(),
+             "content": sanitize_text(item.get("content", ""), MAX_HISTORY_ITEM_LENGTH).strip()}
             for item in raw_history[-MAX_HISTORY_ITEMS:] if isinstance(item, dict)
         ]
         modes = detect_modes(payload.get("message", ""), history_for_modes or None)

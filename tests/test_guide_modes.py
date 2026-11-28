@@ -48,6 +48,19 @@ def test_a_history_that_is_not_a_list_or_has_odd_content_is_ignored():
     assert detect_modes("Je te propose 5000", [{"role": "user", "content": None}]) == set()
 
 
+def test_leading_spaces_do_not_hide_a_practice_request_the_ai_sees():
+    """Relecture Codex de la PR #684 : le texte est nettoyé (comme pour l'IA) avant d'être coupé ; des espaces en tête
+    ne doivent pas faire sortir du jeu de rôle."""
+    import app as app_module
+
+    history = [{"role": "user", "content": " " * 3000 + "Entraîne-moi à marchander un masque au marché"},
+               {"role": "assistant", "content": "15 000 francs !"}]
+    with app_module.app.test_request_context("/chat", method="POST",
+                                             json={"message": "Je te propose 5000", "language": "fr", "history": history}):
+        payload, error = app_module.parse_chat_payload()
+    assert error is None and payload["modes"] == ["market", "market_practice"]
+
+
 def test_the_chat_passes_a_bounded_history_to_mode_detection(monkeypatch):
     import app as app_module
 
