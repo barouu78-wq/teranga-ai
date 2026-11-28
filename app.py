@@ -832,7 +832,14 @@ def parse_chat_payload():
         # Date du jour à Dakar : sans elle, « ce week-end », « cette année » ou « la prochaine Tabaski » sont mal situés.
         payload["instructions"] += "\n\n" + today_line(payload.get("language", "fr"))
         raw = request.get_json(silent=True) or {}
-        modes = detect_modes(payload.get("message", ""), raw.get("history") if isinstance(raw.get("history"), list) else None)
+        # Historique borné comme celui que l'IA reçoit (nombre de répliques et longueur de chacune) : les modes ne
+        # s'activent pas sur des mots que l'IA ne voit pas, et une réplique géante n'occupe pas le serveur.
+        raw_history = raw.get("history") if isinstance(raw.get("history"), list) else []
+        history_for_modes = [
+            {"role": item.get("role"), "content": str(item.get("content") or "")[:MAX_HISTORY_ITEM_LENGTH]}
+            for item in raw_history[-MAX_HISTORY_ITEMS:] if isinstance(item, dict)
+        ]
+        modes = detect_modes(payload.get("message", ""), history_for_modes or None)
         if modes:
             payload["instructions"] += "\n\n" + mode_instructions(modes, SENEGAL_KNOWLEDGE, payload.get("language", "fr"))
             payload["modes"] = sorted(modes)

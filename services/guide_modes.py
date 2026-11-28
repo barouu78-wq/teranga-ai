@@ -102,11 +102,19 @@ _HAGGLING_WORDS = re.compile(
 )
 
 
+# Chaque réplique est coupée avant d'être analysée, sinon une seule réplique de plusieurs mégaoctets occupe le serveur
+# des dizaines de secondes (audit du 27 novembre 2026). Même limite que l'historique que l'IA reçoit
+# (MAX_HISTORY_ITEM_LENGTH, app.py) : aucun mode ne s'active sur des mots que l'IA ne voit pas.
+_MAX_HISTORY_ITEM = 1400
+
+
 def _practice_continues(text: str, history) -> bool:
     if _has(text, _STOP_TERMS) or (_QUESTION_START.match(text.strip()) and not _HAGGLING_WORDS.search(text)):
         return False
-    recent = [item.get("content", "") for item in (history or [])[-6:] if isinstance(item, dict) and item.get("role") == "user"]
-    return any(_has(_normalize(previous), _PRACTICE_TERMS) and _is_market(_normalize(previous)) for previous in recent)
+    items = history[-6:] if isinstance(history, (list, tuple)) else []
+    recent = [_normalize(str(item.get("content") or "")[:_MAX_HISTORY_ITEM]) for item in items
+              if isinstance(item, dict) and item.get("role") == "user"]
+    return any(_has(previous, _PRACTICE_TERMS) and _is_market(previous) for previous in recent)
 
 
 def _is_market(text: str) -> bool:
