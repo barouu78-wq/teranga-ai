@@ -32,7 +32,13 @@ def test_page_shows_the_form_and_is_not_indexed():
 def test_footer_and_home_link_to_the_page():
     client = app_module.app.test_client()
     assert 'href="/avis"' in client.get("/offres-partenaires", base_url=B).get_data(as_text=True)
-    assert 'href="/avis"' in client.get("/", base_url=B).get_data(as_text=True)
+    home = client.get("/", base_url=B).get_data(as_text=True)
+    # Propriétaire, 28 novembre 2026 : « Déplace l'avis dans le bas de page ». Plus à côté de « Copier le lien »,
+    # mais tout en bas de l'accueil, après les guides (les autres pages l'ont dans leur pied de page).
+    start = home.index('<div class="spread">')
+    assert "/avis" not in home[start:home.index("</div>", start)]
+    assert '<p class="home-foot"><a href="/avis" id="feedbackLink">Donner mon avis</a></p>' in home
+    assert home.index('href="/avis"') > home.index('id="guidesTitle"')
 
 
 def test_feedback_is_validated_stored_and_listed(monkeypatch):

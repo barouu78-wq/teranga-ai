@@ -777,6 +777,7 @@ body[data-theme="dark"] .scene-sun{width:46px;height:46px;background:#f1ead2;box
 
 /* Guides et présentation (accueil uniquement) */
 .seo,.guide-section{margin-top:28px;padding:20px;border-radius:var(--radius);border:1px solid var(--line);background:color-mix(in srgb,var(--surface) 75%,transparent)}
+.home-foot{margin:14px 0 0;font-size:14px}.home-foot a{display:inline-block;min-height:44px;line-height:44px;color:var(--muted)}
 .seo h2,.guide-section h2{margin:0 0 6px;font:600 22px/1.2 var(--font-display)}
 .seo p,.guide-section p{margin:0;color:var(--muted);font-size:15px}
 .guide-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -1334,7 +1335,6 @@ body:not([data-fete]) .hero-signature{display:none}
       <a class="wa" id="waShare" target="_blank" rel="noopener noreferrer" href="#">WhatsApp</a>
       <button type="button" class="install" id="installBtn" hidden>Installer l’app</button>
       <button type="button" id="copyLink">Copier le lien</button>
-      <a href="/avis" id="feedbackLink">Donner mon avis</a>
     </div>
   </div>
   <section class="seo">
@@ -1365,6 +1365,8 @@ body:not([data-fete]) .hero-signature{display:none}
       <a href="/entreprendre-senegal">Entreprendre au Sénégal</a>
       <a href="/en/senegal-travel-guide" lang="en" hreflang="en">Senegal travel guide (English)</a>
     </div>
+    <!-- « Donner mon avis » en bas de l'accueil (propriétaire, 28 novembre 2026), plus dans la rangée de partage. -->
+    <p class="home-foot"><a href="/avis" id="feedbackLink">Donner mon avis</a></p>
   </section>
   <div id="messages" role="log" aria-live="polite" aria-relevant="additions text"></div>
 </main>
